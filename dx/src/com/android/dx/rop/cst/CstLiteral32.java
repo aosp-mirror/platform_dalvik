@@ -21,13 +21,13 @@ package com.android.dx.rop.cst;
  */
 public abstract class CstLiteral32
         extends CstLiteralBits {
-    /** the value as <code>int</code> bits */
+    /** the value as {@code int} bits */
     private final int bits;
 
     /**
      * Constructs an instance.
      * 
-     * @param bits the value as <code>int</code> bits
+     * @param bits the value as {@code int} bits
      */
     /*package*/ CstLiteral32(int bits) {
         this.bits = bits;

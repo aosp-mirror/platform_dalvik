@@ -23,7 +23,6 @@ package java.net;
  * implementation.
  * 
  * @see DatagramSocket
- * @since Android 1.0
  */
 public interface DatagramSocketImplFactory {
     
@@ -31,7 +30,6 @@ public interface DatagramSocketImplFactory {
      * Creates a new {@code DatagramSocketImpl} instance.
      * 
      * @return the new datagram socket implementation.
-     * @since Android 1.0
      */
     DatagramSocketImpl createDatagramSocketImpl();
 }

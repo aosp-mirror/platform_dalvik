@@ -21,9 +21,6 @@ import org.apache.harmony.math.internal.nls.Messages;
 
 /**
  * Static library that provides all multiplication of {@link BigInteger} methods.
- *
- * @author Intel Middleware Product Division
- * @author Instituto Tecnologico de Cordoba
  */
 class Multiplication {
 
@@ -45,7 +42,7 @@ class Multiplication {
     static final int tenPows[] = {
         1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
     };
-    
+
     /**
      * An array with powers of five that fit in the type {@code int}.
      * ({@code 5^0,5^1,...,5^13})
@@ -66,13 +63,13 @@ class Multiplication {
      * ({@code 5^0,5^1,...,5^31})
      */
     static final BigInteger bigFivePows[] = new BigInteger[32];
-    
-    
+
+
 
     static {
         int i;
         long fivePow = 1L;
-        
+
         for (i = 0; i <= 18; i++) {
             bigFivePows[i] = BigInteger.valueOf(fivePow);
             bigTenPows[i] = BigInteger.valueOf(fivePow << i);
@@ -115,7 +112,7 @@ class Multiplication {
         ? multiplyByPositiveInt(val, tenPows[(int)exp])
         : val.multiply(powerOf10(exp)));
     }
-    
+
     /**
      * It calculates a power of ten, which exponent could be out of 32-bit range.
      * Note that internally this method will be used in the worst case with
@@ -143,7 +140,7 @@ class Multiplication {
          * estimated size, measured in bytes: 1 + [exp / log10(2)]
          */
         long byteArraySize = 1 + (long)(exp / 2.4082399653118496);
-        
+
         if (byteArraySize > Runtime.getRuntime().freeMemory()) {
             // math.01=power of ten too big
             throw new OutOfMemoryError(Messages.getString("math.01")); //$NON-NLS-1$
@@ -154,7 +151,7 @@ class Multiplication {
         }
         /*
          * "HUGE POWERS"
-         * 
+         *
          * This branch probably won't be executed since the power of ten is too
          * big.
          */
@@ -162,7 +159,7 @@ class Multiplication {
         BigInteger powerOfFive = bigFivePows[1].pow(Integer.MAX_VALUE);
         BigInteger res = powerOfFive;
         long longExp = exp - Integer.MAX_VALUE;
-        
+
         intExp = (int)(exp % Integer.MAX_VALUE);
         while (longExp > Integer.MAX_VALUE) {
             res = res.multiply(powerOfFive);
@@ -179,7 +176,7 @@ class Multiplication {
         res = res.shiftLeft(intExp);
         return res;
     }
-    
+
     /**
      * Multiplies a number by a power of five.
      * This method is used in {@code BigDecimal} class.

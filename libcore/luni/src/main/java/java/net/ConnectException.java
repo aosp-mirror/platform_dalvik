@@ -20,8 +20,6 @@ package java.net;
 /**
  * A {@code ConnectException} is thrown if a connection cannot be established to
  * a remote host on a specific port.
- * 
- * @since Android 1.0
  */
 public class ConnectException extends SocketException {
 
@@ -29,8 +27,6 @@ public class ConnectException extends SocketException {
 
     /**
      * This implementation does nothing.
-     * 
-     * @since Android 1.0
      */
     public ConnectException() {
         super();
@@ -38,10 +34,9 @@ public class ConnectException extends SocketException {
 
     /**
      * This implementation does nothing.
-     * 
+     *
      * @param detailMessage
      *            detail message of the exception.
-     * @since Android 1.0
      */
     public ConnectException(String detailMessage) {
         super(detailMessage);

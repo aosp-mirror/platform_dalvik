@@ -20,8 +20,6 @@ package java.net;
 /**
  * A {@code BindException} is thrown when a process cannot bind a local
  * address/port, either because it is already bound or reserved by the OS.
- * 
- * @since Android 1.0
  */
 public class BindException extends SocketException {
 
@@ -29,8 +27,6 @@ public class BindException extends SocketException {
 
     /**
      * Constructs a new instance with its walkback filled in.
-     * 
-     * @since Android 1.0
      */
     public BindException() {
         super();
@@ -41,7 +37,6 @@ public class BindException extends SocketException {
      * 
      * @param detailMessage
      *            detail message of the exception.
-     * @since Android 1.0
      */
     public BindException(String detailMessage) {
         super(detailMessage);

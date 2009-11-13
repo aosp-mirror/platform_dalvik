@@ -27,13 +27,13 @@ public enum AnnotationVisibility implements ToHuman {
     SYSTEM("system"),
     EMBEDDED("embedded");
 
-    /** non-null; the human-oriented string representation */
+    /** {@code non-null;} the human-oriented string representation */
     private final String human;
 
     /**
      * Constructs an instance.
      * 
-     * @param human non-null; the human-oriented string representation
+     * @param human {@code non-null;} the human-oriented string representation
      */
     private AnnotationVisibility(String human) {
         this.human = human;

@@ -42,6 +42,8 @@ int jniRegisterNativeMethods(C_JNIEnv* env, const char* className,
 
 /*
  * Throw an exception with the specified class and an optional message.
+ * The "className" argument will be passed directly to FindClass, which
+ * takes strings with slashes (e.g. "java/lang/Object").
  *
  * Returns 0 on success, nonzero if something failed (e.g. the exception
  * class couldn't be found).

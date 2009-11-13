@@ -21,8 +21,6 @@ package java.util;
 /**
  * An ListIterator is used to sequence over a List of objects. ListIterator can
  * move backwards or forwards through the list.
- * 
- * @since Android 1.0
  */
 public interface ListIterator<E> extends Iterator<E> {
     
@@ -38,7 +36,6 @@ public interface ListIterator<E> extends Iterator<E> {
      *             if the class of the object is inappropriate for the list.
      * @throws IllegalArgumentException
      *             if the object cannot be added to the list.
-     * @since Android 1.0
      */
     void add(E object);
 
@@ -47,7 +44,6 @@ public interface ListIterator<E> extends Iterator<E> {
      * 
      * @return {@code true} if there are more elements, {@code false} otherwise.
      * @see #next
-     * @since Android 1.0
      */
     public boolean hasNext();
 
@@ -57,7 +53,6 @@ public interface ListIterator<E> extends Iterator<E> {
      * @return {@code true} if there are previous elements, {@code false}
      *         otherwise.
      * @see #previous
-     * @since Android 1.0
      */
     public boolean hasPrevious();
 
@@ -68,7 +63,6 @@ public interface ListIterator<E> extends Iterator<E> {
      * @throws NoSuchElementException
      *             if there are no more elements.
      * @see #hasNext
-     * @since Android 1.0
      */
     public E next();
 
@@ -80,7 +74,6 @@ public interface ListIterator<E> extends Iterator<E> {
      * @throws NoSuchElementException
      *             if there are no more elements.
      * @see #next
-     * @since Android 1.0
      */
     public int nextIndex();
 
@@ -91,7 +84,6 @@ public interface ListIterator<E> extends Iterator<E> {
      * @throws NoSuchElementException
      *             if there are no previous elements.
      * @see #hasPrevious
-     * @since Android 1.0
      */
     public E previous();
 
@@ -103,7 +95,6 @@ public interface ListIterator<E> extends Iterator<E> {
      * @throws NoSuchElementException
      *             if there are no previous elements.
      * @see #previous
-     * @since Android 1.0
      */
     public int previousIndex();
 
@@ -117,7 +108,6 @@ public interface ListIterator<E> extends Iterator<E> {
      *             if {@code next} or {@code previous} have not been called, or
      *             {@code remove} or {@code add} have already been called after
      *             the last call to {@code next} or {@code previous}.
-     * @since Android 1.0
      */
     public void remove();
 
@@ -137,7 +127,6 @@ public interface ListIterator<E> extends Iterator<E> {
      *             if {@code next} or {@code previous} have not been called, or
      *             {@code remove} or {@code add} have already been called after
      *             the last call to {@code next} or {@code previous}.
-     * @since Android 1.0
      */
     void set(E object);
 }

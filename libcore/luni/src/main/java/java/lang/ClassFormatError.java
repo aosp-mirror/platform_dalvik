@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown by a class loader when a class file has an illegal format or if the
  * data that it contains can not be interpreted as a class.
- * 
- * @since Android 1.0
  */
 public class ClassFormatError extends LinkageError {
 
@@ -30,8 +28,6 @@ public class ClassFormatError extends LinkageError {
     /**
      * Constructs a new {@code ClassFormatError} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public ClassFormatError() {
         super();
@@ -40,10 +36,9 @@ public class ClassFormatError extends LinkageError {
     /**
      * Constructs a new {@code ClassFormatError} with the current stack trace
      * and the specified detail message.
-     * 
+     *
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public ClassFormatError(String detailMessage) {
         super(detailMessage);

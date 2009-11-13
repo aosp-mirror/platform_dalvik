@@ -27,48 +27,48 @@ public interface Member {
     /**
      * Get the defining class.
      *
-     * @return non-null; the defining class
+     * @return {@code non-null;} the defining class
      */
     public CstType getDefiningClass();
 
     /**
-     * Get the field <code>access_flags</code>.
+     * Get the field {@code access_flags}.
      *
      * @return the access flags
      */
     public int getAccessFlags();
 
     /**
-     * Get the field <code>name_index</code> of the member. This is
-     * just a convenient shorthand for <code>getNat().getName()</code>.
+     * Get the field {@code name_index} of the member. This is
+     * just a convenient shorthand for {@code getNat().getName()}.
      *
-     * @return non-null; the name
+     * @return {@code non-null;} the name
      */
     public CstUtf8 getName();
 
     /**
-     * Get the field <code>descriptor_index</code> of the member. This is
-     * just a convenient shorthand for <code>getNat().getDescriptor()</code>.
+     * Get the field {@code descriptor_index} of the member. This is
+     * just a convenient shorthand for {@code getNat().getDescriptor()}.
      *
-     * @return non-null; the descriptor
+     * @return {@code non-null;} the descriptor
      */
     public CstUtf8 getDescriptor();
 
     /**
      * Get the name and type associated with this member. This is a
-     * combination of the fields <code>name_index</code> and
-     * <code>descriptor_index</code> in the original classfile, interpreted
+     * combination of the fields {@code name_index} and
+     * {@code descriptor_index} in the original classfile, interpreted
      * via the constant pool.
      *
-     * @return non-null; the name and type
+     * @return {@code non-null;} the name and type
      */
     public CstNat getNat();
 
     /**
-     * Get the field <code>attributes</code> (along with
-     * <code>attributes_count</code>).
+     * Get the field {@code attributes} (along with
+     * {@code attributes_count}).
      *
-     * @return non-null; the constant pool
+     * @return {@code non-null;} the constant pool
      */
     public AttributeList getAttributes();
 }

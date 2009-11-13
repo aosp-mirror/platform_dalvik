@@ -27,7 +27,7 @@ import com.android.dx.util.Hex;
  * Parser for lists of attributes.
  */
 final /*package*/ class AttributeListParser {
-    /** non-null; the class file to parse from */
+    /** {@code non-null;} the class file to parse from */
     private final DirectClassFile cf;
 
     /** attribute parsing context */
@@ -36,26 +36,26 @@ final /*package*/ class AttributeListParser {
     /** offset in the byte array of the classfile to the start of the list */
     private final int offset;
 
-    /** non-null; attribute factory to use */
+    /** {@code non-null;} attribute factory to use */
     private final AttributeFactory attributeFactory;
 
-    /** non-null; list of parsed attributes */
+    /** {@code non-null;} list of parsed attributes */
     private final StdAttributeList list;
 
-    /** &gt;= -1; the end offset of this list in the byte array of the
-     * classfile, or <code>-1</code> if not yet parsed */
+    /** {@code >= -1;} the end offset of this list in the byte array of the
+     * classfile, or {@code -1} if not yet parsed */
     private int endOffset;
 
-    /** null-ok; parse observer, if any */
+    /** {@code null-ok;} parse observer, if any */
     private ParseObserver observer;
 
     /**
      * Constructs an instance.
      *
-     * @param cf non-null; class file to parse from
+     * @param cf {@code non-null;} class file to parse from
      * @param context attribute parsing context (see {@link AttributeFactory})
-     * @param offset offset in <code>bytes</code> to the start of the list
-     * @param attributeFactory non-null; attribute factory to use
+     * @param offset offset in {@code bytes} to the start of the list
+     * @param attributeFactory {@code non-null;} attribute factory to use
      */
     public AttributeListParser(DirectClassFile cf, int context, int offset,
                                AttributeFactory attributeFactory) {
@@ -80,17 +80,17 @@ final /*package*/ class AttributeListParser {
     /**
      * Sets the parse observer for this instance.
      *
-     * @param observer null-ok; the observer
+     * @param observer {@code null-ok;} the observer
      */
     public void setObserver(ParseObserver observer) {
         this.observer = observer;
     }
 
     /**
-     * Gets the end offset of this constant pool in the <code>byte[]</code>
+     * Gets the end offset of this constant pool in the {@code byte[]}
      * which it came from.
      *
-     * @return &gt;= 0; the end offset
+     * @return {@code >= 0;} the end offset
      */
     public int getEndOffset() {
         parseIfNecessary();
@@ -100,7 +100,7 @@ final /*package*/ class AttributeListParser {
     /**
      * Gets the parsed list.
      *
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public StdAttributeList getList() {
         parseIfNecessary();

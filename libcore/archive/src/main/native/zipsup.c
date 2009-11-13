@@ -1438,7 +1438,7 @@ retry:
                   return ZIP_ERR_FILE_CORRUPT;  /* should never happen! */
                 }
               result = zip_establishCache (portLib, zipFile);
-              if (result)
+              if (!result)
                 {
                   /* (silently start operating without a cache if we couldn't make a new one) */
                 }

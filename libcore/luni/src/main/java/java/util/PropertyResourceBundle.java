@@ -17,7 +17,6 @@
 
 package java.util;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -28,9 +27,10 @@ import java.io.InputStream;
  * 
  * @see ResourceBundle
  * @see Properties
- * @since Android 1.0
+ * @since 1.1
  */
 public class PropertyResourceBundle extends ResourceBundle {
+
     Properties resources;
 
     /**
@@ -42,18 +42,23 @@ public class PropertyResourceBundle extends ResourceBundle {
      * @throws IOException
      *             if an error occurs during a read operation on the
      *             {@code InputStream}.
-     * @since Android 1.0
      */
     public PropertyResourceBundle(InputStream stream) throws IOException {
         resources = new Properties();
         resources.load(stream);
     }
-    
+
     @SuppressWarnings("unchecked")
     private Enumeration<String> getLocalKeys() {
-        return (Enumeration<String>)resources.propertyNames();
+        return (Enumeration<String>) resources.propertyNames();
     }
 
+    /**
+     * Returns the names of the resources contained in this
+     * PropertyResourceBundle.
+     * 
+     * @return an Enumeration of the resource names
+     */
     @Override
     public Enumeration<String> getKeys() {
         if (parent == null) {
@@ -102,6 +107,14 @@ public class PropertyResourceBundle extends ResourceBundle {
         };
     }
 
+    /**
+     * Returns the named resource from this PropertyResourceBundle, or null if
+     * the resource is not found.
+     * 
+     * @param key
+     *            the name of the resource
+     * @return the resource object
+     */
     @Override
     public Object handleGetObject(String key) {
         return resources.get(key);

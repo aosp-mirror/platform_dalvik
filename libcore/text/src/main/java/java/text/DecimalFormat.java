@@ -14,24 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file.
 // The icu implementation used was changed from icu4j to icu4jni.
 // END android-note
 
 package java.text;
 
 import java.io.IOException;
-import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
@@ -41,8 +31,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Currency;
 import java.util.Locale;
-
-import org.apache.harmony.text.internal.nls.Messages;
 
 /**
  * A concrete subclass of {@link NumberFormat} that formats decimal numbers. It
@@ -56,7 +44,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <strong>This is an enhanced version of {@code DecimalFormat} that is based on
  * the standard version in the RI. New or changed functionality is labeled
  * <strong><font color="red">NEW</font></strong>.</strong>
- * </p>
  * <p>
  * To obtain a {@link NumberFormat} for a specific locale (including the default
  * locale), call one of {@code NumberFormat}'s factory methods such as
@@ -65,18 +52,18 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@link NumberFormat} factory methods may return subclasses other than
  * {@code DecimalFormat}. If you need to customize the format object, do
  * something like this: <blockquote>
- * 
+ *
  * <pre>
  * NumberFormat f = NumberFormat.getInstance(loc);
  * if (f instanceof DecimalFormat) {
  *     ((DecimalFormat)f).setDecimalSeparatorAlwaysShown(true);
  * }
  * </pre>
- * 
+ *
  * </blockquote>
  * <h5>Example:</h5>
  * <blockquote>
- * 
+ *
  * <pre>
  * // Print out a number using the localized number, currency,
  * // and percent format for each locale
@@ -115,7 +102,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  *     }
  * }
  * </pre>
- * 
+ *
  * </blockquote>
  * <h4>Patterns</h4>
  * <p>
@@ -126,7 +113,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * digits. The symbols are stored in a {@link DecimalFormatSymbols} object. When
  * using the {@link NumberFormat} factory methods, the pattern and symbols are
  * read from ICU's locale data.
- * </p>
  * <h4>Special Pattern Characters</h4>
  * <p>
  * Many characters in a pattern are taken literally; they are matched during
@@ -139,19 +125,16 @@ import org.apache.harmony.text.internal.nls.Messages;
  * character changes. Some special characters affect the behavior of the
  * formatter by their presence; for example, if the percent character is seen,
  * then the value is multiplied by 100 before being displayed.
- * </p>
  * <p>
  * To insert a special character in a pattern as a literal, that is, without any
  * special meaning, the character must be quoted. There are some exceptions to
  * this which are noted below.
- * </p>
  * <p>
  * The characters listed here are used in non-localized patterns. Localized
  * patterns use the corresponding characters taken from this formatter's
  * {@link DecimalFormatSymbols} object instead, and these characters lose their
  * special status. Two exceptions are the currency sign and quote, which are not
  * localized.
- * </p>
  * <blockquote> <table border="0" cellspacing="3" cellpadding="0" summary="Chart
  * showing symbol, location, localized, and meaning.">
  * <tr bgcolor="#ccccff">
@@ -297,7 +280,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code DecimalFormat} to throw an {@link IllegalArgumentException} with a
  * message that describes the problem.
  * <h4>Pattern BNF</h4>
- * 
+ *
  * <pre>
  * pattern    := subpattern (';' subpattern)?
  * subpattern := prefix? number exponent? suffix?
@@ -310,7 +293,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  * exponent   := 'E' '+'? '0'* '0'
  * padSpec    := '*' padChar
  * padChar    := '\\u0000'..'\\uFFFD' - quote
- *  
+ *
  * Notation:
  *   X*       0 or more instances of X
  *   X?       0 or 1 instances of X
@@ -318,7 +301,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  *   C..D     any character from C up to D, inclusive
  *   S-T      characters in S, except those in T
  * </pre>
- * 
+ *
  * The first subpattern is for positive numbers. The second (optional)
  * subpattern is for negative numbers.
  * <p>
@@ -446,7 +429,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * specified directly, and the formatter settings for these counts are ignored.
  * Instead, the formatter uses as many integer and fraction digits as required
  * to display the specified number of significant digits.
- * </p>
  * <h5>Examples:</h5>
  * <blockquote> <table border=0 cellspacing=3 cellpadding=0>
  * <tr bgcolor="#ccccff">
@@ -554,10 +536,9 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <p>
  * {@code DecimalFormat} objects are not synchronized. Multiple threads should
  * not access one formatter concurrently.
- * 
+ *
  * @see Format
  * @see NumberFormat
- * @since Android 1.0
  */
 public class DecimalFormat extends NumberFormat {
 
@@ -578,11 +559,20 @@ public class DecimalFormat extends NumberFormat {
     /**
      * Constructs a new {@code DecimalFormat} for formatting and parsing numbers
      * for the default locale.
-     * 
-     * @since Android 1.0
      */
     public DecimalFormat() {
-        this(getPattern(Locale.getDefault(), "Number")); //$NON-NLS-1$
+        Locale locale = Locale.getDefault();
+        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
+        symbols = new DecimalFormatSymbols(locale);
+        // BEGIN android-changed
+        dform = new com.ibm.icu4jni.text.DecimalFormat(
+                getPattern(Locale.getDefault(), "Number"), icuSymbols);
+        // END android-changed
+
+        super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
+        super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
+        super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
+        super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
 
     /**
@@ -591,12 +581,19 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param pattern
      *            the non-localized pattern.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public DecimalFormat(String pattern) {
-        this(pattern, new DecimalFormatSymbols());
+        Locale locale = Locale.getDefault();
+        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
+        symbols = new DecimalFormatSymbols(locale);
+        dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, icuSymbols);
+
+        super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
+        super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
+        super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
+        super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
 
     /**
@@ -607,13 +604,12 @@ public class DecimalFormat extends NumberFormat {
      *            the non-localized pattern.
      * @param value
      *            the DecimalFormatSymbols.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public DecimalFormat(String pattern, DecimalFormatSymbols value) {
         symbols = (DecimalFormatSymbols) value.clone();
-        Locale locale = (Locale) this.getInternalField("locale", symbols); //$NON-NLS-1$
+        Locale locale = symbols.getLocale();
         icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
         copySymbols(icuSymbols, symbols);
 
@@ -625,15 +621,27 @@ public class DecimalFormat extends NumberFormat {
         super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
 
+    // BEGIN android-removed
+    // DecimalFormat(String pattern, DecimalFormatSymbols value, com.ibm.icu4jni.text.DecimalFormat icuFormat) {
+    //     symbols = value;
+    //     icuSymbols = value.getIcuSymbols();
+    //     dform = icuFormat;
+    //
+    //     super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
+    //     super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
+    //     super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
+    //     super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
+    // }
+    // END android-removed
+
     /**
      * Changes the pattern of this decimal format to the specified pattern which
      * uses localized pattern characters.
      * 
      * @param pattern
      *            the localized pattern.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public void applyLocalizedPattern(String pattern) {
         dform.applyLocalizedPattern(pattern);
@@ -645,9 +653,8 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param pattern
      *            the non-localized pattern.
-     * @exception IllegalArgumentException
-     *                if the pattern cannot be parsed.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the pattern cannot be parsed.
      */
     public void applyPattern(String pattern) {
 
@@ -660,7 +667,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @return a shallow copy of this decimal format.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -680,7 +686,6 @@ public class DecimalFormat extends NumberFormat {
      * @return {@code true} if the specified object is equal to this decimal
      *         format; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -708,7 +713,6 @@ public class DecimalFormat extends NumberFormat {
      *             if {@code object} cannot be formatted by this format.
      * @throws NullPointerException
      *             if {@code object} is {@code null}.
-     * @since Android 1.0
      */
     @Override
     public AttributedCharacterIterator formatToCharacterIterator(Object object) {
@@ -726,8 +730,7 @@ public class DecimalFormat extends NumberFormat {
      * specifying a format field, then its {@code beginIndex} and
      * {@code endIndex} members will be updated with the position of the first
      * occurrence of this field in the formatted text.
-     * </p>
-     * 
+     *
      * @param value
      *            the double to format.
      * @param buffer
@@ -737,7 +740,6 @@ public class DecimalFormat extends NumberFormat {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @since Android 1.0
      */
     @Override
     public StringBuffer format(double value, StringBuffer buffer,
@@ -753,8 +755,7 @@ public class DecimalFormat extends NumberFormat {
      * specifying a format field, then its {@code beginIndex} and
      * {@code endIndex} members will be updated with the position of the first
      * occurrence of this field in the formatted text.
-     * </p>
-     * 
+     *
      * @param value
      *            the long to format.
      * @param buffer
@@ -764,7 +765,6 @@ public class DecimalFormat extends NumberFormat {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @since Android 1.0
      */
     @Override
     public StringBuffer format(long value, StringBuffer buffer,
@@ -780,8 +780,7 @@ public class DecimalFormat extends NumberFormat {
      * specifying a format field, then its {@code beginIndex} and
      * {@code endIndex} members will be updated with the position of the first
      * occurrence of this field in the formatted text.
-     * </p>
-     * 
+     *
      * @param number
      *            the object to format.
      * @param toAppendTo
@@ -794,7 +793,6 @@ public class DecimalFormat extends NumberFormat {
      *             if {@code number} is not an instance of {@code Number}.
      * @throws NullPointerException
      *             if {@code toAppendTo} or {@code pos} is {@code null}.
-     * @since Android 1.0
      */
     @Override
     public final StringBuffer format(Object number, StringBuffer toAppendTo,
@@ -816,7 +814,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @return a copy of the {@code DecimalFormatSymbols} used by this decimal
      *         format.
-     * @since Android 1.0
      */
     public DecimalFormatSymbols getDecimalFormatSymbols() {
         return (DecimalFormatSymbols) symbols.clone();
@@ -827,7 +824,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @return the currency used by this decimal format.
      * @see DecimalFormatSymbols#getCurrency()
-     * @since Android 1.0
      */
     @Override
     public Currency getCurrency() {
@@ -841,9 +837,8 @@ public class DecimalFormat extends NumberFormat {
      * Returns the number of digits grouped together by the grouping separator.
      * This only allows to get the primary grouping size. There is no API to get
      * the secondary grouping size.
-     * 
+     *
      * @return the number of digits grouped together.
-     * @since Android 1.0
      */
     public int getGroupingSize() {
         return dform.getGroupingSize();
@@ -854,7 +849,6 @@ public class DecimalFormat extends NumberFormat {
      * or after parsing.
      * 
      * @return the multiplier.
-     * @since Android 1.0
      */
     public int getMultiplier() {
         return dform.getMultiplier();
@@ -864,7 +858,6 @@ public class DecimalFormat extends NumberFormat {
      * Returns the prefix which is formatted or parsed before a negative number.
      * 
      * @return the negative prefix.
-     * @since Android 1.0
      */
     public String getNegativePrefix() {
         return dform.getNegativePrefix();
@@ -874,7 +867,6 @@ public class DecimalFormat extends NumberFormat {
      * Returns the suffix which is formatted or parsed after a negative number.
      * 
      * @return the negative suffix.
-     * @since Android 1.0
      */
     public String getNegativeSuffix() {
         return dform.getNegativeSuffix();
@@ -884,7 +876,6 @@ public class DecimalFormat extends NumberFormat {
      * Returns the prefix which is formatted or parsed before a positive number.
      * 
      * @return the positive prefix.
-     * @since Android 1.0
      */
     public String getPositivePrefix() {
         return dform.getPositivePrefix();
@@ -894,7 +885,6 @@ public class DecimalFormat extends NumberFormat {
      * Returns the suffix which is formatted or parsed after a positive number.
      * 
      * @return the positive suffix.
-     * @since Android 1.0
      */
     public String getPositiveSuffix() {
         return dform.getPositiveSuffix();
@@ -911,7 +901,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @return {@code true} if the decimal separator should always be formatted;
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isDecimalSeparatorAlwaysShown() {
         return dform.isDecimalSeparatorAlwaysShown();
@@ -924,7 +913,6 @@ public class DecimalFormat extends NumberFormat {
      * @return {@code true} if parse always returns {@code BigDecimals},
      *         {@code false} if the type of the result is {@code Long} or
      *         {@code Double}.
-     * @since Android 1.0
      */
     public boolean isParseBigDecimal() {
         return this.parseBigDecimal;
@@ -937,14 +925,18 @@ public class DecimalFormat extends NumberFormat {
      * {@code java.lang.Integer}. Special cases are NaN, positive and negative
      * infinity, which are still returned as {@code java.lang.Double}.
      * 
+     *
      * @param value
      *            {@code true} that the resulting numbers of parse operations
      *            will be of type {@code java.lang.Integer} except for the
      *            special cases described above.
-     * @since Android 1.0
      */
     @Override
     public void setParseIntegerOnly(boolean value) {
+        // In this implementation, com.ibm.icu.text.DecimalFormat is wrapped to
+        // fulfill most of the format and parse feature. And this method is
+        // delegated to the wrapped instance of com.ibm.icu.text.DecimalFormat.
+
         dform.setParseIntegerOnly(value);
     }
 
@@ -954,7 +946,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @return {@code true} if this {@code DecimalFormat}'s parse method only
      *         returns {@code java.lang.Integer}; {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isParseIntegerOnly() {
@@ -985,7 +976,6 @@ public class DecimalFormat extends NumberFormat {
      *         long, otherwise the result is a {@code Double}. If
      *         {@code isParseBigDecimal} is {@code true} then it returns the
      *         result as a {@code BigDecimal}.
-     * @since Android 1.0
      */
     @Override
     public Number parse(String string, ParsePosition position) {
@@ -1048,7 +1038,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the {@code DecimalFormatSymbols} to set.
-     * @since Android 1.0
      */
     public void setDecimalFormatSymbols(DecimalFormatSymbols value) {
         if (value != null) {
@@ -1066,7 +1055,6 @@ public class DecimalFormat extends NumberFormat {
      * @param currency
      *            the currency this {@code DecimalFormat} should use.
      * @see DecimalFormatSymbols#setCurrency(Currency)
-     * @since Android 1.0
      */
     @Override
     public void setCurrency(Currency currency) {
@@ -1084,7 +1072,6 @@ public class DecimalFormat extends NumberFormat {
      * @param value
      *            {@code true} if the decimal separator should always be
      *            formatted; {@code false} otherwise.
-     * @since Android 1.0
      */
     public void setDecimalSeparatorAlwaysShown(boolean value) {
         dform.setDecimalSeparatorAlwaysShown(value);
@@ -1094,10 +1081,9 @@ public class DecimalFormat extends NumberFormat {
      * Sets the number of digits grouped together by the grouping separator.
      * This only allows to set the primary grouping size; the secondary grouping
      * size can only be set with a pattern.
-     * 
+     *
      * @param value
      *            the number of digits grouped together.
-     * @since Android 1.0
      */
     public void setGroupingSize(int value) {
         dform.setGroupingSize(value);
@@ -1109,7 +1095,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            {@code true} if grouping is used; {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public void setGroupingUsed(boolean value) {
@@ -1120,7 +1105,6 @@ public class DecimalFormat extends NumberFormat {
      * Indicates whether grouping will be used in this format.
      * 
      * @return {@code true} if grouping is used; {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isGroupingUsed() {
@@ -1137,7 +1121,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the maximum number of fraction digits.
-     * @since Android 1.0
      */
     @Override
     public void setMaximumFractionDigits(int value) {
@@ -1155,7 +1138,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the maximum number of integer digits.
-     * @since Android 1.0
      */
     @Override
     public void setMaximumIntegerDigits(int value) {
@@ -1171,7 +1153,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the minimum number of fraction digits.
-     * @since Android 1.0
      */
     @Override
     public void setMinimumFractionDigits(int value) {
@@ -1187,7 +1168,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the minimum number of integer digits.
-     * @since Android 1.0
      */
     @Override
     public void setMinimumIntegerDigits(int value) {
@@ -1201,7 +1181,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the multiplier.
-     * @since Android 1.0
      */
     public void setMultiplier(int value) {
         dform.setMultiplier(value);
@@ -1212,7 +1191,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the negative prefix.
-     * @since Android 1.0
      */
     public void setNegativePrefix(String value) {
         dform.setNegativePrefix(value);
@@ -1223,7 +1201,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the negative suffix.
-     * @since Android 1.0
      */
     public void setNegativeSuffix(String value) {
         dform.setNegativeSuffix(value);
@@ -1234,7 +1211,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the positive prefix.
-     * @since Android 1.0
      */
     public void setPositivePrefix(String value) {
         dform.setPositivePrefix(value);
@@ -1245,7 +1221,6 @@ public class DecimalFormat extends NumberFormat {
      * 
      * @param value
      *            the positive suffix.
-     * @since Android 1.0
      */
     public void setPositiveSuffix(String value) {
         dform.setPositiveSuffix(value);
@@ -1258,7 +1233,6 @@ public class DecimalFormat extends NumberFormat {
      * @param newValue
      *            {@code true} if all the returned objects should be of type
      *            {@code BigDecimal}; {@code false} otherwise.
-     * @since Android 1.0
      */
     public void setParseBigDecimal(boolean newValue) {
         this.parseBigDecimal = newValue;
@@ -1269,7 +1243,6 @@ public class DecimalFormat extends NumberFormat {
      * characters.
      * 
      * @return the localized pattern.
-     * @since Android 1.0
      */
     public String toLocalizedPattern() {
         return dform.toLocalizedPattern();
@@ -1280,7 +1253,6 @@ public class DecimalFormat extends NumberFormat {
      * characters.
      * 
      * @return the non-localized pattern.
-     * @since Android 1.0
      */
     public String toPattern() {
         return dform.toPattern();
@@ -1322,47 +1294,47 @@ public class DecimalFormat extends NumberFormat {
      *             if some I/O error occurs
      * @throws ClassNotFoundException
      */
+    @SuppressWarnings("nls")
     private void writeObject(ObjectOutputStream stream) throws IOException,
             ClassNotFoundException {
         ObjectOutputStream.PutField fields = stream.putFields();
-        fields.put("positivePrefix", dform.getPositivePrefix()); //$NON-NLS-1$
-        fields.put("positiveSuffix", dform.getPositiveSuffix()); //$NON-NLS-1$
-        fields.put("negativePrefix", dform.getNegativePrefix()); //$NON-NLS-1$
-        fields.put("negativeSuffix", dform.getNegativeSuffix()); //$NON-NLS-1$
-        String posPrefixPattern = (String) this.getInternalField(
-                "posPrefixPattern", dform); //$NON-NLS-1$
-        fields.put("posPrefixPattern", posPrefixPattern); //$NON-NLS-1$
-        String posSuffixPattern = (String) this.getInternalField(
-                "posSuffixPattern", dform); //$NON-NLS-1$
-        fields.put("posSuffixPattern", posSuffixPattern); //$NON-NLS-1$
-        String negPrefixPattern = (String) this.getInternalField(
-                "negPrefixPattern", dform); //$NON-NLS-1$
-        fields.put("negPrefixPattern", negPrefixPattern); //$NON-NLS-1$
-        String negSuffixPattern = (String) this.getInternalField(
-                "negSuffixPattern", dform); //$NON-NLS-1$
-        fields.put("negSuffixPattern", negSuffixPattern); //$NON-NLS-1$
-        fields.put("multiplier", dform.getMultiplier()); //$NON-NLS-1$
-        fields.put("groupingSize", (byte) dform.getGroupingSize()); //$NON-NLS-1$
+        fields.put("positivePrefix", dform.getPositivePrefix());
+        fields.put("positiveSuffix", dform.getPositiveSuffix());
+        fields.put("negativePrefix", dform.getNegativePrefix());
+        fields.put("negativeSuffix", dform.getNegativeSuffix());
+        String posPrefixPattern = (String) Format.getInternalField(
+                "posPrefixPattern", dform);
+        fields.put("posPrefixPattern", posPrefixPattern);
+        String posSuffixPattern = (String) Format.getInternalField(
+                "posSuffixPattern", dform);
+        fields.put("posSuffixPattern", posSuffixPattern);
+        String negPrefixPattern = (String) Format.getInternalField(
+                "negPrefixPattern", dform);
+        fields.put("negPrefixPattern", negPrefixPattern);
+        String negSuffixPattern = (String) Format.getInternalField(
+                "negSuffixPattern", dform);
+        fields.put("negSuffixPattern", negSuffixPattern);
+        fields.put("multiplier", dform.getMultiplier());
+        fields.put("groupingSize", (byte) dform.getGroupingSize());
         // BEGIN android-added
-        fields.put("groupingUsed", dform.isGroupingUsed()); //$NON-NLS-1$
+        fields.put("groupingUsed", dform.isGroupingUsed());
         // END android-added
-        fields.put("decimalSeparatorAlwaysShown", dform //$NON-NLS-1$
+        fields.put("decimalSeparatorAlwaysShown", dform
                 .isDecimalSeparatorAlwaysShown());
-        fields.put("parseBigDecimal", parseBigDecimal); //$NON-NLS-1$
-        fields.put("symbols", symbols); //$NON-NLS-1$
-        boolean useExponentialNotation = ((Boolean) this.getInternalField(
-                "useExponentialNotation", dform)).booleanValue(); //$NON-NLS-1$
-        fields.put("useExponentialNotation", useExponentialNotation); //$NON-NLS-1$
-        byte minExponentDigits = ((Byte) this.getInternalField(
-                "minExponentDigits", dform)).byteValue(); //$NON-NLS-1$
-        fields.put("minExponentDigits", minExponentDigits); //$NON-NLS-1$
-        fields.put("maximumIntegerDigits", dform.getMaximumIntegerDigits()); //$NON-NLS-1$
-        fields.put("minimumIntegerDigits", dform.getMinimumIntegerDigits()); //$NON-NLS-1$
-        fields.put("maximumFractionDigits", dform.getMaximumFractionDigits()); //$NON-NLS-1$
-        fields.put("minimumFractionDigits", dform.getMinimumFractionDigits()); //$NON-NLS-1$
-        fields.put("serialVersionOnStream", CURRENT_SERIAL_VERTION); //$NON-NLS-1$
+        fields.put("parseBigDecimal", parseBigDecimal);
+        fields.put("symbols", symbols);
+        boolean useExponentialNotation = ((Boolean) Format.getInternalField(
+                "useExponentialNotation", dform)).booleanValue();
+        fields.put("useExponentialNotation", useExponentialNotation);
+        byte minExponentDigits = ((Byte) Format.getInternalField(
+                "minExponentDigits", dform)).byteValue();
+        fields.put("minExponentDigits", minExponentDigits);
+        fields.put("maximumIntegerDigits", dform.getMaximumIntegerDigits());
+        fields.put("minimumIntegerDigits", dform.getMinimumIntegerDigits());
+        fields.put("maximumFractionDigits", dform.getMaximumFractionDigits());
+        fields.put("minimumFractionDigits", dform.getMinimumFractionDigits());
+        fields.put("serialVersionOnStream", CURRENT_SERIAL_VERTION);
         stream.writeFields();
-
     }
 
     /**
@@ -1376,41 +1348,42 @@ public class DecimalFormat extends NumberFormat {
      * @throws ClassNotFoundException
      *             if some class of serialized objects or fields cannot be found
      */
+    @SuppressWarnings("nls")
     private void readObject(ObjectInputStream stream) throws IOException,
             ClassNotFoundException {
 
         ObjectInputStream.GetField fields = stream.readFields();
-        String positivePrefix = (String) fields.get("positivePrefix", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        String positiveSuffix = (String) fields.get("positiveSuffix", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        String negativePrefix = (String) fields.get("negativePrefix", "-"); //$NON-NLS-1$ //$NON-NLS-2$
-        String negativeSuffix = (String) fields.get("negativeSuffix", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        String positivePrefix = (String) fields.get("positivePrefix", "");
+        String positiveSuffix = (String) fields.get("positiveSuffix", "");
+        String negativePrefix = (String) fields.get("negativePrefix", "-");
+        String negativeSuffix = (String) fields.get("negativeSuffix", "");
 
-        String posPrefixPattern = (String) fields.get("posPrefixPattern", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        String posSuffixPattern = (String) fields.get("posSuffixPattern", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        String negPrefixPattern = (String) fields.get("negPrefixPattern", "-"); //$NON-NLS-1$ //$NON-NLS-2$
-        String negSuffixPattern = (String) fields.get("negSuffixPattern", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        String posPrefixPattern = (String) fields.get("posPrefixPattern", "");
+        String posSuffixPattern = (String) fields.get("posSuffixPattern", "");
+        String negPrefixPattern = (String) fields.get("negPrefixPattern", "-");
+        String negSuffixPattern = (String) fields.get("negSuffixPattern", "");
 
-        int multiplier = fields.get("multiplier", 1); //$NON-NLS-1$
-        byte groupingSize = fields.get("groupingSize", (byte) 3); //$NON-NLS-1$
+        int multiplier = fields.get("multiplier", 1);
+        byte groupingSize = fields.get("groupingSize", (byte) 3);
         // BEGIN android-added
-        boolean groupingUsed = fields.get("groupingUsed", true); //$NON-NLS-1$
+        boolean groupingUsed = fields.get("groupingUsed", true);
         // END android-added
         boolean decimalSeparatorAlwaysShown = fields.get(
-                "decimalSeparatorAlwaysShown", false); //$NON-NLS-1$
-        boolean parseBigDecimal = fields.get("parseBigDecimal", false); //$NON-NLS-1$
-        symbols = (DecimalFormatSymbols) fields.get("symbols", null); //$NON-NLS-1$
+                "decimalSeparatorAlwaysShown", false);
+        boolean parseBigDecimal = fields.get("parseBigDecimal", false);
+        symbols = (DecimalFormatSymbols) fields.get("symbols", null);
 
-        boolean useExponentialNotation = fields.get("useExponentialNotation", //$NON-NLS-1$
+        boolean useExponentialNotation = fields.get("useExponentialNotation",
                 false);
-        byte minExponentDigits = fields.get("minExponentDigits", (byte) 0); //$NON-NLS-1$
+        byte minExponentDigits = fields.get("minExponentDigits", (byte) 0);
 
-        int maximumIntegerDigits = fields.get("maximumIntegerDigits", 309); //$NON-NLS-1$
-        int minimumIntegerDigits = fields.get("minimumIntegerDigits", 309); //$NON-NLS-1$
-        int maximumFractionDigits = fields.get("maximumFractionDigits", 340); //$NON-NLS-1$
-        int minimumFractionDigits = fields.get("minimumFractionDigits", 340); //$NON-NLS-1$
-        this.serialVersionOnStream = fields.get("serialVersionOnStream", 0); //$NON-NLS-1$
+        int maximumIntegerDigits = fields.get("maximumIntegerDigits", 309);
+        int minimumIntegerDigits = fields.get("minimumIntegerDigits", 309);
+        int maximumFractionDigits = fields.get("maximumFractionDigits", 340);
+        int minimumFractionDigits = fields.get("minimumFractionDigits", 340);
+        this.serialVersionOnStream = fields.get("serialVersionOnStream", 0);
 
-        Locale locale = (Locale) getInternalField("locale", symbols); //$NON-NLS-1$
+        Locale locale = (Locale) Format.getInternalField("locale", symbols);
         // BEGIN android-removed
         // dform = new com.ibm.icu4jni.text.DecimalFormat("", //$NON-NLS-1$
         //         new com.ibm.icu4jni.text.DecimalFormatSymbols(locale));
@@ -1421,18 +1394,18 @@ public class DecimalFormat extends NumberFormat {
         dform = new com.ibm.icu4jni.text.DecimalFormat("", //$NON-NLS-1$
                 icuSymbols);
         // END android-added
-        setInternalField("useExponentialNotation", dform, new Boolean( //$NON-NLS-1$
-                useExponentialNotation));
-        setInternalField("minExponentDigits", dform, //$NON-NLS-1$
+        setInternalField("useExponentialNotation", dform, Boolean
+                .valueOf(useExponentialNotation));
+        setInternalField("minExponentDigits", dform,
                 new Byte(minExponentDigits));
         dform.setPositivePrefix(positivePrefix);
         dform.setPositiveSuffix(positiveSuffix);
         dform.setNegativePrefix(negativePrefix);
         dform.setNegativeSuffix(negativeSuffix);
-        setInternalField("posPrefixPattern", dform, posPrefixPattern); //$NON-NLS-1$
-        setInternalField("posSuffixPattern", dform, posSuffixPattern); //$NON-NLS-1$
-        setInternalField("negPrefixPattern", dform, negPrefixPattern); //$NON-NLS-1$
-        setInternalField("negSuffixPattern", dform, negSuffixPattern); //$NON-NLS-1$
+        setInternalField("posPrefixPattern", dform, posPrefixPattern);
+        setInternalField("posSuffixPattern", dform, posSuffixPattern);
+        setInternalField("negPrefixPattern", dform, negPrefixPattern);
+        setInternalField("negSuffixPattern", dform, negSuffixPattern);
         dform.setMultiplier(multiplier);
         dform.setGroupingSize(groupingSize);
         // BEGIN android-added
@@ -1445,21 +1418,14 @@ public class DecimalFormat extends NumberFormat {
         dform.setMaximumFractionDigits(maximumFractionDigits);
         this.setParseBigDecimal(parseBigDecimal);
 
-        if (super.getMaximumIntegerDigits() > Integer.MAX_VALUE
-                || super.getMinimumIntegerDigits() > Integer.MAX_VALUE
-                || super.getMaximumFractionDigits() > Integer.MAX_VALUE
-                || super.getMinimumIntegerDigits() > Integer.MAX_VALUE) {
-            // text.09=The deserialized date is invalid
-            throw new InvalidObjectException(Messages.getString("text.09")); //$NON-NLS-1$
-        }
         if (serialVersionOnStream < 3) {
-            setMaximumIntegerDigits(super.getMinimumIntegerDigits());
+            setMaximumIntegerDigits(super.getMaximumIntegerDigits());
             setMinimumIntegerDigits(super.getMinimumIntegerDigits());
             setMaximumFractionDigits(super.getMaximumFractionDigits());
             setMinimumFractionDigits(super.getMinimumFractionDigits());
         }
         if (serialVersionOnStream < 1) {
-            this.setInternalField("useExponentialNotation", dform, //$NON-NLS-1$
+            this.setInternalField("useExponentialNotation", dform,
                     Boolean.FALSE);
         }
         serialVersionOnStream = 3;
@@ -1473,10 +1439,16 @@ public class DecimalFormat extends NumberFormat {
      */
     private void copySymbols(final com.ibm.icu4jni.text.DecimalFormatSymbols icu,
             final DecimalFormatSymbols dfs) {
+        Currency currency = dfs.getCurrency();
         // BEGIN android-changed
-        icu.setCurrency(Currency.getInstance(dfs.getCurrency()
-                .getCurrencyCode()));
+        if (currency == null) {
+            icu.setCurrency(Currency.getInstance("XXX")); //$NON-NLS-1$
+        } else {
+            icu.setCurrency(Currency.getInstance(dfs.getCurrency()
+                    .getCurrencyCode()));
+        }
         // END android-changed
+       
         icu.setCurrencySymbol(dfs.getCurrencySymbol());
         icu.setDecimalSeparator(dfs.getDecimalSeparator());
         icu.setDigit(dfs.getDigit());
@@ -1518,31 +1490,4 @@ public class DecimalFormat extends NumberFormat {
                     }
                 });
     }
-
-    /*
-     * Gets private field value by reflection.
-     * 
-     * @param fieldName the field name to be set @param target the object which
-     * field to be gotten
-     */
-    private Object getInternalField(final String fieldName, final Object target) {
-        Object value = AccessController
-                .doPrivileged(new PrivilegedAction<Object>() {
-                    public Object run() {
-                        Object result = null;
-                        java.lang.reflect.Field field = null;
-                        try {
-                            field = target.getClass().getDeclaredField(
-                                    fieldName);
-                            field.setAccessible(true);
-                            result = field.get(target);
-                        } catch (Exception e1) {
-                            return null;
-                        }
-                        return result;
-                    }
-                });
-        return value;
-    }
-
 }

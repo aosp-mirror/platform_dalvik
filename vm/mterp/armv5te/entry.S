@@ -66,10 +66,21 @@ dvmMterpStdRun:
     cmp     r1, #kInterpEntryInstr      @ usual case?
     bne     .Lnot_instr                 @ no, handle it
 
+#if defined(WITH_JIT)
+.Lno_singleStep:
+    /* Entry is always a possible trace start */
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_INST()
+    cmp    r0,#0
+    bne    common_updateProfile
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+#else
     /* start executing the instruction at rPC */
     FETCH_INST()                        @ load rINST from rPC
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 .Lnot_instr:
     cmp     r1, #kInterpEntryReturn     @ were we returning from a method?
@@ -78,6 +89,22 @@ dvmMterpStdRun:
 .Lnot_return:
     cmp     r1, #kInterpEntryThrow      @ were we throwing an exception?
     beq     common_exceptionThrown
+
+#if defined(WITH_JIT)
+.Lnot_throw:
+    ldr     r0,[rGLUE, #offGlue_jitResume]
+    ldr     r2,[rGLUE, #offGlue_jitResumePC]
+    cmp     r1, #kInterpEntryResume     @ resuming after Jit single-step?
+    bne     .Lbad_arg
+    cmp     rPC,r2
+    bne     .Lno_singleStep             @ must have branched, don't resume
+    mov     r1, #kInterpEntryInstr
+    strb    r1, [rGLUE, #offGlue_entryPoint]
+    ldr     rINST, .LdvmCompilerTemplate
+    bx      r0                          @ re-enter the translation
+.LdvmCompilerTemplate:
+    .word   dvmCompilerTemplateStart
+#endif
 
 .Lbad_arg:
     ldr     r0, strBadEntryPoint

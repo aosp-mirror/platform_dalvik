@@ -31,11 +31,9 @@ import org.apache.harmony.nio.FileChannelFactory;
  * Since this may induce some performance penalty, in particular if many small
  * read requests are made, a FileInputStream is often wrapped by a
  * BufferedInputStream.
- * 
+ *
  * @see BufferedInputStream
  * @see FileOutputStream
- * 
- * @since Android 1.0
  */
 public class FileInputStream extends InputStream implements Closeable {
     /**
@@ -58,7 +56,7 @@ public class FileInputStream extends InputStream implements Closeable {
 
     /**
      * Constructs a new {@code FileInputStream} based on {@code file}.
-     * 
+     *
      * @param file
      *            the file from which this stream reads.
      * @throws FileNotFoundException
@@ -66,7 +64,6 @@ public class FileInputStream extends InputStream implements Closeable {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             read request.
-     * @since Android 1.0
      */
     public FileInputStream(File file) throws FileNotFoundException {
         super();
@@ -90,7 +87,7 @@ public class FileInputStream extends InputStream implements Closeable {
      * Constructs a new {@code FileInputStream} on the {@link FileDescriptor}
      * {@code fd}. The file must already be open, therefore no
      * {@code FileNotFoundException} will be thrown.
-     * 
+     *
      * @param fd
      *            the FileDescriptor from which this stream reads.
      * @throws NullPointerException
@@ -98,7 +95,6 @@ public class FileInputStream extends InputStream implements Closeable {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             read request.
-     * @since Android 1.0
      */
     public FileInputStream(FileDescriptor fd) {
         super();
@@ -121,7 +117,7 @@ public class FileInputStream extends InputStream implements Closeable {
      * Constructs a new {@code FileInputStream} on the file named
      * {@code fileName}. The path of {@code fileName} may be absolute or
      * relative to the system property {@code "user.dir"}.
-     * 
+     *
      * @param fileName
      *            the path and name of the file from which this stream reads.
      * @throws FileNotFoundException
@@ -129,7 +125,6 @@ public class FileInputStream extends InputStream implements Closeable {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             read request.
-     * @since Android 1.0
      */
     public FileInputStream(String fileName) throws FileNotFoundException {
         this(null == fileName ? (File) null : new File(fileName));
@@ -139,11 +134,10 @@ public class FileInputStream extends InputStream implements Closeable {
      * Returns the number of bytes that are available before this stream will
      * block. This method always returns the size of the file minus the current
      * position.
-     * 
+     *
      * @return the number of bytes available before blocking.
      * @throws IOException
      *             if an error occurs in this stream.
-     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -157,7 +151,7 @@ public class FileInputStream extends InputStream implements Closeable {
         // use.
 
         return fileSystem.ioctlAvailable(fd.descriptor);
-        // END android-added 
+        // END android-added
 
         // BEGIN android-deleted
         // synchronized (repositioningLock) {
@@ -179,10 +173,9 @@ public class FileInputStream extends InputStream implements Closeable {
 
     /**
      * Closes this stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs attempting to close this stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -203,10 +196,9 @@ public class FileInputStream extends InputStream implements Closeable {
     /**
      * Ensures that all resources for this stream are released when it is about
      * to be garbage collected.
-     * 
+     *
      * @throws IOException
      *             if an error occurs attempting to finalize this stream.
-     * @since Android 1.0
      */
     @Override
     protected void finalize() throws IOException {
@@ -220,10 +212,8 @@ public class FileInputStream extends InputStream implements Closeable {
      * that is the same as the current position of this stream within the file.
      * All changes made to the underlying file descriptor state via the channel
      * are visible by the input stream and vice versa.
-     * </p>
-     * 
+     *
      * @return the file channel for this stream.
-     * @since Android 1.0
      */
     public FileChannel getChannel() {
         // BEGIN android-changed
@@ -240,12 +230,11 @@ public class FileInputStream extends InputStream implements Closeable {
     /**
      * Returns the {@link FileDescriptor} representing the operating system
      * resource for this stream.
-     * 
+     *
      * @return the {@code FileDescriptor} for this stream.
      * @throws IOException
      *             if an error occurs while getting this stream's
      *             {@code FileDescriptor}.
-     * @since Android 1.0
      */
     public final FileDescriptor getFD() throws IOException {
         return fd;
@@ -255,11 +244,10 @@ public class FileInputStream extends InputStream implements Closeable {
      * Reads a single byte from this stream and returns it as an integer in the
      * range from 0 to 255. Returns -1 if the end of this stream has been
      * reached.
-     * 
+     *
      * @return the byte read or -1 if the end of this stream has been reached.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -271,14 +259,13 @@ public class FileInputStream extends InputStream implements Closeable {
     /**
      * Reads bytes from this stream and stores them in the byte array
      * {@code buffer}.
-     * 
+     *
      * @param buffer
      *            the byte array in which to store the bytes read.
      * @return the number of bytes actually read or -1 if the end of the stream
      *         has been reached.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer) throws IOException {
@@ -288,7 +275,7 @@ public class FileInputStream extends InputStream implements Closeable {
     /**
      * Reads at most {@code count} bytes from this stream and stores them in the
      * byte array {@code buffer} starting at {@code offset}.
-     * 
+     *
      * @param buffer
      *            the byte array in which to store the bytes read.
      * @param offset
@@ -304,7 +291,6 @@ public class FileInputStream extends InputStream implements Closeable {
      *             {@code buffer}.
      * @throws IOException
      *             if the stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer, int offset, int count) throws IOException {
@@ -338,14 +324,13 @@ public class FileInputStream extends InputStream implements Closeable {
      * Skips {@code count} number of bytes in this stream. Subsequent
      * {@code read()}'s will not return these bytes unless {@code reset()} is
      * used. This method may perform multiple reads to read {@code count} bytes.
-     * 
+     *
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
      * @throws IOException
      *             if {@code count < 0}, this stream is closed or another
      *             IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public long skip(long count) throws IOException {

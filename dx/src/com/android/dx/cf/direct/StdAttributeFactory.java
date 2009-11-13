@@ -65,7 +65,7 @@ import java.io.IOException;
  */
 public class StdAttributeFactory
     extends AttributeFactory {
-    /** non-null; shared instance of this class */
+    /** {@code non-null;} shared instance of this class */
     public static final StdAttributeFactory THE_ONE =
         new StdAttributeFactory();
 
@@ -191,7 +191,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses an <code>AnnotationDefault</code> attribute.
+     * Parses an {@code AnnotationDefault} attribute.
      */
     private Attribute annotationDefault(DirectClassFile cf,
             int offset, int length, ParseObserver observer) {
@@ -207,7 +207,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>Code</code> attribute.
+     * Parses a {@code Code} attribute.
      */
     private Attribute code(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -311,7 +311,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>ConstantValue</code> attribute.
+     * Parses a {@code ConstantValue} attribute.
      */
     private Attribute constantValue(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -333,7 +333,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>Deprecated</code> attribute.
+     * Parses a {@code Deprecated} attribute.
      */
     private Attribute deprecated(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -345,7 +345,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses an <code>EnclosingMethod</code> attribute.
+     * Parses an {@code EnclosingMethod} attribute.
      */
     private Attribute enclosingMethod(DirectClassFile cf, int offset,
             int length, ParseObserver observer) {
@@ -374,7 +374,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses an <code>Exceptions</code> attribute.
+     * Parses an {@code Exceptions} attribute.
      */
     private Attribute exceptions(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -402,7 +402,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses an <code>InnerClasses</code> attribute.
+     * Parses an {@code InnerClasses} attribute.
      */
     private Attribute innerClasses(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -459,7 +459,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>LineNumberTable</code> attribute.
+     * Parses a {@code LineNumberTable} attribute.
      */
     private Attribute lineNumberTable(DirectClassFile cf, int offset,
             int length, ParseObserver observer) {
@@ -500,7 +500,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>LocalVariableTable</code> attribute.
+     * Parses a {@code LocalVariableTable} attribute.
      */
     private Attribute localVariableTable(DirectClassFile cf, int offset,
             int length, ParseObserver observer) {
@@ -523,7 +523,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>LocalVariableTypeTable</code> attribute.
+     * Parses a {@code LocalVariableTypeTable} attribute.
      */
     private Attribute localVariableTypeTable(DirectClassFile cf, int offset,
             int length, ParseObserver observer) {
@@ -546,15 +546,15 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parse the table part of either a <code>LocalVariableTable</code>
-     * or a <code>LocalVariableTypeTable</code>.
+     * Parse the table part of either a {@code LocalVariableTable}
+     * or a {@code LocalVariableTypeTable}.
      * 
-     * @param bytes non-null; bytes to parse, which should <i>only</i>
+     * @param bytes {@code non-null;} bytes to parse, which should <i>only</i>
      * contain the table data (no header)
-     * @param pool non-null; constant pool to use
-     * @param count &gt;= 0; the number of entries
-     * @param typeTable <code>true</code> iff this is for a type table
-     * @return non-null; the constructed list
+     * @param pool {@code non-null;} constant pool to use
+     * @param count {@code >= 0;} the number of entries
+     * @param typeTable {@code true} iff this is for a type table
+     * @return {@code non-null;} the constructed list
      */
     private LocalVariableList parseLocalVariables(ByteArray bytes,
             ConstantPool pool, ParseObserver observer, int count,
@@ -604,7 +604,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>RuntimeInvisibleAnnotations</code> attribute.
+     * Parses a {@code RuntimeInvisibleAnnotations} attribute.
      */
     private Attribute runtimeInvisibleAnnotations(DirectClassFile cf,
             int offset, int length, ParseObserver observer) {
@@ -621,7 +621,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>RuntimeVisibleAnnotations</code> attribute.
+     * Parses a {@code RuntimeVisibleAnnotations} attribute.
      */
     private Attribute runtimeVisibleAnnotations(DirectClassFile cf,
             int offset, int length, ParseObserver observer) {
@@ -638,7 +638,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>RuntimeInvisibleParameterAnnotations</code> attribute.
+     * Parses a {@code RuntimeInvisibleParameterAnnotations} attribute.
      */
     private Attribute runtimeInvisibleParameterAnnotations(DirectClassFile cf,
             int offset, int length, ParseObserver observer) {
@@ -655,7 +655,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>RuntimeVisibleParameterAnnotations</code> attribute.
+     * Parses a {@code RuntimeVisibleParameterAnnotations} attribute.
      */
     private Attribute runtimeVisibleParameterAnnotations(DirectClassFile cf,
             int offset, int length, ParseObserver observer) {
@@ -672,7 +672,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>Signature</code> attribute.
+     * Parses a {@code Signature} attribute.
      */
     private Attribute signature(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -694,7 +694,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>SourceFile</code> attribute.
+     * Parses a {@code SourceFile} attribute.
      */
     private Attribute sourceFile(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -716,7 +716,7 @@ public class StdAttributeFactory
     }
 
     /**
-     * Parses a <code>Synthetic</code> attribute.
+     * Parses a {@code Synthetic} attribute.
      */
     private Attribute synthetic(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {

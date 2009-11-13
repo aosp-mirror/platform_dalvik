@@ -23,16 +23,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * File header section of a <code>.dex</code> file.
+ * File header section of a {@code .dex} file.
  */
 public final class HeaderSection extends UniformItemSection {
-    /** non-null; the list of the one item in the section */
+    /** {@code non-null;} the list of the one item in the section */
     private final List<HeaderItem> list;
     
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param file non-null; file that this instance is part of
+     * @param file {@code non-null;} file that this instance is part of
      */
     public HeaderSection(DexFile file) {
         super(null, file, 4);

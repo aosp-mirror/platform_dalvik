@@ -30,16 +30,15 @@ import java.io.Serializable;
  * <p>
  * <b>Note: This class intentionally violates the general contract of {@code
  * Map}'s on comparing objects by their {@code equals} method.</b>
- * </p>
  * <p>
  * IdentityHashMap uses open addressing (linear probing in particular) for
  * collision resolution. This is different from HashMap which uses Chaining.
- * </p>
+ * <p>
  * Like HashMap, IdentityHashMap is not thread safe, so access by multiple
  * threads must be synchronized by an external mechanism such as
  * Collections.synchronizedMap.
  * 
- * @since Android 1.0
+ * @since 1.4
  */
 public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
         Map<K, V>, Serializable, Cloneable {
@@ -239,8 +238,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
 
     /**
      * Creates an IdentityHashMap with default expected maximum size.
-     * 
-     * @since Android 1.0
      */
     public IdentityHashMap() {
         this(DEFAULT_MAX_SIZE);
@@ -252,7 +249,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * @param maxSize
      *            The estimated maximum number of entries that will be put in
      *            this map.
-     * @since Android 1.0
      */
     public IdentityHashMap(int maxSize) {
         if (maxSize >= 0) {
@@ -271,9 +267,19 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
     }
 
     private int computeElementArraySize() {
-        return (int) (((long) threshold * 10000) / loadFactor) * 2;
+        int arraySize = (int) (((long) threshold * 10000) / loadFactor) * 2;
+        // ensure arraySize is positive, the above cast from long to int type
+        // leads to overflow and negative arraySize if threshold is too big
+        return arraySize < 0 ? -arraySize : arraySize;
     }
 
+    /**
+     * Create a new element array
+     * 
+     * @param s
+     *            the number of elements
+     * @return Reference to the element array
+     */
     private Object[] newElementArray(int s) {
         return new Object[s];
     }
@@ -283,7 +289,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * 
      * @param map
      *            A map of (key,value) pairs to copy into the IdentityHashMap.
-     * @since Android 1.0
      */
     public IdentityHashMap(Map<? extends K, ? extends V> map) {
         this(map.size() < 6 ? 11 : map.size() * 2);
@@ -300,7 +305,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * 
      * @see #isEmpty()
      * @see #size()
-     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -318,7 +322,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      *            the key to search for.
      * @return {@code true} if this map contains the specified key,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean containsKey(Object key) {
@@ -337,7 +340,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      *            the value to search for.
      * @return {@code true} if this map contains the specified value,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean containsValue(Object value) {
@@ -359,7 +361,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * @param key
      *            the key.
      * @return the value of the mapping with the specified key.
-     * @since Android 1.0
      */
     @Override
     public V get(Object key) {
@@ -390,6 +391,10 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
         return null;
     }
 
+    /**
+     * Convenience method for getting the IdentityHashMapEntry without the
+     * NULL_OBJECT elements
+     */
     @SuppressWarnings("unchecked")
     private IdentityHashMapEntry<K, V> getEntry(int index) {
         Object key = elementData[index];
@@ -405,6 +410,10 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
         return new IdentityHashMapEntry<K, V>((K) key, (V) value);
     }
 
+    /**
+     * Returns the index where the key is found at, or the index of the next
+     * empty spot if the key is not found in this table.
+     */
     private int findIndex(Object key, Object[] array) {
         int length = array.length;
         int index = getModuloHash(key, length);
@@ -435,7 +444,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      *            the value.
      * @return the value of any previous mapping with the specified key or
      *         {@code null} if there was no such mapping.
-     * @since Android 1.0
      */
     @Override
     public V put(K key, V value) {
@@ -478,7 +486,8 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * 
      * @param map
      *            the map to copy mappings from.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code map} is {@code null}.
      */
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
@@ -515,7 +524,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      *            the key of the mapping to remove.
      * @return the value of the removed mapping, or {@code null} if no mapping
      *         for the specified key was found.
-     * @since Android 1.0
      */
     @Override
     public V remove(Object key) {
@@ -575,7 +583,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * changes in one will be reflected in the other.
      * 
      * @return a set of the mappings.
-     * @since Android 1.0
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
@@ -588,7 +595,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * support adding.
      * 
      * @return a set of the keys.
-     * @since Android 1.0
      */
     @Override
     public Set<K> keySet() {
@@ -643,16 +649,13 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * "wrapper object" over the iterator of map's entrySet(). The {@code size}
      * method wraps the map's size method and the {@code contains} method wraps
      * the map's containsValue method.
-     * </p>
      * <p>
      * The collection is created when this method is called for the first time
      * and returned in response to all subsequent calls. This method may return
      * different collections when multiple concurrent calls occur, since no
      * synchronization is performed.
-     * </p>
      * 
      * @return a collection of the values contained in this map.
-     * @since Android 1.0
      */
     @Override
     public Collection<V> values() {
@@ -710,7 +713,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * @param object
      *            the object to compare to.
      * @return whether the argument object is equal to this object.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -745,12 +747,16 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * 
      * @return a shallow copy of this IdentityHashMap.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
         try {
-            return super.clone();
+            IdentityHashMap<K, V> cloneHashMap = (IdentityHashMap<K, V>) super
+                    .clone();
+            cloneHashMap.elementData = newElementArray(elementData.length);
+            System.arraycopy(elementData, 0, cloneHashMap.elementData, 0,
+                    elementData.length);
+            return cloneHashMap;
         } catch (CloneNotSupportedException e) {
             return null;
         }
@@ -762,7 +768,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * @return {@code true} if this IdentityHashMap has no elements,
      *         {@code false} otherwise.
      * @see #size()
-     * @since Android 1.0
      */
     @Override
     public boolean isEmpty() {
@@ -773,7 +778,6 @@ public class IdentityHashMap<K, V> extends AbstractMap<K, V> implements
      * Returns the number of mappings in this IdentityHashMap.
      * 
      * @return the number of mappings in this IdentityHashMap.
-     * @since Android 1.0
      */
     @Override
     public int size() {

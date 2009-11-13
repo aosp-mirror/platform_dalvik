@@ -29,33 +29,37 @@ import java.util.ArrayList;
  * Utility that identifies basic blocks in bytecode.
  */
 public final class BasicBlocker implements BytecodeArray.Visitor {
-    /** non-null; method being converted */
+    /** {@code non-null;} method being converted */
     private final ConcreteMethod method;
 
-    /** non-null; work set; bits indicate offsets in need of examination */
+    /**
+     * {@code non-null;} work set; bits indicate offsets in need of
+     * examination
+     */
     private final int[] workSet;
 
     /**
-     * non-null; live set; bits indicate potentially-live opcodes; contrawise,
-     * a bit that isn't on is either in the middle of an instruction or is
-     * a definitely-dead opcode 
+     * {@code non-null;} live set; bits indicate potentially-live
+     * opcodes; contrawise, a bit that isn't on is either in the
+     * middle of an instruction or is a definitely-dead opcode
      */
     private final int[] liveSet;
 
     /**
-     * non-null; block start set; bits indicate the starts of basic blocks,
-     * including the opcodes that start blocks of definitely-dead code 
+     * {@code non-null;} block start set; bits indicate the starts of
+     * basic blocks, including the opcodes that start blocks of
+     * definitely-dead code
      */
     private final int[] blockSet;
 
     /**
-     * non-null, sparse; for each instruction offset to a branch of
+     * {@code non-null, sparse;} for each instruction offset to a branch of
      * some sort, the list of targets for that instruction 
      */
     private final IntList[] targetLists;
 
     /**
-     * non-null, sparse; for each instruction offset to a throwing
+     * {@code non-null, sparse;} for each instruction offset to a throwing
      * instruction, the list of exception handlers for that instruction 
      */
     private final ByteCatchList[] catchLists;
@@ -68,8 +72,8 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * returning a list of them. The returned list notably omits any
      * definitely-dead code that is identified in the process.
      * 
-     * @param method non-null; method to convert
-     * @return non-null; list of basic blocks
+     * @param method {@code non-null;} method to convert
+     * @return {@code non-null;} list of basic blocks
      */
     public static ByteBlockList identifyBlocks(ConcreteMethod method) {
         BasicBlocker bb = new BasicBlocker(method);
@@ -82,7 +86,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * Constructs an instance. This class is not publicly instantiable; use
      * {@link #identifyBlocks}.
      * 
-     * @param method non-null; method to convert
+     * @param method {@code non-null;} method to convert
      */
     private BasicBlocker(ConcreteMethod method) {
         if (method == null) {
@@ -262,10 +266,9 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
     /**
      * Extracts the list of basic blocks from the bit sets.
      * 
-     * @return non-null; the list of basic blocks
+     * @return {@code non-null;} the list of basic blocks
      */
     private ByteBlockList getBlockList() {
-        ByteCatchList catches = method.getCatches();
         BytecodeArray bytes = method.getCode();
         ByteBlock[] bbs = new ByteBlock[bytes.size()];
         int count = 0;
@@ -366,7 +369,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * isn't yet known to be possibly-live.
      * 
      * @param offset offset to the instruction in question
-     * @param blockStart <code>true</code> iff this instruction starts a
+     * @param blockStart {@code true} iff this instruction starts a
      * basic block
      */
     private void addWorkIfNecessary(int offset, boolean blockStart) {
@@ -384,7 +387,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * 
      * @param offset offset to the instruction
      * @param length length of the instruction, in bytes
-     * @param nextIsLive <code>true</code> iff the instruction after
+     * @param nextIsLive {@code true} iff the instruction after
      * the indicated one is possibly-live (because this one isn't an
      * unconditional branch, a return, or a switch)
      */
@@ -417,7 +420,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
      * 
      * @param offset offset to the instruction
      * @param length length of the instruction, in bytes
-     * @param nextIsLive <code>true</code> iff the instruction after
+     * @param nextIsLive {@code true} iff the instruction after
      * the indicated one is possibly-live (because this one isn't an
      * unconditional throw)
      */

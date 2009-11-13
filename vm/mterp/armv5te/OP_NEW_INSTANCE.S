@@ -22,16 +22,13 @@
     cmp     r1, #CLASS_INITIALIZED      @ has class been initialized?
     bne     .L${opcode}_needinit        @ no, init class now
 .L${opcode}_initialized: @ r0=class
-    ldr     r3, [r0, #offClassObject_accessFlags]   @ r3<- clazz->accessFlags
-    tst     r3, #(ACC_INTERFACE|ACC_ABSTRACT)   @ abstract or interface?
     mov     r1, #ALLOC_DONT_TRACK       @ flags for alloc call
-    beq     .L${opcode}_finish          @ concrete class, continue
-    b       .L${opcode}_abstract        @ fail
+    bl      dvmAllocObject              @ r0<- new object
+    b       .L${opcode}_finish          @ continue
 %break
 
     .balign 32                          @ minimize cache lines
-.L${opcode}_finish: @ r0=class
-    bl      dvmAllocObject              @ r0<- new object
+.L${opcode}_finish: @ r0=new object
     mov     r3, rINST, lsr #8           @ r3<- AA
     cmp     r0, #0                      @ failed?
     beq     common_exceptionThrown      @ yes, handle the exception
@@ -66,18 +63,6 @@
     cmp     r0, #0                      @ got null?
     bne     .L${opcode}_resolved        @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
-
-    /*
-     * We can't instantiate an abstract class or interface, so throw an
-     * InstantiationError with the class descriptor as the message.
-     *
-     *  r0 holds class object
-     */
-.L${opcode}_abstract:
-    ldr     r1, [r0, #offClassObject_descriptor]
-    ldr     r0, .LstrInstantiationErrorPtr
-    bl      dvmThrowExceptionWithClassMessage
-    b       common_exceptionThrown
 
 .LstrInstantiationErrorPtr:
     .word   .LstrInstantiationError

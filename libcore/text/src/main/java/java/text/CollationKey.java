@@ -14,17 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2006, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
 // The icu implementation used was changed from icu4j to icu4jni.
 // END android-note
 
@@ -38,13 +29,11 @@ package java.text;
  * string under two different {@code Collator} instances might differ. Hence
  * comparing collation keys generated from different {@code Collator} instances
  * can give incorrect results.
- * </p>
  * <p>
  * Both the method {@code CollationKey.compareTo(CollationKey)} and the method
  * {@code Collator.compare(String, String)} compares two strings and returns
  * their relative order. The performance characteristics of these two approaches
  * can differ.
- * </p>
  * <p>
  * During the construction of a {@code CollationKey}, the entire source string
  * is examined and processed into a series of bits terminated by a null, that
@@ -54,19 +43,16 @@ package java.text;
  * the {@code CollationKey}, but once the key is created, binary comparisons
  * are fast. This approach is recommended when the same strings are to be
  * compared over and over again.
- * </p>
  * <p>
  * On the other hand, implementations of
  * {@code Collator.compare(String, String)} can examine and process the strings
  * only until the first characters differ in order. This approach is
  * recommended if the strings are to be compared only once.
- * </p>
  * <p>
  * The following example shows how collation keys can be used to sort a
  * list of strings:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * // Create an array of CollationKeys for the Strings to be sorted.
  * Collator myCollator = Collator.getInstance();
@@ -89,12 +75,11 @@ package java.text;
  * System.out.println(keys[1].getSourceString());
  * System.out.println(keys[2].getSourceString());
  * </pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * @see Collator
  * @see RuleBasedCollator
- * @since Android 1.0
  */
 public final class CollationKey implements Comparable<CollationKey> {
 
@@ -116,7 +101,6 @@ public final class CollationKey implements Comparable<CollationKey> {
      * @return a negative value if this {@code CollationKey} is less than the
      *         specified {@code CollationKey}, 0 if they are equal and a
      *         positive value if this {@code CollationKey} is greater.
-     * @since Android 1.0
      */
     public int compareTo(CollationKey value) {
         return icuKey.compareTo(value.icuKey);
@@ -133,7 +117,6 @@ public final class CollationKey implements Comparable<CollationKey> {
      * @return {@code true} if {@code object} is equal to this collation key;
      *         {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -148,7 +131,6 @@ public final class CollationKey implements Comparable<CollationKey> {
      * Returns the string from which this collation key was created.
      * 
      * @return the source string of this collation key.
-     * @since Android 1.0
      */
     public String getSourceString() {
         return this.source;
@@ -161,7 +143,6 @@ public final class CollationKey implements Comparable<CollationKey> {
      * @return the receiver's hash.
      * 
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -172,7 +153,6 @@ public final class CollationKey implements Comparable<CollationKey> {
      * Returns the collation key as a byte array.
      * 
      * @return an array of bytes.
-     * @since Android 1.0
      */
     public byte[] toByteArray() {
         return icuKey.toByteArray();

@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.IOException;
 
 /**
@@ -26,7 +25,6 @@ import java.io.IOException;
  * 
  * @see ZipFile
  * @see ZipInputStream
- * @since Android 1.0
  */
 public class ZipException extends IOException {
 
@@ -34,8 +32,6 @@ public class ZipException extends IOException {
 
     /**
      * Constructs a new {@code ZipException} instance.
-     * 
-     * @since Android 1.0
      */
     public ZipException() {
         super();
@@ -44,10 +40,9 @@ public class ZipException extends IOException {
     /**
      * Constructs a new {@code ZipException} instance with the specified
      * message.
-     * 
+     *
      * @param detailMessage
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public ZipException(String detailMessage) {
         super(detailMessage);

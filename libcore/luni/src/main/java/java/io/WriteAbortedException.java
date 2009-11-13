@@ -26,8 +26,6 @@ package java.io;
  * object.
  * 
  * @see ObjectInputStream#readObject()
- * 
- * @since Android 1.0
  */
 public class WriteAbortedException extends ObjectStreamException {
 
@@ -36,8 +34,6 @@ public class WriteAbortedException extends ObjectStreamException {
     /**
      * The exception that occured when writeObject() was attempting to serialize
      * the object.
-     * 
-     * @since Android 1.0
      */
     public Exception detail;
 
@@ -50,7 +46,6 @@ public class WriteAbortedException extends ObjectStreamException {
      *            the detail message for this exception.
      * @param rootCause
      *            the exception that was thrown when serializing the object.
-     * @since Android 1.0
      */
     public WriteAbortedException(String detailMessage, Exception rootCause) {
         super(detailMessage);
@@ -64,7 +59,6 @@ public class WriteAbortedException extends ObjectStreamException {
      * time.
      * 
      * @return the exception message.
-     * @since Android 1.0
      */
     @Override
     public String getMessage() {
@@ -79,7 +73,6 @@ public class WriteAbortedException extends ObjectStreamException {
      * Gets the cause of this exception or {@code null} if there is no cause.
      * 
      * @return the exception cause.
-     * @since Android 1.0
      */
     @Override
     public Throwable getCause() {

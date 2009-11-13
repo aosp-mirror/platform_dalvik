@@ -28,10 +28,10 @@ public final class Hex {
     }
 
     /**
-     * Formats a <code>long</code> as an 8-byte unsigned hex value.
+     * Formats a {@code long} as an 8-byte unsigned hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String u8(long v) {
         char[] result = new char[16];
@@ -44,10 +44,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 4-byte unsigned hex value.
+     * Formats an {@code int} as a 4-byte unsigned hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String u4(int v) {
         char[] result = new char[8];
@@ -60,10 +60,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 3-byte unsigned hex value.
+     * Formats an {@code int} as a 3-byte unsigned hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String u3(int v) {
         char[] result = new char[6];
@@ -76,10 +76,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 2-byte unsigned hex value.
+     * Formats an {@code int} as a 2-byte unsigned hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String u2(int v) {
         char[] result = new char[4];
@@ -92,12 +92,12 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as either a 2-byte unsigned hex value
+     * Formats an {@code int} as either a 2-byte unsigned hex value
      * (if the value is small enough) or a 4-byte unsigned hex value (if
      * not).
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String u2or4(int v) {
         if (v == (char) v) {
@@ -108,10 +108,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 1-byte unsigned hex value.
+     * Formats an {@code int} as a 1-byte unsigned hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String u1(int v) {
         char[] result = new char[2];
@@ -124,10 +124,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 4-bit unsigned hex nibble.
+     * Formats an {@code int} as a 4-bit unsigned hex nibble.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String uNibble(int v) {
         char[] result = new char[1];
@@ -137,10 +137,10 @@ public final class Hex {
     }
 
     /**
-     * Formats a <code>long</code> as an 8-byte signed hex value.
+     * Formats a {@code long} as an 8-byte signed hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String s8(long v) {
         char[] result = new char[17];
@@ -161,10 +161,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 4-byte signed hex value.
+     * Formats an {@code int} as a 4-byte signed hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String s4(int v) {
         char[] result = new char[9];
@@ -185,10 +185,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 2-byte signed hex value.
+     * Formats an {@code int} as a 2-byte signed hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String s2(int v) {
         char[] result = new char[5];
@@ -209,10 +209,10 @@ public final class Hex {
     }
 
     /**
-     * Formats an <code>int</code> as a 1-byte signed hex value.
+     * Formats an {@code int} as a 1-byte signed hex value.
      * 
      * @param v value to format
-     * @return non-null; formatted form
+     * @return {@code non-null;} formatted form
      */
     public static String s1(int v) {
         char[] result = new char[3];
@@ -233,18 +233,18 @@ public final class Hex {
     }
 
     /**
-     * Formats a hex dump of a portion of a <code>byte[]</code>. The result
+     * Formats a hex dump of a portion of a {@code byte[]}. The result
      * is always newline-terminated, unless the passed-in length was zero,
-     * in which case the result is always the empty string (<code>""</code>).
+     * in which case the result is always the empty string ({@code ""}).
      * 
-     * @param arr non-null; array to format
-     * @param offset &gt;= 0; offset to the part to dump
-     * @param length &gt;= 0; number of bytes to dump
-     * @param outOffset &gt;= 0; first output offset to print
-     * @param bpl &gt;= 0; number of bytes of output per line
-     * @param addressLength {2,4,6,8}; number of characters for each address
+     * @param arr {@code non-null;} array to format
+     * @param offset {@code >= 0;} offset to the part to dump
+     * @param length {@code >= 0;} number of bytes to dump
+     * @param outOffset {@code >= 0;} first output offset to print
+     * @param bpl {@code >= 0;} number of bytes of output per line
+     * @param addressLength {@code {2,4,6,8};} number of characters for each address
      * header
-     * @return non-null; a string of the dump
+     * @return {@code non-null;} a string of the dump
      */
     public static String dump(byte[] arr, int offset, int length,
                               int outOffset, int bpl, int addressLength) {

@@ -23,19 +23,15 @@ package java.util;
  * in which each key is mapped to a single value.  The class of the objects
  * used as keys is declared when the {@code Map} is declared, as is the 
  * class of the corresponding values.
- * <p>A {@code Map} provides helper methods to iterate through all of the 
+ * <p>
+ * A {@code Map} provides helper methods to iterate through all of the
  * keys contained in it, as well as various methods to access and update 
  * the key/value pairs.  
- * </p>  
- *  
- * @since Android 1.0
  */
 public interface Map<K,V> {
 
     /**
      * {@code Map.Entry} is a key/value mapping contained in a {@code Map}.
-     *      
-     * @since Android 1.0
      */
     public static interface Entry<K,V> {
         /**
@@ -48,7 +44,6 @@ public interface Map<K,V> {
          * @return {@code true} if the specified {@code Object} is equal to this
          *         {@code Map.Entry}, {@code false} otherwise.
          * @see #hashCode()
-         * @since Android 1.0
          */
         public boolean equals(Object object);
 
@@ -56,7 +51,6 @@ public interface Map<K,V> {
          * Returns the key.
          * 
          * @return the key
-         * @since Android 1.0
          */
         public K getKey();
 
@@ -64,7 +58,6 @@ public interface Map<K,V> {
          * Returns the value.
          * 
          * @return the value
-         * @since Android 1.0
          */
         public V getValue();
 
@@ -74,7 +67,6 @@ public interface Map<K,V> {
          * 
          * @return the receiver's hash code.
          * @see #equals(Object)
-         * @since Android 1.0
          */
         public int hashCode();
 
@@ -85,7 +77,6 @@ public interface Map<K,V> {
          * @param object
          *            the new value to set.
          * @return object the replaced value of this entry.
-         * @since Android 1.0
          */
         public V setValue(V object);
     };
@@ -97,7 +88,6 @@ public interface Map<K,V> {
      *                if removing elements from this {@code Map} is not supported.
      * @see #isEmpty()
      * @see #size()
-     * @since Android 1.0
      */
     public void clear();
 
@@ -108,7 +98,6 @@ public interface Map<K,V> {
      *            the key to search for.
      * @return {@code true} if this map contains the specified key,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean containsKey(Object key);
 
@@ -119,7 +108,6 @@ public interface Map<K,V> {
      *            the value to search for.
      * @return {@code true} if this map contains the specified value,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean containsValue(Object value);
 
@@ -129,7 +117,6 @@ public interface Map<K,V> {
      * changes in one will be reflected in the other.
      * 
      * @return a set of the mappings
-     * @since Android 1.0
      */
     public Set<Map.Entry<K,V>> entrySet();
 
@@ -143,7 +130,6 @@ public interface Map<K,V> {
      *         {@code false} if it is different from this {@code Object}.
      * @see #hashCode()
      * @see #entrySet()
-     * @since Android 1.0
      */
     public boolean equals(Object object);
 
@@ -154,7 +140,6 @@ public interface Map<K,V> {
      *            the key.
      * @return the value of the mapping with the specified key, or {@code null}
      *         if no mapping for the specified key is found.
-     * @since Android 1.0
      */
     public V get(Object key);
 
@@ -164,7 +149,6 @@ public interface Map<K,V> {
      * 
      * @return the receiver's hash.
      * @see #equals(Object)
-     * @since Android 1.0
      */
     public int hashCode();
 
@@ -174,7 +158,6 @@ public interface Map<K,V> {
      * @return {@code true} if this map has no elements, {@code false}
      *         otherwise.
      * @see #size()
-     * @since Android 1.0
      */
     public boolean isEmpty();
 
@@ -184,7 +167,6 @@ public interface Map<K,V> {
      * support adding.
      * 
      * @return a set of the keys.
-     * @since Android 1.0
      */
     public Set<K> keySet();
 
@@ -207,7 +189,6 @@ public interface Map<K,V> {
      * @throws NullPointerException
      *                if the key or value is {@code null} and this {@code Map} does
      *                not support {@code null} keys or values.
-     * @since Android 1.0
      */
     public V put(K key, V value);
 
@@ -226,7 +207,6 @@ public interface Map<K,V> {
      * @throws NullPointerException
      *                if a key or value is {@code null} and this {@code Map} does not
      *                support {@code null} keys or values.
-     * @since Android 1.0
      */
     public void putAll(Map<? extends K,? extends V> map);
 
@@ -239,7 +219,6 @@ public interface Map<K,V> {
      *         for the specified key was found.
      * @throws UnsupportedOperationException
      *                if removing from this {@code Map} is not supported.
-     * @since Android 1.0
      */
     public V remove(Object key);
 
@@ -247,7 +226,6 @@ public interface Map<K,V> {
      * Returns the number of mappings in this {@code Map}.
      * 
      * @return the number of mappings in this {@code Map}.
-     * @since Android 1.0
      */
     public int size();
 
@@ -263,16 +241,13 @@ public interface Map<K,V> {
      * "wrapper object" over the iterator of this {@code Map}'s {@link #entrySet()}. The {@link AbstractCollection#size} method
      * wraps this {@code Map}'s {@link #size} method and the {@link AbstractCollection#contains} method wraps this {@code Map}'s
      * {@link #containsValue} method.
-     * </p>
      * <p>
      * The collection is created when this method is called at first time and
      * returned in response to all subsequent calls. This method may return
      * different Collection when multiple calls to this method, since it has no
      * synchronization performed.
-     * </p>
      * 
      * @return a collection of the values contained in this map.
-     * @since Android 1.0
      */
     public Collection<V> values();
 }

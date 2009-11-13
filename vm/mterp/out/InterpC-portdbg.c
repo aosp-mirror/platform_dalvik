@@ -26,6 +26,7 @@
 #include "interp/InterpDefs.h"
 #include "mterp/Mterp.h"
 #include <math.h>                   // needed for fmod, fmodf
+#include "mterp/common/FindInterface.h"
 
 /*
  * Configuration defines.  These affect the C implementations, i.e. the
@@ -53,7 +54,7 @@
  */
 #define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
-#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia */
+#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
 # define CHECK_REGISTER_INDICES
 #endif
@@ -93,6 +94,18 @@
 #endif
 
 /*
+ * Export another copy of the PC on every instruction; this is largely
+ * redundant with EXPORT_PC and the debugger code.  This value can be
+ * compared against what we have stored on the stack with EXPORT_PC to
+ * help ensure that we aren't missing any export calls.
+ */
+#if WITH_EXTRA_GC_CHECKS > 1
+# define EXPORT_EXTRA_PC() (self->currentPc2 = pc)
+#else
+# define EXPORT_EXTRA_PC()
+#endif
+
+/*
  * Adjust the program counter.  "_offset" is a signed int, in 16-bit units.
  *
  * Assumes the existence of "const u2* pc" and "const u2* curMethod->insns".
@@ -116,9 +129,13 @@
             dvmAbort();                                                     \
         }                                                                   \
         pc += myoff;                                                        \
+        EXPORT_EXTRA_PC();                                                  \
     } while (false)
 #else
-# define ADJUST_PC(_offset) (pc += _offset)
+# define ADJUST_PC(_offset) do {                                            \
+        pc += _offset;                                                      \
+        EXPORT_EXTRA_PC();                                                  \
+    } while (false)
 #endif
 
 /*
@@ -303,6 +320,8 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * within the current method won't be shown correctly.  See the notes
  * in Exception.c.
  *
+ * This is also used to determine the address for precise GC.
+ *
  * Assumes existence of "u4* fp" and "const u2* pc".
  */
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
@@ -316,27 +335,19 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * If we're building without debug and profiling support, we never switch.
  */
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
+#if defined(WITH_JIT)
+# define NEED_INTERP_SWITCH(_current) (                                     \
+    (_current == INTERP_STD) ?                                              \
+        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
+        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+#else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
         dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
+#endif
 #else
 # define NEED_INTERP_SWITCH(_current) (false)
 #endif
-
-/*
- * Look up an interface on a class using the cache.
- */
-INLINE Method* dvmFindInterfaceMethodInCache(ClassObject* thisClass,
-    u4 methodIdx, const Method* method, DvmDex* methodClassDex)
-{
-#define ATOMIC_CACHE_CALC \
-    dvmInterpFindInterfaceMethod(thisClass, methodIdx, method, methodClassDex)
-
-    return (Method*) ATOMIC_CACHE_LOOKUP(methodClassDex->pInterfaceCache,
-                DEX_INTERFACE_CACHE_SIZE, thisClass, methodIdx);
-
-#undef ATOMIC_CACHE_CALC
-}
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
@@ -402,13 +413,20 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     return true;
 }
 
-
 /* File: portable/portdbg.c */
 #define INTERP_FUNC_NAME dvmInterpretDbg
 #define INTERP_TYPE INTERP_DBG
 
 #define CHECK_DEBUG_AND_PROF() \
     checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
+
+#if defined(WITH_JIT)
+#define CHECK_JIT() \
+    if (dvmCheckJit(pc, self, interpState)) GOTO_bail_switch()
+#else
+#define CHECK_JIT() \
+    ((void)0)
+#endif
 
 /* File: portable/stubdefs.c */
 /*
@@ -441,6 +459,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         inst = FETCH(0);                                                    \
         CHECK_DEBUG_AND_PROF();                                             \
         CHECK_TRACKED_REFS();                                               \
+        CHECK_JIT();                                                        \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 #else
@@ -486,7 +505,10 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * started.  If so, switch to a different "goto" table.
  */
 #define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
-        dvmCheckSuspendQuick(self);                                         \
+        if (dvmCheckSuspendQuick(self)) {                                   \
+            EXPORT_PC();  /* need for precise GC */                         \
+            dvmCheckSuspendPending(self);                                   \
+        }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
             interpState->entryPoint = _entryPoint;                          \
@@ -1373,7 +1395,7 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
         if (/*gDvm.debuggerActive &&*/
             strcmp(method->clazz->descriptor, cd) == 0 &&
             strcmp(method->name, mn) == 0 &&
-            strcmp(method->signature, sg) == 0)
+            strcmp(method->shorty, sg) == 0)
         {
             LOGW("Reached %s.%s, enabling verbose mode\n",
                 method->clazz->descriptor, method->name);
@@ -1458,9 +1480,30 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     const Method* methodToCall;
     bool methodCallRange;
 
+
 #if defined(THREADED_INTERP)
     /* static computed goto table */
     DEFINE_GOTO_TABLE(handlerTable);
+#endif
+
+#if defined(WITH_JIT)
+#if 0
+    LOGD("*DebugInterp - entrypoint is %d, tgt is 0x%x, %s\n",
+         interpState->entryPoint,
+         interpState->pc,
+         interpState->method->name);
+#endif
+
+#if INTERP_TYPE == INTERP_DBG
+    /* Check to see if we've got a trace selection request.  If we do,
+     * but something is amiss, revert to the fast interpreter.
+     */
+    if (dvmJitCheckTraceRequest(self,interpState)) {
+        interpState->nextMode = INTERP_STD;
+        //LOGD("** something wrong, exiting\n");
+        return true;
+    }
+#endif
 #endif
 
     /* copy state in */
@@ -1869,9 +1912,7 @@ HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
         if (!checkForNullExportPC(obj, fp, pc))
             GOTO_exceptionThrown();
         ILOGV("+ locking %p %s\n", obj, obj->clazz->descriptor);
-#ifdef WITH_MONITOR_TRACKING
-        EXPORT_PC();        /* need for stack trace */
-#endif
+        EXPORT_PC();    /* need for precise GC, also WITH_MONITOR_TRACKING */
         dvmLockObject(self, obj);
 #ifdef WITH_DEADLOCK_PREDICTION
         if (dvmCheckException(self))
@@ -2018,21 +2059,13 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
             GOTO_exceptionThrown();
 
         /*
-         * Note: the verifier can ensure that this never happens, allowing us
-         * to remove the check.  However, the spec requires we throw the
-         * exception at runtime, not verify time, so the verifier would
-         * need to replace the new-instance call with a magic "throw
-         * InstantiationError" instruction.
-         *
-         * Since this relies on the verifier, which is optional, we would
-         * also need a "new-instance-quick" instruction to identify instances
-         * that don't require the check.
+         * Verifier now tests for interface/abstract class.
          */
-        if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
-            dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationError;",
-                clazz->descriptor);
-            GOTO_exceptionThrown();
-        }
+        //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
+        //    dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationError;",
+        //        clazz->descriptor);
+        //    GOTO_exceptionThrown();
+        //}
         newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
         if (newObj == NULL)
             GOTO_exceptionThrown();
@@ -3128,8 +3161,13 @@ OP_END
 HANDLE_OPCODE(OP_UNUSED_EC)
 OP_END
 
-/* File: c/OP_UNUSED_ED.c */
-HANDLE_OPCODE(OP_UNUSED_ED)
+/* File: c/OP_THROW_VERIFICATION_ERROR.c */
+HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR)
+    EXPORT_PC();
+    vsrc1 = INST_AA(inst);
+    ref = FETCH(1);             /* class/field/method ref */
+    dvmThrowVerificationError(curMethod, vsrc1, ref);
+    GOTO_exceptionThrown();
 OP_END
 
 /* File: c/OP_EXECUTE_INLINE.c */
@@ -3800,7 +3838,7 @@ GOTO_TARGET(returnFromMethod)
 
         ILOGV("> retval=0x%llx (leaving %s.%s %s)",
             retval.j, curMethod->clazz->descriptor, curMethod->name,
-            curMethod->signature);
+            curMethod->shorty);
         //DUMP_REGS(curMethod, fp);
 
         saveArea = SAVEAREA_FROM_FP(fp);
@@ -3828,7 +3866,7 @@ GOTO_TARGET(returnFromMethod)
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = saveArea->savedPc;
         ILOGD("> (return to %s.%s %s)", curMethod->clazz->descriptor,
-            curMethod->name, curMethod->signature);
+            curMethod->name, curMethod->shorty);
 
         /* use FINISH on the caller's invoke instruction */
         //u2 invokeInstr = INST_INST(FETCH(0));
@@ -3963,7 +4001,7 @@ GOTO_TARGET(exceptionThrown)
         methodClassDex = curMethod->clazz->pDvmDex;
         pc = curMethod->insns + catchRelPc;
         ILOGV("> pc <-- %s.%s %s", curMethod->clazz->descriptor,
-            curMethod->name, curMethod->signature);
+            curMethod->name, curMethod->shorty);
         DUMP_REGS(curMethod, fp, false);            // show all regs
 
         /*
@@ -4012,7 +4050,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
         //printf("range=%d call=%p count=%d regs=0x%04x\n",
         //    methodCallRange, methodToCall, count, regs);
         //printf(" --> %s.%s %s\n", methodToCall->clazz->descriptor,
-        //    methodToCall->name, methodToCall->signature);
+        //    methodToCall->name, methodToCall->shorty);
 
         u4* outs;
         int i;
@@ -4082,7 +4120,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
         ILOGV("> %s%s.%s %s",
             dvmIsNativeMethod(methodToCall) ? "(NATIVE) " : "",
             methodToCall->clazz->descriptor, methodToCall->name,
-            methodToCall->signature);
+            methodToCall->shorty);
 
         newFp = (u4*) SAVEAREA_FROM_FP(fp) - methodToCall->registersSize;
         newSaveArea = SAVEAREA_FROM_FP(newFp);
@@ -4122,6 +4160,9 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         newSaveArea->prevFrame = fp;
         newSaveArea->savedPc = pc;
+#if defined(WITH_JIT)
+        newSaveArea->returnAddr = 0;
+#endif
         newSaveArea->method = methodToCall;
 
         if (!dvmIsNativeMethod(methodToCall)) {
@@ -4140,12 +4181,16 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             debugIsMethodEntry = true;              // profiling, debugging
 #endif
             ILOGD("> pc <-- %s.%s %s", curMethod->clazz->descriptor,
-                curMethod->name, curMethod->signature);
+                curMethod->name, curMethod->shorty);
             DUMP_REGS(curMethod, fp, true);         // show input args
             FINISH(0);                              // jump to method start
         } else {
             /* set this up for JNI locals, even if not a JNI native */
-            newSaveArea->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
+#ifdef USE_INDIRECT_REF
+            newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
+#else
+            newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
+#endif
 
             self->curFrame = newFp;
 
@@ -4162,7 +4207,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
 
             ILOGD("> native <-- %s.%s %s", methodToCall->clazz->descriptor,
-                methodToCall->name, methodToCall->signature);
+                methodToCall->name, methodToCall->shorty);
 
             /*
              * Jump through native call bridge.  Because we leave no
@@ -4199,7 +4244,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             ILOGD("> (return from native %s.%s to %s.%s %s)",
                 methodToCall->clazz->descriptor, methodToCall->name,
                 curMethod->clazz->descriptor, curMethod->name,
-                curMethod->signature);
+                curMethod->shorty);
 
             //u2 invokeInstr = INST_INST(FETCH(0));
             if (true /*invokeInstr >= OP_INVOKE_VIRTUAL &&
@@ -4215,7 +4260,6 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
     }
     assert(false);      // should not get here
 GOTO_TARGET_END
-
 
 /* File: portable/enddefs.c */
 /*--- end of opcodes ---*/

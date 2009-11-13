@@ -25,7 +25,7 @@ package java.math;
  * Static library that provides all operations related with division and modular
  * arithmetic to {@link BigInteger}. Some methods are provided in both mutable
  * and immutable way. There are several variants provided listed below:
- * 
+ *
  * <ul type="circle">
  * <li> <b>Division</b>
  * <ul type="circle">
@@ -41,9 +41,6 @@ package java.math;
  * </ul>
  * </li>
  *</ul>
- * 
- * @author Intel Middleware Product Division
- * @author Instituto Tecnologico de Cordoba
  */
 class Division {
 
@@ -55,7 +52,7 @@ class Division {
     /**
      * Divides an array by an integer value. Implements the Knuth's division
      * algorithm. See D. Knuth, The Art of Computer Programming, vol. 2.
-     * 
+     *
      * @param dest the quotient
      * @param src the dividend
      * @param srcLength the length of the dividend
@@ -108,7 +105,7 @@ class Division {
     /**
      * Divides an array by an integer value. Implements the Knuth's division
      * algorithm. See D. Knuth, The Art of Computer Programming, vol. 2.
-     * 
+     *
      * @param src the dividend
      * @param srcLength the length of the dividend
      * @param divisor the divisor
@@ -130,7 +127,7 @@ class Division {
     /**
      * Divides a <code>BigInteger</code> by a signed <code>int</code> and
      * returns the remainder.
-     * 
+     *
      * @param dividend the BigInteger to be divided. Must be non-negative.
      * @param divisor a signed int
      * @return divide % divisor
@@ -146,7 +143,7 @@ class Division {
     /**
      * Divides an unsigned long a by an unsigned int b. It is supposed that the
      * most significant bit of b is set to 1, i.e. b < 0
-     * 
+     *
      * @param a the dividend
      * @param b the divisor
      * @return the long value containing the unsigned integer remainder in the
@@ -191,7 +188,7 @@ class Division {
     /**
      * Computes the quotient and the remainder after a division by an {@code int}
      * number.
-     * 
+     *
      * @return an array of the form {@code [quotient, remainder]}.
      */
     static BigInteger[] divideAndRemainderByInteger(BigInteger val,

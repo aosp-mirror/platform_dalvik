@@ -21,7 +21,6 @@ package java.util;
  * missing but is required.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class MissingFormatWidthException extends IllegalFormatException {
     private static final long serialVersionUID = 15560123L;

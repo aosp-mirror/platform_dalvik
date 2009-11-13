@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-// BEGIN android-note
-// This class and some helper classes where copied from a newer version of harmony
-// to improve reusability of URLConnections
-// END android-note
-
 package org.apache.harmony.luni.internal.net.www.protocol.http;
 
 import java.io.ByteArrayOutputStream;
@@ -185,7 +180,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
             return is.skip(n);
         }
-        
+
         public int available() throws IOException {
             if (closed) {
                 throwClosed();
@@ -222,9 +217,9 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
         private void throwClosed() throws IOException {
             throw new IOException("stream closed");
         }
-    }    
+    }
     // END android-added
-    
+
     private class LimitedInputStream extends InputStream {
         int bytesRemaining;
 
@@ -523,7 +518,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
          * size minus chunk head (which writes chunk data size in HEX and
          * "\r\n") size. For example, a string "abcd" use chunk whose size is 5
          * must be written to socket as "2\r\nab","2\r\ncd" ...
-         * 
+         *
          */
         private int calculateChunkDataLength() {
             /*
@@ -691,7 +686,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
     /**
      * Creates an instance of the <code>HttpURLConnection</code> using default
      * port 80.
-     * 
+     *
      * @param url
      *            URL The URL this connection is connecting
      */
@@ -701,7 +696,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
     /**
      * Creates an instance of the <code>HttpURLConnection</code>
-     * 
+     *
      * @param url
      *            URL The URL this connection is connecting
      * @param port
@@ -711,7 +706,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
         super(url);
         defaultPort = port;
         reqHeader = (Header) defaultReqHeader.clone();
-        
+
         try {
             uri = url.toURI();
         } catch (URISyntaxException e) {
@@ -727,7 +722,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
     /**
      * Creates an instance of the <code>HttpURLConnection</code>
-     * 
+     *
      * @param url
      *            URL The URL this connection is connecting
      * @param port
@@ -742,12 +737,12 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
     /**
      * Establishes the connection to the remote HTTP server
-     * 
+     *
      * Any methods that requires a valid connection to the resource will call
      * this method implicitly. After the connection is established,
      * <code>connected</code> is set to true.
-     * 
-     * 
+     *
+     *
      * @see #connected
      * @see java.io.IOException
      * @see URLStreamHandler
@@ -762,9 +757,9 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
         }
         // BEGIN android-changed
         // url.toURI(); throws an URISyntaxException if the url contains
-        // illegal characters in e.g. the query. 
-        // Since the query is not needed for proxy selection, we just create an 
-        // URI that only contains the necessary information. 
+        // illegal characters in e.g. the query.
+        // Since the query is not needed for proxy selection, we just create an
+        // URI that only contains the necessary information.
         try {
             uri = new URI(url.getProtocol(),
                           null,
@@ -817,7 +812,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
     }
 
     /**
-     * Returns connected socket to be used for this HTTP connection. 
+     * Returns connected socket to be used for this HTTP connection.
      */
     protected HttpConnection getHTTPConnection(Proxy proxy) throws IOException {
         HttpConnection connection;
@@ -832,7 +827,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
     /**
      * Sets up the data streams used to send request[s] and read response[s].
-     * 
+     *
      * @param connection
      *            HttpConnection to be used
      */
@@ -882,8 +877,8 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
     /**
      * Closes the connection with the HTTP server
-     * 
-     * 
+     *
+     *
      * @see URLConnection#connect()
      */
     @Override
@@ -940,7 +935,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      * <p>
      * If the content type is not what stated above,
      * <code>FileNotFoundException</code> is thrown.
-     * 
+     *
      * @return InputStream the error input stream returned by the server.
      */
     @Override
@@ -978,14 +973,14 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
     /**
      * Returns the value of the field corresponding to the <code>key</code>
      * Returns <code>null</code> if there is no such field.
-     * 
+     *
      * If there are multiple fields with that key, the last field value is
      * returned.
-     * 
+     *
      * @return java.lang.String The value of the header field
      * @param key
      *            java.lang.String the name of the header field
-     * 
+     *
      * @see #getHeaderField(int)
      * @see #getHeaderFieldKey
      */
@@ -1019,8 +1014,10 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      * Provides an unmodifiable map of the connection header values. The map
      * keys are the String header field names. Each map value is a list of the
      * header field values associated with that key name.
-     * 
+     *
      * @return the mapping of header field names to values
+     *
+     * @since 1.4
      */
     @Override
     public Map<String, List<String>> getHeaderFields() {
@@ -1172,12 +1169,12 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
 
     /**
      * Returns a line read from the input stream. Does not include the \n
-     * 
+     *
      * @return The line that was read.
      */
     String readln() throws IOException {
         boolean lastCr = false;
-        StringBuffer result = new StringBuffer(80);
+        StringBuilder result = new StringBuilder(80);
         int c = is.read();
         if (c < 0) {
             return null;
@@ -1215,7 +1212,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      * Sends the request header to the remote HTTP server Not all of them are
      * guaranteed to have any effect on the content the server will return,
      * depending on if the server supports that field.
-     * 
+     *
      * Examples : Accept: text/*, text/html, text/html;level=1, Accept-Charset:
      * iso-8859-5, unicode-1-1;q=0.8
      */
@@ -1327,6 +1324,45 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
         } else {
             output.append("1\r\n"); //$NON-NLS-1$
         }
+        // add user-specified request headers if any
+        boolean hasContentLength = false;
+        for (int i = 0; i < reqHeader.length(); i++) {
+            String key = reqHeader.getKey(i);
+            if (key != null) {
+                String lKey = key.toLowerCase();
+                if ((os != null && !os.isChunked())
+                        || (!lKey.equals("transfer-encoding") && !lKey //$NON-NLS-1$
+                                .equals("content-length"))) { //$NON-NLS-1$
+                    output.append(key);
+                    String value = reqHeader.get(i);
+                    /*
+                     * duplicates are allowed under certain conditions see
+                     * http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
+                     */
+                    if (lKey.equals("content-length")) { //$NON-NLS-1$
+                        hasContentLength = true;
+                        /*
+                         * if both setFixedLengthStreamingMode and
+                         * content-length are set, use fixedContentLength first
+                         */
+                        if(fixedContentLength >= 0){
+                            value = String.valueOf(fixedContentLength);
+                        }
+                    }
+                    if (value != null) {
+                        output.append(": "); //$NON-NLS-1$
+                        output.append(value);
+                    }
+                    output.append("\r\n"); //$NON-NLS-1$
+                }
+            }
+        }
+        if (fixedContentLength >= 0 && !hasContentLength) {
+            output.append("content-length: "); //$NON-NLS-1$
+            output.append(String.valueOf(fixedContentLength));
+            output.append("\r\n"); //$NON-NLS-1$
+        }
+
         if (reqHeader.get("User-Agent") == null) { //$NON-NLS-1$
             output.append("User-Agent: "); //$NON-NLS-1$
             String agent = getSystemProperty("http.agent"); //$NON-NLS-1$
@@ -1348,6 +1384,11 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
             }
             output.append("\r\n"); //$NON-NLS-1$
         }
+        if (reqHeader.get("Accept") == null) { //$NON-NLS-1$
+            // BEGIN android-changed
+            output.append("Accept: *, */*\r\n"); //$NON-NLS-1$
+            // END android-changed
+        }
         if (httpVersion > 0 && reqHeader.get("Connection") == null) { //$NON-NLS-1$
             output.append("Connection: Keep-Alive\r\n"); //$NON-NLS-1$
         }
@@ -1367,43 +1408,6 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
                 output.append("Transfer-Encoding: chunked\r\n"); //$NON-NLS-1$
             }
         }
-
-        boolean hasContentLength = false;
-        // then the user-specified request headers, if any
-        for (int i = 0; i < reqHeader.length(); i++) {
-            String key = reqHeader.getKey(i);
-            if (key != null) {
-                String lKey = key.toLowerCase();
-                if ((os != null && !os.isChunked())
-                        || (!lKey.equals("transfer-encoding") && !lKey //$NON-NLS-1$
-                                .equals("content-length"))) { //$NON-NLS-1$
-                    output.append(key);
-                    output.append(": "); //$NON-NLS-1$
-                    /*
-                     * duplicates are allowed under certain conditions see
-                     * http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-                     */
-                    if (lKey.equals("content-length")) { //$NON-NLS-1$
-                        hasContentLength = true;
-                        /*
-                         * if both setFixedLengthStreamingMode and
-                         * content-length are set, use fixedContentLength first
-                         */
-                        output.append((fixedContentLength >= 0) ? String
-                                        .valueOf(fixedContentLength)
-                                        : reqHeader.get(i));
-                    } else {
-                        output.append(reqHeader.get(i));
-                    }
-                    output.append("\r\n"); //$NON-NLS-1$
-                }
-            }
-        }
-        if (fixedContentLength >= 0 && !hasContentLength) {
-            output.append("content-length: "); //$NON-NLS-1$
-            output.append(String.valueOf(fixedContentLength));
-            output.append("\r\n"); //$NON-NLS-1$
-        }
         // end the headers
         output.append("\r\n"); //$NON-NLS-1$
         return output.toString().getBytes("ISO8859_1"); //$NON-NLS-1$
@@ -1412,7 +1416,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
     /**
      * Sets the default request header fields to be sent to the remote server.
      * This does not affect the current URL Connection, only newly created ones.
-     * 
+     *
      * @param field
      *            java.lang.String The name of the field to be changed
      * @param value
@@ -1427,11 +1431,11 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
      * <code>setIfModifiedSince()</code> Since this HTTP impl supports
      * IfModifiedSince as one of the header field, the request header is updated
      * with the new value.
-     * 
-     * 
+     *
+     *
      * @param newValue
      *            the number of millisecond since epoch
-     * 
+     *
      * @throws IllegalStateException
      *             if already connected.
      */
@@ -1655,7 +1659,7 @@ public class HttpURLConnection extends java.net.HttpURLConnection {
     /**
      * Returns the authorization credentials on the base of provided
      * authorization challenge
-     * 
+     *
      * @param challenge
      * @return authorization credentials
      * @throws IOException

@@ -1757,8 +1757,13 @@ public class BidiTest extends TestCase {
             // Expected
         }
 
-// Outsourced to _AndroidFailure:
-//        bidi.createLineBidi(2, 2);
+        // BEGIN android-removed
+        // Outsourced to _AndroidFailure:
+        // try {
+        //     bidi.createLineBidi(2, 2);
+        // } catch (IllegalArgumentException expected) {
+        // }
+        // END android-removed
 
         try {
             bidi.createLineBidi(2, 4);
@@ -1974,19 +1979,23 @@ public class BidiTest extends TestCase {
 
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Doesn't verify any int value between 0 and getRunCount().",
+        notes = "",
         method = "getRunLimit",
         args = {int.class}
     )
+    @KnownFailure("Doesn't verify any int value between 0 and getRunCount().")
     public void testGetRunLimit() {
         bd = new Bidi("text", Bidi.DIRECTION_LEFT_TO_RIGHT);
         try {
             assertTrue(4 == bd.getRunLimit(-1));
-        } catch (Exception e) {
-            fail("Unexpected exception: " + e);
+        } catch (IllegalArgumentException e) {
+            // Expected for illegal run limit
+            return;
         }
+
+        fail("Expected IllegalArgumentException to be thrown for invalid run limit");
     }
-    
+
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
@@ -2052,13 +2061,17 @@ public class BidiTest extends TestCase {
         method = "Bidi",
         args = {java.text.AttributedCharacterIterator.class}
     )
+    @KnownFailure("Doesn't verify any int value between 0 and getRunCount().")
     public void testBidiConstructor_Iterator() {
         AttributedString paragraph = new AttributedString("text");
         bd = new Bidi(paragraph.getIterator());
         try {
             assertTrue(4 == bd.getRunLimit(1));
-        } catch (Exception e) {
-            fail("Unexpected exception: " + e);
+        } catch (IllegalArgumentException e) {
+            // Expected for illegal run limit
+            return;
         }
+
+        fail("Expected IllegalArgumentException to be thrown for invalid run limit");
     }
 }

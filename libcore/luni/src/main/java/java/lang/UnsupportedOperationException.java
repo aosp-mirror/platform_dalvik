@@ -19,8 +19,6 @@ package java.lang;
 
 /**
  * Thrown when an unsupported operation is attempted.
- * 
- * @since Android 1.0
  */
 public class UnsupportedOperationException extends RuntimeException {
 
@@ -29,13 +27,8 @@ public class UnsupportedOperationException extends RuntimeException {
     /**
      * Constructs a new {@code UnsupportedOperationException} that includes the
      * current stack trace.
-     * 
-     * @since Android 1.0
      */
     public UnsupportedOperationException() {
-        // BEGIN android-added
-        super();
-        // END android-added
     }
 
     /**
@@ -44,7 +37,6 @@ public class UnsupportedOperationException extends RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnsupportedOperationException(String detailMessage) {
         super(detailMessage);
@@ -58,7 +50,7 @@ public class UnsupportedOperationException extends RuntimeException {
      *            the detail message for this exception.
      * @param cause
      *            the optional cause of this exception, may be {@code null}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public UnsupportedOperationException(String message, Throwable cause) {
         super(message, cause);
@@ -70,7 +62,7 @@ public class UnsupportedOperationException extends RuntimeException {
      * 
      * @param cause
      *            the optional cause of this exception, may be {@code null}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public UnsupportedOperationException(Throwable cause) {
         super((cause == null ? null : cause.toString()), cause);

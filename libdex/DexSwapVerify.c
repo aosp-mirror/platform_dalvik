@@ -362,12 +362,15 @@ static bool isDataSectionType(int mapType) {
 static bool swapMap(CheckState* state, DexMapList* pMap)
 {
     DexMapItem* item = pMap->list;
-    u4 count = pMap->size;
+    u4 count;
     u4 dataItemCount = 0; // Total count of items in the data section.
     u4 dataItemsLeft = state->pHeader->dataSize; // See use below.
     u4 usedBits = 0;      // Bit set: one bit per section
     bool first = true;
     u4 lastOffset = 0;
+
+    SWAP_FIELD4(pMap->size);
+    count = pMap->size;
     
     CHECK_LIST_SIZE(item, count, sizeof(DexMapItem));
 
@@ -392,21 +395,21 @@ static bool swapMap(CheckState* state, DexMapList* pMap)
         }
 
         if (isDataSectionType(item->type)) {
-            u4 count = item->size;
+            u4 icount = item->size;
 
             /*
              * This sanity check on the data section items ensures that
              * there are no more items than the number of bytes in
              * the data section.
              */
-            if (count > dataItemsLeft) {
+            if (icount > dataItemsLeft) {
                 LOGE("Unrealistically many items in the data section: "
-                        "at least %d\n", dataItemCount + count);
+                        "at least %d\n", dataItemCount + icount);
                 return false;
             }
 
-            dataItemsLeft -= count;
-            dataItemCount += count;
+            dataItemsLeft -= icount;
+            dataItemCount += icount;
         }
 
         u4 bit = mapTypeToBitMask(item->type);
@@ -2077,6 +2080,7 @@ static const u1* verifyEncodedArray(const CheckState* state,
     while (size--) {
         data = verifyEncodedValue(state, data, crossVerify);
         if (data == NULL) {
+            LOGE("Bogus encoded_array value\n");
             return NULL;
         }
     }

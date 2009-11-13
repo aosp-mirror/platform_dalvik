@@ -115,7 +115,7 @@ static int methodIsPublic(JNIEnv* env, jclass clazz, jmethodID methodId)
     }
     getModifiersId = (*env)->GetMethodID(env, methodClass,
                         "getModifiers", "()I");
-    if (methodClass == NULL) {
+    if (getModifiersId == NULL) {
         fprintf(stderr, "Dalvik VM unable to find reflect.Method.getModifiers\n");
         goto bail;
     }

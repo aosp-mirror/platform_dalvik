@@ -33,7 +33,9 @@ r15 (pc) can be tinkered with directly
 r0 holds returns of <= 4 bytes
 r0-r1 hold returns of 8 bytes, low word in r0
 
-Callee must save/restore r4+ (except r12) if it modifies them.
+Callee must save/restore r4+ (except r12) if it modifies them.  If VFP
+is present, registers s16-s31 (a/k/a d8-d15, a/k/a q4-q7) must be preserved,
+s0-s15 (d0-d7, q0-a3) do not need to be.
 
 Stack is "full descending".  Only the arguments that don't fit in the first 4
 registers are placed on the stack.  "sp" points at the first stacked argument
@@ -54,8 +56,8 @@ The following registers have fixed assignments:
   r4  rPC       interpreted program counter, used for fetching instructions
   r5  rFP       interpreted frame pointer, used for accessing locals and args
   r6  rGLUE     MterpGlue pointer
-  r7  rIBASE    interpreted instruction base pointer, used for computed goto
-  r8  rINST     first 16-bit code unit of current instruction
+  r7  rINST     first 16-bit code unit of current instruction
+  r8  rIBASE    interpreted instruction base pointer, used for computed goto
 
 Macros are provided for common operations.  Each macro MUST emit only
 one instruction to make instruction-counting easier.  They MUST NOT alter
@@ -66,8 +68,8 @@ unspecified registers or condition codes.
 #define rPC     r4
 #define rFP     r5
 #define rGLUE   r6
-#define rIBASE  r7
-#define rINST   r8
+#define rINST   r7
+#define rIBASE  r8
 
 /* save/restore the PC and/or FP from the glue struct */
 #define LOAD_PC_FROM_GLUE()     ldr     rPC, [rGLUE, #offGlue_pc]
@@ -117,6 +119,13 @@ unspecified registers or condition codes.
 #define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #(_count*2)]!
 
 /*
+ * The operation performed here is similar to FETCH_ADVANCE_INST, except the
+ * src and dest registers are parameterized (not hard-wired to rPC and rINST).
+ */
+#define PREFETCH_ADVANCE_INST(_dreg, _sreg, _count) \
+        ldrh    _dreg, [_sreg, #(_count*2)]!
+
+/*
  * Fetch the next instruction from an offset specified by _reg.  Updates
  * rPC to point to the next instruction.  "_reg" must specify the distance
  * in bytes, *not* 16-bit code units, and may be a signed value.
@@ -150,16 +159,34 @@ unspecified registers or condition codes.
 #define GET_INST_OPCODE(_reg)   and     _reg, rINST, #255
 
 /*
+ * Put the prefetched instruction's opcode field into the specified register.
+ */
+#define GET_PREFETCHED_OPCODE(_oreg, _ireg)   and     _oreg, _ireg, #255
+
+/*
  * Begin executing the opcode in _reg.  Because this only jumps within the
  * interpreter, we don't have to worry about pre-ARMv5 THUMB interwork.
  */
 #define GOTO_OPCODE(_reg)       add     pc, rIBASE, _reg, lsl #${handler_size_bits}
+#define GOTO_OPCODE_IFEQ(_reg)  addeq   pc, rIBASE, _reg, lsl #${handler_size_bits}
+#define GOTO_OPCODE_IFNE(_reg)  addne   pc, rIBASE, _reg, lsl #${handler_size_bits}
 
 /*
  * Get/set the 32-bit value from a Dalvik register.
  */
 #define GET_VREG(_reg, _vreg)   ldr     _reg, [rFP, _vreg, lsl #2]
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
+
+#if defined(WITH_JIT)
+#define GET_JIT_ENABLED(_reg)       ldr     _reg,[rGLUE,#offGlue_jitEnabled]
+#define GET_JIT_PROF_TABLE(_reg)    ldr     _reg,[rGLUE,#offGlue_pJitProfTable]
+#endif
+
+/*
+ * Convert a virtual register index into an address.
+ */
+#define VREG_INDEX_TO_ADDR(_reg, _vreg) \
+        add     _reg, rFP, _vreg, lsl #2
 
 /*
  * This is a #include, not a %include, because we want the C pre-processor

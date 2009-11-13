@@ -17,7 +17,6 @@
 
 package java.util;
 
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -28,12 +27,12 @@ import java.lang.reflect.Array;
  * LinkedList is an implementation of List, backed by a linked list. All
  * optional operations (adding, removing and replacing) are supported. The
  * elements can be any objects.
- * 
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public class LinkedList<E> extends AbstractSequentialList<E> implements
         List<E>, Queue<E>, Cloneable, Serializable {
-    
+
     private static final long serialVersionUID = 876323262645176354L;
 
     transient int size = 0;
@@ -178,8 +177,6 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Constructs a new empty instance of {@code LinkedList}.
-     * 
-     * @since Android 1.0
      */
     public LinkedList() {
         voidLink = new Link<E>(null, null, null);
@@ -192,10 +189,9 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
      * elements contained in the specified {@code collection}. The order of the
      * elements in this new {@code LinkedList} will be determined by the
      * iteration order of {@code collection}.
-     * 
+     *
      * @param collection
      *            the collection of elements to add.
-     * @since Android 1.0
      */
     public LinkedList(Collection<? extends E> collection) {
         this();
@@ -207,14 +203,13 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
      * specified location. The object is inserted before any previous element at
      * the specified location. If the location is equal to the size of this
      * {@code LinkedList}, the object is added at the end.
-     * 
+     *
      * @param location
      *            the index at which to insert.
      * @param object
      *            the object to add.
      * @throws IndexOutOfBoundsException
      *             if {@code location < 0 || >= size()}
-     * @since Android 1.0
      */
     @Override
     public void add(int location, E object) {
@@ -242,11 +237,10 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Adds the specified object at the end of this {@code LinkedList}.
-     * 
+     *
      * @param object
      *            the object to add.
      * @return always true
-     * @since Android 1.0
      */
     @Override
     public boolean add(E object) {
@@ -264,7 +258,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
      * Inserts the objects in the specified collection at the specified location
      * in this {@code LinkedList}. The objects are added in the order they are
      * returned from the collection's iterator.
-     * 
+     *
      * @param location
      *            the index at which to insert.
      * @param collection
@@ -277,7 +271,6 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
      *             if an object cannot be added to this list.
      * @throws IndexOutOfBoundsException
      *             if {@code location < 0 || > size()}
-     * @since Android 1.0
      */
     @Override
     public boolean addAll(int location, Collection<? extends E> collection) {
@@ -288,6 +281,9 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
         if (adding == 0) {
             return false;
         }
+        Collection<? extends E> elements = (collection == this) ?
+                new ArrayList<E>(collection) : collection;
+
         Link<E> previous = voidLink;
         if (location < (size / 2)) {
             for (int i = 0; i < location; i++) {
@@ -299,7 +295,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
             }
         }
         Link<E> next = previous.next;
-        for (E e : collection) {
+        for (E e : elements) {
             Link<E> newLink = new Link<E>(e, previous, null);
             previous.next = newLink;
             previous = newLink;
@@ -311,15 +307,13 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
         return true;
     }
 
-
     /**
      * Adds the objects in the specified Collection to this {@code LinkedList}.
-     * 
+     *
      * @param collection
      *            the collection of objects.
      * @return {@code true} if this {@code LinkedList} is modified,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean addAll(Collection<? extends E> collection) {
@@ -327,8 +321,11 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
         if (adding == 0) {
             return false;
         }
+        Collection<? extends E> elements = (collection == this) ?
+                new ArrayList<E>(collection) : collection;
+
         Link<E> previous = voidLink.previous;
-        for (E e : collection) {
+        for (E e : elements) {
             Link<E> newLink = new Link<E>(e, previous, null);
             previous.next = newLink;
             previous = newLink;
@@ -342,10 +339,9 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Adds the specified object at the beginning of this {@code LinkedList}.
-     * 
+     *
      * @param object
      *            the object to add.
-     * @since Android 1.0
      */
     public void addFirst(E object) {
         Link<E> oldFirst = voidLink.next;
@@ -358,10 +354,9 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Adds the specified object at the end of this {@code LinkedList}.
-     * 
+     *
      * @param object
      *            the object to add.
-     * @since Android 1.0
      */
     public void addLast(E object) {
         Link<E> oldLast = voidLink.previous;
@@ -374,10 +369,9 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Removes all elements from this {@code LinkedList}, leaving it empty.
-     * 
+     *
      * @see List#isEmpty
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -392,10 +386,9 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
     /**
      * Returns a new {@code LinkedList} with the same elements and size as this
      * {@code LinkedList}.
-     * 
+     *
      * @return a shallow copy of this {@code LinkedList}.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -415,12 +408,11 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Searches this {@code LinkedList} for the specified object.
-     * 
+     *
      * @param object
      *            the object to search for.
      * @return {@code true} if {@code object} is an element of this
      *         {@code LinkedList}, {@code false} otherwise
-     * @since Android 1.0
      */
     @Override
     public boolean contains(Object object) {
@@ -463,11 +455,10 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Returns the first element in this {@code LinkedList}.
-     * 
+     *
      * @return the first element.
      * @throws NoSuchElementException
      *             if this {@code LinkedList} is empty.
-     * @since Android 1.0
      */
     public E getFirst() {
         Link<E> first = voidLink.next;
@@ -479,11 +470,10 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Returns the last element in this {@code LinkedList}.
-     * 
+     *
      * @return the last element
      * @throws NoSuchElementException
      *             if this {@code LinkedList} is empty
-     * @since Android 1.0
      */
     public E getLast() {
         Link<E> last = voidLink.previous;
@@ -520,12 +510,11 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
     /**
      * Searches this {@code LinkedList} for the specified object and returns the
      * index of the last occurrence.
-     * 
+     *
      * @param object
      *            the object to search for
      * @return the index of the last occurrence of the object, or -1 if it was
      *         not found.
-     * @since Android 1.0
      */
     @Override
     public int lastIndexOf(Object object) {
@@ -555,14 +544,13 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
      * Returns a ListIterator on the elements of this {@code LinkedList}. The
      * elements are iterated in the same order that they occur in the
      * {@code LinkedList}. The iteration starts at the specified location.
-     * 
+     *
      * @param location
      *            the index at which to start the iteration
      * @return a ListIterator on the elements of this {@code LinkedList}
      * @throws IndexOutOfBoundsException
      *             if {@code location < 0 || >= size()}
      * @see ListIterator
-     * @since Android 1.0
      */
     @Override
     public ListIterator<E> listIterator(int location) {
@@ -571,13 +559,12 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Removes the object at the specified location from this {@code LinkedList}.
-     * 
+     *
      * @param location
      *            the index of the object to remove
      * @return the removed object
      * @throws IndexOutOfBoundsException
      *             if {@code location < 0 || >= size()}
-     * @since Android 1.0
      */
     @Override
     public E remove(int location) {
@@ -629,11 +616,10 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Removes the first object from this {@code LinkedList}.
-     * 
+     *
      * @return the removed object.
      * @throws NoSuchElementException
      *             if this {@code LinkedList} is empty.
-     * @since Android 1.0
      */
     public E removeFirst() {
         Link<E> first = voidLink.next;
@@ -650,11 +636,10 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Removes the last object from this {@code LinkedList}.
-     * 
+     *
      * @return the removed object.
      * @throws NoSuchElementException
      *             if this {@code LinkedList} is empty.
-     * @since Android 1.0
      */
     public E removeLast() {
         Link<E> last = voidLink.previous;
@@ -672,7 +657,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
     /**
      * Replaces the element at the specified location in this {@code LinkedList}
      * with the specified object.
-     * 
+     *
      * @param location
      *            the index at which to put the specified object.
      * @param object
@@ -684,7 +669,6 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
      *             if an object cannot be added to this list.
      * @throws IndexOutOfBoundsException
      *             if {@code location < 0 || >= size()}
-     * @since Android 1.0
      */
     @Override
     public E set(int location, E object) {
@@ -708,15 +692,14 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
 
     /**
      * Returns the number of elements in this {@code LinkedList}.
-     * 
+     *
      * @return the number of elements in this {@code LinkedList}.
-     * @since Android 1.0
      */
     @Override
     public int size() {
         return size;
     }
-    
+
     public boolean offer(E o) {
         add(o);
         return true;
@@ -742,9 +725,8 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
     /**
      * Returns a new array containing all elements contained in this
      * {@code LinkedList}.
-     * 
+     *
      * @return an array of the elements from this {@code LinkedList}.
-     * @since Android 1.0
      */
     @Override
     public Object[] toArray() {
@@ -765,14 +747,13 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
      * type is created. If the specified array is used and is larger than this
      * {@code LinkedList}, the array element following the collection elements
      * is set to null.
-     * 
+     *
      * @param contents
      *            the array.
      * @return an array of the elements from this {@code LinkedList}.
      * @throws ArrayStoreException
      *             if the type of an element in this {@code LinkedList} cannot
      *             be stored in the type of the specified array.
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -784,7 +765,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
         }
         Link<E> link = voidLink.next;
         while (link != voidLink) {
-            contents[index++] = (T)link.data;
+            contents[index++] = (T) link.data;
             link = link.next;
         }
         if (index < contents.length) {
@@ -810,7 +791,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements
         voidLink = new Link<E>(null, null, null);
         Link<E> link = voidLink;
         for (int i = size; --i >= 0;) {
-            Link<E> nextLink = new Link<E>((E)stream.readObject(), link, null);
+            Link<E> nextLink = new Link<E>((E) stream.readObject(), link, null);
             link.next = nextLink;
             link = nextLink;
         }

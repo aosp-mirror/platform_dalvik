@@ -20,6 +20,7 @@
 #include "Dalvik.h"
 #include "test/Test.h"
 #include "mterp/Mterp.h"
+#include "Hash.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -48,6 +49,11 @@ static bool dvmInitZygote(void);
 
 /* global state */
 struct DvmGlobals gDvm;
+
+/* JIT-specific global state */
+#if defined(WITH_JIT)
+struct DvmJitGlobals gDvmJit;
+#endif
 
 /*
  * Show usage.
@@ -83,8 +89,13 @@ static void dvmUsage(const char* progName)
         kMinStackSize / 1024, kMaxStackSize / 1024);
     dvmFprintf(stderr, "  -Xverify:{none,remote,all}\n");
     dvmFprintf(stderr, "  -Xrs\n");
+#if defined(WITH_JIT)
+    dvmFprintf(stderr,
+                "  -Xint  (extended to accept ':portable', ':fast' and ':jit')\n");
+#else
     dvmFprintf(stderr,
                 "  -Xint  (extended to accept ':portable' and ':fast')\n");
+#endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "These are unique to Dalvik:\n");
     dvmFprintf(stderr, "  -Xzygote\n");
@@ -95,8 +106,21 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
+    dvmFprintf(stderr, "  -Xgc:[no]precise\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
+#if defined(WITH_JIT)
+    dvmFprintf(stderr, "  -Xincludeselectedop\n");
+    dvmFprintf(stderr, "  -Xjitop:hexopvalue[-endvalue]"
+                       "[,hexopvalue[-endvalue]]*\n");
+    dvmFprintf(stderr, "  -Xincludeselectedmethod\n");
+    dvmFprintf(stderr, "  -Xthreshold:decimalvalue\n");
+    dvmFprintf(stderr, "  -Xblocking\n");
+    dvmFprintf(stderr, "  -Xjitmethod:signture[,signature]* "
+                       "(eg Ljava/lang/String\\;replace)\n");
+    dvmFprintf(stderr, "  -Xjitverbose\n");
+    dvmFprintf(stderr, "  -Xjitprofile\n");
+#endif
     dvmFprintf(stderr, "\n");
     dvmFprintf(stderr, "Configured with:"
 #ifdef WITH_DEBUGGER
@@ -132,6 +156,9 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_EXTRA_OBJECT_VALIDATION
         " extra_object_validation"
 #endif
+#ifdef WITH_EXTRA_GC_CHECKS
+        " extra_gc_checks"
+#endif
 #ifdef WITH_DALVIK_ASSERT
         " dalvik_assert"
 #endif
@@ -156,6 +183,9 @@ static void dvmUsage(const char* progName)
         " resolver_cache_expanding"
 #elif DVM_RESOLVER_CACHE == DVM_RC_NO_CACHE
         " resolver_cache_disabled"
+#endif
+#if defined(WITH_JIT)
+        " with_jit"
 #endif
     );
 #ifdef DVM_SHOW_EXCEPTION
@@ -527,6 +557,97 @@ static void freeAssertionCtrl(void)
     free(gDvm.assertionCtrl);
 }
 
+#if defined(WITH_JIT)
+/* Parse -Xjitop to selectively turn on/off certain opcodes for JIT */
+static void processXjitop(const char *opt)
+{
+    if (opt[7] == ':') {
+        const char *startPtr = &opt[8];
+        char *endPtr = NULL;
+
+        do {
+            long startValue, endValue;
+
+            startValue = strtol(startPtr, &endPtr, 16);
+            if (startPtr != endPtr) {
+                /* Just in case value is out of range */
+                startValue &= 0xff;
+
+                if (*endPtr == '-') {
+                    endValue = strtol(endPtr+1, &endPtr, 16);
+                    endValue &= 0xff;
+                } else {
+                    endValue = startValue;
+                }
+
+                for (; startValue <= endValue; startValue++) {
+                    LOGW("Dalvik opcode %x is selected for debugging",
+                         (unsigned int) startValue);
+                    /* Mark the corresponding bit to 1 */
+                    gDvmJit.opList[startValue >> 3] |=
+                        1 << (startValue & 0x7);
+                }
+
+                if (*endPtr == 0) {
+                    break;
+                }
+
+                startPtr = endPtr + 1;
+
+                continue;
+            } else {
+                if (*endPtr != 0) {
+                    dvmFprintf(stderr,
+                        "Warning: Unrecognized opcode value substring "
+                        "%s\n", endPtr);
+                }
+                break;
+            }
+        } while (1);
+    } else {
+        int i;
+        for (i = 0; i < 32; i++) {
+            gDvmJit.opList[i] = 0xff;
+        }
+        dvmFprintf(stderr, "Warning: select all opcodes\n");
+    }
+}
+
+/* Parse -Xjitmethod to selectively turn on/off certain methods for JIT */
+static void processXjitmethod(const char *opt)
+{
+    char *buf = strdup(&opt[12]);
+    char *start, *end;
+
+    gDvmJit.methodTable = dvmHashTableCreate(8, NULL);
+
+    start = buf;
+    /* 
+     * Break comma-separated method signatures and enter them into the hash
+     * table individually.
+     */
+    do {
+        int hashValue;
+
+        end = strchr(start, ',');
+        if (end) {
+            *end = 0;
+        }
+
+        hashValue = dvmComputeUtf8Hash(start);
+
+        dvmHashTableLookup(gDvmJit.methodTable, hashValue,
+                           strdup(start),
+                           (HashCompareFunc) strcmp, true);
+        if (end) {
+            start = end + 1;
+        } else {
+            break;
+        }
+    } while (1);
+    free(buf);
+}
+#endif
 
 /*
  * Process an argument vector full of options.  Unlike standard C programs,
@@ -756,6 +877,10 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                     gDvm.executionMode = kExecutionModeInterpPortable;
                 else if (strcmp(argv[i] + 6, "fast") == 0)
                     gDvm.executionMode = kExecutionModeInterpFast;
+#ifdef WITH_JIT
+                else if (strcmp(argv[i] + 6, "jit") == 0)
+                    gDvm.executionMode = kExecutionModeJit;
+#endif
                 else {
                     dvmFprintf(stderr,
                         "Warning: Unrecognized interpreter mode %s\n",argv[i]);
@@ -764,6 +889,25 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             } else {
                 /* disable JIT -- nothing to do here for now */
             }
+
+#ifdef WITH_JIT
+        } else if (strncmp(argv[i], "-Xjitop", 7) == 0) {
+            processXjitop(argv[i]);
+        } else if (strncmp(argv[i], "-Xjitmethod", 11) == 0) {
+            processXjitmethod(argv[i]);
+        } else if (strncmp(argv[i], "-Xblocking", 10) == 0) {
+          gDvmJit.blockingMode = true;
+        } else if (strncmp(argv[i], "-Xthreshold:", 12) == 0) {
+          gDvmJit.threshold = atoi(argv[i] + 12);
+        } else if (strncmp(argv[i], "-Xincludeselectedop", 19) == 0) {
+          gDvmJit.includeSelectedOp = true;
+        } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {
+          gDvmJit.includeSelectedMethod = true;
+        } else if (strncmp(argv[i], "-Xjitverbose", 12) == 0) {
+          gDvmJit.printMe = true;
+        } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
+          gDvmJit.profile = true;
+#endif
 
         } else if (strncmp(argv[i], "-Xdeadlockpredict:", 18) == 0) {
 #ifdef WITH_DEADLOCK_PREDICTION
@@ -788,6 +932,18 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 
         } else if (strcmp(argv[i], "-Xgenregmap") == 0) {
             gDvm.generateRegisterMaps = true;
+            LOGV("Register maps will be generated during verification\n");
+
+        } else if (strncmp(argv[i], "-Xgc:", 5) == 0) {
+            if (strcmp(argv[i] + 5, "precise") == 0)
+                gDvm.preciseGc = true;
+            else if (strcmp(argv[i] + 5, "noprecise") == 0)
+                gDvm.preciseGc = false;
+            else {
+                dvmFprintf(stderr, "Bad value for -Xgc");
+                return -1;
+            }
+            LOGD("Precise GC configured %s\n", gDvm.preciseGc ? "ON" : "OFF");
 
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
@@ -810,6 +966,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 
 /*
  * Set defaults for fields altered or modified by arguments.
+ *
+ * Globals are initialized to 0 (a/k/a NULL or false).
  */
 static void setCommandLineDefaults()
 {
@@ -849,7 +1007,19 @@ static void setCommandLineDefaults()
      * we know we're using the "desktop" build we should probably be
      * using "portable" rather than "fast".
      */
+#if defined(WITH_JIT)
+    gDvm.executionMode = kExecutionModeJit;
+    /* 
+     * TODO - check system property and insert command-line options in 
+     *        frameworks/base/core/jni/AndroidRuntime.cpp
+     */
+    gDvmJit.blockingMode = false;
+    gDvmJit.jitTableSize = 512;
+    gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
+    gDvmJit.threshold = 200;
+#else
     gDvm.executionMode = kExecutionModeInterpFast;
+#endif
 }
 
 
@@ -886,6 +1056,9 @@ static void blockSignals()
     sigemptyset(&mask);
     sigaddset(&mask, SIGQUIT);
     sigaddset(&mask, SIGUSR1);      // used to initiate heap dump
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+    sigaddset(&mask, SIGUSR2);      // used to investigate JIT internals
+#endif
     //sigaddset(&mask, SIGPIPE);
     cc = sigprocmask(SIG_BLOCK, &mask, NULL);
     assert(cc == 0);
@@ -936,6 +1109,22 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
         goto fail;
     }
 
+#if WITH_EXTRA_GC_CHECKS > 1
+    /* only "portable" interp has the extra goodies */
+    if (gDvm.executionMode != kExecutionModeInterpPortable) {
+        LOGI("Switching to 'portable' interpreter for GC checks\n");
+        gDvm.executionMode = kExecutionModeInterpPortable;
+    }
+#endif
+
+    /* Configure group scheduling capabilities */
+    if (!access("/dev/cpuctl/tasks", F_OK)) {
+        LOGV("Using kernel group scheduling");
+        gDvm.kernelGroupScheduling = 1;
+    } else {
+        LOGV("Using kernel scheduler policies");
+    }
+
     /* configure signal handling */
     if (!gDvm.reduceSignals)
         blockSignals();
@@ -956,6 +1145,8 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmInlineNativeStartup())
         goto fail;
     if (!dvmVerificationStartup())
+        goto fail;
+    if (!dvmRegisterMapStartup())
         goto fail;
     if (!dvmInstanceofStartup())
         goto fail;
@@ -1028,7 +1219,7 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
      * Do some "late" initialization for the memory allocator.  This may
      * allocate storage and initialize classes.
      */
-    if (!dvmGcLateInit())
+    if (!dvmCreateStockExceptions())
         goto fail;
 
     /*
@@ -1058,7 +1249,10 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
 
 
 #ifndef NDEBUG
-    dvmTestHash();
+    if (!dvmTestHash())
+        LOGE("dmvTestHash FAILED\n");
+    if (false /*noisy!*/ && !dvmTestIndirectRefTable())
+        LOGE("dvmTestIndirectRefTable FAILED\n");
 #endif
 
     assert(!dvmCheckException(dvmThreadSelf()));
@@ -1166,6 +1360,11 @@ bool dvmInitAfterZygote(void)
     LOGV("thread-start heap=%d quit=%d jdwp=%d total=%d usec\n",
         (int)(endHeap-startHeap), (int)(endQuit-startQuit),
         (int)(endJdwp-startJdwp), (int)(endJdwp-startHeap));
+
+#ifdef WITH_JIT
+    if (!dvmJitStartup())
+        return false;
+#endif
 
     return true;
 }
@@ -1290,6 +1489,8 @@ int dvmPrepForDexOpt(const char* bootClassPath, DexOptimizerMode dexOptMode,
         goto fail;
     if (!dvmVerificationStartup())
         goto fail;
+    if (!dvmRegisterMapStartup())
+        goto fail;
     if (!dvmInstanceofStartup())
         goto fail;
     if (!dvmClassStartup())
@@ -1350,6 +1551,11 @@ void dvmShutdown(void)
     /* shut down stdout/stderr conversion */
     dvmStdioConverterShutdown();
 
+#ifdef WITH_JIT
+    /* tell the compiler to shut down if it was started */
+    dvmJitShutdown();
+#endif
+
     /*
      * Kill any daemon threads that still exist.  Actively-running threads
      * are likely to crash the process if they continue to execute while
@@ -1370,6 +1576,7 @@ void dvmShutdown(void)
     dvmThreadShutdown();
     dvmClassShutdown();
     dvmVerificationShutdown();
+    dvmRegisterMapShutdown();
     dvmInstanceofShutdown();
     dvmInlineNativeShutdown();
     dvmGcShutdown();

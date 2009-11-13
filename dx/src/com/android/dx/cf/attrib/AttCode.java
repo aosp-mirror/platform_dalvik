@@ -22,35 +22,35 @@ import com.android.dx.cf.iface.AttributeList;
 import com.android.dx.util.MutabilityException;
 
 /**
- * Attribute class for standard <code>Code</code> attributes.
+ * Attribute class for standard {@code Code} attributes.
  */
 public final class AttCode extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "Code";
 
-    /** &gt;= 0; the stack size */
+    /** {@code >= 0;} the stack size */
     private final int maxStack;
 
-    /** &gt;= 0; the number of locals */
+    /** {@code >= 0;} the number of locals */
     private final int maxLocals;
 
-    /** non-null; array containing the bytecode per se */
+    /** {@code non-null;} array containing the bytecode per se */
     private final BytecodeArray code;
 
-    /** non-null; the exception table */
+    /** {@code non-null;} the exception table */
     private final ByteCatchList catches;
 
-    /** non-null; the associated list of attributes */
+    /** {@code non-null;} the associated list of attributes */
     private final AttributeList attributes;
 
     /**
      * Constructs an instance.
      * 
-     * @param maxStack &gt;= 0; the stack size
-     * @param maxLocals &gt;= 0; the number of locals
-     * @param code non-null; array containing the bytecode per se
-     * @param catches non-null; the exception table
-     * @param attributes non-null; the associated list of attributes
+     * @param maxStack {@code >= 0;} the stack size
+     * @param maxLocals {@code >= 0;} the number of locals
+     * @param code {@code non-null;} array containing the bytecode per se
+     * @param catches {@code non-null;} the exception table
+     * @param attributes {@code non-null;} the associated list of attributes
      */
     public AttCode(int maxStack, int maxLocals, BytecodeArray code,
                    ByteCatchList catches, AttributeList attributes) {
@@ -101,7 +101,7 @@ public final class AttCode extends BaseAttribute {
     /**
      * Gets the maximum stack size.
      * 
-     * @return &gt;= 0; the maximum stack size
+     * @return {@code >= 0;} the maximum stack size
      */
     public int getMaxStack() {
         return maxStack;
@@ -110,7 +110,7 @@ public final class AttCode extends BaseAttribute {
     /**
      * Gets the number of locals.
      * 
-     * @return &gt;= 0; the number of locals
+     * @return {@code >= 0;} the number of locals
      */
     public int getMaxLocals() {
         return maxLocals;
@@ -119,7 +119,7 @@ public final class AttCode extends BaseAttribute {
     /**
      * Gets the bytecode array.
      * 
-     * @return non-null; the bytecode array
+     * @return {@code non-null;} the bytecode array
      */
     public BytecodeArray getCode() {
         return code;
@@ -128,7 +128,7 @@ public final class AttCode extends BaseAttribute {
     /**
      * Gets the exception table.
      * 
-     * @return non-null; the exception table
+     * @return {@code non-null;} the exception table
      */
     public ByteCatchList getCatches() {
         return catches;
@@ -137,7 +137,7 @@ public final class AttCode extends BaseAttribute {
     /**
      * Gets the associated attribute list.
      * 
-     * @return non-null; the attribute list
+     * @return {@code non-null;} the attribute list
      */
     public AttributeList getAttributes() {
         return attributes;

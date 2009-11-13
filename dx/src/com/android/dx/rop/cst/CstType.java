@@ -24,69 +24,69 @@ import java.util.HashMap;
  * Constants that represent an arbitrary type (reference or primitive).
  */
 public final class CstType extends TypedConstant {
-    /** non-null; map of interned types */
+    /** {@code non-null;} map of interned types */
     private static final HashMap<Type, CstType> interns =
         new HashMap<Type, CstType>(100);
 
-    /** non-null; instance corresponding to the class <code>Object</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Object} */
     public static final CstType OBJECT = intern(Type.OBJECT);
 
-    /** non-null; instance corresponding to the class <code>Boolean</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Boolean} */
     public static final CstType BOOLEAN = intern(Type.BOOLEAN_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Byte</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Byte} */
     public static final CstType BYTE = intern(Type.BYTE_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Character</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Character} */
     public static final CstType CHARACTER = intern(Type.CHARACTER_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Double</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Double} */
     public static final CstType DOUBLE = intern(Type.DOUBLE_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Float</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Float} */
     public static final CstType FLOAT = intern(Type.FLOAT_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Long</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Long} */
     public static final CstType LONG = intern(Type.LONG_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Integer</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Integer} */
     public static final CstType INTEGER = intern(Type.INTEGER_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Short</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Short} */
     public static final CstType SHORT = intern(Type.SHORT_CLASS);
 
-    /** non-null; instance corresponding to the class <code>Void</code> */
+    /** {@code non-null;} instance corresponding to the class {@code Void} */
     public static final CstType VOID = intern(Type.VOID_CLASS);
 
-    /** non-null; instance corresponding to the type <code>boolean[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code boolean[]} */
     public static final CstType BOOLEAN_ARRAY = intern(Type.BOOLEAN_ARRAY);
 
-    /** non-null; instance corresponding to the type <code>byte[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code byte[]} */
     public static final CstType BYTE_ARRAY = intern(Type.BYTE_ARRAY);
 
-    /** non-null; instance corresponding to the type <code>char[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code char[]} */
     public static final CstType CHAR_ARRAY = intern(Type.CHAR_ARRAY);
 
-    /** non-null; instance corresponding to the type <code>double[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code double[]} */
     public static final CstType DOUBLE_ARRAY = intern(Type.DOUBLE_ARRAY);
 
-    /** non-null; instance corresponding to the type <code>float[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code float[]} */
     public static final CstType FLOAT_ARRAY = intern(Type.FLOAT_ARRAY);
 
-    /** non-null; instance corresponding to the type <code>long[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code long[]} */
     public static final CstType LONG_ARRAY = intern(Type.LONG_ARRAY);
 
-    /** non-null; instance corresponding to the type <code>int[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code int[]} */
     public static final CstType INT_ARRAY = intern(Type.INT_ARRAY);
 
-    /** non-null; instance corresponding to the type <code>short[]</code> */
+    /** {@code non-null;} instance corresponding to the type {@code short[]} */
     public static final CstType SHORT_ARRAY = intern(Type.SHORT_ARRAY);
 
-    /** non-null; the underlying type */
+    /** {@code non-null;} the underlying type */
     private final Type type;
 
     /**
-     * null-ok; the type descriptor corresponding to this instance, if
+     * {@code null-ok;} the type descriptor corresponding to this instance, if
      * calculated
      */
     private CstUtf8 descriptor;
@@ -95,10 +95,10 @@ public final class CstType extends TypedConstant {
      * Returns an instance of this class that represents the wrapper
      * class corresponding to a given primitive type. For example, if
      * given {@link Type#INT}, this method returns the class reference
-     * <code>java.lang.Integer</code>.
+     * {@code java.lang.Integer}.
      * 
-     * @param primitiveType non-null; the primitive type
-     * @return non-null; the corresponding wrapper class
+     * @param primitiveType {@code non-null;} the primitive type
+     * @return {@code non-null;} the corresponding wrapper class
      */
     public static CstType forBoxedPrimitiveType(Type primitiveType) {
         switch (primitiveType.getBasicType()) {
@@ -119,8 +119,8 @@ public final class CstType extends TypedConstant {
     /**
      * Returns an interned instance of this class for the given type.
      * 
-     * @param type non-null; the underlying type
-     * @return non-null; an appropriately-constructed instance
+     * @param type {@code non-null;} the underlying type
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static CstType intern(Type type) {
         CstType cst = interns.get(type);
@@ -136,7 +136,7 @@ public final class CstType extends TypedConstant {
     /**
      * Constructs an instance.
      * 
-     * @param type non-null; the underlying type
+     * @param type {@code non-null;} the underlying type
      */
     public CstType(Type type) {
         if (type == null) {
@@ -207,9 +207,9 @@ public final class CstType extends TypedConstant {
     /**
      * Gets the underlying type (as opposed to the type corresponding
      * to this instance as a constant, which is always
-     * <code>Class</code>).
+     * {@code Class}).
      * 
-     * @return non-null; the type corresponding to the name
+     * @return {@code non-null;} the type corresponding to the name
      */
     public Type getClassType() {
         return type;
@@ -218,7 +218,7 @@ public final class CstType extends TypedConstant {
     /**
      * Gets the type descriptor for this instance.
      * 
-     * @return non-null; the descriptor
+     * @return {@code non-null;} the descriptor
      */
     public CstUtf8 getDescriptor() {
         if (descriptor == null) {

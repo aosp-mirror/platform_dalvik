@@ -75,8 +75,6 @@ public class Support_Configuration {
 
     public static byte[] InetTestCaddr = { 9, 26, -56, -111 };
 
-    public static int InetTestHashcode = 2130706433;
-
     public static final String HomeAddress6 = "jcltest6.apache.org";
 
     public static String IPv6GlobalAddressJcl4 = "FE80:0000:0000:0000:020D:60FF:FE0F:A776%4"; // this
@@ -91,13 +89,6 @@ public class Support_Configuration {
     // network
     // this allows us to check the timeouts for connect
     public static String ResolvedNotExistingHost = "9.26.194.72";
-
-    /**
-     * You can compute the hash code with the following code: try { String name =
-     * "whatever.xxx.com";
-     * System.out.println(InetAddress.getByName(name).hashCode()); } catch
-     * (UnknownHostException e) {}
-     */
 
     // BEGIN android-changed
     /**
@@ -290,11 +281,6 @@ public class Support_Configuration {
         value = props.get("InetTestIP2");
         if (value != null) {
             InetTestIP2 = value;
-        }
-
-        value = props.get("InetTestHashcode");
-        if (value != null) {
-            InetTestHashcode = Integer.parseInt(value);
         }
 
         value = props.get("SpecialInetTestAddress");

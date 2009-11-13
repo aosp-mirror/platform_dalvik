@@ -21,15 +21,12 @@ package java.lang.annotation;
  * Defines a meta-annotation for determining the scope of retention for an
  * annotation. If the retention annotation is not set {@code
  * RetentionPolicy.CLASS} is used as default retention.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface Retention {
-    // BEGIN android-changed
-    // copied from newer version of harmony
     RetentionPolicy value();
-    // END android-changed
 }

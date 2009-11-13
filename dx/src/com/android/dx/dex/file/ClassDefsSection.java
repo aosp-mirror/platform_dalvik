@@ -28,22 +28,22 @@ import java.util.Collection;
 import java.util.TreeMap;
 
 /**
- * Class definitions list section of a <code>.dex</code> file.
+ * Class definitions list section of a {@code .dex} file.
  */
 public final class ClassDefsSection extends UniformItemSection {
     /**
-     * non-null; map from type constants for classes to {@link
+     * {@code non-null;} map from type constants for classes to {@link
      * ClassDefItem} instances that define those classes
      */
     private final TreeMap<Type, ClassDefItem> classDefs;
 
-    /** null-ok; ordered list of classes; set in {@link #orderItems} */
+    /** {@code null-ok;} ordered list of classes; set in {@link #orderItems} */
     private ArrayList<ClassDefItem> orderedDefs;
 
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param file non-null; file that this instance is part of
+     * @param file {@code non-null;} file that this instance is part of
      */
     public ClassDefsSection(DexFile file) {
         super("class_defs", file, 4);
@@ -84,7 +84,7 @@ public final class ClassDefsSection extends UniformItemSection {
     /**
      * Writes the portion of the file header that refers to this instance.
      * 
-     * @param out non-null; where to write
+     * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
         throwIfNotPrepared();
@@ -105,7 +105,7 @@ public final class ClassDefsSection extends UniformItemSection {
      * Adds an element to this instance. It is illegal to attempt to add more
      * than one class with the same name.
      * 
-     * @param clazz non-null; the class def to add
+     * @param clazz {@code non-null;} the class def to add
      */
     public void add(ClassDefItem clazz) {
         Type type;
@@ -149,11 +149,11 @@ public final class ClassDefsSection extends UniformItemSection {
      * Helper for {@link #orderItems}, which recursively assigns indices
      * to classes.
      * 
-     * @param type null-ok; type ref to assign, if any
-     * @param idx &gt;= 0; the next index to assign
+     * @param type {@code null-ok;} type ref to assign, if any
+     * @param idx {@code >= 0;} the next index to assign
      * @param maxDepth maximum recursion depth; if negative, this will
      * throw an exception indicating class definition circularity
-     * @return &gt;= 0; the next index to assign
+     * @return {@code >= 0;} the next index to assign
      */
     private int orderItems0(Type type, int idx, int maxDepth) {
         ClassDefItem c = classDefs.get(type);

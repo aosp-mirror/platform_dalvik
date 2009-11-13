@@ -24,8 +24,8 @@ import org.apache.harmony.annotation.internal.nls.Messages;
 /**
  * Indicates that an annotation type has changed since it was compiled or
  * serialized.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public class AnnotationTypeMismatchException extends RuntimeException {
 
@@ -37,16 +37,13 @@ public class AnnotationTypeMismatchException extends RuntimeException {
 
     /**
      * Constructs an instance for the given type element and the type found.
-     * 
+     *
      * @param element
      *            the annotation type element.
-     * 
      * @param foundType
      *            the invalid type that was found. This is actually the textual
      *            type description found in the binary class representation,
      *            so it may not be human-readable.
-     *            
-     * @since Android 1.0
      */
     public AnnotationTypeMismatchException(Method element, String foundType) {
         super(Messages.getString("annotation.1", element, foundType)); //$NON-NLS-1$
@@ -56,10 +53,8 @@ public class AnnotationTypeMismatchException extends RuntimeException {
 
     /**
      * Returns the method object for the invalid type.
-     * 
+     *
      * @return a {@link Method} instance.
-     *            
-     * @since Android 1.0
      */
     public Method element() {
         return element;
@@ -67,10 +62,8 @@ public class AnnotationTypeMismatchException extends RuntimeException {
 
     /**
      * Returns the invalid type.
-     * 
+     *
      * @return a string describing the invalid data.
-     *            
-     * @since Android 1.0
      */
     public String foundType() {
         return foundType;

@@ -23,17 +23,17 @@ import com.android.dx.rop.cst.Constant;
  */
 public abstract class CstInsn
         extends Insn {
-    /** non-null; the constant */
+    /** {@code non-null;} the constant */
     private final Constant cst;
 
     /**
      * Constructs an instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param result null-ok; spec for the result, if any
-     * @param sources non-null; specs for all the sources
-     * @param cst non-null; constant
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param result {@code null-ok;} spec for the result, if any
+     * @param sources {@code non-null;} specs for all the sources
+     * @param cst {@code non-null;} constant
      */
     public CstInsn(Rop opcode, SourcePosition position, RegisterSpec result,
                    RegisterSpecList sources, Constant cst) {
@@ -55,7 +55,7 @@ public abstract class CstInsn
     /**
      * Gets the constant.
      * 
-     * @return non-null; the constant
+     * @return {@code non-null;} the constant
      */
     public Constant getConstant() {
         return cst;

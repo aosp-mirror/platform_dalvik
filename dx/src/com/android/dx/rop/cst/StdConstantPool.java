@@ -26,16 +26,16 @@ import com.android.dx.util.MutabilityControl;
  */
 public final class StdConstantPool
         extends MutabilityControl implements ConstantPool {
-    /** non-null; array of entries */
+    /** {@code non-null;} array of entries */
     private final Constant[] entries;
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      * 
      * @param size the size of the pool; this corresponds to the
-     * class file field <code>constant_pool_count</code>, and is in fact
+     * class file field {@code constant_pool_count}, and is in fact
      * always at least one more than the actual size of the constant pool,
-     * as element <code>0</code> is always invalid.
+     * as element {@code 0} is always invalid.
      */
     public StdConstantPool(int size) {
         super(size > 1);
@@ -90,8 +90,8 @@ public final class StdConstantPool
     /**
      * Sets the entry at the given index.
      * 
-     * @param n &gt;= 1, &lt; size(); which entry
-     * @param cst null-ok; the constant to store
+     * @param n {@code >= 1, < size();} which entry
+     * @param cst {@code null-ok;} the constant to store
      */
     public void set(int n, Constant cst) {
         throwIfImmutable();

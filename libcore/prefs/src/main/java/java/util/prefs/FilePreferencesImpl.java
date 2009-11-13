@@ -28,12 +28,12 @@ import java.util.Set;
 import org.apache.harmony.prefs.internal.nls.Messages;
 
 /**
- * The default implementation of <code>AbstractPreferences</code> for the Linux platform,
- * using the file system as its back end.
- * 
+ * The default implementation of <code>AbstractPreferences</code> for the Linux
+ * platform, using the file system as its back end.
+ *
  * TODO some sync mechanism with backend, Performance - check file edit date
- * 
- * @since Android 1.0
+ *
+ * @since 1.4
  */
 class FilePreferencesImpl extends AbstractPreferences {
 
@@ -64,7 +64,6 @@ class FilePreferencesImpl extends AbstractPreferences {
                 SYSTEM_HOME = System.getProperty("java.home") + "/.systemPrefs";//$NON-NLS-1$//$NON-NLS-2$
                 return null;
             }
-
         });
     }
 
@@ -97,9 +96,9 @@ class FilePreferencesImpl extends AbstractPreferences {
      * Constructors
      * --------------------------------------------------------------
      */
-    
+
     /**
-     * Construct root <code>FilePreferencesImpl</code> instance, construct 
+     * Construct root <code>FilePreferencesImpl</code> instance, construct
      * user root if userNode is true, system root otherwise
      */
     FilePreferencesImpl(boolean userNode) {
@@ -108,9 +107,9 @@ class FilePreferencesImpl extends AbstractPreferences {
         path = userNode ? USER_HOME : SYSTEM_HOME;
         initPrefs();
     }
-    
+
     /**
-     * Construct a prefs using given parent and given name 
+     * Construct a prefs using given parent and given name
      */
     private FilePreferencesImpl(AbstractPreferences parent, String name) {
         super(parent, name);
@@ -132,16 +131,16 @@ class FilePreferencesImpl extends AbstractPreferences {
     @Override
     protected String[] childrenNamesSpi() throws BackingStoreException {
         String[] names = AccessController
-                .doPrivileged(new PrivilegedAction<String[]>() {
-                    public String[] run() {
-                        return dir.list(new FilenameFilter() {
-                            public boolean accept(File parent, String name) {
-                                return new File(path + File.separator + name).isDirectory(); 
-                            }
-                        });
-
+        .doPrivileged(new PrivilegedAction<String[]>() {
+            public String[] run() {
+                return dir.list(new FilenameFilter() {
+                    public boolean accept(File parent, String name) {
+                        return new File(path + File.separator + name).isDirectory();
                     }
                 });
+
+            }
+        });
         if (null == names) {// file is not a directory, exception case
             // prefs.3=Cannot get children names for {0}!
             throw new BackingStoreException(
@@ -192,14 +191,16 @@ class FilePreferencesImpl extends AbstractPreferences {
                 prefs = XMLParser.loadFilePrefs(prefsFile);
             }
             return prefs.getProperty(key);
-        } catch (Exception e) {// if Exception happened, return null
+        } catch (Exception e) {
+            // if Exception happened, return null
             return null;
         }
     }
 
     @Override
     protected String[] keysSpi() throws BackingStoreException {
-        return prefs.keySet().toArray(new String[0]);
+        final Set<Object> ks = prefs.keySet();
+        return ks.toArray(new String[ks.size()]);
     }
 
     @Override

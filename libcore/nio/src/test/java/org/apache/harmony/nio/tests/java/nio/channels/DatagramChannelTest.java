@@ -17,6 +17,7 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -666,6 +667,7 @@ public class DatagramChannelTest extends TestCase {
         method = "socket",
         args = {}
     )
+    @KnownFailure(value="bug 2155708")
     public void testSocket_BasicStatusBeforeConnect() throws SocketException {
         assertFalse(this.channel1.isConnected());// not connected
         DatagramSocket s1 = this.channel1.socket();

@@ -23,13 +23,13 @@ import com.android.dx.rop.type.Type;
  * value of an enumerated type.
  */
 public final class CstEnumRef extends CstMemberRef {
-    /** null-ok; the corresponding field ref, lazily initialized */
+    /** {@code null-ok;} the corresponding field ref, lazily initialized */
     private CstFieldRef fieldRef;
     
     /**
      * Constructs an instance.
      *
-     * @param nat non-null; the name-and-type; the defining class is derived
+     * @param nat {@code non-null;} the name-and-type; the defining class is derived
      * from this
      */
     public CstEnumRef(CstNat nat) {
@@ -56,7 +56,7 @@ public final class CstEnumRef extends CstMemberRef {
     /**
      * Get a {@link CstFieldRef} that corresponds with this instance.
      * 
-     * @return non-null; the corresponding field reference
+     * @return {@code non-null;} the corresponding field reference
      */
     public CstFieldRef getFieldRef() {
         if (fieldRef == null) {

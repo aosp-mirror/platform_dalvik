@@ -1,5 +1,5 @@
-This directory contains the Dalvik virtual machine and associated
-class library.
+This directory contains the Dalvik virtual machine and core class library,
+as well as related tools, libraries, and tests.
 
 A note about the licenses and header comments
 ---------------------------------------------
@@ -50,3 +50,11 @@ Here is the combined header comment:
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+Native SH call bridge
+---------------------
+
+Native SH call bridge is written by
+Shin-ichiro KAWASAKI <shinichiro.kawasaki.mg@hitachi.com>
+and Contributed to Android by Hitachi, Ltd. and Renesas Solutions Corp.

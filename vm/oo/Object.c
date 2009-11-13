@@ -90,18 +90,16 @@ StaticField* dvmFindStaticField(const ClassObject* clazz,
 
     assert(clazz != NULL);
 
+    /*
+     * Find a field with a matching name and signature.  As with instance
+     * fields, the VM allows you to have two fields with the same name so
+     * long as they have different types.
+     */
     pField = clazz->sfields;
     for (i = 0; i < clazz->sfieldCount; i++, pField++) {
-        if (strcmp(fieldName, pField->field.name) == 0) {
-            /*
-             * The name matches.  Unlike methods, we can't have two fields
-             * with the same names but differing types.
-             */
-            if (strcmp(signature, pField->field.signature) != 0) {
-                LOGW("Found field '%s', but sig is '%s' not '%s'\n",
-                    fieldName, pField->field.signature, signature);
-                return NULL;
-            }
+        if (strcmp(fieldName, pField->field.name) == 0 &&
+            strcmp(signature, pField->field.signature) == 0)
+        {
             return pField;
         }
     }
@@ -150,6 +148,58 @@ StaticField* dvmFindStaticFieldHier(const ClassObject* clazz,
     else
         return NULL;
 }
+
+/*
+ * Find a matching field, in this class or a superclass.
+ *
+ * We scan both the static and instance field lists in the class.  If it's
+ * not found there, we check the direct interfaces, and then recursively
+ * scan the superclasses.  This is the order prescribed in the VM spec
+ * (v2 5.4.3.2).
+ *
+ * In most cases we know that we're looking for either a static or an
+ * instance field and there's no value in searching through both types.
+ * During verification we need to recognize and reject certain unusual
+ * situations, and we won't see them unless we walk the lists this way.
+ */
+Field* dvmFindFieldHier(const ClassObject* clazz, const char* fieldName,
+    const char* signature)
+{
+    Field* pField;
+
+    /*
+     * Search for a match in the current class.  Which set we scan first
+     * doesn't really matter.
+     */
+    pField = (Field*) dvmFindStaticField(clazz, fieldName, signature);
+    if (pField != NULL)
+        return pField;
+    pField = (Field*) dvmFindInstanceField(clazz, fieldName, signature);
+    if (pField != NULL)
+        return pField;
+
+    /*
+     * See if it's in any of our interfaces.  We don't check interfaces
+     * inherited from the superclass yet.
+     */
+    int i = 0;
+    if (clazz->super != NULL) {
+        assert(clazz->iftableCount >= clazz->super->iftableCount);
+        i = clazz->super->iftableCount;
+    }
+    for ( ; i < clazz->iftableCount; i++) {
+        ClassObject* iface = clazz->iftable[i].clazz;
+        pField = (Field*) dvmFindStaticField(iface, fieldName, signature);
+        if (pField != NULL)
+            return pField;
+    }
+
+    if (clazz->super != NULL)
+        return dvmFindFieldHier(clazz->super, fieldName, signature);
+    else
+        return NULL;
+}
+
 
 /*
  * Compare the given name, return type, and argument types with the contents
@@ -367,27 +417,34 @@ static Method* findMethodInListByDescriptor(const ClassObject* clazz,
 /*
  * Look for a match in the given clazz. Returns the match if found
  * or NULL if not.
+ *
+ * "wantedType" should be METHOD_VIRTUAL or METHOD_DIRECT to indicate the
+ * list to search through.  If the match can come from either list, use
+ * MATCH_UNKNOWN to scan both.
  */
 static Method* findMethodInListByProto(const ClassObject* clazz,
-    bool findVirtual, bool isHier, const char* name, const DexProto* proto)
+    MethodType wantedType, bool isHier, const char* name, const DexProto* proto)
 {    
     while (clazz != NULL) {
-        Method* methods;
-        size_t methodCount;
-        size_t i;
+        int i;
 
-        if (findVirtual) {
-            methods = clazz->virtualMethods;
-            methodCount = clazz->virtualMethodCount;
-        } else {
-            methods = clazz->directMethods;
-            methodCount = clazz->directMethodCount;
+        /*
+         * Check the virtual and/or direct method lists.
+         */
+        if (wantedType == METHOD_VIRTUAL || wantedType == METHOD_UNKNOWN) {
+            for (i = 0; i < clazz->virtualMethodCount; i++) {
+                Method* method = &clazz->virtualMethods[i];
+                if (dvmCompareNameProtoAndMethod(name, proto, method) == 0) {
+                    return method;
+                }
+            }
         }
-
-        for (i = 0; i < methodCount; i++) {
-            Method* method = &methods[i];
-            if (dvmCompareNameProtoAndMethod(name, proto, method) == 0) {
-                return method;
+        if (wantedType == METHOD_DIRECT || wantedType == METHOD_UNKNOWN) {
+            for (i = 0; i < clazz->directMethodCount; i++) {
+                Method* method = &clazz->directMethods[i];
+                if (dvmCompareNameProtoAndMethod(name, proto, method) == 0) {
+                    return method;
+                }
             }
         }
 
@@ -454,7 +511,8 @@ Method* dvmFindVirtualMethodByName(const ClassObject* clazz,
 Method* dvmFindVirtualMethod(const ClassObject* clazz, const char* methodName,
     const DexProto* proto)
 {
-    return findMethodInListByProto(clazz, true, false, methodName, proto);
+    return findMethodInListByProto(clazz, METHOD_VIRTUAL, false, methodName,
+            proto);
 }
 
 /*
@@ -479,7 +537,8 @@ Method* dvmFindVirtualMethodHierByDescriptor(const ClassObject* clazz,
 Method* dvmFindVirtualMethodHier(const ClassObject* clazz,
     const char* methodName, const DexProto* proto)
 {
-    return findMethodInListByProto(clazz, true, true, methodName, proto);
+    return findMethodInListByProto(clazz, METHOD_VIRTUAL, true, methodName,
+            proto);
 }
 
 /*
@@ -516,7 +575,8 @@ Method* dvmFindDirectMethodHierByDescriptor(const ClassObject* clazz,
 Method* dvmFindDirectMethod(const ClassObject* clazz, const char* methodName,
     const DexProto* proto)
 {
-    return findMethodInListByProto(clazz, false, false, methodName, proto);
+    return findMethodInListByProto(clazz, METHOD_DIRECT, false, methodName,
+            proto);
 }
 
 /*
@@ -528,8 +588,30 @@ Method* dvmFindDirectMethod(const ClassObject* clazz, const char* methodName,
 Method* dvmFindDirectMethodHier(const ClassObject* clazz,
     const char* methodName, const DexProto* proto)
 {
-    return findMethodInListByProto(clazz, false, true, methodName, proto);
+    return findMethodInListByProto(clazz, METHOD_DIRECT, true, methodName,
+            proto);
 }
+
+/*
+ * Find a virtual or static method in a class.  If we don't find it, try the
+ * superclass.  This is compatible with the VM spec (v2 5.4.3.3) method
+ * search order, but it stops short of scanning through interfaces (which
+ * should be done after this function completes).
+ *
+ * In most cases we know that we're looking for either a static or an
+ * instance field and there's no value in searching through both types.
+ * During verification we need to recognize and reject certain unusual
+ * situations, and we won't see them unless we walk the lists this way.
+ *
+ * Returns NULL if the method can't be found.  (Does not throw an exception.)
+ */
+Method* dvmFindMethodHier(const ClassObject* clazz, const char* methodName,
+    const DexProto* proto)
+{
+    return findMethodInListByProto(clazz, METHOD_UNKNOWN, true, methodName,
+            proto);
+}
+
 
 /*
  * We have a method pointer for a method in "clazz", but it might be
@@ -617,37 +699,44 @@ void dvmDumpObject(const Object* obj)
     }
 
     clazz = obj->clazz;
-    LOGV("----- Object dump: %p (%s, %d bytes) -----\n",
+    LOGD("----- Object dump: %p (%s, %d bytes) -----\n",
         obj, clazz->descriptor, (int) clazz->objectSize);
     //printHexDump(obj, clazz->objectSize);
-    LOGV("  Fields:\n");
-    for (i = 0; i < clazz->ifieldCount; i++) {
-        const InstField* pField = &clazz->ifields[i];
-        char type = pField->field.signature[0];
+    LOGD("  Fields:\n");
+    while (clazz != NULL) {
+        LOGD("    -- %s\n", clazz->descriptor);
+        for (i = 0; i < clazz->ifieldCount; i++) {
+            const InstField* pField = &clazz->ifields[i];
+            char type = pField->field.signature[0];
 
-        if (type == 'F' || type == 'D') {
-            double dval;
+            if (type == 'F' || type == 'D') {
+                double dval;
 
-            if (type == 'F')
-                dval = dvmGetFieldFloat(obj, pField->byteOffset);
-            else
-                dval = dvmGetFieldDouble(obj, pField->byteOffset);
+                if (type == 'F')
+                    dval = dvmGetFieldFloat(obj, pField->byteOffset);
+                else
+                    dval = dvmGetFieldDouble(obj, pField->byteOffset);
 
-            LOGV("  %2d: '%s' '%s' flg=%04x %.3f\n", i, pField->field.name,
-                pField->field.signature, pField->field.accessFlags, dval);
-        } else {
-            long long lval;
+                LOGD("    %2d: '%s' '%s' af=%04x off=%d %.3f\n", i,
+                    pField->field.name, pField->field.signature,
+                    pField->field.accessFlags, pField->byteOffset, dval);
+            } else {
+                u8 lval;
 
-            if (pField->field.signature[0] == 'J')
-                lval = dvmGetFieldLong(obj, pField->byteOffset);
-            else if (pField->field.signature[0] == 'Z')
-                lval = dvmGetFieldBoolean(obj, pField->byteOffset);
-            else
-                lval = dvmGetFieldInt(obj, pField->byteOffset);
+                if (type == 'J')
+                    lval = dvmGetFieldLong(obj, pField->byteOffset);
+                else if (type == 'Z')
+                    lval = dvmGetFieldBoolean(obj, pField->byteOffset);
+                else
+                    lval = dvmGetFieldInt(obj, pField->byteOffset);
 
-            LOGV("  %2d: '%s' '%s' af=%04x 0x%llx\n", i, pField->field.name,
-                pField->field.signature, pField->field.accessFlags, lval);
+                LOGD("    %2d: '%s' '%s' af=%04x off=%d 0x%08llx\n", i,
+                    pField->field.name, pField->field.signature,
+                    pField->field.accessFlags, pField->byteOffset, lval);
+            }
         }
+
+        clazz = clazz->super;
     }
 }
 

@@ -14,17 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file.
 // The icu implementation used was changed from icu4j to icu4jni.
 // END android-note
 
@@ -47,7 +38,6 @@ import org.apache.harmony.luni.util.PriviAction;
  * href="http://www.unicode.org/unicode/reports/tr10/"> Unicode Collation
  * Algorithm (UCA)</a>, there are 4 different levels of strength used in
  * comparisons:
- * </p>
  * <ul>
  * <li>PRIMARY strength: Typically, this is used to denote differences between
  * base characters (for example, "a" &lt; "b"). It is the strongest difference.
@@ -83,12 +73,10 @@ import org.apache.harmony.luni.util.PriviAction;
  * NFD. If canonical decomposition is turned off, it is the user's
  * responsibility to ensure that all text is already in the appropriate form
  * before performing a comparison or before getting a {@link CollationKey}.
- * </p>
  * <p>
  * <em>Examples:</em>
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * // Get the Collator for US English and set its strength to PRIMARY
  * Collator usCollator = Collator.getInstance(Locale.US);
@@ -97,14 +85,13 @@ import org.apache.harmony.luni.util.PriviAction;
  *     System.out.println(&quot;Strings are equivalent&quot;);
  * }
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * The following example shows how to compare two strings using the collator for
  * the default locale.
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * // Compare two strings in the default locale
  * Collator myCollator = Collator.getInstance();
@@ -121,12 +108,11 @@ import org.apache.harmony.luni.util.PriviAction;
  *     System.out.println(&quot;Error: \u00e0\u0325 should be not equal to a\u0325\u0300 without decomposition&quot;);
  * }
  * </pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * @see RuleBasedCollator
  * @see CollationKey
- * @since Android 1.0
  */
 public abstract class Collator implements Comparator<Object>, Cloneable {
 
@@ -138,51 +124,37 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
 
     /**
      * Constant used to specify the decomposition rule.
-     * 
-     * @since Android 1.0
      */
     public static final int NO_DECOMPOSITION = 0;
 
     /**
      * Constant used to specify the decomposition rule.
-     * 
-     * @since Android 1.0
      */
     public static final int CANONICAL_DECOMPOSITION = 1;
 
     /**
      * Constant used to specify the decomposition rule. This value for
      * decomposition is not supported.
-     * 
-     * @since Android 1.0
      */
     public static final int FULL_DECOMPOSITION = 2;
 
     /**
      * Constant used to specify the collation strength.
-     * 
-     * @since Android 1.0
      */
     public static final int PRIMARY = 0;
 
     /**
      * Constant used to specify the collation strength.
-     * 
-     * @since Android 1.0
      */
     public static final int SECONDARY = 1;
 
     /**
      * Constant used to specify the collation strength.
-     * 
-     * @since Android 1.0
      */
     public static final int TERTIARY = 2;
 
     /**
      * Constant used to specify the collation strength.
-     * 
-     * @since Android 1.0
      */
     public static final int IDENTICAL = 3;
 
@@ -214,8 +186,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
 
     /**
      * Constructs a new {@code Collator} instance.
-     * 
-     * @since Android 1.0
      */
     protected Collator() {
         super();
@@ -230,7 +200,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * 
      * @return a shallow copy of this collator.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -254,10 +223,8 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * @return a negative value if {@code object1} is less than {@code object2},
      *         0 if they are equal, and a positive value if {@code object1} is
      *         greater than {@code object2}.
-     * @exception ClassCastException
-     *                if {@code object1} or {@code object2} is not a
-     *                {@code String}.
-     * @since Android 1.0
+     * @throws ClassCastException
+     *         if {@code object1} or {@code object2} is not a {@code String}.
      */
     public int compare(Object object1, Object object2) {
         return compare((String) object1, (String) object2);
@@ -273,7 +240,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * @return a negative value if {@code string1} is less than {@code string2},
      *         0 if they are equal and a positive value if {@code string1} is
      *         greater than {@code string2}.
-     * @since Android 1.0
      */
     public abstract int compare(String string1, String string2);
 
@@ -287,7 +253,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      *         it has the same strength and decomposition values as this
      *         collator; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -309,7 +274,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      *            the second string to compare.
      * @return {@code true} if {@code string1} and {@code string2} are equal
      *         using the collation rules, false otherwise.
-     * @since Android 1.0
      */
     public boolean equals(String string1, String string2) {
         return compare(string1, string2) == 0;
@@ -320,7 +284,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * {@code Collator}.
      * 
      * @return an array of {@code Locale}.
-     * @since Android 1.0
      */
     public static Locale[] getAvailableLocales() {
         return com.ibm.icu4jni.text.Collator.getAvailableLocales();
@@ -333,7 +296,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * @param string
      *            the source string that is converted into a collation key.
      * @return the collation key for {@code string}.
-     * @since Android 1.0
      */
     public abstract CollationKey getCollationKey(String string);
 
@@ -343,7 +305,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * @return the decomposition rule, either {@code NO_DECOMPOSITION} or
      *         {@code CANONICAL_DECOMPOSITION}. {@code FULL_DECOMPOSITION} is
      *         not supported.
-     * @since Android 1.0
      */
     public int getDecomposition() {
         return decompositionMode_ICU_Java(this.icuColl.getDecomposition());
@@ -354,7 +315,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * {@code Locale}.
      * 
      * @return the collator for the default locale.
-     * @since Android 1.0
      */
     public static Collator getInstance() {
         return getInstance(Locale.getDefault());
@@ -367,7 +327,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * @param locale
      *            the locale.
      * @return the collator for {@code locale}.
-     * @since Android 1.0
      */
     public static Collator getInstance(Locale locale) {
         String key = locale.toString();
@@ -386,7 +345,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * 
      * @return the strength value, either PRIMARY, SECONDARY, TERTIARY or
      *         IDENTICAL.
-     * @since Android 1.0
      */
     public int getStrength() {
         return strength_ICU_Java(this.icuColl.getStrength());
@@ -399,7 +357,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * 
      * @see #equals(Object)
      * @see #equals(String, String)
-     * @since Android 1.0
      */
     @Override
     public abstract int hashCode();
@@ -411,10 +368,9 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      *            the decomposition rule, either {@code NO_DECOMPOSITION} or
      *            {@code CANONICAL_DECOMPOSITION}. {@code FULL_DECOMPOSITION}
      *            is not supported.
-     * @exception IllegalArgumentException
-     *                if the provided decomposition rule is not valid. This 
-     *                includes {@code FULL_DECOMPOSITION}.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the provided decomposition rule is not valid. This includes
+     *            {@code FULL_DECOMPOSITION}.
      */
     public void setDecomposition(int value) {
         this.icuColl.setDecomposition(decompositionMode_Java_ICU(value));
@@ -426,10 +382,8 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * @param value
      *            the strength value, either PRIMARY, SECONDARY, TERTIARY, or
      *            IDENTICAL.
-     * 
-     * @exception IllegalArgumentException
-     *                if the provided strength value is not valid.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if the provided strength value is not valid.
      */
     public void setStrength(int value) {
         this.icuColl.setStrength(strength_Java_ICU(value));

@@ -106,7 +106,6 @@ public class FirstFitAllocator extends RegisterAllocator {
             }
 
             for (int j = i + 1; j < oldRegCount; j++) {
-
                 if (mapped.get(j) || isDefinitionMoveParam(j)) {
                     continue;
                 }

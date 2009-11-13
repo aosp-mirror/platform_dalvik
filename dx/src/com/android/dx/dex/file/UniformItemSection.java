@@ -22,7 +22,7 @@ import com.android.dx.util.AnnotatedOutput;
 import java.util.Collection;
 
 /**
- * A section of a <code>.dex</code> file which consists of a sequence of
+ * A section of a {@code .dex} file which consists of a sequence of
  * {@link Item} objects. Each of the items must have the same size in
  * the output.
  */
@@ -30,10 +30,10 @@ public abstract class UniformItemSection extends Section {
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param name null-ok; the name of this instance, for annotation
+     * @param name {@code null-ok;} the name of this instance, for annotation
      * purposes
-     * @param file non-null; file that this instance is part of
-     * @param alignment &gt; 0; alignment requirement for the final output;
+     * @param file {@code non-null;} file that this instance is part of
+     * @param alignment {@code > 0;} alignment requirement for the final output;
      * must be a power of 2
      */
     public UniformItemSection(String name, DexFile file, int alignment) {
@@ -60,8 +60,8 @@ public abstract class UniformItemSection extends Section {
      * if this instance isn't the sort that maps constants to {@link
      * IndexedItem} instances.
      * 
-     * @param cst non-null; constant to look for
-     * @return non-null; the corresponding item found in this instance
+     * @param cst {@code non-null;} constant to look for
+     * @return {@code non-null;} the corresponding item found in this instance
      */
     public abstract IndexedItem get(Constant cst);
 

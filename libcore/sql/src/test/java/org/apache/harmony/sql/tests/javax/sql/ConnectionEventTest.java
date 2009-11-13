@@ -25,9 +25,13 @@ import dalvik.annotation.TestTargetClass;
 import junit.framework.TestCase;
 
 import java.sql.SQLException;
+import java.io.Serializable;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.PooledConnection;
+
+import org.apache.harmony.testframework.serialization.SerializationTest;
+import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
 @TestTargetClass(ConnectionEvent.class)
 public class ConnectionEventTest extends TestCase {
@@ -112,5 +116,63 @@ public class ConnectionEventTest extends TestCase {
         assertNotSame(ce3.getSQLException(), ce2.getSQLException());
 
     }
-}   
 
+    @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "",
+            method = "!SerializationSelf",
+            args = {}
+    )
+    public void testSerializationSelf() throws Exception {
+        Impl_PooledConnection ipc = new Impl_PooledConnection();
+        SQLException e = new SQLException();
+        ConnectionEvent ce = new ConnectionEvent(ipc, e);
+        SerializationTest.verifySelf(ce, CONNECTIONEVENT_COMPARATOR);
+    }
+
+    @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "",
+            method = "!Serialization",
+            args = {}
+    )
+    public void testSerializationCompatibility() throws Exception {
+        Impl_PooledConnection ipc = new Impl_PooledConnection();
+        SQLException nextSQLException = new SQLException("nextReason",
+                "nextSQLState", 33);
+
+        int vendorCode = 10;
+        SQLException sqlException = new SQLException("reason", "SQLState",
+                vendorCode);
+
+        sqlException.setNextException(nextSQLException);
+
+        ConnectionEvent ce = new ConnectionEvent(ipc, sqlException);
+
+        SerializationTest.verifyGolden(this, ce, CONNECTIONEVENT_COMPARATOR);
+    }
+
+    private static final SerializableAssert CONNECTIONEVENT_COMPARATOR = new SerializableAssert() {
+
+        public void assertDeserialized(Serializable initial,
+                Serializable deserialized) {
+            ConnectionEvent ceInitial = (ConnectionEvent) initial;
+            ConnectionEvent ceDeser = (ConnectionEvent) deserialized;
+
+            SQLException initThr = ceInitial.getSQLException();
+            SQLException dserThr = ceDeser.getSQLException();
+
+            // verify SQLState
+            assertEquals(initThr.getSQLState(), dserThr.getSQLState());
+
+            // verify vendorCode
+            assertEquals(initThr.getErrorCode(), dserThr.getErrorCode());
+
+            // verify next
+            if (initThr.getNextException() == null) {
+                assertNull(dserThr.getNextException());
+            }
+        }
+
+    };
+}

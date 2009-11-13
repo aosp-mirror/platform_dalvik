@@ -17,7 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -425,7 +424,6 @@ public class OutputStreamWriterTest extends TestCase {
                 clazz = InputStreamReader.class
         )
     })
-    @KnownFailure("Error when reading bytes in UTF-8 expected:<8916> but was:<8907> ")
     public void test_write$C() throws Exception {
         int upper;
         InputStreamReader isr = null;
@@ -470,7 +468,7 @@ public class OutputStreamWriterTest extends TestCase {
                         j = 0;
                     }
                     assertEquals("Error when reading bytes in "
-                            + MINIMAL_CHARSETS[i], expected++, largeBuffer[j++]);
+                            + MINIMAL_CHARSETS[i] + " at " + j, expected++, largeBuffer[j++]);
                 }
             } finally {
                 try {
@@ -482,6 +480,99 @@ public class OutputStreamWriterTest extends TestCase {
                 } catch (Exception e) {
                 }
             }
+        }
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {char[].class}
+    )
+    public void test_write_US_ASCII() throws Exception {
+        testEncodeCharset("US-ASCII", 128);
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {char[].class}
+    )
+    public void test_write_ISO_8859_1() throws Exception {
+        testEncodeCharset("ISO-8859-1", 256);
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {char[].class}
+    )
+    public void test_write_UTF_16BE() throws Exception {
+        testEncodeCharset("UTF-16BE", 0xd800);
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {char[].class}
+    )
+    public void test_write_UTF_16LE() throws Exception {
+        testEncodeCharset("UTF-16LE", 0xd800);
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {char[].class}
+    )
+    public void test_write_UTF_16() throws Exception {
+        testEncodeCharset("UTF-16", 0xd800);
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "write",
+            args = {char[].class}
+    )
+    public void test_write_UTF_8() throws Exception {
+        testEncodeCharset("UTF-8", 0xd800);
+    }
+
+    private void testEncodeCharset(String charset, int maxChar) throws Exception {
+        char[] chars = new char[maxChar];
+        for (int i = 0; i < maxChar; i++) {
+            chars[i] = (char) i;
+        }
+
+        // to byte array
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        OutputStreamWriter charsOut = new OutputStreamWriter(bytesOut, charset);
+        charsOut.write(chars);
+        charsOut.flush();
+
+        // decode from byte array, one character at a time
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytesOut.toByteArray());
+        InputStreamReader charsIn = new InputStreamReader(bytesIn, charset);
+        for (int i = 0; i < maxChar; i++) {
+            assertEquals(i, charsIn.read());
+        }
+        assertEquals(-1, charsIn.read());
+
+        // decode from byte array, using byte buffers
+        bytesIn = new ByteArrayInputStream(bytesOut.toByteArray());
+        charsIn = new InputStreamReader(bytesIn, charset);
+        char[] decoded = new char[maxChar];
+        for (int r = 0; r < maxChar; ) {
+            r += charsIn.read(decoded, r, maxChar - r);
+        }
+        assertEquals(-1, charsIn.read());
+        for (int i = 0; i < maxChar; i++) {
+            assertEquals(i, decoded[i]);
         }
     }
 
@@ -784,5 +875,4 @@ public class OutputStreamWriterTest extends TestCase {
             fail("UTF-8 not supported");
         }
     }
-
 }

@@ -57,7 +57,11 @@ bool dvmCheckBranchTarget(const Method* meth, InsnFlags* insnFlags,
 #define LOG_VFY_METH(_meth, ...)    dvmLogVerifyFailure(_meth, __VA_ARGS__)
 
 /* log verification failure with optional method info */
-void dvmLogVerifyFailure(const Method* meth, const char* format, ...);
+void dvmLogVerifyFailure(const Method* meth, const char* format, ...)
+#if defined(__GNUC__)
+    __attribute__ ((format(printf, 2, 3)))
+#endif
+    ;
 
 /* log verification failure due to resolution trouble */
 void dvmLogUnableToResolveClass(const char* missingClassDescr,

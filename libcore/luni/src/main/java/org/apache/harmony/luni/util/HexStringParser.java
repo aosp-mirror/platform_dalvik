@@ -304,13 +304,13 @@ final class HexStringParser {
     private int getOffset(String strIntegerPart, String strDecimalPart) {
         strIntegerPart = strIntegerPart.replaceFirst("^0+", ""); //$NON-NLS-1$ //$NON-NLS-2$
         
-        //If the Interger part is a nonzero number.
+        //If the Integer part is a nonzero number.
         if (strIntegerPart.length() != 0) {
             String leadingNumber = strIntegerPart.substring(0, 1);
             return (strIntegerPart.length() - 1) * 4 + countBitsLength(Long.parseLong(leadingNumber,HEX_RADIX)) - 1;
         }
         
-        //If the Interger part is a zero number.
+        //If the Integer part is a zero number.
         int i;
         for (i = 0; i < strDecimalPart.length() && strDecimalPart.charAt(i) == '0'; i++);   
         if (i == strDecimalPart.length()) {

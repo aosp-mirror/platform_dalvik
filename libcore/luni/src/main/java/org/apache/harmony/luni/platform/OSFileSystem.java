@@ -24,17 +24,21 @@ package org.apache.harmony.luni.platform;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * This is the portable implementation of the file system interface.
- * 
+ *
  */
-class OSFileSystem extends OSComponent implements IFileSystem {
+class OSFileSystem implements IFileSystem {
 
-    /**
-     * 
-     */
-    public OSFileSystem() {
+    private static final OSFileSystem singleton = new OSFileSystem();
+
+    public static OSFileSystem getOSFileSystem() {
+        return singleton;
+    }
+
+    private OSFileSystem() {
         super();
     }
 
@@ -153,6 +157,14 @@ class OSFileSystem extends OSComponent implements IFileSystem {
         }
         long bytesRead = readImpl(fileDescriptor, bytes, offset, length);
         if (bytesRead < -1) {
+            /*
+             * TODO: bytesRead is never less than -1 so this code
+             * does nothing?
+             * The native code throws an exception in only one case
+             * so perhaps this should be 'bytesRead < 0' to handle
+             * any other cases.  But the other cases have been
+             * ignored until now so fixing this could break things
+             */
             throw new IOException();
         }
         return bytesRead;
@@ -203,7 +215,7 @@ class OSFileSystem extends OSComponent implements IFileSystem {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.harmony.luni.platform.IFileSystem#close(long)
      */
     public void close(int fileDescriptor) throws IOException {
@@ -228,7 +240,14 @@ class OSFileSystem extends OSComponent implements IFileSystem {
         }
         int handler = openImpl(fileName, mode);
         if (handler < 0) {
-            throw new FileNotFoundException(new String(fileName));
+            try {
+                throw new FileNotFoundException(new String(fileName, "UTF-8"));
+            } catch (java.io.UnsupportedEncodingException e) {
+                // UTF-8 should always be supported, so throw an assertion
+                FileNotFoundException fnfe = new FileNotFoundException(new String(fileName));
+                e.initCause(fnfe);
+                throw new AssertionError(e);
+            }
         }
         return handler;
     }
@@ -238,7 +257,8 @@ class OSFileSystem extends OSComponent implements IFileSystem {
     public long transfer(int fileHandler, FileDescriptor socketDescriptor,
             long offset, long count) throws IOException {
         long result = transferImpl(fileHandler, socketDescriptor, offset, count);
-        if (result < 0) throw new IOException();
+        if (result < 0)
+                throw new IOException();
         return result;
     }
 
@@ -268,7 +288,7 @@ class OSFileSystem extends OSComponent implements IFileSystem {
     }
 
     private native long ttyReadImpl(byte[] bytes, int offset, int length);
-    
+
     // BEGIN android-added
     public native int ioctlAvailable(int fileDescriptor) throws IOException;
     // END android-added

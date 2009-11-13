@@ -36,6 +36,9 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.Permission;
 import java.util.Enumeration;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import tests.support.Support_NetworkInterface;
 import tests.support.Support_PortManager;
@@ -64,23 +67,24 @@ public class MulticastSocketTest extends SocketTestCase {
 
         public MulticastSocket ms;
 
-        boolean running = true;
+        volatile boolean running = true;
 
-        volatile public byte[] rbuf = new byte[512];
-
-        volatile DatagramPacket rdp = null;
+        private final BlockingQueue<DatagramPacket> queue
+                = new ArrayBlockingQueue<DatagramPacket>(1);
 
         public void run() {
             try {
                 while (running) {
                     try {
+                        byte[] rbuf = new byte[512];
+                        rbuf[0] = -1;
+                        DatagramPacket rdp = new DatagramPacket(rbuf, rbuf.length);
                         ms.receive(rdp);
+                        queue.put(rdp);
                     } catch (java.io.InterruptedIOException e) {
-                        Thread.yield();
+                    } catch (InterruptedException e) {
                     }
-                    ;
                 }
-                ;
             } catch (java.io.IOException e) {
                 System.out.println("Multicast server failed: " + e);
             } finally {
@@ -93,15 +97,8 @@ public class MulticastSocketTest extends SocketTestCase {
             ms.leaveGroup(aGroup);
         }
 
-        public void stopServer() {
-            running = false;
-        }
-
         public MulticastServer(InetAddress anAddress, int aPort)
                 throws java.io.IOException {
-            rbuf = new byte[512];
-            rbuf[0] = -1;
-            rdp = new DatagramPacket(rbuf, rbuf.length);
             ms = new MulticastSocket(aPort);
             ms.setSoTimeout(2000);
             ms.joinGroup(anAddress);
@@ -109,12 +106,19 @@ public class MulticastSocketTest extends SocketTestCase {
 
         public MulticastServer(SocketAddress anAddress, int aPort,
                 NetworkInterface netInterface) throws java.io.IOException {
-            rbuf = new byte[512];
-            rbuf[0] = -1;
-            rdp = new DatagramPacket(rbuf, rbuf.length);
             ms = new MulticastSocket(aPort);
             ms.setSoTimeout(2000);
             ms.joinGroup(anAddress, netInterface);
+        }
+
+        public DatagramPacket receive() throws InterruptedException {
+            return queue.poll(1000, TimeUnit.MILLISECONDS);
+        }
+
+        public void stopServer() throws InterruptedException {
+            running = false;
+            interrupt();
+            join();
         }
     }
 
@@ -458,7 +462,7 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "joinGroup",
         args = {java.net.InetAddress.class}
     )
-    public void test_joinGroupLjava_net_InetAddress() {
+    public void test_joinGroupLjava_net_InetAddress() throws InterruptedException {
         // Test for method void
         // java.net.MulticastSocket.joinGroup(java.net.InetAddress)
         String msg = null;
@@ -476,8 +480,7 @@ public class MulticastSocketTest extends SocketTestCase {
                     .length(), group, groupPort);
             mss.joinGroup(group);
             mss.send(sdp, (byte) 10);
-            Thread.sleep(1000);
-            
+
             SecurityManager sm = new SecurityManager() {
 
                 public void checkPermission(Permission perm) {
@@ -514,8 +517,10 @@ public class MulticastSocketTest extends SocketTestCase {
         } catch (Exception e) {
             fail("Exception during joinGroup test: " + e.toString());
         }
-        assertTrue("Group member did not recv data: ", new String(server.rdp
-                .getData(), 0, server.rdp.getLength()).equals(msg));
+        DatagramPacket rdb = server.receive();
+
+        assertEquals("Group member did not recv data: ", msg,
+                new String(rdb.getData(), 0, rdb.getLength()));
 
     }
 
@@ -531,6 +536,7 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "joinGroup",
         args = {java.net.SocketAddress.class, java.net.NetworkInterface.class}
     )
+    @KnownFailure(value="bug 2155705")
     public void test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() 
                                     throws IOException, InterruptedException {
         // security manager that allows us to check that we only return the
@@ -608,11 +614,11 @@ public class MulticastSocketTest extends SocketTestCase {
                     .length(), group, serverPort);
             mss.setTimeToLive(2);
             mss.send(sdp);
-            Thread.sleep(1000);
+            DatagramPacket rdp = server.receive();
+
             // now vaildate that we received the data as expected
-            assertTrue("Group member did not recv data: ", new String(
-                    server.rdp.getData(), 0, server.rdp.getLength())
-                    .equals(msg));
+            assertEquals("Group member did not recv data: ", msg,
+                    new String(rdp.getData(), 0, rdp.getLength()));
             server.stopServer();
 
             // now validate that we handled the case were we join a
@@ -633,11 +639,9 @@ public class MulticastSocketTest extends SocketTestCase {
             sdp = new DatagramPacket(msg.getBytes(), msg.length(), group2,
                     serverPort);
             mss.send(sdp);
-            Thread.sleep(1000);
-            assertFalse(
-                    "Group member received data when sent on different group: ",
-                    new String(server.rdp.getData(), 0, server.rdp.getLength())
-                            .equals(msg));
+            rdp = server.receive();
+            assertNull("Group member received data when sent on different group",
+                    rdp);
             server.stopServer();
 
             // if there is more than one network interface then check that
@@ -717,20 +721,20 @@ public class MulticastSocketTest extends SocketTestCase {
                         sdp = new DatagramPacket(msg.getBytes(), msg.length(),
                                 group, serverPort);
                         mss.send(sdp);
-                        Thread.sleep(1000);
+                        rdp = server.receive();
+
                         if (thisInterface.equals(sendingInterface)) {
-                            assertTrue(
+                            assertEquals(
                                     "Group member did not recv data when " +
-                                    "bound on specific interface: ",
-                                    new String(server.rdp.getData(), 0,
-                                            server.rdp.getLength()).equals(msg));
+                                    "bound on specific interface: ", msg,
+                                    new String(rdp.getData(), 0, rdp.getLength()));
                         } else {
                             assertFalse(
                                     "Group member received data on other " +
                                     "interface when only asked for it on one " +
                                     "interface: ",
-                                    new String(server.rdp.getData(), 0,
-                                            server.rdp.getLength()).equals(msg));
+                                    new String(rdp.getData(), 0,
+                                            rdp.getLength()).equals(msg));
                         }
 
                         server.stopServer();
@@ -829,6 +833,7 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "leaveGroup",
         args = {java.net.SocketAddress.class, java.net.NetworkInterface.class}
     )
+    @KnownFailure(value="bug 2155705")
     public void test_leaveGroupLjava_net_SocketAddressLjava_net_NetworkInterface() {
         // security manager that allows us to check that we only return the
         // addresses that we should
@@ -942,7 +947,7 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "send",
         args = {java.net.DatagramPacket.class, byte.class}
     )
-    public void test_sendLjava_net_DatagramPacketB() {
+    public void test_sendLjava_net_DatagramPacketB() throws InterruptedException {
         // Test for method void
         // java.net.MulticastSocket.send(java.net.DatagramPacket, byte)
 
@@ -1015,11 +1020,10 @@ public class MulticastSocketTest extends SocketTestCase {
         } catch(IOException ioe) {
             //expected
         }
-        
-        byte[] data = server.rdp.getData();
-        int length = server.rdp.getLength();
-        assertTrue("Failed to send data. Received " + length, new String(data,
-                0, length).equals(msg));
+
+        DatagramPacket rdp = server.receive();
+        assertEquals("Failed to send data. Received " + rdp.getLength(), msg,
+                new String(rdp.getData(), 0, rdp.getLength()));
     }
 
     /**
@@ -1097,7 +1101,6 @@ public class MulticastSocketTest extends SocketTestCase {
         method = "setNetworkInterface",
         args = {java.net.NetworkInterface.class}
     )
-    @KnownFailure("No interfaces if there's no debugger connected")
     public void test_setNetworkInterfaceLjava_net_NetworkInterface() 
                                     throws IOException, InterruptedException {
         String msg = null;
@@ -1162,24 +1165,13 @@ public class MulticastSocketTest extends SocketTestCase {
                         DatagramPacket sdp = new DatagramPacket(theBytes,
                                 theBytes.length, group, serverPort);
                         mss.send(sdp);
-                        Thread.sleep(1000);
-                        String receivedMessage = new String(server.rdp
-                                .getData(), 0, server.rdp.getLength());
-                        assertTrue(
-                                "Group member did not recv data when send on " +
-                                "a specific interface: ",
-                                receivedMessage.equals(msg));
-                        assertTrue(
-                                "Datagram was not received from expected " +
-                                "interface expected["
-                                        + thisInterface
-                                        + "] got ["
-                                        + NetworkInterface
-                                                .getByInetAddress(server.rdp
-                                                        .getAddress()) + "]",
-                                NetworkInterface.getByInetAddress(
-                                        server.rdp.getAddress()).equals(
-                                        thisInterface));
+                        DatagramPacket rdp = server.receive();
+
+                        String receivedMessage = new String(rdp.getData(), 0, rdp.getLength());
+                        assertEquals("Group member did not recv data when send on "
+                                + "a specific interface: ", msg, receivedMessage);
+                        assertEquals("Datagram was not received as expected.",
+                                thisInterface, NetworkInterface.getByInetAddress(rdp.getAddress()));
 
                         // stop the server
                         server.stopServer();
@@ -1597,7 +1589,7 @@ public class MulticastSocketTest extends SocketTestCase {
      * Tears down the fixture, for example, close a network connection. This
      * method is called after a test is executed.
      */
-    protected void tearDown() {
+    protected void tearDown() throws InterruptedException {
 
         if (t != null)
             t.interrupt();

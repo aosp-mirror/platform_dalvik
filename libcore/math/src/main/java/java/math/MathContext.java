@@ -27,23 +27,13 @@ import org.apache.harmony.math.internal.nls.Messages;
 /**
  * Immutable objects describing settings such as rounding mode and digit
  * precision for the numerical operations provided by class {@link BigDecimal}.
- * 
- * @since Android 1.0
  */
 public final class MathContext implements Serializable {
-    // BEGIN android-note
-    // copied from newer version of harmony
-    // added final modifier
-    // END android-note
-
-    /* Fields */
 
     /**
      * A {@code MathContext} which corresponds to the IEEE 754r quadruple
      * decimal precision format: 34 digit precision and
      * {@link RoundingMode#HALF_EVEN} rounding.
-     * 
-     * @since Android 1.0
      */
     public static final MathContext DECIMAL128 = new MathContext(34,
             RoundingMode.HALF_EVEN);
@@ -52,8 +42,6 @@ public final class MathContext implements Serializable {
      * A {@code MathContext} which corresponds to the IEEE 754r single decimal
      * precision format: 7 digit precision and {@link RoundingMode#HALF_EVEN}
      * rounding.
-     * 
-     * @since Android 1.0
      */
     public static final MathContext DECIMAL32 = new MathContext(7,
             RoundingMode.HALF_EVEN);
@@ -62,8 +50,6 @@ public final class MathContext implements Serializable {
      * A {@code MathContext} which corresponds to the IEEE 754r double decimal
      * precision format: 16 digit precision and {@link RoundingMode#HALF_EVEN}
      * rounding.
-     * 
-     * @since Android 1.0
      */
     public static final MathContext DECIMAL64 = new MathContext(16,
             RoundingMode.HALF_EVEN);
@@ -71,8 +57,6 @@ public final class MathContext implements Serializable {
     /**
      * A {@code MathContext} for unlimited precision with
      * {@link RoundingMode#HALF_UP} rounding.
-     * 
-     * @since Android 1.0
      */
     public static final MathContext UNLIMITED = new MathContext(0,
             RoundingMode.HALF_UP);
@@ -96,7 +80,7 @@ public final class MathContext implements Serializable {
      * An array of {@code char} containing: {@code
      * 'p','r','e','c','i','s','i','o','n','='}. It's used to improve the
      * methods related to {@code String} conversion.
-     * 
+     *
      * @see #MathContext(String)
      * @see #toString()
      */
@@ -107,32 +91,25 @@ public final class MathContext implements Serializable {
      * An array of {@code char} containing: {@code
      * 'r','o','u','n','d','i','n','g','M','o','d','e','='}. It's used to
      * improve the methods related to {@code String} conversion.
-     * 
+     *
      * @see #MathContext(String)
      * @see #toString()
      */
     private final static char[] chRoundingMode = { 'r', 'o', 'u', 'n', 'd',
             'i', 'n', 'g', 'M', 'o', 'd', 'e', '=' };
 
-    /* Constructors */
-
     /**
      * Constructs a new {@code MathContext} with the specified precision and
      * with the rounding mode {@link RoundingMode#HALF_UP HALF_UP}. If the
      * precision passed is zero, then this implies that the computations have to
      * be performed exact, the rounding mode in this case is irrelevant.
-     * 
+     *
      * @param precision
      *            the precision for the new {@code MathContext}.
      * @throws IllegalArgumentException
      *             if {@code precision < 0}.
-     * 
-     * @since Android 1.0
      */
     public MathContext(int precision) {
-        // BEGIN android-note
-        // parameter names changed.
-        // END android-note
         this(precision, RoundingMode.HALF_UP);
     }
 
@@ -141,7 +118,7 @@ public final class MathContext implements Serializable {
      * with the specified rounding mode. If the precision passed is zero, then
      * this implies that the computations have to be performed exact, the
      * rounding mode in this case is irrelevant.
-     * 
+     *
      * @param precision
      *            the precision for the new {@code MathContext}.
      * @param roundingMode
@@ -150,13 +127,8 @@ public final class MathContext implements Serializable {
      *             if {@code precision < 0}.
      * @throws NullPointerException
      *             if {@code roundingMode} is {@code null}.
-     * 
-     * @since Android 1.0
      */
     public MathContext(int precision, RoundingMode roundingMode) {
-        // BEGIN android-note
-        // parameter names changed.
-        // END android-note
         if (precision < 0) {
             // math.0C=Digits < 0
             throw new IllegalArgumentException(Messages.getString("math.0C")); //$NON-NLS-1$
@@ -175,15 +147,13 @@ public final class MathContext implements Serializable {
      * the following syntax: "precision=&lt;precision&gt; roundingMode=&lt;roundingMode&gt;"
      * This is the same form as the one returned by the {@link #toString}
      * method.
-     * 
+     *
      * @param val
      *            a string describing the precision and rounding mode for the
      *            new {@code MathContext}.
      * @throws IllegalArgumentException
      *             if the string is not in the correct format or if the
      *             precision specified is < 0.
-     * 
-     * @since Android 1.0
      */
     public MathContext(String val) {
         char[] charVal = val.toCharArray();
@@ -258,10 +228,8 @@ public final class MathContext implements Serializable {
      * guaranteed to be non negative. If the precision is zero, then the
      * computations have to be performed exact, results are not rounded in this
      * case.
-     * 
+     *
      * @return the precision.
-     * 
-     * @since Android 1.0
      */
     public int getPrecision() {
         return precision;
@@ -270,20 +238,18 @@ public final class MathContext implements Serializable {
     /**
      * Returns the rounding mode. The rounding mode is the strategy to be used
      * to round results.
-     * <p> 
-     * The rounding mode is one of 
+     * <p>
+     * The rounding mode is one of
      * {@link RoundingMode#UP},
-     * {@link RoundingMode#DOWN}, 
-     * {@link RoundingMode#CEILING}, 
+     * {@link RoundingMode#DOWN},
+     * {@link RoundingMode#CEILING},
      * {@link RoundingMode#FLOOR},
-     * {@link RoundingMode#HALF_UP}, 
-     * {@link RoundingMode#HALF_DOWN}, 
+     * {@link RoundingMode#HALF_UP},
+     * {@link RoundingMode#HALF_DOWN},
      * {@link RoundingMode#HALF_EVEN}, or
      * {@link RoundingMode#UNNECESSARY}.
-     * 
+     *
      * @return the rounding mode.
-     * 
-     * @since Android 1.0
      */
     public RoundingMode getRoundingMode() {
         return roundingMode;
@@ -292,13 +258,11 @@ public final class MathContext implements Serializable {
     /**
      * Returns true if x is a {@code MathContext} with the same precision
      * setting and the same rounding mode as this {@code MathContext} instance.
-     * 
+     *
      * @param x
      *            object to be compared.
      * @return {@code true} if this {@code MathContext} instance is equal to the
      *         {@code x} argument; {@code false} otherwise.
-     * 
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object x) {
@@ -309,10 +273,8 @@ public final class MathContext implements Serializable {
 
     /**
      * Returns the hash code for this {@code MathContext} instance.
-     * 
+     *
      * @return the hash code for this {@code MathContext}.
-     * 
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -322,15 +284,14 @@ public final class MathContext implements Serializable {
 
     /**
      * Returns the string representation for this {@code MathContext} instance.
-     * The string has the form 
+     * The string has the form
      * {@code
      * "precision=&lt;precision&gt; roundingMode=&lt;roundingMode&gt;"
-     * } where {@code &lt;precision&gt;} is an integer describing the number 
+     * } where {@code &lt;precision&gt;} is an integer describing the number
      * of digits used for operations and {@code &lt;roundingMode&gt;} is the
      * string representation of the rounding mode.
-     * 
+     *
      * @return a string representation for this {@code MathContext} instance
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -347,7 +308,7 @@ public final class MathContext implements Serializable {
     /**
      * Makes checks upon deserialization of a {@code MathContext} instance.
      * Checks whether {@code precision >= 0} and {@code roundingMode != null}
-     * 
+     *
      * @throws StreamCorruptedException
      *             if {@code precision < 0}
      * @throws StreamCorruptedException

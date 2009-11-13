@@ -150,7 +150,7 @@ class ComparableTimSort {
 
         // If array is small, do a "mini-TimSort" with no merges
         if (nRemaining < MIN_MERGE) {
-            int initRunLen = countRunAndMakeAscending(a, lo, nRemaining);
+            int initRunLen = countRunAndMakeAscending(a, lo, hi);
             binarySort(a, lo, hi, lo + initRunLen);
             return;
         }

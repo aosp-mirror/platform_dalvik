@@ -23,8 +23,6 @@ package java.util;
  * element in the {@code List} has an index. Each element can thus be accessed by its
  * index, with the first index being zero. Normally, {@code List}s allow duplicate
  * elements, as compared to Sets, where elements have to be unique.
- * 
- * @since Android 1.0
  */
 public interface List<E> extends Collection<E> {
     /**
@@ -39,16 +37,15 @@ public interface List<E> extends Collection<E> {
      *            the index at which to insert.
      * @param object
      *            the object to add.
-     * @exception UnsupportedOperationException
-     *                when adding to this {@code List} is not supported.
-     * @exception ClassCastException
-     *                when the class of the object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code List} is not supported.
+     * @throws ClassCastException
+     *                if the class of the object is inappropriate for this
      *                {@code List}.
-     * @exception IllegalArgumentException
-     *                when the object cannot be added to this {@code List}.
-     * @exception IndexOutOfBoundsException
-     *                when {@code location < 0 || location > size()}
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if the object cannot be added to this {@code List}.
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || location > size()}
      */
     public void add(int location, E object);
 
@@ -58,14 +55,13 @@ public interface List<E> extends Collection<E> {
      * @param object
      *            the object to add.
      * @return always true.
-     * @exception UnsupportedOperationException
-     *                when adding to this {@code List} is not supported.
-     * @exception ClassCastException
-     *                when the class of the object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code List} is not supported.
+     * @throws ClassCastException
+     *                if the class of the object is inappropriate for this
      *                {@code List}.
-     * @exception IllegalArgumentException
-     *                when the object cannot be added to this {@code List}.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if the object cannot be added to this {@code List}.
      */
     public boolean add(E object);
 
@@ -80,16 +76,15 @@ public interface List<E> extends Collection<E> {
      *            the collection of objects to be inserted.
      * @return true if this {@code List} has been modified through the insertion, false
      *         otherwise (i.e. if the passed collection was empty).
-     * @exception UnsupportedOperationException
-     *                when adding to this {@code List} is not supported.
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code List} is not supported.
+     * @throws ClassCastException
+     *                if the class of an object is inappropriate for this
      *                {@code List}.
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this {@code List}.
-     * @exception IndexOutOfBoundsException
-     *                when {@code location < 0 || > size()}
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if an object cannot be added to this {@code List}.
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || > size()}
      */
     public boolean addAll(int location, Collection<? extends E> collection);
 
@@ -102,25 +97,23 @@ public interface List<E> extends Collection<E> {
      *            the collection of objects.
      * @return {@code true} if this {@code List} is modified, {@code false} otherwise
      *         (i.e. if the passed collection was empty).
-     * @exception UnsupportedOperationException
-     *                when adding to this {@code List} is not supported.
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code List} is not supported.
+     * @throws ClassCastException
+     *                if the class of an object is inappropriate for this
      *                {@code List}.
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this {@code List}.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if an object cannot be added to this {@code List}.
      */
     public boolean addAll(Collection<? extends E> collection);
 
     /**
      * Removes all elements from this {@code List}, leaving it empty.
      * 
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code List} is not supported.
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code List} is not supported.
      * @see #isEmpty
      * @see #size
-     * @since Android 1.0
      */
     public void clear();
 
@@ -131,7 +124,6 @@ public interface List<E> extends Collection<E> {
      *            the object to search for.
      * @return {@code true} if object is an element of this {@code List}, {@code false}
      *         otherwise
-     * @since Android 1.0
      */
     public boolean contains(Object object);
 
@@ -143,7 +135,6 @@ public interface List<E> extends Collection<E> {
      *            the collection of objects
      * @return {@code true} if all objects in the specified collection are
      *         elements of this {@code List}, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean containsAll(Collection<?> collection);
 
@@ -158,7 +149,6 @@ public interface List<E> extends Collection<E> {
      * @return boolean {@code true} if the object is the same as this object,
      *         and {@code false} if it is different from this object.
      * @see #hashCode
-     * @since Android 1.0
      */
     public boolean equals(Object object);
 
@@ -168,9 +158,8 @@ public interface List<E> extends Collection<E> {
      * @param location
      *            the index of the element to return.
      * @return the element at the specified location.
-     * @exception IndexOutOfBoundsException
-     *                when {@code location < 0 || >= size()}
-     * @since Android 1.0
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || >= size()}
      */
     public E get(int location);
 
@@ -179,7 +168,6 @@ public interface List<E> extends Collection<E> {
      * element' hashcode and its position in the {@code List} into account.
      * 
      * @return the hash code of the {@code List}.
-     * @since Android 1.0
      */
     public int hashCode();
 
@@ -191,7 +179,6 @@ public interface List<E> extends Collection<E> {
      *            the object to search for.
      * @return the index of the first occurrence of the object or -1 if the
      *         object was not found.
-     * @since Android 1.0
      */
     public int indexOf(Object object);
 
@@ -201,7 +188,6 @@ public interface List<E> extends Collection<E> {
      * @return {@code true} if this {@code List} has no elements, {@code false}
      *         otherwise.
      * @see #size
-     * @since Android 1.0
      */
     public boolean isEmpty();
 
@@ -211,7 +197,6 @@ public interface List<E> extends Collection<E> {
      * 
      * @return an iterator on the elements of this {@code List}.
      * @see Iterator
-     * @since Android 1.0
      */
     public Iterator<E> iterator();
 
@@ -223,7 +208,6 @@ public interface List<E> extends Collection<E> {
      *            the object to search for.
      * @return the index of the last occurrence of the object, or -1 if the
      *         object was not found.
-     * @since Android 1.0
      */
     public int lastIndexOf(Object object);
 
@@ -234,7 +218,6 @@ public interface List<E> extends Collection<E> {
      * @return a {@code List} iterator on the elements of this {@code List}
      * 
      * @see ListIterator
-     * @since Android 1.0
      */
     public ListIterator<E> listIterator();
 
@@ -246,10 +229,9 @@ public interface List<E> extends Collection<E> {
      * @param location
      *            the index at which to start the iteration.
      * @return a list iterator on the elements of this {@code List}.
-     * @exception IndexOutOfBoundsException
-     *                when {@code location < 0 || location > size()}
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || location > size()}
      * @see ListIterator
-     * @since Android 1.0
      */
     public ListIterator<E> listIterator(int location);
 
@@ -259,11 +241,10 @@ public interface List<E> extends Collection<E> {
      * @param location
      *            the index of the object to remove.
      * @return the removed object.
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code List} is not supported.
-     * @exception IndexOutOfBoundsException
-     *                when {@code location < 0 || >= size()}
-     * @since Android 1.0
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code List} is not supported.
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || >= size()}
      */
     public E remove(int location);
 
@@ -274,9 +255,8 @@ public interface List<E> extends Collection<E> {
      *            the object to remove.
      * @return true if this {@code List} was modified by this operation, false
      *         otherwise.
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code List} is not supported.
-     * @since Android 1.0
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code List} is not supported.
      */
     public boolean remove(Object object);
 
@@ -287,9 +267,8 @@ public interface List<E> extends Collection<E> {
      * @param collection
      *            the collection of objects to remove.
      * @return {@code true} if this {@code List} is modified, {@code false} otherwise.
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code List} is not supported.
-     * @since Android 1.0
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code List} is not supported.
      */
     public boolean removeAll(Collection<?> collection);
 
@@ -300,9 +279,8 @@ public interface List<E> extends Collection<E> {
      * @param collection
      *            the collection of objects to retain.
      * @return {@code true} if this {@code List} is modified, {@code false} otherwise.
-     * @exception UnsupportedOperationException
-     *                when removing from this {@code List} is not supported.
-     * @since Android 1.0
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code List} is not supported.
      */
     public boolean retainAll(Collection<?> collection);
 
@@ -315,16 +293,15 @@ public interface List<E> extends Collection<E> {
      * @param object
      *            the object to insert.
      * @return the previous element at the index.
-     * @exception UnsupportedOperationException
-     *                when replacing elements in this {@code List} is not supported.
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if replacing elements in this {@code List} is not supported.
+     * @throws ClassCastException
+     *                if the class of an object is inappropriate for this
      *                {@code List}.
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this {@code List}.
-     * @exception IndexOutOfBoundsException
-     *                when {@code location < 0 || >= size()}
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if an object cannot be added to this {@code List}.
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || >= size()}
      */
     public E set(int location, E object);
 
@@ -332,7 +309,6 @@ public interface List<E> extends Collection<E> {
      * Returns the number of elements in this {@code List}.
      * 
      * @return the number of elements in this {@code List}.
-     * @since Android 1.0
      */
     public int size();
 
@@ -346,10 +322,9 @@ public interface List<E> extends Collection<E> {
      * @param end
      *            the index one past the end of the sublist.
      * @return a list of a portion of this {@code List}.
-     * @exception IndexOutOfBoundsException
-     *                when {@code start < 0, start > end} or {@code end >
+     * @throws IndexOutOfBoundsException
+     *                if {@code start < 0, start > end} or {@code end >
      *                size()}
-     * @since Android 1.0
      */
     public List<E> subList(int start, int end);
 
@@ -357,7 +332,6 @@ public interface List<E> extends Collection<E> {
      * Returns an array containing all elements contained in this {@code List}.
      * 
      * @return an array of the elements from this {@code List}.
-     * @since Android 1.0
      */
     public Object[] toArray();
 
@@ -371,10 +345,9 @@ public interface List<E> extends Collection<E> {
      * @param array
      *            the array.
      * @return an array of the elements from this {@code List}.
-     * @exception ArrayStoreException
-     *                when the type of an element in this {@code List} cannot be stored
+     * @throws ArrayStoreException
+     *                if the type of an element in this {@code List} cannot be stored
      *                in the type of the specified array.
-     * @since Android 1.0
      */
     public <T> T[] toArray(T[] array);
 }

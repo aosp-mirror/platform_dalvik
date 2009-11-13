@@ -16,6 +16,7 @@
  */
 
 #include "hy2sie.h"
+#include "zip.h"
 
 #include "zlib.h"
 #include <memory.h>
@@ -24,6 +25,7 @@
 
 #include <fcntl.h>
 
+void throwNewDataFormatException (JNIEnv * env, const char *message);
 
 void zfree PROTOTYPE ((void *opaque, void *address));
 void *zalloc PROTOTYPE ((void *opaque, U_32 items, U_32 size));
@@ -35,27 +37,6 @@ static struct {
     jfieldID needsDictionary;
 } gCachedFields;
 
-
-// Contents from Harmony's inflater.h was put here:
-//
-typedef struct JCLZipStream
-{
-  U_8 *inaddr;
-  int inCap;
-  U_8 *dict;
-  z_stream *stream;
-} JCLZipStream;
-
-
-
-/**
-  * Throw java.util.zip.DataFormatException
-  */
-void
-throwNewDataFormatException (JNIEnv * env, const char *message)
-{
-  jniThrowException(env, "java/util/zip/DataFormatException", message);
-}
 
 
 /* Create a new stream . This stream cannot be used until it has been properly initialized. */
@@ -69,6 +50,11 @@ Java_java_util_zip_Inflater_createStream (JNIEnv * env, jobject recv,
   z_stream *stream;
   int err = 0;
   int wbits = 15;               /*Use MAX for fastest */
+#ifdef HY_ZIP_API
+  VMI_ACCESS_FROM_ENV (env);
+  VMIZipFunctionTable *zipFuncs;
+  zipFuncs = (*VMI)->GetZipFunctions(VMI);
+#endif
 
   /*Allocate mem for wrapped struct */
   jstream = jclmem_allocate_memory (env, sizeof (JCLZipStream));
@@ -104,7 +90,7 @@ Java_java_util_zip_Inflater_createStream (JNIEnv * env, jobject recv,
     {
       jclmem_free_memory (env, stream);
       jclmem_free_memory (env, jstream);
-      throwNewIllegalArgumentException (env, "");
+      THROW_ZIP_EXCEPTION(env, err, IllegalArgumentException);
       return -1;
     }
 
@@ -134,8 +120,10 @@ Java_java_util_zip_Inflater_setInputImpl (JNIEnv * env, jobject recv,
   stream->stream->next_in = (Bytef *) baseAddr;
   stream->stream->avail_in = len;
   in = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
-  if (in == NULL)
+  if (in == NULL) {
+    throwNewOutOfMemoryError(env, "");
     return;
+  }
   memcpy (baseAddr, (in + off), len);
   ((*env)->ReleasePrimitiveArrayCritical (env, buf, in, JNI_ABORT));
   return;
@@ -176,8 +164,6 @@ Java_java_util_zip_Inflater_inflateImpl (JNIEnv * env, jobject recv,
                                          jbyteArray buf, int off, int len,
                                          jlong handle)
 {
-  PORT_ACCESS_FROM_ENV (env);
-
   jbyte *out;
   JCLZipStream *stream = (JCLZipStream *) ((IDATA) handle);
   jint err = 0;
@@ -192,9 +178,10 @@ Java_java_util_zip_Inflater_inflateImpl (JNIEnv * env, jobject recv,
   sin = stream->stream->total_in;
   sout = stream->stream->total_out;
   out = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
-
-  if (out == NULL)
+  if (out == NULL) {
+    throwNewOutOfMemoryError(env, "");
     return -1;
+  }
   stream->stream->next_out = (Bytef *) out + off;
   err = inflate (stream->stream, Z_SYNC_FLUSH);
   ((*env)->ReleasePrimitiveArrayCritical (env, buf, out, 0));
@@ -217,7 +204,7 @@ Java_java_util_zip_Inflater_inflateImpl (JNIEnv * env, jobject recv,
         }
       else
         {
-          throwNewDataFormatException (env, "");
+          THROW_ZIP_EXCEPTION(env, err, DataFormatException);
           return -1;
         }
     }
@@ -280,7 +267,7 @@ Java_java_util_zip_Inflater_setDictionaryImpl (JNIEnv * env, jobject recv,
   if (err != Z_OK)
     {
       jclmem_free_memory (env, dBytes);
-      throwNewIllegalArgumentException (env, "");
+      THROW_ZIP_EXCEPTION(env, err, IllegalArgumentException);
       return;
     }
   stream->dict = dBytes;
@@ -297,11 +284,19 @@ Java_java_util_zip_Inflater_resetImpl (JNIEnv * env, jobject recv,
   err = inflateReset (stream->stream);
   if (err != Z_OK)
     {
-      throwNewIllegalArgumentException (env, "");
+      THROW_ZIP_EXCEPTION(env, err, IllegalArgumentException);
       return;
     }
 }
 
+/**
+  * Throw java.util.zip.DataFormatException
+  */
+void
+throwNewDataFormatException (JNIEnv * env, const char *message)
+{
+  jniThrowException(env, "java/util/zip/DataFormatException", message);
+}
 
 JNIEXPORT jlong JNICALL
 Java_java_util_zip_Inflater_getTotalOutImpl (JNIEnv * env, jobject recv,
@@ -311,6 +306,7 @@ Java_java_util_zip_Inflater_getTotalOutImpl (JNIEnv * env, jobject recv,
 
   stream = (JCLZipStream *) ((IDATA) handle);
   return stream->stream->total_out;
+
 }
 
 JNIEXPORT jlong JNICALL

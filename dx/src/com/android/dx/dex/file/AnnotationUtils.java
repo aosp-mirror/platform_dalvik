@@ -38,41 +38,41 @@ import static com.android.dx.rop.annotation.AnnotationVisibility.*;
  * Utility class for dealing with annotations.
  */
 public final class AnnotationUtils {
-    /** non-null; type for <code>AnnotationDefault</code> annotations */
+    /** {@code non-null;} type for {@code AnnotationDefault} annotations */
     private static final CstType ANNOTATION_DEFAULT_TYPE = 
         CstType.intern(Type.intern("Ldalvik/annotation/AnnotationDefault;"));
 
-    /** non-null; type for <code>EnclosingClass</code> annotations */
+    /** {@code non-null;} type for {@code EnclosingClass} annotations */
     private static final CstType ENCLOSING_CLASS_TYPE = 
         CstType.intern(Type.intern("Ldalvik/annotation/EnclosingClass;"));
 
-    /** non-null; type for <code>EnclosingMethod</code> annotations */
+    /** {@code non-null;} type for {@code EnclosingMethod} annotations */
     private static final CstType ENCLOSING_METHOD_TYPE = 
         CstType.intern(Type.intern("Ldalvik/annotation/EnclosingMethod;"));
 
-    /** non-null; type for <code>InnerClass</code> annotations */
+    /** {@code non-null;} type for {@code InnerClass} annotations */
     private static final CstType INNER_CLASS_TYPE = 
         CstType.intern(Type.intern("Ldalvik/annotation/InnerClass;"));
 
-    /** non-null; type for <code>MemberClasses</code> annotations */
+    /** {@code non-null;} type for {@code MemberClasses} annotations */
     private static final CstType MEMBER_CLASSES_TYPE = 
         CstType.intern(Type.intern("Ldalvik/annotation/MemberClasses;"));
 
-    /** non-null; type for <code>Signature</code> annotations */
+    /** {@code non-null;} type for {@code Signature} annotations */
     private static final CstType SIGNATURE_TYPE = 
         CstType.intern(Type.intern("Ldalvik/annotation/Signature;"));
 
-    /** non-null; type for <code>Throws</code> annotations */
+    /** {@code non-null;} type for {@code Throws} annotations */
     private static final CstType THROWS_TYPE = 
         CstType.intern(Type.intern("Ldalvik/annotation/Throws;"));
 
-    /** non-null; the UTF-8 constant <code>"accessFlags"</code> */
+    /** {@code non-null;} the UTF-8 constant {@code "accessFlags"} */
     private static final CstUtf8 ACCESS_FLAGS_UTF = new CstUtf8("accessFlags");
 
-    /** non-null; the UTF-8 constant <code>"name"</code> */
+    /** {@code non-null;} the UTF-8 constant {@code "name"} */
     private static final CstUtf8 NAME_UTF = new CstUtf8("name");
 
-    /** non-null; the UTF-8 constant <code>"value"</code> */
+    /** {@code non-null;} the UTF-8 constant {@code "value"} */
     private static final CstUtf8 VALUE_UTF = new CstUtf8("value");
 
     /**
@@ -83,10 +83,10 @@ public final class AnnotationUtils {
     }
 
     /**
-     * Constructs a standard <code>AnnotationDefault</code> annotation.
+     * Constructs a standard {@code AnnotationDefault} annotation.
      * 
-     * @param defaults non-null; the defaults, itself as an annotation
-     * @return non-null; the constructed annotation
+     * @param defaults {@code non-null;} the defaults, itself as an annotation
+     * @return {@code non-null;} the constructed annotation
      */
     public static Annotation makeAnnotationDefault(Annotation defaults) {
         Annotation result = new Annotation(ANNOTATION_DEFAULT_TYPE, SYSTEM);
@@ -97,10 +97,10 @@ public final class AnnotationUtils {
     }
 
     /**
-     * Constructs a standard <code>EnclosingClass</code> annotation.
+     * Constructs a standard {@code EnclosingClass} annotation.
      * 
-     * @param clazz non-null; the enclosing class
-     * @return non-null; the annotation
+     * @param clazz {@code non-null;} the enclosing class
+     * @return {@code non-null;} the annotation
      */
     public static Annotation makeEnclosingClass(CstType clazz) {
         Annotation result = new Annotation(ENCLOSING_CLASS_TYPE, SYSTEM);
@@ -111,10 +111,10 @@ public final class AnnotationUtils {
     }
 
     /**
-     * Constructs a standard <code>EnclosingMethod</code> annotation.
+     * Constructs a standard {@code EnclosingMethod} annotation.
      * 
-     * @param method non-null; the enclosing method
-     * @return non-null; the annotation
+     * @param method {@code non-null;} the enclosing method
+     * @return {@code non-null;} the annotation
      */
     public static Annotation makeEnclosingMethod(CstMethodRef method) {
         Annotation result = new Annotation(ENCLOSING_METHOD_TYPE, SYSTEM);
@@ -125,12 +125,12 @@ public final class AnnotationUtils {
     }
 
     /**
-     * Constructs a standard <code>InnerClass</code> annotation.
+     * Constructs a standard {@code InnerClass} annotation.
      * 
-     * @param name null-ok; the original name of the class, or
-     * <code>null</code> to represent an anonymous class
+     * @param name {@code null-ok;} the original name of the class, or
+     * {@code null} to represent an anonymous class
      * @param accessFlags the original access flags
-     * @return non-null; the annotation
+     * @return {@code non-null;} the annotation
      */
     public static Annotation makeInnerClass(CstUtf8 name, int accessFlags) {
         Annotation result = new Annotation(INNER_CLASS_TYPE, SYSTEM);
@@ -145,10 +145,10 @@ public final class AnnotationUtils {
     }
 
     /**
-     * Constructs a standard <code>MemberClasses</code> annotation.
+     * Constructs a standard {@code MemberClasses} annotation.
      * 
-     * @param types non-null; the list of (the types of) the member classes
-     * @return non-null; the annotation
+     * @param types {@code non-null;} the list of (the types of) the member classes
+     * @return {@code non-null;} the annotation
      */
     public static Annotation makeMemberClasses(TypeList types) {
         CstArray array = makeCstArray(types);
@@ -159,10 +159,10 @@ public final class AnnotationUtils {
     }
 
     /**
-     * Constructs a standard <code>Signature</code> annotation.
+     * Constructs a standard {@code Signature} annotation.
      * 
-     * @param signature non-null; the signature string
-     * @return non-null; the annotation
+     * @param signature {@code non-null;} the signature string
+     * @return {@code non-null;} the annotation
      */
     public static Annotation makeSignature(CstUtf8 signature) {
         Annotation result = new Annotation(SIGNATURE_TYPE, SYSTEM);
@@ -221,10 +221,10 @@ public final class AnnotationUtils {
     }
 
     /**
-     * Constructs a standard <code>Throws</code> annotation.
+     * Constructs a standard {@code Throws} annotation.
      * 
-     * @param types non-null; the list of thrown types
-     * @return non-null; the annotation
+     * @param types {@code non-null;} the list of thrown types
+     * @return {@code non-null;} the annotation
      */
     public static Annotation makeThrows(TypeList types) {
         CstArray array = makeCstArray(types);
@@ -237,8 +237,8 @@ public final class AnnotationUtils {
     /**
      * Converts a {@link TypeList} to a {@link CstArray}.
      * 
-     * @param types non-null; the type list
-     * @return non-null; the corresponding array constant
+     * @param types {@code non-null;} the type list
+     * @return {@code non-null;} the corresponding array constant
      */
     private static CstArray makeCstArray(TypeList types) {
         int size = types.size();

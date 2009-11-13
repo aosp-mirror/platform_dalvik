@@ -21,8 +21,6 @@ package java.text;
  * Tracks the current position in a parsed string. In case of an error the error
  * index can be set to the position where the error occurred without having to
  * change the parse position.
- * 
- * @since Android 1.0
  */
 public class ParsePosition {
 
@@ -33,7 +31,6 @@ public class ParsePosition {
      * 
      * @param index
      *            the index to begin parsing.
-     * @since Android 1.0
      */
     public ParsePosition(int index) {
         currentPosition = index;
@@ -50,7 +47,6 @@ public class ParsePosition {
      * @return {@code true} if the specified object is equal to this
      *         {@code ParsePosition}; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -66,7 +62,6 @@ public class ParsePosition {
      * Returns the index at which the parse could not continue.
      * 
      * @return the index of the parse error or -1 if there is no error.
-     * @since Android 1.0
      */
     public int getErrorIndex() {
         return errorIndex;
@@ -76,7 +71,6 @@ public class ParsePosition {
      * Returns the current parse position.
      * 
      * @return the current position.
-     * @since Android 1.0
      */
     public int getIndex() {
         return currentPosition;
@@ -92,7 +86,6 @@ public class ParsePosition {
      * 
      * @param index
      *            the index of the parse error.
-     * @since Android 1.0
      */
     public void setErrorIndex(int index) {
         errorIndex = index;
@@ -103,7 +96,6 @@ public class ParsePosition {
      * 
      * @param index
      *            the current parse position.
-     * @since Android 1.0
      */
     public void setIndex(int index) {
         currentPosition = index;
@@ -113,7 +105,6 @@ public class ParsePosition {
      * Returns the string representation of this parse position.
      * 
      * @return the string representation of this parse position.
-     * @since Android 1.0
      */
     @Override
     public String toString() {

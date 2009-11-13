@@ -102,6 +102,9 @@ static bool initException(Object* exception, const char* msg, Object* cause,
 
 /*
  * Cache pointers to some of the exception classes we use locally.
+ *
+ * Note this is NOT called during dexopt optimization.  Some of the fields
+ * are initialized by the verifier (dvmVerifyCodeFlow).
  */
 bool dvmExceptionStartup(void)
 {
@@ -377,6 +380,14 @@ static bool initException(Object* exception, const char* msg, Object* cause,
         }
     }
 
+    if (cause != NULL) {
+        if (!dvmInstanceof(cause->clazz, gDvm.classJavaLangThrowable)) {
+            LOGE("Tried to init exception with cause '%s'\n",
+                cause->clazz->descriptor);
+            dvmAbort();
+        }
+    }
+
     /*
      * The Throwable class has four public constructors:
      *  (1) Throwable()
@@ -622,6 +633,28 @@ void dvmWrapException(const char* newExcepStr)
 
     assert(dvmCheckException(self));
     dvmReleaseTrackedAlloc(origExcep, self);
+}
+
+/*
+ * Get the "cause" field from an exception.
+ *
+ * The Throwable class initializes the "cause" field to "this" to
+ * differentiate between being initialized to null and never being
+ * initialized.  We check for that here and convert it to NULL.
+ */
+Object* dvmGetExceptionCause(const Object* exception)
+{
+    if (!dvmInstanceof(exception->clazz, gDvm.classJavaLangThrowable)) {
+        LOGE("Tried to get cause from object of type '%s'\n",
+            exception->clazz->descriptor);
+        dvmAbort();
+    }
+    Object* cause =
+        dvmGetFieldObject(exception, gDvm.offJavaLangThrowable_cause);
+    if (cause == exception)
+        return NULL;
+    else
+        return cause;
 }
 
 /*
@@ -1208,9 +1241,8 @@ void dvmLogExceptionStackTrace(void)
 
     for (;;) {
         logStackTraceOf(exception);
-        cause = (Object*) dvmGetFieldObject(exception,
-                    gDvm.offJavaLangThrowable_cause);
-        if ((cause == NULL) || (cause == exception)) {
+        cause = dvmGetExceptionCause(exception);
+        if (cause == NULL) {
             break;
         }
         LOGI("Caused by:\n");

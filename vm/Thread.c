@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Thread support.
  */
 #include "Dalvik.h"
+#include "native/SystemThread.h"
 
 #include "utils/threads.h"      // need Android thread priorities
 
@@ -26,6 +28,9 @@
 #include <sys/resource.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <fcntl.h>
+
+#include <cutils/sched_policy.h>
 
 #if defined(HAVE_PRCTL)
 #include <sys/prctl.h>
@@ -233,6 +238,16 @@ static void threadExitCheck(void* arg);
 static void waitForThreadSuspend(Thread* self, Thread* thread);
 static int getThreadPriorityFromSystem(void);
 
+/*
+ * The JIT needs to know if any thread is suspended.  We do this by
+ * maintaining a global sum of all threads' suspend counts.  All suspendCount
+ * updates should go through this after aquiring threadSuspendCountLock.
+ */
+static inline void dvmAddToThreadSuspendCount(int *pSuspendCount, int delta)
+{
+    *pSuspendCount += delta;
+    gDvm.sumThreadSuspendCount += delta;
+}
 
 /*
  * Initialize thread list and main thread's environment.  We need to set
@@ -398,8 +413,12 @@ bool dvmThreadObjStartup(void)
 void dvmThreadShutdown(void)
 {
     if (gDvm.threadList != NULL) {
-        assert(gDvm.threadList->next == NULL);
-        assert(gDvm.threadList->prev == NULL);
+        /*
+         * If we walk through the thread list and try to free the
+         * lingering thread structures (which should only be for daemon
+         * threads), the daemon threads may crash if they execute before
+         * the process dies.  Let them leak.
+         */
         freeThread(gDvm.threadList);
         gDvm.threadList = NULL;
     }
@@ -448,6 +467,11 @@ static inline void unlockThreadSuspendCount(void)
  * We don't have to check to see if we should be suspended once we have
  * the lock.  Nobody can suspend all threads without holding the thread list
  * lock while they do it, so by definition there isn't a GC in progress.
+ *
+ * TODO: consider checking for suspend after acquiring the lock, and
+ * backing off if set.  As stated above, it can't happen during normal
+ * execution, but it *can* happen during shutdown when daemon threads
+ * are being suspended.
  */
 void dvmLockThreadList(Thread* self)
 {
@@ -460,7 +484,7 @@ void dvmLockThreadList(Thread* self)
         oldStatus = self->status;
         self->status = THREAD_VMWAIT;
     } else {
-        /* happens for JNI AttachCurrentThread [not anymore?] */
+        /* happens during VM shutdown */
         //LOGW("NULL self in dvmLockThreadList\n");
         oldStatus = -1;         // shut up gcc
     }
@@ -510,7 +534,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
     u8 startWhen = 0;       // init req'd to placate gcc
     int sleepIter = 0;
     int cc;
-    
+
     do {
         cc = pthread_mutex_trylock(&gDvm._threadSuspendLock);
         if (cc != 0) {
@@ -519,8 +543,8 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
                  * Could be that a resume-all is in progress, and something
                  * grabbed the CPU when the wakeup was broadcast.  The thread
                  * performing the resume hasn't had a chance to release the
-                 * thread suspend lock.  (Should no longer be an issue --
-                 * we now release before broadcast.)
+                 * thread suspend lock.  (We release before the broadcast,
+                 * so this should be a narrow window.)
                  *
                  * Could be we hit the window as a suspend was started,
                  * and the lock has been grabbed but the suspend counts
@@ -580,18 +604,23 @@ static inline void unlockThreadSuspend(void)
  *
  * It's possible for this function to get called after a failed
  * initialization, so be careful with assumptions about the environment.
+ *
+ * This will be called from whatever thread calls DestroyJavaVM, usually
+ * but not necessarily the main thread.  It's likely, but not guaranteed,
+ * that the current thread has already been cleaned up.
  */
 void dvmSlayDaemons(void)
 {
-    Thread* self = dvmThreadSelf();
+    Thread* self = dvmThreadSelf();     // may be null
     Thread* target;
-    Thread* nextTarget;
-
-    if (self == NULL)
-        return;
+    int threadId = 0;
+    bool doWait = false;
 
     //dvmEnterCritical(self);
     dvmLockThreadList(self);
+
+    if (self != NULL)
+        threadId = self->threadId;
 
     target = gDvm.threadList;
     while (target != NULL) {
@@ -603,27 +632,95 @@ void dvmSlayDaemons(void)
         if (!dvmGetFieldBoolean(target->threadObj,
                 gDvm.offJavaLangThread_daemon))
         {
+            /* should never happen; suspend it with the rest */
             LOGW("threadid=%d: non-daemon id=%d still running at shutdown?!\n",
-                self->threadId, target->threadId);
-            target = target->next;
-            continue;
+                threadId, target->threadId);
         }
 
-        LOGI("threadid=%d: killing leftover daemon threadid=%d [TODO]\n",
-            self->threadId, target->threadId);
-        // TODO: suspend and/or kill the thread
-        // (at the very least, we can "rescind their JNI privileges")
+        char* threadName = dvmGetThreadName(target);
+        LOGD("threadid=%d: suspending daemon id=%d name='%s'\n",
+            threadId, target->threadId, threadName);
+        free(threadName);
 
-        /* remove from list */
-        nextTarget = target->next;
+        /* mark as suspended */
+        lockThreadSuspendCount();
+        dvmAddToThreadSuspendCount(&target->suspendCount, 1);
+        unlockThreadSuspendCount();
+        doWait = true;
+
+        target = target->next;
+    }
+
+    //dvmDumpAllThreads(false);
+
+    /*
+     * Unlock the thread list, relocking it later if necessary.  It's
+     * possible a thread is in VMWAIT after calling dvmLockThreadList,
+     * and that function *doesn't* check for pending suspend after
+     * acquiring the lock.  We want to let them finish their business
+     * and see the pending suspend before we continue here.
+     *
+     * There's no guarantee of mutex fairness, so this might not work.
+     * (The alternative is to have dvmLockThreadList check for suspend
+     * after acquiring the lock and back off, something we should consider.)
+     */
+    dvmUnlockThreadList();
+
+    if (doWait) {
+        usleep(200 * 1000);
+
+        dvmLockThreadList(self);
+
+        /*
+         * Sleep for a bit until the threads have suspended.  We're trying
+         * to exit, so don't wait for too long.
+         */
+        int i;
+        for (i = 0; i < 10; i++) {
+            bool allSuspended = true;
+
+            target = gDvm.threadList;
+            while (target != NULL) {
+                if (target == self) {
+                    target = target->next;
+                    continue;
+                }
+
+                if (target->status == THREAD_RUNNING && !target->isSuspended) {
+                    LOGD("threadid=%d not ready yet\n", target->threadId);
+                    allSuspended = false;
+                    break;
+                }
+
+                target = target->next;
+            }
+
+            if (allSuspended) {
+                LOGD("threadid=%d: all daemons have suspended\n", threadId);
+                break;
+            } else {
+                LOGD("threadid=%d: waiting for daemons to suspend\n", threadId);
+            }
+
+            usleep(200 * 1000);
+        }
+        dvmUnlockThreadList();
+    }
+
+#if 0   /* bad things happen if they come out of JNI or "spuriously" wake up */
+    /*
+     * Abandon the threads and recover their resources.
+     */
+    target = gDvm.threadList;
+    while (target != NULL) {
+        Thread* nextTarget = target->next;
         unlinkThread(target);
-
         freeThread(target);
         target = nextTarget;
     }
+#endif
 
-    dvmUnlockThreadList();
-    //dvmExitCritical(self);
+    //dvmDumpAllThreads(true);
 }
 
 
@@ -886,15 +983,22 @@ static bool prepareThread(Thread* thread)
     /*
      * Initialize our reference tracking tables.
      *
-     * The JNI local ref table *must* be fixed-size because we keep pointers
-     * into the table in our stack frames.
-     *
      * Most threads won't use jniMonitorRefTable, so we clear out the
      * structure but don't call the init function (which allocs storage).
+     */
+#ifdef USE_INDIRECT_REF
+    if (!dvmInitIndirectRefTable(&thread->jniLocalRefTable,
+            kJniLocalRefMin, kJniLocalRefMax, kIndirectKindLocal))
+        return false;
+#else
+    /*
+     * The JNI local ref table *must* be fixed-size because we keep pointers
+     * into the table in our stack frames.
      */
     if (!dvmInitReferenceTable(&thread->jniLocalRefTable,
             kJniLocalRefMax, kJniLocalRefMax))
         return false;
+#endif
     if (!dvmInitReferenceTable(&thread->internalLocalRefTable,
             kInternalRefDefault, kInternalRefMax))
         return false;
@@ -948,7 +1052,11 @@ static void freeThread(Thread* thread)
 #endif
     }
 
+#ifdef USE_INDIRECT_REF
+    dvmClearIndirectRefTable(&thread->jniLocalRefTable);
+#else
     dvmClearReferenceTable(&thread->jniLocalRefTable);
+#endif
     dvmClearReferenceTable(&thread->internalLocalRefTable);
     if (&thread->jniMonitorRefTable.table != NULL)
         dvmClearReferenceTable(&thread->jniMonitorRefTable);
@@ -995,6 +1103,12 @@ static void setThreadSelf(Thread* thread)
  * This is mainly of use to ensure that we don't leak resources if, for
  * example, a thread attaches itself to us with AttachCurrentThread and
  * then exits without notifying the VM.
+ *
+ * We could do the detach here instead of aborting, but this will lead to
+ * portability problems.  Other implementations do not do this check and
+ * will simply be unaware that the thread has exited, leading to resource
+ * leaks (and, if this is a non-daemon thread, an infinite hang when the
+ * VM tries to shut down).
  */
 static void threadExitCheck(void* arg)
 {
@@ -1004,7 +1118,6 @@ static void threadExitCheck(void* arg)
     assert(thread != NULL);
 
     if (thread->status != THREAD_ZOMBIE) {
-        /* TODO: instead of failing, we could call dvmDetachCurrentThread() */
         LOGE("Native thread exited without telling us\n");
         dvmAbort();
     }
@@ -1185,10 +1298,18 @@ bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
     assert(threadObj != NULL);
 
     if(gDvm.zygote) {
-        dvmThrowException("Ljava/lang/IllegalStateException;",
-            "No new threads in -Xzygote mode");
+        // Allow the sampling profiler thread. We shut it down before forking.
+        StringObject* nameStr = (StringObject*) dvmGetFieldObject(threadObj,
+                    gDvm.offJavaLangThread_name);
+        char* threadName = dvmCreateCstrFromString(nameStr);
+        bool profilerThread = strcmp(threadName, "SamplingProfiler") == 0;
+        free(threadName);
+        if (!profilerThread) {
+            dvmThrowException("Ljava/lang/IllegalStateException;",
+                "No new threads in -Xzygote mode");
 
-        goto fail;
+            goto fail;
+        }
     }
 
     self = dvmThreadSelf();
@@ -1470,7 +1591,7 @@ static void* interpThreadStart(void* arg)
      * setPriority(), and then starts the thread.  We could manage this with
      * a "needs priority update" flag to avoid the redundant call.
      */
-    int priority = dvmGetFieldBoolean(self->threadObj,
+    int priority = dvmGetFieldInt(self->threadObj,
                         gDvm.offJavaLangThread_priority);
     dvmChangeThreadPriority(self, priority);
 
@@ -1562,6 +1683,12 @@ static void threadExitUncaughtException(Thread* self, Object* group)
     }
 
 bail:
+#if defined(WITH_JIT)
+    /* Remove this thread's suspendCount from global suspendCount sum */
+    lockThreadSuspendCount();
+    dvmAddToThreadSuspendCount(&self->suspendCount, -self->suspendCount);
+    unlockThreadSuspendCount();
+#endif
     dvmReleaseTrackedAlloc(exception, self);
 }
 
@@ -2116,6 +2243,9 @@ void dvmDetachCurrentThread(void)
     dvmUnlockThreadList();
 
     setThreadSelf(NULL);
+
+    dvmDetachSystemThread(self);
+
     freeThread(self);
 }
 
@@ -2138,7 +2268,7 @@ void dvmSuspendThread(Thread* thread)
     //assert(thread->handle != dvmJdwpGetDebugThread(gDvm.jdwpState));
 
     lockThreadSuspendCount();
-    thread->suspendCount++;
+    dvmAddToThreadSuspendCount(&thread->suspendCount, 1);
     thread->dbgSuspendCount++;
 
     LOG_THREAD("threadid=%d: suspend++, now=%d\n",
@@ -2167,7 +2297,7 @@ void dvmResumeThread(Thread* thread)
 
     lockThreadSuspendCount();
     if (thread->suspendCount > 0) {
-        thread->suspendCount--;
+        dvmAddToThreadSuspendCount(&thread->suspendCount, -1);
         thread->dbgSuspendCount--;
     } else {
         LOG_THREAD("threadid=%d:  suspendCount already zero\n",
@@ -2205,7 +2335,7 @@ void dvmSuspendSelf(bool jdwpActivity)
      * though.
      */
     lockThreadSuspendCount();
-    self->suspendCount++;
+    dvmAddToThreadSuspendCount(&self->suspendCount, 1);
     self->dbgSuspendCount++;
 
     /*
@@ -2300,7 +2430,7 @@ static void dumpWedgedThread(Thread* thread)
         char proc[100];
         sprintf(proc, "/proc/%d/exe", getpid());
         int len;
-        
+
         len = readlink(proc, exePath, sizeof(exePath)-1);
         exePath[len] = '\0';
     }
@@ -2343,29 +2473,83 @@ static void dumpWedgedThread(Thread* thread)
  *
  * TODO: track basic stats about time required to suspend VM.
  */
+#define FIRST_SLEEP (250*1000)    /* 0.25s */
+#define MORE_SLEEP  (750*1000)    /* 0.75s */
 static void waitForThreadSuspend(Thread* self, Thread* thread)
 {
     const int kMaxRetries = 10;
-    const int kSpinSleepTime = 750*1000;        /* 0.75s */
+    int spinSleepTime = FIRST_SLEEP;
     bool complained = false;
+    bool needPriorityReset = false;
+    int savedThreadPrio = -500;
 
     int sleepIter = 0;
     int retryCount = 0;
     u8 startWhen = 0;       // init req'd to placate gcc
+    u8 firstStartWhen = 0;
 
     while (thread->status == THREAD_RUNNING && !thread->isSuspended) {
-        if (sleepIter == 0)         // get current time on first iteration
+        if (sleepIter == 0) {           // get current time on first iteration
             startWhen = dvmGetRelativeTimeUsec();
+            if (firstStartWhen == 0)    // first iteration of first attempt
+                firstStartWhen = startWhen;
 
-        if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
-            LOGW("threadid=%d (h=%d): spin on suspend threadid=%d (handle=%d)\n",
-                self->threadId, (int)self->handle,
+            /*
+             * After waiting for a bit, check to see if the target thread is
+             * running at a reduced priority.  If so, bump it up temporarily
+             * to give it more CPU time.
+             *
+             * getpriority() returns the "nice" value, so larger numbers
+             * indicate lower priority.
+             *
+             * (Not currently changing the cgroup.  Wasn't necessary in some
+             * simple experiments.)
+             */
+            if (retryCount == 2) {
+                assert(thread->systemTid != 0);
+                errno = 0;
+                int threadPrio = getpriority(PRIO_PROCESS, thread->systemTid);
+                if (errno == 0 && threadPrio > 0) {
+                    const int kHigher = 0;
+                    if (setpriority(PRIO_PROCESS, thread->systemTid, kHigher) < 0)
+                    {
+                        LOGW("Couldn't raise priority on tid %d to %d\n",
+                            thread->systemTid, kHigher);
+                    } else {
+                        savedThreadPrio = threadPrio;
+                        needPriorityReset = true;
+                        LOGD("Temporarily raising priority on tid %d (%d -> %d)\n",
+                            thread->systemTid, threadPrio, kHigher);
+                    }
+                }
+            }
+        }
+
+#if defined (WITH_JIT)
+        /*
+         * If we're still waiting after the first timeout,
+         * unchain all translations.
+         */
+        if (gDvmJit.pJitEntryTable && retryCount > 0) {
+            LOGD("JIT unchain all attempt #%d",retryCount);
+            dvmJitUnchainAll();
+        }
+#endif
+
+        /*
+         * Sleep briefly.  This returns false if we've exceeded the total
+         * time limit for this round of sleeping.
+         */
+        if (!dvmIterativeSleep(sleepIter++, spinSleepTime, startWhen)) {
+            LOGW("threadid=%d: spin on suspend #%d threadid=%d (h=%d)\n",
+                self->threadId, retryCount,
                 thread->threadId, (int)thread->handle);
             dumpWedgedThread(thread);
             complained = true;
 
             // keep going; could be slow due to valgrind
             sleepIter = 0;
+            spinSleepTime = MORE_SLEEP;
 
             if (retryCount++ == kMaxRetries) {
                 LOGE("threadid=%d: stuck on threadid=%d, giving up\n",
@@ -2377,8 +2561,19 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
     }
 
     if (complained) {
-        LOGW("threadid=%d: spin on suspend resolved\n", self->threadId);
+        LOGW("threadid=%d: spin on suspend resolved in %lld msec\n",
+            self->threadId,
+            (dvmGetRelativeTimeUsec() - firstStartWhen) / 1000);
         //dvmDumpThread(thread, false);   /* suspended, so dump is safe */
+    }
+    if (needPriorityReset) {
+        if (setpriority(PRIO_PROCESS, thread->systemTid, savedThreadPrio) < 0) {
+            LOGW("NOTE: couldn't reset priority on thread %d to %d\n",
+                thread->systemTid, savedThreadPrio);
+        } else {
+            LOGV("Restored priority on %d to %d\n",
+                thread->systemTid, savedThreadPrio);
+        }
     }
 }
 
@@ -2444,7 +2639,7 @@ void dvmSuspendAllThreads(SuspendCause why)
             thread->handle == dvmJdwpGetDebugThread(gDvm.jdwpState))
             continue;
 
-        thread->suspendCount++;
+        dvmAddToThreadSuspendCount(&thread->suspendCount, 1);
         if (why == SUSPEND_FOR_DEBUG || why == SUSPEND_FOR_DEBUG_EVENT)
             thread->dbgSuspendCount++;
     }
@@ -2476,7 +2671,7 @@ void dvmSuspendAllThreads(SuspendCause why)
         /* wait for the other thread to see the pending suspend */
         waitForThreadSuspend(self, thread);
 
-        LOG_THREAD("threadid=%d:   threadid=%d status=%d c=%d dc=%d isSusp=%d\n", 
+        LOG_THREAD("threadid=%d:   threadid=%d status=%d c=%d dc=%d isSusp=%d\n",
             self->threadId,
             thread->threadId, thread->status, thread->suspendCount,
             thread->dbgSuspendCount, thread->isSuspended);
@@ -2521,7 +2716,7 @@ void dvmResumeAllThreads(SuspendCause why)
         }
 
         if (thread->suspendCount > 0) {
-            thread->suspendCount--;
+            dvmAddToThreadSuspendCount(&thread->suspendCount, -1);
             if (why == SUSPEND_FOR_DEBUG || why == SUSPEND_FOR_DEBUG_EVENT)
                 thread->dbgSuspendCount--;
         } else {
@@ -2612,7 +2807,8 @@ void dvmUndoDebuggerSuspensions(void)
         }
 
         assert(thread->suspendCount >= thread->dbgSuspendCount);
-        thread->suspendCount -= thread->dbgSuspendCount;
+        dvmAddToThreadSuspendCount(&thread->suspendCount,
+                                   -thread->dbgSuspendCount);
         thread->dbgSuspendCount = 0;
     }
     unlockThreadSuspendCount();
@@ -2827,6 +3023,23 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj)
     int vmData;
 
     vmData = dvmGetFieldInt(vmThreadObj, gDvm.offJavaLangVMThread_vmData);
+
+    if (false) {
+        Thread* thread = gDvm.threadList;
+        while (thread != NULL) {
+            if ((Thread*)vmData == thread)
+                break;
+
+            thread = thread->next;
+        }
+
+        if (thread == NULL) {
+            LOGW("WARNING: vmThreadObj=%p has thread=%p, not in thread list\n",
+                vmThreadObj, (Thread*)vmData);
+            vmData = 0;
+        }
+    }
+
     return (Thread*) vmData;
 }
 
@@ -2851,41 +3064,6 @@ static const int kNiceValues[10] = {
 };
 
 /*
- * Change the scheduler cgroup of a pid
- */
-int dvmChangeThreadSchedulerGroup(const char *cgroup)
-{
-#ifdef HAVE_ANDROID_OS
-    FILE *fp;
-    char path[255];
-    int rc;
-
-    sprintf(path, "/dev/cpuctl/%s/tasks", (cgroup ? cgroup : ""));
-
-    if (!(fp = fopen(path, "w"))) {
-#if ENABLE_CGROUP_ERR_LOGGING
-        LOGW("Unable to open %s (%s)\n", path, strerror(errno));
-#endif
-        return -errno;
-    }
-
-    rc = fprintf(fp, "0");
-    fclose(fp);
-
-    if (rc < 0) {
-#if ENABLE_CGROUP_ERR_LOGGING
-        LOGW("Unable to move pid %d to cgroup %s (%s)\n", getpid(),
-             (cgroup ? cgroup : "<default>"), strerror(errno));
-#endif
-    }
-
-    return (rc < 0) ? errno : 0;
-#else // HAVE_ANDROID_OS
-    return 0;
-#endif
-}
-
-/*
  * Change the priority of a system thread to match that of the Thread object.
  *
  * We map a priority value from 1-10 to Linux "nice" values, where lower
@@ -2902,10 +3080,10 @@ void dvmChangeThreadPriority(Thread* thread, int newPriority)
     }
     newNice = kNiceValues[newPriority-1];
 
-    if (newPriority >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerGroup("bg_non_interactive");
+    if (newNice >= ANDROID_PRIORITY_BACKGROUND) {
+        set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
     } else if (getpriority(PRIO_PROCESS, pid) >= ANDROID_PRIORITY_BACKGROUND) {
-        dvmChangeThreadSchedulerGroup(NULL);
+        set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
     }
 
     if (setpriority(PRIO_PROCESS, pid, newNice) != 0) {
@@ -2981,6 +3159,56 @@ void dvmDumpThread(Thread* thread, bool isRunning)
 }
 
 /*
+ * Try to get the scheduler group.
+ *
+ * The data from /proc/<pid>/cgroup looks like:
+ *  2:cpu:/bg_non_interactive
+ *
+ * We return the part after the "/", which will be an empty string for
+ * the default cgroup.  If the string is longer than "bufLen", the string
+ * will be truncated.
+ */
+static bool getSchedulerGroup(Thread* thread, char* buf, size_t bufLen)
+{
+#ifdef HAVE_ANDROID_OS
+    char pathBuf[32];
+    char readBuf[256];
+    ssize_t count;
+    int fd;
+
+    snprintf(pathBuf, sizeof(pathBuf), "/proc/%d/cgroup", thread->systemTid);
+    if ((fd = open(pathBuf, O_RDONLY)) < 0) {
+        LOGV("open(%s) failed: %s\n", pathBuf, strerror(errno));
+        return false;
+    }
+
+    count = read(fd, readBuf, sizeof(readBuf));
+    if (count <= 0) {
+        LOGV("read(%s) failed (%d): %s\n",
+            pathBuf, (int) count, strerror(errno));
+        close(fd);
+        return false;
+    }
+    close(fd);
+
+    readBuf[--count] = '\0';    /* remove the '\n', now count==strlen */
+
+    char* cp = strchr(readBuf, '/');
+    if (cp == NULL) {
+        readBuf[sizeof(readBuf)-1] = '\0';
+        LOGV("no '/' in '%s' (file=%s count=%d)\n",
+            readBuf, pathBuf, (int) count);
+        return false;
+    }
+
+    memcpy(buf, cp+1, count);   /* count-1 for cp+1, count+1 for NUL */
+    return true;
+#else
+    return false;
+#endif
+}
+
+/*
  * Print information about the specified thread.
  *
  * Works best when the thread in question is "self" or has been suspended.
@@ -3000,6 +3228,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     StringObject* nameStr;
     char* threadName = NULL;
     char* groupName = NULL;
+    char schedulerGroupBuf[32];
     bool isDaemon;
     int priority;               // java.lang.Thread priority
     int policy;                 // pthread policy
@@ -3021,6 +3250,12 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         LOGW("Warning: pthread_getschedparam failed\n");
         policy = -1;
         sp.sched_priority = -1;
+    }
+    if (!getSchedulerGroup(thread, schedulerGroupBuf,sizeof(schedulerGroupBuf)))
+    {
+        strcpy(schedulerGroupBuf, "unknown");
+    } else if (schedulerGroupBuf[0] == '\0') {
+        strcpy(schedulerGroupBuf, "default");
     }
 
     /* a null value for group is not expected, but deal with it anyway */
@@ -3049,9 +3284,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         groupName, thread->suspendCount, thread->dbgSuspendCount,
         thread->isSuspended ? 'Y' : 'N', thread->threadObj, thread);
     dvmPrintDebugMessage(target,
-        "  | sysTid=%d nice=%d sched=%d/%d handle=%d\n",
+        "  | sysTid=%d nice=%d sched=%d/%d cgrp=%s handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
-        policy, sp.sched_priority, (int)thread->handle);
+        policy, sp.sched_priority, schedulerGroupBuf, (int)thread->handle);
 
 #ifdef WITH_MONITOR_TRACKING
     if (!isRunning) {
@@ -3274,9 +3509,15 @@ LockedObjectData* dvmFindInMonitorList(const Thread* self, const Object* obj)
  * GC helper functions
  */
 
+/*
+ * Add the contents of the registers from the interpreted call stack.
+ */
 static void gcScanInterpStackReferences(Thread *thread)
 {
     const u4 *framePtr;
+#if WITH_EXTRA_GC_CHECKS > 1
+    bool first = true;
+#endif
 
     framePtr = (const u4 *)thread->curFrame;
     while (framePtr != NULL) {
@@ -3285,26 +3526,181 @@ static void gcScanInterpStackReferences(Thread *thread)
 
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = saveArea->method;
-        if (method != NULL) {
+        if (method != NULL && !dvmIsNativeMethod(method)) {
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
-            if (!dvmIsNativeMethod(method)) {
-                if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
-                    LOGI("Added %s.%s %p\n",
-                        method->clazz->descriptor, method->name, method);
-            }
+            if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
+                LOGI("PGC: added %s.%s %p\n",
+                    method->clazz->descriptor, method->name, method);
 #endif
-            int i;
-            for (i = method->registersSize - 1; i >= 0; i--) {
-                u4 rval = *framePtr++;
-//TODO: wrap markifobject in a macro that does pointer checks
-                if (rval != 0 && (rval & 0x3) == 0) {
-                    dvmMarkIfObject((Object *)rval);
+#if WITH_EXTRA_GC_CHECKS > 1
+            /*
+             * May also want to enable the memset() in the "invokeMethod"
+             * goto target in the portable interpreter.  That sets the stack
+             * to a pattern that makes referring to uninitialized data
+             * very obvious.
+             */
+
+            if (first) {
+                /*
+                 * First frame, isn't native, check the "alternate" saved PC
+                 * as a sanity check.
+                 *
+                 * It seems like we could check the second frame if the first
+                 * is native, since the PCs should be the same.  It turns out
+                 * this doesn't always work.  The problem is that we could
+                 * have calls in the sequence:
+                 *   interp method #2
+                 *   native method
+                 *   interp method #1
+                 *
+                 * and then GC while in the native method after returning
+                 * from interp method #2.  The currentPc on the stack is
+                 * for interp method #1, but thread->currentPc2 is still
+                 * set for the last thing interp method #2 did.
+                 *
+                 * This can also happen in normal execution:
+                 * - sget-object on not-yet-loaded class
+                 * - class init updates currentPc2
+                 * - static field init is handled by parsing annotations;
+                 *   static String init requires creation of a String object,
+                 *   which can cause a GC
+                 *
+                 * Essentially, any pattern that involves executing
+                 * interpreted code and then causes an allocation without
+                 * executing instructions in the original method will hit
+                 * this.  These are rare enough that the test still has
+                 * some value.
+                 */
+                if (saveArea->xtra.currentPc != thread->currentPc2) {
+                    LOGW("PGC: savedPC(%p) != current PC(%p), %s.%s ins=%p\n",
+                        saveArea->xtra.currentPc, thread->currentPc2,
+                        method->clazz->descriptor, method->name, method->insns);
+                    if (saveArea->xtra.currentPc != NULL)
+                        LOGE("  pc inst = 0x%04x\n", *saveArea->xtra.currentPc);
+                    if (thread->currentPc2 != NULL)
+                        LOGE("  pc2 inst = 0x%04x\n", *thread->currentPc2);
+                    dvmDumpThread(thread, false);
                 }
+            } else {
+                /*
+                 * It's unusual, but not impossible, for a non-first frame
+                 * to be at something other than a method invocation.  For
+                 * example, if we do a new-instance on a nonexistent class,
+                 * we'll have a lot of class loader activity on the stack
+                 * above the frame with the "new" operation.  Could also
+                 * happen while we initialize a Throwable when an instruction
+                 * fails.
+                 *
+                 * So there's not much we can do here to verify the PC,
+                 * except to verify that it's a GC point.
+                 */
+            }
+            assert(saveArea->xtra.currentPc != NULL);
+#endif
+
+            const RegisterMap* pMap;
+            const u1* regVector;
+            int i;
+
+            Method* nonConstMethod = (Method*) method;  // quiet gcc
+            pMap = dvmGetExpandedRegisterMap(nonConstMethod);
+            if (pMap != NULL) {
+                /* found map, get registers for this address */
+                int addr = saveArea->xtra.currentPc - method->insns;
+                regVector = dvmRegisterMapGetLine(pMap, addr);
+                if (regVector == NULL) {
+                    LOGW("PGC: map but no entry for %s.%s addr=0x%04x\n",
+                        method->clazz->descriptor, method->name, addr);
+                } else {
+                    LOGV("PGC: found map for %s.%s 0x%04x (t=%d)\n",
+                        method->clazz->descriptor, method->name, addr,
+                        thread->threadId);
+                }
+            } else {
+                /*
+                 * No map found.  If precise GC is disabled this is
+                 * expected -- we don't create pointers to the map data even
+                 * if it's present -- but if it's enabled it means we're
+                 * unexpectedly falling back on a conservative scan, so it's
+                 * worth yelling a little.
+                 */
+                if (gDvm.preciseGc) {
+                    LOGVV("PGC: no map for %s.%s\n",
+                        method->clazz->descriptor, method->name);
+                }
+                regVector = NULL;
+            }
+
+            if (regVector == NULL) {
+                /* conservative scan */
+                for (i = method->registersSize - 1; i >= 0; i--) {
+                    u4 rval = *framePtr++;
+                    if (rval != 0 && (rval & 0x3) == 0) {
+                        dvmMarkIfObject((Object *)rval);
+                    }
+                }
+            } else {
+                /*
+                 * Precise scan.  v0 is at the lowest address on the
+                 * interpreted stack, and is the first bit in the register
+                 * vector, so we can walk through the register map and
+                 * memory in the same direction.
+                 *
+                 * A '1' bit indicates a live reference.
+                 */
+                u2 bits = 1 << 1;
+                for (i = method->registersSize - 1; i >= 0; i--) {
+                    u4 rval = *framePtr++;
+
+                    bits >>= 1;
+                    if (bits == 1) {
+                        /* set bit 9 so we can tell when we're empty */
+                        bits = *regVector++ | 0x0100;
+                        LOGVV("loaded bits: 0x%02x\n", bits & 0xff);
+                    }
+
+                    if (rval != 0 && (bits & 0x01) != 0) {
+                        /*
+                         * Non-null, register marked as live reference.  This
+                         * should always be a valid object.
+                         */
+#if WITH_EXTRA_GC_CHECKS > 0
+                        if ((rval & 0x3) != 0 ||
+                            !dvmIsValidObject((Object*) rval))
+                        {
+                            /* this is very bad */
+                            LOGE("PGC: invalid ref in reg %d: 0x%08x\n",
+                                method->registersSize-1 - i, rval);
+                        } else
+#endif
+                        {
+                            dvmMarkObjectNonNull((Object *)rval);
+                        }
+                    } else {
+                        /*
+                         * Null or non-reference, do nothing at all.
+                         */
+#if WITH_EXTRA_GC_CHECKS > 1
+                        if (dvmIsValidObject((Object*) rval)) {
+                            /* this is normal, but we feel chatty */
+                            LOGD("PGC: ignoring valid ref in reg %d: 0x%08x\n",
+                                method->registersSize-1 - i, rval);
+                        }
+#endif
+                    }
+                }
+                dvmReleaseRegisterMapLine(pMap, regVector);
             }
         }
-        /* else this is a break frame; nothing to mark.
+        /* else this is a break frame and there is nothing to mark, or
+         * this is a native method and the registers are just the "ins",
+         * copied from various registers in the caller's set.
          */
+
+#if WITH_EXTRA_GC_CHECKS > 1
+        first = false;
+#endif
 
         /* Don't fall into an infinite loop if things get corrupted.
          */
@@ -3328,6 +3724,20 @@ static void gcScanReferenceTable(ReferenceTable *refTable)
     op = refTable->table;
     while ((uintptr_t)op < (uintptr_t)refTable->nextEntry) {
         dvmMarkObjectNonNull(*(op++));
+    }
+}
+
+static void gcScanIndirectRefTable(IndirectRefTable* pRefTable)
+{
+    Object** op = pRefTable->table;
+    int numEntries = dvmIndirectRefTableEntries(pRefTable);
+    int i;
+
+    for (i = 0; i < numEntries; i++) {
+        Object* obj = *op;
+        if (obj != NULL)
+            dvmMarkObjectNonNull(obj);
+        op++;
     }
 }
 
@@ -3361,7 +3771,11 @@ static void gcScanThread(Thread *thread)
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_LOCAL, thread->threadId);
 
+#ifdef USE_INDIRECT_REF
+    gcScanIndirectRefTable(&thread->jniLocalRefTable);
+#else
     gcScanReferenceTable(&thread->jniLocalRefTable);
+#endif
 
     if (thread->jniMonitorRefTable.table != NULL) {
         HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_JNI_MONITOR, thread->threadId);
@@ -3403,11 +3817,10 @@ void dvmGcScanRootThreadGroups()
      * through the actual ThreadGroups, but it should be
      * equivalent.
      *
-     * This assumes that the ThreadGroup class object is in 
+     * This assumes that the ThreadGroup class object is in
      * the root set, which should always be true;  it's
      * loaded by the built-in class loader, which is part
      * of the root set.
      */
     gcScanAllThreads();
 }
-

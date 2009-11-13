@@ -34,21 +34,21 @@ import java.io.StringWriter;
  */
 public abstract class BaseDumper
         implements ParseObserver {
-    /** non-null; array of data being dumped */
+    /** {@code non-null;} array of data being dumped */
     private final byte[] bytes;
 
     /** whether or not to include the raw bytes (in a column on the left) */
     private final boolean rawBytes;
 
-    /** non-null; where to dump to */
+    /** {@code non-null;} where to dump to */
     private final PrintStream out;
 
     /** width of the output in columns */
     private final int width;
 
     /**
-     * non-null; the file path for the class, excluding any base directory
-     * specification 
+     * {@code non-null;} the file path for the class, excluding any base
+     * directory specification 
      */
     private final String filePath;
 
@@ -61,7 +61,7 @@ public abstract class BaseDumper
     /** the current level of indentation */
     private int indent;
 
-    /** non-null; the current column separator string */
+    /** {@code non-null;} the current column separator string */
     private String separator;
 
     /** the offset of the next byte to dump */
@@ -73,10 +73,9 @@ public abstract class BaseDumper
     /**
      * Constructs an instance.
      * 
-     * @param bytes non-null; bytes of the (alleged) class file
+     * @param bytes {@code non-null;} bytes of the (alleged) class file
      * on the left)
-     * @param out non-null; where to dump to
-     * passed in as &lt;= 0
+     * @param out {@code non-null;} where to dump to
      * @param filePath the file path for the class, excluding any base
      * directory specification
      */
@@ -109,7 +108,8 @@ public abstract class BaseDumper
      * @return width in register-units
      */
     static int computeParamWidth(ConcreteMethod meth, boolean isStatic) {
-        return meth.getEffectiveDescriptor().getParameterTypes().getWordCount();
+        return meth.getEffectiveDescriptor().getParameterTypes().
+            getWordCount();
     }
 
     /** {@inheritDoc} */
@@ -158,7 +158,7 @@ public abstract class BaseDumper
      * Gets the current dump cursor (that is, the offset of the expected
      * next byte to dump).
      * 
-     * @return &gt;= 0; the dump cursor
+     * @return {@code >= 0;} the dump cursor
      */
     protected final int getAt() {
         return at;
@@ -167,17 +167,17 @@ public abstract class BaseDumper
     /**
      * Sets the dump cursor to the indicated offset in the given array.
      * 
-     * @param arr non-null; array in question
-     * @param offset &gt;= 0; offset into the array
+     * @param arr {@code non-null;} array in question
+     * @param offset {@code >= 0;} offset into the array
      */
     protected final void setAt(ByteArray arr, int offset) {
         at = arr.underlyingOffset(offset, bytes);
     }
 
     /**
-     * Gets the array of <code>byte</code>s to process.
+     * Gets the array of {@code byte}s to process.
      * 
-     * @return non-null; the bytes
+     * @return {@code non-null;} the bytes
      */
     protected final byte[] getBytes() {
         return bytes;
@@ -186,7 +186,7 @@ public abstract class BaseDumper
     /**
      * Gets the filesystem/jar path of the file being dumped.
      * 
-     * @return non-null; the path
+     * @return {@code non-null;} the path
      */
     protected final String getFilePath() {
         return filePath;
@@ -204,7 +204,7 @@ public abstract class BaseDumper
     /**
      * Prints the given string to this instance's output stream.
      * 
-     * @param s null-ok; string to print
+     * @param s {@code null-ok;} string to print
      */
     protected final void print(String s) {
         out.print(s);
@@ -214,7 +214,7 @@ public abstract class BaseDumper
      * Prints the given string to this instance's output stream, followed
      * by a newline.
      * 
-     * @param s null-ok; string to print
+     * @param s {@code null-ok;} string to print
      */
     protected final void println(String s) {
         out.println(s);
@@ -230,10 +230,10 @@ public abstract class BaseDumper
     }
 
     /**
-     * Gets the width of the first column of output. This is <code>0</code>
+     * Gets the width of the first column of output. This is {@code 0}
      * unless raw bytes are being included in the output.
      * 
-     * @return &gt;= 0; the width of the first column
+     * @return {@code >= 0;} the width of the first column
      */
     protected final int getWidth1() {
         if (rawBytes) {
@@ -246,7 +246,7 @@ public abstract class BaseDumper
     /**
      * Gets the width of the second column of output.
      * 
-     * @return &gt;= 0; the width of the second column
+     * @return {@code >= 0;} the width of the second column
      */
     protected final int getWidth2() {
         int w1 = rawBytes ? (getWidth1() + 1) : 0;
@@ -258,7 +258,7 @@ public abstract class BaseDumper
      * 
      * @param offset offset to start dumping at
      * @param len length to dump
-     * @return non-null; the dump
+     * @return {@code non-null;} the dump
      */
     protected final String hexDump(int offset, int len) {
         return Hex.dump(bytes, offset, len, offset, hexCols, 4);
@@ -268,9 +268,9 @@ public abstract class BaseDumper
      * Combines a pair of strings as two columns, or if this is one-column
      * output, format the otherwise-second column.
      * 
-     * @param s1 non-null; the first column's string
-     * @param s2 non-null; the second column's string
-     * @return non-null; the combined output
+     * @param s1 {@code non-null;} the first column's string
+     * @param s2 {@code non-null;} the second column's string
+     * @return {@code non-null;} the combined output
      */
     protected final String twoColumns(String s1, String s2) {
         int w1 = getWidth1();

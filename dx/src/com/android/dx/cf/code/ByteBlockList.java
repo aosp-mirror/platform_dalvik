@@ -28,7 +28,7 @@ public final class ByteBlockList extends LabeledList {
     /**
      * Constructs an instance.
      *
-     * @param size &gt;= 0; the number of elements to be in the list
+     * @param size {@code >= 0;} the number of elements to be in the list
      */
     public ByteBlockList(int size) {
         super(size);
@@ -37,10 +37,10 @@ public final class ByteBlockList extends LabeledList {
     /**
      * Gets the indicated element. It is an error to call this with the
      * index for an element which was never set; if you do that, this
-     * will throw <code>NullPointerException</code>.
+     * will throw {@code NullPointerException}.
      *
-     * @param n &gt;= 0, &lt; size(); which element
-     * @return non-null; the indicated element
+     * @param n {@code >= 0, < size();} which element
+     * @return {@code non-null;} the indicated element
      */
     public ByteBlock get(int n) {
         return (ByteBlock) get0(n);
@@ -50,7 +50,7 @@ public final class ByteBlockList extends LabeledList {
      * Gets the block with the given label.
      *
      * @param label the label to look for
-     * @return non-null; the block with the given label
+     * @return {@code non-null;} the block with the given label
      */
     public ByteBlock labelToBlock(int label) {
         int idx = indexOfLabel(label);
@@ -66,8 +66,8 @@ public final class ByteBlockList extends LabeledList {
     /**
      * Sets the element at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param bb null-ok; the value to store
+     * @param n {@code >= 0, < size();} which element
+     * @param bb {@code null-ok;} the value to store
      */
     public void set(int n, ByteBlock bb) {
         super.set(n, bb);

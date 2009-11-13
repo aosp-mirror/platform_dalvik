@@ -21,8 +21,6 @@ package java.lang.reflect;
  * Implementors of this interface dispatch methods invoked on proxy instances.
  * 
  * @see Proxy
- * 
- * @since Android 1.0
  */
 public interface InvocationHandler {
 
@@ -58,8 +56,6 @@ public interface InvocationHandler {
      *             The exception must match one of the declared exception types
      *             of the invoked method or any unchecked exception type. If not
      *             then an {@code UndeclaredThrowableException} is thrown
-     * 
-     * @since Android 1.0
      */
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable;

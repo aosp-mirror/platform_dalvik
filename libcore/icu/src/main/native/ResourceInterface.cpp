@@ -943,7 +943,7 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz,
 
 
 
-    jclass obj_class = env->FindClass("java/lang/Object");
+    jclass obj_class = env->FindClass("[Ljava/lang/Object;");
     jclass integer_class = env->FindClass("java/lang/Integer");
     jmethodID integerInit = env->GetMethodID(integer_class, "<init>", "(I)V");
     jobjectArray result;
@@ -1207,7 +1207,8 @@ endOfCalendar:
         intCurrencySymbol = env->NewStringUTF("XXX");
     }
     if(currencySymbol == NULL) {
-        currencySymbol = env->NewStringUTF("\u00a4");
+        // creating a new string explicitly with the UTF-8 encoding of "\u00a4"
+        currencySymbol = env->NewStringUTF("\xc2\xa4");
     }
     counter += 2;
 

@@ -33,6 +33,7 @@ class Impl_PooledConnection implements PooledConnection {
         return null;
     }
 
-    public void removeConnectionEventListener(ConnectionEventListener theListener) {
+    public void removeConnectionEventListener(
+            ConnectionEventListener theListener) {
     }
 }

@@ -16,14 +16,11 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
-
+import dalvik.annotation.TestTargetNew;
 import junit.framework.TestCase;
 
-import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FilePermission;
 import java.io.IOException;
@@ -40,8 +37,6 @@ import java.security.Permission;
 import java.security.ProtectionDomain;
 import java.security.Security;
 import java.security.SecurityPermission;
-
-import tests.support.Support_Exec;
 
 /**
  * Test case for java.lang.SecurityManager
@@ -230,14 +225,14 @@ public class SecurityManagerTest extends TestCase {
             }
             
             try {
-                mutableSM.checkMemberAccess(Object.class, Member.DECLARED);
+                delegateCallToCheckMemberAccess2(Object.class, Member.DECLARED);
                 fail("SecurityException was not thrown.");
             } catch(SecurityException se) {
                 //expected
             }
             
             try {
-                mutableSM.checkMemberAccess(null, Member.PUBLIC);
+                delegateCallToCheckMemberAccess2(null, Member.PUBLIC);
                 fail("NullPointerException was not thrown.");
             } catch(NullPointerException npe) {
                 //expected
@@ -245,6 +240,23 @@ public class SecurityManagerTest extends TestCase {
         } finally {
             System.setSecurityManager(null);
         }
+    }
+
+    /**
+     * Don't call checkMemberAccess directly, since we're checking our caller
+     * (and not ourselves). This is necessary for unit tests, since JUnit's
+     * TestCase is usually in the boot classpath for dalvik. This delegating
+     * method corresponds to Class.getDeclared*();
+     */
+    private void delegateCallToCheckMemberAccess2(Class<Object> cls, int type) {
+        delegateCallToCheckMemberAccess1(cls, type);
+    }
+
+    /**
+     * This delegating method corresponds to Class.checkMemberAccess().
+     */
+    private void delegateCallToCheckMemberAccess1(Class<Object> cls, int type) {
+        mutableSM.checkMemberAccess(cls, type);
     }
 
     /**

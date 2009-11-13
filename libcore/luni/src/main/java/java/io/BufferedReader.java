@@ -32,14 +32,13 @@ import java.util.logging.Logger;
  * benefits.
  * 
  * <p/>A typical application pattern for the class looks like this:<p/>
- * 
+ *
  * <pre>
  * BufferedReader buf = new BufferedReader(new FileReader(&quot;file.java&quot;));
  * </pre>
  * 
  * @see BufferedWriter
- * 
- * @since Android 1.0
+ * @since 1.1
  */
 public class BufferedReader extends Reader {
 
@@ -61,7 +60,6 @@ public class BufferedReader extends Reader {
      * 
      * @param in
      *            the Reader that is buffered.
-     * @since Android 1.0
      */
     public BufferedReader(Reader in) {
         super(in);
@@ -94,7 +92,6 @@ public class BufferedReader extends Reader {
      *            the size of the buffer to allocate.
      * @throws IllegalArgumentException
      *             if {@code size <= 0}.
-     * @since Android 1.0
      */
     public BufferedReader(Reader in, int size) {
         super(in);
@@ -112,7 +109,6 @@ public class BufferedReader extends Reader {
      * 
      * @throws IOException
      *             if an error occurs while closing this reader.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -181,7 +177,6 @@ public class BufferedReader extends Reader {
      *             if an error occurs while setting a mark in this reader.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public void mark(int readlimit) throws IOException {
@@ -204,7 +199,6 @@ public class BufferedReader extends Reader {
      * @return {@code true} for {@code BufferedReader}.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -217,12 +211,11 @@ public class BufferedReader extends Reader {
      * character from the buffer. If there are no characters available in the
      * buffer, it fills the buffer and then returns a character. It returns -1
      * if there are no more characters in the source reader.
-     * 
+     *
      * @return the character read or -1 if the end of the source reader has been
      *         reached.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -234,6 +227,7 @@ public class BufferedReader extends Reader {
             if (pos < count || fillbuf() != -1) {
                 return buf[pos++];
             }
+            markpos = -1;
             return -1;
         }
     }
@@ -263,7 +257,6 @@ public class BufferedReader extends Reader {
      *             {@code buffer}.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(char[] buffer, int offset, int length) throws IOException {
@@ -342,7 +335,6 @@ public class BufferedReader extends Reader {
      *         read before the end of the reader has been reached.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     public String readLine() throws IOException {
         synchronized (lock) {
@@ -355,6 +347,9 @@ public class BufferedReader extends Reader {
             }
             for (int charPos = pos; charPos < count; charPos++) {
                 char ch = buf[charPos];
+                // BEGIN android-note
+                // a switch statement may be more efficient
+                // END android-note
                 if (ch > '\r') {
                     continue;
                 }
@@ -393,6 +388,9 @@ public class BufferedReader extends Reader {
                     }
                 }
                 for (int charPos = pos; charPos < count; charPos++) {
+                    // BEGIN android-note
+                    // use a local variable for buf[charPos] and a switch statement
+                    // END android-note
                     if (eol == '\0') {
                         if ((buf[charPos] == '\n' || buf[charPos] == '\r')) {
                             eol = buf[charPos];
@@ -403,7 +401,7 @@ public class BufferedReader extends Reader {
                         }
                         pos = charPos + 1;
                         return result.toString();
-                    } else if (eol != '\0') {
+                    } else {
                         if (charPos > pos) {
                             result.append(buf, pos, charPos - pos - 1);
                         }
@@ -424,7 +422,7 @@ public class BufferedReader extends Reader {
 
     /**
      * Indicates whether this reader is ready to be read without blocking.
-     * 
+     *
      * @return {@code true} if this reader will not block when {@code read} is
      *         called, {@code false} if unknown or blocking will occur.
      * @throws IOException
@@ -432,7 +430,6 @@ public class BufferedReader extends Reader {
      * @see #read()
      * @see #read(char[], int, int)
      * @see #readLine()
-     * @since Android 1.0
      */
     @Override
     public boolean ready() throws IOException {
@@ -453,7 +450,6 @@ public class BufferedReader extends Reader {
      *             if this reader is closed or no mark has been set.
      * @see #mark(int)
      * @see #markSupported()
-     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -484,7 +480,6 @@ public class BufferedReader extends Reader {
      * @see #mark(int)
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public long skip(long amount) throws IOException {

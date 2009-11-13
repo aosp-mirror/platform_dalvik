@@ -34,23 +34,17 @@ extern "C"
 #include "zlib.h"
 
 
-// Contents from Harmony's inflater.h was put here:
-//
-typedef struct JCLZipStream
-{
-  U_8 *inaddr;
-  U_8 *dict;
-  z_stream *stream;
-} JCLZipStream;
-
-
 typedef struct HyZipCachePool HyZipCachePool;
 
 HyZipCachePool *
 zipsup_GetZipCachePool(HyPortLibrary * portLib);
 
 
+#if defined(HY_LOCAL_ZLIB)
+#define HY_ZIP_DLL_NAME "z"
+#else
 #define HY_ZIP_DLL_NAME "hyzlib"
+#endif
 
 #define ZIP_INTERNAL_MAX  80
 #define ZIP_CM_Reduced1  2
@@ -153,18 +147,6 @@ zipsup_GetZipCachePool(HyPortLibrary * portLib);
     U_8 type;
     char _hypadding0065[3];  /* 3 bytes of automatic padding */
   } HyZipFile;
-
-
-
-// Contents from Harmony's zip.h were put in java_util_zip_ZipFile.c
-// and here:
-typedef struct JCLZipFile
-{
-  struct JCLZipFile *last;
-  struct JCLZipFile *next;
-  HyZipFile hyZipFile;
-} JCLZipFile;
-
 
 
 

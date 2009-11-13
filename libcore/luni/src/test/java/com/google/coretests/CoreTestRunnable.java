@@ -137,18 +137,18 @@ public class CoreTestRunnable implements Runnable {
         Throwable throwable = null;
         
         File file = File.createTempFile("isolation", ".tmp");
-        
-        fProcess = Runtime.getRuntime().exec(
-                (IS_DALVIK ? "dalvikvm" : "java") +
+
+        String program = (IS_DALVIK ? "dalvikvm" : "java") +
                 " -classpath " + System.getProperty("java.class.path") +
                 " -Djava.home=" + System.getProperty("java.home") +
                 " -Duser.home=" + System.getProperty("user.home") +
-                " -Djava.io.tmpdir=" + System.getProperty("user.home") +
+                " -Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir") +
                 " com.google.coretests.CoreTestIsolator" +
                 " " + fTest.getClass().getName() +
                 " " + fTest.getName() +
-                " " + file.getAbsolutePath());
-        
+                " " + file.getAbsolutePath();
+        fProcess = Runtime.getRuntime().exec(program);
+
         int result = fProcess.waitFor();
         
         if (result != TestRunner.SUCCESS_EXIT) {
@@ -158,7 +158,7 @@ public class CoreTestRunnable implements Runnable {
                 throwable = (Throwable)ois.readObject();
                 ois.close();
             } catch (Exception ex) {
-                throwable = new RuntimeException("Error isolating test", ex);
+                throwable = new RuntimeException("Error isolating test: " + program, ex);
             }
         }
         

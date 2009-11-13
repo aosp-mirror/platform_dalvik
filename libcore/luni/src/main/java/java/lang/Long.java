@@ -24,10 +24,9 @@ package java.lang;
  * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
  * Delight, (Addison Wesley, 2002)</a> as well as <a
  * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
- * </p>
- * 
+ *
  * @see java.lang.Number
- * @since Android 1.0
+ * @since 1.0
  */
 public final class Long extends Number implements Comparable<Long> {
 
@@ -40,22 +39,16 @@ public final class Long extends Number implements Comparable<Long> {
 
     /**
      * Constant for the maximum {@code long} value, 2<sup>63</sup>-1.
-     * 
-     * @since Android 1.0
      */
     public static final long MAX_VALUE = 0x7FFFFFFFFFFFFFFFL;
 
     /**
      * Constant for the minimum {@code long} value, -2<sup>63</sup>.
-     * 
-     * @since Android 1.0
      */
     public static final long MIN_VALUE = 0x8000000000000000L;
 
     /**
      * The {@link Class} object that represents the primitive type {@code long}.
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final Class<Long> TYPE = (Class<Long>) new long[0].getClass()
@@ -67,8 +60,8 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Constant for the number of bits needed to represent a {@code long} in
      * two's complement form.
-     * 
-     * @since Android 1.0
+     *
+     * @since 1.5
      */
     public static final int SIZE = 64;
 
@@ -78,7 +71,6 @@ public final class Long extends Number implements Comparable<Long> {
      * 
      * @param value
      *            the primitive long value to store in the new instance.
-     * @since Android 1.0
      */
     public Long(long value) {
         this.value = value;
@@ -92,7 +84,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @throws NumberFormatException
      *             if {@code string} can not be decoded into a long value.
      * @see #parseLong(String)
-     * @since Android 1.0
      */
     public Long(String string) throws NumberFormatException {
         this(parseLong(string));
@@ -114,7 +105,7 @@ public final class Long extends Number implements Comparable<Long> {
      *         {@code object} are equal; a positive value if the value of this
      *         long is greater than the value of {@code object}.
      * @see java.lang.Comparable
-     * @since Android 1.0
+     * @since 1.2
      */
     public int compareTo(Long object) {
         return value > object.value ? 1 : (value < object.value ? -1 : 0);
@@ -131,7 +122,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @return a {@code Long} containing the value represented by {@code string}.
      * @throws NumberFormatException
      *             if {@code string} can not be parsed as a long value.
-     * @since Android 1.0
      */
     public static Long decode(String string) throws NumberFormatException {
         int length = string.length(), i = 0;
@@ -187,7 +177,6 @@ public final class Long extends Number implements Comparable<Long> {
      *            the object to compare this long with.
      * @return {@code true} if the specified object is equal to this
      *         {@code Long}; {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -209,7 +198,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @param string
      *            the name of the requested system property.
      * @return the requested property's value as a {@code Long} or {@code null}.
-     * @since Android 1.0
      */
     public static Long getLong(String string) {
         if (string == null || string.length() == 0) {
@@ -239,7 +227,6 @@ public final class Long extends Number implements Comparable<Long> {
      *            property with the requested name.
      * @return the requested property's value as a {@code Long} or the default
      *         value.
-     * @since Android 1.0
      */
     public static Long getLong(String string, long defaultValue) {
         if (string == null || string.length() == 0) {
@@ -269,7 +256,6 @@ public final class Long extends Number implements Comparable<Long> {
      *            property with the requested name.
      * @return the requested property's value as a {@code Long} or the default
      *         value.
-     * @since Android 1.0
      */
     public static Long getLong(String string, Long defaultValue) {
         if (string == null || string.length() == 0) {
@@ -300,7 +286,6 @@ public final class Long extends Number implements Comparable<Long> {
      * Gets the primitive value of this long.
      * 
      * @return this object's primitive value.
-     * @since Android 1.0
      */
     @Override
     public long longValue() {
@@ -317,7 +302,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @throws NumberFormatException
      *             if {@code string} is {@code null}, has a length of zero or
      *             can not be parsed as a long value.
-     * @since Android 1.0
      */
     public static long parseLong(String string) throws NumberFormatException {
         return parseLong(string, 10);
@@ -338,7 +322,6 @@ public final class Long extends Number implements Comparable<Long> {
      *             {@code radix < Character.MIN_RADIX},
      *             {@code radix > Character.MAX_RADIX}, or if {@code string}
      *             can not be parsed as a long value.
-     * @since Android 1.0
      */
     public static long parseLong(String string, int radix)
             throws NumberFormatException {
@@ -397,7 +380,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @param l
      *            the long value to convert.
      * @return the binary string representation of {@code l}.
-     * @since Android 1.0
      */
     public static String toBinaryString(long l) {
         int count = 1;
@@ -427,7 +409,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @param l
      *            the long value to convert.
      * @return the hexadecimal string representation of {@code l}.
-     * @since Android 1.0
      */
     public static String toHexString(long l) {
         int count = 1;
@@ -462,7 +443,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @param l
      *            the long value to convert.
      * @return the octal string representation of {@code l}.
-     * @since Android 1.0
      */
     public static String toOctalString(long l) {
         int count = 1;
@@ -497,8 +477,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @param l
      *            the long to convert.
      * @return the decimal string representation of {@code l}.
-     * @since Android 1.0
-     */    
+     */
     public static String toString(long l) {
         return toString(l, 10);
     }
@@ -516,7 +495,6 @@ public final class Long extends Number implements Comparable<Long> {
      * @param radix
      *            the base to use for the conversion.
      * @return the string representation of {@code l}.
-     * @since Android 1.0
      */
     public static String toString(long l, int radix) {
         if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX) {
@@ -564,7 +542,6 @@ public final class Long extends Number implements Comparable<Long> {
      *             if {@code string} is {@code null}, has a length of zero or
      *             can not be parsed as a long value.
      * @see #parseLong(String)
-     * @since Android 1.0
      */
     public static Long valueOf(String string) throws NumberFormatException {
         return valueOf(parseLong(string));
@@ -586,7 +563,6 @@ public final class Long extends Number implements Comparable<Long> {
      *             {@code radix > Character.MAX_RADIX}, or if {@code string}
      *             can not be parsed as a long value.
      * @see #parseLong(String, int)
-     * @since Android 1.0
      */
     public static Long valueOf(String string, int radix)
             throws NumberFormatException {
@@ -602,7 +578,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @param lng
      *            the long to examine.
      * @return the bit mask indicating the highest 1 bit in {@code lng}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static long highestOneBit(long lng) {
         lng |= (lng >> 1);
@@ -623,7 +599,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @param lng
      *            the long to examine.
      * @return the bit mask indicating the lowest 1 bit in {@code lng}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static long lowestOneBit(long lng) {
         return (lng & (-lng));
@@ -632,11 +608,11 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Determines the number of leading zeros in the specified long value prior
      * to the {@link #highestOneBit(long) highest one bit}.
-     * 
+     *
      * @param lng
      *            the long to examine.
      * @return the number of leading zeros in {@code lng}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int numberOfLeadingZeros(long lng) {
         lng |= lng >> 1;
@@ -651,11 +627,11 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Determines the number of trailing zeros in the specified long value after
      * the {@link #lowestOneBit(long) lowest one bit}.
-     * 
+     *
      * @param lng
      *            the long to examine.
      * @return the number of trailing zeros in {@code lng}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int numberOfTrailingZeros(long lng) {
         return bitCount((lng & -lng) - 1);
@@ -664,11 +640,11 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Counts the number of 1 bits in the specified long value; this is also
      * referred to as population count.
-     * 
+     *
      * @param lng
      *            the long to examine.
      * @return the number of 1 bits in {@code lng}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int bitCount(long lng) {
         lng = (lng & 0x5555555555555555L) + ((lng >> 1) & 0x5555555555555555L);
@@ -684,13 +660,13 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Rotates the bits of the specified long value to the left by the specified
      * number of bits.
-     * 
+     *
      * @param lng
      *            the long value to rotate left.
      * @param distance
      *            the number of bits to rotate.
      * @return the rotated value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static long rotateLeft(long lng, int distance) {
         if (distance == 0) {
@@ -705,15 +681,16 @@ public final class Long extends Number implements Comparable<Long> {
     }
 
     /**
+     * <p>
      * Rotates the bits of the specified long value to the right by the
      * specified number of bits.
-     * 
+     *
      * @param lng
      *            the long value to rotate right.
      * @param distance
      *            the number of bits to rotate.
      * @return the rotated value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static long rotateRight(long lng, int distance) {
         if (distance == 0) {
@@ -733,7 +710,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @param lng
      *            the long value for which to reverse the byte order.
      * @return the reversed value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static long reverseBytes(long lng) {
         long b7 = lng >>> 56;
@@ -753,7 +730,7 @@ public final class Long extends Number implements Comparable<Long> {
      * @param lng
      *            the long value for which to reverse the bit order.
      * @return the reversed value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static long reverse(long lng) {
         // From Hacker's Delight, 7-1, Figure 7-1
@@ -774,7 +751,7 @@ public final class Long extends Number implements Comparable<Long> {
      *            the long value to check.
      * @return -1 if {@code lng} is negative, 1 if {@code lng} is positive, 0 if
      *         {@code lng} is zero.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int signum(long lng) {
         return (lng == 0 ? 0 : (lng < 0 ? -1 : 1));
@@ -786,12 +763,11 @@ public final class Long extends Number implements Comparable<Long> {
      * If it is not necessary to get a new {@code Long} instance, it is
      * recommended to use this method instead of the constructor, since it
      * maintains a cache of instances which may result in better performance.
-     * </p>
-     * 
+     *
      * @param lng
      *            the long value to store in the instance.
      * @return a {@code Long} instance containing {@code lng}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static Long valueOf(long lng) {
         if (lng < -128 || lng > 127) {
@@ -804,7 +780,6 @@ public final class Long extends Number implements Comparable<Long> {
         /**
          * <p>
          * A cache of instances used by {@link Long#valueOf(long)} and auto-boxing.
-         * </p>
          */
         static final Long[] CACHE = new Long[256];
 

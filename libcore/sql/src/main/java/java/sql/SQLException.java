@@ -38,11 +38,8 @@ import java.io.Serializable;
  * <li>A chain to a next {@code Exception}, if relevant, which can give access
  * to additional error information.</li>
  * </ul>
- * </p>
  * 
  * @see DatabaseMetaData
- * 
- * @since Android 1.0
  */
 public class SQLException extends Exception implements Serializable {
 
@@ -84,7 +81,6 @@ public class SQLException extends Exception implements Serializable {
      *            the string to use as the reason string.
      * @param theSQLState
      *            the string to use as the {@code SQLState} string.
-     * @since Android 1.0
      */
     public SQLException(String theReason, String theSQLState) {
         this(theReason, theSQLState, 0);
@@ -102,7 +98,6 @@ public class SQLException extends Exception implements Serializable {
      *            the string to use as the {@code SQLState} string.
      * @param theErrorCode
      *            the integer value for the error code.
-     * @since Android 1.0
      */
     public SQLException(String theReason, String theSQLState, int theErrorCode) {
         super(theReason);
@@ -115,7 +110,6 @@ public class SQLException extends Exception implements Serializable {
      * 
      * @return The integer error code for this {@code SQLException}. The meaning
      *         of the code is specific to the vendor of the database.
-     * @since Android 1.0
      */
     public int getErrorCode() {
         return vendorCode;
@@ -156,7 +150,6 @@ public class SQLException extends Exception implements Serializable {
      * @param ex
      *            the new {@code SQLException} to be added to the end of the
      *            chain.
-     * @since Android 1.0
      */
     public void setNextException(SQLException ex) {    
         if (next != null) {

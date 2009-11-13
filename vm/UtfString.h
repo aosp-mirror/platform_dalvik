@@ -100,6 +100,11 @@ int dvmStringUtf8ByteLen(StringObject* jstr);
 int dvmStringLen(StringObject* jstr);
 
 /*
+ * Get the char[] object from the String.
+ */
+ArrayObject* dvmStringCharArray(StringObject* jstr);
+
+/*
  * Get a pointer to the Unicode data.
  */
 const u2* dvmStringChars(StringObject* jstr);

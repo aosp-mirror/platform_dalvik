@@ -26,6 +26,14 @@
 void dvmInterpret(Thread* thread, const Method* method, JValue* pResult);
 
 /*
+ * Throw an exception for a problem detected by the verifier.
+ *
+ * This is called from the handler for the throw-verification-error
+ * instruction.  "method" is the method currently being executed.
+ */
+void dvmThrowVerificationError(const Method* method, int kind, int ref);
+
+/*
  * Breakpoint optimization table.
  */
 void dvmInitBreakpoints();

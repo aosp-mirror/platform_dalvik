@@ -31,10 +31,10 @@ public final class PlainInsn
     /**
      * Constructs an instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param result null-ok; spec for the result, if any
-     * @param sources non-null; specs for all the sources
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param result {@code null-ok;} spec for the result, if any
+     * @param sources {@code non-null;} specs for all the sources
      */
     public PlainInsn(Rop opcode, SourcePosition position,
                      RegisterSpec result, RegisterSpecList sources) {
@@ -57,10 +57,10 @@ public final class PlainInsn
     /**
      * Constructs a single-source instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param result null-ok; spec for the result, if any
-     * @param source non-null; spec for the source
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param result {@code null-ok;} spec for the result, if any
+     * @param source {@code non-null;} spec for the source
      */
     public PlainInsn(Rop opcode, SourcePosition position, RegisterSpec result,
                      RegisterSpec source) {

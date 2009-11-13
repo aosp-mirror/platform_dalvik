@@ -24,6 +24,7 @@ from string import Template
 
 interp_defs_file = "../../libdex/OpCode.h" # need opcode list
 
+verbose = False
 handler_size_bits = -1000
 handler_size_bytes = -1000
 in_op_start = 0             # 0=not started, 1=started, 2=ended
@@ -129,6 +130,9 @@ def opEntry(tokens):
         index = opcodes.index(tokens[1])
     except ValueError:
         raise DataParseError("unknown opcode %s" % tokens[1])
+    if opcode_locations.has_key(tokens[1]):
+        print "Warning: op overrides earlier %s (%s -> %s)" \
+                % (tokens[1], opcode_locations[tokens[1]], tokens[2])
     opcode_locations[tokens[1]] = tokens[2]
 
 #
@@ -228,7 +232,8 @@ def loadAndEmitOpcodes():
 def loadAndEmitC(location, opindex):
     op = opcodes[opindex]
     source = "%s/%s.c" % (location, op)
-    print " emit %s --> C" % source
+    if verbose:
+        print " emit %s --> C" % source
     dict = getGlobalSubDict()
     dict.update({ "opcode":op, "opnum":opindex })
 
@@ -245,7 +250,8 @@ def loadAndEmitAsm(location, opindex, sister_list):
     source = "%s/%s.S" % (location, op)
     dict = getGlobalSubDict()
     dict.update({ "opcode":op, "opnum":opindex })
-    print " emit %s --> asm" % source
+    if verbose:
+        print " emit %s --> asm" % source
 
     emitAsmHeader(asm_fp, dict)
     appendSourceFile(source, dict, asm_fp, sister_list)

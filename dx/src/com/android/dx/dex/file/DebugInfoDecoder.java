@@ -38,7 +38,7 @@ import static com.android.dx.dex.file.DebugInfoConstants.*;
 /**
  * A decoder for the dex debug info state machine format.
  * This code exists mostly as a reference implementation and test for
- * for the <code>DebugInfoEncoder</code>
+ * for the {@code DebugInfoEncoder}
  */
 public class DebugInfoDecoder {
     /** encoded debug info */
@@ -180,7 +180,7 @@ public class DebugInfoDecoder {
 
     /**
      * Gets the decoded positions list.
-     * Valid after calling <code>decode</code>.
+     * Valid after calling {@code decode}.
      *
      * @return positions list in ascending address order.
      */
@@ -190,7 +190,7 @@ public class DebugInfoDecoder {
 
     /**
      * Gets the decoded locals list, in ascending start-address order.
-     * Valid after calling <code>decode</code>.
+     * Valid after calling {@code decode}.
      *
      * @return locals list in ascending address order.
      */
@@ -227,7 +227,7 @@ public class DebugInfoDecoder {
     /**
      * Gets the register that begins the method's parameter range (including
      * the 'this' parameter for non-static methods). The range continues until
-     * <code>regSize</code>
+     * {@code regSize}
      *
      * @return register as noted above.
      */
@@ -416,9 +416,9 @@ public class DebugInfoDecoder {
      * encoder.
      *
      * @param info encoded debug info
-     * @param file non-null; file to refer to during decoding
-     * @param ref non-null; method whose info is being decoded
-     * @param code non-null; original code object that was encoded
+     * @param file {@code non-null;} file to refer to during decoding
+     * @param ref {@code non-null;} method whose info is being decoded
+     * @param code {@code non-null;} original code object that was encoded
      * @param isStatic whether the method is static
      */
     public static void validateEncode(byte[] info, DexFile file,

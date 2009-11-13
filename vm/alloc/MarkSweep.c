@@ -15,6 +15,7 @@
  */
 
 #include "Dalvik.h"
+#include "alloc/clz.h"
 #include "alloc/HeapBitmap.h"
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
@@ -22,6 +23,7 @@
 #include <limits.h>     // for ULONG_MAX
 #include <sys/mman.h>   // for madvise(), mmap()
 #include <cutils/ashmem.h>
+#include <errno.h>
 
 #define GC_DEBUG_PARANOID   2
 #define GC_DEBUG_BASIC      1
@@ -92,7 +94,7 @@ createMarkStack(GcMarkStack *stack)
 {
     const Object **limit;
     size_t size;
-    int fd;
+    int fd, err;
 
     /* Create a stack big enough for the worst possible case,
      * where the heap is perfectly full of the smallest object.
@@ -104,14 +106,17 @@ createMarkStack(GcMarkStack *stack)
     size = ALIGN_UP_TO_PAGE_SIZE(size);
     fd = ashmem_create_region("dalvik-heap-markstack", size);
     if (fd < 0) {
-        LOGE_GC("Could not create %d-byte ashmem mark stack\n", size);
+        LOGE_GC("Could not create %d-byte ashmem mark stack: %s\n",
+            size, strerror(errno));
         return false;
     }
     limit = (const Object **)mmap(NULL, size, PROT_READ | PROT_WRITE,
             MAP_PRIVATE, fd, 0);
+    err = errno;
     close(fd);
     if (limit == MAP_FAILED) {
-        LOGE_GC("Could not mmap %d-byte ashmem mark stack\n", size);
+        LOGE_GC("Could not mmap %d-byte ashmem mark stack: %s\n",
+            size, strerror(err));
         return false;
     }
 
@@ -374,6 +379,7 @@ void dvmHeapMarkRootSet()
     LOG_SCAN("special objects\n");
     dvmMarkObjectNonNull(gDvm.outOfMemoryObj);
     dvmMarkObjectNonNull(gDvm.internalErrorObj);
+    dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
 //TODO: scan object references sitting in gDvm;  use pointer begin & end
 
     HPROF_CLEAR_GC_SCAN_STATE();
@@ -430,30 +436,39 @@ static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
 static void scanInstanceFields(const DataObject *obj, ClassObject *clazz,
         GcMarkContext *ctx)
 {
-//TODO: Optimize this by avoiding walking the superclass chain
-    while (clazz != NULL) {
-        InstField *f;
-        int i;
-
-        /* All of the fields that contain object references
-         * are guaranteed to be at the beginning of the ifields list.
-         */
-        f = clazz->ifields;
-        for (i = 0; i < clazz->ifieldRefCount; i++) {
-            /* Mark the array or object reference.
-             * May be NULL.
-             *
-             * Note that, per the comment on struct InstField,
-             * f->byteOffset is the offset from the beginning of
-             * obj, not the offset into obj->instanceData.
-             */
-            markObject(dvmGetFieldObject((Object*)obj, f->byteOffset), ctx);
-            f++;
+    if (false && clazz->refOffsets != CLASS_WALK_SUPER) {
+        unsigned int refOffsets = clazz->refOffsets;
+        while (refOffsets != 0) {
+            const int rshift = CLZ(refOffsets);
+            refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
+            markObject(dvmGetFieldObject((Object*)obj,
+                                         CLASS_OFFSET_FROM_CLZ(rshift)), ctx);
         }
+    } else {
+        while (clazz != NULL) {
+            InstField *f;
+            int i;
 
-        /* This will be NULL when we hit java.lang.Object
-         */
-        clazz = clazz->super;
+            /* All of the fields that contain object references
+             * are guaranteed to be at the beginning of the ifields list.
+             */
+            f = clazz->ifields;
+            for (i = 0; i < clazz->ifieldRefCount; i++) {
+                /* Mark the array or object reference.
+                 * May be NULL.
+                 *
+                 * Note that, per the comment on struct InstField,
+                 * f->byteOffset is the offset from the beginning of
+                 * obj, not the offset into obj->instanceData.
+                 */
+                markObject(dvmGetFieldObject((Object*)obj, f->byteOffset), ctx);
+                f++;
+            }
+
+            /* This will be NULL when we hit java.lang.Object
+             */
+            clazz = clazz->super;
+        }
     }
 }
 
@@ -520,6 +535,17 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     }
 #endif
 
+#if WITH_OBJECT_HEADERS
+    if (ptr2chunk(obj)->scanGeneration == gGeneration) {
+        LOGE("object 0x%08x was already scanned this generation\n",
+                (uintptr_t)obj);
+        dvmAbort();
+    }
+    ptr2chunk(obj)->oldScanGeneration = ptr2chunk(obj)->scanGeneration;
+    ptr2chunk(obj)->scanGeneration = gGeneration;
+    ptr2chunk(obj)->scanCount++;
+#endif
+
     /* Get and mark the class object for this particular instance.
      */
     clazz = obj->clazz;
@@ -540,16 +566,9 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
          */
         return;
     }
+
 #if WITH_OBJECT_HEADERS
     gMarkParent = obj;
-    if (ptr2chunk(obj)->scanGeneration == gGeneration) {
-        LOGE("object 0x%08x was already scanned this generation\n",
-                (uintptr_t)obj);
-        dvmAbort();
-    }
-    ptr2chunk(obj)->oldScanGeneration = ptr2chunk(obj)->scanGeneration;
-    ptr2chunk(obj)->scanGeneration = gGeneration;
-    ptr2chunk(obj)->scanCount++;
 #endif
 
     assert(dvmIsValidObject((Object *)clazz));
@@ -1194,6 +1213,7 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
 {
     const ClassObject *const classJavaLangClass = gDvm.classJavaLangClass;
     size_t i;
+    void **origPtrs = ptrs;
 
     for (i = 0; i < numPtrs; i++) {
         DvmHeapChunk *hc;
@@ -1256,11 +1276,10 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
 #endif
         }
 #endif
-
-//TODO: provide a heapsource function that takes a list of pointers to free
-//      and call it outside of this loop.
-        dvmHeapSourceFree(hc);
     }
+    // TODO: dvmHeapSourceFreeList has a loop, just like the above
+    // does. Consider collapsing the two loops to save overhead.
+    dvmHeapSourceFreeList(numPtrs, origPtrs);
 
     return true;
 }

@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when a program attempts to access a value in an indexable collection
  * using a value which is outside of the range of valid indices.
- * 
- * @since Android 1.0
  */
 public class IndexOutOfBoundsException extends RuntimeException {
 
@@ -30,8 +28,6 @@ public class IndexOutOfBoundsException extends RuntimeException {
     /**
      * Constructs a new {@code IndexOutOfBoundsException} that includes the
      * current stack trace.
-     * 
-     * @since Android 1.0
      */
     public IndexOutOfBoundsException() {
         super();
@@ -43,7 +39,6 @@ public class IndexOutOfBoundsException extends RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public IndexOutOfBoundsException(String detailMessage) {
         super(detailMessage);

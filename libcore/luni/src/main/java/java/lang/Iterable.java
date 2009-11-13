@@ -21,8 +21,8 @@ import java.util.Iterator;
 /**
  * Objects of classes that implement this interface can be used within a
  * {@code foreach} statement.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface Iterable<T> {
 
@@ -30,7 +30,6 @@ public interface Iterable<T> {
      * Returns an {@link Iterator} for the elements in this object.
      * 
      * @return An {@code Iterator} instance.
-     * @since Android 1.0
      */
     Iterator<T> iterator();
 }

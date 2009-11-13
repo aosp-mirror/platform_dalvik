@@ -23,15 +23,13 @@ import java.util.Arrays;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * <p>
  * A modifiable {@link CharSequence sequence of characters} for use in creating
  * and modifying Strings. This class is intended as a base class for
  * {@link StringBuffer} and {@link StringBuilder}.
- * </p>
  *
  * @see StringBuffer
  * @see StringBuilder
- * @since Android 1.0
+ * @since 1.5
  */
 abstract class AbstractStringBuilder {
 
@@ -95,8 +93,8 @@ abstract class AbstractStringBuilder {
     }
 
     private void enlargeBuffer(int min) {
-        int twice = (value.length << 1) + 2;
-        char[] newData = new char[min > twice ? min : twice];
+        int newSize = ((value.length >> 1) + value.length) + 2;
+        char[] newData = new char[min > newSize ? min : newSize];
         System.arraycopy(value, 0, newData, 0, count);
         value = newData;
         shared = false;
@@ -106,9 +104,6 @@ abstract class AbstractStringBuilder {
         int newSize = count + 4;
         if (newSize > value.length) {
             enlargeBuffer(newSize);
-        } else if (shared) {
-            value = value.clone();
-            shared = false;
         }
         value[count++] = 'n';
         value[count++] = 'u';
@@ -120,9 +115,6 @@ abstract class AbstractStringBuilder {
         int newSize = count + chars.length;
         if (newSize > value.length) {
             enlargeBuffer(newSize);
-        } else if (shared) {
-            value = value.clone();
-            shared = false;
         }
         System.arraycopy(chars, 0, value, count, chars.length);
         count = newSize;
@@ -137,9 +129,6 @@ abstract class AbstractStringBuilder {
             int newSize = count + length;
             if (newSize > value.length) {
                 enlargeBuffer(newSize);
-            } else if (shared) {
-                value = value.clone();
-                shared = false;
             }
             System.arraycopy(chars, start, value, count, length);
             count = newSize;
@@ -151,10 +140,6 @@ abstract class AbstractStringBuilder {
     final void append0(char ch) {
         if (count == value.length) {
             enlargeBuffer(count + 1);
-        }
-        if (shared) {
-            value = value.clone();
-            shared = false;
         }
         value[count++] = ch;
     }
@@ -168,9 +153,6 @@ abstract class AbstractStringBuilder {
         int newSize = count + adding;
         if (newSize > value.length) {
             enlargeBuffer(newSize);
-        } else if (shared) {
-            value = value.clone();
-            shared = false;
         }
         // BEGIN android-changed
         string._getChars(0, adding, value, count);
@@ -213,7 +195,7 @@ abstract class AbstractStringBuilder {
 
     /**
      * Returns the number of characters that can be held without growing.
-     * 
+     *
      * @return the capacity
      * @see #ensureCapacity
      * @see #length
@@ -224,7 +206,7 @@ abstract class AbstractStringBuilder {
 
     /**
      * Retrieves the character at the {@code index}.
-     * 
+     *
      * @param index
      *            the index of the character to retrieve.
      * @return the char value.
@@ -249,7 +231,7 @@ abstract class AbstractStringBuilder {
             }
             if (end > start) {
                 int length = count - end;
-                if (length > 0) {
+                if (length >= 0) {
                     if (!shared) {
                         System.arraycopy(value, end, value, start, length);
                     } else {
@@ -296,20 +278,21 @@ abstract class AbstractStringBuilder {
      * value of either the {@code minimumCapacity} or the current capacity
      * multiplied by two plus two. Although this is the general policy, there is
      * no guarantee that the capacity will change.
-     * 
+     *
      * @param min
      *            the new minimum capacity to set.
      */
     public void ensureCapacity(int min) {
         if (min > value.length) {
-            enlargeBuffer(min);
+            int twice = (value.length << 1) + 2;
+            enlargeBuffer(twice > min ? twice : min);
         }
     }
 
     /**
      * Copies the requested sequence of characters to the {@code char[]} passed
      * starting at {@code destStart}.
-     * 
+     *
      * @param start
      *            the inclusive start index of the characters to copy.
      * @param end
@@ -343,7 +326,7 @@ abstract class AbstractStringBuilder {
         }
     }
 
-    final void insert0(int index, char chars[], int start, int length) {
+    final void insert0(int index, char[] chars, int start, int length) {
         if (0 <= index && index <= count) {
             // start + length could overflow, start/length maybe MaxInt
             if (start >= 0 && 0 <= length && length <= chars.length - start) {
@@ -354,8 +337,9 @@ abstract class AbstractStringBuilder {
                 }
                 return;
             }
-            throw new StringIndexOutOfBoundsException("offset " + start
-                    + ", len " + length + ", array.length " + chars.length);
+            throw new StringIndexOutOfBoundsException("offset " + start //$NON-NLS-1$
+                    + ", length " + length //$NON-NLS-1$
+                    + ", char[].length " + chars.length); //$NON-NLS-1$
         }
         throw new StringIndexOutOfBoundsException(index);
     }
@@ -401,7 +385,7 @@ abstract class AbstractStringBuilder {
 
     /**
      * The current length.
-     * 
+     *
      * @return the number of characters contained in this instance.
      */
     public int length() {
@@ -481,15 +465,72 @@ abstract class AbstractStringBuilder {
             return;
         }
         if (!shared) {
-            for (int i = 0, end = count, mid = count / 2; i < mid; i++) {
-                char temp = value[--end];
-                value[end] = value[i];
-                value[i] = temp;
+            int end = count - 1;
+            char frontHigh = value[0];
+            char endLow = value[end];
+            boolean allowFrontSur = true, allowEndSur = true;
+            for (int i = 0, mid = count / 2; i < mid; i++, --end) {
+                char frontLow = value[i + 1];
+                char endHigh = value[end - 1];
+                boolean surAtFront = allowFrontSur && frontLow >= 0xdc00
+                        && frontLow <= 0xdfff && frontHigh >= 0xd800
+                        && frontHigh <= 0xdbff;
+                if (surAtFront && (count < 3)) {
+                    return;
+                }
+                boolean surAtEnd = allowEndSur && endHigh >= 0xd800
+                        && endHigh <= 0xdbff && endLow >= 0xdc00
+                        && endLow <= 0xdfff;
+                allowFrontSur = allowEndSur = true;
+                if (surAtFront == surAtEnd) {
+                    if (surAtFront) {
+                        // both surrogates
+                        value[end] = frontLow;
+                        value[end - 1] = frontHigh;
+                        value[i] = endHigh;
+                        value[i + 1] = endLow;
+                        frontHigh = value[i + 2];
+                        endLow = value[end - 2];
+                        i++;
+                        end--;
+                    } else {
+                        // neither surrogates
+                        value[end] = frontHigh;
+                        value[i] = endLow;
+                        frontHigh = frontLow;
+                        endLow = endHigh;
+                    }
+                } else {
+                    if (surAtFront) {
+                        // surrogate only at the front
+                        value[end] = frontLow;
+                        value[i] = endLow;
+                        endLow = endHigh;
+                        allowFrontSur = false;
+                    } else {
+                        // surrogate only at the end
+                        value[end] = frontHigh;
+                        value[i] = endHigh;
+                        frontHigh = frontLow;
+                        allowEndSur = false;
+                    }
+                }
+            }
+            if ((count & 1) == 1 && (!allowFrontSur || !allowEndSur)) {
+                value[end] = allowFrontSur ? endLow : frontHigh;
             }
         } else {
             char[] newData = new char[value.length];
             for (int i = 0, end = count; i < count; i++) {
-                newData[--end] = value[i];
+                char high = value[i];
+                if ((i + 1) < count && high >= 0xd800 && high <= 0xdbff) {
+                    char low = value[i + 1];
+                    if (low >= 0xdc00 && low <= 0xdfff) {
+                        newData[--end] = low;
+                        i++;
+                    }
+                }
+                newData[--end] = high;
             }
             value = newData;
             shared = false;
@@ -498,7 +539,7 @@ abstract class AbstractStringBuilder {
 
     /**
      * Sets the character at the {@code index}.
-     * 
+     *
      * @param index
      *            the zero-based index of the character to replace.
      * @param ch
@@ -522,7 +563,7 @@ abstract class AbstractStringBuilder {
      * Sets the current length to a new value. If the new length is larger than
      * the current length, then the new characters at the end of this object
      * will contain the {@code char} value of {@code \u0000}.
-     * 
+     *
      * @param length
      *            the new length of this StringBuffer.
      * @exception IndexOutOfBoundsException
@@ -533,16 +574,16 @@ abstract class AbstractStringBuilder {
         if (length < 0) {
             throw new StringIndexOutOfBoundsException(length);
         }
-        if (count < length) {
-            if (length > value.length) {
-                enlargeBuffer(length);
+        if (length > value.length) {
+            enlargeBuffer(length);
+        } else {
+            if (shared) {
+                char[] newData = new char[value.length];
+                System.arraycopy(value, 0, newData, 0, count);
+                value = newData;
+                shared = false;
             } else {
-                if (shared) {
-                    char[] newData = new char[value.length];
-                    System.arraycopy(value, 0, newData, 0, count);
-                    value = newData;
-                    shared = false;
-                } else {
+                if (count < length) {
                     Arrays.fill(value, count, length, (char) 0);
                 }
             }
@@ -553,7 +594,7 @@ abstract class AbstractStringBuilder {
     /**
      * Returns the String value of the subsequence from the {@code start} index
      * to the current end.
-     * 
+     *
      * @param start
      *            the inclusive start index to begin the subsequence.
      * @return a String containing the subsequence.
@@ -567,8 +608,8 @@ abstract class AbstractStringBuilder {
                 return ""; //$NON-NLS-1$
             }
 
-            shared = true;
-            return new String(start, count - start, value);
+            // Remove String sharing for more performance
+            return new String(value, start, count - start);
         }
         throw new StringIndexOutOfBoundsException(start);
     }
@@ -576,7 +617,7 @@ abstract class AbstractStringBuilder {
     /**
      * Returns the String value of the subsequence from the {@code start} index
      * to the {@code end} index.
-     * 
+     *
      * @param start
      *            the inclusive start index to begin the subsequence.
      * @param end
@@ -592,7 +633,7 @@ abstract class AbstractStringBuilder {
                 return ""; //$NON-NLS-1$
             }
 
-            shared = true;
+            // Remove String sharing for more performance
             return new String(value, start, end - start);
         }
         throw new StringIndexOutOfBoundsException();
@@ -600,7 +641,7 @@ abstract class AbstractStringBuilder {
 
     /**
      * Returns the current String representation.
-     * 
+     *
      * @return a String containing the characters in this instance.
      */
     @Override
@@ -608,8 +649,10 @@ abstract class AbstractStringBuilder {
         if (count == 0) {
             return ""; //$NON-NLS-1$
         }
-
-        if (count >= 256 && count <= (value.length >> 1)) {
+        // Optimize String sharing for more performance
+        int wasted = value.length - count;
+        if (wasted >= 256
+                || (wasted >= INITIAL_CAPACITY && wasted >= (count >> 1))) {
             return new String(value, 0, count);
         }
         shared = true;
@@ -619,7 +662,7 @@ abstract class AbstractStringBuilder {
     /**
      * Returns a {@code CharSequence} of the subsequence from the {@code start}
      * index to the {@code end} index.
-     * 
+     *
      * @param start
      *            the inclusive start index to begin the subsequence.
      * @param end
@@ -628,6 +671,7 @@ abstract class AbstractStringBuilder {
      * @throws IndexOutOfBoundsException
      *             if {@code start} is negative, greater than {@code end} or if
      *             {@code end} is greater than the current {@link #length()}.
+     * @since 1.4
      */
     public CharSequence subSequence(int start, int end) {
         return substring(start, end);
@@ -636,12 +680,13 @@ abstract class AbstractStringBuilder {
     /**
      * Searches for the first index of the specified character. The search for
      * the character starts at the beginning and moves towards the end.
-     * 
+     *
      * @param string
      *            the string to find.
      * @return the index of the specified character, -1 if the character isn't
      *         found.
      * @see #lastIndexOf(String)
+     * @since 1.4
      */
     public int indexOf(String string) {
         return indexOf(string, 0);
@@ -650,7 +695,7 @@ abstract class AbstractStringBuilder {
     /**
      * Searches for the index of the specified character. The search for the
      * character starts at the specified offset and moves towards the end.
-     * 
+     *
      * @param subString
      *            the string to find.
      * @param start
@@ -658,6 +703,7 @@ abstract class AbstractStringBuilder {
      * @return the index of the specified character, -1 if the character isn't
      *         found
      * @see #lastIndexOf(String,int)
+     * @since 1.4
      */
     public int indexOf(String subString, int start) {
         if (start < 0) {
@@ -698,12 +744,15 @@ abstract class AbstractStringBuilder {
     /**
      * Searches for the last index of the specified character. The search for
      * the character starts at the end and moves towards the beginning.
-     * 
+     *
      * @param string
      *            the string to find.
      * @return the index of the specified character, -1 if the character isn't
      *         found.
-     * @see String#lastIndexOf(String)
+     * @throws NullPointerException
+     *             if {@code string} is {@code null}.
+     * @see String#lastIndexOf(java.lang.String)
+     * @since 1.4
      */
     public int lastIndexOf(String string) {
         return lastIndexOf(string, count);
@@ -712,14 +761,17 @@ abstract class AbstractStringBuilder {
     /**
      * Searches for the index of the specified character. The search for the
      * character starts at the specified offset and moves towards the beginning.
-     * 
+     *
      * @param subString
      *            the string to find.
      * @param start
      *            the starting offset.
      * @return the index of the specified character, -1 if the character isn't
      *         found.
+     * @throws NullPointerException
+     *             if {@code subString} is {@code null}.
      * @see String#lastIndexOf(String,int)
+     * @since 1.4
      */
     public int lastIndexOf(String subString, int start) {
         int subCount = subString.length();
@@ -762,6 +814,8 @@ abstract class AbstractStringBuilder {
     /**
      * Trims off any extra capacity beyond the current length. Note, this method
      * is NOT guaranteed to change the capacity of this object.
+     *
+     * @since 1.5
      */
     public void trimToSize() {
         if (count < value.length) {
@@ -774,7 +828,7 @@ abstract class AbstractStringBuilder {
 
     /**
      * Retrieves the Unicode code point value at the {@code index}.
-     * 
+     *
      * @param index
      *            the index to the {@code char} code unit.
      * @return the Unicode code point value.
@@ -783,6 +837,7 @@ abstract class AbstractStringBuilder {
      *             {@link #length()}.
      * @see Character
      * @see Character#codePointAt(char[], int, int)
+     * @since 1.5
      */
     public int codePointAt(int index) {
         if (index < 0 || index >= count) {
@@ -793,7 +848,7 @@ abstract class AbstractStringBuilder {
 
     /**
      * Retrieves the Unicode code point value that precedes the {@code index}.
-     * 
+     *
      * @param index
      *            the index to the {@code char} code unit within this object.
      * @return the Unicode code point value.
@@ -801,7 +856,8 @@ abstract class AbstractStringBuilder {
      *             if {@code index} is less than 1 or greater than
      *             {@link #length()}.
      * @see Character
-     * @see Character#codePointBefore(char[], int)
+     * @see Character#codePointBefore(char[], int, int)
+     * @since 1.5
      */
     public int codePointBefore(int index) {
         if (index < 1 || index > count) {
@@ -811,11 +867,9 @@ abstract class AbstractStringBuilder {
     }
 
     /**
-     * <p>
      * Calculates the number of Unicode code points between {@code beginIndex}
      * and {@code endIndex}.
-     * </p>
-     * 
+     *
      * @param beginIndex
      *            the inclusive beginning index of the subsequence.
      * @param endIndex
@@ -827,6 +881,7 @@ abstract class AbstractStringBuilder {
      *             {@link #length()}.
      * @see Character
      * @see Character#codePointCount(char[], int, int)
+     * @since 1.5
      */
     public int codePointCount(int beginIndex, int endIndex) {
         if (beginIndex < 0 || endIndex > count || beginIndex > endIndex) {
@@ -837,11 +892,9 @@ abstract class AbstractStringBuilder {
     }
 
     /**
-     * <p>
      * Returns the index that is offset {@code codePointOffset} code points from
      * {@code index}.
-     * </p>
-     * 
+     *
      * @param index
      *            the index to calculate the offset from.
      * @param codePointOffset
@@ -855,6 +908,7 @@ abstract class AbstractStringBuilder {
      *             {@code codePointOffset}.
      * @see Character
      * @see Character#offsetByCodePoints(char[], int, int, int, int)
+     * @since 1.5
      */
     public int offsetByCodePoints(int index, int codePointOffset) {
         return Character.offsetByCodePoints(value, 0, count, index,

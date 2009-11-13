@@ -25,6 +25,8 @@ import dalvik.annotation.TestTargetNew;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -310,7 +312,43 @@ public class GZIPInputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @Override
+    /**
+     * Regression test for HARMONY-3703.
+     * @tests java.util.zip.GZIPInputStream#read()
+     */
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "read",
+            args = {byte[].class}
+    )
+    public void test_read() throws IOException {
+        GZIPInputStream gis = null;
+        int result = 0;
+        byte[] buffer = new byte[] {1,2,3,4,5,6,7,8,9,10};
+        File f = new File(resources.getAbsolutePath() + "test.gz");
+        FileOutputStream out = new FileOutputStream(f);
+        GZIPOutputStream gout = new GZIPOutputStream(out);
+
+        // write 100 bytes to the stream
+        for(int i = 0; i < 10; i++) {
+            gout.write(buffer);
+        }
+        gout.finish();
+        out.write(1);
+        out.close();
+
+        gis = new GZIPInputStream(new FileInputStream(f));
+        buffer = new byte[100];
+        gis.read(buffer);
+        result = gis.read();
+        gis.close();
+        f.delete();
+
+        assertEquals("Incorrect value returned at the end of the file", -1, result);
+    }
+
+	@Override
     protected void setUp() {
         resources = Support_Resources.createTempFolder();
     }

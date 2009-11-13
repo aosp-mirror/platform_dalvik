@@ -1266,6 +1266,16 @@ public class BigIntegerTest extends junit.framework.TestCase {
                         (i1.testBit(i) && !i2.testBit(i)) == res.testBit(i));
             }
         }
+
+        //regression for HARMONY-4653
+        try{
+            BigInteger.ZERO.andNot(null);
+            fail("should throw NPE");
+        }catch(Exception e){
+            //expected
+        }
+        BigInteger bi = new BigInteger(0, new byte[]{});
+        assertEquals(BigInteger.ZERO, bi.andNot(BigInteger.ZERO));
     }
     
 

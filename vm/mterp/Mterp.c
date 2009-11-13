@@ -27,12 +27,14 @@
  */
 bool dvmCheckAsmConstants(void)
 {
+    bool failed = false;
+
+#ifndef DVM_NO_ASM_INTERP
+
     extern char dvmAsmInstructionStart[];
     extern char dvmAsmInstructionEnd[];
     extern char dvmAsmSisterStart[];
     extern char dvmAsmSisterEnd[];
-
-    bool failed = false;
 
 #define ASM_DEF_VERIFY
 #include "mterp/common/asm-constants.h"
@@ -57,6 +59,8 @@ bool dvmCheckAsmConstants(void)
     LOGV("mterp: interp is %d bytes, sisters are %d bytes\n",
         interpSize, sisterSize);
 
+#endif // ndef DVM_NO_ASM_INTERP
+
     return !failed;
 }
 
@@ -77,6 +81,9 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
 
     glue->interpStackEnd = self->interpStackEnd;
     glue->pSelfSuspendCount = &self->suspendCount;
+#if defined(WITH_JIT)
+    glue->pJitProfTable = gDvmJit.pProfTable;
+#endif
 #if defined(WITH_DEBUGGER)
     glue->pDebuggerActive = &gDvm.debuggerActive;
 #endif
@@ -111,4 +118,3 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
         return true;
     }
 }
-

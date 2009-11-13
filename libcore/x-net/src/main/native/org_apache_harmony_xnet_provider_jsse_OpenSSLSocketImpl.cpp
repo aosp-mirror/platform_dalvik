@@ -36,8 +36,6 @@
 #include <openssl/rand.h>
 #include <openssl/ssl.h>
 
-#include <utils/LogSocket.h>
-
 #include "org_apache_harmony_xnet_provider_jsse_common.h"
 
 /**
@@ -423,7 +421,7 @@ typedef struct app_data {
 static int sslCreateAppData(SSL* ssl) {
     APP_DATA* data = (APP_DATA*) malloc(sizeof(APP_DATA));
 
-    memset(data, sizeof(APP_DATA), 0);
+    memset(data, 0, sizeof(APP_DATA));
 
     data->aliveAndKicking = 1;
     data->waitingThreads = 0;
@@ -670,8 +668,11 @@ static int sslRead(SSL* ssl, char* buf, jint len, int* sslReturnCode,
         
         // LOGD("Doing SSL_Read()");
         int result = SSL_read(ssl, buf, len);
-        int error = SSL_get_error(ssl, result);
-        freeSslErrorState();
+        int error = SSL_ERROR_NONE;
+        if (result <= 0) {
+            error = SSL_get_error(ssl, result);
+            freeSslErrorState();
+        }
         // LOGD("Returned from SSL_Read() with result %d, error code %d", result, error);
 
         // If we have been successful in moving data around, check whether it
@@ -693,7 +694,6 @@ static int sslRead(SSL* ssl, char* buf, jint len, int* sslReturnCode,
         switch (error) {
              // Sucessfully read at least one byte.
             case SSL_ERROR_NONE: {
-                add_recv_stats(fd, result);
                 return result;
             }
 
@@ -786,8 +786,11 @@ static int sslWrite(SSL* ssl, const char* buf, jint len, int* sslReturnCode,
         
         // LOGD("Doing SSL_write() with %d bytes to go", len);
         int result = SSL_write(ssl, buf, len);
-        int error = SSL_get_error(ssl, result);
-        freeSslErrorState();
+        int error = SSL_ERROR_NONE;
+        if (result <= 0) {
+            error = SSL_get_error(ssl, result);
+            freeSslErrorState();
+        }
         // LOGD("Returned from SSL_write() with result %d, error code %d", result, error);
 
         // If we have been successful in moving data around, check whether it
@@ -861,7 +864,6 @@ static int sslWrite(SSL* ssl, const char* buf, jint len, int* sslReturnCode,
             }
         }
     }
-    add_send_stats(fd, count);
     // LOGD("Successfully wrote %d bytes", count);
     
     return count;

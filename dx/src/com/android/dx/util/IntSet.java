@@ -44,24 +44,24 @@ public interface IntSet {
     boolean has(int value);
 
     /**
-     * Merges <code>other</code> into this set, so this set becomes the
+     * Merges {@code other} into this set, so this set becomes the
      * union of the two.
      *
-     * @param other non-null; other set to merge with.
+     * @param other {@code non-null;} other set to merge with.
      */
     void merge(IntSet other);
 
     /**
      * Returns the count of unique elements in this set.
      *
-     * @return &gt; = 0; count of unique elements
+     * @return {@code > = 0;} count of unique elements
      */
     int elements();
 
     /**
      * Iterates the set
      *
-     * @return non-null; a set iterator
+     * @return {@code non-null;} a set iterator
      */
     IntIterator iterator();
 }

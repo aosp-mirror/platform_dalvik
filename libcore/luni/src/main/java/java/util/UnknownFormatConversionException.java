@@ -22,7 +22,6 @@ import org.apache.harmony.luni.util.Msg;
  * conversion is unknown.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class UnknownFormatConversionException extends IllegalFormatException {
     private static final long serialVersionUID = 19060418L;

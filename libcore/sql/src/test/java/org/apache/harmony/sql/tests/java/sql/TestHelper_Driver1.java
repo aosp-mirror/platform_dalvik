@@ -104,7 +104,8 @@ public class TestHelper_Driver1 implements Driver {
 
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
             throws SQLException {
-        DriverPropertyInfo[] theInfos = { new DriverPropertyInfo(userProperty, "*"),
+        DriverPropertyInfo[] theInfos = {
+                new DriverPropertyInfo(userProperty, "*"),
                 new DriverPropertyInfo(passwordProperty, "*"), };
         return theInfos;
     }

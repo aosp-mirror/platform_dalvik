@@ -28,6 +28,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.AccessController;
@@ -37,63 +38,59 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 
-// BEGIN android-note
-// Added quite extensive class documentation. Almost none was present before.
-// END android-note
-
 /**
  * <p>The {@code Formatter} class is a String-formatting utility that is designed
- * to work like the {@code printf} function of the C programming language. 
+ * to work like the {@code printf} function of the C programming language.
  * Its key methods are the {@code format} methods which create a formatted
- * {@code String} by replacing a set of placeholders (format tokens) with formatted 
+ * {@code String} by replacing a set of placeholders (format tokens) with formatted
  * values. The style used to format each value is determined by the format
  * token used.  For example, the call<br/>
  * {@code format("My decimal value is %d and my String is %s.", 3, "Hello");}<br/>
  * returns the {@code String}<br/>
- * {@code My decimal value is 3 and my String is Hello.}</p>
- * 
- *<p>The format token consists of a percent sign, optionally followed 
- * by flags and precision arguments, and then a single character that 
+ * {@code My decimal value is 3 and my String is Hello.}
+ *
+ * <p>The format token consists of a percent sign, optionally followed
+ * by flags and precision arguments, and then a single character that
  * indicates the type of value
  * being formatted.  If the type is a time/date, then the type character
- * {@code t} is followed by an additional character that indicates how the 
- * date is to be formatted. The two characters {@code <$} immediately 
+ * {@code t} is followed by an additional character that indicates how the
+ * date is to be formatted. The two characters {@code <$} immediately
  * following the % sign indicate that the previous value should be used again
  * instead of moving on to the next value argument. A number {@code n}
  * and a dollar sign immediately following the % sign make n the next argument
- * to be used.</p>  
- * 
- * <p>The available choices are the following:</p>
- * 
+ * to be used.
+ *
+ * <p>The available choices are the following:
+ *
  * <table BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Text value types</B></TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code s}</td> 
- * <td width="10%">String</td> 
- * <td width="30%">{@code format("%s, %s", "hello", "Hello");}</td> 
- * <td width="30%">{@code hello, Hello}</td> 
- * </tr>  
+ * <td width="5%">{@code s}</td>
+ * <td width="10%">String</td>
+ * <td width="30%">{@code format("%s, %s", "hello", "Hello");}</td>
+ * <td width="30%">{@code hello, Hello}</td>
+ * </tr>
  * <tr>
- * <td width="5%">{@code S}, {@code s}</td> 
- * <td width="10%">String to capitals</td> 
- * <td width="30%">{@code format("%S, %S", "hello", "Hello");}</td> 
- * <td width="30%">{@code HELLO, HELLO}</td> 
- * </tr>  
+ * <td width="5%">{@code S}, {@code s}</td>
+ * <td width="10%">String to capitals</td>
+ * <td width="30%">{@code format("%S, %S", "hello", "Hello");}</td>
+ * <td width="30%">{@code HELLO, HELLO}</td>
+ * </tr>
  * <tr>
- * <td width="5%">{@code c}</td> 
- * <td width="10%">Character</td> 
- * <td width="30%">{@code format("%c, %c", 'd', 0x65);}</td> 
+ * <td width="5%">{@code c}</td>
+ * <td width="10%">Character</td>
+ * <td width="30%">{@code format("%c, %c", 'd', 0x65);}</td>
  * <td width="30%">{@code d, e}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code C}</td> 
- * <td width="10%">Character to capitals</td> 
- * <td width="30%">{@code format("%C, %C", 'd', 0x65);}</td> 
+ * <td width="5%">{@code C}</td>
+ * <td width="10%">Character to capitals</td>
+ * <td width="30%">{@code format("%C, %C", 'd', 0x65);}</td>
  * <td width="30%">{@code D, E}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Text option flags</B><br/>The value between the
@@ -101,33 +98,33 @@ import java.text.NumberFormat;
  * characters of the formatted value  </TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code -}</td> 
- * <td width="10%">Left justify (width value is required)</td> 
- * <td width="30%">{@code format("%-3C, %3C", 'd', 0x65);}</td> 
+ * <td width="5%">{@code -}</td>
+ * <td width="10%">Left justify (width value is required)</td>
+ * <td width="30%">{@code format("%-3C, %3C", 'd', 0x65);}</td>
  * <td width="30%">{@code D  ,   E}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Integer types</B></TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code d}</td> 
- * <td width="10%">int, formatted as decimal</td> 
- * <td width="30%">{@code format("%d, %d"1$, 35, 0x10);}</td> 
+ * <td width="5%">{@code d}</td>
+ * <td width="10%">int, formatted as decimal</td>
+ * <td width="30%">{@code format("%d, %d"1$, 35, 0x10);}</td>
  * <td width="30%">{@code 35, 16}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code o}</td> 
- * <td width="10%">int, formatted as octal</td> 
- * <td width="30%">{@code format("%o, %o", 8, 010);}</td> 
+ * <td width="5%">{@code o}</td>
+ * <td width="10%">int, formatted as octal</td>
+ * <td width="30%">{@code format("%o, %o", 8, 010);}</td>
  * <td width="30%">{@code 10, 10}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code X}, {@code x}</td> 
- * <td width="10%">int, formatted as hexidecimal</td> 
- * <td width="30%">{@code format("%x, %X", 10, 10);}</td> 
+ * <td width="5%">{@code X}, {@code x}</td>
+ * <td width="10%">int, formatted as hexidecimal</td>
+ * <td width="30%">{@code format("%x, %X", 10, 10);}</td>
  * <td width="30%">{@code a, A}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Integer option flags</B><br/>The value between the
@@ -135,43 +132,43 @@ import java.text.NumberFormat;
  * characters of the formatted value  </TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code +}</td> 
- * <td width="10%">lead with the number's sign</td> 
- * <td width="30%">{@code format("%+d, %+4d", 5, 5);}</td> 
+ * <td width="5%">{@code +}</td>
+ * <td width="10%">lead with the number's sign</td>
+ * <td width="30%">{@code format("%+d, %+4d", 5, 5);}</td>
  * <td width="30%">{@code +5,   +5}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code -}</td> 
- * <td width="10%">Left justify (width value is required)</td> 
- * <td width="30%">{@code format("%-6dx", 5);}</td> 
+ * <td width="5%">{@code -}</td>
+ * <td width="10%">Left justify (width value is required)</td>
+ * <td width="30%">{@code format("%-6dx", 5);}</td>
  * <td width="30%">{@code 5      x}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code #}</td> 
- * <td width="10%">Print the leading characters that indicate 
- * hexidecimal or octal (for use only with hex and octal types) </td> 
- * <td width="30%">{@code format("%#o", 010);}</td> 
+ * <td width="5%">{@code #}</td>
+ * <td width="10%">Print the leading characters that indicate
+ * hexidecimal or octal (for use only with hex and octal types) </td>
+ * <td width="30%">{@code format("%#o", 010);}</td>
  * <td width="30%">{@code 010}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code  }</td> 
- * <td width="10%">A space indicates that non-negative numbers 
- * should have a leading space. </td> 
- * <td width="30%">{@code format("x% d% 5d", 4, 4);}</td> 
+ * <td width="5%">{@code  }</td>
+ * <td width="10%">A space indicates that non-negative numbers
+ * should have a leading space. </td>
+ * <td width="30%">{@code format("x% d% 5d", 4, 4);}</td>
  * <td width="30%">{@code x 4    4}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code 0}</td> 
- * <td width="10%">Pad the number with leading zeros (width value is required)</td> 
- * <td width="30%">{@code format("%07d, %03d", 4, 5555);}</td> 
+ * <td width="5%">{@code 0}</td>
+ * <td width="10%">Pad the number with leading zeros (width value is required)</td>
+ * <td width="30%">{@code format("%07d, %03d", 4, 5555);}</td>
  * <td width="30%">{@code 0000004, 5555}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code (}</td> 
- * <td width="10%">Put parentheses around negative numbers (decimal only)</td> 
- * <td width="30%">{@code format("%(d, %(d, %(6d", 12, -12, -12);}</td> 
+ * <td width="5%">{@code (}</td>
+ * <td width="10%">Put parentheses around negative numbers (decimal only)</td>
+ * <td width="30%">{@code format("%(d, %(d, %(6d", 12, -12, -12);}</td>
  * <td width="30%">{@code 12, (12),   (12)}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Float types</B><br/>A value immediately following the % symbol
@@ -180,229 +177,223 @@ import java.text.NumberFormat;
  * gives the precision (6 by default).</TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code f}</td> 
- * <td width="10%">float (or double) formatted as a decimal, where 
- * the precision indicates the number of digits after the decimal.</td> 
- * <td width="30%">{@code format("%f %<.1f %<1.5f %<10f %<6.0f", 123.456f);}</td> 
+ * <td width="5%">{@code f}</td>
+ * <td width="10%">float (or double) formatted as a decimal, where
+ * the precision indicates the number of digits after the decimal.</td>
+ * <td width="30%">{@code format("%f %<.1f %<1.5f %<10f %<6.0f", 123.456f);}</td>
  * <td width="30%">{@code 123.456001 123.5 123.45600 123.456001    123}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code E}, {@code e}</td> 
+ * <td width="5%">{@code E}, {@code e}</td>
  * <td width="10%">float (or double) formatted in decimal exponential
- * notation, where the precision indicates the number of significant digits.</td> 
- * <td width="30%">{@code format("%E %<.1e %<1.5E %<10E %<6.0E", 123.456f);}</td> 
+ * notation, where the precision indicates the number of significant digits.</td>
+ * <td width="30%">{@code format("%E %<.1e %<1.5E %<10E %<6.0E", 123.456f);}</td>
  * <td width="30%">{@code 1.234560E+02 1.2e+02 1.23456E+02 1.234560E+02  1E+02}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code G}, {@code g}</td> 
+ * <td width="5%">{@code G}, {@code g}</td>
  * <td width="10%">float (or double) formatted in decimal exponential
- * notation , where the precision indicates the maximum number of significant digits.</td> 
- * <td width="30%">{@code format("%G %<.1g %<1.5G %<10G %<6.0G", 123.456f);}</td> 
+ * notation , where the precision indicates the maximum number of significant digits.</td>
+ * <td width="30%">{@code format("%G %<.1g %<1.5G %<10G %<6.0G", 123.456f);}</td>
  * <td width="30%">{@code 123.456 1e+02 123.46    123.456  1E+02}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code A}, {@code a}</td> 
+ * <td width="5%">{@code A}, {@code a}</td>
  * <td width="10%">float (or double) formatted as a hexidecimal in exponential
- * notation, where the precision indicates the number of significant digits.</td> 
- * <td width="30%">{@code format("%A %<.1a %<1.5A %<10A %<6.0A", 123.456f);}</td> 
+ * notation, where the precision indicates the number of significant digits.</td>
+ * <td width="30%">{@code format("%A %<.1a %<1.5A %<10A %<6.0A", 123.456f);}</td>
  * <td width="30%">{@code 0X1.EDD2F2P6 0x1.fp6 0X1.EDD2FP6 0X1.EDD2F2P6 0X1.FP6}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
- * <B>Float-type option flags</B><br/>See the Integer-type options.  
+ * <B>Float-type option flags</B><br/>See the Integer-type options.
  * The options for float-types are the
  * same as for integer types with one addition: </TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code ,}</td> 
+ * <td width="5%">{@code ,}</td>
  * <td width="10%">Use a comma in place of a decimal if the locale
- * requires it. </td> 
- * <td width="30%">{@code format(new Locale("fr"), "%,7.2f", 6.03f);}</td> 
+ * requires it. </td>
+ * <td width="30%">{@code format(new Locale("fr"), "%,7.2f", 6.03f);}</td>
  * <td width="30%">{@code    6,03}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Date types</B></TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code t}, {@code T}</td> 
- * <td width="10%">Date</td> 
- * <td width="30%">{@code format(new Locale("fr"), "%tB %TB", Calendar.getInstance(), Calendar.getInstance());}</td> 
+ * <td width="5%">{@code t}, {@code T}</td>
+ * <td width="10%">Date</td>
+ * <td width="30%">{@code format(new Locale("fr"), "%tB %TB", Calendar.getInstance(), Calendar.getInstance());}</td>
  * <td width="30%">{@code avril AVRIL}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
- * <B>Date format precisions</B><br/>The format precision character 
+ * <B>Date format precisions</B><br/>The format precision character
  * follows the {@code t}. </TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code A}, {@code a}</td> 
- * <td width="10%">The day of the week</td> 
- * <td width="30%">{@code format("%ta %tA", cal, cal);}</td> 
+ * <td width="5%">{@code A}, {@code a}</td>
+ * <td width="10%">The day of the week</td>
+ * <td width="30%">{@code format("%ta %tA", cal, cal);}</td>
  * <td width="30%">{@code Tue Tuesday}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code b}, {@code B}, {@code h}</td> 
- * <td width="10%">The name of the month</td> 
- * <td width="30%">{@code format("%tb %<tB %<th", cal, cal, cal);}</td> 
+ * <td width="5%">{@code b}, {@code B}, {@code h}</td>
+ * <td width="10%">The name of the month</td>
+ * <td width="30%">{@code format("%tb %<tB %<th", cal, cal, cal);}</td>
  * <td width="30%">{@code Apr April Apr}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code C}</td> 
- * <td width="10%">The century</td> 
- * <td width="30%">{@code format("%tC\n", cal);}</td> 
+ * <td width="5%">{@code C}</td>
+ * <td width="10%">The century</td>
+ * <td width="30%">{@code format("%tC\n", cal);}</td>
  * <td width="30%">{@code 20}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code d}, {@code e}</td> 
- * <td width="10%">The day of the month (with or without leading zeros)</td> 
- * <td width="30%">{@code format("%td %te", cal, cal);}</td> 
+ * <td width="5%">{@code d}, {@code e}</td>
+ * <td width="10%">The day of the month (with or without leading zeros)</td>
+ * <td width="30%">{@code format("%td %te", cal, cal);}</td>
  * <td width="30%">{@code 01 1}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code F}</td> 
- * <td width="10%">The complete date formatted as YYYY-MM-DD</td> 
- * <td width="30%">{@code format("%tF", cal);}</td> 
+ * <td width="5%">{@code F}</td>
+ * <td width="10%">The complete date formatted as YYYY-MM-DD</td>
+ * <td width="30%">{@code format("%tF", cal);}</td>
  * <td width="30%">{@code 2008-04-01}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code D}</td> 
- * <td width="10%">The complete date formatted as MM/DD/YY 
- * (not corrected for locale) </td> 
- * <td width="30%">{@code format(new Locale("en_US"), "%tD", cal);<br/>format(new Locale("en_UK"), " %tD", cal);}</td> 
+ * <td width="5%">{@code D}</td>
+ * <td width="10%">The complete date formatted as MM/DD/YY
+ * (not corrected for locale) </td>
+ * <td width="30%">{@code format(new Locale("en_US"), "%tD", cal);<br/>format(new Locale("en_UK"), " %tD", cal);}</td>
  * <td width="30%">{@code 04/01/08 04/01/08}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code j}</td> 
- * <td width="10%">The number of the day (from the beginning of the year).</td> 
- * <td width="30%">{@code format("%tj\n", cal);}</td> 
+ * <td width="5%">{@code j}</td>
+ * <td width="10%">The number of the day (from the beginning of the year).</td>
+ * <td width="30%">{@code format("%tj\n", cal);}</td>
  * <td width="30%">{@code 092}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code m}</td> 
- * <td width="10%">The number of the month</td> 
- * <td width="30%">{@code format("%tm\n", cal);}</td> 
+ * <td width="5%">{@code m}</td>
+ * <td width="10%">The number of the month</td>
+ * <td width="30%">{@code format("%tm\n", cal);}</td>
  * <td width="30%">{@code 04}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code y}, {@code Y}</td> 
- * <td width="10%">The year</td> 
- * <td width="30%">{@code format("%ty %tY", cal, cal);}</td> 
+ * <td width="5%">{@code y}, {@code Y}</td>
+ * <td width="10%">The year</td>
+ * <td width="30%">{@code format("%ty %tY", cal, cal);}</td>
  * <td width="30%">{@code 08 2008}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code H}, {@code I}, {@code k}, {@code l}</td> 
+ * <td width="5%">{@code H}, {@code I}, {@code k}, {@code l}</td>
  * <td width="10%">The hour of the day, in 12 or 24 hour format, with or
- * without a leading zero</td> 
- * <td width="30%">{@code format("%tH %tI %tk %tl", cal, cal, cal, cal);}</td> 
+ * without a leading zero</td>
+ * <td width="30%">{@code format("%tH %tI %tk %tl", cal, cal, cal, cal);}</td>
  * <td width="30%">{@code 16 04 16 4}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code p}</td> 
- * <td width="10%">a.m. or p.m.</td> 
- * <td width="30%">{@code format("%tp %Tp", cal, cal);}</td> 
+ * <td width="5%">{@code p}</td>
+ * <td width="10%">a.m. or p.m.</td>
+ * <td width="30%">{@code format("%tp %Tp", cal, cal);}</td>
  * <td width="30%">{@code pm PM}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code M}, {@code S}, {@code L}, {@code N}</td> 
- * <td width="10%">The minutes, seconds, milliseconds, and nanoseconds</td> 
- * <td width="30%">{@code format("%tM %tS %tL %tN", cal, cal, cal, cal);}</td> 
+ * <td width="5%">{@code M}, {@code S}, {@code L}, {@code N}</td>
+ * <td width="10%">The minutes, seconds, milliseconds, and nanoseconds</td>
+ * <td width="30%">{@code format("%tM %tS %tL %tN", cal, cal, cal, cal);}</td>
  * <td width="30%">{@code 08 17 359 359000000}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code Z}, {@code z}</td> 
- * <td width="10%">The time zone: its abbreviation or offset from GMT</td> 
- * <td width="30%">{@code format("%tZ %tz", cal, cal);}</td> 
+ * <td width="5%">{@code Z}, {@code z}</td>
+ * <td width="10%">The time zone: its abbreviation or offset from GMT</td>
+ * <td width="30%">{@code format("%tZ %tz", cal, cal);}</td>
  * <td width="30%">{@code CEST +0100}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code R}, {@code r}, {@code T}</td> 
- * <td width="10%">The complete time</td> 
- * <td width="30%">{@code format("%tR %tr %tT", cal, cal, cal);}</td> 
+ * <td width="5%">{@code R}, {@code r}, {@code T}</td>
+ * <td width="10%">The complete time</td>
+ * <td width="30%">{@code format("%tR %tr %tT", cal, cal, cal);}</td>
  * <td width="30%">{@code 16:15 04:15:32 PM 16:15:32}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code s}, {@code Q}</td> 
+ * <td width="5%">{@code s}, {@code Q}</td>
  * <td width="10%">The number of seconds or milliseconds from "the epoch"
- * (1 January 1970 00:00:00 UTC) </td> 
- * <td width="30%">{@code format("%ts %tQ", cal, cal);}</td> 
+ * (1 January 1970 00:00:00 UTC) </td>
+ * <td width="30%">{@code format("%ts %tQ", cal, cal);}</td>
  * <td width="30%">{@code 1207059412 1207059412656}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code c}</td> 
- * <td width="10%">The complete time and date</td> 
- * <td width="30%">{@code format("%tc", cal);}</td> 
+ * <td width="5%">{@code c}</td>
+ * <td width="10%">The complete time and date</td>
+ * <td width="30%">{@code format("%tc", cal);}</td>
  * <td width="30%">{@code Tue Apr 01 16:19:17 CEST 2008}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Other data types</B></TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code B}, {@code b}</td> 
- * <td width="10%">Boolean</td> 
- * <td width="30%">{@code format("%b, %B", true, false);}</td> 
+ * <td width="5%">{@code B}, {@code b}</td>
+ * <td width="10%">Boolean</td>
+ * <td width="30%">{@code format("%b, %B", true, false);}</td>
  * <td width="30%">{@code true, FALSE}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code H}, {@code h}</td> 
- * <td width="10%">Hashcode</td> 
- * <td width="30%">{@code format("%h, %H", obj, obj);}</td> 
+ * <td width="5%">{@code H}, {@code h}</td>
+ * <td width="10%">Hashcode</td>
+ * <td width="30%">{@code format("%h, %H", obj, obj);}</td>
  * <td width="30%">{@code 190d11, 190D11}</td>
- * </tr>  
+ * </tr>
  * <tr>
- * <td width="5%">{@code n}</td> 
- * <td width="10%">line separator</td> 
- * <td width="30%">{@code format("first%nsecond", "???");}</td> 
+ * <td width="5%">{@code n}</td>
+ * <td width="10%">line separator</td>
+ * <td width="30%">{@code format("first%nsecond", "???");}</td>
  * <td width="30%">{@code first<br/>second}</td>
- * </tr>  
+ * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
  * <B>Escape sequences</B></TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code %}</td> 
- * <td width="10%">Escape the % character</td> 
- * <td width="30%">{@code format("%d%%, %d", 50, 60);}</td> 
+ * <td width="5%">{@code %}</td>
+ * <td width="10%">Escape the % character</td>
+ * <td width="30%">{@code format("%d%%, %d", 50, 60);}</td>
  * <td width="30%">{@code 50%, 60}</td>
- * </tr>  
- * </table>   
- * 
+ * </tr>
+ * </table>
+ *
  * <p>An instance of Formatter can be created to write the formatted
- * output to standard types of output streams.  Its functionality can 
- * also be accessed through the format methods of an output stream 
+ * output to standard types of output streams.  Its functionality can
+ * also be accessed through the format methods of an output stream
  * or of {@code String}:<br/>
  * {@code System.out.println(String.format("%ty\n", cal));}<br/>
- * {@code System.out.format("%ty\n", cal);}</p>
- * 
- * <p>The class is not multi-threaded safe. The user is responsible for 
+ * {@code System.out.format("%ty\n", cal);}
+ *
+ * <p>The class is not multi-threaded safe. The user is responsible for
  * maintaining a thread-safe design if a {@code Formatter} is
- * accessed by multiple threads. </p>
- * 
- * @since Android 1.0
+ * accessed by multiple threads.
+ *
+ * @since 1.5
  */
 public final class Formatter implements Closeable, Flushable {
 
-    // BEGIN android-changed
     /**
      * The enumeration giving the available styles for formatting very large
      * decimal numbers.
-     * 
-     * @since Android 1.0
-     */    
+     */
     public enum BigDecimalLayoutForm {
         /**
          * Use scientific style for BigDecimals.
-         * @since Android 1.0
          */
-        SCIENTIFIC, 
+        SCIENTIFIC,
         /**
          * Use normal decimal/float style for BigDecimals.
-         * @since Android 1.0
          */
         DECIMAL_FLOAT
     }
-    // END android-changed
 
     private Appendable out;
 
@@ -414,29 +405,26 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Constructs a {@code Formatter}.
-     * 
+     *
      * The output is written to a {@code StringBuilder} which can be acquired by invoking
      * {@link #out()} and whose content can be obtained by calling
      * {@code toString()}.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
-     * @since Android 1.0
      */
     public Formatter() {
         this(new StringBuilder(), Locale.getDefault());
     }
 
     /**
-     * Constructs a {@code Formatter} whose output will be written to the 
+     * Constructs a {@code Formatter} whose output will be written to the
      * specified {@code Appendable}.
-     * 
+     *
      * The locale for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param a
      *            the output destination of the {@code Formatter}. If {@code a} is {@code null},
      *            then a {@code StringBuilder} will be used.
-     * @since Android 1.0
      */
     public Formatter(Appendable a) {
         this(a, Locale.getDefault());
@@ -444,32 +432,30 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Constructs a {@code Formatter} with the specified {@code Locale}.
-     * 
+     *
      * The output is written to a {@code StringBuilder} which can be acquired by invoking
      * {@link #out()} and whose content can be obtained by calling
      * {@code toString()}.
-     * 
+     *
      * @param l
      *            the {@code Locale} of the {@code Formatter}. If {@code l} is {@code null},
      *            then no localization will be used.
-     * @since Android 1.0
      */
     public Formatter(Locale l) {
         this(new StringBuilder(), l);
     }
 
     /**
-     * Constructs a {@code Formatter} with the specified {@code Locale} 
-     * and whose output will be written to the 
+     * Constructs a {@code Formatter} with the specified {@code Locale}
+     * and whose output will be written to the
      * specified {@code Appendable}.
-     * 
+     *
      * @param a
      *            the output destination of the {@code Formatter}. If {@code a} is {@code null},
      *            then a {@code StringBuilder} will be used.
      * @param l
      *            the {@code Locale} of the {@code Formatter}. If {@code l} is {@code null},
      *            then no localization will be used.
-     * @since Android 1.0
      */
     public Formatter(Appendable a, Locale l) {
         if (null == a) {
@@ -482,17 +468,16 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Constructs a {@code Formatter} whose output is written to the specified file.
-     * 
+     *
      * The charset of the {@code Formatter} is the default charset.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param fileName
      *            the filename of the file that is used as the output
      *            destination for the {@code Formatter}. The file will be truncated to
      *            zero size if the file exists, or else a new file will be
      *            created. The output of the {@code Formatter} is buffered.
-     * 
      * @throws FileNotFoundException
      *             if the filename does not denote a normal and writable file,
      *             or if a new file cannot be created, or if any error arises when
@@ -500,7 +485,6 @@ public final class Formatter implements Closeable, Flushable {
      * @throws SecurityException
      *             if there is a {@code SecurityManager} in place which denies permission
      *             to write to the file in {@code checkWrite(file.getPath())}.
-     * @since Android 1.0
      */
     public Formatter(String fileName) throws FileNotFoundException {
         this(new File(fileName));
@@ -509,9 +493,9 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Constructs a {@code Formatter} whose output is written to the specified file.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param fileName
      *            the filename of the file that is used as the output
      *            destination for the {@code Formatter}. The file will be truncated to
@@ -519,7 +503,6 @@ public final class Formatter implements Closeable, Flushable {
      *            created. The output of the {@code Formatter} is buffered.
      * @param csn
      *            the name of the charset for the {@code Formatter}.
-     * 
      * @throws FileNotFoundException
      *             if the filename does not denote a normal and writable file,
      *             or if a new file cannot be created, or if any error arises when
@@ -529,7 +512,6 @@ public final class Formatter implements Closeable, Flushable {
      *             to write to the file in {@code checkWrite(file.getPath())}.
      * @throws UnsupportedEncodingException
      *             if the charset with the specified name is not supported.
-     * @since Android 1.0
      */
     public Formatter(String fileName, String csn) throws FileNotFoundException,
             UnsupportedEncodingException {
@@ -537,9 +519,9 @@ public final class Formatter implements Closeable, Flushable {
     }
 
     /**
-     * Constructs a {@code Formatter} with the given {@code Locale} and charset, 
+     * Constructs a {@code Formatter} with the given {@code Locale} and charset,
      * and whose output is written to the specified file.
-     * 
+     *
      * @param fileName
      *            the filename of the file that is used as the output
      *            destination for the {@code Formatter}. The file will be truncated to
@@ -550,7 +532,6 @@ public final class Formatter implements Closeable, Flushable {
      * @param l
      *            the {@code Locale} of the {@code Formatter}. If {@code l} is {@code null},
      *            then no localization will be used.
-     * 
      * @throws FileNotFoundException
      *             if the filename does not denote a normal and writable file,
      *             or if a new file cannot be created, or if any error arises when
@@ -560,7 +541,6 @@ public final class Formatter implements Closeable, Flushable {
      *             to write to the file in {@code checkWrite(file.getPath())}.
      * @throws UnsupportedEncodingException
      *             if the charset with the specified name is not supported.
-     * @since Android 1.0
      */
     public Formatter(String fileName, String csn, Locale l)
             throws FileNotFoundException, UnsupportedEncodingException {
@@ -570,17 +550,16 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Constructs a {@code Formatter} whose output is written to the specified {@code File}.
-     * 
+     *
      * The charset of the {@code Formatter} is the default charset.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param file
      *            the {@code File} that is used as the output destination for the
      *            {@code Formatter}. The {@code File} will be truncated to zero size if the {@code File}
      *            exists, or else a new {@code File} will be created. The output of the
      *            {@code Formatter} is buffered.
-     * 
      * @throws FileNotFoundException
      *             if the {@code File} is not a normal and writable {@code File}, or if a
      *             new {@code File} cannot be created, or if any error rises when opening or
@@ -588,18 +567,17 @@ public final class Formatter implements Closeable, Flushable {
      * @throws SecurityException
      *             if there is a {@code SecurityManager} in place which denies permission
      *             to write to the {@code File} in {@code checkWrite(file.getPath())}.
-     * @since Android 1.0
      */
     public Formatter(File file) throws FileNotFoundException {
         this(new FileOutputStream(file));
     }
 
     /**
-     * Constructs a {@code Formatter} with the given charset, 
+     * Constructs a {@code Formatter} with the given charset,
      * and whose output is written to the specified {@code File}.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param file
      *            the {@code File} that is used as the output destination for the
      *            {@code Formatter}. The {@code File} will be truncated to zero size if the {@code File}
@@ -616,7 +594,6 @@ public final class Formatter implements Closeable, Flushable {
      *             to write to the {@code File} in {@code checkWrite(file.getPath())}.
      * @throws UnsupportedEncodingException
      *             if the charset with the specified name is not supported.
-     * @since Android 1.0
      */
     public Formatter(File file, String csn) throws FileNotFoundException,
             UnsupportedEncodingException {
@@ -624,9 +601,9 @@ public final class Formatter implements Closeable, Flushable {
     }
 
     /**
-     * Constructs a {@code Formatter} with the given {@code Locale} and charset, 
+     * Constructs a {@code Formatter} with the given {@code Locale} and charset,
      * and whose output is written to the specified {@code File}.
-     * 
+     *
      * @param file
      *            the {@code File} that is used as the output destination for the
      *            {@code Formatter}. The {@code File} will be truncated to zero size if the {@code File}
@@ -646,7 +623,6 @@ public final class Formatter implements Closeable, Flushable {
      *             to write to the {@code File} in {@code checkWrite(file.getPath())}.
      * @throws UnsupportedEncodingException
      *             if the charset with the specified name is not supported.
-     * @since Android 1.0
      */
     public Formatter(File file, String csn, Locale l)
             throws FileNotFoundException, UnsupportedEncodingException {
@@ -654,9 +630,9 @@ public final class Formatter implements Closeable, Flushable {
         try {
             fout = new FileOutputStream(file);
             OutputStreamWriter writer = new OutputStreamWriter(fout, csn);
-            // BEGIN android-modified
+            // BEGIN android-changed
             out = new BufferedWriter(writer, 8192);
-            // END android-modified
+            // END android-changed
         } catch (RuntimeException e) {
             closeOutputStream(fout);
             throw e;
@@ -670,37 +646,35 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Constructs a {@code Formatter} whose output is written to the specified {@code OutputStream}.
-     * 
+     *
      * The charset of the {@code Formatter} is the default charset.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param os
      *            the stream to be used as the destination of the {@code Formatter}.
-     * @since Android 1.0
      */
     public Formatter(OutputStream os) {
         OutputStreamWriter writer = new OutputStreamWriter(os, Charset
                 .defaultCharset());
-        // BEGIN android-modified
+        // BEGIN android-changed
         out = new BufferedWriter(writer, 8192);
-        // END android-modified
+        // END android-changed
         locale = Locale.getDefault();
     }
 
     /**
-     * Constructs a {@code Formatter} with the given charset, 
+     * Constructs a {@code Formatter} with the given charset,
      * and whose output is written to the specified {@code OutputStream}.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param os
      *            the stream to be used as the destination of the {@code Formatter}.
      * @param csn
      *            the name of the charset for the {@code Formatter}.
      * @throws UnsupportedEncodingException
      *             if the charset with the specified name is not supported.
-     * @since Android 1.0
      */
     public Formatter(OutputStream os, String csn)
             throws UnsupportedEncodingException {
@@ -709,9 +683,9 @@ public final class Formatter implements Closeable, Flushable {
     }
 
     /**
-     * Constructs a {@code Formatter} with the given {@code Locale} and charset, 
+     * Constructs a {@code Formatter} with the given {@code Locale} and charset,
      * and whose output is written to the specified {@code OutputStream}.
-     * 
+     *
      * @param os
      *            the stream to be used as the destination of the {@code Formatter}.
      * @param csn
@@ -721,31 +695,29 @@ public final class Formatter implements Closeable, Flushable {
      *            then no localization will be used.
      * @throws UnsupportedEncodingException
      *             if the charset with the specified name is not supported.
-     * @since Android 1.0
      */
     public Formatter(OutputStream os, String csn, Locale l)
             throws UnsupportedEncodingException {
 
         OutputStreamWriter writer = new OutputStreamWriter(os, csn);
-        // BEGIN android-modified
+        // BEGIN android-changed
         out = new BufferedWriter(writer, 8192);
-        // END android-modified
+        // END android-changed
 
         locale = l;
     }
 
     /**
      * Constructs a {@code Formatter} whose output is written to the specified {@code PrintStream}.
-     * 
+     *
      * The charset of the {@code Formatter} is the default charset.
-     * 
+     *
      * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     * 
+     *
      * @param ps
      *            the {@code PrintStream} used as destination of the {@code Formatter}. If
-     *            {@code ps} is {@code null}, then a {@ code NullPointerExcepiton} will
+     *            {@code ps} is {@code null}, then a {@code NullPointerException} will
      *            be raised.
-     * @since Android 1.0
      */
     public Formatter(PrintStream ps) {
         if (null == ps) {
@@ -763,11 +735,10 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Returns the {@code Locale} of the {@code Formatter}.
-     * 
+     *
      * @return the {@code Locale} for the {@code Formatter} or {@code null} for no {@code Locale}.
      * @throws FormatterClosedException
      *             if the {@code Formatter} has been closed.
-     * @since Android 1.0
      */
     public Locale locale() {
         checkClosed();
@@ -776,11 +747,10 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Returns the output destination of the {@code Formatter}.
-     * 
+     *
      * @return the output destination of the {@code Formatter}.
      * @throws FormatterClosedException
      *             if the {@code Formatter} has been closed.
-     * @since Android 1.0
      */
     public Appendable out() {
         checkClosed();
@@ -790,12 +760,11 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Returns the content by calling the {@code toString()} method of the output
      * destination.
-     * 
+     *
      * @return the content by calling the {@code toString()} method of the output
      *         destination.
      * @throws FormatterClosedException
      *             if the {@code Formatter} has been closed.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -805,11 +774,10 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Flushes the {@code Formatter}. If the output destination is {@link Flushable},
-     * then the method {@ code flush()} will be called on that destination.
-     * 
+     * then the method {@code flush()} will be called on that destination.
+     *
      * @throws FormatterClosedException
      *             if the {@code Formatter} has been closed.
-     * @since Android 1.0
      */
     public void flush() {
         checkClosed();
@@ -825,14 +793,12 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Closes the {@code Formatter}. If the output destination is {@link Closeable},
      * then the method {@code close()} will be called on that destination.
-     * 
+     *
      * If the {@code Formatter} has been closed, then calling the this method will have no
      * effect.
-     * 
+     *
      * Any method but the {@link #ioException()} that is called after the
      * {@code Formatter} has been closed will raise a {@code FormatterClosedException}.
-     * 
-     * @since Android 1.0
      */
     public void close() {
         closed = true;
@@ -850,10 +816,9 @@ public final class Formatter implements Closeable, Flushable {
      * Returns the last {@code IOException} thrown by the {@code Formatter}'s output
      * destination. If the {@code append()} method of the destination does not throw
      * {@code IOException}s, the {@code ioException()} method will always return {@code null}.
-     * 
+     *
      * @return the last {@code IOException} thrown by the {@code Formatter}'s output
      *         destination.
-     * @since Android 1.0
      */
     public IOException ioException() {
         return lastIOException;
@@ -861,7 +826,7 @@ public final class Formatter implements Closeable, Flushable {
 
     /**
      * Writes a formatted string to the output destination of the {@code Formatter}.
-     * 
+     *
      * @param format
      *            a format string.
      * @param args
@@ -875,23 +840,22 @@ public final class Formatter implements Closeable, Flushable {
      *             the format string, or any other illegal situation.
      * @throws FormatterClosedException
      *             if the {@code Formatter} has been closed.
-     * @since Android 1.0
      */
     public Formatter format(String format, Object... args) {
         return format(locale, format, args);
     }
 
-// BEGIN android-changed
+    // BEGIN android-added
     /**
      * Cached transformer. Improves performance when format() is called multiple
      * times.
      */
     private Transformer transformer;
-// END android-changed
+    // END android-added
 
     /**
      * Writes a formatted string to the output destination of the {@code Formatter}.
-     * 
+     *
      * @param l
      *            the {@code Locale} used in the method. If {@code locale} is
      *            {@code null}, then no localization will be applied. This
@@ -910,7 +874,6 @@ public final class Formatter implements Closeable, Flushable {
      *             the format string, or any other illegal situation.
      * @throws FormatterClosedException
      *             if the {@code Formatter} has been closed.
-     * @since Android 1.0
      */
     public Formatter format(Locale l, String format, Object... args) {
         checkClosed();
@@ -1275,7 +1238,7 @@ public final class Formatter implements Closeable, Flushable {
                     break;
                 }
                 case 'n': {
-                    result = transfromFromLineSeparator();
+                    result = transformFromLineSeparator();
                     break;
                 }
                 case 't':
@@ -1499,7 +1462,7 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms line separator to a formatted string. Any flag, the width
          * or the precision is illegal.
          */
-        private String transfromFromLineSeparator() {
+        private String transformFromLineSeparator() {
             if (formatToken.isPrecisionSet()) {
                 throw new IllegalFormatPrecisionException(formatToken
                         .getPrecision());
@@ -2121,9 +2084,18 @@ public final class Formatter implements Closeable, Flushable {
             boolean requireScientificRepresentation = true;
             double d = ((Number) argument).doubleValue();
             d = Math.abs(d);
-            long l = Math.round(d);
+            if (Double.isInfinite(d)) {
+                precision = formatToken.getPrecision();
+                precision--;
+                formatToken.setPrecision(precision);
+                transform_e();
+                return;
+            }
+            BigDecimal b = new BigDecimal(d, new MathContext(precision));
+            d = b.doubleValue();
+            long l = b.longValue();
 
-            if (l >= 1) {
+            if (d >= 1 && d < Math.pow(10, precision)) {
                 if (l < Math.pow(10, precision)) {
                     requireScientificRepresentation = false;
                     precision -= String.valueOf(l).length();
@@ -2137,19 +2109,20 @@ public final class Formatter implements Closeable, Flushable {
                 }
 
             } else {
-                l = Math.round(d * Math.pow(10, 4));
-                if (l >= 1) {
+                l = b.movePointRight(4).longValue();
+                b.movePointLeft(4);
+                if (d >= Math.pow(10, -4) && d < 1) {
                     requireScientificRepresentation = false;
                     precision += 4 - String.valueOf(l).length();
-                    l = Math.round(d * Math.pow(10, precision + 1));
+                    l = b.movePointRight(precision + 1).longValue();
+                    b.movePointLeft(precision + 1);
                     if (String.valueOf(l).length() <= formatToken
                             .getPrecision()) {
                         precision++;
                     }
-                    l = Math.round(d * Math.pow(10, precision));
-                    if (l < Math.pow(10, precision - 4)) {
-                        requireScientificRepresentation = true;
-                    } else {
+                    l = b.movePointRight(precision).longValue();
+                    b.movePointLeft(precision);
+                    if (l >= Math.pow(10, precision - 4)) {
                         formatToken.setPrecision(precision);
                     }
                 }
@@ -2461,9 +2434,10 @@ public final class Formatter implements Closeable, Flushable {
 
         private void transform_Z() {
             TimeZone timeZone = calendar.getTimeZone();
-            result
-                    .append(timeZone.getDisplayName(true, TimeZone.SHORT,
-                            locale));
+            result.append(timeZone
+                    .getDisplayName(
+                            timeZone.inDaylightTime(calendar.getTime()),
+                            TimeZone.SHORT, locale));
         }
 
         private void transform_z() {

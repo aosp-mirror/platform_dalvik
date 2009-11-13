@@ -26,8 +26,6 @@ import java.util.Vector;
  * This class represents a list of {@code SocketPermission} objects and provides
  * a method to check whether or not a specific permission is implied by this
  * {@code SocketPermissionCollection}.
- * 
- * @since Android 1.0
  */
 final class SocketPermissionCollection extends PermissionCollection {
 
@@ -62,8 +60,6 @@ final class SocketPermissionCollection extends PermissionCollection {
      * Returns whether this permission collection implies {@code permission}.
      * Basically it tests whether {@code permission} is the subset of this
      * collection.
-     * 
-     * @since Android 1.0
      */
     @Override
     public boolean implies(Permission permission) {

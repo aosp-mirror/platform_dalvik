@@ -29,7 +29,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor(){
         try{
-            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
+            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "y");
             shouldThrow();
@@ -42,7 +42,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor2(){
         try{
-            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
+            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "z");
             shouldThrow();
@@ -55,12 +55,33 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
      */
     public void testConstructor3(){
         try{
-            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> 
+            AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest>
                 a = AtomicLongFieldUpdater.newUpdater
                 (AtomicLongFieldUpdaterTest.class, "w");
             shouldThrow();
         }
 
+        catch (RuntimeException rt) {}
+    }
+
+    static class Base {
+        protected volatile long f = 0;
+    }
+    static class Sub1 extends Base {
+        AtomicLongFieldUpdater<Base> fUpdater
+                = AtomicLongFieldUpdater.newUpdater(Base.class, "f");
+    }
+    static class Sub2 extends Base {}
+
+    public void testProtectedFieldOnAnotherSubtype() {
+        Sub1 sub1 = new Sub1();
+        Sub2 sub2 = new Sub2();
+
+        sub1.fUpdater.set(sub1, 1);
+        try {
+            sub1.fUpdater.set(sub2, 2);
+            shouldThrow();
+        }
         catch (RuntimeException rt) {}
     }
 
@@ -75,12 +96,12 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = 1;
-        assertEquals(1,a.get(this));
-        a.set(this,2);
-        assertEquals(2,a.get(this));
-        a.set(this,-3);
-        assertEquals(-3,a.get(this));
-        
+	assertEquals(1,a.get(this));
+	a.set(this,2);
+	assertEquals(2,a.get(this));
+	a.set(this,-3);
+	assertEquals(-3,a.get(this));
+
     }
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
@@ -134,7 +155,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet(){
         AtomicLongFieldUpdater<AtomicLongFieldUpdaterTest> a;

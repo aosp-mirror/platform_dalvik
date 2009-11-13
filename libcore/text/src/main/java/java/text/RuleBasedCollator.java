@@ -15,17 +15,7 @@
  * limitations under the License.
  */
 
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
-
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
 // The icu implementation used was changed from icu4j to icu4jni.
 // END android-note
 
@@ -38,7 +28,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <p>
  * {@code RuleBasedCollator} has the following restrictions for efficiency
  * (other subclasses may be used for more complex languages):
- * </p>
  * <ol>
  * <li> If a French secondary ordering is specified it applies to the whole
  * collator object.</li>
@@ -51,19 +40,17 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <p>
  * The collation table is composed of a list of collation rules, where each rule
  * is of three forms:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * <modifier>
  * <relation> <text-argument>
  * <reset> <text-argument>
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * The rule elements are defined as follows:
- * </p>
  * <ul type="disc">
  * <li><strong>Text-Argument</strong>: A text-argument is any sequence of
  * characters, excluding special characters (that is, common whitespace
@@ -76,7 +63,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * specify that all accents (secondary differences) are backwards.
  * <p>
  * '@' : Indicates that accents are sorted backwards, as in French.
- * </p>
  * </li>
  * <li><strong>Relation</strong>: The relations are the following:
  * <ul type=square>
@@ -92,33 +78,30 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <p>
  * '&' : Indicates that the next rule follows the position to where the reset
  * text-argument would be sorted.
- * </p>
  * </li>
  * </ul>
  * <p>
  * This sounds more complicated than it is in practice. For example, the
  * following are equivalent ways of expressing the same thing:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * a < b < c
  * a < b & b < c
  * a < c & a < b
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * Notice that the order is important, as the subsequent item goes immediately
  * after the text-argument. The following are not equivalent:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * a < b & a < c
  * a < c & a < b
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * Either the text-argument must already be present in the sequence, or some
@@ -132,7 +115,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * German a-umlaut is treated as if it expands to two characters (expressed as
  * {@code "a,A < b,B  ... & ae;\u00e3 & AE;\u00c3"}, where \u00e3 and \u00c3
  * are the escape sequences for a-umlaut).
- * </p>
  * <h4>Ignorable Characters</h4>
  * <p>
  * For ignorable characters, the first rule must start with a relation (the
@@ -141,7 +123,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code "<"}, then all text-arguments up to the first {@code "<"} are
  * ignorable. For example, {@code ", - < a < b"} makes {@code "-"} an ignorable
  * character.
- * </p>
  * <h4>Normalization and Accents</h4>
  * <p>
  * {@code RuleBasedCollator} automatically processes its rule table to include
@@ -150,7 +131,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * combining accent characters, the pre-composed accented characters matching
  * all canonical combinations of characters from the rule string will be entered
  * in the table.
- * </p>
  * <p>
  * This allows you to use a RuleBasedCollator to compare accented strings even
  * when the collator is set to NO_DECOMPOSITION. However, if the strings to be
@@ -158,11 +138,9 @@ import org.apache.harmony.text.internal.nls.Messages;
  * should set the collator to CANONICAL_DECOMPOSITION to enable sorting of
  * combining sequences. For more information, see <a
  * href="http://www.aw.com/devpress">The Unicode Standard, Version 3.0</a>.
- * </p>
  * <h4>Errors</h4>
  * <p>
  * The following rules are not valid:
- * </p>
  * <ul type="disc">
  * <li>A text-argument contains unquoted punctuation symbols, for example
  * {@code "a < b-c < d"}.</li>
@@ -175,7 +153,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <p>
  * If you produce one of these errors, {@code RuleBasedCollator} throws a
  * {@code ParseException}.
- * </p>
  * <h4>Examples</h4>
  * <p>
  * Normally, to create a rule-based collator object, you will use
@@ -183,117 +160,109 @@ import org.apache.harmony.text.internal.nls.Messages;
  * rule-based collator object with specialized rules tailored to your needs, you
  * construct the {@code RuleBasedCollator} with the rules contained in a
  * {@code String} object. For example:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * String Simple = "< a < b < c < d";
- * 
+ *
  * RuleBasedCollator mySimple = new RuleBasedCollator(Simple);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * Or:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * String Norwegian = "< a,A< b,B< c,C< d,D< e,E< f,F< g,G< h,H< i,I"
- *         + "< j,J< k,K< l,L< m,M< n,N< o,O< p,P< q,Q< r,R" 
+ *         + "< j,J< k,K< l,L< m,M< n,N< o,O< p,P< q,Q< r,R"
  *         + "< s,S< t,T< u,U< v,V< w,W< x,X< y,Y< z,Z"
- *         + "< \u00E5=a\u030A,\u00C5=A\u030A" 
+ *         + "< \u00E5=a\u030A,\u00C5=A\u030A"
  *         + ";aa,AA< \u00E6,\u00C6< \u00F8,\u00D8";
- * 
+ *
  * RuleBasedCollator myNorwegian = new RuleBasedCollator(Norwegian);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * Combining {@code Collator}s is as simple as concatenating strings. Here is
  * an example that combines two {@code Collator}s from two different locales:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * // Create an en_US Collator object
  * RuleBasedCollator en_USCollator = (RuleBasedCollator)Collator
  *         .getInstance(new Locale("en", "US", ""));
- * 
+ *
  * // Create a da_DK Collator object
  * RuleBasedCollator da_DKCollator = (RuleBasedCollator)Collator
  *         .getInstance(new Locale("da", "DK", ""));
- * 
+ *
  * // Combine the two collators
  * // First, get the collation rules from en_USCollator
  * String en_USRules = en_USCollator.getRules();
- * 
+ *
  * // Second, get the collation rules from da_DKCollator
  * String da_DKRules = da_DKCollator.getRules();
- * 
+ *
  * RuleBasedCollator newCollator = new RuleBasedCollator(en_USRules + da_DKRules);
  * // newCollator has the combined rules
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * The next example shows to make changes on an existing table to create a new
  * {@code Collator} object. For example, add {@code "& C < ch, cH, Ch, CH"} to
  * the {@code en_USCollator} object to create your own:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * // Create a new Collator object with additional rules
  * String addRules = "& C < ch, cH, Ch, CH";
- * 
+ *
  * RuleBasedCollator myCollator = new RuleBasedCollator(en_USCollator + addRules);
  * // myCollator contains the new rules
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * The following example demonstrates how to change the order of non-spacing
  * accents:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * // old rule
  * String oldRules = "= \u00a8 ; \u00af ; \u00bf" + "< a , A ; ae, AE ; \u00e6 , \u00c6"
  *         + "< b , B < c, C < e, E & C < d, D";
- * 
+ *
  * // change the order of accent characters
  * String addOn = "& \u00bf ; \u00af ; \u00a8;";
- * 
+ *
  * RuleBasedCollator myCollator = new RuleBasedCollator(oldRules + addOn);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * The last example shows how to put new primary ordering in before the default
  * setting. For example, in the Japanese {@code Collator}, you can either sort
  * English characters before or after Japanese characters:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * // get en_US Collator rules
  * RuleBasedCollator en_USCollator = (RuleBasedCollator)
  *     Collator.getInstance(Locale.US);
- * 
+ *
  * // add a few Japanese character to sort before English characters
  * // suppose the last character before the first base letter 'a' in
  * // the English collation rule is \u30A2
  * String jaString = "& \u30A2 , \u30FC < \u30C8";
- * 
- * RuleBasedCollator myJapaneseCollator = 
+ *
+ * RuleBasedCollator myJapaneseCollator =
  *     new RuleBasedCollator(en_USCollator.getRules() + jaString);
  * </pre>
- * 
+ *
  * </blockquote>
- * 
- * @since Android 1.0
  */
 public class RuleBasedCollator extends Collator {
 
@@ -320,7 +289,6 @@ public class RuleBasedCollator extends Collator {
      * @throws ParseException
      *             if {@code rules} contains rules with invalid collation rule
      *             syntax.
-     * @since Android 1.0
      */
     public RuleBasedCollator(String rules) throws ParseException {
         if (rules == null) {
@@ -359,7 +327,6 @@ public class RuleBasedCollator extends Collator {
      * @param source
      *            the source character iterator.
      * @return a {@code CollationElementIterator} for {@code source}.
-     * @since Android 1.0
      */
     public CollationElementIterator getCollationElementIterator(
             CharacterIterator source) {
@@ -377,7 +344,6 @@ public class RuleBasedCollator extends Collator {
      * @param source
      *            the source string.
      * @return the {@code CollationElementIterator} for {@code source}.
-     * @since Android 1.0
      */
     public CollationElementIterator getCollationElementIterator(String source) {
         if (source == null) {
@@ -390,7 +356,7 @@ public class RuleBasedCollator extends Collator {
 
     /**
      * Returns the collation rules of this collator. These {@code rules} can be
-     * fed into the {@link #RuleBasedCollator(String)} constructor.
+     * fed into the {@code RuleBasedCollator(String)} constructor.
      * <p>
      * Note that the {@code rules} are actually interpreted as a delta to the
      * standard Unicode Collation Algorithm (UCA). Hence, an empty {@code rules}
@@ -399,7 +365,6 @@ public class RuleBasedCollator extends Collator {
      * specifications and may result in different behavior.
      *
      * @return the collation rules.
-     * @since Android 1.0
      */
     public String getRules() {
         return ((com.ibm.icu4jni.text.RuleBasedCollator) this.icuColl).getRules();
@@ -411,7 +376,6 @@ public class RuleBasedCollator extends Collator {
      * 
      * @return a shallow copy of this collator.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -431,7 +395,6 @@ public class RuleBasedCollator extends Collator {
      * {@code CollationKey.compareTo(CollationKey)} for the comparisons. If each
      * string is compared to only once, using
      * {@code RuleBasedCollator.compare(String, String)} has better performance.
-     * </p>
      * 
      * @param source
      *            the source text.
@@ -440,7 +403,6 @@ public class RuleBasedCollator extends Collator {
      * @return an integer which may be a negative value, zero, or else a
      *         positive value depending on whether {@code source} is less than,
      *         equivalent to, or greater than {@code target}.
-     * @since Android 1.0
      */
     @Override
     public int compare(String source, String target) {
@@ -457,7 +419,6 @@ public class RuleBasedCollator extends Collator {
      * @param source
      *            the specified source text.
      * @return the {@code CollationKey} for the given source text.
-     * @since Android 1.0
      */
     @Override
     public CollationKey getCollationKey(String source) {
@@ -486,7 +447,6 @@ public class RuleBasedCollator extends Collator {
      * @return {@code true} if the specified object is equal to this
      *         {@code RuleBasedCollator}; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {

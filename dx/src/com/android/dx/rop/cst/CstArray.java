@@ -24,13 +24,13 @@ import com.android.dx.util.FixedSizeList;
  * may be of any type <i>other</i> than {@link CstUtf8}.
  */
 public final class CstArray extends Constant {
-    /** non-null; the actual list of contents */
+    /** {@code non-null;} the actual list of contents */
     private final List list;
     
     /**
      * Constructs an instance.
      *
-     * @param list non-null; the actual list of contents
+     * @param list {@code non-null;} the actual list of contents
      */
     public CstArray(List list) {
         if (list == null) {
@@ -90,7 +90,7 @@ public final class CstArray extends Constant {
     /**
      * Get the underlying list.
      * 
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public List getList() {
         return list;
@@ -103,7 +103,7 @@ public final class CstArray extends Constant {
             extends FixedSizeList implements Comparable<List> {
         /**
          * Constructs an instance. All indices initially contain
-         * <code>null</code>.
+         * {@code null}.
          * 
          * @param size the size of the list
          */
@@ -138,10 +138,10 @@ public final class CstArray extends Constant {
         /**
          * Gets the element at the given index. It is an error to call
          * this with the index for an element which was never set; if you
-         * do that, this will throw <code>NullPointerException</code>.
+         * do that, this will throw {@code NullPointerException}.
          * 
-         * @param n &gt;= 0, &lt; size(); which index
-         * @return non-null; element at that index
+         * @param n {@code >= 0, < size();} which index
+         * @return {@code non-null;} element at that index
          */
         public Constant get(int n) {
             return (Constant) get0(n);
@@ -150,8 +150,8 @@ public final class CstArray extends Constant {
         /**
          * Sets the element at the given index.
          * 
-         * @param n &gt;= 0, &lt; size(); which index
-         * @param a null-ok; the element to set at <code>n</code>
+         * @param n {@code >= 0, < size();} which index
+         * @param a {@code null-ok;} the element to set at {@code n}
          */
         public void set(int n, Constant a) {
             if (a instanceof CstUtf8) {

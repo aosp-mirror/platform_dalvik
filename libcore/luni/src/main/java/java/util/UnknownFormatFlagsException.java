@@ -23,7 +23,6 @@ import org.apache.harmony.luni.util.Msg;
  * an unknown flag.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class UnknownFormatFlagsException extends IllegalFormatException {
 

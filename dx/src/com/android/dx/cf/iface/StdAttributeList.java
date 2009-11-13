@@ -25,7 +25,7 @@ import com.android.dx.util.FixedSizeList;
 public final class StdAttributeList extends FixedSizeList
         implements AttributeList {
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      * 
      * @param size the size of the list
      */
@@ -95,8 +95,8 @@ public final class StdAttributeList extends FixedSizeList
     /**
      * Sets the attribute at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which attribute
-     * @param attribute null-ok; the attribute object
+     * @param n {@code >= 0, < size();} which attribute
+     * @param attribute {@code null-ok;} the attribute object
      */
     public void set(int n, Attribute attribute) {
         set0(n, attribute);

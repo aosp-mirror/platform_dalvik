@@ -20,8 +20,8 @@ package java.lang.reflect;
 /**
  * Indicates that a malformed signature has been encountered via a reflective
  * method.
- *
- * @since Android 1.0
+ * 
+ * @since 1.5
  */
 public class GenericSignatureFormatError extends ClassFormatError {
 
@@ -29,8 +29,6 @@ public class GenericSignatureFormatError extends ClassFormatError {
 
     /**
      * Constructs a new {@code GenericSignatureFormatError} instance.
-     *
-     * @since Android 1.0
      */
     public GenericSignatureFormatError() {
         super();

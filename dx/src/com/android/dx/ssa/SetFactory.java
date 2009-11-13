@@ -59,8 +59,8 @@ public final class SetFactory {
     /**
      * Make IntSet for the dominance-frontier sets.
      *
-     * @param szBlocks &gt;=0; count of basic blocks in method
-     * @return non-null; appropriate set
+     * @param szBlocks {@code >=0;} count of basic blocks in method
+     * @return {@code non-null;} appropriate set
      */
     /*package*/ static IntSet makeDomFrontSet(int szBlocks) {
         return szBlocks <= DOMFRONT_SET_THRESHOLD_SIZE
@@ -72,8 +72,8 @@ public final class SetFactory {
      * Make IntSet for the interference graph sets. Public because
      * InterferenceGraph is in another package.
      *
-     * @param countRegs &gt;=0; count of SSA registers used in method
-     * @return non-null; appropriate set
+     * @param countRegs {@code >=0;} count of SSA registers used in method
+     * @return {@code non-null;} appropriate set
      */
     public static IntSet makeInterferenceSet(int countRegs) {
         return countRegs <= INTERFERENCE_SET_THRESHOLD_SIZE
@@ -84,8 +84,8 @@ public final class SetFactory {
     /**
      * Make IntSet for register live in/out sets.
      *
-     * @param countRegs &gt;=0; count of SSA registers used in method
-     * @return non-null; appropriate set
+     * @param countRegs {@code >=0;} count of SSA registers used in method
+     * @return {@code non-null;} appropriate set
      */
     /*package*/ static IntSet makeLivenessSet(int countRegs) {
         return countRegs <= LIVENESS_SET_THRESHOLD_SIZE

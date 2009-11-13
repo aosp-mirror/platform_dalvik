@@ -87,17 +87,18 @@ public class Main {
                     String argParam = arg.substring(arg.indexOf('=') + 1);
 
                     try {
-                        for (String p: argParam.split(",")) {
+                        for (String p : argParam.split(",")) {
                             eTypes.add(ElementType.valueOf(p.toUpperCase()));
                         }
                     } catch (IllegalArgumentException ex) {
-                        throw new InvalidArgumentException("invalid --element");
+                        throw new InvalidArgumentException(
+                                "invalid --element");
                     }
                 } else if (arg.startsWith("--print=")) {
                     String argParam = arg.substring(arg.indexOf('=') + 1);
 
                     try {
-                        for (String p: argParam.split(",")) {
+                        for (String p : argParam.split(",")) {
                             printTypes.add(PrintType.valueOf(p.toUpperCase()));
                         }
                     } catch (IllegalArgumentException ex) {

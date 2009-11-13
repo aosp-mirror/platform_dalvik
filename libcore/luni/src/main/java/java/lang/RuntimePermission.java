@@ -23,8 +23,6 @@ import java.security.BasicPermission;
  * Represents the permission to execute a runtime-related function. There is no
  * action list associated with a {@code RuntimePermission}; the user either has
  * the permission or he doesn't.
- * 
- * @since Android 1.0
  */
 public final class RuntimePermission extends BasicPermission {
 
@@ -83,7 +81,6 @@ public final class RuntimePermission extends BasicPermission {
      * 
      * @param permissionName
      *            the name of the new permission.
-     * @since Android 1.0
      */
     public RuntimePermission(String permissionName) {
         super(permissionName);
@@ -97,7 +94,6 @@ public final class RuntimePermission extends BasicPermission {
      *            the name of the new permission.
      * @param actions
      *            ignored.
-     * @since Android 1.0
      */
     public RuntimePermission(String name, String actions) {
         super(name, actions);

@@ -37,17 +37,13 @@ import java.util.NoSuchElementException;
  * While {@code ZipInputStream} provides stream based read access to a
  * <i>ZIP-archive</i>, this class implements more efficient (file based) access
  * and makes use of the <i>central directory</i> within a <i>ZIP-archive</i>.
- * </p>
  * <p>
  * Use {@code ZipOutputStream} if you want to create an archive.
- * </p>
  * <p>
  * A temporary ZIP file can be marked for automatic deletion upon closing it.
- * </p>
- * 
+ *
  * @see ZipEntry
  * @see ZipOutputStream
- * @since Android 1.0
  */
 public class ZipFile implements ZipConstants {
 
@@ -57,28 +53,23 @@ public class ZipFile implements ZipConstants {
 
     /**
      * Open zip file for read.
-     * 
-     * @since Android 1.0
      */
     public static final int OPEN_READ = 1;
 
     /**
      * Delete zip file when closed.
-     * 
-     * @since Android 1.0
      */
     public static final int OPEN_DELETE = 4;
 
     /**
      * Constructs a new {@code ZipFile} with the specified file.
-     * 
+     *
      * @param file
      *            the file to read from.
      * @throws ZipException
      *             if a ZIP error occurs.
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     public ZipFile(File file) throws ZipException, IOException {
         this(file, OPEN_READ);
@@ -88,22 +79,31 @@ public class ZipFile implements ZipConstants {
      * Opens a file as <i>ZIP-archive</i>. "mode" must be {@code OPEN_READ} or
      * {@code OPEN_DELETE} . The latter sets the "delete on exit" flag through a
      * file.
-     * 
+     *
      * @param file
      *            the ZIP file to read.
      * @param mode
      *            the mode of the file open operation.
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     public ZipFile(File file, int mode) throws IOException {
-        if (mode == (OPEN_READ | OPEN_DELETE))
-            fileToDeleteOnClose = file; // file.deleteOnExit();
-        else if (mode != OPEN_READ)
-            throw new IllegalArgumentException("invalid mode");
-
         fileName = file.getPath();
+        if (mode == OPEN_READ || mode == (OPEN_READ | OPEN_DELETE)) {
+            SecurityManager security = System.getSecurityManager();
+            if (security != null) {
+                security.checkRead(fileName);
+            }
+            if ((mode & OPEN_DELETE) != 0) {
+                if (security != null) {
+                    security.checkDelete(fileName);
+                }
+                fileToDeleteOnClose = file; // file.deleteOnExit();
+            }
+        } else {
+            throw new IllegalArgumentException();
+        }
+
         mRaf = new RandomAccessFile(fileName, "r");
 
         mEntryList = new ArrayList<ZipEntry>();
@@ -124,12 +124,11 @@ public class ZipFile implements ZipConstants {
 
     /**
      * Opens a ZIP archived file.
-     * 
+     *
      * @param name
      *            the name of the ZIP file.
      * @throws IOException
      *             if an IOException occurs.
-     * @since Android 1.0
      */
     public ZipFile(String name) throws IOException {
         this(new File(name), OPEN_READ);
@@ -142,10 +141,9 @@ public class ZipFile implements ZipConstants {
 
     /**
      * Closes this ZIP file.
-     * 
+     *
      * @throws IOException
      *             if an IOException occurs.
-     * @since Android 1.0
      */
     public void close() throws IOException {
         RandomAccessFile raf = mRaf;
@@ -171,9 +169,8 @@ public class ZipFile implements ZipConstants {
     /**
      * Returns an enumeration of the entries. The entries are listed in the
      * order in which they appear in the ZIP archive.
-     * 
+     *
      * @return the enumeration of the entries.
-     * @since Android 1.0
      */
     public Enumeration<? extends ZipEntry> entries() {
         return new Enumeration<ZipEntry>() {
@@ -195,12 +192,11 @@ public class ZipFile implements ZipConstants {
 
     /**
      * Gets the ZIP entry with the specified name from this {@code ZipFile}.
-     * 
+     *
      * @param entryName
      *            the name of the entry in the ZIP file.
      * @return a {@code ZipEntry} or {@code null} if the entry name does not
      *         exist in the ZIP file.
-     * @since Android 1.0
      */
     public ZipEntry getEntry(String entryName) {
         if (entryName != null) {
@@ -213,13 +209,12 @@ public class ZipFile implements ZipConstants {
 
     /**
      * Returns an input stream on the data of the specified {@code ZipEntry}.
-     * 
+     *
      * @param entry
      *            the ZipEntry.
      * @return an input stream of the data contained in the {@code ZipEntry}.
      * @throws IOException
      *             if an {@code IOException} occurs.
-     * @since Android 1.0
      */
     public InputStream getInputStream(ZipEntry entry) throws IOException {
         /*
@@ -259,9 +254,8 @@ public class ZipFile implements ZipConstants {
 
     /**
      * Gets the file name of this {@code ZipFile}.
-     * 
+     *
      * @return the file name of this {@code ZipFile}.
-     * @since Android 1.0
      */
     public String getName() {
         return fileName;
@@ -269,9 +263,8 @@ public class ZipFile implements ZipConstants {
 
     /**
      * Returns the number of {@code ZipEntries} in this {@code ZipFile}.
-     * 
+     *
      * @return the number of entries in this file.
-     * @since Android 1.0
      */
     public int size() {
         return mEntryList.size();

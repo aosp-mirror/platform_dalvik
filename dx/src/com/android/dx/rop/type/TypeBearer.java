@@ -26,40 +26,40 @@ public interface TypeBearer
     /**
      * Gets the type associated with this instance.
      *
-     * @return non-null; the type
+     * @return {@code non-null;} the type
      */
     public Type getType();
 
     /**
      * Gets the frame type corresponding to this type. This method returns
-     * <code>this</code>, except if {@link Type#isIntlike} on the underlying
-     * type returns <code>true</code> but the underlying type is not in
+     * {@code this}, except if {@link Type#isIntlike} on the underlying
+     * type returns {@code true} but the underlying type is not in
      * fact {@link Type#INT}, in which case this method returns an instance
-     * whose underlying type <i>is</i> <code>INT</code>.
+     * whose underlying type <i>is</i> {@code INT}.
      *
-     * @return non-null; the frame type for this instance
+     * @return {@code non-null;} the frame type for this instance
      */
     public TypeBearer getFrameType();
 
     /**
      * Gets the basic type corresponding to this instance.
      *
-     * @return the basic type; one of the <code>BT_*</code> constants
+     * @return the basic type; one of the {@code BT_*} constants
      * defined by {@link Type}
      */
     public int getBasicType();
 
     /**
      * Gets the basic type corresponding to this instance's frame type. This
-     * is equivalent to <code>getFrameType().getBasicType()</code>, and
-     * is the same as calling <code>getFrameType()</code> unless this
+     * is equivalent to {@code getFrameType().getBasicType()}, and
+     * is the same as calling {@code getFrameType()} unless this
      * instance is an int-like type, in which case this method returns
-     * <code>BT_INT</code>.
+     * {@code BT_INT}.
      * 
      * @see #getBasicType
      * @see #getFrameType
      * 
-     * @return the basic frame type; one of the <code>BT_*</code> constants
+     * @return the basic frame type; one of the {@code BT_*} constants
      * defined by {@link Type}
      */
     public int getBasicFrameType();
@@ -67,8 +67,8 @@ public interface TypeBearer
     /**
      * Returns whether this instance represents a constant value.
      * 
-     * @return <code>true</code> if this instance represents a constant value
-     * and <code>false</code> if not
+     * @return {@code true} if this instance represents a constant value
+     * and {@code false} if not
      */
     public boolean isConstant();
 }

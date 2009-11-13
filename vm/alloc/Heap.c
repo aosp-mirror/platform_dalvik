@@ -27,6 +27,8 @@
 #include "utils/threads.h"      // need Android thread priorities
 #define kInvalidPriority        10000
 
+#include <cutils/sched_policy.h>
+
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <limits.h>
@@ -148,15 +150,21 @@ void dvmHeapShutdown()
 
 /*
  * We've been asked to allocate something we can't, e.g. an array so
- * large that (length * elementWidth) is larger than 2^31.  We want to
- * throw an OutOfMemoryError, but doing so implies that certain other
- * actions have taken place (like clearing soft references).
+ * large that (length * elementWidth) is larger than 2^31.
  *
- * TODO: for now we just throw an InternalError.
+ * _The Java Programming Language_, 4th edition, says, "you can be sure
+ * that all SoftReferences to softly reachable objects will be cleared
+ * before an OutOfMemoryError is thrown."
+ *
+ * It's unclear whether that holds for all situations where an OOM can
+ * be thrown, or just in the context of an allocation that fails due
+ * to lack of heap space.  For simplicity we just throw the exception.
+ *
+ * (OOM due to actually running out of space is handled elsewhere.)
  */
 void dvmThrowBadAllocException(const char* msg)
 {
-    dvmThrowException("Ljava/lang/InternalError;", msg);
+    dvmThrowException("Ljava/lang/OutOfMemoryError;", msg);
 }
 
 /*
@@ -174,6 +182,7 @@ bool dvmLockHeap()
         if (self != NULL) {
             oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
         } else {
+            LOGI("ODD: waiting on heap lock, no self\n");
             oldStatus = -1; // shut up gcc
         }
 
@@ -776,7 +785,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
          */
 
         if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
-            dvmChangeThreadSchedulerGroup(NULL);
+            set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
         }
 
         if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
@@ -867,7 +876,10 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
 
     /* Set up the marking context.
      */
-    dvmHeapBeginMarkStep();
+    if (!dvmHeapBeginMarkStep()) {
+        LOGE_HEAP("dvmHeapBeginMarkStep failed; aborting\n");
+        dvmAbort();
+    }
 
     /* Mark the set of objects that are strongly reachable from the roots.
      */
@@ -1026,7 +1038,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
         }
 
         if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
-            dvmChangeThreadSchedulerGroup("bg_non_interactive");
+            set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
         }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;

@@ -40,12 +40,47 @@ if exist %frameworkdir%%jarfile% goto JarFileOk
 set jarpath=%frameworkdir%%jarfile%
 
 set javaOpts=
+set args=
 
-REM If you want DX to have more memory when executing, uncomment the
-REM following line and adjust the value accordingly. Use "java -X" for
-REM a list of options you can pass here.
-REM 
-REM set javaOpts=-Xmx256M
+REM By default, give dx a max heap size of 1 gig. This can be overridden
+REM by using a "-JXmx..." option (see below).
+set defaultMx=-Xmx1024M
 
-call java %javaOpts% -Djava.ext.dirs=%frameworkdir% -jar %jarpath% %*
+REM capture all arguments to process them below
+set params=%*
+
+:nextArg
+if "%params%"=="" goto endArgs
+    REM Note: advanced substitions don't work on %1..%N. We need to assign to
+    REM a variable first.
+    REM We also can't use %1..%N directly because an option such as --output=name
+    REM gets automagically converted into %1=--output and %2=name (yes, really!)
+    REM Instead we manually extract the first token from the params variable.
+    for /F "tokens=1*" %%a in ("%params%") do call :getArg "%%a" "%%b"
+
+    if "%defaultMx%"=="" goto notXmx
+    if "%A:~0,5%" NEQ "-JXmx" goto notXmx
+        set defaultMx=
+    :notXmx
+
+    if "%A:~0,2%" NEQ "-J" goto notJ
+        set javaOpts=%javaOpts% -%A:~2%
+        goto nextArg
+
+    :notJ
+        set args=%args% %A%
+        goto nextArg
+
+:getArg
+    REM this subroutine is called by the for /F with the first argument of params
+    REM and the rest of the line. The "goto :eof" actually exits the subroutine.
+    set A=%~1
+    set params=%~2
+    goto :eof
+
+:endArgs
+
+set javaOpts=%javaOpts% %defaultMx%
+
+call java %javaOpts% -Djava.ext.dirs=%frameworkdir% -jar %jarpath% %args%
 

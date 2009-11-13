@@ -109,7 +109,7 @@ public class IndexedPKIXParameters extends PKIXParameters {
             if (anchor != null) {
                 return anchor;
             }
-        } catch (Exception e) { 
+        } catch (Exception e) {
             Logger.getLogger(IndexedPKIXParameters.class.getName()).log(
                     Level.WARNING, "Error encoding cert.", e);
         }
@@ -122,6 +122,21 @@ public class IndexedPKIXParameters extends PKIXParameters {
         }
 
         return null;
+    }
+
+    /**
+     * Returns true if the given certificate is found in the trusted key
+     * store.
+     */
+    public boolean isDirectlyTrusted(X509Certificate cert) {
+        try {
+            Bytes encoded = new Bytes(cert.getEncoded());
+            return encodings.containsKey(encoded);
+        } catch (Exception e) {
+            Logger.getLogger(IndexedPKIXParameters.class.getName()).log(
+                    Level.WARNING, "Error encoding cert.", e);
+            return false;
+        }
     }
 
     /**

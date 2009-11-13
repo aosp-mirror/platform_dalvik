@@ -30,10 +30,22 @@ import java.io.IOException;
  */
 public interface IMemorySystem {
 
+    /**
+     * The constant representing read-only access to data in a memory map
+     * request.
+     */
     public final int MMAP_READ_ONLY = 1;
 
+    /**
+     * The constant representing read-write access to data in a memory map
+     * request.
+     */
     public final int MMAP_READ_WRITE = 2;
 
+    /**
+     * The constant representing copy-on-write access to data in a memory map
+     * request.
+     */
     public final int MMAP_WRITE_COPY = 4;
 
     /**
@@ -243,7 +255,17 @@ public interface IMemorySystem {
             throws NullPointerException, IndexOutOfBoundsException;
     // END android-added
 
-    // Primitive get & set methods
+    /**
+     * Returns the value of a single byte at the given address.
+     * <p>
+     * The behavior is unspecified if <code>address</code> is not in the range
+     * that was previously allocated using <code>malloc()</code>.
+     * </p>
+     *
+     * @param address
+     *            the address at which to get the byte value.
+     * @return the value of the byte.
+     */
     public byte getByte(int address);
 
     /**
@@ -275,6 +297,21 @@ public interface IMemorySystem {
      */
     public short getShort(int address);
 
+    /**
+     * Gets the value of the signed two-byte integer stored in the given byte
+     * order at the given address.
+     * <p>
+     * The behavior is unspecified if <code>(address ... address + 2)</code> is
+     * not wholly within the range that was previously allocated using
+     * <code>malloc()</code>.
+     * </p>
+     *
+     * @param address
+     *            the platform address of the start of the two-byte value.
+     * @param endianness
+     *            the required interpretation of the short endianness.
+     * @return the value of the two-byte integer as a Java <code>short</code>.
+     */
     public short getShort(int address, Endianness endianness);
 
     /**
@@ -474,17 +511,25 @@ public interface IMemorySystem {
     public void setAddress(int address, int value);
 
     /**
-     * TODO: JavaDoc
-     * 
+     * Map file content into memory.
+     *
      * @param fileDescriptor
+     *            a handle to the file that is to be memory mapped.
      * @param alignment
+     *            the offset in the file where the mapping should begin.
      * @param size
+     *            the number of bytes that are requested to map.
      * @param mapMode
-     * @return
+     *            the desired access mode as defined by one of the constants
+     *            {@link IMemorySystem#MMAP_READ_ONLY},
+     *            {@link IMemorySystem#MMAP_READ_WRITE},
+     *            {@link IMemorySystem#MMAP_WRITE_COPY}
+     * @return the start address of the mapped memory area.
      * @throws IOException
+     *             if an exception occurs mapping the file into memory.
      */
-    public int mmap(int fileDescriptor, long alignment, long size,
-            int mapMode) throws IOException;
+    public int mmap(int fileDescriptor, long alignment, long size,  int mapMode)
+            throws IOException;
 
     /**
      * TODO: JavaDoc

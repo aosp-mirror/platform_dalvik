@@ -51,23 +51,23 @@ import java.io.IOException;
  * Parser for annotations.
  */
 public final class AnnotationParser {
-    /** non-null; class file being parsed */
+    /** {@code non-null;} class file being parsed */
     private final DirectClassFile cf;
 
-    /** non-null; constant pool to use */
+    /** {@code non-null;} constant pool to use */
     private final ConstantPool pool;
 
-    /** non-null; bytes of the attribute data */
+    /** {@code non-null;} bytes of the attribute data */
     private final ByteArray bytes;
 
-    /** null-ok; parse observer, if any */
+    /** {@code null-ok;} parse observer, if any */
     private final ParseObserver observer;
 
-    /** non-null; input stream to parse from */
+    /** {@code non-null;} input stream to parse from */
     private final ByteArray.MyDataInputStream input;
 
     /**
-     * non-null; cursor for use when informing the observer of what
+     * {@code non-null;} cursor for use when informing the observer of what
      * was parsed
      */
     private int parseCursor;
@@ -75,10 +75,10 @@ public final class AnnotationParser {
     /**
      * Constructs an instance.
      * 
-     * @param cf non-null; class file to parse from
-     * @param offset &gt;= 0; offset into the class file data to parse at
-     * @param length &gt;= 0; number of bytes left in the attribute data
-     * @param observer null-ok; parse observer to notify, if any
+     * @param cf {@code non-null;} class file to parse from
+     * @param offset {@code >= 0;} offset into the class file data to parse at
+     * @param length {@code >= 0;} number of bytes left in the attribute data
+     * @param observer {@code null-ok;} parse observer to notify, if any
      */
     public AnnotationParser(DirectClassFile cf, int offset, int length,
             ParseObserver observer) {
@@ -95,9 +95,9 @@ public final class AnnotationParser {
     }
     
     /**
-     * Parses an annotation value (<code>element_value</code>) attribute.
+     * Parses an annotation value ({@code element_value}) attribute.
      * 
-     * @return non-null; the parsed constant value
+     * @return {@code non-null;} the parsed constant value
      */
     public Constant parseValueAttribute() {
         Constant result;
@@ -119,8 +119,8 @@ public final class AnnotationParser {
     /**
      * Parses a parameter annotation attribute.
      * 
-     * @param visibility non-null; visibility of the parsed annotations
-     * @return non-null; the parsed list of lists of annotations
+     * @param visibility {@code non-null;} visibility of the parsed annotations
+     * @return {@code non-null;} the parsed list of lists of annotations
      */
     public AnnotationsList parseParameterAttribute(
             AnnotationVisibility visibility) {
@@ -143,8 +143,8 @@ public final class AnnotationParser {
     /**
      * Parses an annotation attribute, per se.
      * 
-     * @param visibility non-null; visibility of the parsed annotations
-     * @return non-null; the list of annotations read from the attribute
+     * @param visibility {@code non-null;} visibility of the parsed annotations
+     * @return {@code non-null;} the list of annotations read from the attribute
      * data
      */
     public Annotations parseAnnotationAttribute(
@@ -168,8 +168,8 @@ public final class AnnotationParser {
     /**
      * Parses a list of annotation lists.
      * 
-     * @param visibility non-null; visibility of the parsed annotations
-     * @return non-null; the list of annotation lists read from the attribute
+     * @param visibility {@code non-null;} visibility of the parsed annotations
+     * @return {@code non-null;} the list of annotation lists read from the attribute
      * data
      */
     private AnnotationsList parseAnnotationsList(
@@ -203,8 +203,8 @@ public final class AnnotationParser {
     /**
      * Parses an annotation list.
      * 
-     * @param visibility non-null; visibility of the parsed annotations
-     * @return non-null; the list of annotations read from the attribute
+     * @param visibility {@code non-null;} visibility of the parsed annotations
+     * @return {@code non-null;} the list of annotations read from the attribute
      * data
      */
     private Annotations parseAnnotations(AnnotationVisibility visibility)
@@ -238,8 +238,8 @@ public final class AnnotationParser {
     /**
      * Parses a single annotation.
      * 
-     * @param visibility non-null; visibility of the parsed annotation
-     * @return non-null; the parsed annotation
+     * @param visibility {@code non-null;} visibility of the parsed annotation
+     * @return {@code non-null;} the parsed annotation
      */
     private Annotation parseAnnotation(AnnotationVisibility visibility)
             throws IOException {
@@ -278,7 +278,7 @@ public final class AnnotationParser {
     /**
      * Parses a {@link NameValuePair}.
      * 
-     * @return non-null; the parsed element
+     * @return {@code non-null;} the parsed element
      */
     private NameValuePair parseElement() throws IOException {
         requireLength(5);
@@ -304,7 +304,7 @@ public final class AnnotationParser {
     /**
      * Parses an annotation value.
      * 
-     * @return non-null; the parsed value
+     * @return {@code non-null;} the parsed value
      */
     private Constant parseValue() throws IOException {
         int tag = input.readUnsignedByte();
@@ -421,7 +421,7 @@ public final class AnnotationParser {
      * Helper for {@link #parseValue}, which parses a constant reference
      * and returns the referred-to constant value.
      * 
-     * @return non-null; the parsed value
+     * @return {@code non-null;} the parsed value
      */
     private Constant parseConstant() throws IOException {
         int constValueIndex = input.readUnsignedShort();
@@ -454,8 +454,8 @@ public final class AnnotationParser {
      * only be used (for efficiency sake) if the parse is known to be
      * observed.
      * 
-     * @param length &gt;= 0; number of bytes parsed
-     * @param message non-null; associated message
+     * @param length {@code >= 0;} number of bytes parsed
+     * @param message {@code non-null;} associated message
      */
     private void parsed(int length, String message) {
         observer.parsed(bytes, parseCursor, length, message);
@@ -464,7 +464,7 @@ public final class AnnotationParser {
 
     /**
      * Convenience wrapper that simply calls through to
-     * <code>observer.changeIndent()</code>.
+     * {@code observer.changeIndent()}.
      * 
      * @param indent the amount to change the indent by
      */

@@ -26,21 +26,13 @@ package java.io;
  * from this class.
  * 
  * @see FilterOutputStream
- * 
- * @since Android 1.0
  */
 public class FilterInputStream extends InputStream {
 
-    // BEGIN android-changed
-    // The underlying input stream address should not be cached in a register.
-    // This was changed to be more close to the RI.
     /**
      * The source input stream that is filtered.
-     * 
-     * @since Android 1.0
      */
     protected volatile InputStream in;
-    // END android-changed
 
     /**
      * Constructs a new {@code FilterInputStream} with the specified input
@@ -48,7 +40,6 @@ public class FilterInputStream extends InputStream {
      * 
      * @param in
      *            the non-null InputStream to filter reads on.
-     * @since Android 1.0
      */
     protected FilterInputStream(InputStream in) {
         super();
@@ -57,12 +48,11 @@ public class FilterInputStream extends InputStream {
 
     /**
      * Returns the number of bytes that are available before this stream will
-     * block. 
-     *  
+     * block.
+     *
      * @return the number of bytes available before blocking.
      * @throws IOException
      *             if an error occurs in this stream.
-     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -74,7 +64,6 @@ public class FilterInputStream extends InputStream {
      * 
      * @throws IOException
      *             if an error occurs while closing this stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -88,14 +77,12 @@ public class FilterInputStream extends InputStream {
      * position, provided that {@code readlimit} has not been surpassed.
      * <p>
      * This implementation sets a mark in the filtered stream.
-     * </p>
-     * 
+     *
      * @param readlimit
      *            the number of bytes that can be read from this stream before
      *            the mark is invalidated.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public synchronized void mark(int readlimit) {
@@ -112,7 +99,6 @@ public class FilterInputStream extends InputStream {
      * @see #mark(int)
      * @see #reset()
      * @see #skip(long)
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -128,7 +114,6 @@ public class FilterInputStream extends InputStream {
      *         reached.
      * @throws IOException
      *             if the stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -147,7 +132,6 @@ public class FilterInputStream extends InputStream {
      *         filtered stream has been reached while reading.
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer) throws IOException {
@@ -172,7 +156,6 @@ public class FilterInputStream extends InputStream {
      *         filtered stream has been reached while reading.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer, int offset, int count) throws IOException {
@@ -189,7 +172,6 @@ public class FilterInputStream extends InputStream {
      *             bytes have been read since setting the mark.
      * @see #mark(int)
      * @see #markSupported()
-     * @since Android 1.0
      */
     @Override
     public synchronized void reset() throws IOException {
@@ -208,12 +190,10 @@ public class FilterInputStream extends InputStream {
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
      * @see #mark(int)
-     * @see #reset()  
-     * @since Android 1.0          
+     * @see #reset()
      */
     @Override
     public long skip(long count) throws IOException {
         return in.skip(count);
     }
 }
-

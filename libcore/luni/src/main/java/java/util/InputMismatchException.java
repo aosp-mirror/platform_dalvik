@@ -24,13 +24,12 @@ import java.io.Serializable;
  * 
  * @see Scanner
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class InputMismatchException extends NoSuchElementException implements
         Serializable {
 
-    static final long serialVersionUID = 8811230760997066428L;
-    
+    private static final long serialVersionUID = 8811230760997066428L;
+
     /**
      * Constructs a new {@code InputMismatchException} with the current stack
      * trace filled in.

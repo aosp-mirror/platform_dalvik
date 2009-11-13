@@ -19,12 +19,11 @@ package java.util;
 /**
  * The unchecked exception will be thrown out if there are duplicate flags given
  * out in the format specifier.
- * 
+ *
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class DuplicateFormatFlagsException extends IllegalFormatException {
-    
+
     private static final long serialVersionUID = 18890531L;
 
     private String flags;

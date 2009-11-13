@@ -25,7 +25,6 @@ package java.net;
  * 
  * @see SocketImpl
  * @see DatagramSocketImpl
- * @since Android 1.0
  */
 public interface SocketOptions {
 
@@ -38,8 +37,6 @@ public interface SocketOptions {
      * during this timeout the socket is closed normally otherwise forcefully.
      * Valid values for this option are in the range {@code 0 <= SO_LINGER <=
      * 65535}.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_LINGER = 128;
 
@@ -47,8 +44,6 @@ public interface SocketOptions {
      * Timeout for blocking operations. The argument value is specified in
      * milliseconds. An {@code InterruptedIOException} is thrown if this timeout
      * expires.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_TIMEOUT = 4102;
 
@@ -57,8 +52,6 @@ public interface SocketOptions {
      * a side-effect though, this could lead to a low packet efficiency. The
      * socket implementation uses the Nagle's algorithm to try to reach a higher
      * packet efficiency if this option is disabled.
-     * 
-     * @since Android 1.0
      */
     public static final int TCP_NODELAY = 1;
 
@@ -69,8 +62,6 @@ public interface SocketOptions {
     /**
      * This option specifies the interface which is used to send multicast
      * packets. It's only available on a {@code MulticastSocket}.
-     * 
-     * @since Android 1.0
      */
     public static final int IP_MULTICAST_IF = 16;
 
@@ -78,8 +69,6 @@ public interface SocketOptions {
      * This option can be used to set one specific interface on a multihomed
      * host on which incoming connections are accepted. It's only available on
      * server-side sockets.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_BINDADDR = 15;
 
@@ -87,8 +76,6 @@ public interface SocketOptions {
      * This option specifies whether a reuse of a local address is allowed even
      * if an other socket is not yet removed by the operating system. It's only
      * available on a {@code MulticastSocket}.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_REUSEADDR = 4;
 
@@ -96,15 +83,11 @@ public interface SocketOptions {
     
     /**
      * Buffer size of the outgoing channel.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_SNDBUF = 4097;
 
     /**
      * Buffer size of the incoming channel.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_RCVBUF = 4098;
 
@@ -113,16 +96,12 @@ public interface SocketOptions {
     /**
      * This option specifies whether socket implementations can send keepalive
      * messages if no data has been sent for a longer time.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_KEEPALIVE = 8;
     
     /**
      * This option specifies the value for the Type-of-Service (TOS) field of
      * the IP header.
-     * 
-     * @since Android 1.0
      */
     public static final int IP_TOS = 3;
     
@@ -130,23 +109,17 @@ public interface SocketOptions {
      * This option specifies whether the local loopback of multicast packets is
      * enabled or disabled. This option is enabled by default on multicast
      * sockets.
-     * 
-     * @since Android 1.0
      */
     public static final int IP_MULTICAST_LOOP = 18;
     
     /**
      * This option can be used to enable broadcasting on datagram sockets.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_BROADCAST = 32;
     
     /**
      * This option specifies whether sending TCP urgent data is supported on
      * this socket or not.
-     * 
-     * @since Android 1.0
      */
     public static final int SO_OOBINLINE = 4099;
     
@@ -155,8 +128,6 @@ public interface SocketOptions {
      * host on which incoming connections are accepted. It's only available on
      * server-side sockets. This option supports setting outgoing interfaces
      * with either IPv4 or IPv6 addresses.
-     * 
-     * @since Android 1.0
      */
     public static final int IP_MULTICAST_IF2 = 31;
 
@@ -168,7 +139,6 @@ public interface SocketOptions {
      *            the option identifier.
      * @throws SocketException
      *             if an error occurs reading the option value.
-     * @since Android 1.0
      */
     public Object getOption(int optID) throws SocketException;
 
@@ -181,7 +151,6 @@ public interface SocketOptions {
      *            the value to be set for the option.
      * @throws SocketException
      *             if an error occurs setting the option value.
-     * @since Android 1.0
      */
     public void setOption(int optID, Object val) throws SocketException;
 }

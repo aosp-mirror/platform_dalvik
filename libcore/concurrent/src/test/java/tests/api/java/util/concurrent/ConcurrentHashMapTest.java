@@ -16,59 +16,16 @@ import java.io.*;
 
 public class ConcurrentHashMapTest extends JSR166TestCase{
     public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());        
+        junit.textui.TestRunner.run (suite());
     }
     public static Test suite() {
         return new TestSuite(ConcurrentHashMapTest.class);
     }
-    // BEGIN android-added
-    static class MyConcurrentHashMap<V, K> extends ConcurrentHashMap<K, V>
-            implements Cloneable {
-
-        public MyConcurrentHashMap() {
-            super();
-        }
-
-        public MyConcurrentHashMap(int initialCapacity, float loadFactor,
-                int concurrencyLevel) {
-            super(initialCapacity, loadFactor, concurrencyLevel);
-        }
-
-        public MyConcurrentHashMap(int initialCapacity) {
-            super(initialCapacity);
-        }
-
-        public MyConcurrentHashMap(Map<? extends K, ? extends V> t) {
-            super(t);
-        }
-
-        @Override
-        protected Object clone() throws CloneNotSupportedException {
-            return super.clone();
-        }
-
-    }
 
     /**
      * Create a map from Integers 1-5 to Strings "A"-"E".
      */
-    private static MyConcurrentHashMap myMap5() {
-        MyConcurrentHashMap map = new MyConcurrentHashMap(5);
-        assertTrue(map.isEmpty());
-        map.put(one, "A");
-        map.put(two, "B");
-        map.put(three, "C");
-        map.put(four, "D");
-        map.put(five, "E");
-        assertFalse(map.isEmpty());
-        assertEquals(5, map.size());
-        return map;
-    }
-    // END android-added
-    /**
-     * Create a map from Integers 1-5 to Strings "A"-"E".
-     */
-    private static ConcurrentHashMap map5() {   
+    private static ConcurrentHashMap map5() {
         ConcurrentHashMap map = new ConcurrentHashMap(5);
         assertTrue(map.isEmpty());
         map.put(one, "A");
@@ -111,7 +68,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         assertTrue(map.contains("A"));
         assertFalse(map.contains("Z"));
     }
-    
+
     /**
      *  containsKey returns true for contained key
      */
@@ -126,8 +83,8 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
      */
     public void testContainsValue() {
         ConcurrentHashMap map = map5();
-        assertTrue(map.contains("A"));
-        assertFalse(map.contains("Z"));
+	assertTrue(map.containsValue("A"));
+        assertFalse(map.containsValue("Z"));
     }
 
     /**
@@ -143,21 +100,6 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             e.nextElement();
         }
         assertEquals(5, count);
-    }
-
-    /**
-     *   Clone creates an equal map
-     */
-    public void testClone() {
-        // BEGIN android-changed
-        MyConcurrentHashMap map =myMap5();
-        try {
-            MyConcurrentHashMap m2 = (MyConcurrentHashMap)(map.clone());
-            assertEquals(map, m2);
-        } catch (CloneNotSupportedException e) {
-            fail("clone not supported");
-        }
-        // END android-changed
     }
 
     /**
@@ -210,6 +152,49 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
     }
 
     /**
+     *  keySet.toArray returns contains all keys
+     */
+    public void testKeySetToArray() {
+        ConcurrentHashMap map = map5();
+	Set s = map.keySet();
+        Object[] ar = s.toArray();
+        assertTrue(s.containsAll(Arrays.asList(ar)));
+	assertEquals(5, ar.length);
+        ar[0] = m10;
+        assertFalse(s.containsAll(Arrays.asList(ar)));
+    }
+
+    /**
+     *  Values.toArray contains all values
+     */
+    public void testValuesToArray() {
+        ConcurrentHashMap map = map5();
+	Collection v = map.values();
+        Object[] ar = v.toArray();
+        ArrayList s = new ArrayList(Arrays.asList(ar));
+	assertEquals(5, ar.length);
+	assertTrue(s.contains("A"));
+	assertTrue(s.contains("B"));
+	assertTrue(s.contains("C"));
+	assertTrue(s.contains("D"));
+	assertTrue(s.contains("E"));
+    }
+
+    /**
+     *  entrySet.toArray contains all entries
+     */
+    public void testEntrySetToArray() {
+        ConcurrentHashMap map = map5();
+	Set s = map.entrySet();
+        Object[] ar = s.toArray();
+        assertEquals(5, ar.length);
+        for (int i = 0; i < 5; ++i) {
+            assertTrue(map.containsKey(((Map.Entry)(ar[i])).getKey()));
+            assertTrue(map.containsValue(((Map.Entry)(ar[i])).getValue()));
+        }
+    }
+
+    /**
      * values collection contains all values
      */
     public void testValues() {
@@ -233,7 +218,7 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         Iterator it = s.iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry) it.next();
-            assertTrue( 
+            assertTrue(
                        (e.getKey().equals(one) && e.getValue().equals("A")) ||
                        (e.getKey().equals(two) && e.getValue().equals("B")) ||
                        (e.getKey().equals(three) && e.getValue().equals("C")) ||
@@ -357,12 +342,12 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
         for (int i = 1; i <= 5; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
     // Exception tests
-    
+
     /**
-     * Cannot create with negative capacity 
+     * Cannot create with negative capacity
      */
     public void testConstructor1() {
         try {
@@ -558,6 +543,19 @@ public class ConcurrentHashMapTest extends JSR166TestCase{
             c.remove(null, "whatever");
             shouldThrow();
         } catch(NullPointerException e){}
+    }
+
+    /**
+     * remove(x, null) returns false
+     */
+    public void testRemove3() {
+        try {
+            ConcurrentHashMap c = new ConcurrentHashMap(5);
+            c.put("sadsdf", "asdads");
+            assertFalse(c.remove("sadsdf", null));
+        } catch(NullPointerException e){
+            fail();
+        }
     }
 
     /**

@@ -23,8 +23,10 @@ import java.util.Map;
  * A connection represents a link from a Java application to a database. All SQL
  * statements and results are returned within the context of a connection.
  * Database statements that are executed within this context form a
- * database session which forms one or more closed transactions. Especially In distributed applications, multiple concurrent connections may exist accessing the same values of the database.
- * which may lead to the following phenomena (referred to as <i>transaction isolation levels</i>):
+ * database session which forms one or more closed transactions. Especially in
+ * distributed applications, multiple concurrent connections may exist accessing
+ * the same values of the database. which may lead to the following phenomena
+ * (referred to as <i>transaction isolation levels</i>):
  * <ul>
  * <li><i>dirty reads</i>:<br>
  * reading values from table rows that are not committed.</br></li>
@@ -36,15 +38,11 @@ import java.util.Map;
  * because other transactions have inserted additional rows that satisfy an
  * SQL {@code WHERE} clause</br></li>
  * </ul>
- *  
- * @since Android 1.0
  */
 public interface Connection {
 
     /**
      * A constant indicating that transactions are not supported.
-     * 
-     * @since Android 1.0
      */
     public static final int TRANSACTION_NONE = 0;
 
@@ -52,8 +50,6 @@ public interface Connection {
      * No <i>dirty reads</i> are permitted, therefore transactions may not read
      * a row containing uncommitted values - but does not prevent an application
      * from <i>non-repeatable reads</i> and <i>phantom reads</i>.
-     * 
-     * @since Android 1.0
      */
     public static final int TRANSACTION_READ_COMMITTED = 2;
 
@@ -65,16 +61,12 @@ public interface Connection {
      * <li><i>non-repeatable reads</i></li>
      * <li><i>phantom reads</i></li>
      * </ul>
-     * 
-     * @since Android 1.0
      */
     public static final int TRANSACTION_READ_UNCOMMITTED = 1;
 
     /**
      * A constant indicating that <i>dirty reads</i> and <i>non-repeatable
      * reads</i> are <b>prevented</b> but <i>phantom reads</i> can occur.
-     * 
-     * @since Android 1.0
      */
     public static final int TRANSACTION_REPEATABLE_READ = 4;
 
@@ -86,8 +78,6 @@ public interface Connection {
      * <li><i>non-repeatable reads</i></li>
      * <li><i>phantom reads</i></li>
      * </ul>
-     * 
-     * @since Android 1.0
      */
     public static final int TRANSACTION_SERIALIZABLE = 8;
 
@@ -112,8 +102,7 @@ public interface Connection {
      * connection before garbage collection takes place, it is not advisable to
      * leave the {@code close} operation to take place in this way. Mainly
      * because undesired side-effects may appear.
-     * </p>
-     * 
+     *
      * @throws SQLException
      *             if there is a problem accessing the database.
      */
@@ -217,7 +206,6 @@ public interface Connection {
      *         false}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public boolean getAutoCommit() throws SQLException;
 
@@ -242,7 +230,6 @@ public interface Connection {
      *         </ul>
      * @throws SQLException
      *             if there is a problem accessing the a database.
-     * @since Android 1.0
      */
     public int getHoldability() throws SQLException;
 
@@ -255,7 +242,6 @@ public interface Connection {
      *         description.
      * @throws SQLException
      *             if there is a problem accessing the a database.
-     * @since Android 1.0
      */
     public DatabaseMetaData getMetaData() throws SQLException;
 
@@ -270,7 +256,6 @@ public interface Connection {
      * @see #TRANSACTION_READ_UNCOMMITTED
      * @see #TRANSACTION_REPEATABLE_READ
      * @see #TRANSACTION_SERIALIZABLE
-     * @since Android 1.0
      */
     public int getTransactionIsolation() throws SQLException;
 
@@ -281,7 +266,6 @@ public interface Connection {
      * @return the Type Map as a {@code java.util.Map}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Map<String, Class<?>> getTypeMap() throws SQLException;
 
@@ -294,14 +278,12 @@ public interface Connection {
      * By invoking the {@link SQLWarning#getNextWarning()} method of the
      * returned {@code SQLWarning} object it is possible to obtain all of
      * this connection's warning objects.
-     * </p>
-     * 
+     *
      * @return the first warning as an SQLWarning object (may be {@code null}).
      * @throws SQLException
      *             if there is a problem accessing the database or if the call
      *             has been made on a connection which has been previously
      *             closed.
-     * @since Android 1.0
      */
     public SQLWarning getWarnings() throws SQLException;
 
@@ -315,7 +297,6 @@ public interface Connection {
      * @return {@code true} if closed, otherwise {@code false}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public boolean isClosed() throws SQLException;
 
@@ -326,7 +307,6 @@ public interface Connection {
      * @return {@code true} if in read-only state, otherwise {@code false}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public boolean isReadOnly() throws SQLException;
 
@@ -356,7 +336,6 @@ public interface Connection {
      *         {@link ResultSet#CONCUR_READ_ONLY}.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public CallableStatement prepareCall(String sql) throws SQLException;
 
@@ -387,7 +366,6 @@ public interface Connection {
      *         resultSetType} and {@code resultSetConcurrency} values.
      * @throws SQLException
      *             if a problem occurs accessing the database
-     * @since Android 1.0
      */
     public CallableStatement prepareCall(String sql, int resultSetType,
             int resultSetConcurrency) throws SQLException;
@@ -426,7 +404,6 @@ public interface Connection {
      *         resultSetHoldability} values.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public CallableStatement prepareCall(String sql, int resultSetType,
             int resultSetConcurrency, int resultSetHoldability)
@@ -441,7 +418,7 @@ public interface Connection {
      * the driver does not support precompiled statements, the statement will
      * not reach the database server until it is executed. This distinction
      * determines the moment when {@code SQLException}s get raised.
-     * </p>
+     * <p>
      * By default, {@code ResultSet}s from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
      * {@link ResultSet#CONCUR_READ_ONLY} mode of concurrency.
@@ -452,7 +429,6 @@ public interface Connection {
      *         statement.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql) throws SQLException;
 
@@ -467,7 +443,7 @@ public interface Connection {
      * precompiled in a {@code PreparedStatement}. The {@code PreparedStatement}
      * can then be then be used to execute the statement multiple times in an
      * efficient way.
-     * </p>
+     * <p>
      * Subject to JDBC driver support, this operation will attempt to send the
      * precompiled version of the statement to the database. If
      * the driver does not support precompiled statements, the statement will
@@ -477,8 +453,7 @@ public interface Connection {
      * By default, {@code ResultSet}s from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
      * {@link ResultSet#CONCUR_READ_ONLY} mode of concurrency.
-     * </p>
-     * 
+     *
      * @param sql
      *            the SQL statement.
      * @param autoGeneratedKeys
@@ -491,7 +466,6 @@ public interface Connection {
      *         SQL statement.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
             throws SQLException;
@@ -509,13 +483,11 @@ public interface Connection {
      * the driver does not support precompiled statements, the statement will
      * not reach the database server until it is executed. This distinction
      * determines the moment when {@code SQLException}s get raised.
-     * </p>
      * <p>
      * By default, {@code ResultSet}s from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
      * {@link ResultSet#CONCUR_READ_ONLY} concurrency mode.
-     * </p>
-     * 
+     *
      * @param sql
      *            the SQL statement.
      * @param columnIndexes
@@ -524,7 +496,6 @@ public interface Connection {
      * @return the PreparedStatement containing the supplied SQL statement.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
             throws SQLException;
@@ -556,7 +527,6 @@ public interface Connection {
      *         resultSetType} and {@code resultSetConcurrency} values.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int resultSetType,
             int resultSetConcurrency) throws SQLException;
@@ -594,7 +564,6 @@ public interface Connection {
      *         resultSetHoldability} values.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int resultSetType,
             int resultSetConcurrency, int resultSetHoldability)
@@ -614,13 +583,11 @@ public interface Connection {
      * statement will not reach the database server until it is executed. This
      * will have a bearing on precisely <i>when</i> {@code SQLException}
      * instances get raised.
-     * </p>
      * <p>
      * By default, ResultSets from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
      * {@link ResultSet#CONCUR_READ_ONLY} concurrency mode.
-     * </p>
-     * 
+     *
      * @param sql
      *            the SQL statement.
      * @param columnNames
@@ -629,7 +596,6 @@ public interface Connection {
      * @return the PreparedStatement containing the supplied SQL statement.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, String[] columnNames)
             throws SQLException;
@@ -645,7 +611,6 @@ public interface Connection {
      *             if there is a problem with accessing the database or if
      *             {@code savepoint} is considered not valid in this
      *             transaction.
-     * @since Android 1.0
      */
     public void releaseSavepoint(Savepoint savepoint) throws SQLException;
 
@@ -657,7 +622,6 @@ public interface Connection {
      * @throws SQLException
      *             if there is a problem with the database or if the method is
      *             called while in auto-commit mode of operation.
-     * @since Android 1.0
      */
     public void rollback() throws SQLException;
 
@@ -669,7 +633,6 @@ public interface Connection {
      *            the Savepoint to roll back to
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void rollback(Savepoint savepoint) throws SQLException;
 
@@ -682,26 +645,23 @@ public interface Connection {
      * statements get grouped into transactions that need to be completed by
      * explicit calls to either the {@link #commit()} or {@link #rollback()}
      * methods.
-     * </p>
+     * <p>
      * Auto-commit is the default mode for new connection instances.
      * <p>
      * When in this mode, commits will automatically occur upon successful SQL
      * statement completion or upon successful completion of an execute.
      * Statements are not considered successfully completed until all associated
      * {@code ResultSet}s and output parameters have been obtained or closed.
-     * </p>
      * <p>
      * Calling this operation during an uncommitted transaction will result in
      * it being committed.
-     * </p>
-     * 
+     *
      * @param autoCommit
      *            {@code boolean} indication of whether to put the target
      *            connection into auto-commit mode ({@code true}) or not (
      *            {@code false}).
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setAutoCommit(boolean autoCommit) throws SQLException;
 
@@ -714,7 +674,6 @@ public interface Connection {
      *            the catalog name to use.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setCatalog(String catalog) throws SQLException;
 
@@ -738,14 +697,12 @@ public interface Connection {
      * <p>
      * This serves as a hint to the driver, which can enable database
      * optimizations.
-     * </p>
-     * 
+     *
      * @param readOnly
      *            {@code true} to set the Connection to read only mode. {@code
      *            false} disables read-only mode.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setReadOnly(boolean readOnly) throws SQLException;
 
@@ -755,7 +712,6 @@ public interface Connection {
      * @return a {@code Savepoint} object for this savepoint.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Savepoint setSavepoint() throws SQLException;
 
@@ -767,7 +723,6 @@ public interface Connection {
      * @return a {@code Savepoint} object for this savepoint.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public Savepoint setSavepoint(String name) throws SQLException;
 
@@ -776,8 +731,7 @@ public interface Connection {
      * <p>
      * If this method is called during a transaction, the results are
      * implementation defined.
-     * </p>
-     * 
+     *
      * @param level
      *            the new transaction isolation level to use from the following
      *            list of possible values:
@@ -790,7 +744,6 @@ public interface Connection {
      * @throws SQLException
      *             if there is a problem with the database or if the value of
      *             {@code level} is not one of the expected constant values.
-     * @since Android 1.0
      */
     public void setTransactionIsolation(int level) throws SQLException;
 
@@ -803,7 +756,6 @@ public interface Connection {
      * @throws SQLException
      *             if there is a problem accessing the database or if {@code
      *             map} is not an instance of {@link Map}.
-     * @since Android 1.0
      */
     public void setTypeMap(Map<String, Class<?>> map) throws SQLException;
 }

@@ -36,13 +36,13 @@ public final class TypeListItem extends OffsettedItem {
     /** header size in bytes */
     private static final int HEADER_SIZE = 4;
 
-    /** non-null; the actual list */
+    /** {@code non-null;} the actual list */
     private final TypeList list;
 
     /**
      * Constructs an instance.
      * 
-     * @param list non-null; the actual list
+     * @param list {@code non-null;} the actual list
      */
     public TypeListItem(TypeList list) {
         super(ALIGNMENT, (list.size() * ELEMENT_SIZE) + HEADER_SIZE);
@@ -81,7 +81,7 @@ public final class TypeListItem extends OffsettedItem {
     /**
      * Gets the underlying list.
      * 
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public TypeList getList() {
         return list;

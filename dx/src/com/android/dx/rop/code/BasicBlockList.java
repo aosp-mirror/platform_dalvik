@@ -27,14 +27,14 @@ import com.android.dx.util.LabeledList;
  */
 public final class BasicBlockList extends LabeledList {
     /**
-     * &gt;= -1; the count of registers required by this method or
-     * <code>-1</code> if not yet calculated 
+     * {@code >= -1;} the count of registers required by this method or
+     * {@code -1} if not yet calculated 
      */
     private int regCount;
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>,
-     * and the first-block label is initially <code>-1</code>.
+     * Constructs an instance. All indices initially contain {@code null},
+     * and the first-block label is initially {@code -1}.
      * 
      * @param size the size of the list
      */
@@ -45,7 +45,7 @@ public final class BasicBlockList extends LabeledList {
     }
 
     /**
-     * Constructs a mutable copy for <code>getMutableCopy()</code>.
+     * Constructs a mutable copy for {@code getMutableCopy()}.
      * 
      * @param old block to copy
      */
@@ -58,10 +58,10 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
-     * do that, this will throw <code>NullPointerException</code>.
+     * do that, this will throw {@code NullPointerException}.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @return non-null; element at that index
+     * @param n {@code >= 0, < size();} which index
+     * @return {@code non-null;} element at that index
      */
     public BasicBlock get(int n) {
         return (BasicBlock) get0(n);
@@ -70,8 +70,8 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Sets the basic block at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param bb null-ok; the element to set at <code>n</code>
+     * @param n {@code >= 0, < size();} which index
+     * @param bb {@code null-ok;} the element to set at {@code n}
      */
     public void set(int n, BasicBlock bb) {
         super.set(n, bb);
@@ -86,7 +86,7 @@ public final class BasicBlockList extends LabeledList {
      * instance's instructions (indirectly through {@link BasicBlock}
      * instances).
      * 
-     * @return &gt;= 0; the register count
+     * @return {@code >= 0;} the register count
      */
     public int getRegCount() {
         if (regCount == -1) {
@@ -102,7 +102,7 @@ public final class BasicBlockList extends LabeledList {
      * Gets the total instruction count for this instance. This is the
      * sum of the instruction counts of each block.
      * 
-     * @return &gt;= 0; the total instruction count
+     * @return {@code >= 0;} the total instruction count
      */
     public int getInstructionCount() {
         int sz = size();
@@ -122,7 +122,7 @@ public final class BasicBlockList extends LabeledList {
      * Gets the total instruction count for this instance, ignoring
      * mark-local instructions which are not actually emitted.
      *
-     * @return &gt;= 0; the total instruction count
+     * @return {@code >= 0;} the total instruction count
      */
     public int getEffectiveInstructionCount() {
         int sz = size();
@@ -151,8 +151,8 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Gets the first block in the list with the given label, if any.
      *
-     * @param label &gt;= 0; the label to look for
-     * @return non-null; the so-labelled block
+     * @param label {@code >= 0;} the label to look for
+     * @return {@code non-null;} the so-labelled block
      * @throws IllegalArgumentException thrown if the label isn't found
      */
     public BasicBlock labelToBlock(int label) {
@@ -169,7 +169,7 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Visits each instruction of each block in the list, in order.
      * 
-     * @param visitor non-null; visitor to use
+     * @param visitor {@code non-null;} visitor to use
      */
     public void forEachInsn(Insn.Visitor visitor) {
         int sz = size();
@@ -188,7 +188,7 @@ public final class BasicBlockList extends LabeledList {
      * original.
      * 
      * @param delta the amount to offset register numbers by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public BasicBlockList withRegisterOffset(int delta) {
         int sz = size();
@@ -211,7 +211,7 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Returns a mutable copy of this list.
      *
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public BasicBlockList getMutableCopy() {
         return new BasicBlockList(this);
@@ -222,10 +222,10 @@ public final class BasicBlockList extends LabeledList {
      * only has one successor, then that is the preferred successor.
      * Otherwise, if the block has a primay successor, then that is
      * the preferred successor. If the block has no successors, then
-     * this returns <code>null</code>.
+     * this returns {@code null}.
      * 
-     * @param block non-null; the block in question
-     * @return null-ok; the preferred successor, if any
+     * @param block {@code non-null;} the block in question
+     * @return {@code null-ok;} the preferred successor, if any
      */
     public BasicBlock preferredSuccessorOf(BasicBlock block) {
         int primarySuccessor = block.getPrimarySuccessor();
@@ -252,9 +252,9 @@ public final class BasicBlockList extends LabeledList {
      * Compares the catches of two blocks for equality. This includes
      * both the catch types and target labels.
      * 
-     * @param block1 non-null; one block to compare
-     * @param block2 non-null; the other block to compare
-     * @return <code>true</code> if the two blocks' non-primary successors
+     * @param block1 {@code non-null;} one block to compare
+     * @param block2 {@code non-null;} the other block to compare
+     * @return {@code true} if the two blocks' non-primary successors
      * are identical
      */
     public boolean catchesEqual(BasicBlock block1,
@@ -313,7 +313,7 @@ public final class BasicBlockList extends LabeledList {
      */
     private static class RegCountVisitor
             implements Insn.Visitor {
-        /** &gt;= 0; register count in-progress */
+        /** {@code >= 0;} register count in-progress */
         private int regCount;
 
         /**
@@ -326,7 +326,7 @@ public final class BasicBlockList extends LabeledList {
         /**
          * Gets the register count.
          * 
-         * @return &gt;= 0; the count
+         * @return {@code >= 0;} the count
          */
         public int getRegCount() {
             return regCount;
@@ -363,9 +363,9 @@ public final class BasicBlockList extends LabeledList {
         }
 
         /**
-         * Helper for all the <code>visit*</code> methods.
+         * Helper for all the {@code visit*} methods.
          * 
-         * @param insn non-null; instruction being visited
+         * @param insn {@code non-null;} instruction being visited
          */
         private void visit(Insn insn) {
             RegisterSpec result = insn.getResult();
@@ -385,7 +385,7 @@ public final class BasicBlockList extends LabeledList {
         /**
          * Processes the given register spec.
          * 
-         * @param spec non-null; the register spec
+         * @param spec {@code non-null;} the register spec
          */
         private void processReg(RegisterSpec spec) {
             int reg = spec.getNextReg();

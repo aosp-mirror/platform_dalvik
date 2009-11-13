@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Common defines for all Dalvik code.
  */
@@ -29,8 +30,8 @@
 #if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
 # undef assert
 # define assert(x) \
-    ((x) ? ((void)0) : (LOGE("ASSERT FAILED (%s:%d): " #x "\n", \
-        __FILE__, __LINE__), *(int*)39=39, 0) )
+    ((x) ? ((void)0) : (LOGE("ASSERT FAILED (%s:%d): %s\n", \
+        __FILE__, __LINE__, #x), *(int*)39=39, 0) )
 #endif
 
 
@@ -96,11 +97,15 @@ typedef union JValue {
 } JValue;
 
 /*
- * Some systems might have this in <stdbool.h>.
+ * The <stdbool.h> definition uses _Bool, a type known to the compiler.
  */
-#ifndef __bool_true_false_are_defined
+#ifdef HAVE_STDBOOL_H
+# include <stdbool.h>   /* C99 */
+#else
+# ifndef __bool_true_false_are_defined
 typedef enum { false=0, true=!false } bool;
-#define __bool_true_false_are_defined 1
+# define __bool_true_false_are_defined 1
+# endif
 #endif
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))

@@ -22,8 +22,6 @@ import java.io.UnsupportedEncodingException;
 /**
  * This class is used to encode a string using the format required by
  * {@code application/x-www-form-urlencoded} MIME content type.
- * 
- * @since Android 1.0
  */
 public class URLEncoder {
 
@@ -43,17 +41,15 @@ public class URLEncoder {
      * and characters '.', '-', '*', '_' are converted into their hexadecimal
      * value prepended by '%'. For example: '#' -> %23. In addition, spaces are
      * substituted by '+'
-     * </p>
-     * 
+     *
      * @param s
      *            the string to be encoded.
      * @return the encoded string.
      * @deprecated use {@link #encode(String, String)} instead.
-     * @since Android 1.0
      */
     @Deprecated
     public static String encode(String s) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
@@ -81,8 +77,7 @@ public class URLEncoder {
      * and characters '.', '-', '*', '_' are converted into their hexadecimal
      * value prepended by '%'. For example: '#' -> %23. In addition, spaces are
      * substituted by '+'
-     * </p>
-     * 
+     *
      * @param s
      *            the string to be encoded.
      * @param enc
@@ -90,10 +85,10 @@ public class URLEncoder {
      * @return the encoded string.
      * @throws UnsupportedEncodingException
      *             if the specified encoding scheme is invalid.
-     * @since Android 1.0
      */
     public static String encode(String s, String enc)
             throws UnsupportedEncodingException {
+
         if (s == null || enc == null) {
             throw new NullPointerException();
         }

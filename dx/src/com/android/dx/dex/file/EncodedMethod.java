@@ -32,23 +32,23 @@ import java.io.PrintWriter;
  */
 public final class EncodedMethod extends EncodedMember 
         implements Comparable<EncodedMethod> {
-    /** non-null; constant for the method */
+    /** {@code non-null;} constant for the method */
     private final CstMethodRef method;
 
     /**
-     * null-ok; code for the method, if the method is neither
-     * <code>abstract</code> nor <code>native</code> 
+     * {@code null-ok;} code for the method, if the method is neither
+     * {@code abstract} nor {@code native} 
      */
     private final CodeItem code;
 
     /**
      * Constructs an instance.
      * 
-     * @param method non-null; constant for the method
+     * @param method {@code non-null;} constant for the method
      * @param accessFlags access flags
-     * @param code null-ok; code for the method, if it is neither
-     * <code>abstract</code> nor <code>native</code>
-     * @param throwsList non-null; list of possibly-thrown exceptions,
+     * @param code {@code null-ok;} code for the method, if it is neither
+     * {@code abstract} nor {@code native}
+     * @param throwsList {@code non-null;} list of possibly-thrown exceptions,
      * just used in generating debugging output (listings)
      */
     public EncodedMethod(CstMethodRef method, int accessFlags,
@@ -148,7 +148,7 @@ public final class EncodedMethod extends EncodedMember
     /**
      * Gets the constant for the method.
      * 
-     * @return non-null; the constant
+     * @return {@code non-null;} the constant
      */
     public final CstMethodRef getRef() {
         return method;

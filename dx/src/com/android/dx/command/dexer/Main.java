@@ -55,26 +55,26 @@ import java.util.jar.Manifest;
  */
 public class Main {
     /**
-     * non-null; name for the <code>.dex</code> file that goes into
-     * <code>.jar</code> files
+     * {@code non-null;} name for the {@code .dex} file that goes into
+     * {@code .jar} files
      */
     private static final String DEX_IN_JAR_NAME = "classes.dex";
 
     /**
-     * non-null; name of the standard manifest file in <code>.jar</code>
+     * {@code non-null;} name of the standard manifest file in {@code .jar}
      * files
      */
     private static final String MANIFEST_NAME = "META-INF/MANIFEST.MF";
 
     /**
-     * non-null; attribute name for the (quasi-standard?)
-     * <code>Created-By</code> attribute
+     * {@code non-null;} attribute name for the (quasi-standard?)
+     * {@code Created-By} attribute
      */
     private static final Attributes.Name CREATED_BY =
         new Attributes.Name("Created-By");
 
     /**
-     * non-null; list of <code>javax</code> subpackages that are considered
+     * {@code non-null;} list of {@code javax} subpackages that are considered
      * to be "core". <b>Note:</b>: This list must be sorted, since it
      * is binary-searched.
      */
@@ -90,15 +90,15 @@ public class Main {
     /** number of errors during processing */
     private static int errors = 0;
 
-    /** non-null; parsed command-line arguments */
+    /** {@code non-null;} parsed command-line arguments */
     private static Arguments args;
 
-    /** non-null; output file in-progress */
+    /** {@code non-null;} output file in-progress */
     private static DexFile outputDex;
 
     /**
-     * null-ok; map of resources to include in the output, or
-     * <code>null</code> if resources are being ignored
+     * {@code null-ok;} map of resources to include in the output, or
+     * {@code null} if resources are being ignored
      */
     private static TreeMap<String, byte[]> outputResources;
 
@@ -215,8 +215,9 @@ public class Main {
     /**
      * Processes one pathname element.
      *
-     * @param pathname non-null; the pathname to process. May be the path of
-     * a class file, a jar file, or a directory containing class files.
+     * @param pathname {@code non-null;} the pathname to process. May
+     * be the path of a class file, a jar file, or a directory
+     * containing class files.
      * @return whether any processing actually happened
      */
     private static boolean processOne(String pathname) {
@@ -237,7 +238,8 @@ public class Main {
             }
             public void onProcessArchiveStart(File file) {
                 if (args.verbose) {
-                    DxConsole.out.println("processing archive " + file + "...");
+                    DxConsole.out.println("processing archive " + file +
+                            "...");
                 }
             }
         });
@@ -248,8 +250,8 @@ public class Main {
     /**
      * Processes one file, which may be either a class or a resource.
      *
-     * @param name non-null; name of the file
-     * @param bytes non-null; contents of the file
+     * @param name {@code non-null;} name of the file
+     * @param bytes {@code non-null;} contents of the file
      * @return whether processing was successful
      */
     private static boolean processFileBytes(String name, byte[] bytes) {
@@ -283,9 +285,9 @@ public class Main {
     /**
      * Processes one classfile.
      *
-     * @param name non-null; name of the file, clipped such that it
+     * @param name {@code non-null;} name of the file, clipped such that it
      * <i>should</i> correspond to the name of the class it contains
-     * @param bytes non-null; contents of the file
+     * @param bytes {@code non-null;} contents of the file
      * @return whether processing was successful
      */
     private static boolean processClass(String name, byte[] bytes) {
@@ -316,7 +318,8 @@ public class Main {
      * class. If there is a problem, this updates the error count and
      * throws an exception to stop processing.
      * 
-     * @param name non-null; the fully-qualified internal-form class name
+     * @param name {@code non-null;} the fully-qualified internal-form
+     * class name
      */
     private static void checkClassName(String name) {
         boolean bogus = false;
@@ -346,35 +349,60 @@ public class Main {
 
         DxConsole.err.println("\ntrouble processing \"" + name + "\":");
         DxConsole.err.println("\n" + 
-                "Attempt to include a core VM class in something other " +
-                "than a core library.\n" +
-                "It is likely that you have attempted to include the " +
-                "core library from a desktop\n" +
-                "virtual machine into an application, which will most " +
-                "assuredly not work. If\n" +
-                "you really intend to build a core library -- which is "+
-                "only appropriate as\n" +
-                "part of creating a full virtual machine binary, as " +
-                "opposed to compiling an\n" +
-                "application -- then use the \"--core-library\" option " +
-                "to suppress this error\n" +
-                "message. If you go ahead and use \"--core-library\" " +
-                "but are in fact building\n" +
-                "an application, then please be aware that your build " +
-                "will still fail at some\n" +
-                "point; you will simply be denied the pleasure of " +
-                "reading this helpful error\n" +
-                "message.");
+                "Attempt to include a core class (java.* or javax.*) in " +
+                "something other\n" +
+                "than a core library. It is likely that you have " +
+                "attempted to include\n" +
+                "in an application the core library (or a part thereof) " +
+                "from a desktop\n" +
+                "virtual machine. This will most assuredly not work. " +
+                "At a minimum, it\n" +
+                "jeopardizes the compatibility of your app with future " +
+                "versions of the\n" +
+                "platform. It is also often of questionable legality.\n" +
+                "\n" +
+                "If you really intend to build a core library -- which is " +
+                "only\n" +
+                "appropriate as part of creating a full virtual machine " +
+                "distribution,\n" +
+                "as opposed to compiling an application -- then use the\n" +
+                "\"--core-library\" option to suppress this error message.\n" +
+                "\n" +
+                "If you go ahead and use \"--core-library\" but are in " +
+                "fact building an\n" +
+                "application, then be forewarned that your application " +
+                "will still fail\n" +
+                "to build or run, at some point. Please be prepared for " +
+                "angry customers\n" +
+                "who find, for example, that your application ceases to " +
+                "function once\n" +
+                "they upgrade their operating system. You will be to " +
+                "blame for this\n" +
+                "problem.\n" +
+                "\n" +
+                "If you are legitimately using some code that happens to " +
+                "be in a core\n" +
+                "package, then the easiest safe alternative you have is " +
+                "to repackage\n" +
+                "that code. That is, move the classes in question into " +
+                "your own package\n" +
+                "namespace. This means that they will never be in " +
+                "conflict with core\n" +
+                "system classes. If you find that you cannot do this, " +
+                "then that is an\n" +
+                "indication that the path you are on will ultimately lead " +
+                "to pain,\n" +
+                "suffering, grief, and lamentation.\n");
         errors++;
         throw new StopProcessing();
     }
 
     /**
-     * Converts {@link #outputDex} into a <code>byte[]</code>, write
+     * Converts {@link #outputDex} into a {@code byte[]}, write
      * it out to the proper file (if any), and also do whatever human-oriented
      * dumping is required.
      *
-     * @return null-ok; the converted <code>byte[]</code> or <code>null</code>
+     * @return {@code null-ok;} the converted {@code byte[]} or {@code null}
      * if there was a problem
      */
     private static byte[] writeDex() {
@@ -438,8 +466,9 @@ public class Main {
     /**
      * Creates a jar file from the resources and given dex file array.
      *
-     * @param fileName non-null; name of the file
-     * @param dexArray non-null; array containing the dex file to include
+     * @param fileName {@code non-null;} name of the file
+     * @param dexArray {@code non-null;} array containing the dex file
+     * to include
      * @return whether the creation was successful
      */
     private static boolean createJar(String fileName, byte[] dexArray) {
@@ -496,7 +525,7 @@ public class Main {
      * Creates and returns the manifest to use for the output. This may
      * modify {@link #outputResources} (removing the pre-existing manifest).
      *
-     * @return non-null; the manifest
+     * @return {@code non-null;} the manifest
      */
     private static Manifest makeManifest() throws IOException {
         byte[] manifestBytes = outputResources.get(MANIFEST_NAME);
@@ -531,8 +560,8 @@ public class Main {
     /**
      * Opens and returns the named file for writing, treating "-" specially.
      *
-     * @param name non-null; the file name
-     * @return non-null; the opened file
+     * @param name {@code non-null;} the file name
+     * @return {@code non-null;} the opened file
      */
     private static OutputStream openOutput(String name) throws IOException {
         if (name.equals("-") ||
@@ -547,9 +576,9 @@ public class Main {
      * Flushes and closes the given output stream, except if it happens to be
      * {@link System#out} in which case this method does the flush but not
      * the close. This method will also silently do nothing if given a
-     * <code>null</code> argument.
+     * {@code null} argument.
      *
-     * @param stream null-ok; what to close
+     * @param stream {@code null-ok;} what to close
      */
     private static void closeOutput(OutputStream stream) throws IOException {
         if (stream == null) {
@@ -565,18 +594,18 @@ public class Main {
 
     /**
      * Returns the "fixed" version of a given file path, suitable for
-     * use as a path within a <code>.jar</code> file and for checking
+     * use as a path within a {@code .jar} file and for checking
      * against a classfile-internal "this class" name. This looks for
-     * the last instance of the substring <code>"/./"</code> within
+     * the last instance of the substring {@code "/./"} within
      * the path, and if it finds it, it takes the portion after to be
      * the fixed path. If that isn't found but the path starts with
-     * <code>"./"</code>, then that prefix is removed and the rest is
+     * {@code "./"}, then that prefix is removed and the rest is
      * return. If neither of these is the case, this method returns
      * its argument.
      *
-     * @param path non-null; the path to "fix"
-     * @return non-null; the fixed version (which might be the same as
-     * the given <code>path</code>)
+     * @param path {@code non-null;} the path to "fix"
+     * @return {@code non-null;} the fixed version (which might be the same as
+     * the given {@code path})
      */
     private static String fixPath(String path) {
         /*
@@ -603,9 +632,10 @@ public class Main {
     /**
      * Dumps any method with the given name in the given file.
      *
-     * @param dex non-null; the dex file
-     * @param fqName non-null; the fully-qualified name of the method(s)
-     * @param out non-null; where to dump to
+     * @param dex {@code non-null;} the dex file
+     * @param fqName {@code non-null;} the fully-qualified name of the
+     * method(s)
+     * @param out {@code non-null;} where to dump to
      */
     private static void dumpMethod(DexFile dex, String fqName,
             OutputStreamWriter out) {
@@ -719,36 +749,36 @@ public class Main {
         /** whether we are constructing a core library */
         public boolean coreLibrary = false;
 
-        /** null-ok; particular method to dump */
+        /** {@code null-ok;} particular method to dump */
         public String methodToDump = null;
 
         /** max width for columnar output */
         public int dumpWidth = 0;
 
-        /** null-ok; output file name for binary file */
+        /** {@code null-ok;} output file name for binary file */
         public String outName = null;
 
-        /** null-ok; output file name for human-oriented dump */
+        /** {@code null-ok;} output file name for human-oriented dump */
         public String humanOutName = null;
 
         /** whether strict file-name-vs-class-name checking should be done */
         public boolean strictNameCheck = true;
 
         /**
-         * whether it is okay for there to be no <code>.class</code> files
+         * whether it is okay for there to be no {@code .class} files
          * to process
          */
         public boolean emptyOk = false;
 
         /**
-         * whether the binary output is to be a <code>.jar</code> file
-         * instead of a plain <code>.dex</code>
+         * whether the binary output is to be a {@code .jar} file
+         * instead of a plain {@code .dex}
          */
         public boolean jarOutput = false;
 
         /**
-         * when writing a <code>.jar</code> file, whether to still
-         * keep the <code>.class</code> files
+         * when writing a {@code .jar} file, whether to still
+         * keep the {@code .class} files
          */
         public boolean keepClassesInJar = false;
 
@@ -758,7 +788,7 @@ public class Main {
         /** whether to keep local variable information */
         public boolean localInfo = true;
 
-        /** non-null after {@link #parse}; file name arguments */
+        /** {@code non-null after {@link #parse};} file name arguments */
         public String[] fileNames;
 
         /** whether to do SSA/register optimization */
@@ -779,7 +809,7 @@ public class Main {
         /**
          * Parses the given command-line arguments.
          *
-         * @param args non-null; the arguments
+         * @param args {@code non-null;} the arguments
          */
         public void parse(String[] args) {
             int at = 0;
@@ -866,8 +896,6 @@ public class Main {
             }
 
             int fileCount = args.length - at;
-            fileNames = new String[fileCount];
-            System.arraycopy(args, at, fileNames, 0, fileCount);
 
             if (fileCount == 0) {
                 if (!emptyOk) {
@@ -876,8 +904,12 @@ public class Main {
                 }
             } else if (emptyOk) {
                 System.out.println("ignoring input files");
-                at = args.length;
+                at = 0;
+                fileCount = 0;
             }
+
+            fileNames = new String[fileCount];
+            System.arraycopy(args, at, fileNames, 0, fileCount);
 
             if ((humanOutName == null) && (methodToDump != null)) {
                 humanOutName = "-";

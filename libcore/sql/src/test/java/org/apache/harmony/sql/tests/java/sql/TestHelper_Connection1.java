@@ -46,8 +46,9 @@ public class TestHelper_Connection1 implements Connection {
         return null;
     }
 
-    public Statement createStatement(int resultSetType, int resultSetConcurrency,
-            int resultSetHoldability) throws SQLException {
+    public Statement createStatement(int resultSetType,
+            int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
         return null;
     }
 
@@ -97,12 +98,13 @@ public class TestHelper_Connection1 implements Connection {
     }
 
     public CallableStatement prepareCall(String sql, int resultSetType,
-            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+            int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
         return null;
     }
 
-    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency)
-            throws SQLException {
+    public CallableStatement prepareCall(String sql, int resultSetType,
+            int resultSetConcurrency) throws SQLException {
         return null;
     }
 
@@ -111,7 +113,8 @@ public class TestHelper_Connection1 implements Connection {
     }
 
     public PreparedStatement prepareStatement(String sql, int resultSetType,
-            int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+            int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
         return null;
     }
 

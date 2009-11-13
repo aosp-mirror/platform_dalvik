@@ -25,13 +25,9 @@ package java.text;
  * A {@code FieldPosition} can be created by using the integer constants in the
  * various format classes (for example {@code NumberFormat.INTEGER_FIELD}) or
  * one of the fields of type {@code Format.Field}.
- * </p>
  * <p>
  * If more than one field information is needed, the method
  * {@link NumberFormat#formatToCharacterIterator(Object)} should be used.
- * </p>
- * 
- * @since Android 1.0
  */
 public class FieldPosition {
 
@@ -44,7 +40,6 @@ public class FieldPosition {
      * 
      * @param field
      *            the field to identify.
-     * @since Android 1.0
      */
     public FieldPosition(int field) {
         myField = field;
@@ -56,7 +51,6 @@ public class FieldPosition {
      * 
      * @param attribute
      *            the field attribute to identify.
-     * @since Android 1.0
      */
     public FieldPosition(Format.Field attribute) {
         myAttribute = attribute;
@@ -71,7 +65,6 @@ public class FieldPosition {
      *            the field attribute to identify.
      * @param field
      *            the field to identify.
-     * @since Android 1.0
      */
     public FieldPosition(Format.Field attribute, int field) {
         myAttribute = attribute;
@@ -92,7 +85,6 @@ public class FieldPosition {
      * @return {@code true} if the specified object is equal to this field
      *         position; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -108,7 +100,6 @@ public class FieldPosition {
      * Returns the index of the beginning of the field.
      * 
      * @return the first index of the field.
-     * @since Android 1.0
      */
     public int getBeginIndex() {
         return beginIndex;
@@ -118,7 +109,6 @@ public class FieldPosition {
      * Returns the index one past the end of the field.
      * 
      * @return one past the index of the last character in the field.
-     * @since Android 1.0
      */
     public int getEndIndex() {
         return endIndex;
@@ -128,7 +118,6 @@ public class FieldPosition {
      * Returns the field which is being identified.
      * 
      * @return the field constant.
-     * @since Android 1.0
      */
     public int getField() {
         return myField;
@@ -138,7 +127,6 @@ public class FieldPosition {
      * Returns the attribute which is being identified.
      * 
      * @return the field.
-     * @since Android 1.0
      */
     public Format.Field getFieldAttribute() {
         return myAttribute;
@@ -155,7 +143,6 @@ public class FieldPosition {
      * 
      * @param index
      *            the index of the first character in the field.
-     * @since Android 1.0
      */
     public void setBeginIndex(int index) {
         beginIndex = index;
@@ -166,7 +153,6 @@ public class FieldPosition {
      * 
      * @param index
      *            one past the index of the last character in the field.
-     * @since Android 1.0
      */
     public void setEndIndex(int index) {
         endIndex = index;
@@ -176,7 +162,6 @@ public class FieldPosition {
      * Returns the string representation of this field position.
      * 
      * @return the string representation of this field position.
-     * @since Android 1.0
      */
     @Override
     public String toString() {

@@ -17,7 +17,6 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
-
 /**
  * TODO Type description
  * 

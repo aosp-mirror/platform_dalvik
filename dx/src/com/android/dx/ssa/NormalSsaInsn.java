@@ -19,13 +19,10 @@ package com.android.dx.ssa;
 import com.android.dx.rop.code.*;
 
 /**
- * A "normal" (non-phi) instruction in SSA form. Always wraps a ROP insn.
+ * A "normal" (non-phi) instruction in SSA form. Always wraps a rop insn.
  */
 public final class NormalSsaInsn extends SsaInsn implements Cloneable {
-
-    /**
-     * ROP insn that we're wrapping
-     */
+    /** {@code non-null;} rop insn that we're wrapping */
     private Insn insn;
 
     /**
@@ -35,21 +32,19 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
      * @param block block that contains this insn
      */
     NormalSsaInsn(final Insn insn, final SsaBasicBlock block) {
-        super(block);
+        super(insn.getResult(), block);
         this.insn = insn;
-        this.result = insn.getResult();
     }
 
     /** {@inheritDoc} */
     @Override
     public final void mapSourceRegisters(RegisterMapper mapper) {
-
         RegisterSpecList oldSources = insn.getSources();
         RegisterSpecList newSources = mapper.map(oldSources);
 
         if (newSources != oldSources) {
-            insn = insn.withNewRegisters(result, newSources);
-            block.getParent().onSourcesChanged(this, oldSources);
+            insn = insn.withNewRegisters(getResult(), newSources);
+            getBlock().getParent().onSourcesChanged(this, oldSources);
         }
     }
 
@@ -57,7 +52,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
      * Changes one of the insn's sources. New source should be of same type
      * and category.
      *
-     * @param index &gt;=0; index of source to change
+     * @param index {@code >=0;} index of source to change
      * @param newSpec spec for new source
      */
     public final void changeOneSource(int index, RegisterSpec newSpec) {
@@ -68,6 +63,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
         for (int i = 0; i < sz; i++) {
             newSources.set(i, i == index ? newSpec : origSources.get(i));
         }
+        
         newSources.setImmutable();
 
         RegisterSpec origSpec = origSources.get(index);
@@ -76,10 +72,10 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
              * If the register remains unchanged, we're only changing 
              * the type or local var name so don't update use list
              */
-            block.getParent().onSourceChanged(this, origSpec, newSpec);
+            getBlock().getParent().onSourceChanged(this, origSpec, newSpec);
         }
 
-        insn = insn.withNewRegisters(result, newSources);
+        insn = insn.withNewRegisters(getResult(), newSources);
     }
 
     /**
@@ -90,22 +86,24 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
      */
     public final void setNewSources (RegisterSpecList newSources) {
         RegisterSpecList origSources = insn.getSources();
+
         if (origSources.size() != newSources.size()) {
             throw new RuntimeException("Sources counts don't match");
         }
 
-        insn = insn.withNewRegisters(result, newSources);
+        insn = insn.withNewRegisters(getResult(), newSources);
     }
 
     /** {@inheritDoc} */
     @Override
     public NormalSsaInsn clone() {
-        return (NormalSsaInsn)super.clone();
+        return (NormalSsaInsn) super.clone();
     }
 
     /**
-     * Like rop.Insn.getSources()
-     * @return null-ok; sources list
+     * Like rop.Insn.getSources().
+     * 
+     * @return {@code null-ok;} sources list
      */
     public RegisterSpecList getSources() {
         return insn.getSources();
@@ -119,7 +117,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
     /** {@inheritDoc} */
     @Override
     public Insn toRopInsn() {
-        return insn.withNewRegisters(result,insn.getSources());
+        return insn.withNewRegisters(getResult(), insn.getSources());
     }
 
     /**
@@ -143,7 +141,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
         if (insn.getOpcode().getOpcode() == RegOps.MARK_LOCAL) {
             assignment = insn.getSources().get(0);
         } else {
-            assignment = result;
+            assignment = getResult();
         }
 
         if (assignment == null) {
@@ -167,8 +165,9 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
      */
     public void upgradeToLiteral() {
         RegisterSpecList oldSources = insn.getSources();
+
         insn = insn.withLastSourceLiteral();
-        block.getParent().onSourcesChanged(this, oldSources);
+        getBlock().getParent().onSourcesChanged(this, oldSources);
     }
 
     /**
@@ -210,7 +209,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
     /**
      * {@inheritDoc}
      *
-     * TODO increase the scope of this.
+     * TODO: Increase the scope of this.
      */
     @Override
     public boolean hasSideEffect() {
@@ -221,7 +220,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
         }
 
         boolean hasLocalSideEffect
-                = Optimizer.getPreserveLocals() && getLocalAssignment() != null;
+            = Optimizer.getPreserveLocals() && getLocalAssignment() != null;
 
         switch (opcode.getOpcode()) {
             case RegOps.MOVE_RESULT:

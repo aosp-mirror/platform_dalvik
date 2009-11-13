@@ -48,6 +48,24 @@ typedef struct InlineOperation {
     const char*     methodSignature;
 } InlineOperation;
 
+/* Must be kept in sync w/ gDvmInlineOpsTable in InlineNative.c */
+typedef enum NativeInlineOps {
+    INLINE_EMPTYINLINEMETHOD = 0,
+    INLINE_STRING_CHARAT = 1,
+    INLINE_STRING_COMPARETO = 2,
+    INLINE_STRING_EQUALS = 3,
+    INLINE_STRING_LENGTH = 4,
+    INLINE_MATH_ABS_INT = 5,
+    INLINE_MATH_ABS_LONG = 6,
+    INLINE_MATH_ABS_FLOAT = 7,
+    INLINE_MATH_ABS_DOUBLE = 8,
+    INLINE_MATH_MIN_INT = 9,
+    INLINE_MATH_MAX_INT = 10,
+    INLINE_MATH_SQRT = 11,
+    INLINE_MATH_COS = 12,
+    INLINE_MATH_SIN = 13,
+} NativeInlineOps;
+
 /*
  * Get the inlineops table.
  */

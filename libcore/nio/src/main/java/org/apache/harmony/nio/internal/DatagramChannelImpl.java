@@ -15,13 +15,12 @@
  *  limitations under the License.
  */
 
-/*
- * Android Notice 
- * In this class the address length was changed from long to int.
- * This is due to performance optimizations for the device.
- */
-
 package org.apache.harmony.nio.internal;
+
+// BEGIN android-note
+// Copied from a newer version of Harmony.
+// In this class the address length was changed from long to int.
+// END android-note
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -43,7 +42,7 @@ import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.spi.SelectorProvider;
 
 import org.apache.harmony.luni.net.NetUtil;
-import org.apache.harmony.luni.net.SocketImplProvider;
+import org.apache.harmony.luni.net.PlainDatagramSocketImpl;
 import org.apache.harmony.luni.platform.FileDescriptorHandler;
 import org.apache.harmony.luni.platform.INetworkSystem;
 import org.apache.harmony.luni.platform.Platform;
@@ -52,14 +51,9 @@ import org.apache.harmony.nio.AddressUtil;
 
 /*
  * The default implementation class of java.nio.channels.DatagramChannel.
- * 
  */
 class DatagramChannelImpl extends DatagramChannel implements
         FileDescriptorHandler {
-
-    // -------------------------------------------------------------------
-    // Class variables
-    // -------------------------------------------------------------------
 
     // The singleton to do the native network operation.
     private static final INetworkSystem networkSystem = Platform
@@ -71,10 +65,6 @@ class DatagramChannelImpl extends DatagramChannel implements
     private static final int ERRCODE_SOCKET_NONBLOCKING_WOULD_BLOCK = -211;
     
     private static final byte[] stubArray = new byte[0];
-
-    // -------------------------------------------------------------------
-    // Instance variables
-    // -------------------------------------------------------------------
 
     // The fd to interact with native code
     private FileDescriptor fd;
@@ -94,18 +84,16 @@ class DatagramChannelImpl extends DatagramChannel implements
     // whether the socket is bound
     boolean isBound = false;
 
-    private final Object readLock = new Object();
+    private static class ReadLock {}
+    private final Object readLock = new ReadLock();
 
-    private final Object writeLock = new Object();
+    private static class WriteLock {}
+    private final Object writeLock = new WriteLock();
 
     // used to store the trafficClass value which is simply returned
     // as the value that was set. We also need it to pass it to methods
     // that specify an address packets are going to be sent to
     private int trafficClass = 0;
-
-    // -------------------------------------------------------------------
-    // Constructor
-    // -------------------------------------------------------------------
 
     /*
      * Constructor
@@ -120,15 +108,12 @@ class DatagramChannelImpl extends DatagramChannel implements
     /*
      * for native call
      */
-    private DatagramChannelImpl(){
+    @SuppressWarnings("unused")
+    private DatagramChannelImpl() {
         super(SelectorProvider.provider());
         fd = new FileDescriptor();
         connectAddress = new InetSocketAddress(0);
     }
-
-    // -------------------------------------------------------------------
-    // Methods for getting internal DatagramSocket.
-    // -------------------------------------------------------------------
 
     /*
      * Getting the internal DatagramSocket If we have not the socket, we create
@@ -137,8 +122,8 @@ class DatagramChannelImpl extends DatagramChannel implements
     @Override
     synchronized public DatagramSocket socket() {
         if (null == socket) {
-            socket = new DatagramSocketAdapter(SocketImplProvider
-                    .getDatagramSocketImpl(fd, localPort), this);
+            socket = new DatagramSocketAdapter(
+                    new PlainDatagramSocketImpl(fd, localPort), this);
         }
         return socket;
     }
@@ -155,12 +140,7 @@ class DatagramChannelImpl extends DatagramChannel implements
                 .preferIPv6Addresses());
     }
 
-    // -------------------------------------------------------------------
-    // Methods for connect and disconnect
-    // -------------------------------------------------------------------
-
-    /*
-     * 
+    /**
      * @see java.nio.channels.DatagramChannel#isConnected()
      */
     @Override
@@ -168,8 +148,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         return connected;
     }
 
-    /*
-     * 
+    /**
      * @see java.nio.channels.DatagramChannel#connect(java.net.SocketAddress)
      */
     @Override
@@ -214,8 +193,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         return this;
     }
 
-    /*
-     * 
+    /**
      * @see java.nio.channels.DatagramChannel#disconnect()
      */
     @Override
@@ -232,12 +210,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         return this;
     }
 
-    // -------------------------------------------------------------------
-    // Methods for send and receive
-    // -------------------------------------------------------------------
-
-    /*
-     * 
+    /**
      * @see java.nio.channels.DatagramChannel#receive(java.nio.ByteBuffer)
      */
     @Override
@@ -284,14 +257,15 @@ class DatagramChannelImpl extends DatagramChannel implements
                     .position()
                     + target.arrayOffset(), target.remaining());
         } else {        
-            receivePacket = new DatagramPacket(new byte[target.remaining()], target.remaining());
+            receivePacket = new DatagramPacket(new byte[target.remaining()],
+                    target.remaining());
         }
         do {
             if (isConnected()) {
-                received = networkSystem.recvConnectedDatagram(fd, receivePacket,
-                        receivePacket.getData(), receivePacket.getOffset(),
-                        receivePacket.getLength(), isBlocking() ? 0
-                                : DEFAULT_TIMEOUT, false);
+                received = networkSystem.recvConnectedDatagram(fd,
+                        receivePacket, receivePacket.getData(), receivePacket
+                                .getOffset(), receivePacket.getLength(),
+                        isBlocking() ? 0 : DEFAULT_TIMEOUT, false);
             } else {
                 received = networkSystem.receiveDatagram(fd, receivePacket,
                         receivePacket.getData(), receivePacket.getOffset(),
@@ -327,24 +301,23 @@ class DatagramChannelImpl extends DatagramChannel implements
         return retAddr;
     }
     
-    private SocketAddress receiveDirectImpl(ByteBuffer target, boolean loop) throws IOException
-    {
-        SocketAddress retAddr = null;  
-        DatagramPacket receivePacket = new DatagramPacket(
-                stubArray, 0);
+    private SocketAddress receiveDirectImpl(ByteBuffer target, boolean loop)
+            throws IOException {
+        SocketAddress retAddr = null;
+        DatagramPacket receivePacket = new DatagramPacket(stubArray, 0);
         int oldposition = target.position();
         int received = 0;
         do {
             int address = AddressUtil.getDirectBufferAddress(target);
             if (isConnected()) {
-                received = networkSystem.recvConnectedDatagramDirect(fd, receivePacket,
-                        address, target.position(),
-                        target.remaining(), isBlocking() ? 0
+                received = networkSystem.recvConnectedDatagramDirect(fd,
+                        receivePacket, address, target.position(), target
+                                .remaining(), isBlocking() ? 0
                                 : DEFAULT_TIMEOUT, false);
             } else {
-                received = networkSystem.receiveDatagramDirect(fd, receivePacket,
-                        address, target.position(),
-                        target.remaining(), isBlocking() ? 0
+                received = networkSystem.receiveDatagramDirect(fd,
+                        receivePacket, address, target.position(), target
+                                .remaining(), isBlocking() ? 0
                                 : DEFAULT_TIMEOUT, false);
             }
 
@@ -352,15 +325,14 @@ class DatagramChannelImpl extends DatagramChannel implements
             SecurityManager sm = System.getSecurityManager();
             if (!isConnected() && null != sm) {
                 try {
-                    sm.checkAccept(receivePacket.getAddress()
-                            .getHostAddress(), receivePacket.getPort());
+                    sm.checkAccept(receivePacket.getAddress().getHostAddress(),
+                            receivePacket.getPort());
                 } catch (SecurityException e) {
                     // do discard the datagram packet
                     receivePacket = null;
                 }
             }
-            if (null != receivePacket
-                    && null != receivePacket.getAddress()) {
+            if (null != receivePacket && null != receivePacket.getAddress()) {
                 // copy the data of received packet
                 if (received > 0) {
                     target.position(oldposition + received);
@@ -372,7 +344,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         return retAddr;
     }
 
-    /*
+    /**
      * @see java.nio.channels.DatagramChannel#send(java.nio.ByteBuffer,
      *      java.net.SocketAddress)
      */
@@ -445,12 +417,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         }
     }
 
-    // -------------------------------------------------------------------
-    // Methods for read and write.
-    // -------------------------------------------------------------------
-
-    /*
-     * 
+    /**
      * @see java.nio.channels.DatagramChannel#read(java.nio.ByteBuffer)
      */
     @Override
@@ -467,10 +434,10 @@ class DatagramChannelImpl extends DatagramChannel implements
             return 0;
         }
 
-        int readCount  = 0;
+        int readCount = 0;
         if (target.isDirect() || target.hasArray()) {
             readCount = readImpl(target);
-            if(readCount > 0){
+            if (readCount > 0) {
                 target.position(target.position() + readCount);
             }
 
@@ -478,15 +445,14 @@ class DatagramChannelImpl extends DatagramChannel implements
             byte[] readArray = new byte[target.remaining()];
             ByteBuffer readBuffer = ByteBuffer.wrap(readArray);
             readCount = readImpl(readBuffer);
-            if(readCount > 0){
+            if (readCount > 0) {
                 target.put(readArray, 0, readCount);
             }
         }
         return readCount;
     }
 
-    /*
-     * 
+    /**
      * @see java.nio.channels.DatagramChannel#read(java.nio.ByteBuffer[], int,
      *      int)
      */
@@ -530,7 +496,7 @@ class DatagramChannelImpl extends DatagramChannel implements
      * read from channel, and store the result in the target.
      */
     private int readImpl(ByteBuffer readBuffer) throws IOException {
-        synchronized(readLock){
+        synchronized (readLock) {
             int readCount = 0;
             try {
                 begin();
@@ -542,8 +508,9 @@ class DatagramChannelImpl extends DatagramChannel implements
                 if (readBuffer.isDirect()) {
                     int address = AddressUtil.getDirectBufferAddress(readBuffer);
                     if (isConnected()) {
-                        readCount = networkSystem.recvConnectedDatagramDirect(fd,
-                                null, address, start, length, timeout, false);
+                        readCount = networkSystem.recvConnectedDatagramDirect(
+                                fd, null, address, start, length, timeout,
+                                false);
                     } else {
                         readCount = networkSystem.receiveDatagramDirect(fd,
                                 null, address, start, length, timeout, false);
@@ -553,11 +520,11 @@ class DatagramChannelImpl extends DatagramChannel implements
                     byte[] target = readBuffer.array();
                     start += readBuffer.arrayOffset();
                     if (isConnected()) {
-                        readCount = networkSystem.recvConnectedDatagram(fd, null,
-                                target, start, length, timeout, false);
+                        readCount = networkSystem.recvConnectedDatagram(fd,
+                                null, target, start, length, timeout, false);
                     } else {
-                        readCount = networkSystem.receiveDatagram(fd, null, target,
-                                start, length, timeout, false);
+                        readCount = networkSystem.receiveDatagram(fd, null,
+                                target, start, length, timeout, false);
                     }
                 }
                 return readCount;
@@ -570,7 +537,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         }
     }
 
-    /*
+    /**
      * @see java.nio.channels.DatagramChannel#write(java.nio.ByteBuffer)
      */
     @Override
@@ -602,7 +569,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         return result;
     }
 
-    /*
+    /**
      * @see java.nio.channels.DatagramChannel#write(java.nio.ByteBuffer[], int,
      *      int)
      */
@@ -621,7 +588,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             return 0;
         }
         ByteBuffer writeBuf = ByteBuffer.allocate(count);
-        for (int val = offset; val < length+offset; val++) {
+        for (int val = offset; val < length + offset; val++) {
             ByteBuffer source = sources[val];
             int oldPosition = source.position();
             writeBuf.put(source);
@@ -642,10 +609,10 @@ class DatagramChannelImpl extends DatagramChannel implements
     }
 
     /*
-     * write the source. return the count of bytes written.
+     * Write the source. Return the count of bytes written.
      */
     private int writeImpl(ByteBuffer buf) throws IOException {
-        synchronized(writeLock){
+        synchronized (writeLock) {
             int result = 0;
             try {
                 begin();
@@ -654,13 +621,13 @@ class DatagramChannelImpl extends DatagramChannel implements
     
                 if (buf.isDirect()) {
                     int address = AddressUtil.getDirectBufferAddress(buf);
-                    result = networkSystem.sendConnectedDatagramDirect(fd, address,
-                            start, length, isBound);
+                    result = networkSystem.sendConnectedDatagramDirect(fd,
+                            address, start, length, isBound);
                 } else {
                     // buf is assured to have array.
                     start += buf.arrayOffset();
-                    result = networkSystem.sendConnectedDatagram(fd, buf.array(),
-                            start, length, isBound);
+                    result = networkSystem.sendConnectedDatagram(fd, buf
+                            .array(), start, length, isBound);
                 }
                 return result;
             } catch (SocketException e) {
@@ -677,12 +644,8 @@ class DatagramChannelImpl extends DatagramChannel implements
         }
     }
 
-    // -------------------------------------------------------------------
-    // Protected Inherited methods
-    // -------------------------------------------------------------------
-
     /*
-     * do really closing action here
+     * Do really closing action here.
      */
     @Override
     synchronized protected void implCloseSelectableChannel() throws IOException {
@@ -694,8 +657,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         }
     }
 
-    /*
-     * 
+    /**
      * @see java.nio.channels.spi.AbstractSelectableChannel#implConfigureBlocking(boolean)
      */
     @Override
@@ -707,12 +669,8 @@ class DatagramChannelImpl extends DatagramChannel implements
         // decided by isBlocking() method.
     }
 
-    // -------------------------------------------------------------------
-    // Share methods for checking.
-    // -------------------------------------------------------------------
-
     /*
-     * status check, must be open.
+     * Status check, must be open.
      */
     private void checkOpen() throws IOException {
         if (!isOpen()) {
@@ -721,7 +679,7 @@ class DatagramChannelImpl extends DatagramChannel implements
     }
 
     /*
-     * status check, must be open and connected, for read and write.
+     * Status check, must be open and connected, for read and write.
      */
     private void checkOpenConnected() throws IOException {
         checkOpen();
@@ -731,7 +689,7 @@ class DatagramChannelImpl extends DatagramChannel implements
     }
 
     /*
-     * buffer check, must not null
+     * Buffer check, must not null
      */
     private void checkNotNull(ByteBuffer source) {
         if (null == source) {
@@ -740,7 +698,7 @@ class DatagramChannelImpl extends DatagramChannel implements
     }
 
     /*
-     * buffer check, must not null and not read only buffer, for read and
+     * Buffer check, must not null and not read only buffer, for read and
      * receive.
      */
     private void checkWritable(ByteBuffer target) {
@@ -750,12 +708,8 @@ class DatagramChannelImpl extends DatagramChannel implements
         }
     }
 
-    // -------------------------------------------------------------------
-    // Adapter classes for internal socket.
-    // -------------------------------------------------------------------
-
     /*
-     * get the fd for internal use.
+     * Get the fd for internal use.
      */
     public FileDescriptor getFD() {
         return fd;
@@ -781,7 +735,7 @@ class DatagramChannelImpl extends DatagramChannel implements
         private DatagramChannelImpl channelImpl;
 
         /*
-         * init the datagramSocketImpl and datagramChannelImpl
+         * Constructor initialize the datagramSocketImpl and datagramChannelImpl
          */
         DatagramSocketAdapter(DatagramSocketImpl socketimpl,
                 DatagramChannelImpl channelImpl) {
@@ -790,14 +744,14 @@ class DatagramChannelImpl extends DatagramChannel implements
         }
 
         /*
-         * get the internal datagramChannelImpl
+         * Get the internal datagramChannelImpl
          */
         @Override
         public DatagramChannel getChannel() {
             return channelImpl;
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#isBound()
          */
         @Override
@@ -805,7 +759,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             return channelImpl.isBound;
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#isConnected()
          */
         @Override
@@ -813,7 +767,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             return channelImpl.isConnected();
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#getInetAddress()
          */
         @Override
@@ -824,7 +778,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             return channelImpl.connectAddress.getAddress();
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#getLocalAddress()
          */
         @Override
@@ -832,7 +786,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             return channelImpl.getLocalAddress();
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#getPort()
          */
         @Override
@@ -843,7 +797,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             return channelImpl.connectAddress.getPort();
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#bind(java.net.SocketAddress)
          */
         @Override
@@ -855,7 +809,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             channelImpl.isBound = true;
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#receive(java.net.DatagramPacket)
          */
         @Override
@@ -866,7 +820,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             super.receive(packet);
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#send(java.net.DatagramPacket)
          */
         @Override
@@ -877,7 +831,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             super.send(packet);
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#close()
          */
         @Override
@@ -894,7 +848,7 @@ class DatagramChannelImpl extends DatagramChannel implements
             }
         }
 
-        /*
+        /**
          * @see java.net.DatagramSocket#disconnect()
          */
         @Override

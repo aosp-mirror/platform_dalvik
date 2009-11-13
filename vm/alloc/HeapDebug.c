@@ -15,7 +15,7 @@
  */
 
 #include <fcntl.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #include "Dalvik.h"
 #include "HeapInternal.h"

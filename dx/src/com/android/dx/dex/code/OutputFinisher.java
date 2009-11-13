@@ -37,12 +37,12 @@ import java.util.HashSet;
  */
 public final class OutputFinisher {
     /**
-     * &gt;= 0; register count for the method, not including any extra
+     * {@code >= 0;} register count for the method, not including any extra
      * "reserved" registers needed to translate "difficult" instructions
      */
     private final int unreservedRegCount;
 
-    /** non-null; the list of instructions, per se */
+    /** {@code non-null;} the list of instructions, per se */
     private ArrayList<DalvInsn> insns;
 
     /** whether any instruction has position info */
@@ -52,7 +52,7 @@ public final class OutputFinisher {
     private boolean hasAnyLocalInfo;
 
     /**
-     * &gt;= 0; the count of reserved registers (low-numbered
+     * {@code >= 0;} the count of reserved registers (low-numbered
      * registers used when expanding instructions that can't be
      * represented simply); becomes valid after a call to {@link
      * #massageInstructions}
@@ -62,8 +62,8 @@ public final class OutputFinisher {
     /**
      * Constructs an instance. It initially contains no instructions.
      * 
-     * @param regCount &gt;= 0; register count for the method
-     * @param initialCapacity &gt;= 0; initial capacity of the instructions
+     * @param regCount {@code >= 0;} register count for the method
+     * @param initialCapacity {@code >= 0;} initial capacity of the instructions
      * list
      */
     public OutputFinisher(int initialCapacity, int regCount) {
@@ -98,8 +98,8 @@ public final class OutputFinisher {
      * Helper for {@link #add} which scrutinizes a single
      * instruction for local variable information.
      * 
-     * @param insn non-null; instruction to scrutinize
-     * @return <code>true</code> iff the instruction refers to any
+     * @param insn {@code non-null;} instruction to scrutinize
+     * @return {@code true} iff the instruction refers to any
      * named locals
      */
     private static boolean hasLocalInfo(DalvInsn insn) {
@@ -125,8 +125,8 @@ public final class OutputFinisher {
      * Helper for {@link #hasAnyLocalInfo} which scrutinizes a single
      * register spec.
      * 
-     * @param spec non-null; spec to scrutinize
-     * @return <code>true</code> iff the spec refers to any
+     * @param spec {@code non-null;} spec to scrutinize
+     * @return {@code true} iff the spec refers to any
      * named locals
      */
     private static boolean hasLocalInfo(RegisterSpec spec) {
@@ -138,7 +138,7 @@ public final class OutputFinisher {
      * Returns the set of all constants referred to by instructions added
      * to this instance.
      * 
-     * @return non-null; the set of constants
+     * @return {@code non-null;} the set of constants
      */
     public HashSet<Constant> getAllConstants() {
         HashSet<Constant> result = new HashSet<Constant>(20);
@@ -154,8 +154,8 @@ public final class OutputFinisher {
      * Helper for {@link #getAllConstants} which adds all the info for
      * a single instruction.
      * 
-     * @param result non-null; result set to add to
-     * @param insn non-null; instruction to scrutinize
+     * @param result {@code non-null;} result set to add to
+     * @param insn {@code non-null;} instruction to scrutinize
      */
     private static void addConstants(HashSet<Constant> result,
             DalvInsn insn) {
@@ -176,10 +176,10 @@ public final class OutputFinisher {
 
     /**
      * Helper for {@link #getAllConstants} which adds all the info for
-     * a single <code>RegisterSpec</code>.
+     * a single {@code RegisterSpec}.
      *
-     * @param result non-null; result set to add to
-     * @param spec null-ok; register spec to add
+     * @param result {@code non-null;} result set to add to
+     * @param spec {@code null-ok;} register spec to add
      */
     private static void addConstants(HashSet<Constant> result,
             RegisterSpec spec) {
@@ -208,7 +208,7 @@ public final class OutputFinisher {
     /**
      * Adds an instruction to the output.
      * 
-     * @param insn non-null; the instruction to add 
+     * @param insn {@code non-null;} the instruction to add 
      */
     public void add(DalvInsn insn) {
         insns.add(insn);
@@ -218,8 +218,8 @@ public final class OutputFinisher {
     /**
      * Inserts an instruction in the output at the given offset.
      * 
-     * @param at &gt;= 0; what index to insert at
-     * @param insn non-null; the instruction to insert
+     * @param at {@code >= 0;} what index to insert at
+     * @param insn {@code non-null;} the instruction to insert
      */
     public void insert(int at, DalvInsn insn) {
         insns.add(at, insn);
@@ -230,7 +230,7 @@ public final class OutputFinisher {
      * Helper for {@link #add} and {@link #insert},
      * which updates the position and local info flags.
      * 
-     * @param insn non-null; an instruction that was just introduced
+     * @param insn {@code non-null;} an instruction that was just introduced
      */
     private void updateInfo(DalvInsn insn) {
         if (! hasAnyPositionInfo) {
@@ -253,9 +253,9 @@ public final class OutputFinisher {
      * indicated instruction really is a reversible branch.
      * 
      * @param which how many instructions back to find the branch;
-     * <code>0</code> is the most recently added instruction,
-     * <code>1</code> is the instruction before that, etc.
-     * @param newTarget non-null; the new target for the reversed branch
+     * {@code 0} is the most recently added instruction,
+     * {@code 1} is the instruction before that, etc.
+     * @param newTarget {@code non-null;} the new target for the reversed branch
      */
     public void reverseBranch(int which, CodeAddress newTarget) {
         int size = insns.size();
@@ -284,7 +284,7 @@ public final class OutputFinisher {
      * given callback to perform lookups. This should be called before
      * calling {@link #finishProcessingAndGetList}.
      * 
-     * @param callback non-null; callback object
+     * @param callback {@code non-null;} callback object
      */
     public void assignIndices(DalvCode.AssignIndicesCallback callback) {
         for (DalvInsn insn : insns) {
@@ -298,8 +298,8 @@ public final class OutputFinisher {
      * Helper for {@link #assignIndices} which does assignment for one
      * instruction.
      * 
-     * @param insn non-null; the instruction
-     * @param callback non-null; the callback
+     * @param insn {@code non-null;} the instruction
+     * @param callback {@code non-null;} the callback
      */
     private static void assignIndices(CstInsn insn,
             DalvCode.AssignIndicesCallback callback) {
@@ -336,7 +336,7 @@ public final class OutputFinisher {
      * <p><b>Note:</b> This method may only be called once per instance
      * of this class.</p>
      *
-     * @return non-null; the output list
+     * @return {@code non-null;} the output list
      * @throws UnsupportedOperationException if this method has
      * already been called
      */
@@ -359,7 +359,7 @@ public final class OutputFinisher {
      * the format out of each instruction into a separate array, to be
      * further manipulated as things progress.
      * 
-     * @return non-null; the array of formats
+     * @return {@code non-null;} the array of formats
      */
     private InsnFormat[] makeFormatsArray() {
         int size = insns.size();
@@ -375,11 +375,11 @@ public final class OutputFinisher {
     /**
      * Helper for {@link #finishProcessingAndGetList}, which figures
      * out how many reserved registers are required and then reserving
-     * them. It also updates the given <code>formats</code> array so
+     * them. It also updates the given {@code formats} array so
      * as to avoid extra work when constructing the massaged
      * instruction list.
      * 
-     * @param formats non-null; array of per-instruction format selections
+     * @param formats {@code non-null;} array of per-instruction format selections
      */
     private void reserveRegisters(InsnFormat[] formats) {
         int oldReservedCount = (reservedCount < 0) ? 0 : reservedCount;
@@ -425,11 +425,11 @@ public final class OutputFinisher {
      * Helper for {@link #reserveRegisters}, which does one
      * pass over the instructions, calculating the number of
      * registers that need to be reserved. It also updates the
-     * <code>formats</code> list to help avoid extra work in future
+     * {@code formats} list to help avoid extra work in future
      * register reservation passes.
      * 
-     * @param formats non-null; array of per-instruction format selections
-     * @return &gt;= 0; the count of reserved registers
+     * @param formats {@code non-null;} array of per-instruction format selections
+     * @return {@code >= 0;} the count of reserved registers
      */
     private int calculateReservedCount(InsnFormat[] formats) {
         int size = insns.size();
@@ -470,16 +470,16 @@ public final class OutputFinisher {
 
     /**
      * Attempts to fit the given instruction into a format, returning
-     * either a format that the instruction fits into or <code>null</code>
+     * either a format that the instruction fits into or {@code null}
      * to indicate that the instruction will need to be expanded. This
      * fitting process starts with the given format as a first "best
      * guess" and then pessimizes from there if necessary.
      *
-     * @param insn non-null; the instruction in question
-     * @param format null-ok; the current guess as to the best instruction
-     * format to use; <code>null</code> means that no simple format fits
-     * @return null-ok; a possibly-different format, which is either a
-     * good fit or <code>null</code> to indicate that no simple format
+     * @param insn {@code non-null;} the instruction in question
+     * @param format {@code null-ok;} the current guess as to the best instruction
+     * format to use; {@code null} means that no simple format fits
+     * @return {@code null-ok;} a possibly-different format, which is either a
+     * good fit or {@code null} to indicate that no simple format
      * fits
      */
     private InsnFormat findFormatForInsn(DalvInsn insn, InsnFormat format) {
@@ -527,7 +527,7 @@ public final class OutputFinisher {
      * final addresses aren't known at the point that this method is
      * called.</p>
      * 
-     * @param formats non-null; array of per-instruction format selections
+     * @param formats {@code non-null;} array of per-instruction format selections
      */
     private void massageInstructions(InsnFormat[] formats) {
         if (reservedCount == 0) {
@@ -566,8 +566,8 @@ public final class OutputFinisher {
      * problems) is expanded into a series of instances that together
      * perform the proper function.
      * 
-     * @param formats non-null; array of per-instruction format selections
-     * @return non-null; the replacement list
+     * @param formats {@code non-null;} array of per-instruction format selections
+     * @return {@code non-null;} the replacement list
      */
     private ArrayList<DalvInsn> performExpansion(InsnFormat[] formats) {
         int size = insns.size();
@@ -651,9 +651,9 @@ public final class OutputFinisher {
      * Helper for {@link #assignAddressesAndFixBranches}, which checks
      * the branch target size requirement of each branch instruction
      * to make sure it fits. For instructions that don't fit, this
-     * rewrites them to use a <code>goto</code> of some sort. In the
+     * rewrites them to use a {@code goto} of some sort. In the
      * case of a conditional branch that doesn't fit, the sense of the
-     * test is reversed in order to branch around a <code>goto</code>
+     * test is reversed in order to branch around a {@code goto}
      * to the original target.
      * 
      * @return whether any branches had to be fixed

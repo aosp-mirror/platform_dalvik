@@ -22,17 +22,15 @@ package java.lang.annotation;
  * itself is <i>not</i> an annotation, and neither is an interface that simply
  * extends this one. Only the compiler is able to create proper annotation
  * types.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface Annotation {
 
     /**
      * Returns the type of this annotation.
-     * 
+     *
      * @return A {@code Class} instance representing the annotation type.
-     * 
-     * @since Android 1.0
      */
     Class<? extends Annotation> annotationType();
 
@@ -70,14 +68,12 @@ public interface Annotation {
      *         calling their {@code equals()} method.
      *     </li>
      * </ul>
-     * 
+     *
      * @param obj
      *            The object to compare to.
-     * 
-     * @return {@code true} if {@code obj} is equal to this annotation, 
-     * {@code false} otherwise.
-     *         
-     * @since Android 1.0
+     *
+     * @return {@code true} if {@code obj} is equal to this annotation,
+     *            {@code false} otherwise.
      */
     boolean equals(Object obj);
 
@@ -111,10 +107,8 @@ public interface Annotation {
      *         calling their {@code hashCode} method.
      *     </li>
      * </ul>
-     * 
+     *
      * @return the hash code.
-     * 
-     * @since Android 1.0
      */
     int hashCode();
 
@@ -123,11 +117,9 @@ public interface Annotation {
      * strictly defined what the representation has to look like, but it usually
      * consists of the name of the annotation, preceded by a "@". If the
      * annotation contains field members, their names and values are also
-     * included in the result. 
+     * included in the result.
      * 
      * @return the {@code String} that represents this annotation.
-     * 
-     * @since Android 1.0
      */
     String toString();
 }

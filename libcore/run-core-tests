@@ -26,5 +26,5 @@ mkdir $tmp
 chmod 777 $tmp
   
 exec dalvikvm -Duser.language=en -Duser.region=US -Djava.io.tmpdir=$tmp \
-     -Xbootclasspath:$BOOTCLASSPATH:/system/framework/core-tests.jar \
+     -classpath /system/framework/core-tests.jar \
      -Xmx64M com.google.coretests.Main "$@"

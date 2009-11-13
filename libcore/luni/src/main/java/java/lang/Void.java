@@ -21,15 +21,13 @@ import java.lang.reflect.Method;
 
 /**
  * Placeholder class for the Java keyword {@code void}.
- * 
- * @since Android 1.0
+ *
+ * @since 1.1
  */
 public final class Void extends Object {
     
     /**
      * The {@link Class} object that represents the primitive type {@code void}.
-     * 
-     * @since Android 1.0
      */
     public static final Class<Void> TYPE = lookupType();
 
@@ -48,6 +46,6 @@ public final class Void extends Object {
         return (Class<Void>) voidType;
     }
 
-    private Void() {
-    }
+	private Void() {
+	}
 }

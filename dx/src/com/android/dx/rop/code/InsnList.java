@@ -24,7 +24,7 @@ import com.android.dx.util.FixedSizeList;
 public final class InsnList
         extends FixedSizeList {
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      *
      * @param size the size of the list
      */
@@ -35,10 +35,10 @@ public final class InsnList
     /**
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
-     * do that, this will throw <code>NullPointerException</code>.
+     * do that, this will throw {@code NullPointerException}.
      *
-     * @param n &gt;= 0, &lt; size(); which index
-     * @return non-null; element at that index
+     * @param n {@code >= 0, < size();} which index
+     * @return {@code non-null;} element at that index
      */
     public Insn get(int n) {
         return (Insn) get0(n);
@@ -47,8 +47,8 @@ public final class InsnList
     /**
      * Sets the instruction at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param insn non-null; the instruction to set at <code>n</code>
+     * @param n {@code >= 0, < size();} which index
+     * @param insn {@code non-null;} the instruction to set at {@code n}
      */
     public void set(int n, Insn insn) {
         set0(n, insn);
@@ -56,9 +56,9 @@ public final class InsnList
 
     /**
      * Gets the last instruction. This is just a convenient shorthand for
-     * <code>get(size() - 1)</code>.
+     * {@code get(size() - 1)}.
      * 
-     * @return non-null; the last instruction
+     * @return {@code non-null;} the last instruction
      */
     public Insn getLast() {
         return get(size() - 1);
@@ -67,7 +67,7 @@ public final class InsnList
     /**
      * Visits each instruction in the list, in order.
      *
-     * @param visitor non-null; visitor to use
+     * @param visitor {@code non-null;} visitor to use
      */
     public void forEach(Insn.Visitor visitor) {
         int sz = size();
@@ -78,9 +78,9 @@ public final class InsnList
     }
 
     /**
-     * Compares the contents of this <code>InsnList</code> with another.
+     * Compares the contents of this {@code InsnList} with another.
      * The blocks must have the same number of insns, and each Insn must
-     * also return true to <code>Insn.contentEquals()</code>.
+     * also return true to {@code Insn.contentEquals()}.
      *
      * @param b to compare
      * @return true in the case described above.
@@ -108,7 +108,7 @@ public final class InsnList
      * original.
      * 
      * @param delta the amount to offset register numbers by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public InsnList withRegisterOffset(int delta) {
         int sz = size();

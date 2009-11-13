@@ -23,13 +23,13 @@ import com.android.dx.cf.iface.Attribute;
  * the attribute name but leaves the rest up to subclasses.
  */
 public abstract class BaseAttribute implements Attribute {
-    /** non-null; attribute name */
+    /** {@code non-null;} attribute name */
     private final String name;
 
     /**
      * Constructs an instance.
      * 
-     * @param name non-null; attribute name
+     * @param name {@code non-null;} attribute name
      */
     public BaseAttribute(String name) {
         if (name == null) {

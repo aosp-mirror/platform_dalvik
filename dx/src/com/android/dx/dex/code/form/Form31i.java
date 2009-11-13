@@ -25,11 +25,11 @@ import com.android.dx.rop.cst.CstLiteralBits;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Instruction format <code>31i</code>. See the instruction format spec
+ * Instruction format {@code 31i}. See the instruction format spec
  * for details.
  */
 public final class Form31i extends InsnFormat {
-    /** non-null; unique instance of this class */
+    /** {@code non-null;} unique instance of this class */
     public static final InsnFormat THE_ONE = new Form31i();
 
     /**

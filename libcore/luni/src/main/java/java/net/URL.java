@@ -34,8 +34,6 @@ import org.apache.harmony.luni.util.Util;
  * which generates the output dynamically. A URL is divided in its parts
  * protocol, host name, port, path, file, user-info, query, reference and
  * authority. However, not each of this parts has to be defined.
- * 
- * @since Android 1.0
  */
 public final class URL implements java.io.Serializable {
     private static final long serialVersionUID = -7627629688361524110L;
@@ -131,11 +129,9 @@ public final class URL implements java.io.Serializable {
      * <p>
      * A security check is performed to verify whether the current policy allows
      * to set the stream handler factory.
-     * </p>
-     * 
+     *
      * @param streamFactory
      *            the factory to be used for creating stream protocol handlers.
-     * @since Android 1.0
      */
     public static synchronized void setURLStreamHandlerFactory(
             URLStreamHandlerFactory streamFactory) {
@@ -158,7 +154,6 @@ public final class URL implements java.io.Serializable {
      * @throws MalformedURLException
      *             if the given string {@code spec} could not be parsed as a
      *             URL.
-     * @since Android 1.0
      */
     public URL(String spec) throws MalformedURLException {
         this((URL) null, spec, (URLStreamHandler) null);
@@ -178,7 +173,6 @@ public final class URL implements java.io.Serializable {
      * @throws MalformedURLException
      *             if the given string {@code spec} could not be parsed as a URL
      *             or an invalid protocol has been found.
-     * @since Android 1.0
      */
     public URL(URL context, String spec) throws MalformedURLException {
         this(context, spec, (URLStreamHandler) null);
@@ -202,7 +196,6 @@ public final class URL implements java.io.Serializable {
      * @throws MalformedURLException
      *             if the given string {@code spec} could not be parsed as a URL
      *             or an invalid protocol has been found.
-     * @since Android 1.0
      */
     public URL(URL context, String spec, URLStreamHandler handler)
             throws MalformedURLException {
@@ -235,8 +228,6 @@ public final class URL implements java.io.Serializable {
                 // According to RFC 2396 scheme part should match
                 // the following expression:
                 // alpha *( alpha | digit | "+" | "-" | "." )
-                // BEGIN android-changed
-                // copied from newer version of harmony
                 char c = protocol.charAt(0);
                 boolean valid = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
                 for (int i = 1; valid && (i < protocol.length()); i++) {
@@ -253,10 +244,9 @@ public final class URL implements java.io.Serializable {
                     index = -1;
                 } else {
                     // Ignore case in protocol names.
-                    // Scheme is defined by ASCII characters.
+                	// Scheme is defined by ASCII characters.
                     protocol = Util.toASCIILowerCase(protocol);
                 }
-                // END android-changed
             }
         }
 
@@ -338,7 +328,6 @@ public final class URL implements java.io.Serializable {
      * @throws MalformedURLException
      *             if the combination of all arguments do not represent a valid
      *             URL or the protocol is invalid.
-     * @since Android 1.0
      */
     public URL(String protocol, String host, String file)
             throws MalformedURLException {
@@ -361,7 +350,6 @@ public final class URL implements java.io.Serializable {
      * @throws MalformedURLException
      *             if the combination of all arguments do not represent a valid
      *             URL or the protocol is invalid.
-     * @since Android 1.0
      */
     public URL(String protocol, String host, int port, String file)
             throws MalformedURLException {
@@ -371,7 +359,7 @@ public final class URL implements java.io.Serializable {
     /**
      * Creates a new URL instance using the given arguments. The URL uses the
      * specified port instead of the default port for the given protocol.
-     * 
+     *
      * @param protocol
      *            the protocol of the new URL.
      * @param host
@@ -386,25 +374,26 @@ public final class URL implements java.io.Serializable {
      * @throws MalformedURLException
      *             if the combination of all arguments do not represent a valid
      *             URL or the protocol is invalid.
-     * @since Android 1.0
+     * @throws SecurityException
+     *             if {@code handler} is non-{@code null}, and a security
+     *             manager is installed that disallows user-defined protocol
+     *             handlers.
      */
     public URL(String protocol, String host, int port, String file,
             URLStreamHandler handler) throws MalformedURLException {
         if (port < -1) {
-            throw new MalformedURLException(org.apache.harmony.luni.util.Msg
-                    .getString("K0325", port)); //$NON-NLS-1$
+            throw new MalformedURLException(Msg.getString("K0325", port)); //$NON-NLS-1$
         }
 
         if (host != null && host.indexOf(":") != -1 && host.charAt(0) != '[') { //$NON-NLS-1$
             host = "[" + host + "]"; //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        if (protocol != null) {
-            this.protocol = protocol;
-        } else {
-            throw new NullPointerException(Msg.getString("K00b3", protocol)); //$NON-NLS-1$
+        if (protocol == null) {
+            throw new NullPointerException(Msg.getString("K00b3", "null")); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
+        this.protocol = protocol;
         this.host = host;
         this.port = port;
 
@@ -427,8 +416,7 @@ public final class URL implements java.io.Serializable {
             setupStreamHandler();
             if (strmHandler == null) {
                 throw new MalformedURLException(
-                        org.apache.harmony.luni.util.Msg.getString(
-                                "K00b3", protocol)); //$NON-NLS-1$
+                        Msg.getString("K00b3", protocol)); //$NON-NLS-1$
             }
         } else {
             SecurityManager sm = System.getSecurityManager();
@@ -479,7 +467,6 @@ public final class URL implements java.io.Serializable {
      *            the file to be set.
      * @param ref
      *            the reference to be set.
-     * @since Android 1.0
      */
     protected void set(String protocol, String host, int port, String file,
             String ref) {
@@ -506,8 +493,7 @@ public final class URL implements java.io.Serializable {
      *            the URL this instance has to be compared with.
      * @return {@code true} if both instances represents the same URL, {@code
      *         false} otherwise.
-     * @see #hashCode
-     * @since Android 1.0
+     * @see #hashCode()
      */
     @Override
     public boolean equals(Object o) {
@@ -532,7 +518,6 @@ public final class URL implements java.io.Serializable {
      *            the URL to compare against.
      * @return {@code true} if both instances refer to the same resource,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean sameFile(URL otherURL) {
         return strmHandler.sameFile(this, otherURL);
@@ -542,7 +527,6 @@ public final class URL implements java.io.Serializable {
      * Gets the hashcode value of this URL instance.
      * 
      * @return the appropriate hashcode value.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -560,7 +544,6 @@ public final class URL implements java.io.Serializable {
      * Note that this will overwrite any existing stream handler with the new
      * one. Senders must check if the strmHandler is null before calling the
      * method if they do not want this behavior (a speed optimization).
-     * </p>
      */
     void setupStreamHandler() {
         // Check for a cached (previously looked up) handler for
@@ -629,12 +612,10 @@ public final class URL implements java.io.Serializable {
      * <li>Image for pictures</li>
      * <li>AudioClip for audio sequences</li>
      * <li>{@link InputStream} for all other data</li>
-     * </p>
      * 
      * @return the content of the referred resource.
      * @throws IOException
      *             if an error occurs obtaining the content.
-     * @since Android 1.0
      */
     public final Object getContent() throws IOException {
         return openConnection().getContent();
@@ -654,7 +635,6 @@ public final class URL implements java.io.Serializable {
      *         type.
      * @throws IOException
      *             if an error occurs obtaining the content.
-     * @since Android 1.0
      */
     // Param not generic in spec
     @SuppressWarnings("unchecked")
@@ -668,7 +648,6 @@ public final class URL implements java.io.Serializable {
      * @return the stream which allows to read the resource.
      * @throws IOException
      *             if an error occurs while opening the InputStream.
-     * @since Android 1.0
      */
     public final InputStream openStream() throws java.io.IOException {
         return openConnection().getInputStream();
@@ -681,7 +660,6 @@ public final class URL implements java.io.Serializable {
      * @return the connection to this URL.
      * @throws IOException
      *             if an error occurs while opening the connection.
-     * @since Android 1.0
      */
     public URLConnection openConnection() throws IOException {
         return strmHandler.openConnection(this);
@@ -693,7 +671,6 @@ public final class URL implements java.io.Serializable {
      * @return the URI instance that represents this URL.
      * @throws URISyntaxException
      *             if this URL cannot be converted into a URI.
-     * @since Android 1.0
      */
     public URI toURI() throws URISyntaxException {
         return new URI(toExternalForm());
@@ -718,7 +695,6 @@ public final class URL implements java.io.Serializable {
      * @throws UnsupportedOperationException
      *             if the protocol handler does not support opening connections
      *             through proxies.
-     * @since Android 1.0
      */
     public URLConnection openConnection(Proxy proxy) throws IOException {
         if (null == proxy) {
@@ -733,7 +709,6 @@ public final class URL implements java.io.Serializable {
      * {@code toExternalForm()}.
      * 
      * @return the string representation of this URL.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -745,7 +720,6 @@ public final class URL implements java.io.Serializable {
      * this URL.
      * 
      * @return the string representation of this URL.
-     * @since Android 1.0
      */
     public String toExternalForm() {
         if (strmHandler == null) {
@@ -798,8 +772,7 @@ public final class URL implements java.io.Serializable {
      * <p>
      * Note that, we really only need the readObject method but the spec that
      * says readObject will be ignored if no writeObject is present.
-     * </p>
-     * 
+     *
      * @param s
      *            the stream to write on.
      * @throws IOException
@@ -814,7 +787,6 @@ public final class URL implements java.io.Serializable {
      * 
      * @return the file name this URL refers to or an empty string if the file
      *         part is not set.
-     * @since Android 1.0
      */
     public String getFile() {
         return file;
@@ -824,7 +796,6 @@ public final class URL implements java.io.Serializable {
      * Gets the value of the host part of this URL.
      * 
      * @return the host name or IP address of this URL.
-     * @since Android 1.0
      */
     public String getHost() {
         return host;
@@ -834,7 +805,6 @@ public final class URL implements java.io.Serializable {
      * Gets the port number of this URL or {@code -1} if the port is not set.
      * 
      * @return the port number of this URL.
-     * @since Android 1.0
      */
     public int getPort() {
         return port;
@@ -844,7 +814,6 @@ public final class URL implements java.io.Serializable {
      * Gets the protocol of this URL.
      * 
      * @return the protocol type of this URL.
-     * @since Android 1.0
      */
     public String getProtocol() {
         return protocol;
@@ -854,7 +823,6 @@ public final class URL implements java.io.Serializable {
      * Gets the value of the reference part of this URL.
      * 
      * @return the reference part of this URL.
-     * @since Android 1.0
      */
     public String getRef() {
         return ref;
@@ -864,7 +832,6 @@ public final class URL implements java.io.Serializable {
      * Gets the value of the query part of this URL.
      * 
      * @return the query part of this URL.
-     * @since Android 1.0
      */
     public String getQuery() {
         return query;
@@ -874,7 +841,6 @@ public final class URL implements java.io.Serializable {
      * Gets the value of the path part of this URL.
      * 
      * @return the path part of this URL.
-     * @since Android 1.0
      */
     public String getPath() {
         return path;
@@ -884,7 +850,6 @@ public final class URL implements java.io.Serializable {
      * Gets the value of the user-info part of this URL.
      * 
      * @return the user-info part of this URL.
-     * @since Android 1.0
      */
     public String getUserInfo() {
         return userInfo;
@@ -894,7 +859,6 @@ public final class URL implements java.io.Serializable {
      * Gets the value of the authority part of this URL.
      * 
      * @return the authority part of this URL.
-     * @since Android 1.0
      */
     public String getAuthority() {
         return authority;
@@ -921,7 +885,6 @@ public final class URL implements java.io.Serializable {
      *            the query to be set.
      * @param ref
      *            the reference to be set.
-     * @since Android 1.0
      */
     protected void set(String protocol, String host, int port,
             String authority, String userInfo, String path, String query,
@@ -941,21 +904,13 @@ public final class URL implements java.io.Serializable {
         this.query = query;
     }
 
-    // BEGIN android-removed
-    // copied from newer version of harmony
-    // URLStreamHandler getStreamHandler() {
-    //     return strmHandler;
-    // }
-    // END android-removed
-
     /**
      * Gets the default port number of the protocol used by this URL. If no
      * default port is defined by the protocol or the {@code URLStreamHandler},
      * {@code -1} will be returned.
-     * 
+     *
      * @return the default port number according to the protocol of this URL.
      * @see URLStreamHandler#getDefaultPort
-     * @since Android 1.0
      */
     public int getDefaultPort() {
         return strmHandler.getDefaultPort();

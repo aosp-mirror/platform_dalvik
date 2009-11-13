@@ -192,6 +192,9 @@ static void* signalCatcherThreadStart(void* arg)
     sigemptyset(&mask);
     sigaddset(&mask, SIGQUIT);
     sigaddset(&mask, SIGUSR1);
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+    sigaddset(&mask, SIGUSR2);
+#endif
 
     while (true) {
         int rcvd;
@@ -237,9 +240,13 @@ loop:
 
             logThreadStacks();
 
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+            dvmCompilerDumpStats();
+#endif
+
             if (false) {
                 dvmLockMutex(&gDvm.jniGlobalRefLock);
-                dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
+                //dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
                 dvmUnlockMutex(&gDvm.jniGlobalRefLock);
             }
 
@@ -253,6 +260,13 @@ loop:
             LOGI("SIGUSR1 forcing GC (no HPROF)\n");
             dvmCollectGarbage(false);
 #endif
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+        } else if (rcvd == SIGUSR2) {
+            gDvmJit.printMe ^= true;
+            dvmCompilerDumpStats();
+            /* Stress-test unchain all */
+            dvmJitUnchainAll();
+#endif
         } else {
             LOGE("unexpected signal %d\n", rcvd);
         }
@@ -260,4 +274,3 @@ loop:
 
     return NULL;
 }
-

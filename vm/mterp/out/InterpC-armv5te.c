@@ -26,6 +26,7 @@
 #include "interp/InterpDefs.h"
 #include "mterp/Mterp.h"
 #include <math.h>                   // needed for fmod, fmodf
+#include "mterp/common/FindInterface.h"
 
 /*
  * Configuration defines.  These affect the C implementations, i.e. the
@@ -53,7 +54,7 @@
  */
 #define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
-#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia */
+#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
 # define CHECK_REGISTER_INDICES
 #endif
@@ -93,6 +94,18 @@
 #endif
 
 /*
+ * Export another copy of the PC on every instruction; this is largely
+ * redundant with EXPORT_PC and the debugger code.  This value can be
+ * compared against what we have stored on the stack with EXPORT_PC to
+ * help ensure that we aren't missing any export calls.
+ */
+#if WITH_EXTRA_GC_CHECKS > 1
+# define EXPORT_EXTRA_PC() (self->currentPc2 = pc)
+#else
+# define EXPORT_EXTRA_PC()
+#endif
+
+/*
  * Adjust the program counter.  "_offset" is a signed int, in 16-bit units.
  *
  * Assumes the existence of "const u2* pc" and "const u2* curMethod->insns".
@@ -116,9 +129,13 @@
             dvmAbort();                                                     \
         }                                                                   \
         pc += myoff;                                                        \
+        EXPORT_EXTRA_PC();                                                  \
     } while (false)
 #else
-# define ADJUST_PC(_offset) (pc += _offset)
+# define ADJUST_PC(_offset) do {                                            \
+        pc += _offset;                                                      \
+        EXPORT_EXTRA_PC();                                                  \
+    } while (false)
 #endif
 
 /*
@@ -303,6 +320,8 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * within the current method won't be shown correctly.  See the notes
  * in Exception.c.
  *
+ * This is also used to determine the address for precise GC.
+ *
  * Assumes existence of "u4* fp" and "const u2* pc".
  */
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
@@ -316,27 +335,19 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * If we're building without debug and profiling support, we never switch.
  */
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
+#if defined(WITH_JIT)
+# define NEED_INTERP_SWITCH(_current) (                                     \
+    (_current == INTERP_STD) ?                                              \
+        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
+        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+#else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
         dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
+#endif
 #else
 # define NEED_INTERP_SWITCH(_current) (false)
 #endif
-
-/*
- * Look up an interface on a class using the cache.
- */
-INLINE Method* dvmFindInterfaceMethodInCache(ClassObject* thisClass,
-    u4 methodIdx, const Method* method, DvmDex* methodClassDex)
-{
-#define ATOMIC_CACHE_CALC \
-    dvmInterpFindInterfaceMethod(thisClass, methodIdx, method, methodClassDex)
-
-    return (Method*) ATOMIC_CACHE_LOOKUP(methodClassDex->pInterfaceCache,
-                DEX_INTERFACE_CACHE_SIZE, thisClass, methodIdx);
-
-#undef ATOMIC_CACHE_CALC
-}
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
@@ -401,7 +412,6 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #endif
     return true;
 }
-
 
 /* File: cstubs/stubdefs.c */
 /* this is a standard (no debug support) interpreter */
@@ -513,12 +523,15 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * started.  If so, switch to a different "goto" table.
  */
 #define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
-        dvmCheckSuspendQuick(self);                                         \
+        if (dvmCheckSuspendQuick(self)) {                                   \
+            EXPORT_PC();  /* need for precise GC */                         \
+            dvmCheckSuspendPending(self);                                   \
+        }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
             glue->entryPoint = _entryPoint;                                 \
             LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                glue->self->threadId, (_entryPoint), (_pcadj));             \
+                self->threadId, (_entryPoint), (_pcadj));                   \
             GOTO_bail_switch();                                             \
         }                                                                   \
     }
@@ -1199,23 +1212,23 @@ void dvmMterpDumpArmRegs(uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
     register uint32_t rPC       asm("r4");
     register uint32_t rFP       asm("r5");
     register uint32_t rGLUE     asm("r6");
-    register uint32_t rIBASE    asm("r7");
-    register uint32_t rINST     asm("r8");
+    register uint32_t rINST     asm("r7");
+    register uint32_t rIBASE    asm("r8");
     register uint32_t r9        asm("r9");
     register uint32_t r10       asm("r10");
 
     extern char dvmAsmInstructionStart[];
 
     printf("REGS: r0=%08x r1=%08x r2=%08x r3=%08x\n", r0, r1, r2, r3);
-    printf("    : rPC=%08x rFP=%08x rGLUE=%08x rIBASE=%08x\n",
-        rPC, rFP, rGLUE, rIBASE);
-    printf("    : rINST=%08x r9=%08x r10=%08x\n", rINST, r9, r10);
+    printf("    : rPC=%08x rFP=%08x rGLUE=%08x rINST=%08x\n",
+        rPC, rFP, rGLUE, rINST);
+    printf("    : rIBASE=%08x r9=%08x r10=%08x\n", rIBASE, r9, r10);
 
     MterpGlue* glue = (MterpGlue*) rGLUE;
     const Method* method = glue->method;
     printf("    + self is %p\n", dvmThreadSelf());
     //printf("    + currently in %s.%s %s\n",
-    //    method->clazz->descriptor, method->name, method->signature);
+    //    method->clazz->descriptor, method->name, method->shorty);
     //printf("    + dvmAsmInstructionStart = %p\n", dvmAsmInstructionStart);
     //printf("    + next handler for 0x%02x = %p\n",
     //    rINST & 0xff, dvmAsmInstructionStart + (rINST & 0xff) * 64);
@@ -1249,12 +1262,12 @@ void dvmMterpPrintMethod(Method* method)
      * It is a direct (non-virtual) method if it is static, private,
      * or a constructor.
      */
-    bool isDirect = 
+    bool isDirect =
         ((method->accessFlags & (ACC_STATIC|ACC_PRIVATE)) != 0) ||
         (method->name[0] == '<');
 
     char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
-        
+
     printf("<%c:%s.%s %s> ",
             isDirect ? 'D' : 'V',
             method->clazz->descriptor,

@@ -27,8 +27,6 @@ package java.io;
  * 
  * @see BufferedWriter
  * @see FileReader
- *
- * @since Android 1.0
  */
 public class FileWriter extends OutputStreamWriter {
 
@@ -39,7 +37,6 @@ public class FileWriter extends OutputStreamWriter {
      *            the non-null File to write bytes to.
      * @throws IOException
      *             if {@code file} cannot be opened for writing.
-     * @since Android 1.0
      */
     public FileWriter(File file) throws IOException {
         super(new FileOutputStream(file));
@@ -56,7 +53,6 @@ public class FileWriter extends OutputStreamWriter {
      *            indicates whether or not to append to an existing file.
      * @throws IOException
      *             if the {@code file} cannot be opened for writing.
-     * @since Android 1.0
      */
     public FileWriter(File file, boolean append) throws IOException {
         super(new FileOutputStream(file, append));
@@ -67,7 +63,6 @@ public class FileWriter extends OutputStreamWriter {
      * 
      * @param fd
      *            the non-null FileDescriptor to write bytes to.
-     * @since Android 1.0
      */
     public FileWriter(FileDescriptor fd) {
         super(new FileOutputStream(fd));
@@ -80,7 +75,6 @@ public class FileWriter extends OutputStreamWriter {
      *            the non-null name of the file to write bytes to.
      * @throws IOException
      *             if the file cannot be opened for writing.
-     * @since Android 1.0
      */
     public FileWriter(String filename) throws IOException {
         super(new FileOutputStream(new File(filename)));
@@ -97,7 +91,6 @@ public class FileWriter extends OutputStreamWriter {
      *            indicates whether or not to append to an existing file.
      * @throws IOException
      *             if the {@code file} cannot be opened for writing.
-     * @since Android 1.0
      */
     public FileWriter(String filename, boolean append) throws IOException {
         super(new FileOutputStream(filename, append));

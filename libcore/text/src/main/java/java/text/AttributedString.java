@@ -33,8 +33,6 @@ import org.apache.harmony.text.internal.nls.Messages;
 /**
  * Holds a string with attributes describing the characters of
  * this string.
- * 
- * @since Android 1.0
  */
 public class AttributedString {
 
@@ -180,8 +178,8 @@ public class AttributedString {
 
         /**
          * Returns a set of attributes present in the {@code AttributedString}.
-         * An empty set returned indicates that no attributes where defined
-         * 
+         * An empty set returned indicates that no attributes where defined.
+         *
          * @return a set of attribute keys that may be empty.
          */
         public Set<AttributedIterator.Attribute> getAllAttributeKeys() {
@@ -384,18 +382,17 @@ public class AttributedString {
     /**
      * Constructs an {@code AttributedString} from an {@code
      * AttributedCharacterIterator}, which represents attributed text.
-     * 
+     *
      * @param iterator
      *            the {@code AttributedCharacterIterator} that contains the text
      *            for this attributed string.
-     * @since Android 1.0
      */
     public AttributedString(AttributedCharacterIterator iterator) {
         if (iterator.getBeginIndex() > iterator.getEndIndex()) {
             // text.0A=Invalid substring range
             throw new IllegalArgumentException(Messages.getString("text.0A")); //$NON-NLS-1$
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = iterator.getBeginIndex(); i < iterator.getEndIndex(); i++) {
             buffer.append(iterator.current());
             iterator.next();
@@ -436,7 +433,7 @@ public class AttributedString {
             return;
         }
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         iterator.setIndex(start);
         while (iterator.getIndex() < end) {
             buffer.append(iterator.current());
@@ -470,7 +467,7 @@ public class AttributedString {
      * in the specified {@code AttributedCharacterIterator}, starting at {@code
      * start} and ending at {@code end}. All attributes will be copied to this
      * attributed string.
-     * 
+     *
      * @param iterator
      *            the {@code AttributedCharacterIterator} that contains the text
      *            for this attributed string.
@@ -479,10 +476,9 @@ public class AttributedString {
      * @param end
      *            the end index of the range of the copied text.
      * @throws IllegalArgumentException
-     *             if {@code start} is less than first index of 
+     *             if {@code start} is less than first index of
      *             {@code iterator}, {@code end} is greater than the last
      *             index + 1 in {@code iterator} or if {@code start > end}.
-     * @since Android 1.0
      */
     public AttributedString(AttributedCharacterIterator iterator, int start,
             int end) {
@@ -495,7 +491,7 @@ public class AttributedString {
      * start}, ending at {@code end} and it will copy the attributes defined in
      * the specified set. If the set is {@code null} then all attributes are
      * copied.
-     * 
+     *
      * @param iterator
      *            the {@code AttributedCharacterIterator} that contains the text
      *            for this attributed string.
@@ -507,10 +503,9 @@ public class AttributedString {
      *            the set of attributes that will be copied, or all if it is
      *            {@code null}.
      * @throws IllegalArgumentException
-     *             if {@code start} is less than first index of 
-     *             {@code iterator}, {@code end} is greater than the last index + 
+     *             if {@code start} is less than first index of
+     *             {@code iterator}, {@code end} is greater than the last index +
      *             1 in {@code iterator} or if {@code start > end}.
-     * @since Android 1.0
      */
     public AttributedString(AttributedCharacterIterator iterator, int start,
             int end, AttributedCharacterIterator.Attribute[] attributes) {
@@ -527,10 +522,9 @@ public class AttributedString {
 
     /**
      * Creates an {@code AttributedString} from the given text.
-     * 
+     *
      * @param value
      *            the text to take as base for this attributed string.
-     * @since Android 1.0
      */
     public AttributedString(String value) {
         if (value == null) {
@@ -543,7 +537,7 @@ public class AttributedString {
     /**
      * Creates an {@code AttributedString} from the given text and the
      * attributes. The whole text has the given attributes applied.
-     * 
+     *
      * @param value
      *            the text to take as base for this attributed string.
      * @param attributes
@@ -553,7 +547,6 @@ public class AttributedString {
      *             attributes} is greater than 0.
      * @throws NullPointerException
      *             if {@code value} is {@code null}.
-     * @since Android 1.0
      */
     public AttributedString(String value,
             Map<? extends AttributedCharacterIterator.Attribute, ?> attributes) {
@@ -579,7 +572,7 @@ public class AttributedString {
 
     /**
      * Applies a given attribute to this string.
-     * 
+     *
      * @param attribute
      *            the attribute that will be applied to this string.
      * @param value
@@ -589,7 +582,6 @@ public class AttributedString {
      *             if the length of this attributed string is 0.
      * @throws NullPointerException
      *             if {@code attribute} is {@code null}.
-     * @since Android 1.0
      */
     public void addAttribute(AttributedCharacterIterator.Attribute attribute,
             Object value) {
@@ -612,7 +604,7 @@ public class AttributedString {
 
     /**
      * Applies a given attribute to the given range of this string.
-     * 
+     *
      * @param attribute
      *            the attribute that will be applied to this string.
      * @param value
@@ -627,7 +619,6 @@ public class AttributedString {
      *             of this string, or if {@code start >= end}.
      * @throws NullPointerException
      *             if {@code attribute} is {@code null}.
-     * @since Android 1.0
      */
     public void addAttribute(AttributedCharacterIterator.Attribute attribute,
             Object value, int start, int end) {
@@ -650,9 +641,6 @@ public class AttributedString {
             return;
         }
         ListIterator<Range> it = ranges.listIterator();
-        // BEGIN android-changed
-        // copied from a newer version of harmony
-        // value can't be null
         while (it.hasNext()) {
             Range range = it.next();
             if (end <= range.start) {
@@ -710,13 +698,12 @@ public class AttributedString {
                 return;
             }
         }
-        // END android-changed
         it.add(new Range(start, end, value));
     }
 
     /**
      * Applies a given set of attributes to the given range of the string.
-     * 
+     *
      * @param attributes
      *            the set of attributes that will be applied to this string.
      * @param start
@@ -726,7 +713,6 @@ public class AttributedString {
      * @throws IllegalArgumentException
      *             if {@code start < 0}, {@code end} is greater than the length
      *             of this string, or if {@code start >= end}.
-     * @since Android 1.0
      */
     public void addAttributes(
             Map<? extends AttributedCharacterIterator.Attribute, ?> attributes,
@@ -743,9 +729,8 @@ public class AttributedString {
     /**
      * Returns an {@code AttributedCharacterIterator} that gives access to the
      * complete content of this attributed string.
-     * 
+     *
      * @return the newly created {@code AttributedCharacterIterator}.
-     * @since Android 1.0
      */
     public AttributedCharacterIterator getIterator() {
         return new AttributedIterator(this);
@@ -756,12 +741,11 @@ public class AttributedString {
      * complete content of this attributed string. Only attributes contained in
      * {@code attributes} are available from this iterator if they are defined
      * for this text.
-     * 
+     *
      * @param attributes
      *            the array containing attributes that will be in the new
      *            iterator if they are defined for this text.
      * @return the newly created {@code AttributedCharacterIterator}.
-     * @since Android 1.0
      */
     public AttributedCharacterIterator getIterator(
             AttributedCharacterIterator.Attribute[] attributes) {
@@ -773,7 +757,7 @@ public class AttributedString {
      * contents of this attributed string starting at index {@code start} up to
      * index {@code end}. Only attributes contained in {@code attributes} are
      * available from this iterator if they are defined for this text.
-     * 
+     *
      * @param attributes
      *            the array containing attributes that will be in the new
      *            iterator if they are defined for this text.
@@ -782,7 +766,6 @@ public class AttributedString {
      * @param end
      *            the end index of the iterator on the underlying text.
      * @return the newly created {@code AttributedCharacterIterator}.
-     * @since Android 1.0
      */
     public AttributedCharacterIterator getIterator(
             AttributedCharacterIterator.Attribute[] attributes, int start,

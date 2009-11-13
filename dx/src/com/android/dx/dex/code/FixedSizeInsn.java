@@ -28,17 +28,17 @@ import com.android.dx.util.AnnotatedOutput;
 public abstract class FixedSizeInsn extends DalvInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
      * <p><b>Note:</b> In the unlikely event that an instruction takes
-     * absolutely no registers (e.g., a <code>nop</code> or a
+     * absolutely no registers (e.g., a {@code nop} or a
      * no-argument no-result * static method call), then the given
      * register list may be passed as {@link
      * RegisterSpecList#EMPTY}.</p>
      * 
      * @param opcode the opcode; one of the constants from {@link Dops}
-     * @param position non-null; source position
-     * @param registers non-null; register list, including a
+     * @param position {@code non-null;} source position
+     * @param registers {@code non-null;} register list, including a
      * result register if appropriate (that is, registers may be either
      * ins or outs)
      */

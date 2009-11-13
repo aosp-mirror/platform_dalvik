@@ -34,11 +34,11 @@ public interface ParseObserver {
     /**
      * Indicate that a particular member is now being parsed.
      *
-     * @param bytes non-null; the source that is being parsed
-     * @param offset offset into <code>bytes</code> for the start of the
+     * @param bytes {@code non-null;} the source that is being parsed
+     * @param offset offset into {@code bytes} for the start of the
      * member
-     * @param name non-null; name of the member
-     * @param descriptor non-null; descriptor of the member
+     * @param name {@code non-null;} name of the member
+     * @param descriptor {@code non-null;} descriptor of the member
      */
     public void startParsingMember(ByteArray bytes, int offset, String name,
                                    String descriptor);
@@ -46,12 +46,12 @@ public interface ParseObserver {
     /**
      * Indicate that a particular member is no longer being parsed.
      *
-     * @param bytes non-null; the source that was parsed
-     * @param offset offset into <code>bytes</code> for the end of the
+     * @param bytes {@code non-null;} the source that was parsed
+     * @param offset offset into {@code bytes} for the end of the
      * member
-     * @param name non-null; name of the member
-     * @param descriptor non-null; descriptor of the member
-     * @param member non-null; the actual member that was parsed
+     * @param name {@code non-null;} name of the member
+     * @param descriptor {@code non-null;} descriptor of the member
+     * @param member {@code non-null;} the actual member that was parsed
      */
     public void endParsingMember(ByteArray bytes, int offset, String name,
                                  String descriptor, Member member);
@@ -59,10 +59,10 @@ public interface ParseObserver {
     /**
      * Indicate that some parsing happened.
      *
-     * @param bytes non-null; the source that was parsed
-     * @param offset offset into <code>bytes</code> for what was parsed
+     * @param bytes {@code non-null;} the source that was parsed
+     * @param offset offset into {@code bytes} for what was parsed
      * @param len number of bytes parsed
-     * @param human non-null; human form for what was parsed
+     * @param human {@code non-null;} human form for what was parsed
      */
     public void parsed(ByteArray bytes, int offset, int len, String human);
 }

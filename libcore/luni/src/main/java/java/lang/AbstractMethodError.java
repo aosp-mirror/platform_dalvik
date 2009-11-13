@@ -22,8 +22,6 @@ package java.lang;
  * <p>
  * Note that this can only occur when inconsistent class files have been loaded,
  * since invoking an abstract method is a compile time error.
- * </p>
- * @since Android 1.0
  */
 public class AbstractMethodError extends IncompatibleClassChangeError {
 
@@ -32,8 +30,6 @@ public class AbstractMethodError extends IncompatibleClassChangeError {
     /**
      * Constructs a new {@code AbstractMethodError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public AbstractMethodError() {
         super();
@@ -42,10 +38,9 @@ public class AbstractMethodError extends IncompatibleClassChangeError {
     /**
      * Constructs a new {@code AbstractMethodError} with the current stack trace
      * and the specified detail message.
-     * 
+     *
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public AbstractMethodError(String detailMessage) {
         super(detailMessage);

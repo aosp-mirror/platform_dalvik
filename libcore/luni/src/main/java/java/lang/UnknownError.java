@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when the virtual machine must throw an error which does not match any
  * known exceptional condition.
- * 
- * @since Android 1.0
  */
 public class UnknownError extends VirtualMachineError {
 
@@ -30,8 +28,6 @@ public class UnknownError extends VirtualMachineError {
     /**
      * Constructs a new {@code UnknownError} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public UnknownError() {
         super();
@@ -43,7 +39,6 @@ public class UnknownError extends VirtualMachineError {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnknownError(String detailMessage) {
         super(detailMessage);

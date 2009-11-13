@@ -84,6 +84,7 @@ public class MockAbstractPreferences extends AbstractPreferences {
         return lock;
     }
 
+    @Override
     public String[] childrenNamesSpi() throws BackingStoreException {
         checkException();
         if (result == returnNull)
@@ -108,6 +109,7 @@ public class MockAbstractPreferences extends AbstractPreferences {
         return childSpi(name);
     }
 
+    @Override
     public AbstractPreferences childSpi(String name) {
         try {
             checkException();
@@ -123,11 +125,13 @@ public class MockAbstractPreferences extends AbstractPreferences {
         return r;
     }
 
+    @Override
     public void flushSpi() throws BackingStoreException {
         checkException();
         flushedTimes++;
     }
 
+    @Override
     public String getSpi(String key) {
         try {
             checkException();
@@ -139,6 +143,7 @@ public class MockAbstractPreferences extends AbstractPreferences {
         return result == returnNull ? null : attr.getProperty(key);
     }
 
+    @Override
     public String[] keysSpi() throws BackingStoreException {
         checkException();
         Set<Object> keys = attr.keySet();
@@ -147,6 +152,7 @@ public class MockAbstractPreferences extends AbstractPreferences {
         return result == returnNull ? null : results;
     }
 
+    @Override
     public void putSpi(String name, String value) {
         try {
             checkException();
@@ -158,11 +164,13 @@ public class MockAbstractPreferences extends AbstractPreferences {
         attr.put(name, value);
     }
 
+    @Override
     protected void removeNodeSpi() throws BackingStoreException {
         checkException();
         ((MockAbstractPreferences) parent()).childs.remove(name());
     }
 
+    @Override
     public void removeSpi(String key) {
         try {
             checkException();
@@ -174,6 +182,7 @@ public class MockAbstractPreferences extends AbstractPreferences {
         attr.remove(key);
     }
 
+    @Override
     public void syncSpi() throws BackingStoreException {
         checkException();
         syncTimes++;

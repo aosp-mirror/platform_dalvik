@@ -18,11 +18,11 @@ package com.android.dx.rop.code;
 
 /**
  * Implementation of {@link TranslationAdvice} which conservatively answers
- * <code>false</code> to all methods.
+ * {@code false} to all methods.
  */
 public final class ConservativeTranslationAdvice
         implements TranslationAdvice {
-    /** non-null; standard instance of this class */
+    /** {@code non-null;} standard instance of this class */
     public static final ConservativeTranslationAdvice THE_ONE =
         new ConservativeTranslationAdvice();
 

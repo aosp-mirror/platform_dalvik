@@ -29,20 +29,20 @@ import com.android.dx.util.IntList;
  * results" area.
  */
 public final class Frame {
-    /** non-null; the locals */
+    /** {@code non-null;} the locals */
     private final LocalsArray locals;
 
-    /** non-null; the stack */
+    /** {@code non-null;} the stack */
     private final ExecutionStack stack;
 
-    /** null-ok; stack of labels of subroutines that this block is nested in */
+    /** {@code null-ok;} stack of labels of subroutines that this block is nested in */
     private final IntList subroutines;
 
     /**
      * Constructs an instance.
      *
-     * @param locals non-null; the locals array to use
-     * @param stack non-null; the execution stack to use
+     * @param locals {@code non-null;} the locals array to use
+     * @param stack {@code non-null;} the execution stack to use
      */
     private Frame(LocalsArray locals, ExecutionStack stack) {
         this(locals, stack, IntList.EMPTY);
@@ -51,9 +51,9 @@ public final class Frame {
     /**
      * Constructs an instance.
      *
-     * @param locals non-null; the locals array to use
-     * @param stack non-null; the execution stack to use
-     * @param subroutines non-null; list of subroutine start labels for
+     * @param locals {@code non-null;} the locals array to use
+     * @param stack {@code non-null;} the execution stack to use
+     * @param subroutines {@code non-null;} list of subroutine start labels for
      * subroutines this frame is nested in
      */
     private Frame(LocalsArray locals,
@@ -75,12 +75,12 @@ public final class Frame {
 
     /**
      * Constructs an instance. The locals array initially consists of
-     * all-uninitialized values (represented as <code>null</code>s) and
+     * all-uninitialized values (represented as {@code null}s) and
      * the stack starts out empty.
      *
-     * @param maxLocals &gt;= 0; the maximum number of locals this instance
+     * @param maxLocals {@code >= 0;} the maximum number of locals this instance
      * can refer to
-     * @param maxStack &gt;= 0; the maximum size of the stack for this
+     * @param maxStack {@code >= 0;} the maximum size of the stack for this
      * instance
      */
     public Frame(int maxLocals, int maxStack) {
@@ -92,7 +92,7 @@ public final class Frame {
      * contains copies of the locals and stack (that is, it doesn't
      * share them with the original).
      *
-     * @return non-null; the copy
+     * @return {@code non-null;} the copy
      */
     public Frame copy() {
         return new Frame(locals.copy(), stack.copy(), subroutines);
@@ -111,7 +111,7 @@ public final class Frame {
      * Replaces all the occurrences of the given uninitialized type in
      * this frame with its initialized equivalent.
      *
-     * @param type non-null; type to replace
+     * @param type {@code non-null;} type to replace
      */
     public void makeInitialized(Type type) {
         locals.makeInitialized(type);
@@ -121,7 +121,7 @@ public final class Frame {
     /**
      * Gets the locals array for this instance.
      *
-     * @return non-null; the locals array
+     * @return {@code non-null;} the locals array
      */
     public LocalsArray getLocals() {
         return locals;
@@ -130,7 +130,7 @@ public final class Frame {
     /**
      * Gets the execution stack for this instance.
      *
-     * @return non-null; the execution stack
+     * @return {@code non-null;} the execution stack
      */
     public ExecutionStack getStack() {
         return stack;
@@ -143,7 +143,7 @@ public final class Frame {
      * list is ordered such that the deepest nesting (the actual subroutine
      * this block is in) is the last label in the list.
      *
-     * @return non-null; list as noted above
+     * @return {@code non-null;} list as noted above
      */
     public IntList getSubroutines() {
         return subroutines;
@@ -171,10 +171,10 @@ public final class Frame {
      * be used when returning from a subroutine. The stack state of all
      * subroutine invocations is identical, but the locals state may differ.
      *
-     * @param startLabel &gt;=0; The label of the returning subroutine's
+     * @param startLabel {@code >=0;} The label of the returning subroutine's
      * start block
-     * @param subLabel &gt;=0; A calling label of a subroutine
-     * @return null-ok; an appropriatly-constructed instance, or null
+     * @param subLabel {@code >=0;} A calling label of a subroutine
+     * @return {@code null-ok;} an appropriatly-constructed instance, or null
      * if label is not in the set
      */
     public Frame subFrameForLabel(int startLabel, int subLabel) {
@@ -206,8 +206,8 @@ public final class Frame {
      * Merges two frames. If the merged result is the same as this frame,
      * then this instance is returned.
      *
-     * @param other non-null; another frame
-     * @return non-null; the result of merging the two frames
+     * @param other {@code non-null;} another frame
+     * @return {@code non-null;} the result of merging the two frames
      */
     public Frame mergeWith(Frame other) {
         LocalsArray resultLocals;
@@ -237,7 +237,7 @@ public final class Frame {
      * 
      * @param otherSubroutines label list of subroutine start blocks, from
      * least-nested to most-nested.
-     * @return non-null; merged subroutine nest list as described above
+     * @return {@code non-null;} merged subroutine nest list as described above
      */
     private IntList mergeSubroutineLists(IntList otherSubroutines) {
         if (subroutines.equals(otherSubroutines)) {
@@ -265,10 +265,10 @@ public final class Frame {
      * need to be trimmed of all OneLocalsArray elements that relevent to
      * the subroutine that is returning.
      *
-     * @param locals non-null; LocalsArray from before a merge
-     * @param subroutines non-null; a label list of subroutine start blocks
+     * @param locals {@code non-null;} LocalsArray from before a merge
+     * @param subroutines {@code non-null;} a label list of subroutine start blocks
      * representing the subroutine nesting of the block being merged into.
-     * @return non-null; locals set appropriate for merge
+     * @return {@code non-null;} locals set appropriate for merge
      */
     private static LocalsArray adjustLocalsForSubroutines(
             LocalsArray locals, IntList subroutines) {
@@ -301,13 +301,13 @@ public final class Frame {
 
     /**
      * Merges this frame with the frame of a subroutine caller at
-     * <code>predLabel</code>. Only called on the frame at the first
+     * {@code predLabel}. Only called on the frame at the first
      * block of a subroutine.
      *
-     * @param other non-null; another frame
+     * @param other {@code non-null;} another frame
      * @param subLabel label of subroutine start block
      * @param predLabel label of calling block
-     * @return non-null; the result of merging the two frames
+     * @return {@code non-null;} the result of merging the two frames
      */
     public Frame mergeWithSubroutineCaller(Frame other, int subLabel,
             int predLabel) {
@@ -374,7 +374,7 @@ public final class Frame {
      * subroutine calls return.
      *
      * @param subLabel label of subroutine start block
-     * @param callerLabel &gt;=0 label of the caller block where this frame
+     * @param callerLabel {@code >=0;} label of the caller block where this frame
      * came from.
      * @return a new instance to begin a called subroutine.
      */
@@ -406,7 +406,7 @@ public final class Frame {
      * Annotates (adds context to) the given exception with information
      * about this frame.
      *
-     * @param ex non-null; the exception to annotate
+     * @param ex {@code non-null;} the exception to annotate
      */
     public void annotate(ExceptionWithContext ex) {
         locals.annotate(ex);

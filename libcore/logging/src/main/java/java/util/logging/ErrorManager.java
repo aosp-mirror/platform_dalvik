@@ -24,51 +24,37 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * error that may happen during logging. {@code Handlers} should report errors
  * to an {@code ErrorManager}, instead of throwing exceptions, which would
  * interfere with the log issuer's execution.
- * 
- * @since Android 1.0
  */
 public class ErrorManager {
 
     /**
      * The error code indicating a failure that does not fit in any of the
      * specific types of failures that follow.
-     * 
-     * @since Android 1.0
      */
     public static final int GENERIC_FAILURE = 0;
 
     /**
      * The error code indicating a failure when writing to an output stream.
-     * 
-     * @since Android 1.0
      */
     public static final int WRITE_FAILURE = 1;
 
     /**
      * The error code indicating a failure when flushing an output stream.
-     * 
-     * @since Android 1.0
      */
     public static final int FLUSH_FAILURE = 2;
 
     /**
      * The error code indicating a failure when closing an output stream.
-     * 
-     * @since Android 1.0
      */
     public static final int CLOSE_FAILURE = 3;
 
     /**
      * The error code indicating a failure when opening an output stream.
-     * 
-     * @since Android 1.0
      */
     public static final int OPEN_FAILURE = 4;
 
     /**
      * The error code indicating a failure when formatting the error messages.
-     * 
-     * @since Android 1.0
      */
     public static final int FORMAT_FAILURE = 5;
 
@@ -85,20 +71,16 @@ public class ErrorManager {
 
     /**
      * Constructs an instance of {@code ErrorManager}.
-     * 
-     * @since Android 1.0
      */
     public ErrorManager() {
         super();
     }
 
     /**
-     * <p>
      * Reports an error using the given message, exception and error code. This
      * implementation will write out the message to {@link System#err} on the
      * first call and all subsequent calls are ignored. A subclass of this class
      * should override this method.
-     * </p>
      * 
      * @param message
      *            the error message, which may be {@code null}.
@@ -108,8 +90,6 @@ public class ErrorManager {
      * @param errorCode
      *            the error code that identifies the type of error; see the
      *            constant fields of this class for possible values.
-     *            
-     * @since Android 1.0            
      */
     public void error(String message, Exception exception, int errorCode) {
         synchronized (this) {
@@ -119,7 +99,7 @@ public class ErrorManager {
             called = true;
         }
         System.err.println(this.getClass().getName()
-            + ": " + FAILURES[errorCode]); //$NON-NLS-1$
+                + ": " + FAILURES[errorCode]); //$NON-NLS-1$
         if (message != null) {
             // logging.1E=Error message - {0}
             System.err.println(Messages.getString("logging.1E", message)); //$NON-NLS-1$

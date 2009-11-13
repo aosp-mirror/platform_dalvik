@@ -33,8 +33,6 @@ import org.apache.harmony.nio.FileChannelFactory;
  * opened in read/write mode, write operations are available as well. The
  * position of the next read or write operation can be moved forwards and
  * backwards after every operation.
- * 
- * @since Android 1.0
  */
 public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
@@ -51,7 +49,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     private IFileSystem fileSystem = Platform.getFileSystem();
 
     private boolean isReadOnly;
-    
+
     // BEGIN android-added
     private int options;
     // END android-added
@@ -61,12 +59,11 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
 
     private Object repositionLock = new RepositionLock();
 
-    // BEGIN android-changed
     /**
      * Constructs a new {@code RandomAccessFile} based on {@code file} and opens
-     * it according to the access string in {@code mode}. 
+     * it according to the access string in {@code mode}.
      * <p><a id="accessmode"/>
-     * {@code mode} may have one of following values: 
+     * {@code mode} may have one of following values:
      * <table border="0">
      * <tr>
      * <td>{@code "r"}</td>
@@ -90,7 +87,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * file's content must be written synchronously to the target device.</td>
      * </tr>
      * </table>
-     * </p>
+     *
      * @param file
      *            the file to open.
      * @param mode
@@ -107,16 +104,17 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      *             access request according to {@code mode}.
      * @see java.lang.SecurityManager#checkRead(FileDescriptor)
      * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
-     * @since Android 1.0
      */
     public RandomAccessFile(File file, String mode)
             throws FileNotFoundException {
         super();
 
+        // BEGIN android-changed
         options = 0;
-        
+        // END android-changed
+
         fd = new FileDescriptor();
-       
+
         if (mode.equals("r")) { //$NON-NLS-1$
             isReadOnly = true;
             fd.readOnly = true;
@@ -143,8 +141,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
                 security.checkWrite(file.getPath());
             }
         }
-        
+
         fd.descriptor = fileSystem.open(file.properPath(true), options);
+        // BEGIN android-removed
+        // channel = FileChannelFactory.getFileChannel(this, fd.descriptor,
+        //         options);
+        // END android-removed
 
         // if we are in "rws" mode, attempt to sync file+metadata
         if (syncMetadata) {
@@ -155,14 +157,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
             }
         }
     }
-    // END android-changed
 
     /**
      * Constructs a new {@code RandomAccessFile} based on the file named {@code
      * fileName} and opens it according to the access string in {@code mode}.
      * The file path may be specified absolutely or relative to the system
      * property {@code "user.dir"}.
-     * 
+     *
      * @param fileName
      *            the name of the file to open.
      * @param mode
@@ -179,7 +180,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      *             access request according to {@code mode}.
      * @see java.lang.SecurityManager#checkRead(FileDescriptor)
      * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
-     * @since Android 1.0
      */
     public RandomAccessFile(String fileName, String mode)
             throws FileNotFoundException {
@@ -188,10 +188,9 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
 
     /**
      * Closes this file.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this file.
-     * @since Android 1.0
      */
     public void close() throws IOException {
         // BEGIN android-changed
@@ -208,39 +207,34 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
         // END android-changed
     }
 
-    // BEGIN android-changed
     /**
      * Gets this file's {@link FileChannel} object.
      * <p>
-     * The file channel's {@link FileChannel.#position() position} is the same
+     * The file channel's {@link FileChannel#position() position} is the same
      * as this file's file pointer offset (see {@link #getFilePointer()}). Any
      * changes made to this file's file pointer offset are also visible in the
      * file channel's position and vice versa.
-     * </p>
-     * 
+     *
      * @return this file's file channel instance.
-     * @since Android 1.0
      */
-    public final FileChannel getChannel() {
-        synchronized(this) {
-            if(channel == null) {
-                channel = FileChannelFactory.getFileChannel(this, fd.descriptor,
-                        options);
-            }
-            return channel;
+    public final synchronized FileChannel getChannel() {
+        // BEGIN android-added
+        if(channel == null) {
+            channel = FileChannelFactory.getFileChannel(this, fd.descriptor,
+                    options);
         }
+        // END android-added
+        return channel;
     }
-    // END android-changed
 
     /**
      * Gets this file's {@link FileDescriptor}. This represents the operating
      * system resource for this random access file.
-     * 
+     *
      * @return this file's file descriptor object.
      * @throws IOException
      *             if an error occurs while getting the file descriptor of this
      *             file.
-     * @since Android 1.0
      */
     public final FileDescriptor getFD() throws IOException {
         return fd;
@@ -249,13 +243,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
      * Gets the current position within this file. All reads and
      * writes take place at the current file pointer position.
-     * 
+     *
      * @return the current offset in bytes from the beginning of the file.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while getting the file pointer of this
      *             file.
-     * @since Android 1.0
      */
     public long getFilePointer() throws IOException {
         openCheck();
@@ -265,7 +258,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
      * Checks to see if the file is currently open. Returns silently if it is,
      * and throws an exception if it is not.
-     * 
+     *
      * @throws IOException
      *             the receiver is closed.
      */
@@ -277,11 +270,10 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
 
     /**
      * Returns the length of this file in bytes.
-     * 
+     *
      * @return the file's length in bytes.
      * @throws IOException
      *             if this file is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     public long length() throws IOException {
         openCheck();
@@ -301,11 +293,10 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * as an integer in the range from 0 to 255. Returns -1 if the end of the
      * file has been reached. Blocks until one byte has been read, the end of
      * the file is detected or an exception is thrown.
-     * 
+     *
      * @return the byte read or -1 if the end of the file has been reached.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public int read() throws IOException {
         openCheck();
@@ -321,14 +312,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * byte array {@code buffer}. The maximum number of bytes read corresponds
      * to the size of {@code buffer}. Blocks until at least one byte has been
      * read.
-     * 
+     *
      * @param buffer
      *            the byte array in which to store the bytes read.
      * @return the number of bytes actually read or -1 if the end of the file
      *         has been reached.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public int read(byte[] buffer) throws IOException {
         return read(buffer, 0, buffer.length);
@@ -339,7 +329,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * and stores them in the byte array {@code buffer} starting at {@code
      * offset}. Blocks until {@code count} bytes have been read, the end of the
      * file is reached or an exception is thrown.
-     * 
+     *
      * @param buffer
      *            the array in which to store the bytes read from this file.
      * @param offset
@@ -354,7 +344,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      *             offset + count} is greater than the size of {@code buffer}.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public int read(byte[] buffer, int offset, int count) throws IOException {
         // have to have four comparisions to not miss integer overflow cases
@@ -383,14 +372,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads a boolean from the current position in this file. Blocks until one
      * byte has been read, the end of the file is reached or an exception is
      * thrown.
-     * 
+     *
      * @return the next boolean value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeBoolean(boolean)
-     * @since Android 1.0
      */
     public final boolean readBoolean() throws IOException {
         int temp = this.read();
@@ -404,14 +392,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads an 8-bit byte from the current position in this file. Blocks until
      * one byte has been read, the end of the file is reached or an exception is
      * thrown.
-     * 
+     *
      * @return the next signed 8-bit byte value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeBoolean(boolean)
-     * @since Android 1.0
      */
     public final byte readByte() throws IOException {
         int temp = this.read();
@@ -425,15 +412,14 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads a 16-bit character from the current position in this file. Blocks until
      * two bytes have been read, the end of the file is reached or an exception is
      * thrown.
-     * 
+     *
      * @return the next char value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeChar(int)
-     * @since Android 1.0
-     */    
+     */
     public final char readChar() throws IOException {
         byte[] buffer = new byte[2];
         if (read(buffer, 0, buffer.length) != buffer.length) {
@@ -446,14 +432,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads a 64-bit double from the current position in this file. Blocks
      * until eight bytes have been read, the end of the file is reached or an
      * exception is thrown.
-     * 
+     *
      * @return the next double value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeDouble(double)
-     * @since Android 1.0
      */
     public final double readDouble() throws IOException {
         return Double.longBitsToDouble(readLong());
@@ -463,14 +448,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads a 32-bit float from the current position in this file. Blocks
      * until four bytes have been read, the end of the file is reached or an
      * exception is thrown.
-     * 
+     *
      * @return the next float value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeFloat(float)
-     * @since Android 1.0
      */
     public final float readFloat() throws IOException {
         return Float.intBitsToFloat(readInt());
@@ -480,7 +464,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads bytes from this file into {@code buffer}. Blocks until {@code
      * buffer.length} number of bytes have been read, the end of the file is
      * reached or an exception is thrown.
-     * 
+     *
      * @param buffer
      *            the buffer to read bytes into.
      * @throws EOFException
@@ -489,7 +473,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      *             if this file is closed or another I/O error occurs.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0             
      */
     public final void readFully(byte[] buffer) throws IOException {
         readFully(buffer, 0, buffer.length);
@@ -499,7 +482,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Read bytes from this file into {@code buffer} starting at offset {@code
      * offset}. This method blocks until {@code count} number of bytes have been
      * read.
-     * 
+     *
      * @param buffer
      *            the buffer to read bytes into.
      * @param offset
@@ -516,7 +499,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      *             if this file is closed or another I/O error occurs.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0
      */
     public final void readFully(byte[] buffer, int offset, int count)
             throws IOException {
@@ -547,14 +529,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads a 32-bit integer from the current position in this file. Blocks
      * until four bytes have been read, the end of the file is reached or an
      * exception is thrown.
-     * 
+     *
      * @return the next int value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeInt(int)
-     * @since Android 1.0
      */
     public final int readInt() throws IOException {
         byte[] buffer = new byte[4];
@@ -573,13 +554,11 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * <p>
      * Blocks until a line terminating sequence has been read, the end of the
      * file is reached or an exception is thrown.
-     * </p>
-     * 
+     *
      * @return the contents of the line or {@code null} if no characters have
      *         been read before the end of the file has been reached.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public final String readLine() throws IOException {
         StringBuilder line = new StringBuilder(80); // Typical line length
@@ -615,14 +594,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads a 64-bit long from the current position in this file. Blocks until
      * eight bytes have been read, the end of the file is reached or an
      * exception is thrown.
-     * 
+     *
      * @return the next long value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeLong(long)
-     * @since Android 1.0
      */
     public final long readLong() throws IOException {
         byte[] buffer = new byte[8];
@@ -641,14 +619,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads a 16-bit short from the current position in this file. Blocks until
      * two bytes have been read, the end of the file is reached or an exception
      * is thrown.
-     * 
+     *
      * @return the next short value from this file.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeShort(int)
-     * @since Android 1.0
      */
     public final short readShort() throws IOException {
         byte[] buffer = new byte[2];
@@ -662,14 +639,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads an unsigned 8-bit byte from the current position in this file and
      * returns it as an integer. Blocks until one byte has been read, the end of
      * the file is reached or an exception is thrown.
-     * 
+     *
      * @return the next unsigned byte value from this file as an int.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeByte(int)
-     * @since Android 1.0
      */
     public final int readUnsignedByte() throws IOException {
         int temp = this.read();
@@ -683,14 +659,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Reads an unsigned 16-bit short from the current position in this file and
      * returns it as an integer. Blocks until two bytes have been read, the end of
      * the file is reached or an exception is thrown.
-     * 
+     *
      * @return the next unsigned short value from this file as an int.
      * @throws EOFException
      *             if the end of this file is detected.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #writeShort(int)
-     * @since Android 1.0
      */
     public final int readUnsignedShort() throws IOException {
         byte[] buffer = new byte[2];
@@ -706,7 +681,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * is determined by the first two bytes read from the file. Blocks until all
      * required bytes have been read, the end of the file is reached or an
      * exception is thrown.
-     * 
+     *
      * @return the next string encoded in {@link DataInput modified UTF-8} from
      *         this file.
      * @throws EOFException
@@ -716,7 +691,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * @throws UTFDataFormatException
      *             if the bytes read cannot be decoded into a character string.
      * @see #writeUTF(String)
-     * @since Android 1.0
      */
     public final String readUTF() throws IOException {
         int utfSize = readUnsignedShort();
@@ -736,13 +710,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * position may be greater than the current length of the file, but the
      * file's length will only change if the moving of the pointer is followed
      * by a {@code write} operation.
-     * 
+     *
      * @param pos
      *            the new file pointer position.
      * @throws IOException
      *             if this file is closed, {@code pos < 0} or another I/O error
      *             occurs.
-     * @since Android 1.0
      */
     public void seek(long pos) throws IOException {
         if (pos < 0) {
@@ -761,14 +734,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * file to the new end are undefined. The file is truncated if its current
      * size is bigger than {@code newLength}. If the current file pointer
      * position is in the truncated part, it is set to the end of the file.
-     * 
+     *
      * @param newLength
      *            the new file length in bytes.
      * @throws IllegalArgumentException
      *             if {@code newLength < 0}.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public void setLength(long newLength) throws IOException {
         openCheck();
@@ -793,13 +765,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * bytes are skipped if the end of the file is reached or an exception is
      * thrown during the operation. Nothing is done if {@code count} is
      * negative.
-     * 
+     *
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public int skipBytes(int count) throws IOException {
         if (count > 0) {
@@ -815,7 +786,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
      * Writes the entire contents of the byte array {@code buffer} to this file,
      * starting at the current file pointer.
-     * 
+     *
      * @param buffer
      *            the buffer to write.
      * @throws IOException
@@ -824,7 +795,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * @see #read(byte[],int,int)
      * @see #readFully(byte[])
      * @see #readFully(byte[],int,int)
-     * @since Android 1.0
      */
     public void write(byte[] buffer) throws IOException {
         write(buffer, 0, buffer.length);
@@ -834,7 +804,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Writes {@code count} bytes from the byte array {@code buffer} to this
      * file, starting at the current file pointer and using {@code offset} as
      * the first position within {@code buffer} to get bytes.
-     * 
+     *
      * @param buffer
      *            the buffer to write to this file.
      * @param offset
@@ -848,7 +818,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      *             if an I/O error occurs while writing to this file.
      * @see #read(byte[], int, int)
      * @see #readFully(byte[], int, int)
-     * @since Android 1.0
      */
     public void write(byte[] buffer, int offset, int count) throws IOException {
         // BEGIN android-changed
@@ -883,13 +852,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
      * Writes a byte to this file, starting at the current file pointer. Only
      * the least significant byte of the integer {@code oneByte} is written.
-     * 
+     *
      * @param oneByte
      *            the byte to write to this file.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #read()
-     * @since Android 1.0
      */
     public void write(int oneByte) throws IOException {
         openCheck();
@@ -907,13 +875,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
 
     /**
      * Writes a boolean to this file, starting at the current file pointer.
-     * 
+     *
      * @param val
      *            the boolean to write to this file.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #readBoolean()
-     * @since Android 1.0
      */
     public final void writeBoolean(boolean val) throws IOException {
         write(val ? 1 : 0);
@@ -922,14 +889,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
      * Writes an 8-bit byte to this file, starting at the current file pointer.
      * Only the least significant byte of the integer {@code val} is written.
-     * 
+     *
      * @param val
      *            the byte to write to this file.
      * @throws IOException
      *             if this file is closed or another I/O error occurs.
      * @see #readByte()
      * @see #readUnsignedByte()
-     * @since Android 1.0
      */
     public final void writeByte(int val) throws IOException {
         write(val & 0xFF);
@@ -938,7 +904,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
      * Writes the low order 8-bit bytes from a string to this file, starting at
      * the current file pointer.
-     * 
+     *
      * @param str
      *            the string containing the bytes to write to this file
      * @throws IOException
@@ -947,7 +913,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * @see #read(byte[],int,int)
      * @see #readFully(byte[])
      * @see #readFully(byte[],int,int)
-     * @since Android 1.0
      */
     public final void writeBytes(String str) throws IOException {
         byte bytes[] = new byte[str.length()];
@@ -957,18 +922,16 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
         write(bytes);
     }
 
-
     /**
      * Writes a 16-bit character to this file, starting at the current file
      * pointer. Only the two least significant bytes of the integer {@code val}
      * are written, with the high byte first.
-     * 
+     *
      * @param val
      *            the char to write to this file.
      * @throws IOException
      *             if an I/O error occurs while writing to this file.
      * @see #readChar()
-     * @since Android 1.0
      */
     public final void writeChar(int val) throws IOException {
         byte[] buffer = new byte[2];
@@ -981,13 +944,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Writes the 16-bit characters from a string to this file, starting at the
      * current file pointer. Each character is written in the same way as with
      * {@link #writeChar(int)}, with its high byte first.
-     * 
+     *
      * @param str
      *            the string to write to this file.
      * @throws IOException
      *             if an I/O error occurs while writing to this file.
      * @see #readChar()
-     * @since Android 1.0
      */
     public final void writeChars(String str) throws IOException {
         byte newBytes[] = new byte[str.length() * 2];
@@ -1003,13 +965,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Writes a 64-bit double to this file, starting at the current file
      * pointer. The eight bytes returned by
      * {@link Double#doubleToLongBits(double)} are written to this file.
-     * 
+     *
      * @param val
      *            the double to write to this file.
      * @throws IOException
      *             if an I/O error occurs while writing to this file.
      * @see #readDouble()
-     * @since Android 1.0
      */
     public final void writeDouble(double val) throws IOException {
         writeLong(Double.doubleToLongBits(val));
@@ -1019,13 +980,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Writes a 32-bit float to this file, starting at the current file pointer.
      * The four bytes returned by {@link Float#floatToIntBits(float)} are
      * written to this file.
-     * 
+     *
      * @param val
      *            the float to write to this file.
      * @throws IOException
      *             if an I/O error occurs while writing to this file.
      * @see #readFloat()
-     * @since Android 1.0
      */
     public final void writeFloat(float val) throws IOException {
         writeInt(Float.floatToIntBits(val));
@@ -1035,13 +995,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Writes a 32-bit integer to this file, starting at the current file
      * pointer. The four bytes of the integer are written with the highest byte
      * first.
-     * 
+     *
      * @param val
      *            the int to write to this file.
      * @throws IOException
      *             if an I/O error occurs while writing to this file.
      * @see #readInt()
-     * @since Android 1.0
      */
     public final void writeInt(int val) throws IOException {
         byte[] buffer = new byte[4];
@@ -1056,13 +1015,12 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Writes a 64-bit long to this file, starting at the current file
      * pointer. The eight bytes of the long are written with the highest byte
      * first.
-     * 
+     *
      * @param val
      *            the long to write to this file.
      * @throws IOException
      *             if an I/O error occurs while writing to this file.
      * @see #readLong()
-     * @since Android 1.0
      */
     public final void writeLong(long val) throws IOException {
         byte[] buffer = new byte[8];
@@ -1082,13 +1040,13 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * Writes a 16-bit short to this file, starting at the current file
      * pointer. Only the two least significant bytes of the integer {@code val}
      * are written, with the high byte first.
-     * 
+     *
      * @param val
      *            the short to write to this file.
      * @throws IOException
      *             if an I/O error occurs while writing to this file.
      * @see #readShort()
-     * @since Android 1.0
+     * @see DataInput#readUnsignedShort()
      */
     public final void writeShort(int val) throws IOException {
         writeChar(val);
@@ -1097,7 +1055,7 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
     /**
      * Writes a string encoded with {@link DataInput modified UTF-8} to this
      * file, starting at the current file pointer.
-     * 
+     *
      * @param str
      *            the string to write in {@link DataInput modified UTF-8}
      *            format.
@@ -1106,7 +1064,6 @@ public class RandomAccessFile implements DataInput, DataOutput, Closeable {
      * @throws UTFDataFormatException
      *             if the encoded string is longer than 65535 bytes.
      * @see #readUTF()
-     * @since Android 1.0
      */
     public final void writeUTF(String str) throws IOException {
         int utfCount = 0, length = str.length();

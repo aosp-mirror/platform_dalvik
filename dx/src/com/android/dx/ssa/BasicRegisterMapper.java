@@ -24,17 +24,16 @@ import com.android.dx.util.IntList;
  * This class maps one register space into another, with
  * each mapping built up individually and added via addMapping()
  */
-public class BasicRegisterMapper
-        extends RegisterMapper {
-
+public class BasicRegisterMapper extends RegisterMapper {
     /** indexed by old register, containing new name */
     private IntList oldToNew;
 
-    /** Running count of used registers in new namespace */
+    /** running count of used registers in new namespace */
     private int runningCountNewRegisters;
 
     /**
-     * Creates a new OneToOneRegisterMapper
+     * Creates a new OneToOneRegisterMapper.
+     * 
      * @param countOldRegisters the number of registers in the old name space
      */
     public BasicRegisterMapper(int countOldRegisters) {
@@ -70,15 +69,16 @@ public class BasicRegisterMapper
 
     /**
      * Returns the new-namespace mapping for the specified
-     * old-namespace register, or -1 if one exists
+     * old-namespace register, or -1 if one exists.
      *
-     * @param oldReg &gt;=0; old-namespace register
-     * @return new-namespace register or -1 if none.
+     * @param oldReg {@code >= 0;} old-namespace register
+     * @return new-namespace register or -1 if none
      */
     public int oldToNew(int oldReg) {
-        if(oldReg >= oldToNew.size()) {
+        if (oldReg >= oldToNew.size()) {
             return -1;
         }
+
         return oldToNew.get(oldReg);
     }
 
@@ -88,7 +88,8 @@ public class BasicRegisterMapper
 
         sb.append("Old\tNew\n");
         int sz = oldToNew.size();
-        for(int i = 0; i < sz; i++) {
+
+        for (int i = 0; i < sz; i++) {
             sb.append(i);
             sb.append('\t');
             sb.append(oldToNew.get(i));
@@ -104,12 +105,12 @@ public class BasicRegisterMapper
     }
 
     /**
-     * adds a mapping to the mapper. If oldReg has already been mapped,
+     * Adds a mapping to the mapper. If oldReg has already been mapped,
      * overwrites previous mapping with new mapping.
      *
-     * @param oldReg >=0
-     * @param newReg >=0
-     * @param category width of reg (1 or 2)
+     * @param oldReg {@code >= 0;} old register
+     * @param newReg {@code >= 0;} new register
+     * @param category {@code 1..2;} width of reg
      */
     public void addMapping(int oldReg, int newReg, int category) {
         if (oldReg >= oldToNew.size()) {
@@ -118,6 +119,7 @@ public class BasicRegisterMapper
                 oldToNew.add(-1);
             }
         }
+
         oldToNew.set(oldReg, newReg);
 
         if (runningCountNewRegisters < (newReg + category)) {

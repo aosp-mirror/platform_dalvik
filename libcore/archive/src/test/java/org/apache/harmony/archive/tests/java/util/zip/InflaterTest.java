@@ -409,6 +409,22 @@ public class InflaterTest extends junit.framework.TestCase {
     }
 
     /**
+     * @tests java.util.zip.Inflater#Inflater()
+     */
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "Inflater",
+            args = {}
+    )
+    public void test_Constructor() {
+        // test method of java.util.zip.inflater.Inflater()
+        Inflater inflate = new Inflater();
+        assertNotNull("failed to create the instance of inflater",
+                        inflate);
+    }
+
+    /**
      * @tests java.util.zip.Inflater#inflate(byte[], int, int)
      */
     @TestTargetNew(
@@ -501,27 +517,6 @@ public class InflaterTest extends junit.framework.TestCase {
         }
 
         infl2.end();
-    }
-
-    /**
-     * @tests java.util.zip.Inflater#Inflater()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Inflater",
-        args = {}
-    )
-    public void test_Constructor() {
-        // test method of java.util.zip.inflater.Inflater()
-        try {
-            Inflater inflate = new Inflater();
-            assertNotNull("failed to create the instance of inflater", inflate);
-
-        } catch (Exception e) {
-
-            assertTrue("Inflate () constructor threw an exception", true);
-        }
     }
 
     /**
@@ -867,17 +862,6 @@ public class InflaterTest extends junit.framework.TestCase {
         byte[] b = new byte[1024];
         assertEquals(0, inflater.inflate(b));
         inflater.end();
-
-        // Regression for HARMONY-2510
-        inflater = new Inflater();
-        byte[] input = new byte[] {-1};
-        inflater.setInput(input);
-        try {
-            inflater.inflate(b);
-            fail("should throw DataFormateException");
-        } catch (DataFormatException e) {
-            // expected
-        }
     }
 
     /**

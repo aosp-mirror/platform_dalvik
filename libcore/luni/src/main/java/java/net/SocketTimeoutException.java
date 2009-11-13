@@ -22,8 +22,6 @@ import java.io.InterruptedIOException;
 /**
  * This exception is thrown when a timeout expired on a socket {@code read} or
  * {@code accept} operation.
- * 
- * @since Android 1.0
  */
 public class SocketTimeoutException extends InterruptedIOException {
 
@@ -32,8 +30,6 @@ public class SocketTimeoutException extends InterruptedIOException {
     /**
      * Creates a new {@code SocketTimeoutException} instance with its walkback
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public SocketTimeoutException() {
         super();
@@ -45,7 +41,6 @@ public class SocketTimeoutException extends InterruptedIOException {
      * 
      * @param detailMessage
      *            the detail message of this exception.
-     * @since Android 1.0
      */
     public SocketTimeoutException(String detailMessage) {
         super(detailMessage);

@@ -92,7 +92,7 @@ public class PreferenceChangeEventTest extends TestCase {
     )
     public void testConstructor() {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key",
-                "value");
+        "value");
         assertEquals("key", event.getKey());
         assertEquals("value", event.getNewValue());
         assertSame(Preferences.userRoot(), event.getNode());
@@ -107,7 +107,7 @@ public class PreferenceChangeEventTest extends TestCase {
     )
     public void testSerialization() throws Exception {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key",
-                "value");
+        "value");
         try {
             SerializationTest.copySerializable(event);
             fail("No expected NotSerializableException");

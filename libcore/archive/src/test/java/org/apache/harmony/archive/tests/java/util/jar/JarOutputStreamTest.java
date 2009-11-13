@@ -48,7 +48,7 @@ public class JarOutputStreamTest extends junit.framework.TestCase {
         method = "putNextEntry",
         args = {java.util.zip.ZipEntry.class}
     )
-    public void test_putNextEntryLjava_util_zip_ZipEntry() {
+    public void test_putNextEntryLjava_util_zip_ZipEntry() throws Exception {
         // testClass file`s actual extension is .class, since having .class
         // extension files in source dir causes
         // problems on eclipse, the extension is changed into .ser or it can be
@@ -76,35 +76,30 @@ public class JarOutputStreamTest extends junit.framework.TestCase {
             File outputJar = null;
             JarOutputStream jout = null;
 
-            try {
-                // open the output jarfile
-                outputJar = File.createTempFile("hyts_", ".jar");
-                jout = new JarOutputStream(new FileOutputStream(outputJar),
-                        newman);
-                jout.putNextEntry(new JarEntry(entryName));
-            } catch (Exception e) {
-                fail("Error creating JarOutputStream: " + e);
-            }
+            // open the output jarfile
+            outputJar = File.createTempFile("hyts_", ".jar");
+            jout = new JarOutputStream(new FileOutputStream(outputJar),
+                    newman);
+            jout.putNextEntry(new JarEntry(entryName));
+
             File resources = Support_Resources.createTempFolder();
-            try {
-                // read in the class file, and output it to the jar
-                Support_Resources.copyFile(resources, null, testClass);
-                URL jarURL = new URL((new File(resources, testClass)).toURL()
-                        .toString());
-                InputStream jis = jarURL.openStream();
 
-                byte[] bytes = new byte[1024];
-                int len;
-                while ((len = jis.read(bytes)) != -1) {
-                    jout.write(bytes, 0, len);
-                }
+            // read in the class file, and output it to the jar
+            Support_Resources.copyFile(resources, null, testClass);
+            URL jarURL = new URL((new File(resources, testClass)).toURL()
+                    .toString());
+            InputStream jis = jarURL.openStream();
 
-                jout.flush();
-                jout.close();
-                jis.close();
-            } catch (Exception e) {
-                fail("Error writing JAR file for testing: " + e);
+            byte[] bytes = new byte[1024];
+            int len;
+            while ((len = jis.read(bytes)) != -1) {
+                jout.write(bytes, 0, len);
             }
+
+            jout.flush();
+            jout.close();
+            jis.close();
+
             String res = null;
             // set up the VM parameters
             String[] args = new String[2];

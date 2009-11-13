@@ -38,15 +38,11 @@ import java.util.jar.Manifest;
  * jar:http://www.example.com/applets/archive.jar!/test.class}</li>
  * <li>Directory Entry: {@code
  * jar:http://www.example.com/applets/archive.jar!/applets/}</li>
- * 
- * @since Android 1.0
  */
 public abstract class JarURLConnection extends URLConnection {
 
     /**
      * The location part of the represented URL.
-     * 
-     * @since Android 1.0
      */
     protected URLConnection jarFileURLConnection;
 
@@ -60,12 +56,11 @@ public abstract class JarURLConnection extends URLConnection {
     /**
      * Constructs an instance of {@code JarURLConnection} that refers to the
      * specified URL.
-     * 
+     *
      * @param url
      *            the URL that contains the location to connect to.
      * @throws MalformedURLException
      *             if an invalid URL has been entered.
-     * @since Android 1.0
      */
     protected JarURLConnection(URL url) throws MalformedURLException {
         super(url);
@@ -74,10 +69,12 @@ public abstract class JarURLConnection extends URLConnection {
         if ((sepIdx = file.indexOf("!/")) < 0) { //$NON-NLS-1$
             throw new MalformedURLException();
         }
-        if (file.length() == sepIdx + 2) {
+        fileURL = new URL(url.getFile().substring(0,sepIdx)); //$NON-NLS-1$
+        sepIdx += 2;
+        if (file.length() == sepIdx) {
             return;
         }
-        entryName = file.substring(sepIdx + 2, file.length());
+        entryName = file.substring(sepIdx, file.length());
         if (null != url.getRef()) {
             entryName += "#" + url.getRef(); //$NON-NLS-1$
         }
@@ -86,12 +83,11 @@ public abstract class JarURLConnection extends URLConnection {
     /**
      * Returns all attributes of the {@code JarEntry} referenced by this {@code
      * JarURLConnection}.
-     * 
+     *
      * @return the attributes of the referenced {@code JarEntry}.
-     * @exception IOException
+     * @throws IOException
      *                if an I/O exception occurs while retrieving the
      *                JAR-entries.
-     * @since Android 1.0
      */
     public Attributes getAttributes() throws java.io.IOException {
         JarEntry jEntry = getJarEntry();
@@ -102,12 +98,11 @@ public abstract class JarURLConnection extends URLConnection {
      * Returns all certificates of the {@code JarEntry} referenced by this
      * {@code JarURLConnection} instance. This method will return {@code null}
      * until the {@code InputStream} has been completely verified.
-     * 
+     *
      * @return the certificates of the {@code JarEntry} as an array.
-     * @exception IOException
+     * @throws IOException
      *                if there is an I/O exception occurs while getting the
      *                {@code JarEntry}.
-     * @since Android 1.0
      */
     public Certificate[] getCertificates() throws java.io.IOException {
         JarEntry jEntry = getJarEntry();
@@ -122,9 +117,8 @@ public abstract class JarURLConnection extends URLConnection {
      * Gets the name of the entry referenced by this {@code JarURLConnection}.
      * The return value will be {@code null} if this instance refers to a JAR
      * file rather than an JAR file entry.
-     * 
+     *
      * @return the {@code JarEntry} name this instance refers to.
-     * @since Android 1.0
      */
     public String getEntryName() {
         return entryName;
@@ -133,12 +127,11 @@ public abstract class JarURLConnection extends URLConnection {
     /**
      * Gets the {@code JarEntry} object of the entry referenced by this {@code
      * JarURLConnection}.
-     * 
+     *
      * @return the referenced {@code JarEntry} object or {@code null} if no
      *         entry name is specified.
      * @throws IOException
      *             if an error occurs while getting the file or file-entry.
-     * @since Android 1.0
      */
     public JarEntry getJarEntry() throws IOException {
         if (!connected) {
@@ -153,56 +146,44 @@ public abstract class JarURLConnection extends URLConnection {
 
     /**
      * Gets the manifest file associated with this JAR-URL.
-     * 
+     *
      * @return the manifest of the referenced JAR-file.
      * @throws IOException
      *             if an error occurs while getting the manifest file.
-     * @since Android 1.0
      */
     public Manifest getManifest() throws java.io.IOException {
-        return getJarFile().getManifest();
+        return (Manifest)getJarFile().getManifest().clone();
     }
 
     /**
      * Gets the {@code JarFile} object referenced by this {@code
      * JarURLConnection}.
-     * 
+     *
      * @return the referenced JarFile object.
-     * @exception IOException
+     * @throws IOException
      *                if an I/O exception occurs while retrieving the JAR-file.
-     * @since Android 1.0
      */
     public abstract JarFile getJarFile() throws java.io.IOException;
 
     /**
      * Gets the URL to the JAR-file referenced by this {@code JarURLConnection}.
-     * 
+     *
      * @return the URL to the JAR-file or {@code null} if there was an error
      *         retrieving the URL.
-     * @since Android 1.0
      */
     public URL getJarFileURL() {
-        if (fileURL != null) {
-            return fileURL;
-        }
-        try {
-            return fileURL = new URL(url.getFile().substring(0,
-                    url.getFile().indexOf("!/"))); //$NON-NLS-1$
-        } catch (MalformedURLException e) {
-            return null;
-        }
+        return fileURL;
     }
 
     /**
      * Gets all attributes of the manifest file referenced by this {@code
      * JarURLConnection}. If this instance refers to a JAR-file rather than a
      * JAR-file entry, {@code null} will be returned.
-     * 
+     *
      * @return the attributes of the manifest file or {@code null}.
-     * @exception IOException
+     * @throws IOException
      *                if an I/O exception occurs while retrieving the {@code
      *                JarFile}.
-     * @since Android 1.0
      */
     public Attributes getMainAttributes() throws java.io.IOException {
         Manifest m = getJarFile().getManifest();

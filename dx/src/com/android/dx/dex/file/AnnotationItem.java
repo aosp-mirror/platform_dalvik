@@ -46,20 +46,20 @@ public final class AnnotationItem extends OffsettedItem {
     /** the required alignment for instances of this class */
     private static final int ALIGNMENT = 1;
 
-    /** non-null; unique instance of {@link #TypeIdSorter} */
+    /** {@code non-null;} unique instance of {@link #TypeIdSorter} */
     private static final TypeIdSorter TYPE_ID_SORTER = new TypeIdSorter();
     
-    /** non-null; the annotation to represent */
+    /** {@code non-null;} the annotation to represent */
     private final Annotation annotation;
 
     /**
-     * null-ok; type reference for the annotation type; set during
+     * {@code null-ok;} type reference for the annotation type; set during
      * {@link #addContents}
      */
     private TypeIdItem type;
 
     /**
-     * null-ok; encoded form, ready for writing to a file; set during
+     * {@code null-ok;} encoded form, ready for writing to a file; set during
      * {@link #place0}
      */
     private byte[] encodedForm;
@@ -88,7 +88,7 @@ public final class AnnotationItem extends OffsettedItem {
      * ignoring all other aspects of the elements. This is only valid
      * to use after type id indices are known.
      * 
-     * @param array non-null; array to sort
+     * @param array {@code non-null;} array to sort
      */
     public static void sortByTypeIdIndex(AnnotationItem[] array) {
         Arrays.sort(array, TYPE_ID_SORTER);
@@ -97,7 +97,7 @@ public final class AnnotationItem extends OffsettedItem {
     /**
      * Constructs an instance.
      * 
-     * @param annotation non-null; annotation to represent
+     * @param annotation {@code non-null;} annotation to represent
      */
     public AnnotationItem(Annotation annotation) {
         /*
@@ -167,8 +167,8 @@ public final class AnnotationItem extends OffsettedItem {
      * output, that consumes no bytes of output. This is for annotating
      * a reference to this instance at the point of the reference.
      * 
-     * @param out non-null; where to output to
-     * @param prefix non-null; prefix for each line of output
+     * @param out {@code non-null;} where to output to
+     * @param prefix {@code non-null;} prefix for each line of output
      */
     public void annotateTo(AnnotatedOutput out, String prefix) {
         out.annotate(0, prefix + "visibility: " +

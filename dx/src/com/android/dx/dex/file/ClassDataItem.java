@@ -38,32 +38,32 @@ import java.util.HashMap;
  * Representation of all the parts of a Dalvik class that are generally
  * "inflated" into an in-memory representation at runtime. Instances of
  * this class are represented in a compact streamable form in a
- * <code>dex</code> file, as opposed to a random-access form.
+ * {@code dex} file, as opposed to a random-access form.
  */
 public final class ClassDataItem extends OffsettedItem {
-    /** non-null; what class this data is for, just for listing generation */
+    /** {@code non-null;} what class this data is for, just for listing generation */
     private final CstType thisClass;
     
-    /** non-null; list of static fields */
+    /** {@code non-null;} list of static fields */
     private final ArrayList<EncodedField> staticFields;
 
-    /** non-null; list of initial values for static fields */
+    /** {@code non-null;} list of initial values for static fields */
     private final HashMap<EncodedField, Constant> staticValues;
 
-    /** non-null; list of instance fields */
+    /** {@code non-null;} list of instance fields */
     private final ArrayList<EncodedField> instanceFields;
 
-    /** non-null; list of direct methods */
+    /** {@code non-null;} list of direct methods */
     private final ArrayList<EncodedMethod> directMethods;
 
-    /** non-null; list of virtual methods */
+    /** {@code non-null;} list of virtual methods */
     private final ArrayList<EncodedMethod> virtualMethods;
 
-    /** null-ok; static initializer list; set in {@link #addContents} */
+    /** {@code null-ok;} static initializer list; set in {@link #addContents} */
     private CstArray staticValuesConstant;
 
     /**
-     * null-ok; encoded form, ready for writing to a file; set during
+     * {@code null-ok;} encoded form, ready for writing to a file; set during
      * {@link #place0}
      */
     private byte[] encodedForm;
@@ -72,7 +72,7 @@ public final class ClassDataItem extends OffsettedItem {
      * Constructs an instance. Its sets of members are initially
      * empty.
      * 
-     * @param thisClass non-null; what class this data is for, just
+     * @param thisClass {@code non-null;} what class this data is for, just
      * for listing generation
      */
     public ClassDataItem(CstType thisClass) {
@@ -106,8 +106,8 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Returns whether this instance is empty.
      * 
-     * @return <code>true</code> if this instance is empty or
-     * <code>false</code> if at least one element has been added to it
+     * @return {@code true} if this instance is empty or
+     * {@code false} if at least one element has been added to it
      */
     public boolean isEmpty() {
         return staticFields.isEmpty() && instanceFields.isEmpty()
@@ -117,8 +117,8 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Adds a static field.
      * 
-     * @param field non-null; the field to add
-     * @param value null-ok; initial value for the field, if any
+     * @param field {@code non-null;} the field to add
+     * @param value {@code null-ok;} initial value for the field, if any
      */
     public void addStaticField(EncodedField field, Constant value) {
         if (field == null) {
@@ -137,7 +137,7 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Adds an instance field.
      * 
-     * @param field non-null; the field to add
+     * @param field {@code non-null;} the field to add
      */
     public void addInstanceField(EncodedField field) {
         if (field == null) {
@@ -148,9 +148,9 @@ public final class ClassDataItem extends OffsettedItem {
     }
 
     /**
-     * Adds a direct (<code>static</code> and/or <code>private</code>) method.
+     * Adds a direct ({@code static} and/or {@code private}) method.
      * 
-     * @param method non-null; the method to add
+     * @param method {@code non-null;} the method to add
      */
     public void addDirectMethod(EncodedMethod method) {
         if (method == null) {
@@ -163,7 +163,7 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Adds a virtual method.
      * 
-     * @param method non-null; the method to add
+     * @param method {@code non-null;} the method to add
      */
     public void addVirtualMethod(EncodedMethod method) {
         if (method == null) {
@@ -178,7 +178,7 @@ public final class ClassDataItem extends OffsettedItem {
      * in any way to the underlying lists contained in this instance, but
      * the objects contained in the list are shared.
      * 
-     * @return non-null; list of all methods
+     * @return {@code non-null;} list of all methods
      */
     public ArrayList<EncodedMethod> getMethods() {
         int sz = directMethods.size() + virtualMethods.size();
@@ -195,7 +195,7 @@ public final class ClassDataItem extends OffsettedItem {
      * Prints out the contents of this instance, in a debugging-friendly
      * way.
      * 
-     * @param out non-null; where to output to
+     * @param out {@code non-null;} where to output to
      * @param verbose whether to be verbose with the output
      */
     public void debugPrint(Writer out, boolean verbose) {
@@ -258,9 +258,9 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Gets a {@link CstArray} corresponding to {@link #staticValues} if
-     * it contains any non-zero non-<code>null</code> values.
+     * it contains any non-zero non-{@code null} values.
      * 
-     * @return null-ok; the corresponding constant or <code>null</code> if
+     * @return {@code null-ok;} the corresponding constant or {@code null} if
      * there are no values to encode
      */
     public CstArray getStaticValuesConstant() {
@@ -273,9 +273,9 @@ public final class ClassDataItem extends OffsettedItem {
 
     /**
      * Gets a {@link CstArray} corresponding to {@link #staticValues} if
-     * it contains any non-zero non-<code>null</code> values.
+     * it contains any non-zero non-{@code null} values.
      * 
-     * @return null-ok; the corresponding constant or <code>null</code> if
+     * @return {@code null-ok;} the corresponding constant or {@code null} if
      * there are no values to encode
      */
     private CstArray makeStaticValuesConstant() {
@@ -337,13 +337,11 @@ public final class ClassDataItem extends OffsettedItem {
     /**
      * Writes out the encoded form of this instance.
      * 
-     * @param file non-null; file this instance is part of
-     * @param out non-null; where to write to
+     * @param file {@code non-null;} file this instance is part of
+     * @param out {@code non-null;} where to write to
      */
     private void encodeOutput(DexFile file, AnnotatedOutput out) {
         boolean annotates = out.annotates();
-        int svSize = (staticValuesConstant == null) ? 0 :
-            staticValuesConstant.getList().size();
 
         if (annotates) {
             out.annotate(0, offsetString() + " class data for " +
@@ -369,10 +367,10 @@ public final class ClassDataItem extends OffsettedItem {
      * Helper for {@link #encodeOutput}, which writes out the given
      * size value, annotating it as well (if annotations are enabled).
      * 
-     * @param file non-null; file this instance is part of
-     * @param out non-null; where to write to
-     * @param label non-null; the label for the purposes of annotation
-     * @param size &gt;= 0; the size to write
+     * @param file {@code non-null;} file this instance is part of
+     * @param out {@code non-null;} where to write to
+     * @param label {@code non-null;} the label for the purposes of annotation
+     * @param size {@code >= 0;} the size to write
      */
     private static void encodeSize(DexFile file, AnnotatedOutput out,
             String label, int size) {
@@ -389,10 +387,10 @@ public final class ClassDataItem extends OffsettedItem {
      * list. It also annotates the items (if any and if annotations
      * are enabled).
      * 
-     * @param file non-null; file this instance is part of
-     * @param out non-null; where to write to
-     * @param label non-null; the label for the purposes of annotation
-     * @param list non-null; the list in question
+     * @param file {@code non-null;} file this instance is part of
+     * @param out {@code non-null;} where to write to
+     * @param label {@code non-null;} the label for the purposes of annotation
+     * @param list {@code non-null;} the list in question
      */
     private static void encodeList(DexFile file, AnnotatedOutput out,
             String label, ArrayList<? extends EncodedMember> list) {

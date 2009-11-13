@@ -41,7 +41,6 @@ public final class Leb128Utils {
         int count = 0;
 
         while (remaining != 0) {
-            value = remaining;
             remaining >>= 7;
             count++;
         }

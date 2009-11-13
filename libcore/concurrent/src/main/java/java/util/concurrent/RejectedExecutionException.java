@@ -9,7 +9,7 @@ package java.util.concurrent;
 /**
  * Exception thrown by an {@link Executor} when a task cannot be
  * accepted for execution.
- * 
+ *
  * @since 1.5
  * @author Doug Lea
  */

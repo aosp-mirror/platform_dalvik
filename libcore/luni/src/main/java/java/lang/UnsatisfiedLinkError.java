@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when an attempt is made to invoke a native for which an implementation
  * could not be found.
- * 
- * @since Android 1.0
  */
 public class UnsatisfiedLinkError extends LinkageError {
 
@@ -30,8 +28,6 @@ public class UnsatisfiedLinkError extends LinkageError {
     /**
      * Constructs a new {@code UnsatisfiedLinkError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public UnsatisfiedLinkError() {
         super();
@@ -43,7 +39,6 @@ public class UnsatisfiedLinkError extends LinkageError {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UnsatisfiedLinkError(String detailMessage) {
         super(detailMessage);

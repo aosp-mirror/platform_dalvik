@@ -36,11 +36,11 @@ public final class EncodedArrayItem extends OffsettedItem {
     /** the required alignment for instances of this class */
     private static final int ALIGNMENT = 1;
 
-    /** non-null; the array to represent */
+    /** {@code non-null;} the array to represent */
     private final CstArray array;
 
     /**
-     * null-ok; encoded form, ready for writing to a file; set during
+     * {@code null-ok;} encoded form, ready for writing to a file; set during
      * {@link #place0}
      */
     private byte[] encodedForm;
@@ -48,7 +48,7 @@ public final class EncodedArrayItem extends OffsettedItem {
     /**
      * Constructs an instance.
      * 
-     * @param array non-null; array to represent
+     * @param array {@code non-null;} array to represent
      */
     public EncodedArrayItem(CstArray array) {
         /*

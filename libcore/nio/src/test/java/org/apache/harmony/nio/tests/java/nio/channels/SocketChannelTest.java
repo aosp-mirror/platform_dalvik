@@ -29,6 +29,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.BindException;
 import java.net.ConnectException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -4111,6 +4113,95 @@ public class SocketChannelTest extends TestCase {
         lastByte = in.read();
         if (lastByte != -1) {
             fail("Server received too long sequence. Expected 1 byte.");
+        }
+    }
+
+    /**
+     * @throws IOException 
+     * @tests java.nio.channels.SocketChannel#read(ByteBuffer)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    ) 
+    public void test_socketChannel_read_DirectByteBuffer() throws InterruptedException, IOException {
+
+        ServerThread server = new ServerThread();
+        server.start();
+        Thread.currentThread().sleep(1000);
+
+        InetSocketAddress address = new InetSocketAddress(InetAddress
+                .getByName("localhost"), port);
+
+        // First test with array based byte buffer
+        SocketChannel sc = SocketChannel.open();
+        sc.connect(address);
+
+        ByteBuffer buf = ByteBuffer.allocate(data.length);
+        buf.limit(data.length / 2);
+        sc.read(buf);
+
+        buf.limit(buf.capacity());
+        sc.read(buf);
+        sc.close();
+
+        // Make sure the buffer is filled correctly
+        buf.rewind();
+        assertSameContent(data, buf);
+
+        // Now test with direct byte buffer
+        sc = SocketChannel.open();
+        sc.connect(address);
+
+        buf = ByteBuffer.allocateDirect(data.length);
+        buf.limit(data.length / 2);
+        sc.read(buf);
+
+        buf.limit(buf.capacity());
+        sc.read(buf);
+        sc.close();
+
+        // Make sure the buffer is filled correctly
+        buf.rewind();
+        assertSameContent(data, buf);
+    }
+
+    private void assertSameContent(byte[] data, ByteBuffer buf) {
+        for (byte b : data) {
+            if (b != buf.get()) {
+                int pos = buf.position() - 1;
+                fail("Content not equal. Buffer position: " +
+                        (pos) + " expected: " + b + " was: " + buf.get(pos));
+            }
+        }
+    }
+
+    public static boolean done = false;
+    public static int port = Support_PortManager.getNextPort();
+    public static byte[] data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    static class ServerThread extends Thread {
+        @Override
+        public void run() {
+            try {
+                ServerSocketChannel ssc = ServerSocketChannel.open();
+                InetSocketAddress addr = new InetSocketAddress(InetAddress
+                        .getByAddress(new byte[] {0, 0, 0, 0}), port);
+                ssc.socket().bind(addr, 0);
+
+                ByteBuffer buf = ByteBuffer.allocate(10);
+                buf.put(data);
+
+                while (!done) {
+                    SocketChannel sc = ssc.accept();
+                    buf.rewind();
+                    sc.write(buf);
+                }
+            } catch (Exception e) {
+                // ignore
+            }
         }
     }
 

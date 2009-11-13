@@ -27,6 +27,7 @@ import java.security.PrivilegedAction;
 import com.ibm.icu4jni.util.Resources;
 import dalvik.system.VMStack;
 // END android-changed
+import org.apache.harmony.luni.util.Msg;
 
 /**
  * {@code ResourceBundle} is an abstract class which is the superclass of classes which
@@ -35,7 +36,7 @@ import dalvik.system.VMStack;
  * and when a resource is not found in a bundle, the parent bundle is searched for
  * the resource. If the fallback mechanism reaches the base bundle and still
  * can't find the resource it throws a {@code MissingResourceException}.
- * 
+ *
  * <ul>
  * <li>All bundles for the same group of resources share a common base bundle.
  * This base bundle acts as the root and is the last fallback in case none of
@@ -53,7 +54,7 @@ import dalvik.system.VMStack;
  * current currency (Euro) and the {@code PREEURO} variant bundle would return the old
  * currency (e.g. DM for Germany).</li>
  * </ul>
- * 
+ *
  * <strong>Examples</strong>
  * <ul>
  * <li>BaseName (base bundle)
@@ -67,24 +68,22 @@ import dalvik.system.VMStack;
  * <li>BaseName_fr_FR_PREEURO (bundle with France specific resources in french of
  * the time before the Euro)
  * </ul>
- * 
+ *
  * It's also possible to create variants for languages or countries. This can be
  * done by just skipping the country or language abbreviation:
  * BaseName_us__POSIX or BaseName__DE_PREEURO. But it's not allowed to
  * circumvent both language and country: BaseName___VARIANT is illegal.
- * 
+ *
  * @see Properties
  * @see PropertyResourceBundle
  * @see ListResourceBundle
- * @since Android 1.0
+ * @since 1.1
  */
 public abstract class ResourceBundle {
 
     /**
      * The parent of this {@code ResourceBundle} that is used if this bundle doesn't
      * include the requested resource.
-     * 
-     * @since Android 1.0
      */
     protected ResourceBundle parent;
 
@@ -114,8 +113,6 @@ public abstract class ResourceBundle {
 
     /**
      * Constructs a new instance of this class.
-     * 
-     * @since Android 1.0
      */
     public ResourceBundle() {
         /* empty */
@@ -124,13 +121,12 @@ public abstract class ResourceBundle {
     /**
      * Finds the named resource bundle for the default {@code Locale} and the caller's
      * {@code ClassLoader}.
-     * 
+     *
      * @param bundleName
      *            the name of the {@code ResourceBundle}.
      * @return the requested {@code ResourceBundle}.
-     * @exception MissingResourceException
+     * @throws MissingResourceException
      *                if the {@code ResourceBundle} cannot be found.
-     * @since Android 1.0
      */
     public static final ResourceBundle getBundle(String bundleName)
             throws MissingResourceException {
@@ -143,15 +139,14 @@ public abstract class ResourceBundle {
     /**
      * Finds the named {@code ResourceBundle} for the specified {@code Locale} and the caller
      * {@code ClassLoader}.
-     * 
+     *
      * @param bundleName
      *            the name of the {@code ResourceBundle}.
      * @param locale
      *            the {@code Locale}.
      * @return the requested resource bundle.
-     * @exception MissingResourceException
+     * @throws MissingResourceException
      *                if the resource bundle cannot be found.
-     * @since Android 1.0
      */
     public static final ResourceBundle getBundle(String bundleName,
             Locale locale) {
@@ -163,17 +158,17 @@ public abstract class ResourceBundle {
 
     /**
      * Finds the named resource bundle for the specified {@code Locale} and {@code ClassLoader}.
-     * 
+     *
      * The passed base name and {@code Locale} are used to create resource bundle names.
      * The first name is created by concatenating the base name with the result
      * of {@link Locale#toString()}. From this name all parent bundle names are
      * derived. Then the same thing is done for the default {@code Locale}. This results
      * in a list of possible bundle names.
-     * 
+     *
      * <strong>Example</strong> For the basename "BaseName", the {@code Locale} of the
      * German part of Switzerland (de_CH) and the default {@code Locale} en_US the list
      * would look something like this:
-     * 
+     *
      * <ol>
      * <li>BaseName_de_CH</li>
      * <li>BaseName_de</li>
@@ -181,11 +176,11 @@ public abstract class ResourceBundle {
      * <li>Basename_en</li>
      * <li>BaseName</li>
      * </ol>
-     * 
+     *
      * This list also shows the order in which the bundles will be searched for a requested
      * resource in the German part of Switzerland (de_CH).
-     * 
-     * As a first step, this method tries to instantiate 
+     *
+     * As a first step, this method tries to instantiate
      * a {@code ResourceBundle} with the names provided.
      * If such a class can be instantiated and initialized, it is returned and
      * all the parent bundles are instantiated too. If no such class can be
@@ -195,11 +190,11 @@ public abstract class ResourceBundle {
      * by calling {@link ClassLoader#getResource(String)} it is used to
      * initialize a {@link PropertyResourceBundle}. If this succeeds, it will
      * also load the parents of this {@code ResourceBundle}.
-     * 
+     *
      * For compatibility with older code, the bundle name isn't required to be
      * a fully qualified class name. It's also possible to directly pass
      * the path to a properties file (without a file extension).
-     * 
+     *
      * @param bundleName
      *            the name of the {@code ResourceBundle}.
      * @param locale
@@ -207,9 +202,8 @@ public abstract class ResourceBundle {
      * @param loader
      *            the {@code ClassLoader} to use.
      * @return the requested {@code ResourceBundle}.
-     * @exception MissingResourceException
+     * @throws MissingResourceException
      *                if the {@code ResourceBundle} cannot be found.
-     * @since Android 1.0
      */
     public static ResourceBundle getBundle(String bundleName, Locale locale,
             ClassLoader loader) throws MissingResourceException {
@@ -248,7 +242,7 @@ public abstract class ResourceBundle {
             if ((bundle = handleGetBundle(bundleName, localeName, true, loader)) != null) {
                 return bundle;
             }
-            throw new MissingResourceException(null, bundleName + '_' + locale,
+            throw new MissingResourceException(Msg.getString("KA029", bundleName, locale), bundleName + '_' + locale, //$NON-NLS-1$
                     ""); //$NON-NLS-1$
         }
         throw new NullPointerException();
@@ -256,9 +250,8 @@ public abstract class ResourceBundle {
 
     /**
      * Returns the names of the resources contained in this {@code ResourceBundle}.
-     * 
+     *
      * @return an {@code Enumeration} of the resource names.
-     * @since Android 1.0
      */
     public abstract Enumeration<String> getKeys();
 
@@ -266,9 +259,8 @@ public abstract class ResourceBundle {
      * Gets the {@code Locale} of this {@code ResourceBundle}. In case a bundle was not
      * found for the requested {@code Locale}, this will return the actual {@code Locale} of
      * this resource bundle that was found after doing a fallback.
-     * 
+     *
      * @return the {@code Locale} of this {@code ResourceBundle}.
-     * @since Android 1.0
      */
     public Locale getLocale() {
         return locale;
@@ -279,13 +271,12 @@ public abstract class ResourceBundle {
      * cannot be found in this bundle, it falls back to the parent bundle (if
      * it's not null) by calling the {@link #handleGetObject} method. If the resource still
      * can't be found it throws a {@code MissingResourceException}.
-     * 
+     *
      * @param key
      *            the name of the resource.
      * @return the resource object.
-     * @exception MissingResourceException
+     * @throws MissingResourceException
      *                if the resource is not found.
-     * @since Android 1.0
      */
     public final Object getObject(String key) {
         ResourceBundle last, theParent = this;
@@ -297,21 +288,20 @@ public abstract class ResourceBundle {
             last = theParent;
             theParent = theParent.parent;
         } while (theParent != null);
-        throw new MissingResourceException(null, last.getClass().getName(), key);
+        throw new MissingResourceException(Msg.getString("KA029", last.getClass().getName(), key), last.getClass().getName(), key); //$NON-NLS-1$
     }
 
     /**
      * Returns the named string resource from this {@code ResourceBundle}.
-     * 
+     *
      * @param key
      *            the name of the resource.
      * @return the resource string.
-     * @exception MissingResourceException
+     * @throws MissingResourceException
      *                if the resource is not found.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if the resource found is not a string.
      * @see #getObject(String)
-     * @since Android 1.0
      */
     public final String getString(String key) {
         return (String) getObject(key);
@@ -319,16 +309,15 @@ public abstract class ResourceBundle {
 
     /**
      * Returns the named resource from this {@code ResourceBundle}.
-     * 
+     *
      * @param key
      *            the name of the resource.
      * @return the resource string array.
-     * @exception MissingResourceException
+     * @throws MissingResourceException
      *                if the resource is not found.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if the resource found is not an array of strings.
      * @see #getObject(String)
-     * @since Android 1.0
      */
     public final String[] getStringArray(String key) {
         return (String[]) getObject(key);
@@ -343,7 +332,7 @@ public abstract class ResourceBundle {
         synchronized (cache) {
             loaderCache = cache.get(cacheKey);
             if (loaderCache == null) {
-                loaderCache = new Hashtable<String, ResourceBundle>(13);
+                loaderCache = new Hashtable<String, ResourceBundle>();
                 cache.put(cacheKey, loaderCache);
             }
         }
@@ -389,13 +378,9 @@ public abstract class ResourceBundle {
         } catch (Exception e) {
         }
 
-        // BEGIN android-added
-        // copied from newer version of Harmony
         if (bundle != null) {
             bundle.setLocale(locale);
-        }
-        // END android-added
-        if (bundle == null) {
+        } else {
             final String fileName = bundleName.replace('.', '/');
             InputStream stream = AccessController
                     .doPrivileged(new PrivilegedAction<InputStream>() {
@@ -447,21 +432,19 @@ public abstract class ResourceBundle {
     /**
      * Returns the named resource from this {@code ResourceBundle}, or null if the
      * resource is not found.
-     * 
+     *
      * @param key
      *            the name of the resource.
      * @return the resource object.
-     * @since Android 1.0
      */
     protected abstract Object handleGetObject(String key);
 
     /**
      * Sets the parent resource bundle of this {@code ResourceBundle}. The parent is
      * searched for resources which are not found in this {@code ResourceBundle}.
-     * 
+     *
      * @param bundle
      *            the parent {@code ResourceBundle}.
-     * @since Android 1.0
      */
     protected void setParent(ResourceBundle bundle) {
         parent = bundle;

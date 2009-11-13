@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
 import java.util.TreeMap;
 
 /**
- * A section of a <code>.dex</code> file which consists of a sequence of
+ * A section of a {@code .dex} file which consists of a sequence of
  * {@link OffsettedItem} objects, which may each be of a different concrete
  * class and/or size.
  * 
@@ -50,7 +50,7 @@ public final class MixedItemSection extends Section {
         INSTANCE;
     };
 
-    /** non-null; sorter which sorts instances by type */
+    /** {@code non-null;} sorter which sorts instances by type */
     private static final Comparator<OffsettedItem> TYPE_SORTER =
         new Comparator<OffsettedItem>() {
         public int compare(OffsettedItem item1, OffsettedItem item2) {
@@ -60,17 +60,17 @@ public final class MixedItemSection extends Section {
         }
     };
     
-    /** non-null; the items in this part */
+    /** {@code non-null;} the items in this part */
     private final ArrayList<OffsettedItem> items;
 
-    /** non-null; items that have been explicitly interned */
+    /** {@code non-null;} items that have been explicitly interned */
     private final HashMap<OffsettedItem, OffsettedItem> interns;
 
-    /** non-null; how to sort the items */
+    /** {@code non-null;} how to sort the items */
     private final SortType sort;
 
     /**
-     * &gt;= -1; the current size of this part, in bytes, or <code>-1</code>
+     * {@code >= -1;} the current size of this part, in bytes, or {@code -1}
      * if not yet calculated
      */
     private int writeSize;
@@ -78,10 +78,10 @@ public final class MixedItemSection extends Section {
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param name null-ok; the name of this instance, for annotation
+     * @param name {@code null-ok;} the name of this instance, for annotation
      * purposes
-     * @param file non-null; file that this instance is part of
-     * @param alignment &gt; 0; alignment requirement for the final output;
+     * @param file {@code non-null;} file that this instance is part of
+     * @param alignment {@code > 0;} alignment requirement for the final output;
      * must be a power of 2
      * @param sort how the items should be sorted in the final output
      */
@@ -118,7 +118,7 @@ public final class MixedItemSection extends Section {
     /**
      * Gets the size of this instance, in items.
      * 
-     * @return &gt;= 0; the size
+     * @return {@code >= 0;} the size
      */
     public int size() {
         return items.size();
@@ -127,7 +127,7 @@ public final class MixedItemSection extends Section {
     /**
      * Writes the portion of the file header that refers to this instance.
      *
-     * @param out non-null; where to write
+     * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
         throwIfNotPrepared();
@@ -164,7 +164,7 @@ public final class MixedItemSection extends Section {
      * same item to more than one instance, nor to add the same items
      * multiple times to a single instance.
      * 
-     * @param item non-null; the item to add
+     * @param item {@code non-null;} the item to add
      */
     public void add(OffsettedItem item) {
         throwIfPrepared();
@@ -187,8 +187,8 @@ public final class MixedItemSection extends Section {
      * (which may not be the one passed in). This will add the item if no
      * equal item has been added.
      * 
-     * @param item non-null; the item to intern
-     * @return non-null; the equivalent interned instance
+     * @param item {@code non-null;} the item to intern
+     * @return {@code non-null;} the equivalent interned instance
      */
     public <T extends OffsettedItem> T intern(T item) {
         throwIfPrepared();
@@ -207,8 +207,8 @@ public final class MixedItemSection extends Section {
     /**
      * Gets an item which was previously interned.
      * 
-     * @param item non-null; the item to look for
-     * @return non-null; the equivalent already-interned instance
+     * @param item {@code non-null;} the item to look for
+     * @return {@code non-null;} the equivalent already-interned instance
      */
     public <T extends OffsettedItem> T get(T item) {
         throwIfNotPrepared();
@@ -227,9 +227,9 @@ public final class MixedItemSection extends Section {
      * given type. If there are none, this writes nothing. If there are any,
      * then the index is preceded by the given intro string.
      * 
-     * @param out non-null; where to write to
-     * @param itemType non-null; the item type of interest
-     * @param intro non-null; the introductory string for non-empty indices
+     * @param out {@code non-null;} where to write to
+     * @param itemType {@code non-null;} the item type of interest
+     * @param intro {@code non-null;} the introductory string for non-empty indices
      */
     public void writeIndexAnnotation(AnnotatedOutput out, ItemType itemType,
             String intro) {
@@ -285,7 +285,7 @@ public final class MixedItemSection extends Section {
     /**
      * Places all the items in this instance at particular offsets. This
      * will call {@link OffsettedItem#place} on each item. If an item
-     * does not know its write size before the call to <code>place</code>,
+     * does not know its write size before the call to {@code place},
      * it is that call which is responsible for setting the write size.
      * This method may only be called once per instance; subsequent calls
      * will throw an exception.

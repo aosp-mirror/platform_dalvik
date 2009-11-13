@@ -24,21 +24,21 @@ import com.android.dx.util.Hex;
  * line number and original bytecode address.
  */
 public final class SourcePosition {
-    /** non-null; convenient "no information known" instance */
+    /** {@code non-null;} convenient "no information known" instance */
     public static final SourcePosition NO_INFO =
         new SourcePosition(null, -1, -1);
 
-    /** null-ok; name of the file of origin or <code>null</code> if unknown */
+    /** {@code null-ok;} name of the file of origin or {@code null} if unknown */
     private final CstUtf8 sourceFile;
 
     /**
-     * &gt;= -1; the bytecode address, or <code>-1</code> if that
+     * {@code >= -1;} the bytecode address, or {@code -1} if that
      * information is unknown 
      */
     private final int address;
 
     /**
-     * &gt;= -1; the line number, or <code>-1</code> if that
+     * {@code >= -1;} the line number, or {@code -1} if that
      * information is unknown 
      */
     private final int line;
@@ -46,11 +46,11 @@ public final class SourcePosition {
     /**
      * Constructs an instance.
      * 
-     * @param sourceFile null-ok; name of the file of origin or
-     * <code>null</code> if unknown
-     * @param address &gt;= -1; original bytecode address or <code>-1</code>
+     * @param sourceFile {@code null-ok;} name of the file of origin or
+     * {@code null} if unknown
+     * @param address {@code >= -1;} original bytecode address or {@code -1}
      * if unknown
-     * @param line &gt;= -1; original line number or <code>-1</code> if
+     * @param line {@code >= -1;} original line number or {@code -1} if
      * unknown
      */
     public SourcePosition(CstUtf8 sourceFile, int address, int line) {
@@ -118,8 +118,8 @@ public final class SourcePosition {
      * Returns whether the lines match between this instance and
      * the one given.
      * 
-     * @param other non-null; the instance to compare to
-     * @return <code>true</code> iff the lines match
+     * @param other {@code non-null;} the instance to compare to
+     * @return {@code true} iff the lines match
      */
     public boolean sameLine(SourcePosition other) {
         return (line == other.line);
@@ -129,8 +129,8 @@ public final class SourcePosition {
      * Returns whether the lines and files match between this instance and
      * the one given.
      * 
-     * @param other non-null; the instance to compare to
-     * @return <code>true</code> iff the lines and files match
+     * @param other {@code non-null;} the instance to compare to
+     * @return {@code true} iff the lines and files match
      */
     public boolean sameLineAndFile(SourcePosition other) {
         return (line == other.line) &&
@@ -141,7 +141,7 @@ public final class SourcePosition {
     /**
      * Gets the source file, if known.
      * 
-     * @return null-ok; the source file or <code>null</code> if unknown
+     * @return {@code null-ok;} the source file or {@code null} if unknown
      */
     public CstUtf8 getSourceFile() {
         return sourceFile;
@@ -150,7 +150,7 @@ public final class SourcePosition {
     /**
      * Gets the original bytecode address.
      * 
-     * @return &gt;= -1; the address or <code>-1</code> if unknown
+     * @return {@code >= -1;} the address or {@code -1} if unknown
      */
     public int getAddress() {
         return address;
@@ -159,7 +159,7 @@ public final class SourcePosition {
     /**
      * Gets the original line number.
      * 
-     * @return &gt;= -1; the original line number or <code>-1</code> if
+     * @return {@code >= -1;} the original line number or {@code -1} if
      * unknown
      */
     public int getLine() {

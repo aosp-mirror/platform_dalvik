@@ -30,6 +30,7 @@ import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.math.MathContext;
 
 @TestTargetClass(BigDecimal.class)
 public class BigDecimalTest extends junit.framework.TestCase {
@@ -1310,6 +1311,41 @@ public class BigDecimalTest extends junit.framework.TestCase {
         BigDecimal zerotest = new BigDecimal("0.0000");
         assertEquals("stripTrailingZero failed for 0.0000",
                 0, (zerotest.stripTrailingZeros()).scale() );        
-    }    
+    }
 
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "abs",
+            args = {MathContext.class}
+    )
+    public void testMathContextConstruction() {
+        String a = "-12380945E+61";
+        BigDecimal aNumber = new BigDecimal(a);
+        int precision = 6;
+        RoundingMode rm = RoundingMode.HALF_DOWN;
+        MathContext mcIntRm = new MathContext(precision, rm);
+        MathContext mcStr = new MathContext("precision=6 roundingMode=HALF_DOWN");
+        MathContext mcInt = new MathContext(precision);
+        BigDecimal res = aNumber.abs(mcInt);
+        assertEquals("MathContext Constructor with int precision failed",
+                res,
+                new BigDecimal("1.23809E+68"));
+
+        assertEquals("Equal MathContexts are not Equal ",
+                mcIntRm,
+                mcStr);
+
+        assertEquals("Different MathContext are reported as Equal ",
+                mcInt.equals(mcStr),
+                false);
+
+        assertEquals("Equal MathContexts have different hashcodes ",
+                mcIntRm.hashCode(),
+                mcStr.hashCode());
+
+        assertEquals("MathContext.toString() returning incorrect value",
+                mcIntRm.toString(),
+                "precision=6 roundingMode=HALF_DOWN");
+    }
 }

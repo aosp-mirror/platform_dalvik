@@ -29,11 +29,9 @@ import java.util.Map;
  * the database supports the {@code Ref} type, it is not typically 
  * necessary to get the underlying object before using it in a method call -
  * the {@code Ref} object can be used in place of the data structure.
- * </p>
+ * <p>
  * A {@code Ref} object is stored into the database using the
  * {@link PreparedStatement#setRef(int, Ref)} method.
- *  
- * @since Android 1.0
  */
 public interface Ref {
 
@@ -44,7 +42,6 @@ public interface Ref {
      * @return the fully qualified name of the SQL structured type.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getBaseTypeName() throws SQLException;
 
@@ -55,7 +52,6 @@ public interface Ref {
      *         structured type.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Object getObject() throws SQLException;
 
@@ -69,7 +65,6 @@ public interface Ref {
      *         structured type.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public Object getObject(Map<String, Class<?>> map) throws SQLException;
 
@@ -82,7 +77,6 @@ public interface Ref {
      *            that this {@code Ref} references.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public void setObject(Object value) throws SQLException;
 }

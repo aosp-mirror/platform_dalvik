@@ -41,29 +41,29 @@ import static com.android.dx.cf.cst.ConstantTags.*;
  * Parser for a constant pool embedded in a class file.
  */
 public final class ConstantPoolParser {
-    /** non-null; the bytes of the constant pool */
+    /** {@code non-null;} the bytes of the constant pool */
     private final ByteArray bytes;
 
-    /** non-null; actual parsed constant pool contents */
+    /** {@code non-null;} actual parsed constant pool contents */
     private final StdConstantPool pool;
 
-    /** non-null; byte offsets to each cst */
+    /** {@code non-null;} byte offsets to each cst */
     private final int[] offsets;
 
     /**
      * -1 || &gt;= 10; the end offset of this constant pool in the
-     * <code>byte[]</code> which it came from or <code>-1</code> if not
+     * {@code byte[]} which it came from or {@code -1} if not
      * yet parsed 
      */
     private int endOffset;
 
-    /** null-ok; parse observer, if any */
+    /** {@code null-ok;} parse observer, if any */
     private ParseObserver observer;
 
     /**
      * Constructs an instance.
      * 
-     * @param bytes non-null; the bytes of the file
+     * @param bytes {@code non-null;} the bytes of the file
      */
     public ConstantPoolParser(ByteArray bytes) {
         int size = bytes.getUnsignedShort(8); // constant_pool_count
@@ -77,17 +77,17 @@ public final class ConstantPoolParser {
     /**
      * Sets the parse observer for this instance.
      * 
-     * @param observer null-ok; the observer
+     * @param observer {@code null-ok;} the observer
      */
     public void setObserver(ParseObserver observer) {
         this.observer = observer;
     }
 
     /**
-     * Gets the end offset of this constant pool in the <code>byte[]</code>
+     * Gets the end offset of this constant pool in the {@code byte[]}
      * which it came from.
      * 
-     * @return &gt;= 10; the end offset
+     * @return {@code >= 10;} the end offset
      */
     public int getEndOffset() {
         parseIfNecessary();
@@ -97,7 +97,7 @@ public final class ConstantPoolParser {
     /**
      * Gets the actual constant pool.
      * 
-     * @return non-null; the constant pool
+     * @return {@code non-null;} the constant pool
      */
     public StdConstantPool getPool() {
         parseIfNecessary();
@@ -215,7 +215,7 @@ public final class ConstantPoolParser {
      * depends on.
      * 
      * @param idx which constant
-     * @return non-null; the parsed constant
+     * @return {@code non-null;} the parsed constant
      */
     private Constant parse0(int idx) {
         Constant cst = pool.getOrNull(idx);
@@ -316,7 +316,7 @@ public final class ConstantPoolParser {
      * Parses a utf8 constant.
      * 
      * @param at offset to the start of the constant (where the tag byte is)
-     * @return non-null; the parsed value
+     * @return {@code non-null;} the parsed value
      */
     private CstUtf8 parseUtf8(int at) {
         int length = bytes.getUnsignedShort(at + 1);

@@ -32,7 +32,50 @@ typedef enum InterpEntry {
     kInterpEntryInstr = 0,      // continue to next instruction
     kInterpEntryReturn = 1,     // jump to method return
     kInterpEntryThrow = 2,      // jump to exception throw
+#if defined(WITH_JIT)
+    kInterpEntryResume = 3,     // Resume after single-step
+#endif
 } InterpEntry;
+
+#if defined(WITH_JIT)
+/*
+ * There are six entry points from the compiled code to the interpreter:
+ * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for
+ *    the new dalvik PC. If so, chain the originating compilation with the
+ *    target then jump to it.
+ * 2) dvmJitToInterpInvokeNoChain: similar to 1) but don't chain. This is
+ *    for handling 1-to-many mappings like virtual method call and
+ *    packed switch.
+ * 3) dvmJitToInterpPunt: use the fast interpreter to execute the next
+ *    instruction(s) and stay there as long as it is appropriate to return
+ *    to the compiled land. This is used when the jit'ed code is about to
+ *    throw an exception.
+ * 4) dvmJitToInterpSingleStep: use the portable interpreter to execute the
+ *    next instruction only and return to pre-specified location in the
+ *    compiled code to resume execution. This is mainly used as debugging
+ *    feature to bypass problematic opcode implementations without
+ *    disturbing the trace formation.
+ * 5) dvmJitToTraceSelect: if there is a single exit from a translation that
+ *    has already gone hot enough to be translated, we should assume that
+ *    the exit point should also be translated (this is a common case for
+ *    invokes).  This trace exit will first check for a chaining
+ *    opportunity, and if none is available will switch to the debug
+ *    interpreter immediately for trace selection (as if threshold had
+ *    just been reached).
+ * 6) dvmJitToPredictedChain: patch the chaining cell for a virtual call site
+ *    to a predicted callee.
+ */
+struct JitToInterpEntries {
+    void *dvmJitToInterpNormal;
+    void *dvmJitToInterpNoChain;
+    void *dvmJitToInterpPunt;
+    void *dvmJitToInterpSingleStep;
+    void *dvmJitToTraceSelect;
+    void *dvmJitToPatchPredictedChain;
+};
+
+#define JIT_TRACE_THRESH_FILTER_SIZE  16
+#endif
 
 /*
  * Interpreter context, used when switching from one interpreter to
@@ -66,7 +109,7 @@ typedef struct InterpState {
     const u1*       interpStackEnd;
     volatile int*   pSelfSuspendCount;
 #if defined(WITH_DEBUGGER)
-    volatile bool*  pDebuggerActive;
+    volatile u1*    pDebuggerActive;
 #endif
 #if defined(WITH_PROFILER)
     volatile int*   pActiveProfilers;
@@ -78,14 +121,36 @@ typedef struct InterpState {
      * Interpreter switching.
      */
     InterpEntry entryPoint;             // what to do when we start
-    int         nextMode;               // INTERP_STD or INTERP_DBG
+    int         nextMode;               // INTERP_STD, INTERP_DBG
 
+#if defined(WITH_JIT)
+    /*
+     * Local copies of field from gDvm placed here for fast access
+     */
+    unsigned char*     pJitProfTable;
+    JitState           jitState;
+    void*              jitResume;
+    u2*                jitResumePC;
+#endif
 
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
     bool        debugIsMethodEntry;     // used for method entry event triggers
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
     int         debugTrackedRefStart;   // tracked refs from prior invocations
+#endif
+
+#if defined(WITH_JIT)
+    struct JitToInterpEntries jitToInterpEntries;
+
+    int currTraceRun;
+    int totalTraceLen;        // Number of Dalvik insts in trace
+    const u2* currTraceHead;        // Start of the trace we're building
+    const u2* currRunHead;          // Start of run we're building
+    int currRunLen;           // Length of run in 16-bit words
+    int lastThreshFilter;
+    const u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
+    JitTraceRun trace[MAX_JIT_RUN_LEN];
 #endif
 
 } InterpState;
@@ -123,7 +188,7 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal);
 /*
  * Process fill-array-data.
  */
-bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject, 
+bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,
                                   const u2* arrayData);
 
 /*
@@ -144,5 +209,20 @@ static inline bool dvmDebuggerOrProfilerActive(void)
 #endif
         ;
 }
+
+#if defined(WITH_JIT)
+/*
+ * Determine if the jit, debugger or profiler is currently active.  Used when
+ * selecting which interpreter to switch to.
+ */
+static inline bool dvmJitDebuggerOrProfilerActive(int jitState)
+{
+    return jitState != kJitOff
+#if defined(WITH_PROFILER)
+        || gDvm.activeProfilers != 0
+#endif
+        ||gDvm.debuggerActive;
+}
+#endif
 
 #endif /*_DALVIK_INTERP_DEFS*/

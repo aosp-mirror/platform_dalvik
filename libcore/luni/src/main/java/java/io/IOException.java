@@ -22,8 +22,6 @@ package java.io;
  * calling the constructor, as usual. Note there are also several subclasses of
  * this class for more specific error situations, such as
  * {@link FileNotFoundException} or {@link EOFException}.
- * 
- * @since Android 1.0
  */
 public class IOException extends Exception {
 
@@ -31,8 +29,6 @@ public class IOException extends Exception {
 
     /**
      * Constructs a new {@code IOException} with its stack trace filled in.
-     * 
-     * @since Android 1.0
      */
     public IOException() {
         super();
@@ -44,7 +40,6 @@ public class IOException extends Exception {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public IOException(String detailMessage) {
         super(detailMessage);

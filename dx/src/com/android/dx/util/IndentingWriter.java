@@ -27,31 +27,31 @@ import java.io.Writer;
  * line.
  */
 public final class IndentingWriter extends FilterWriter {
-    /** null-ok; optional prefix for every line */
+    /** {@code null-ok;} optional prefix for every line */
     private final String prefix;
 
-    /** &gt; 0; the maximum output width */
+    /** {@code > 0;} the maximum output width */
     private final int width;
 
-    /** &gt; 0; the maximum indent */
+    /** {@code > 0;} the maximum indent */
     private final int maxIndent;
 
-    /** &gt;= 0; current output column (zero-based) */
+    /** {@code >= 0;} current output column (zero-based) */
     private int column;
 
     /** whether indent spaces are currently being collected */
     private boolean collectingIndent;
 
-    /** &gt;= 0; current indent amount */
+    /** {@code >= 0;} current indent amount */
     private int indent;
 
     /**
      * Constructs an instance.
      * 
-     * @param out non-null; writer to send final output to
-     * @param width &gt;= 0; the maximum output width (not including
-     * <code>prefix</code>), or <code>0</code> for no maximum
-     * @param prefix non-null; the prefix for each line
+     * @param out {@code non-null;} writer to send final output to
+     * @param width {@code >= 0;} the maximum output width (not including
+     * {@code prefix}), or {@code 0} for no maximum
+     * @param prefix {@code non-null;} the prefix for each line
      */
     public IndentingWriter(Writer out, int width, String prefix) {
         super(out);
@@ -78,9 +78,9 @@ public final class IndentingWriter extends FilterWriter {
     /**
      * Constructs a no-prefix instance.
      * 
-     * @param out non-null; writer to send final output to
-     * @param width &gt;= 0; the maximum output width (not including
-     * <code>prefix</code>), or <code>0</code> for no maximum
+     * @param out {@code non-null;} writer to send final output to
+     * @param width {@code >= 0;} the maximum output width (not including
+     * {@code prefix}), or {@code 0} for no maximum
      */
     public IndentingWriter(Writer out, int width) {
         this(out, width, "");

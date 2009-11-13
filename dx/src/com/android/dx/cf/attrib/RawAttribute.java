@@ -23,11 +23,11 @@ import com.android.dx.util.ByteArray;
  * Raw attribute, for holding onto attributes that are unrecognized.
  */
 public final class RawAttribute extends BaseAttribute {
-    /** non-null; attribute data */
+    /** {@code non-null;} attribute data */
     private final ByteArray data;
 
     /**
-     * null-ok; constant pool to use for resolution of cpis in {@link
+     * {@code null-ok;} constant pool to use for resolution of cpis in {@link
      * #data} 
      */
     private final ConstantPool pool;
@@ -35,9 +35,9 @@ public final class RawAttribute extends BaseAttribute {
     /**
      * Constructs an instance.
      * 
-     * @param name non-null; attribute name
-     * @param data non-null; attribute data
-     * @param pool null-ok; constant pool to use for cpi resolution
+     * @param name {@code non-null;} attribute name
+     * @param data {@code non-null;} attribute data
+     * @param pool {@code null-ok;} constant pool to use for cpi resolution
      */
     public RawAttribute(String name, ByteArray data, ConstantPool pool) {
         super(name);
@@ -53,11 +53,11 @@ public final class RawAttribute extends BaseAttribute {
     /**
      * Constructs an instance from a sub-array of a {@link ByteArray}.
      * 
-     * @param name non-null; attribute name
-     * @param data non-null; array containing the attribute data
-     * @param offset offset in <code>data</code> to the attribute data
+     * @param name {@code non-null;} attribute name
+     * @param data {@code non-null;} array containing the attribute data
+     * @param offset offset in {@code data} to the attribute data
      * @param length length of the attribute data, in bytes
-     * @param pool null-ok; constant pool to use for cpi resolution
+     * @param pool {@code null-ok;} constant pool to use for cpi resolution
      */
     public RawAttribute(String name, ByteArray data, int offset,
                         int length, ConstantPool pool) {
@@ -67,7 +67,7 @@ public final class RawAttribute extends BaseAttribute {
     /**
      * Get the raw data of the attribute.
      * 
-     * @return non-null; the data
+     * @return {@code non-null;} the data
      */
     public ByteArray getData() {
         return data;
@@ -83,7 +83,7 @@ public final class RawAttribute extends BaseAttribute {
      * presumably came from the class file that this attribute came
      * from.
      * 
-     * @return null-ok; the constant pool
+     * @return {@code null-ok;} the constant pool
      */
     public ConstantPool getPool() {
         return pool;

@@ -23,7 +23,6 @@ import java.io.Serializable;
  * conversion and the flags are incompatible.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class FormatFlagsConversionMismatchException extends
         IllegalFormatException implements Serializable {

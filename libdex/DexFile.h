@@ -163,6 +163,7 @@ enum {
 /* auxillary data section chunk codes */
 enum {
     kDexChunkClassLookup            = 0x434c4b50,   /* CLKP */
+    kDexChunkRegisterMaps           = 0x524d4150,   /* RMAP */
 
     kDexChunkReducingIndexMap       = 0x5249584d,   /* RIXM */
     kDexChunkExpandingIndexMap      = 0x4549584d,   /* EIXM */
@@ -514,11 +515,13 @@ typedef struct DexFile {
     const DexClassDef*  pClassDefs;
     const DexLink*      pLinkData;
 
-    /* mapped in "auxillary" section */
+    /*
+     * These are mapped out of the "auxillary" section, and may not be
+     * included in the file.
+     */
     const DexClassLookup* pClassLookup;
-
-    /* mapped in "auxillary" section */
     DexIndexMap         indexMap;
+    const void*         pRegisterMapPool;       // RegisterMapClassPool
 
     /* points to start of DEX file data */
     const u1*           baseAddr;
@@ -672,6 +675,15 @@ DEX_INLINE const DexClassDef* dexGetClassDef(const DexFile* pDexFile, u4 idx) {
     return &pDexFile->pClassDefs[idx];
 }
 
+/* given a ClassDef pointer, recover its index */
+DEX_INLINE u4 dexGetIndexForClassDef(const DexFile* pDexFile,
+    const DexClassDef* pClassDef)
+{
+    assert(pClassDef >= pDexFile->pClassDefs &&
+           pClassDef < pDexFile->pClassDefs + pDexFile->pHeader->classDefsSize);
+    return pClassDef - pDexFile->pClassDefs;
+}
+
 /* get the interface list for a DexClass */
 DEX_INLINE const DexTypeList* dexGetInterfacesList(const DexFile* pDexFile,
     const DexClassDef* pClassDef)
@@ -723,6 +735,9 @@ DEX_INLINE const char* dexGetSourceFile(
     return dexStringById(pDexFile, pClassDef->sourceFileIdx);
 }
 
+/* get the size, in bytes, of a DexCode */
+size_t dexGetDexCodeSize(const DexCode* pCode);
+
 /* Get the list of "tries" for the given DexCode. */
 DEX_INLINE const DexTry* dexGetTries(const DexCode* pCode) {
     const u2* insnsEnd = &pCode->insns[pCode->insnsSize];
@@ -741,6 +756,7 @@ DEX_INLINE const u1* dexGetCatchHandlerData(const DexCode* pCode) {
     return (const u1*) &pTries[pCode->triesSize];
 }
 
+/* get a pointer to the start of the debugging data */
 DEX_INLINE const u1* dexGetDebugInfoStream(const DexFile* pDexFile,
     const DexCode* pCode)
 {

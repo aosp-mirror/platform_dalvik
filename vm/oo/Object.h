@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Declaration of the fundamental Object type and refinements thereof, plus
  * some functions for manipulating them.
@@ -93,6 +94,44 @@ typedef enum ClassFlags {
 #define EXPECTED_FILE_FLAGS \
     (ACC_CLASS_MASK | CLASS_ISPREVERIFIED | CLASS_ISOPTIMIZED)
 
+/*
+ * Get/set class flags.
+ */
+#define SET_CLASS_FLAG(clazz, flag) \
+    do { (clazz)->accessFlags |= (flag); } while (0)
+
+#define CLEAR_CLASS_FLAG(clazz, flag) \
+    do { (clazz)->accessFlags &= ~(flag); } while (0)
+
+#define IS_CLASS_FLAG_SET(clazz, flag) \
+    (((clazz)->accessFlags & (flag)) != 0)
+
+#define GET_CLASS_FLAG_GROUP(clazz, flags) \
+    ((u4)((clazz)->accessFlags & (flags)))
+
+/*
+ * Use the top 16 bits of the access flags field for other method flags.
+ * Code should use the *METHOD_FLAG*() macros to set/get these flags.
+ */
+typedef enum MethodFlags {
+    METHOD_ISWRITABLE       = (1<<31),  // the method's code is writable
+} MethodFlags;
+
+/*
+ * Get/set method flags.
+ */
+#define SET_METHOD_FLAG(method, flag) \
+    do { (method)->accessFlags |= (flag); } while (0)
+
+#define CLEAR_METHOD_FLAG(method, flag) \
+    do { (method)->accessFlags &= ~(flag); } while (0)
+
+#define IS_METHOD_FLAG_SET(method, flag) \
+    (((method)->accessFlags & (flag)) != 0)
+
+#define GET_METHOD_FLAG_GROUP(method, flags) \
+    ((u4)((method)->accessFlags & (flags)))
+
 /* current state of the class, increasing as we progress */
 typedef enum ClassStatus {
     CLASS_ERROR         = -1,
@@ -134,11 +173,31 @@ typedef enum PrimitiveType {
 #define PRIM_TYPE_TO_LETTER "ZCFDBSIJV"     /* must match order in enum */
 
 /*
- * This defines the amount of space we leave for field slots in the
- * java.lang.Class definition.  If we alter the class to have more than
- * this many fields, the VM will abort at startup.
+ * Definitions for packing refOffsets in ClassObject.
  */
-#define CLASS_FIELD_SLOTS   4
+/*
+ * A magic value for refOffsets. Ignore the bits and walk the super
+ * chain when this is the value.
+ * [This is an unlikely "natural" value, since it would be 30 non-ref instance
+ * fields followed by 2 ref instance fields.]
+ */
+#define CLASS_WALK_SUPER ((unsigned int)(3))
+#define CLASS_SMALLEST_OFFSET (sizeof(struct Object))
+#define CLASS_BITS_PER_WORD (sizeof(unsigned long int) * 8)
+#define CLASS_OFFSET_ALIGNMENT 4
+#define CLASS_HIGH_BIT ((unsigned int)1 << (CLASS_BITS_PER_WORD - 1))
+/*
+ * Return a single bit, or zero if the encoding can't encode the offset.
+ */
+#define CLASS_BIT_FROM_OFFSET(byteOffset) \
+    (CLASS_HIGH_BIT >> \
+      (((unsigned int)(byteOffset) - CLASS_SMALLEST_OFFSET) / \
+       CLASS_OFFSET_ALIGNMENT))
+/*
+ * Return an offset, given a bit number as returned from CLZ.
+ */
+#define CLASS_OFFSET_FROM_CLZ(rshift) \
+    (((int)(rshift) * CLASS_OFFSET_ALIGNMENT) + CLASS_SMALLEST_OFFSET)
 
 
 /*
@@ -183,21 +242,6 @@ typedef struct Object {
  */
 #define DVM_OBJECT_INIT(obj, clazz_) \
     do { (obj)->clazz = (clazz_); DVM_LOCK_INIT(&(obj)->lock); } while (0)
-
-/*
- * Get/set class flags.
- */
-#define SET_CLASS_FLAG(clazz, flag) \
-    do { (clazz)->accessFlags |= (flag); } while (0)
-
-#define CLEAR_CLASS_FLAG(clazz, flag) \
-    do { (clazz)->accessFlags &= ~(flag); } while (0)
-
-#define IS_CLASS_FLAG_SET(clazz, flag) \
-    (((clazz)->accessFlags & (flag)) != 0)
-
-#define GET_CLASS_FLAG_GROUP(clazz, flags) \
-    ((u4)((clazz)->accessFlags & (flags)))
 
 /*
  * Data objects have an Object header followed by their instance data.
@@ -260,6 +304,13 @@ struct InitiatingLoaderList {
     /* count of loaders in the above list */
     int       initiatingLoaderCount;
 };
+
+/*
+ * This defines the amount of space we leave for field slots in the
+ * java.lang.Class definition.  If we alter the class to have more than
+ * this many fields, the VM will abort at startup.
+ */
+#define CLASS_FIELD_SLOTS   4
 
 /*
  * Class objects have many additional fields.  This is used for both
@@ -399,6 +450,9 @@ struct ClassObject {
     int             ifieldCount;
     int             ifieldRefCount; // number of fields that are object refs
     InstField*      ifields;
+
+    /* bitmap of offsets of ifields */
+    u4 refOffsets;
 
     /* source file name, if known */
     const char*     sourceFile;
@@ -559,6 +613,8 @@ Method* dvmFindDirectMethodHier(const ClassObject* clazz,
     const char* methodName, const DexProto* proto);
 Method* dvmFindVirtualMethodHier(const ClassObject* clazz,
     const char* methodName, const DexProto* proto);
+Method* dvmFindMethodHier(const ClassObject* clazz, const char* methodName,
+    const DexProto* proto);
 
 /*
  * Find the implementation of "meth" in "clazz".
@@ -588,6 +644,8 @@ InstField* dvmFindInstanceFieldHier(const ClassObject* clazz,
     const char* fieldName, const char* signature);
 StaticField* dvmFindStaticFieldHier(const ClassObject* clazz,
     const char* fieldName, const char* signature);
+Field* dvmFindFieldHier(const ClassObject* clazz, const char* fieldName,
+    const char* signature);
 
 /*
  * Find a field and return the byte offset from the object pointer.  Only

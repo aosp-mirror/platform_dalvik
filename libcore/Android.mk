@@ -51,7 +51,7 @@ include $(BUILD_JAVA_LIBRARY)
 # resource with a "#" in its name, but Perforce doesn't
 # allow us to submit such a file. So we create it here
 # on-the-fly.
-TMP_RESOURCE_DIR := /tmp/
+TMP_RESOURCE_DIR := $(OUT_DIR)/tmp/
 TMP_RESOURCE_FILE := org/apache/harmony/luni/tests/java/lang/test\#.properties
 
 $(TMP_RESOURCE_DIR)$(TMP_RESOURCE_FILE):

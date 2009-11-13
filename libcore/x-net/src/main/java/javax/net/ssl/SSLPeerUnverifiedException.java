@@ -20,20 +20,17 @@ package javax.net.ssl;
 /**
  * The exception that is thrown when the identity of a peer has not beed
  * verified.
- * 
- * @since Android 1.0
  */
 public class SSLPeerUnverifiedException extends SSLException {
-    
+
     private static final long serialVersionUID = -8919512675000600547L;
 
     /**
      * Creates a new {@code SSLPeerUnverifiedException} with the specified
      * message.
-     * 
+     *
      * @param reason
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public SSLPeerUnverifiedException(String reason) {
         super(reason);

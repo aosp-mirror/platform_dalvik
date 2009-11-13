@@ -107,12 +107,15 @@
  * started.  If so, switch to a different "goto" table.
  */
 #define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
-        dvmCheckSuspendQuick(self);                                         \
+        if (dvmCheckSuspendQuick(self)) {                                   \
+            EXPORT_PC();  /* need for precise GC */                         \
+            dvmCheckSuspendPending(self);                                   \
+        }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
             glue->entryPoint = _entryPoint;                                 \
             LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                glue->self->threadId, (_entryPoint), (_pcadj));             \
+                self->threadId, (_entryPoint), (_pcadj));                   \
             GOTO_bail_switch();                                             \
         }                                                                   \
     }

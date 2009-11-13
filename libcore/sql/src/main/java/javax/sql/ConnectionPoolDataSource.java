@@ -27,9 +27,6 @@ import java.io.PrintWriter;
  * A class which implements the {@code ConnectionPoolDataSource} interface is
  * typically registered with a JNDI naming service directory and is retrieved
  * from there by name.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface ConnectionPoolDataSource {
 
@@ -44,7 +41,6 @@ public interface ConnectionPoolDataSource {
      * @return the login timeout value in seconds.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public int getLoginTimeout() throws SQLException;
 
@@ -58,14 +54,12 @@ public interface ConnectionPoolDataSource {
      * created is {@code null}. Note that the log writer for an {@code
      * ConnectionPoolDataSource} is not the same as the log writer used by a
      * {@code DriverManager}.
-     * </p>
-     * 
+     *
      * @return a {@code PrintWriter} which is the log writer for this {@code
      *         ConnectionPoolDataSource}. Can be {@code null}, in which case log
      *         writing is disabled for this {@code ConnectionPoolDataSource}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public PrintWriter getLogWriter() throws SQLException;
 
@@ -77,7 +71,6 @@ public interface ConnectionPoolDataSource {
      *         database.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public PooledConnection getPooledConnection() throws SQLException;
 
@@ -94,7 +87,6 @@ public interface ConnectionPoolDataSource {
      *         to the database.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public PooledConnection getPooledConnection(String theUser,
             String thePassword) throws SQLException;
@@ -111,7 +103,6 @@ public interface ConnectionPoolDataSource {
      *            the new login timeout value in seconds.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setLoginTimeout(int theTimeout) throws SQLException;
 
@@ -125,13 +116,11 @@ public interface ConnectionPoolDataSource {
      * is {@code null}. Note that the log writer for a {@code
      * ConnectionPoolDataSource} is not the same as the log writer used by a
      * {@code DriverManager}.
-     * </p>
      * 
      * @param theWriter
      *            is the log writer for this {@code ConnectionPoolDataSource}.
      * @throws SQLException
      *             if there is a problem accessing the database.
-     * @since Android 1.0
      */
     public void setLogWriter(PrintWriter theWriter) throws SQLException;
 }

@@ -25,8 +25,6 @@ package java.io;
  * 
  * @see ObjectInputStream
  * @see OptionalDataException
- * 
- * @since Android 1.0
  */
 public class StreamCorruptedException extends ObjectStreamException {
 
@@ -35,8 +33,6 @@ public class StreamCorruptedException extends ObjectStreamException {
     /**
      * Constructs a new {@code StreamCorruptedException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public StreamCorruptedException() {
         super();
@@ -48,7 +44,6 @@ public class StreamCorruptedException extends ObjectStreamException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public StreamCorruptedException(String detailMessage) {
         super(detailMessage);

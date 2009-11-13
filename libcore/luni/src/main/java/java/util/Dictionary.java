@@ -25,14 +25,11 @@ package java.util;
  * associate keys with values, such as {@code Hashtable}.
  * 
  * @see Hashtable
- * @since Android 1.0
+ * @since 1.0
  */
-public abstract class Dictionary<K,V> {
-
+public abstract class Dictionary<K, V> {
     /**
      * Constructs a new instance of this class.
-     * 
-     * @since Android 1.0
      */
     public Dictionary() {
         super();
@@ -45,7 +42,6 @@ public abstract class Dictionary<K,V> {
      * @see #keys
      * @see #size
      * @see Enumeration
-     * @since Android 1.0
      */
     public abstract Enumeration<V> elements();
 
@@ -57,7 +53,6 @@ public abstract class Dictionary<K,V> {
      * @return the value associated with {@code key}, or {@code null} if the
      *         specified key does not exist.
      * @see #put
-     * @since Android 1.0
      */
     public abstract V get(Object key);
 
@@ -67,7 +62,6 @@ public abstract class Dictionary<K,V> {
      * @return {@code true} if this dictionary has no key/value pairs,
      *         {@code false} otherwise.
      * @see #size
-     * @since Android 1.0
      */
     public abstract boolean isEmpty();
 
@@ -78,7 +72,6 @@ public abstract class Dictionary<K,V> {
      * @see #elements
      * @see #size
      * @see Enumeration
-     * @since Android 1.0
      */
     public abstract Enumeration<K> keys();
 
@@ -96,7 +89,6 @@ public abstract class Dictionary<K,V> {
      * @see #elements
      * @see #get
      * @see #keys
-     * @since Android 1.0
      */
     public abstract V put(K key, V value);
 
@@ -110,7 +102,6 @@ public abstract class Dictionary<K,V> {
      *         {@code key} was not known to this dictionary.
      * @see #get
      * @see #put
-     * @since Android 1.0
      */
     public abstract V remove(Object key);
 
@@ -120,7 +111,6 @@ public abstract class Dictionary<K,V> {
      * @return the number of key/value pairs in this dictionary.
      * @see #elements
      * @see #keys
-     * @since Android 1.0
      */
     public abstract int size();
 }

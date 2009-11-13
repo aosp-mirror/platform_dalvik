@@ -30,68 +30,49 @@ import java.util.logging.Logger;
  * drawback is that some extra space is required to hold the buffer and that
  * copying takes place when filling that buffer, but this is usually outweighed
  * by the performance benefits.
- * 
+ *
  * <p/>A typical application pattern for the class looks like this:<p/>
- * 
+ *
  * <pre>
  * BufferedInputStream buf = new BufferedInputStream(new FileInputStream(&quot;file.java&quot;));
  * </pre>
- * 
+ *
  * @see BufferedOutputStream
- * 
- * @since Android 1.0
  */
 public class BufferedInputStream extends FilterInputStream {
-    // BEGIN android-changed
-    // The address of the buffer should not be cached in a register.
-    // This was changed to be more close to the RI.
     /**
      * The buffer containing the current bytes read from the target InputStream.
-     * 
-     * @since Android 1.0
      */
     protected volatile byte[] buf;
-    // END android-changed
 
     /**
      * The total number of bytes inside the byte array {@code buf}.
-     * 
-     * @since Android 1.0
      */
     protected int count;
 
     /**
      * The current limit, which when passed, invalidates the current mark.
-     * 
-     * @since Android 1.0
      */
     protected int marklimit;
 
     /**
      * The currently marked position. -1 indicates no mark has been set or the
      * mark has been invalidated.
-     * 
-     * @since Android 1.0
      */
     protected int markpos = -1;
 
     /**
      * The current position within the byte array {@code buf}.
-     * 
-     * @since Android 1.0
      */
     protected int pos;
-
-    private boolean closed = false;
 
     /**
      * Constructs a new {@code BufferedInputStream} on the {@link InputStream}
      * {@code in}. The default buffer size (8 KB) is allocated and all reads
      * can now be filtered through this stream.
-     * 
+     *
      * @param in
      *            the InputStream the buffer reads from.
-     * @since Android 1.0
      */
     public BufferedInputStream(InputStream in) {
         super(in);
@@ -116,14 +97,13 @@ public class BufferedInputStream extends FilterInputStream {
      * Constructs a new {@code BufferedInputStream} on the {@link InputStream}
      * {@code in}. The buffer size is specified by the parameter {@code size}
      * and all reads are now filtered through this stream.
-     * 
+     *
      * @param in
      *            the input stream the buffer reads from.
      * @param size
      *            the size of buffer to allocate.
      * @throws IllegalArgumentException
      *             if {@code size < 0}.
-     * @since Android 1.0
      */
     public BufferedInputStream(InputStream in, int size) {
         super(in);
@@ -138,43 +118,43 @@ public class BufferedInputStream extends FilterInputStream {
      * Returns the number of bytes that are available before this stream will
      * block. This method returns the number of bytes available in the buffer
      * plus those available in the source stream.
-     * 
+     *
      * @return the number of bytes available before blocking.
      * @throws IOException
      *             if this stream is closed.
-     * @since Android 1.0
      */
     @Override
     public synchronized int available() throws IOException {
-        if (buf == null) {
+        InputStream localIn = in; // 'in' could be invalidated by close()
+        if (buf == null || localIn == null) {
             // K0059=Stream is closed
             throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
-        return count - pos + in.available();
+        return count - pos + localIn.available();
     }
 
     /**
      * Closes this stream. The source stream is closed and any resources
      * associated with it are released.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this stream.
-     * @since Android 1.0
      */
     @Override
-    public synchronized void close() throws IOException {
-        if (null != in) {
-            super.close();
-            in = null;
-        }
+    public void close() throws IOException {
         buf = null;
-        closed = true;
+        InputStream localIn = in;
+        in = null;
+        if (localIn != null) {
+            localIn.close();
+        }
     }
 
-    private int fillbuf() throws IOException {
+    private int fillbuf(InputStream localIn, byte[] localBuf)
+            throws IOException {
         if (markpos == -1 || (pos - markpos >= marklimit)) {
             /* Mark position not set or exceeded readlimit */
-            int result = in.read(buf);
+            int result = localIn.read(localBuf);
             if (result > 0) {
                 markpos = -1;
                 pos = 0;
@@ -182,22 +162,25 @@ public class BufferedInputStream extends FilterInputStream {
             }
             return result;
         }
-        if (markpos == 0 && marklimit > buf.length) {
-            /* Increase buffer size to accomodate the readlimit */
-            int newLength = buf.length * 2;
+        if (markpos == 0 && marklimit > localBuf.length) {
+            /* Increase buffer size to accommodate the readlimit */
+            int newLength = localBuf.length * 2;
             if (newLength > marklimit) {
                 newLength = marklimit;
             }
             byte[] newbuf = new byte[newLength];
-            System.arraycopy(buf, 0, newbuf, 0, buf.length);
-            buf = newbuf;
+            System.arraycopy(localBuf, 0, newbuf, 0, localBuf.length);
+            // Reassign buf, which will invalidate any local references
+            // FIXME: what if buf was null?
+            localBuf = buf = newbuf;
         } else if (markpos > 0) {
-            System.arraycopy(buf, markpos, buf, 0, buf.length - markpos);
+            System.arraycopy(localBuf, markpos, localBuf, 0, localBuf.length
+                    - markpos);
         }
         /* Set the new position and mark position */
         pos -= markpos;
         count = markpos = 0;
-        int bytesread = in.read(buf, pos, buf.length - pos);
+        int bytesread = localIn.read(localBuf, pos, localBuf.length - pos);
         count = bytesread <= 0 ? pos : pos + bytesread;
         return bytesread;
     }
@@ -209,12 +192,11 @@ public class BufferedInputStream extends FilterInputStream {
      * position if {@code readlimit} has not been surpassed. The underlying
      * buffer may be increased in size to allow {@code readlimit} number of
      * bytes to be supported.
-     * 
+     *
      * @param readlimit
      *            the number of bytes that can be read before the mark is
      *            invalidated.
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public synchronized void mark(int readlimit) {
@@ -225,11 +207,10 @@ public class BufferedInputStream extends FilterInputStream {
     /**
      * Indicates whether {@code BufferedInputStream} supports the {@code mark()}
      * and {@code reset()} methods.
-     * 
+     *
      * @return {@code true} for BufferedInputStreams.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -241,28 +222,39 @@ public class BufferedInputStream extends FilterInputStream {
      * range from 0 to 255. Returns -1 if the end of the source string has been
      * reached. If the internal buffer does not contain any available bytes then
      * it is filled from the source stream and the first byte is returned.
-     * 
+     *
      * @return the byte read or -1 if the end of the source stream has been
      *         reached.
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public synchronized int read() throws IOException {
-        if (in == null) {
+        // Use local refs since buf and in may be invalidated by an
+        // unsynchronized close()
+        byte[] localBuf = buf;
+        InputStream localIn = in;
+        if (localBuf == null || localIn == null) {
             // K0059=Stream is closed
             throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
 
         /* Are there buffered bytes available? */
-        if (pos >= count && fillbuf() == -1) {
+        if (pos >= count && fillbuf(localIn, localBuf) == -1) {
             return -1; /* no, fill buffer */
+        }
+        // localBuf may have been invalidated by fillbuf
+        if (localBuf != buf) {
+            localBuf = buf;
+            if (localBuf == null) {
+                // K0059=Stream is closed
+                throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
+            }
         }
 
         /* Did filling the buffer fail with -1 (EOF)? */
         if (count - pos > 0) {
-            return buf[pos++] & 0xFF;
+            return localBuf[pos++] & 0xFF;
         }
         return -1;
     }
@@ -275,7 +267,7 @@ public class BufferedInputStream extends FilterInputStream {
      * mark has not been set and the requested number of bytes is larger than
      * the receiver's buffer size, this implementation bypasses the buffer and
      * simply places the results directly into {@code buffer}.
-     * 
+     *
      * @param buffer
      *            the byte array in which to store the bytes read.
      * @param offset
@@ -291,12 +283,14 @@ public class BufferedInputStream extends FilterInputStream {
      * @throws IOException
      *             if the stream is already closed or another IOException
      *             occurs.
-     * @since Android 1.0
      */
     @Override
     public synchronized int read(byte[] buffer, int offset, int length)
             throws IOException {
-        if (closed) {
+        // Use local ref since buf may be invalidated by an unsynchronized
+        // close()
+        byte[] localBuf = buf;
+        if (localBuf == null) {
             // K0059=Stream is closed
             throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
@@ -316,7 +310,9 @@ public class BufferedInputStream extends FilterInputStream {
         if (length == 0) {
             return 0;
         }
-        if (null == buf) {
+        InputStream localIn = in;
+        if (localIn == null) {
+            // K0059=Stream is closed
             throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
 
@@ -324,9 +320,9 @@ public class BufferedInputStream extends FilterInputStream {
         if (pos < count) {
             /* There are bytes available in the buffer. */
             int copylength = count - pos >= length ? length : count - pos;
-            System.arraycopy(buf, pos, buffer, offset, copylength);
+            System.arraycopy(localBuf, pos, buffer, offset, copylength);
             pos += copylength;
-            if (copylength == length || in.available() == 0) {
+            if (copylength == length || localIn.available() == 0) {
                 return copylength;
             }
             offset += copylength;
@@ -341,24 +337,33 @@ public class BufferedInputStream extends FilterInputStream {
              * If we're not marked and the required size is greater than the
              * buffer, simply read the bytes directly bypassing the buffer.
              */
-            if (markpos == -1 && required >= buf.length) {
-                read = in.read(buffer, offset, required);
+            if (markpos == -1 && required >= localBuf.length) {
+                read = localIn.read(buffer, offset, required);
                 if (read == -1) {
                     return required == length ? -1 : length - required;
                 }
             } else {
-                if (fillbuf() == -1) {
+                if (fillbuf(localIn, localBuf) == -1) {
                     return required == length ? -1 : length - required;
                 }
+                // localBuf may have been invalidated by fillbuf
+                if (localBuf != buf) {
+                    localBuf = buf;
+                    if (localBuf == null) {
+                        // K0059=Stream is closed
+                        throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
+                    }
+                }
+
                 read = count - pos >= required ? required : count - pos;
-                System.arraycopy(buf, pos, buffer, offset, read);
+                System.arraycopy(localBuf, pos, buffer, offset, read);
                 pos += read;
             }
             required -= read;
             if (required == 0) {
                 return length;
             }
-            if (in.available() == 0) {
+            if (localIn.available() == 0) {
                 return length - required;
             }
             offset += read;
@@ -367,13 +372,12 @@ public class BufferedInputStream extends FilterInputStream {
 
     /**
      * Resets this stream to the last marked location.
-     * 
+     *
      * @throws IOException
      *             if this stream is closed, no mark has been set or the mark is
      *             no longer valid because more than {@code readlimit} bytes
      *             have been read since setting the mark.
      * @see #mark(int)
-     * @since Android 1.0
      */
     @Override
     public synchronized void reset() throws IOException {
@@ -383,7 +387,7 @@ public class BufferedInputStream extends FilterInputStream {
          * so it is preferable to avoid loading up the whole big set of
          * messages just for these cases.
          */
-        if (closed) {
+        if (buf == null) {
             throw new IOException("Stream is closed");
         }
         if (-1 == markpos) {
@@ -397,23 +401,30 @@ public class BufferedInputStream extends FilterInputStream {
      * Skips {@code amount} number of bytes in this stream. Subsequent
      * {@code read()}'s will not return these bytes unless {@code reset()} is
      * used.
-     * 
+     *
      * @param amount
      *            the number of bytes to skip. {@code skip} does nothing and
      *            returns 0 if {@code amount} is less than zero.
      * @return the number of bytes actually skipped.
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     @Override
     public synchronized long skip(long amount) throws IOException {
-        if (null == in) {
+        // Use local refs since buf and in may be invalidated by an
+        // unsynchronized close()
+        byte[] localBuf = buf;
+        InputStream localIn = in;
+        if (localBuf == null) {
             // K0059=Stream is closed
             throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
         if (amount < 1) {
             return 0;
+        }
+        if (localIn == null) {
+            // K0059=Stream is closed
+            throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
 
         if (count - pos >= amount) {
@@ -425,7 +436,7 @@ public class BufferedInputStream extends FilterInputStream {
 
         if (markpos != -1) {
             if (amount <= marklimit) {
-                if (fillbuf() == -1) {
+                if (fillbuf(localIn, localBuf) == -1) {
                     return read;
                 }
                 if (count - pos >= amount - read) {
@@ -437,9 +448,7 @@ public class BufferedInputStream extends FilterInputStream {
                 pos = count;
                 return read;
             }
-            markpos = -1;
         }
-        return read + in.skip(amount - read);
+        return read + localIn.skip(amount - read);
     }
 }
-

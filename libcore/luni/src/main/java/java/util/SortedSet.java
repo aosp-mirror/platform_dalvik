@@ -27,7 +27,6 @@ package java.util;
  * 
  * @see Comparator
  * @see Comparable
- * @since Android 1.0
  */
 public interface SortedSet<E> extends Set<E> {
     
@@ -35,7 +34,6 @@ public interface SortedSet<E> extends Set<E> {
      * Returns the comparator used to compare elements in this {@code SortedSet}.
      * 
      * @return a comparator or null if the natural ordering is used.
-     * @since Android 1.0
      */
     public Comparator<? super E> comparator();
 
@@ -46,7 +44,6 @@ public interface SortedSet<E> extends Set<E> {
      * @return the first element.
      * @throws NoSuchElementException
      *             when this {@code SortedSet} is empty.
-     * @since Android 1.0
      */
     public E first();
 
@@ -65,7 +62,6 @@ public interface SortedSet<E> extends Set<E> {
      * @throws NullPointerException
      *             when the end element is null and this {@code SortedSet} does
      *             not support null elements.
-     * @since Android 1.0
      */
     public SortedSet<E> headSet(E end);
 
@@ -76,7 +72,6 @@ public interface SortedSet<E> extends Set<E> {
      * @return the last element.
      * @throws NoSuchElementException
      *             when this {@code SortedSet} is empty.
-     * @since Android 1.0
      */
     public E last();
 
@@ -101,7 +96,6 @@ public interface SortedSet<E> extends Set<E> {
      *             {@code SortedSet} does not support null elements.
      * @throws IllegalArgumentException
      *             when the start element is greater than the end element.
-     * @since Android 1.0
      */
     public SortedSet<E> subSet(E start, E end);
 
@@ -120,7 +114,6 @@ public interface SortedSet<E> extends Set<E> {
      * @throws NullPointerException
      *             when the start element is null and this {@code SortedSet}
      *             does not support null elements.
-     * @since Android 1.0
      */
     public SortedSet<E> tailSet(E start);
 }

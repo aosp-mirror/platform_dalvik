@@ -28,16 +28,16 @@ public final class StringIdItem
     /** size of instances when written out to a file, in bytes */
     public static final int WRITE_SIZE = 4;
 
-    /** non-null; the string value */
+    /** {@code non-null;} the string value */
     private final CstUtf8 value;
 
-    /** null-ok; associated string data object, if known */
+    /** {@code null-ok;} associated string data object, if known */
     private StringDataItem data;
 
     /**
      * Constructs an instance.
      * 
-     * @param value non-null; the string value
+     * @param value {@code non-null;} the string value
      */
     public StringIdItem(CstUtf8 value) {
         if (value == null) {
@@ -110,7 +110,7 @@ public final class StringIdItem
     /**
      * Gets the string value.
      * 
-     * @return non-null; the value
+     * @return {@code non-null;} the value
      */
     public CstUtf8 getValue() {
         return value;
@@ -119,7 +119,7 @@ public final class StringIdItem
     /**
      * Gets the associated data object for this instance, if known.
      * 
-     * @return null-ok; the associated data object or <code>null</code>
+     * @return {@code null-ok;} the associated data object or {@code null}
      * if not yet known
      */
     public StringDataItem getData() {

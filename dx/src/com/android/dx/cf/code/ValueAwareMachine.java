@@ -30,7 +30,8 @@ public class ValueAwareMachine extends BaseMachine {
     /**
      * Constructs an instance.
      * 
-     * @param prototype non-null; the prototype for the associated method
+     * @param prototype {@code non-null;} the prototype for the associated
+     * method
      */
     public ValueAwareMachine(Prototype prototype) {
         super(prototype);

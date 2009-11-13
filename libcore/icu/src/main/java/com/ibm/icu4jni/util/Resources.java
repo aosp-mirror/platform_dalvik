@@ -179,20 +179,28 @@ public class Resources {
     private static String getDefaultLocaleName() {
         return java.util.Locale.getDefault().toString();
     }
-    
-    /**
-     * Name of default locale at the time this class was initialized.
-     */
-    private static final String initialLocale = getDefaultLocaleName();
 
     /**
-     * Names of time zones for the default locale.
+     * Initialization holder for default time zone names. This class will
+     * be preloaded by the zygote to share the time and space costs of setting
+     * up the list of time zone names, so although it looks like the lazy
+     * initialization idiom, it's actually the opposite.
      */
-    private static String[][] defaultTimezoneNames = null;
+    private static class DefaultTimeZones {
+        /**
+         * Name of default locale at the time this class was initialized.
+         */
+        private static final String locale = getDefaultLocaleName();
+
+        /**
+         * Names of time zones for the default locale.
+         */
+        private static final String[][] names = createTimeZoneNamesFor(locale);
+    }
 
     /**
      * Creates array of time zone names for the given locale. This method takes
-     * about 2s to run on a 400mhz ARM11.
+     * about 2s to run on a 400MHz ARM11.
      */
     private static String[][] createTimeZoneNamesFor(String locale) {
         long start = System.currentTimeMillis();
@@ -252,22 +260,16 @@ public class Resources {
      *         the TomeZone class.
      */
     public static String[][] getDisplayTimeZones(String locale) {
-        // Note: Defer loading DefaultTimeZones as long as possible.
-
-        String defaultLocaleName = getDefaultLocaleName();
+        String defaultLocale = getDefaultLocaleName();
         if (locale == null) {
-            locale = defaultLocaleName;
+            locale = defaultLocale;
         }
 
         // If locale == default and the default locale hasn't changed since
         // DefaultTimeZones loaded, return the cached names.
         // TODO: We should force a reboot if the default locale changes.
-        if (defaultLocaleName.equals(locale)
-                && initialLocale.equals(defaultLocaleName)) {
-            if (defaultTimezoneNames == null) {
-                defaultTimezoneNames = createTimeZoneNamesFor(locale);
-            }
-            return defaultTimezoneNames;
+        if (defaultLocale.equals(locale) && DefaultTimeZones.locale.equals(defaultLocale)) {
+            return DefaultTimeZones.names;
         }
         
         return createTimeZoneNamesFor(locale);

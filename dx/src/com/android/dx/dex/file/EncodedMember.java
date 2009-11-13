@@ -51,14 +51,14 @@ public abstract class EncodedMember implements ToHuman {
     /**
      * Gets the name.
      *
-     * @return non-null; the name
+     * @return {@code non-null;} the name
      */
     public abstract CstUtf8 getName();
 
     /**
      * Does a human-friendly dump of this instance.
      *
-     * @param out non-null; where to dump
+     * @param out {@code non-null;} where to dump
      * @param verbose whether to be verbose with the output
      */
     public abstract void debugPrint(PrintWriter out, boolean verbose);
@@ -66,20 +66,20 @@ public abstract class EncodedMember implements ToHuman {
     /**
      * Populates a {@link DexFile} with items from within this instance.
      * 
-     * @param file non-null; the file to populate
+     * @param file {@code non-null;} the file to populate
      */
     public abstract void addContents(DexFile file);
 
     /**
      * Encodes this instance to the given output.
      * 
-     * @param file non-null; file this instance is part of
-     * @param out non-null; where to write to
-     * @param lastIndex &gt;= 0; the previous member index value encoded, or
-     * <code>0</code> if this is the first element to encode
-     * @param dumpSeq &gt;= 0; sequence number of this instance for
+     * @param file {@code non-null;} file this instance is part of
+     * @param out {@code non-null;} where to write to
+     * @param lastIndex {@code >= 0;} the previous member index value encoded, or
+     * {@code 0} if this is the first element to encode
+     * @param dumpSeq {@code >= 0;} sequence number of this instance for
      * annotation purposes
-     * @return &gt;= 0; the member index value that was encoded
+     * @return {@code >= 0;} the member index value that was encoded
      */
     public abstract int encode(DexFile file, AnnotatedOutput out, 
             int lastIndex, int dumpSeq);

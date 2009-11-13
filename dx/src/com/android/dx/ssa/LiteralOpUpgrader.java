@@ -42,7 +42,7 @@ public class LiteralOpUpgrader {
     /**
      * Process a method.
      *
-     * @param ssaMethod non-null; method to process
+     * @param ssaMethod {@code non-null;} method to process
      */
     public static void process(SsaMethod ssaMethod) {
         LiteralOpUpgrader dc;
@@ -135,8 +135,8 @@ public class LiteralOpUpgrader {
      *
      * TODO move this somewhere else.
      *
-     * @param insn non-null; an SsaInsn containing a PlainInsn
-     * @param newSources non-null; new sources list for new insn
+     * @param insn {@code non-null;} an SsaInsn containing a PlainInsn
+     * @param newSources {@code non-null;} new sources list for new insn
      * @param newOpcode A RegOp from {@link RegOps}
      */
     private void replacePlainInsn(NormalSsaInsn insn,

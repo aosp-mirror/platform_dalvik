@@ -19,16 +19,13 @@ package java.net;
 
 /**
  * This interface defines a factory for socket implementations.
- * 
- * @since Android 1.0
  */
 public interface SocketImplFactory {
-    
+
     /**
      * Creates a new {@code SocketImpl} instance.
      * 
      * @return the created {@code SocketImpl} instance.
-     * @since Android 1.0
      */
     SocketImpl createSocketImpl();
 }

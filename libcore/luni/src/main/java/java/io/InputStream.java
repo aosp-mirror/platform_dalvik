@@ -34,10 +34,8 @@ import org.apache.harmony.luni.util.Msg;
  * <p>
  * Many specialized input streams for purposes like reading from a file already
  * exist in this package.
- * 
+ *
  * @see OutputStream
- * 
- * @since Android 1.0
  */
 public abstract class InputStream extends Object implements Closeable {
 
@@ -46,8 +44,6 @@ public abstract class InputStream extends Object implements Closeable {
     /**
      * This constructor does nothing. It is provided for signature
      * compatibility.
-     * 
-     * @since Android 1.0
      */
     public InputStream() {
         /* empty */
@@ -57,11 +53,10 @@ public abstract class InputStream extends Object implements Closeable {
      * Returns the number of bytes that are available before this stream will
      * block. This implementation always returns 0. Subclasses should override
      * and indicate the correct number of bytes available.
-     * 
+     *
      * @return the number of bytes available before blocking.
      * @throws IOException
      *             if an error occurs in this stream.
-     * @since Android 1.0
      */
     public int available() throws IOException {
         return 0;
@@ -70,10 +65,9 @@ public abstract class InputStream extends Object implements Closeable {
     /**
      * Closes this stream. Concrete implementations of this class should free
      * any resources during close. This implementation does nothing.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this stream.
-     * @since Android 1.0
      */
     public void close() throws IOException {
         /* empty */
@@ -87,14 +81,12 @@ public abstract class InputStream extends Object implements Closeable {
      * <p>
      * This default implementation does nothing and concrete subclasses must
      * provide their own implementation.
-     * </p>
-     * 
+     *
      * @param readlimit
      *            the number of bytes that can be read from this stream before
      *            the mark is invalidated.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     public void mark(int readlimit) {
         /* empty */
@@ -103,11 +95,10 @@ public abstract class InputStream extends Object implements Closeable {
     /**
      * Indicates whether this stream supports the {@code mark()} and
      * {@code reset()} methods. The default implementation returns {@code false}.
-     * 
+     *
      * @return always {@code false}.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     public boolean markSupported() {
         return false;
@@ -118,24 +109,22 @@ public abstract class InputStream extends Object implements Closeable {
      * range from 0 to 255. Returns -1 if the end of the stream has been
      * reached. Blocks until one byte has been read, the end of the source
      * stream is detected or an exception is thrown.
-     * 
+     *
      * @return the byte read or -1 if the end of stream has been reached.
      * @throws IOException
      *             if the stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     public abstract int read() throws IOException;
 
     /**
      * Reads bytes from this stream and stores them in the byte array {@code b}.
-     * 
+     *
      * @param b
      *            the byte array in which to store the bytes read.
      * @return the number of bytes actually read or -1 if the end of the stream
      *         has been reached.
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     public int read(byte[] b) throws IOException {
         // BEGIN android-note
@@ -147,7 +136,7 @@ public abstract class InputStream extends Object implements Closeable {
     /**
      * Reads at most {@code length} bytes from this stream and stores them in
      * the byte array {@code b} starting at {@code offset}.
-     * 
+     *
      * @param b
      *            the byte array in which to store the bytes read.
      * @param offset
@@ -163,7 +152,6 @@ public abstract class InputStream extends Object implements Closeable {
      *             {@code b}.
      * @throws IOException
      *             if the stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     public int read(byte[] b, int offset, int length) throws IOException {
         // BEGIN android-note
@@ -195,7 +183,7 @@ public abstract class InputStream extends Object implements Closeable {
                 }
                 throw e;
             }
-            b[offset + i] = (byte)c;
+            b[offset + i] = (byte) c;
         }
         return length;
     }
@@ -208,11 +196,9 @@ public abstract class InputStream extends Object implements Closeable {
      * <p>
      * This implementation always throws an {@code IOException} and concrete
      * subclasses should provide the proper implementation.
-     * </p>
-     * 
+     *
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     public synchronized void reset() throws IOException {
         throw new IOException();
@@ -225,14 +211,12 @@ public abstract class InputStream extends Object implements Closeable {
      * <p>
      * This default implementation reads {@code n} bytes into a temporary
      * buffer. Concrete subclasses should provide their own implementation.
-     * </p>
-     * 
+     *
      * @param n
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
-     * @since Android 1.0
      */
     public long skip(long n) throws IOException {
         if (n <= 0) {

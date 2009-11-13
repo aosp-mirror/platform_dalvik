@@ -31,15 +31,11 @@ package java.math;
  * </ul>
  * All operations are provided in immutable way, and some in both mutable and
  * immutable.
- * 
- * @author Intel Middleware Product Division
- * @author Instituto Tecnologico de Cordoba
  */
 class BitLevel {
 
     /** Just to denote that this class can't be instantiated. */
     private BitLevel() {}
-
 
     /** @see BigInteger#bitLength() */
     static int bitLength(BigInteger val) {
@@ -179,6 +175,31 @@ class BitLevel {
     //     }
     // }
     // END android-removed
+
+    static void shiftLeftOneBit(int result[], int source[], int srcLen) {
+        int carry = 0;
+        for(int i = 0; i < srcLen; i++) {
+            int val = source[i];
+            result[i] = (val << 1) | carry;
+            carry = val >>> 31;
+        }
+        if(carry != 0) {
+            result[srcLen] = carry;
+        }
+    }
+
+    static BigInteger shiftLeftOneBit(BigInteger source) {
+        // BEGIN android-added
+        source.establishOldRepresentation("BitLevel.shiftLeftOneBit");
+        // END android-added
+        int srcLen = source.numberLength;
+        int resLen = srcLen + 1;
+        int resDigits[] = new int[resLen];
+        shiftLeftOneBit(resDigits, source.digits, srcLen);
+        BigInteger result = new BigInteger(source.sign, resLen, resDigits);
+        result.cutOffLeadingZeroes();
+        return result;
+    }
 
     /** @see BigInteger#shiftRight(int) */
     static BigInteger shiftRight(BigInteger source, int count) {

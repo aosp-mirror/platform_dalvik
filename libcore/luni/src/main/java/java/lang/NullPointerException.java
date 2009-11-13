@@ -23,8 +23,6 @@ package java.lang;
  * object or array points to {@code null}. It also occurs in some other, less
  * obvious circumstances, like a {@code throw e} statement where the {@link
  * Throwable} reference is {@code null}.
- * 
- * @since Android 1.0
  */
 public class NullPointerException extends RuntimeException {
 
@@ -33,8 +31,6 @@ public class NullPointerException extends RuntimeException {
     /**
      * Constructs a new {@code NullPointerException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public NullPointerException() {
         super();
@@ -46,7 +42,6 @@ public class NullPointerException extends RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public NullPointerException(String detailMessage) {
         super(detailMessage);

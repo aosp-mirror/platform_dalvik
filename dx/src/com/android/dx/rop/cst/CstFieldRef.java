@@ -19,7 +19,7 @@ package com.android.dx.rop.cst;
 import com.android.dx.rop.type.Type;
 
 /**
- * Constants of type <code>CONSTANT_Fieldref_info</code>.
+ * Constants of type {@code CONSTANT_Fieldref_info}.
  */
 public final class CstFieldRef extends CstMemberRef {
     /**
@@ -27,10 +27,10 @@ public final class CstFieldRef extends CstMemberRef {
      * field which should hold the class corresponding to a given
      * primitive type. For example, if given {@link Type#INT}, this
      * method returns an instance corresponding to the field
-     * <code>java.lang.Integer.TYPE</code>.
+     * {@code java.lang.Integer.TYPE}.
      * 
-     * @param primitiveType non-null; the primitive type
-     * @return non-null; the corresponding static field
+     * @param primitiveType {@code non-null;} the primitive type
+     * @return {@code non-null;} the corresponding static field
      */
     public static CstFieldRef forPrimitiveType(Type primitiveType) {
         return new CstFieldRef(CstType.forBoxedPrimitiveType(primitiveType),
@@ -40,8 +40,8 @@ public final class CstFieldRef extends CstMemberRef {
     /**
      * Constructs an instance.
      * 
-     * @param definingClass non-null; the type of the defining class
-     * @param nat non-null; the name-and-type
+     * @param definingClass {@code non-null;} the type of the defining class
+     * @param nat {@code non-null;} the name-and-type
      */
     public CstFieldRef(CstType definingClass, CstNat nat) {
         super(definingClass, nat);
@@ -56,7 +56,7 @@ public final class CstFieldRef extends CstMemberRef {
     /**
      * Returns the type of this field.
      * 
-     * @return non-null; the field's type
+     * @return {@code non-null;} the field's type
      */
     public Type getType() {
         return getNat().getFieldType();

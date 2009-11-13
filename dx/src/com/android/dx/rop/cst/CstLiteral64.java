@@ -21,13 +21,13 @@ package com.android.dx.rop.cst;
  */
 public abstract class CstLiteral64
         extends CstLiteralBits {
-    /** the value as <code>long</code> bits */
+    /** the value as {@code long} bits */
     private final long bits;
 
     /**
      * Constructs an instance.
      * 
-     * @param bits the value as <code>long</code> bits
+     * @param bits the value as {@code long} bits
      */
     /*package*/ CstLiteral64(long bits) {
         this.bits = bits;

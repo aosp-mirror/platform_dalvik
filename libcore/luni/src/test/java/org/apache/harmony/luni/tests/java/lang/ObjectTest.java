@@ -23,6 +23,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.BrokenTest;
+import dalvik.annotation.SideEffect;
 
 @TestTargetClass(Object.class) 
 public class ObjectTest extends junit.framework.TestCase {
@@ -79,6 +80,7 @@ public class ObjectTest extends junit.framework.TestCase {
         method = "finalize",
         args = {}
     )
+    @SideEffect("Causes OutOfMemoryError to test finalization")
     public void test_finalize() {
         isCalled = false;
         class TestObject extends Object {

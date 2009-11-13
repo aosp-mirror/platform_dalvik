@@ -51,7 +51,7 @@ public class MimeTable implements FileNameMap {
     }
 
     /**
-     * Contructs a MIME table using the default values defined in this class.
+     * Constructs a MIME table using the default values defined in this class.
      * 
      * It then augments this table by reading pairs of extensions and
      * corresponding content types from the file "content-types.properties",

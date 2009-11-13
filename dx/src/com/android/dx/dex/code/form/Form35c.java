@@ -28,11 +28,11 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Instruction format <code>35c</code>. See the instruction format spec
+ * Instruction format {@code 35c}. See the instruction format spec
  * for details.
  */
 public final class Form35c extends InsnFormat {
-    /** non-null; unique instance of this class */
+    /** {@code non-null;} unique instance of this class */
     public static final InsnFormat THE_ONE = new Form35c();
 
     /** Maximal number of operands */
@@ -120,12 +120,12 @@ public final class Form35c extends InsnFormat {
 
     /**
      * Gets the number of words required for the given register list, where
-     * category-2 values count as two words. Return <code>-1</code> if the
+     * category-2 values count as two words. Return {@code -1} if the
      * list requires more than five words or contains registers that need
      * more than a nibble to identify them.
      * 
-     * @param regs non-null; the register list in question
-     * @return &gt;= -1; the number of words required, or <code>-1</code> 
+     * @param regs {@code non-null;} the register list in question
+     * @return {@code >= -1;} the number of words required, or {@code -1} 
      * if the list couldn't possibly fit in this format
      */
     private static int wordCount(RegisterSpecList regs) {
@@ -161,8 +161,8 @@ public final class Form35c extends InsnFormat {
      * entries. This returns the original list if no modification is
      * required
      * 
-     * @param orig non-null; the original list
-     * @return non-null; the list with the described transformation
+     * @param orig {@code non-null;} the original list
+     * @return {@code non-null;} the list with the described transformation
      */
     private static RegisterSpecList explicitize(RegisterSpecList orig) {
         int wordCount = wordCount(orig);

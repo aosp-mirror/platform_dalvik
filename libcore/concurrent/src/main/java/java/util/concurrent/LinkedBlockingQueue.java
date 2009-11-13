@@ -32,14 +32,15 @@ import java.util.*;
  * dynamically created upon each insertion unless this would bring the
  * queue above capacity.
  *
- * <p>This class implements all of the <em>optional</em> methods
- * of the {@link Collection} and {@link Iterator} interfaces.
+ * <p>This class and its iterator implement all of the
+ * <em>optional</em> methods of the {@link Collection} and {@link
+ * Iterator} interfaces.
  *
  * @since 1.5
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  *
- **/
+ */
 public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         implements BlockingQueue<E>, java.io.Serializable {
     private static final long serialVersionUID = -6903933977591709194L;
@@ -56,7 +57,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * items have been entered since the signal. And symmetrically for
      * takes signalling puts. Operations such as remove(Object) and
      * iterators acquire both locks.
-    */
+     */
 
     /**
      * Linked list node class
@@ -93,7 +94,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     private final Condition notFull = putLock.newCondition();
 
     /**
-     * Signal a waiting take. Called only from put/offer (which do not
+     * Signals a waiting take. Called only from put/offer (which do not
      * otherwise ordinarily lock takeLock.)
      */
     private void signalNotEmpty() {
@@ -107,7 +108,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Signal a waiting put. Called only from take/poll.
+     * Signals a waiting put. Called only from take/poll.
      */
     private void signalNotFull() {
         final ReentrantLock putLock = this.putLock;
@@ -120,7 +121,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Create a node and link it at end of queue
+     * Creates a node and links it at end of queue.
      * @param x the item
      */
     private void insert(E x) {
@@ -128,11 +129,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Remove a node from head of queue,
+     * Removes a node from head of queue,
      * @return the node
      */
     private E extract() {
-        Node<E> first = head.next;
+        Node<E> h = head;
+        Node<E> first = h.next;
+        h.next = null; // help GC
         head = first;
         E x = first.item;
         first.item = null;
@@ -167,9 +170,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Creates a <tt>LinkedBlockingQueue</tt> with the given (fixed) capacity.
      *
-     * @param capacity the capacity of this queue.
+     * @param capacity the capacity of this queue
      * @throws IllegalArgumentException if <tt>capacity</tt> is not greater
-     *         than zero.
+     *         than zero
      */
     public LinkedBlockingQueue(int capacity) {
         if (capacity <= 0) throw new IllegalArgumentException();
@@ -182,14 +185,15 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * {@link Integer#MAX_VALUE}, initially containing the elements of the
      * given collection,
      * added in traversal order of the collection's iterator.
+     *
      * @param c the collection of elements to initially contain
-     * @throws NullPointerException if <tt>c</tt> or any element within it
-     * is <tt>null</tt>
+     * @throws NullPointerException if the specified collection or any
+     *         of its elements are null
      */
     public LinkedBlockingQueue(Collection<? extends E> c) {
         this(Integer.MAX_VALUE);
-        for (Iterator<? extends E> it = c.iterator(); it.hasNext();)
-            add(it.next());
+        for (E e : c)
+            add(e);
     }
 
 
@@ -198,7 +202,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns the number of elements in this queue.
      *
-     * @return  the number of elements in this queue.
+     * @return the number of elements in this queue
      */
     public int size() {
         return count.get();
@@ -207,31 +211,29 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     // this doc comment is a modified copy of the inherited doc comment,
     // without the reference to unlimited queues.
     /**
-     * Returns the number of elements that this queue can ideally (in
-     * the absence of memory or resource constraints) accept without
+     * Returns the number of additional elements that this queue can ideally
+     * (in the absence of memory or resource constraints) accept without
      * blocking. This is always equal to the initial capacity of this queue
      * less the current <tt>size</tt> of this queue.
-     * <p>Note that you <em>cannot</em> always tell if
-     * an attempt to <tt>add</tt> an element will succeed by
-     * inspecting <tt>remainingCapacity</tt> because it may be the
-     * case that a waiting consumer is ready to <tt>take</tt> an
-     * element out of an otherwise full queue.
-     * 
-     * @return the remaining capacity
+     *
+     * <p>Note that you <em>cannot</em> always tell if an attempt to insert
+     * an element will succeed by inspecting <tt>remainingCapacity</tt>
+     * because it may be the case that another thread is about to
+     * insert or remove an element.
      */
     public int remainingCapacity() {
         return capacity - count.get();
     }
 
     /**
-     * Adds the specified element to the tail of this queue, waiting if
+     * Inserts the specified element at the tail of this queue, waiting if
      * necessary for space to become available.
-     * @param o the element to add
-     * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
-    public void put(E o) throws InterruptedException {
-        if (o == null) throw new NullPointerException();
+    public void put(E e) throws InterruptedException {
+        if (e == null) throw new NullPointerException();
         // Note: convention in all put/take/etc is to preset
         // local var holding count  negative to indicate failure unless set.
         int c = -1;
@@ -255,7 +257,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 notFull.signal(); // propagate to a non-interrupted thread
                 throw ie;
             }
-            insert(o);
+            insert(e);
             c = count.getAndIncrement();
             if (c + 1 < capacity)
                 notFull.signal();
@@ -269,20 +271,16 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Inserts the specified element at the tail of this queue, waiting if
      * necessary up to the specified wait time for space to become available.
-     * @param o the element to add
-     * @param timeout how long to wait before giving up, in units of
-     * <tt>unit</tt>
-     * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-     * <tt>timeout</tt> parameter
+     *
      * @return <tt>true</tt> if successful, or <tt>false</tt> if
-     * the specified waiting time elapses before space is available.
-     * @throws InterruptedException if interrupted while waiting.
-     * @throws NullPointerException if the specified element is <tt>null</tt>.
+     *         the specified waiting time elapses before space is available.
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NullPointerException {@inheritDoc}
      */
-    public boolean offer(E o, long timeout, TimeUnit unit)
+    public boolean offer(E e, long timeout, TimeUnit unit)
         throws InterruptedException {
 
-        if (o == null) throw new NullPointerException();
+        if (e == null) throw new NullPointerException();
         long nanos = unit.toNanos(timeout);
         int c = -1;
         final ReentrantLock putLock = this.putLock;
@@ -291,7 +289,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         try {
             for (;;) {
                 if (count.get() < capacity) {
-                    insert(o);
+                    insert(e);
                     c = count.getAndIncrement();
                     if (c + 1 < capacity)
                         notFull.signal();
@@ -315,16 +313,18 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Inserts the specified element at the tail of this queue if possible,
-     * returning immediately if this queue is full.
+     * Inserts the specified element at the tail of this queue if it is
+     * possible to do so immediately without exceeding the queue's capacity,
+     * returning <tt>true</tt> upon success and <tt>false</tt> if this queue
+     * is full.
+     * When using a capacity-restricted queue, this method is generally
+     * preferable to method {@link BlockingQueue#add add}, which can fail to
+     * insert an element only by throwing an exception.
      *
-     * @param o the element to add.
-     * @return <tt>true</tt> if it was possible to add the element to
-     *         this queue, else <tt>false</tt>
-     * @throws NullPointerException if the specified element is <tt>null</tt>
+     * @throws NullPointerException if the specified element is null
      */
-    public boolean offer(E o) {
-        if (o == null) throw new NullPointerException();
+    public boolean offer(E e) {
+        if (e == null) throw new NullPointerException();
         final AtomicInteger count = this.count;
         if (count.get() == capacity)
             return false;
@@ -333,7 +333,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         putLock.lock();
         try {
             if (count.get() < capacity) {
-                insert(o);
+                insert(e);
                 c = count.getAndIncrement();
                 if (c + 1 < capacity)
                     notFull.signal();
@@ -447,6 +447,17 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Removes a single instance of the specified element from this queue,
+     * if it is present.  More formally, removes an element <tt>e</tt> such
+     * that <tt>o.equals(e)</tt>, if this queue contains one or more such
+     * elements.
+     * Returns <tt>true</tt> if this queue contained the specified element
+     * (or equivalently, if this queue changed as a result of the call).
+     *
+     * @param o element to be removed from this queue, if present
+     * @return <tt>true</tt> if this queue changed as a result of the call
+     */
     public boolean remove(Object o) {
         if (o == null) return false;
         boolean removed = false;
@@ -465,6 +476,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             if (removed) {
                 p.item = null;
                 trail.next = p.next;
+                if (last == p)
+                    last = trail;
                 if (count.getAndDecrement() == capacity)
                     notFull.signalAll();
             }
@@ -474,6 +487,19 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         return removed;
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence.
+     *
+     * <p>The returned array will be "safe" in that no references to it are
+     * maintained by this queue.  (In other words, this method must allocate
+     * a new array).  The caller is thus free to modify the returned array.
+     *
+     * <p>This method acts as bridge between array-based and collection-based
+     * APIs.
+     *
+     * @return an array containing all of the elements in this queue
+     */
     public Object[] toArray() {
         fullyLock();
         try {
@@ -488,6 +514,42 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Returns an array containing all of the elements in this queue, in
+     * proper sequence; the runtime type of the returned array is that of
+     * the specified array.  If the queue fits in the specified array, it
+     * is returned therein.  Otherwise, a new array is allocated with the
+     * runtime type of the specified array and the size of this queue.
+     *
+     * <p>If this queue fits in the specified array with room to spare
+     * (i.e., the array has more elements than this queue), the element in
+     * the array immediately following the end of the queue is set to
+     * <tt>null</tt>.
+     *
+     * <p>Like the {@link #toArray()} method, this method acts as bridge between
+     * array-based and collection-based APIs.  Further, this method allows
+     * precise control over the runtime type of the output array, and may,
+     * under certain circumstances, be used to save allocation costs.
+     *
+     * <p>Suppose <tt>x</tt> is a queue known to contain only strings.
+     * The following code can be used to dump the queue into a newly
+     * allocated array of <tt>String</tt>:
+     *
+     * <pre>
+     *     String[] y = x.toArray(new String[0]);</pre>
+     *
+     * Note that <tt>toArray(new Object[0])</tt> is identical in function to
+     * <tt>toArray()</tt>.
+     *
+     * @param a the array into which the elements of the queue are to
+     *          be stored, if it is big enough; otherwise, a new array of the
+     *          same runtime type is allocated for this purpose
+     * @return an array containing all of the elements in this queue
+     * @throws ArrayStoreException if the runtime type of the specified array
+     *         is not a supertype of the runtime type of every element in
+     *         this queue
+     * @throws NullPointerException if the specified array is null
+     */
     public <T> T[] toArray(T[] a) {
         fullyLock();
         try {
@@ -499,6 +561,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             int k = 0;
             for (Node p = head.next; p != null; p = p.next)
                 a[k++] = (T)p.item;
+            if (a.length > k)
+                a[k] = null;
             return a;
         } finally {
             fullyUnlock();
@@ -514,10 +578,16 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * Atomically removes all of the elements from this queue.
+     * The queue will be empty after this call returns.
+     */
     public void clear() {
         fullyLock();
         try {
             head.next = null;
+            assert head.item == null;
+            last = head;
             if (count.getAndSet(0) == capacity)
                 notFull.signalAll();
         } finally {
@@ -525,16 +595,24 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();
         if (c == this)
             throw new IllegalArgumentException();
-        Node first;
+        Node<E> first;
         fullyLock();
         try {
             first = head.next;
             head.next = null;
+            assert head.item == null;
+            last = head;
             if (count.getAndSet(0) == capacity)
                 notFull.signalAll();
         } finally {
@@ -549,14 +627,18 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         }
         return n;
     }
-        
+
+    /**
+     * @throws UnsupportedOperationException {@inheritDoc}
+     * @throws ClassCastException            {@inheritDoc}
+     * @throws NullPointerException          {@inheritDoc}
+     * @throws IllegalArgumentException      {@inheritDoc}
+     */
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)
             throw new NullPointerException();
         if (c == this)
             throw new IllegalArgumentException();
-        if (maxElements <= 0)
-            return 0;
         fullyLock();
         try {
             int n = 0;
@@ -569,6 +651,9 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             }
             if (n != 0) {
                 head.next = p;
+                assert head.item == null;
+                if (p == null)
+                    last = head;
                 if (count.getAndAdd(-n) == capacity)
                     notFull.signalAll();
             }
@@ -581,12 +666,12 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      * The returned <tt>Iterator</tt> is a "weakly consistent" iterator that
-     * will never throw {@link java.util.ConcurrentModificationException},
+     * will never throw {@link ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
      *
-     * @return an iterator over the elements in this queue in proper sequence.
+     * @return an iterator over the elements in this queue in proper sequence
      */
     public Iterator<E> iterator() {
       return new Itr();
@@ -660,6 +745,8 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
                 if (p == node) {
                     p.item = null;
                     trail.next = p.next;
+                    if (last == p)
+                        last = trail;
                     int c = count.getAndDecrement();
                     if (c == capacity)
                         notFull.signalAll();

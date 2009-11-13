@@ -30,40 +30,33 @@ import java.util.logging.Logger;
  * drawback is that some extra space is required to hold the buffer and that
  * copying takes place when flushing that buffer, but this is usually outweighed
  * by the performance benefits.
- * 
+ *
  * <p/>A typical application pattern for the class looks like this:<p/>
- * 
+ *
  * <pre>
  * BufferedOutputStream buf = new BufferedOutputStream(new FileOutputStream(&quot;file.java&quot;));
  * </pre>
- * 
+ *
  * @see BufferedInputStream
- * 
- * @since Android 1.0
  */
 public class BufferedOutputStream extends FilterOutputStream {
     /**
      * The buffer containing the bytes to be written to the target stream.
-     * 
-     * @since Android 1.0
      */
     protected byte[] buf;
 
     /**
      * The total number of bytes inside the byte array {@code buf}.
-     * 
-     * @since Android 1.0
      */
     protected int count;
 
     /**
      * Constructs a new {@code BufferedOutputStream} on the {@link OutputStream}
      * {@code out}. The buffer size is set to the default value of 8 KB.
-     * 
+     *
      * @param out
      *            the {@code OutputStream} for which write operations are
      *            buffered.
-     * @since Android 1.0
      */
     public BufferedOutputStream(OutputStream out) {
         super(out);
@@ -87,14 +80,13 @@ public class BufferedOutputStream extends FilterOutputStream {
     /**
      * Constructs a new {@code BufferedOutputStream} on the {@link OutputStream}
      * {@code out}. The buffer size is set to {@code size}.
-     * 
+     *
      * @param out
      *            the output stream for which write operations are buffered.
      * @param size
      *            the size of the buffer in bytes.
      * @throws IllegalArgumentException
      *             if {@code size <= 0}.
-     * @since Android 1.0
      */
     public BufferedOutputStream(OutputStream out, int size) {
         super(out);
@@ -108,17 +100,13 @@ public class BufferedOutputStream extends FilterOutputStream {
     /**
      * Flushes this stream to ensure all pending data is written out to the
      * target stream. In addition, the target stream is flushed.
-     * 
+     *
      * @throws IOException
      *             if an error occurs attempting to flush this stream.
-     * @since Android 1.0
      */
     @Override
     public synchronized void flush() throws IOException {
-        if (count > 0) {
-            out.write(buf, 0, count);
-        }
-        count = 0;
+        flushInternal();
         out.flush();
     }
 
@@ -128,7 +116,7 @@ public class BufferedOutputStream extends FilterOutputStream {
      * bytes, they are copied in. If not, the buffered bytes plus the bytes in
      * {@code buffer} are written to the target stream, the target is flushed,
      * and the buffer is cleared.
-     * 
+     *
      * @param buffer
      *            the buffer to be written.
      * @param offset
@@ -144,7 +132,8 @@ public class BufferedOutputStream extends FilterOutputStream {
      *             if an error occurs attempting to write to this stream.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0
+     * @throws ArrayIndexOutOfBoundsException
+     *             If offset or count is outside of bounds.
      */
     @Override
     public synchronized void write(byte[] buffer, int offset, int length)
@@ -153,6 +142,13 @@ public class BufferedOutputStream extends FilterOutputStream {
             // K0047=buffer is null
             throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
+
+        if (length >= buf.length) {
+            flushInternal();
+            out.write(buffer, offset, length);
+            return;
+        }
+
         // BEGIN android-changed
         // Exception priorities (in case of multiple errors) differ from
         // RI, but are spec-compliant.
@@ -163,32 +159,15 @@ public class BufferedOutputStream extends FilterOutputStream {
             throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
         // END android-changed
-        if (count == 0 && length >= buf.length) {
-            out.write(buffer, offset, length);
-            return;
+
+        // flush the internal buffer first if we have not enough space left
+        if (length >= (buf.length - count)) {
+            flushInternal();
         }
-        int available = buf.length - count;
-        if (length < available) {
-            available = length;
-        }
-        if (available > 0) {
-            System.arraycopy(buffer, offset, buf, count, available);
-            count += available;
-        }
-        if (count == buf.length) {
-            out.write(buf, 0, buf.length);
-            count = 0;
-            if (length > available) {
-                offset += available;
-                available = length - available;
-                if (available >= buf.length) {
-                    out.write(buffer, offset, available);
-                } else {
-                    System.arraycopy(buffer, offset, buf, count, available);
-                    count += available;
-                }
-            }
-        }
+
+        // the length is always less than (buf.length - count) here so arraycopy is safe
+        System.arraycopy(buffer, offset, buf, count, length);
+        count += length;
     }
 
     /**
@@ -197,12 +176,11 @@ public class BufferedOutputStream extends FilterOutputStream {
      * copied into the buffer and the count incremented. Otherwise, the buffer
      * plus {@code oneByte} are written to the target stream, the target is
      * flushed, and the buffer is reset.
-     * 
+     *
      * @param oneByte
      *            the byte to be written.
      * @throws IOException
      *             if an error occurs attempting to write to this stream.
-     * @since Android 1.0
      */
     @Override
     public synchronized void write(int oneByte) throws IOException {
@@ -211,5 +189,15 @@ public class BufferedOutputStream extends FilterOutputStream {
             count = 0;
         }
         buf[count++] = (byte) oneByte;
+    }
+
+    /**
+     * Flushes only internal buffer.
+     */
+    private void flushInternal() throws IOException {
+        if (count > 0) {
+            out.write(buf, 0, count);
+        }
+        count = 0;
     }
 }

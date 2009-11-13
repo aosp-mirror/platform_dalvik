@@ -261,7 +261,8 @@ tryArchive:
                     dexGetZipEntryCrc32(&archive, entry),
                     isBootstrap, &newFile, /*createIfMissing=*/true);
             if (fd < 0) {
-                LOGI("Unable to open or create cache for %s\n", fileName);
+                LOGI("Unable to open or create cache for %s (%s)\n",
+                    fileName, cachedName);
                 goto bail;
             }
             locked = true;

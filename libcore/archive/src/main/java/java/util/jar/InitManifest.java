@@ -17,279 +17,206 @@
 
 package java.util.jar;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UTFDataFormatException;
-import java.security.AccessController;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
 import java.util.Map;
 
 import org.apache.harmony.archive.internal.nls.Messages;
-import org.apache.harmony.luni.util.PriviAction;
-import org.apache.harmony.luni.util.Util;
+import org.apache.harmony.luni.util.ThreadLocalCache;
 
 class InitManifest {
-    private final byte[] inbuf = new byte[1024];
 
-    private int inbufCount = 0, inbufPos = 0;
+    private byte[] buf;
 
-    private byte[] buffer = new byte[5];
+    private int pos;
 
-    private char[] charbuf = new char[0];
+    Attributes.Name name;
 
-    private final ByteArrayOutputStream out = new ByteArrayOutputStream(256);
+    String value;
 
-    private String encoding;
+    CharsetDecoder decoder = ThreadLocalCache.utf8Decoder.get();
+    CharBuffer cBuf = ThreadLocalCache.charBuffer.get();
 
-    private boolean usingUTF8 = true;
+    InitManifest(byte[] buf, Attributes main, Attributes.Name ver)
+            throws IOException {
 
-    private final Map<String, Attributes.Name> attributeNames = new HashMap<String, Attributes.Name>();
+        this.buf = buf;
 
-    private final byte[] mainAttributesChunk;
-
-    InitManifest(InputStream is, Attributes main, Map<String, Attributes> entries, Map<String, byte[]> chunks,
-            String verString) throws IOException {
-        encoding = AccessController.doPrivileged(new PriviAction<String>(
-                "manifest.read.encoding")); //$NON-NLS-1$
-        if ("".equals(encoding)) { //$NON-NLS-1$
-            encoding = null;
+        // check a version attribute
+        if (!readHeader() || (ver != null && !name.equals(ver))) {
+            throw new IOException(Messages.getString(
+                    "archive.2D", ver)); //$NON-NLS-1$
         }
 
-        Attributes current = main;
-        ArrayList<String> list = new ArrayList<String>();
-
-        // Return the chunk of main attributes in the manifest.
-        mainAttributesChunk = nextChunk(is, list);
-
-        Iterator<String> it = list.iterator();
-        while (it.hasNext()) {
-            addAttribute(it.next(), current);
+        main.put(name, value);
+        while (readHeader()) {
+            main.put(name, value);
         }
+    }
 
-        // Check for version attribute
-        if (verString != null && main.getValue(verString) == null) {
-            throw new IOException(Messages.getString("archive.2D", verString)); //$NON-NLS-1$
-        }
+    void initEntries(Map<String, Attributes> entries,
+            Map<String, Manifest.Chunk> chunks) throws IOException {
 
-        list.clear();
-        byte[] chunk = null;
-        while (chunks == null ? readLines(is, list) : (chunk = nextChunk(is,
-                list)) != null) {
-            it = list.iterator();
-            String line = it.next();
-            if (line.length() < 7
-                    || !Util.toASCIILowerCase(line.substring(0, 5)).equals("name:")) { //$NON-NLS-1$
+        int mark = pos;
+        while (readHeader()) {
+            if (!Attributes.Name.NAME.equals(name)) {
                 throw new IOException(Messages.getString("archive.23")); //$NON-NLS-1$
             }
-            // Name: length required space char
-            String name = line.substring(6, line.length());
-            current = new Attributes(12);
+            String entryNameValue = value;
+
+            Attributes entry = entries.get(entryNameValue);
+            if (entry == null) {
+                entry = new Attributes(12);
+            }
+
+            while (readHeader()) {
+                entry.put(name, value);
+            }
+
             if (chunks != null) {
-                chunks.put(name, chunk);
-            }
-            entries.put(name, current);
-            while (it.hasNext()) {
-                addAttribute(it.next(), current);
-            }
-            list.clear();
-        }
-
-    }
-
-    byte[] getMainAttributesChunk() {
-        return mainAttributesChunk;
-    }
-
-    private void addLine(int length, List<String> lines) throws IOException {
-        if (encoding != null) {
-            lines.add(new String(buffer, 0, length, encoding));
-        } else {
-            if (usingUTF8) {
-                try {
-                    if (charbuf.length < length) {
-                        charbuf = new char[length];
-                    }
-                    lines.add(Util.convertUTF8WithBuf(buffer, charbuf, 0,
-                            length));
-                } catch (UTFDataFormatException e) {
-                    usingUTF8 = false;
+                if (chunks.get(entryNameValue) != null) {
+                    // TODO A bug: there might be several verification chunks for
+                    // the same name. I believe they should be used to update
+                    // signature in order of appearance; there are two ways to fix
+                    // this: either use a list of chunks, or decide on used
+                    // signature algorithm in advance and reread the chunks while
+                    // updating the signature; for now a defensive error is thrown
+                    throw new IOException(Messages.getString("archive.34")); //$NON-NLS-1$
                 }
+                chunks.put(entryNameValue, new Manifest.Chunk(mark, pos));
+                mark = pos;
             }
-            if (!usingUTF8) {
-                if (charbuf.length < length) {
-                    charbuf = new char[length];
-                }
-                // If invalid UTF8, convert bytes to chars setting the upper
-                // bytes to zeros
-                int charOffset = 0;
-                int offset = 0;
-                for (int i = length; --i >= 0;) {
-                    charbuf[charOffset++] = (char) (buffer[offset++] & 0xff);
-                }
-                lines.add(new String(charbuf, 0, length));
-            }
+
+            entries.put(entryNameValue, entry);
         }
     }
 
-    private byte[] nextChunk(InputStream in, List<String> lines)
-            throws IOException {
-        if (inbufCount == -1) {
-            return null;
-        }
-        byte next;
-        int pos = 0;
-        boolean blankline = false, lastCr = false;
-        out.reset();
-        while (true) {
-            if (inbufPos == inbufCount) {
-                if ((inbufCount = in.read(inbuf)) == -1) {
-                    if (out.size() == 0) {
-                        return null;
-                    }
-                    if (blankline) {
-                        addLine(pos, lines);
-                    }
-                    return out.toByteArray();
-                }
-                if (inbufCount == inbuf.length && in.available() == 0) {
-                    /* archive.2E = "line too long" */
-                    throw new IOException(Messages.getString("archive.2E")); //$NON-NLS-1$
-                }
-                inbufPos = 0;
-            }
-            next = inbuf[inbufPos++];
-            if (lastCr) {
-                if (next != '\n') {
-                    inbufPos--;
-                    next = '\r';
-                } else {
-                    if (out.size() == 0) {
-                        continue;
-                    }
-                    out.write('\r');
-                }
-                lastCr = false;
-            } else if (next == '\r') {
-                lastCr = true;
-                continue;
-            }
-            if (blankline) {
-                if (next == ' ') {
-                    out.write(next);
-                    blankline = false;
-                    continue;
-                }
-                addLine(pos, lines);
-                if (next == '\n') {
-                    out.write(next);
-                    return out.toByteArray();
-                }
-                pos = 0;
-            } else if (next == '\n') {
-                if (out.size() == 0) {
-                    continue;
-                }
-                out.write(next);
-                blankline = true;
-                continue;
-            }
-            blankline = false;
-            out.write(next);
-            if (pos == buffer.length) {
-                byte[] newBuf = new byte[buffer.length * 2];
-                System.arraycopy(buffer, 0, newBuf, 0, buffer.length);
-                buffer = newBuf;
-            }
-            buffer[pos++] = next;
-        }
+    int getPos() {
+        return pos;
     }
 
-    private boolean readLines(InputStream in, List<String> lines)
-            throws IOException {
-        if (inbufCount == -1) {
+    /**
+     * Number of subsequent line breaks.
+     */
+    int linebreak = 0;
+
+    /**
+     * Read a single line from the manifest buffer.
+     */
+    private boolean readHeader() throws IOException {
+        if (linebreak > 1) {
+            // break a section on an empty line
+            linebreak = 0;
             return false;
         }
-        byte next;
-        int pos = 0;
-        boolean blankline = false, lastCr = false;
-        while (true) {
-            if (inbufPos == inbufCount) {
-                if ((inbufCount = in.read(inbuf)) == -1) {
-                    if (blankline) {
-                        addLine(pos, lines);
-                    }
-                    return lines.size() != 0;
+        readName();
+        linebreak = 0;
+        readValue();
+        // if the last line break is missed, the line
+        // is ignored by the reference implementation
+        return linebreak > 0;
+    }
+
+    private byte[] wrap(int mark, int pos) {
+        byte[] buffer = new byte[pos - mark];
+        System.arraycopy(buf, mark, buffer, 0, pos - mark);
+        return buffer;
+    }
+
+    private void readName() throws IOException {
+        int i = 0;
+        int mark = pos;
+
+        while (pos < buf.length) {
+            byte b = buf[pos++];
+
+            if (b == ':') {
+                byte[] nameBuffer = wrap(mark, pos - 1);
+
+                if (buf[pos++] != ' ') {
+                    throw new IOException(Messages.getString(
+                            "archive.30", nameBuffer)); //$NON-NLS-1$
                 }
-                if (inbufCount == inbuf.length && in.available() == 0) {
-                    /* archive.2E = "line too long" */
-                    throw new IOException(Messages.getString("archive.2E")); //$NON-NLS-1$
-                }
-                inbufPos = 0;
+
+                name = new Attributes.Name(nameBuffer);
+                return;
             }
-            next = inbuf[inbufPos++];
-            if (lastCr) {
-                if (next != '\n') {
-                    inbufPos--;
-                    next = '\r';
-                }
-                lastCr = false;
-            } else if (next == '\r') {
-                lastCr = true;
-                continue;
+
+            if (!((b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || b == '_'
+                    || b == '-' || (b >= '0' && b <= '9'))) {
+                throw new IOException(Messages.getString("archive.30", b)); //$NON-NLS-1$
             }
-            if (blankline) {
-                if (next == ' ') {
-                    blankline = false;
-                    continue;
-                }
-                addLine(pos, lines);
-                if (next == '\n') {
-                    return true;
-                }
-                pos = 0;
-            } else if (next == '\n') {
-                if (pos == 0 && lines.size() == 0) {
-                    continue;
-                }
-                blankline = true;
-                continue;
-            }
-            blankline = false;
-            if (pos == buffer.length) {
-                byte[] newBuf = new byte[buffer.length * 2];
-                System.arraycopy(buffer, 0, newBuf, 0, buffer.length);
-                buffer = newBuf;
-            }
-            buffer[pos++] = next;
+        }
+        if (i > 0) {
+            throw new IOException(Messages.getString(
+                    "archive.30", wrap(mark, buf.length))); //$NON-NLS-1$
         }
     }
 
-    /* Get the next attribute and add it */
-    private void addAttribute(String line, Attributes current)
-            throws IOException {
-        String header;
-        int hdrIdx = line.indexOf(':');
-        if (hdrIdx < 1) {
-            throw new IOException(Messages.getString("archive.2F", line)); //$NON-NLS-1$
-        }
-        header = line.substring(0, hdrIdx);
-        Attributes.Name name = attributeNames.get(header);
-        if (name == null) {
-            try {
-                name = new Attributes.Name(header);
-            } catch (IllegalArgumentException e) {
-                throw new IOException(e.toString());
+    private void readValue() throws IOException {
+        byte next;
+        boolean lastCr = false;
+        int mark = pos;
+        int last = pos;
+
+        decoder.reset();
+        cBuf.clear();
+
+        while (pos < buf.length) {
+            next = buf[pos++];
+
+            switch (next) {
+            case 0:
+                throw new IOException(Messages.getString("archive.2F")); //$NON-NLS-1$
+            case '\n':
+                if (lastCr) {
+                    lastCr = false;
+                } else {
+                    linebreak++;
+                }
+                continue;
+            case '\r':
+                lastCr = true;
+                linebreak++;
+                continue;
+            case ' ':
+                if (linebreak == 1) {
+                    decode(mark, last, false);
+                    mark = pos;
+                    linebreak = 0;
+                    continue;
+                }
             }
-            attributeNames.put(header, name);
+
+            if (linebreak >= 1) {
+                pos--;
+                break;
+            }
+            last = pos;
         }
-        if (hdrIdx + 1 >= line.length() || line.charAt(hdrIdx + 1) != ' ') {
-            throw new IOException(Messages.getString("archive.2F", line)); //$NON-NLS-1$
+
+        decode(mark, last, true);
+        while (CoderResult.OVERFLOW == decoder.flush(cBuf)) {
+            enlargeBuffer();
         }
-        // +2 due to required SPACE char
-        current.put(name, line.substring(hdrIdx + 2, line.length()));
+        value = new String(cBuf.array(), cBuf.arrayOffset(), cBuf.position());
+    }
+
+    private void decode(int mark, int pos, boolean endOfInput)
+            throws IOException {
+        ByteBuffer bBuf = ByteBuffer.wrap(buf, mark, pos - mark);
+        while (CoderResult.OVERFLOW == decoder.decode(bBuf, cBuf, endOfInput)) {
+            enlargeBuffer();
+        }
+    }
+
+    private void enlargeBuffer() {
+        CharBuffer newBuf = CharBuffer.allocate(cBuf.capacity() * 2);
+        newBuf.put(cBuf.array(), cBuf.arrayOffset(), cBuf.position());
+        cBuf = newBuf;
+        ThreadLocalCache.charBuffer.set(cBuf);
     }
 }

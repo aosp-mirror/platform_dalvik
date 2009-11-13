@@ -44,6 +44,7 @@ class UnresTest2 {
         }
 
         checkCasts(stuff);
+        System.out.println("UnresTest2 done");
     }
 }
 

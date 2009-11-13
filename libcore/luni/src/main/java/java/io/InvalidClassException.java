@@ -30,8 +30,6 @@ package java.io;
  * 
  * @see ObjectInputStream #readObject()
  * @see ObjectInputValidation#validateObject()
- * 
- * @since Android 1.0
  */
 public class InvalidClassException extends ObjectStreamException {
 
@@ -39,8 +37,6 @@ public class InvalidClassException extends ObjectStreamException {
 
     /**
      * The fully qualified name of the class that caused the problem.
-     * 
-     * @since Android 1.0
      */
     public String classname;
 
@@ -50,7 +46,6 @@ public class InvalidClassException extends ObjectStreamException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InvalidClassException(String detailMessage) {
         super(detailMessage);
@@ -65,7 +60,6 @@ public class InvalidClassException extends ObjectStreamException {
      *            the name of the class that caused the exception.
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InvalidClassException(String className, String detailMessage) {
         super(detailMessage);
@@ -80,7 +74,6 @@ public class InvalidClassException extends ObjectStreamException {
      * 
      * @return the detail message, possibly concatenated with the name of the
      *         class that caused the problem.
-     * @since Android 1.0
      */
     @Override
     public String getMessage() {

@@ -158,7 +158,14 @@ public class SocketTest extends SocketTestCase {
         Socket socket = null;
         try {
             socket = new Socket(InetAddress.getByName(null), sport);
-            assertEquals(InetAddress.getByName("127.0.0.1"), socket.getLocalAddress());
+            InetAddress address = socket.getLocalAddress();
+            if (Boolean.getBoolean("java.net.preferIPv6Addresses")) {
+                assertTrue(
+                    address.equals(InetAddress.getByName("::1")) ||
+                    address.equals(InetAddress.getByName("0:0:0:0:0:0:0:1")));
+            } else {
+                assertEquals(address, InetAddress.getByName("127.0.0.1"));
+            }
         } finally {
             try {
                 socket.close();

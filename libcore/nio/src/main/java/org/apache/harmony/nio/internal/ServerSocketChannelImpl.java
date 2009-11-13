@@ -17,6 +17,10 @@
 
 package org.apache.harmony.nio.internal;
 
+// BEGIN android-note
+// Copied from a newer version of Harmony.
+// END android-note
+
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -27,13 +31,12 @@ import java.net.SocketTimeoutException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.IllegalBlockingModeException;
 import java.nio.channels.NotYetBoundException;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 
 import org.apache.harmony.luni.net.NetUtil;
-import org.apache.harmony.luni.net.SocketImplProvider;
+import org.apache.harmony.luni.net.PlainServerSocketImpl;
 import org.apache.harmony.luni.platform.FileDescriptorHandler;
 import org.apache.harmony.luni.platform.Platform;
 
@@ -43,10 +46,6 @@ import org.apache.harmony.luni.platform.Platform;
 public class ServerSocketChannelImpl extends ServerSocketChannel implements
         FileDescriptorHandler {
 
-    // ----------------------------------------------------
-    // Class variables
-    // ----------------------------------------------------
-
     // status un-init, not initialized.
     private static final int SERVER_STATUS_UNINIT = -1;
 
@@ -55,10 +54,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
 
     // status closed.
     private static final int SERVER_STATUS_CLOSED = 1;
-
-    // -------------------------------------------------------------------
-    // Instance variables
-    // -------------------------------------------------------------------
 
     // The fd to interact with native code
     private final FileDescriptor fd;
@@ -74,12 +69,8 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
     boolean isBound = false;
 
     // lock for accept
-    private class AcceptLock {}
+    private static class AcceptLock {}
     private final Object acceptLock = new AcceptLock();
-
-    // ----------------------------------------------------
-    // Constructor
-    // ----------------------------------------------------
 
     /*
      * Constructor
@@ -88,25 +79,22 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
         super(sp);
         status = SERVER_STATUS_OPEN;
         fd = new FileDescriptor();
-        Platform.getNetworkSystem().createServerStreamSocket(fd,
+        Platform.getNetworkSystem().createStreamSocket(fd,
                 NetUtil.preferIPv4Stack());
-        impl = SocketImplProvider.getServerSocketImpl(fd);
+        impl = new PlainServerSocketImpl(fd);
         socket = new ServerSocketAdapter(impl, this);
     }
     
     // for native call
+    @SuppressWarnings("unused")
     private ServerSocketChannelImpl() throws IOException {
         super(SelectorProvider.provider());
         status = SERVER_STATUS_OPEN;
         fd = new FileDescriptor();
-        impl = SocketImplProvider.getServerSocketImpl(fd);        
+        impl = new PlainServerSocketImpl(fd);
         socket = new ServerSocketAdapter(impl, this);
         isBound = false;
     }
-
-    // ----------------------------------------------------
-    // Methods
-    // ----------------------------------------------------
 
     /*
      * Getting the internal Socket If we have not the socket, we create a new
@@ -128,7 +116,7 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
             throw new NotYetBoundException();
         }
 
-        SocketChannel sockChannel = SocketChannel.open();
+        SocketChannel sockChannel = new SocketChannelImpl(SelectorProvider.provider(), false);
         Socket socketGot = sockChannel.socket();
 
         try {
@@ -168,10 +156,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
         return sockChannel;
     }
 
-    // -------------------------------------------------------------------
-    // Protected inherited methods
-    // -------------------------------------------------------------------
-
     /*
      * @see java.nio.channels.spi.AbstractSelectableChannel#implConfigureBlocking
      * 
@@ -201,10 +185,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
     public FileDescriptor getFD() {
         return fd;
     }
-
-    // ----------------------------------------------------
-    // Adapter classes.
-    // ----------------------------------------------------
 
     /*
      * The adapter class of ServerSocket.
@@ -264,10 +244,7 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
                 synchronized (this) {
                     super.implAccept(aSocket);
                     sockChannel.setConnected();
-                    // BEGIN android-added
-                    // copied from a newer version of harmony
                     sockChannel.setBound(true);
-                    // END android-added
                 }
                 SecurityManager sm = System.getSecurityManager();
                 if (sm != null) {

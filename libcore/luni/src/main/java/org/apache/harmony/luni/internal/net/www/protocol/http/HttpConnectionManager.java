@@ -14,12 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-// BEGIN android-note
-// This class was copied from a newer version of harmony
-// to improve reusability of URLConnections
-// END android-note
-
 package org.apache.harmony.luni.internal.net.www.protocol.http;
 
 import java.io.IOException;

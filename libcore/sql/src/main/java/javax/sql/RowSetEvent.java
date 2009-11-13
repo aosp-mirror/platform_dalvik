@@ -33,9 +33,6 @@ import java.io.Serializable;
  * The event contains a reference to the {@code RowSet} object which generated
  * the message so that the listeners can extract whatever information they need
  * from that reference.
- * </p>
- * 
- * @since Android 1.0
  */
 public class RowSetEvent extends EventObject implements Serializable {
 
@@ -50,7 +47,6 @@ public class RowSetEvent extends EventObject implements Serializable {
      * 
      * @param theSource
      *            the {@code RowSet} which generated the event.
-     * @since Android 1.0
      */
     public RowSetEvent(RowSet theSource) {
         super(theSource);

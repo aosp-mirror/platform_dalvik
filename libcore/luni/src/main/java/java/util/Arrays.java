@@ -22,10 +22,15 @@ import java.lang.reflect.Array;
 
 /**
  * {@code Arrays} contains static methods which operate on arrays.
- *  
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public class Arrays {
+
+    // BEGIN android-removed
+    /* Specifies when to switch to insertion sort */
+    // private static final int SIMPLE_LENGTH = 7;
+    // END android-removed
 
     private static class ArrayList<E> extends AbstractList<E> implements
             List<E>, Serializable, RandomAccess {
@@ -152,11 +157,10 @@ public class Arrays {
      * {@code List} cannot be modified, i.e. adding and removing are unsupported, but
      * the elements can be set. Setting an element modifies the underlying
      * array.
-     * 
+     *
      * @param array
      *            the array.
      * @return a {@code List} of the elements of the specified array.
-     * @since Android 1.0
      */
     public static <T> List<T> asList(T... array) {
         return new ArrayList<T>(array);
@@ -167,19 +171,18 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code byte} array to search.
      * @param value
      *            the {@code byte} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @since Android 1.0
      */
     public static int binarySearch(byte[] array, byte value) {
         int low = 0, mid = -1, high = array.length - 1;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if (value > array[mid]) {
                 low = mid + 1;
             } else if (value == array[mid]) {
@@ -200,19 +203,18 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code char} array to search.
      * @param value
      *            the {@code char} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @since Android 1.0
      */
     public static int binarySearch(char[] array, char value) {
         int low = 0, mid = -1, high = array.length - 1;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if (value > array[mid]) {
                 low = mid + 1;
             } else if (value == array[mid]) {
@@ -232,20 +234,19 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code double} array to search.
      * @param value
      *            the {@code double} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @since Android 1.0
      */
     public static int binarySearch(double[] array, double value) {
         long longBits = Double.doubleToLongBits(value);
         int low = 0, mid = -1, high = array.length - 1;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if (lessThan(array[mid], value)) {
                 low = mid + 1;
             } else if (longBits == Double.doubleToLongBits(array[mid])) {
@@ -265,20 +266,19 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code float} array to search.
      * @param value
      *            the {@code float} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @since Android 1.0
      */
     public static int binarySearch(float[] array, float value) {
         int intBits = Float.floatToIntBits(value);
         int low = 0, mid = -1, high = array.length - 1;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if (lessThan(array[mid], value)) {
                 low = mid + 1;
             } else if (intBits == Float.floatToIntBits(array[mid])) {
@@ -298,19 +298,18 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code int} array to search.
      * @param value
      *            the {@code int} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @since Android 1.0
      */
     public static int binarySearch(int[] array, int value) {
         int low = 0, mid = -1, high = array.length - 1;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if (value > array[mid]) {
                 low = mid + 1;
             } else if (value == array[mid]) {
@@ -330,19 +329,18 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code long} array to search.
      * @param value
      *            the {@code long} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @since Android 1.0
      */
     public static int binarySearch(long[] array, long value) {
         int low = 0, mid = -1, high = array.length - 1;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if (value > array[mid]) {
                 low = mid + 1;
             } else if (value == array[mid]) {
@@ -362,28 +360,27 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code Object} array to search.
      * @param object
      *            the {@code Object} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if an element in the array or the search element does not
      *                implement {@code Comparable}, or cannot be compared to each other.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static int binarySearch(Object[] array, Object object) {
         if (array.length == 0) {
             return -1;
         }
-        Comparable<Object> key = (Comparable<Object>) object;
+
         int low = 0, mid = 0, high = array.length - 1, result = 0;
         while (low <= high) {
-            mid = (low + high) >> 1;
-            if ((result = key.compareTo(array[mid])) > 0) {
+            mid = (low + high) >>> 1;
+            if ((result = ((Comparable<Object>)array[mid]).compareTo(object)) < 0){
                 low = mid + 1;
             } else if (result == 0) {
                 return mid;
@@ -391,7 +388,7 @@ public class Arrays {
                 high = mid - 1;
             }
         }
-        return -mid - (result <= 0 ? 1 : 2);
+        return -mid - (result >= 0 ? 1 : 2);
     }
 
     /**
@@ -400,7 +397,7 @@ public class Arrays {
      * Searching in an unsorted array has an undefined result. It's also
      * undefined which element is found if there are multiple occurrences of the
      * same element.
-     * 
+     *
      * @param array
      *            the sorted array to search
      * @param object
@@ -409,10 +406,9 @@ public class Arrays {
      *            the {@code Comparator} sued to compare the elements.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @exception ClassCastException
-     *                if an element in the array cannot be compared to the search element 
+     * @throws ClassCastException
+     *                if an element in the array cannot be compared to the search element
      *                using the {@code Comparator}.
-     * @since Android 1.0
      */
     public static <T> int binarySearch(T[] array, T object,
             Comparator<? super T> comparator) {
@@ -422,7 +418,7 @@ public class Arrays {
 
         int low = 0, mid = 0, high = array.length - 1, result = 0;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if ((result = comparator.compare(array[mid], object)) < 0) {
                 low = mid + 1;
             } else if (result == 0) {
@@ -439,19 +435,18 @@ public class Arrays {
      * ascending sorted array. Searching in an unsorted array has an undefined
      * result. It's also undefined which element is found if there are multiple
      * occurrences of the same element.
-     * 
+     *
      * @param array
      *            the sorted {@code short} array to search.
      * @param value
      *            the {@code short} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @since Android 1.0
      */
     public static int binarySearch(short[] array, short value) {
         int low = 0, mid = -1, high = array.length - 1;
         while (low <= high) {
-            mid = (low + high) >> 1;
+            mid = (low + high) >>> 1;
             if (value > array[mid]) {
                 low = mid + 1;
             } else if (value == array[mid]) {
@@ -468,12 +463,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code byte} array to fill.
      * @param value
      *            the {@code byte} element.
-     * @since Android 1.0
      */
     public static void fill(byte[] array, byte value) {
         for (int i = 0; i < array.length; i++) {
@@ -483,7 +477,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code byte} array to fill.
      * @param start
@@ -492,11 +486,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code byte} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(byte[] array, int start, int end, byte value) {
         // Check for null first
@@ -514,12 +507,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code short} array to fill.
      * @param value
      *            the {@code short} element.
-     * @since Android 1.0
      */
     public static void fill(short[] array, short value) {
         for (int i = 0; i < array.length; i++) {
@@ -529,7 +521,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code short} array to fill.
      * @param start
@@ -538,11 +530,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code short} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(short[] array, int start, int end, short value) {
         // Check for null first
@@ -560,12 +551,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code char} array to fill.
      * @param value
      *            the {@code char} element.
-     * @since Android 1.0
      */
     public static void fill(char[] array, char value) {
         for (int i = 0; i < array.length; i++) {
@@ -575,7 +565,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code char} array to fill.
      * @param start
@@ -584,11 +574,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code char} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(char[] array, int start, int end, char value) {
         // Check for null first
@@ -606,12 +595,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code int} array to fill.
      * @param value
      *            the {@code int} element.
-     * @since Android 1.0
      */
     public static void fill(int[] array, int value) {
         for (int i = 0; i < array.length; i++) {
@@ -621,7 +609,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code int} array to fill.
      * @param start
@@ -630,11 +618,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code int} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(int[] array, int start, int end, int value) {
         // Check for null first
@@ -652,12 +639,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code long} array to fill.
      * @param value
      *            the {@code long} element.
-     * @since Android 1.0
      */
     public static void fill(long[] array, long value) {
         for (int i = 0; i < array.length; i++) {
@@ -667,7 +653,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code long} array to fill.
      * @param start
@@ -676,11 +662,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code long} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(long[] array, int start, int end, long value) {
         // Check for null first
@@ -698,12 +683,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code float} array to fill.
      * @param value
      *            the {@code float} element.
-     * @since Android 1.0
      */
     public static void fill(float[] array, float value) {
         for (int i = 0; i < array.length; i++) {
@@ -713,7 +697,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code float} array to fill.
      * @param start
@@ -722,11 +706,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code float} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(float[] array, int start, int end, float value) {
         // Check for null first
@@ -744,12 +727,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code double} array to fill.
      * @param value
      *            the {@code double} element.
-     * @since Android 1.0
      */
     public static void fill(double[] array, double value) {
         for (int i = 0; i < array.length; i++) {
@@ -759,7 +741,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code double} array to fill.
      * @param start
@@ -768,11 +750,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code double} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(double[] array, int start, int end, double value) {
         // Check for null first
@@ -790,12 +771,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code boolean} array to fill.
      * @param value
      *            the {@code boolean} element.
-     * @since Android 1.0
      */
     public static void fill(boolean[] array, boolean value) {
         for (int i = 0; i < array.length; i++) {
@@ -805,7 +785,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code boolean} array to fill.
      * @param start
@@ -814,11 +794,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code boolean} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(boolean[] array, int start, int end, boolean value) {
         // Check for null first
@@ -836,12 +815,11 @@ public class Arrays {
 
     /**
      * Fills the specified array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code Object} array to fill.
      * @param value
      *            the {@code Object} element.
-     * @since Android 1.0
      */
     public static void fill(Object[] array, Object value) {
         for (int i = 0; i < array.length; i++) {
@@ -851,7 +829,7 @@ public class Arrays {
 
     /**
      * Fills the specified range in the array with the specified element.
-     * 
+     *
      * @param array
      *            the {@code Object} array to fill.
      * @param start
@@ -860,11 +838,10 @@ public class Arrays {
      *            the last + 1 index to fill.
      * @param value
      *            the {@code Object} element.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void fill(Object[] array, int start, int end, Object value) {
         // Check for null first
@@ -882,7 +859,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * {@code boolean} arrays {@code a} and {@code b}, if 
+     * {@code boolean} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -891,11 +868,10 @@ public class Arrays {
      * containing a sequence of {@link Boolean}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(boolean[] array) {
         if (array == null) {
@@ -911,7 +887,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * not-null {@code int} arrays {@code a} and {@code b}, if 
+     * not-null {@code int} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -920,11 +896,10 @@ public class Arrays {
      * containing a sequence of {@link Integer}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(int[] array) {
         if (array == null) {
@@ -940,7 +915,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * {@code short} arrays {@code a} and {@code b}, if 
+     * {@code short} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -949,11 +924,10 @@ public class Arrays {
      * containing a sequence of {@link Short}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(short[] array) {
         if (array == null) {
@@ -969,7 +943,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * {@code char} arrays {@code a} and {@code b}, if 
+     * {@code char} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -978,11 +952,10 @@ public class Arrays {
      * containing a sequence of {@link Character}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(char[] array) {
         if (array == null) {
@@ -998,7 +971,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * {@code byte} arrays {@code a} and {@code b}, if 
+     * {@code byte} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -1007,11 +980,10 @@ public class Arrays {
      * containing a sequence of {@link Byte}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(byte[] array) {
         if (array == null) {
@@ -1027,7 +999,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * {@code long} arrays {@code a} and {@code b}, if 
+     * {@code long} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -1036,11 +1008,10 @@ public class Arrays {
      * containing a sequence of {@link Long}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(long[] array) {
         if (array == null) {
@@ -1060,7 +1031,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * {@code float} arrays {@code a} and {@code b}, if 
+     * {@code float} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -1069,11 +1040,10 @@ public class Arrays {
      * containing a sequence of {@link Float}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(float[] array) {
         if (array == null) {
@@ -1092,7 +1062,7 @@ public class Arrays {
 
     /**
      * Returns a hash code based on the contents of the given array. For any two
-     * {@code double} arrays {@code a} and {@code b}, if 
+     * {@code double} arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
      * that the return value of {@code Arrays.hashCode(a)} equals {@code Arrays.hashCode(b)}.
      * <p>
@@ -1101,11 +1071,10 @@ public class Arrays {
      * containing a sequence of {@link Double}} instances representing the
      * elements of array in the same order. If the array is {@code null}, the return
      * value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(double[] array) {
         if (array == null) {
@@ -1131,19 +1100,18 @@ public class Arrays {
      * method on an array that contains itself as an element, either directly or
      * indirectly.
      * <p>
-     * For any two arrays {@code a} and {@code b}, if 
+     * For any two arrays {@code a} and {@code b}, if
      * {@code Arrays.equals(a, b)} returns {@code true}, it means
-     * that the return value of {@code Arrays.hashCode(a)} equals 
+     * that the return value of {@code Arrays.hashCode(a)} equals
      * {@code Arrays.hashCode(b)}.
      * <p>
      * The value returned by this method is the same value as the method
      * Arrays.asList(array).hashCode(). If the array is {@code null}, the return value
      * is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int hashCode(Object[] array) {
         if (array == null) {
@@ -1170,7 +1138,7 @@ public class Arrays {
      * this method on an array that contains itself as an element, either
      * directly or indirectly.
      * <p>
-     * For any two arrays {@code a} and {@code b}, if 
+     * For any two arrays {@code a} and {@code b}, if
      * {@code Arrays.deepEquals(a, b)} returns {@code true}, it
      * means that the return value of {@code Arrays.deepHashCode(a)} equals
      * {@code Arrays.deepHashCode(b)}.
@@ -1185,11 +1153,10 @@ public class Arrays {
      * an array of a reference type. The value returned by this method is the
      * same value as the method {@code Arrays.asList(array).hashCode()}. If the array is
      * {@code null}, the return value is 0.
-     * 
+     *
      * @param array
      *            the array whose hash code to compute.
      * @return the hash code for {@code array}.
-     * @since Android 1.0
      */
     public static int deepHashCode(Object[] array) {
         if (array == null) {
@@ -1247,7 +1214,7 @@ public class Arrays {
 
     /**
      * Compares the two arrays.
-     * 
+     *
      * @param array1
      *            the first {@code byte} array.
      * @param array2
@@ -1255,7 +1222,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean equals(byte[] array1, byte[] array2) {
         if (array1 == array2) {
@@ -1274,7 +1240,7 @@ public class Arrays {
 
     /**
      * Compares the two arrays.
-     * 
+     *
      * @param array1
      *            the first {@code short} array.
      * @param array2
@@ -1282,7 +1248,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean equals(short[] array1, short[] array2) {
         if (array1 == array2) {
@@ -1301,7 +1266,7 @@ public class Arrays {
 
     /**
      * Compares the two arrays.
-     * 
+     *
      * @param array1
      *            the first {@code char} array.
      * @param array2
@@ -1309,7 +1274,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean equals(char[] array1, char[] array2) {
         if (array1 == array2) {
@@ -1328,7 +1292,7 @@ public class Arrays {
 
     /**
      * Compares the two arrays.
-     * 
+     *
      * @param array1
      *            the first {@code int} array.
      * @param array2
@@ -1336,7 +1300,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean equals(int[] array1, int[] array2) {
         if (array1 == array2) {
@@ -1355,7 +1318,7 @@ public class Arrays {
 
     /**
      * Compares the two arrays.
-     * 
+     *
      * @param array1
      *            the first {@code long} array.
      * @param array2
@@ -1363,7 +1326,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean equals(long[] array1, long[] array2) {
         if (array1 == array2) {
@@ -1383,7 +1345,7 @@ public class Arrays {
     /**
      * Compares the two arrays. The values are compared in the same manner as
      * {@code Float.equals()}.
-     * 
+     *
      * @param array1
      *            the first {@code float} array.
      * @param array2
@@ -1392,7 +1354,6 @@ public class Arrays {
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
      * @see Float#equals(Object)
-     * @since Android 1.0
      */
     public static boolean equals(float[] array1, float[] array2) {
         if (array1 == array2) {
@@ -1413,7 +1374,7 @@ public class Arrays {
     /**
      * Compares the two arrays. The values are compared in the same manner as
      * {@code Double.equals()}.
-     * 
+     *
      * @param array1
      *            the first {@code double} array.
      * @param array2
@@ -1422,7 +1383,6 @@ public class Arrays {
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
      * @see Double#equals(Object)
-     * @since Android 1.0
      */
     public static boolean equals(double[] array1, double[] array2) {
         if (array1 == array2) {
@@ -1442,7 +1402,7 @@ public class Arrays {
 
     /**
      * Compares the two arrays.
-     * 
+     *
      * @param array1
      *            the first {@code boolean} array.
      * @param array2
@@ -1450,7 +1410,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean equals(boolean[] array1, boolean[] array2) {
         if (array1 == array2) {
@@ -1469,7 +1428,7 @@ public class Arrays {
 
     /**
      * Compares the two arrays.
-     * 
+     *
      * @param array1
      *            the first {@code Object} array.
      * @param array2
@@ -1477,7 +1436,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal according to {@code equals()}, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean equals(Object[] array1, Object[] array2) {
         if (array1 == array2) {
@@ -1522,7 +1480,7 @@ public class Arrays {
      * <p>
      * If either of the given arrays contain themselves as elements, the
      * behavior of this method is uncertain.
-     * 
+     *
      * @param array1
      *            the first {@code Object} array.
      * @param array2
@@ -1530,7 +1488,6 @@ public class Arrays {
      * @return {@code true} if both arrays are {@code null} or if the arrays have the
      *         same length and the elements at each index in the two arrays are
      *         equal according to {@code equals()}, {@code false} otherwise.
-     * @since Android 1.0
      */
     public static boolean deepEquals(Object[] array1, Object[] array2) {
         if (array1 == array2) {
@@ -1603,41 +1560,58 @@ public class Arrays {
     }
 
     private static boolean lessThan(double double1, double double2) {
-        long d1, d2;
-        long NaNbits = Double.doubleToLongBits(Double.NaN);
-        if ((d1 = Double.doubleToLongBits(double1)) == NaNbits) {
-            return false;
-        }
-        if ((d2 = Double.doubleToLongBits(double2)) == NaNbits) {
+        // A slightly specialized version of
+        // Double.compare(double1, double2) < 0.
+
+        // Non-zero and non-NaN checking.
+        if (double1 < double2) {
             return true;
         }
-        if (double1 == double2) {
-            if (d1 == d2) {
-                return false;
-            }
-            // check for -0
-            return d1 < d2;
+        if (double1 > double2) {
+            return false;
         }
-        return double1 < double2;
+        if (double1 == double2 && 0.0d != double1) {
+            return false;
+        }
+
+        // NaNs are equal to other NaNs and larger than any other double.
+        if (Double.isNaN(double1)) {
+            return false;
+        } else if (Double.isNaN(double2)) {
+            return true;
+        }
+
+        // Deal with +0.0 and -0.0.
+        long d1 = Double.doubleToRawLongBits(double1);
+        long d2 = Double.doubleToRawLongBits(double2);
+        return d1 < d2;
     }
 
     private static boolean lessThan(float float1, float float2) {
-        int f1, f2;
-        int NaNbits = Float.floatToIntBits(Float.NaN);
-        if ((f1 = Float.floatToIntBits(float1)) == NaNbits) {
-            return false;
-        }
-        if ((f2 = Float.floatToIntBits(float2)) == NaNbits) {
+        // A slightly specialized version of Float.compare(float1, float2) < 0.
+
+        // Non-zero and non-NaN checking.
+        if (float1 < float2) {
             return true;
         }
-        if (float1 == float2) {
-            if (f1 == f2) {
-                return false;
-            }
-            // check for -0
-            return f1 < f2;
+        if (float1 > float2) {
+            return false;
         }
-        return float1 < float2;
+        if (float1 == float2 && 0.0f != float1) {
+            return false;
+        }
+
+        // NaNs are equal to other NaNs and larger than any other float
+        if (Float.isNaN(float1)) {
+            return false;
+        } else if (Float.isNaN(float2)) {
+            return true;
+        }
+
+        // Deal with +0.0 and -0.0
+        int f1 = Float.floatToRawIntBits(float1);
+        int f2 = Float.floatToRawIntBits(float2);
+        return f1 < f2;
     }
 
     private static int med3(byte[] array, int a, int b, int c) {
@@ -1684,10 +1658,9 @@ public class Arrays {
 
     /**
      * Sorts the specified array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code byte} array to be sorted.
-     * @since Android 1.0
      */
     public static void sort(byte[] array) {
         sort(0, array.length, array);
@@ -1695,18 +1668,17 @@ public class Arrays {
 
     /**
      * Sorts the specified range in the array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code byte} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void sort(byte[] array, int start, int end) {
         if (array == null) {
@@ -1718,8 +1690,8 @@ public class Arrays {
 
     private static void checkBounds(int arrLength, int start, int end) {
         if (start > end) {
-            throw new IllegalArgumentException("fromIndex(" + start //$NON-NLS-1$
-                    + ") > toIndex(" + end + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new IllegalArgumentException("start(" + start //$NON-NLS-1$
+                    + ") > end(" + end + ")"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (start < 0 || end > arrLength) {
             throw new ArrayIndexOutOfBoundsException();
@@ -1806,10 +1778,9 @@ public class Arrays {
 
     /**
      * Sorts the specified array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code char} array to be sorted.
-     * @since Android 1.0
      */
     public static void sort(char[] array) {
         sort(0, array.length, array);
@@ -1817,18 +1788,17 @@ public class Arrays {
 
     /**
      * Sorts the specified range in the array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code char} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void sort(char[] array, int start, int end) {
         if (array == null) {
@@ -1918,11 +1888,10 @@ public class Arrays {
 
     /**
      * Sorts the specified array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code double} array to be sorted.
      * @see #sort(double[], int, int)
-     * @since Android 1.0
      */
     public static void sort(double[] array) {
         sort(0, array.length, array);
@@ -1931,19 +1900,18 @@ public class Arrays {
     /**
      * Sorts the specified range in the array in ascending numerical order. The
      * values are sorted according to the order imposed by {@code Double.compareTo()}.
-     * 
+     *
      * @param array
      *            the {@code double} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
      * @see Double#compareTo(Double)
-     * @since Android 1.0
      */
     public static void sort(double[] array, int start, int end) {
         if (array == null) {
@@ -2033,11 +2001,10 @@ public class Arrays {
 
     /**
      * Sorts the specified array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code float} array to be sorted.
      * @see #sort(float[], int, int)
-     * @since Android 1.0
      */
     public static void sort(float[] array) {
         sort(0, array.length, array);
@@ -2046,19 +2013,18 @@ public class Arrays {
     /**
      * Sorts the specified range in the array in ascending numerical order. The
      * values are sorted according to the order imposed by {@code Float.compareTo()}.
-     * 
+     *
      * @param array
      *            the {@code float} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
      * @see Float#compareTo(Float)
-     * @since Android 1.0
      */
     public static void sort(float[] array, int start, int end) {
         if (array == null) {
@@ -2148,10 +2114,9 @@ public class Arrays {
 
     /**
      * Sorts the specified array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code int} array to be sorted.
-     * @since Android 1.0
      */
     public static void sort(int[] array) {
         sort(0, array.length, array);
@@ -2159,18 +2124,17 @@ public class Arrays {
 
     /**
      * Sorts the specified range in the array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code int} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void sort(int[] array, int start, int end) {
         if (array == null) {
@@ -2260,10 +2224,9 @@ public class Arrays {
 
     /**
      * Sorts the specified array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code long} array to be sorted.
-     * @since Android 1.0
      */
     public static void sort(long[] array) {
         sort(0, array.length, array);
@@ -2271,18 +2234,17 @@ public class Arrays {
 
     /**
      * Sorts the specified range in the array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code long} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void sort(long[] array, int start, int end) {
         if (array == null) {
@@ -2370,7 +2332,7 @@ public class Arrays {
         }
     }
 
-// BEGIN android-changed
+// BEGIN android-note
 
     /*
      * <p>If this platform has an optimizing VM, check whether ComparableTimSort
@@ -2405,19 +2367,22 @@ public class Arrays {
 //        sort(a, fromIndex, toIndex, NATURAL_ORDER);
 //    }
 
+// END android-note
+
     /**
      * Sorts the specified array in ascending natural order.
-     * 
+     *
      * @param array
      *            the {@code Object} array to be sorted.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if an element in the array does not implement {@code Comparable}
      *                or if some elements cannot be compared to each other.
      * @see #sort(Object[], int, int)
-     * @since Android 1.0
      */
     public static void sort(Object[] array) {
+        // BEGIN android-changed
         ComparableTimSort.sort(array);
+        // END android-changed
     }
 
     /**
@@ -2425,31 +2390,76 @@ public class Arrays {
      * elements must implement the {@code Comparable} interface and must be
      * comparable to each other without a {@code ClassCastException} being
      * thrown.
-     * 
+     *
      * @param array
      *            the {@code Object} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if an element in the array does not implement {@code Comparable}
      *                or some elements cannot be compared to each other.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void sort(Object[] array, int start, int end) {
+        // BEGIN android-changed
         ComparableTimSort.sort(array, start, end);
+        // END android-changed
     }
+
+    // BEGIN android-removed
+    /*
+    private static void sort(int start, int end, Object[] array) {
+            ...
+    }
+    private static void swap(int a, int b, Object[] arr) {
+            ...
+    }
+    private static void mergeSort(Object[] in, Object[] out, int start,
+            int end) {
+            ...
+    }
+    private static void mergeSort(Object[] in, Object[] out, int start,
+            int end, Comparator c) {
+            ...
+    }
+    private static int find(Object[] arr, Comparable val, int bnd, int l, int r) {
+            ...
+    }
+    private static int find(Object[] arr, Object val, int bnd, int l, int r,
+            Comparator c) {
+            ...
+    }
+    private static int medChar(int a, int b, int c, String[] arr, int id) {
+            ...
+    }
+    private static int charAt(String str, int i) {
+            ...
+    }
+    private static void copySwap(Object[] src, int from, Object[] dst, int to,
+            int len) {
+            ...
+    }
+    private static void stableStringSort(String[] arr, int start,
+            int end) {
+            ...
+    }
+    private static void stableStringSort(String[] arr, String[] src,
+            String[] dst, int start, int end, int chId) {
+            ...
+    }
+    */
+    // END android-removed
 
     /**
      * Sorts the specified range in the array using the specified {@code Comparator}.
      * All elements must be comparable to each other without a
      * {@code ClassCastException} being thrown.
-     * 
+     *
      * @param array
      *            the {@code Object} array to be sorted.
      * @param start
@@ -2458,45 +2468,44 @@ public class Arrays {
      *            the last + 1 index to sort.
      * @param comparator
      *            the {@code Comparator}.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if elements in the array cannot be compared to each other
      *                using the {@code Comparator}.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static <T> void sort(T[] array, int start, int end,
             Comparator<? super T> comparator) {
+        // BEGIN android-changed
         TimSort.sort(array, start, end, comparator);
+        // END android-changed
     }
 
     /**
      * Sorts the specified array using the specified {@code Comparator}. All elements
      * must be comparable to each other without a {@code ClassCastException} being thrown.
-     * 
+     *
      * @param array
      *            the {@code Object} array to be sorted.
      * @param comparator
      *            the {@code Comparator}.
-     * @exception ClassCastException
+     * @throws ClassCastException
      *                if elements in the array cannot be compared to each other
      *                using the {@code Comparator}.
-     * @since Android 1.0
      */
     public static <T> void sort(T[] array, Comparator<? super T> comparator) {
+        // BEGIN android-changed
         TimSort.sort(array, comparator);
+        // END android-changed
     }
-
-// END  android-changed
 
     /**
      * Sorts the specified array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code short} array to be sorted.
-     * @since Android 1.0
      */
     public static void sort(short[] array) {
         sort(0, array.length, array);
@@ -2504,18 +2513,17 @@ public class Arrays {
 
     /**
      * Sorts the specified range in the array in ascending numerical order.
-     * 
+     *
      * @param array
      *            the {@code short} array to be sorted.
      * @param start
      *            the start index to sort.
      * @param end
      *            the last + 1 index to sort.
-     * @exception IllegalArgumentException
+     * @throws IllegalArgumentException
      *                if {@code start > end}.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if {@code start < 0} or {@code end > array.length}.
-     * @since Android 1.0
      */
     public static void sort(short[] array, int start, int end) {
         if (array == null) {
@@ -2604,18 +2612,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code boolean[]} passed.
      * The result is surrounded by brackets ({@code &quot;[]&quot;}), each
      * element is converted to a {@code String} via the
      * {@link String#valueOf(boolean)} and separated by {@code &quot;, &quot;}.
      * If the array is {@code null}, then {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code boolean} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(boolean[] array) {
         if (array == null) {
@@ -2636,18 +2642,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code byte[]} passed. The
      * result is surrounded by brackets ({@code &quot;[]&quot;}), each element
      * is converted to a {@code String} via the {@link String#valueOf(int)} and
      * separated by {@code &quot;, &quot;}. If the array is {@code null}, then
      * {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code byte} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(byte[] array) {
         if (array == null) {
@@ -2668,18 +2672,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code char[]} passed. The
      * result is surrounded by brackets ({@code &quot;[]&quot;}), each element
      * is converted to a {@code String} via the {@link String#valueOf(char)} and
      * separated by {@code &quot;, &quot;}. If the array is {@code null}, then
      * {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code char} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(char[] array) {
         if (array == null) {
@@ -2700,18 +2702,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code double[]} passed.
      * The result is surrounded by brackets ({@code &quot;[]&quot;}), each
      * element is converted to a {@code String} via the
      * {@link String#valueOf(double)} and separated by {@code &quot;, &quot;}.
      * If the array is {@code null}, then {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code double} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(double[] array) {
         if (array == null) {
@@ -2732,18 +2732,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code float[]} passed.
      * The result is surrounded by brackets ({@code &quot;[]&quot;}), each
      * element is converted to a {@code String} via the
      * {@link String#valueOf(float)} and separated by {@code &quot;, &quot;}.
      * If the array is {@code null}, then {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code float} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(float[] array) {
         if (array == null) {
@@ -2764,18 +2762,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code int[]} passed. The
      * result is surrounded by brackets ({@code &quot;[]&quot;}), each element
      * is converted to a {@code String} via the {@link String#valueOf(int)} and
      * separated by {@code &quot;, &quot;}. If the array is {@code null}, then
      * {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code int} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(int[] array) {
         if (array == null) {
@@ -2796,18 +2792,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code long[]} passed. The
      * result is surrounded by brackets ({@code &quot;[]&quot;}), each element
      * is converted to a {@code String} via the {@link String#valueOf(long)} and
      * separated by {@code &quot;, &quot;}. If the array is {@code null}, then
      * {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code long} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(long[] array) {
         if (array == null) {
@@ -2828,18 +2822,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code short[]} passed.
      * The result is surrounded by brackets ({@code &quot;[]&quot;}), each
      * element is converted to a {@code String} via the
      * {@link String#valueOf(int)} and separated by {@code &quot;, &quot;}. If
      * the array is {@code null}, then {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code short} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(short[] array) {
         if (array == null) {
@@ -2860,18 +2852,16 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a {@code String} representation of the {@code Object[]} passed.
      * The result is surrounded by brackets ({@code &quot;[]&quot;}), each
      * element is converted to a {@code String} via the
      * {@link String#valueOf(Object)} and separated by {@code &quot;, &quot;}.
      * If the array is {@code null}, then {@code &quot;null&quot;} is returned.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code Object} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String toString(Object[] array) {
         if (array == null) {
@@ -2892,11 +2882,9 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Creates a <i>"deep"</i> {@code String} representation of the
      * {@code Object[]} passed, such that if the array contains other arrays,
      * the {@code String} representation of those arrays is generated as well.
-     * </p>
      * <p>
      * If any of the elements are primitive arrays, the generation is delegated
      * to the other {@code toString} methods in this class. If any element
@@ -2904,12 +2892,11 @@ public class Arrays {
      * as {@code "[...]"}. If an element is an {@code Object[]}, then its
      * representation is generated by a recursive call to this method. All other
      * elements are converted via the {@link String#valueOf(Object)} method.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code Object} array to convert.
      * @return the {@code String} representation of {@code array}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static String deepToString(Object[] array) {
         // Special case null to prevent NPE
@@ -2923,10 +2910,8 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Implementation method used by {@link #deepToString(Object[])}.
-     * </p>
-     * 
+     *
      * @param array
      *            the {@code Object[]} to dive into.
      * @param origArrays
@@ -3010,11 +2995,9 @@ public class Arrays {
     }
 
     /**
-     * <p>
      * Utility method used to assist the implementation of
      * {@link #deepToString(Object[])}.
-     * </p>
-     * 
+     *
      * @param origArrays
      *            An array of Object[] references.
      * @param array

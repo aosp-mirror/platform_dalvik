@@ -17,7 +17,6 @@
 
 package java.util;
 
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,8 +25,6 @@ import java.io.Serializable;
 /**
  * HashSet is an implementation of a Set. All optional operations (adding and
  * removing) are supported. The elements can be any objects.
- * 
- * @since Android 1.0
  */
 public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
         Serializable {
@@ -38,8 +35,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
 
     /**
      * Constructs a new empty instance of {@code HashSet}.
-     * 
-     * @since Android 1.0
      */
     public HashSet() {
         this(new HashMap<E, HashSet<E>>());
@@ -50,7 +45,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * 
      * @param capacity
      *            the initial capacity of this {@code HashSet}.
-     * @since Android 1.0
      */
     public HashSet(int capacity) {
         this(new HashMap<E, HashSet<E>>(capacity));
@@ -64,7 +58,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      *            the initial capacity.
      * @param loadFactor
      *            the initial load factor.
-     * @since Android 1.0
      */
     public HashSet(int capacity, float loadFactor) {
         this(new HashMap<E, HashSet<E>>(capacity, loadFactor));
@@ -76,10 +69,10 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * 
      * @param collection
      *            the collection of elements to add.
-     * @since Android 1.0
      */
     public HashSet(Collection<? extends E> collection) {
-        this(new HashMap<E, HashSet<E>>(collection.size() < 6 ? 11 : collection.size() * 2));
+        this(new HashMap<E, HashSet<E>>(collection.size() < 6 ? 11 : collection
+                .size() * 2));
         for (E e : collection) {
             add(e);
         }
@@ -96,7 +89,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      *            the object to add.
      * @return {@code true} when this {@code HashSet} did not already contain
      *         the object, {@code false} otherwise
-     * @since Android 1.0
      */
     @Override
     public boolean add(E object) {
@@ -108,7 +100,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * 
      * @see #isEmpty
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -121,7 +112,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * 
      * @return a shallow copy of this {@code HashSet}.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -142,7 +132,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      *            the object to search for.
      * @return {@code true} if {@code object} is an element of this
      *         {@code HashSet}, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean contains(Object object) {
@@ -155,7 +144,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * @return {@code true} if this {@code HashSet} has no elements,
      *         {@code false} otherwise.
      * @see #size
-     * @since Android 1.0
      */
     @Override
     public boolean isEmpty() {
@@ -167,7 +155,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * 
      * @return an Iterator on the elements of this {@code HashSet}.
      * @see Iterator
-     * @since Android 1.0
      */
     @Override
     public Iterator<E> iterator() {
@@ -180,7 +167,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * @param object
      *            the object to remove.
      * @return {@code true} if the object was removed, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean remove(Object object) {
@@ -191,7 +177,6 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
      * Returns the number of elements in this {@code HashSet}.
      * 
      * @return the number of elements in this {@code HashSet}.
-     * @since Android 1.0
      */
     @Override
     public int size() {
@@ -200,15 +185,11 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
-        stream.writeInt(backingMap.elementData.length);
-        stream.writeFloat(backingMap.loadFactor);
-        stream.writeInt(backingMap.elementCount);
-        for (int i = backingMap.elementData.length; --i >= 0;) {
-            HashMap.Entry<E, HashSet<E>> entry = backingMap.elementData[i];
-            while (entry != null) {
-                stream.writeObject(entry.key);
-                entry = entry.next;
-            }
+        stream.writeInt(backingMap.table.length);
+        stream.writeFloat(HashMap.DEFAULT_LOAD_FACTOR);
+        stream.writeInt(size());
+        for (E e : this) {
+            stream.writeObject(e);
         }
     }
 
@@ -221,7 +202,7 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
         backingMap = createBackingMap(length, loadFactor);
         int elementCount = stream.readInt();
         for (int i = elementCount; --i >= 0;) {
-            E key = (E)stream.readObject();
+            E key = (E) stream.readObject();
             backingMap.put(key, this);
         }
     }

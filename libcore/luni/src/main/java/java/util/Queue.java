@@ -24,22 +24,17 @@ package java.util;
  * However, a priority queue orders its elements according to a comparator
  * specified or the elements' natural order. Furthermore, a stack orders its
  * elements last-in-first out.
- * </p>
  * <p>
  * A typical queue does not allow {@code null} to be inserted as its element,
  * while some implementations such as {@code LinkedList} allow it. But {@code
  * null} should not be inserted even in these implementations, since the method
  * {@code poll} returns {@code null} to indicate that there is no element left
  * in the queue.
- * </p>
  * <p>
  * {@code Queue} does not provide blocking queue methods, which would block
  * until the operation of the method is allowed. See the
  * {@link java.util.concurrent.BlockingQueue} interface for information about
  * blocking queue methods.
- * </p>
- * 
- * @since Android 1.0
  */
 public interface Queue<E> extends Collection<E> {
 
@@ -53,7 +48,6 @@ public interface Queue<E> extends Collection<E> {
      *            the specified element to insert into the queue.
      * @return {@code true} if the operation succeeds and {@code false} if it
      *         fails.
-     * @since Android 1.0
      */
     public boolean offer(E o);
 
@@ -63,7 +57,6 @@ public interface Queue<E> extends Collection<E> {
      * 
      * @return the element at the head of the queue or {@code null} if there is
      *         no element in the queue.
-     * @since Android 1.0
      */
     public E poll();
 
@@ -74,7 +67,6 @@ public interface Queue<E> extends Collection<E> {
      * @return the element at the head of the queue.
      * @throws NoSuchElementException
      *             if there is no element in the queue.
-     * @since Android 1.0
      */
     public E remove();
 
@@ -83,7 +75,6 @@ public interface Queue<E> extends Collection<E> {
      * 
      * @return the element at the head of the queue or {@code null} if there is
      *         no element in the queue.
-     * @since Android 1.0
      */
     public E peek();
 
@@ -94,7 +85,6 @@ public interface Queue<E> extends Collection<E> {
      * @return the element at the head of the queue.
      * @throws NoSuchElementException
      *             if there is no element in the queue.
-     * @since Android 1.0
      */
     public E element();
 

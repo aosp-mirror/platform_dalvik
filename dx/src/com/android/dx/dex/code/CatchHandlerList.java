@@ -25,13 +25,13 @@ import com.android.dx.util.Hex;
  */
 public final class CatchHandlerList extends FixedSizeList
         implements Comparable<CatchHandlerList> {
-    /** non-null; empty instance */
+    /** {@code non-null;} empty instance */
     public static final CatchHandlerList EMPTY = new CatchHandlerList(0);
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      *
-     * @param size &gt;= 0; the size of the list
+     * @param size {@code >= 0;} the size of the list
      */
     public CatchHandlerList(int size) {
         super(size);
@@ -40,10 +40,10 @@ public final class CatchHandlerList extends FixedSizeList
     /**
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
-     * do that, this will throw <code>NullPointerException</code>.
+     * do that, this will throw {@code NullPointerException}.
      *
-     * @param n &gt;= 0, &lt; size(); which index
-     * @return non-null; element at that index
+     * @param n {@code >= 0, < size();} which index
+     * @return {@code non-null;} element at that index
      */
     public Entry get(int n) {
         return (Entry) get0(n);
@@ -58,10 +58,10 @@ public final class CatchHandlerList extends FixedSizeList
      * Get the human form of this instance, prefixed on each line
      * with the string.
      * 
-     * @param prefix non-null; the prefix for every line
-     * @param header non-null; the header for the first line (after the
+     * @param prefix {@code non-null;} the prefix for every line
+     * @param header {@code non-null;} the header for the first line (after the
      * first prefix)
-     * @return non-null; the human form
+     * @return {@code non-null;} the human form
      */
     public String toHuman(String prefix, String header) {
         StringBuilder sb = new StringBuilder(100);
@@ -97,8 +97,8 @@ public final class CatchHandlerList extends FixedSizeList
      * Returns whether or not this instance ends with a "catch-all"
      * handler.
      * 
-     * @return <code>true</code> if this instance ends with a "catch-all"
-     * handler or <code>false</code> if not
+     * @return {@code true} if this instance ends with a "catch-all"
+     * handler or {@code false} if not
      */
     public boolean catchesAll() {
         int size = size();
@@ -114,9 +114,9 @@ public final class CatchHandlerList extends FixedSizeList
     /**
      * Sets the entry at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param exceptionType non-null; type of exception handled
-     * @param handler &gt;= 0; exception handler address
+     * @param n {@code >= 0, < size();} which index
+     * @param exceptionType {@code non-null;} type of exception handled
+     * @param handler {@code >= 0;} exception handler address
      */
     public void set(int n, CstType exceptionType, int handler) {
         set0(n, new Entry(exceptionType, handler));
@@ -125,8 +125,8 @@ public final class CatchHandlerList extends FixedSizeList
     /**
      * Sets the entry at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param entry non-null; the entry to set at <code>n</code>
+     * @param n {@code >= 0, < size();} which index
+     * @param entry {@code non-null;} the entry to set at {@code n}
      */
     public void set(int n, Entry entry) {
         set0(n, entry);
@@ -165,17 +165,17 @@ public final class CatchHandlerList extends FixedSizeList
      * Entry in the list.
      */
     public static class Entry implements Comparable<Entry> {
-        /** non-null; type of exception handled */
+        /** {@code non-null;} type of exception handled */
         private final CstType exceptionType;
 
-        /** &gt;= 0; exception handler address */
+        /** {@code >= 0;} exception handler address */
         private final int handler;
 
         /**
          * Constructs an instance.
          *
-         * @param exceptionType non-null; type of exception handled
-         * @param handler &gt;= 0; exception handler address
+         * @param exceptionType {@code non-null;} type of exception handled
+         * @param handler {@code >= 0;} exception handler address
          */
         public Entry(CstType exceptionType, int handler) {
             if (handler < 0) {
@@ -220,7 +220,7 @@ public final class CatchHandlerList extends FixedSizeList
         /**
          * Gets the exception type handled.
          * 
-         * @return non-null; the exception type
+         * @return {@code non-null;} the exception type
          */
         public CstType getExceptionType() {
             return exceptionType;
@@ -229,7 +229,7 @@ public final class CatchHandlerList extends FixedSizeList
         /**
          * Gets the handler address.
          * 
-         * @return &gt;= 0; the handler address
+         * @return {@code >= 0;} the handler address
          */
         public int getHandler() {
             return handler;

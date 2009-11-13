@@ -29,9 +29,30 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     const Method* methodToCall;
     bool methodCallRange;
 
+
 #if defined(THREADED_INTERP)
     /* static computed goto table */
     DEFINE_GOTO_TABLE(handlerTable);
+#endif
+
+#if defined(WITH_JIT)
+#if 0
+    LOGD("*DebugInterp - entrypoint is %d, tgt is 0x%x, %s\n",
+         interpState->entryPoint,
+         interpState->pc,
+         interpState->method->name);
+#endif
+
+#if INTERP_TYPE == INTERP_DBG
+    /* Check to see if we've got a trace selection request.  If we do,
+     * but something is amiss, revert to the fast interpreter.
+     */
+    if (dvmJitCheckTraceRequest(self,interpState)) {
+        interpState->nextMode = INTERP_STD;
+        //LOGD("** something wrong, exiting\n");
+        return true;
+    }
+#endif
 #endif
 
     /* copy state in */

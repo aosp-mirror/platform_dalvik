@@ -24,7 +24,7 @@ public interface LabeledItem {
     /*
      * Gets the label of this block.
      *
-     * @return &gt;= 0; the label
+     * @return {@code >= 0;} the label
      */
     public int getLabel();
 }

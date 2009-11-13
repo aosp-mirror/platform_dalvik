@@ -32,17 +32,13 @@ import org.apache.harmony.luni.util.Msg;
  * <p>
  * Many specialized output streams for purposes like writing to a file already
  * exist in this package.
- * 
+ *
  * @see InputStream
- * 
- * @since Android 1.0
  */
 public abstract class OutputStream implements Closeable, Flushable {
 
     /**
      * Default constructor.
-     * 
-     * @since Android 1.0
      */
     public OutputStream() {
         super();
@@ -51,10 +47,9 @@ public abstract class OutputStream implements Closeable, Flushable {
     /**
      * Closes this stream. Implementations of this method should free any
      * resources used by the stream. This implementation does nothing.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this stream.
-     * @since Android 1.0
      */
     public void close() throws IOException {
         /* empty */
@@ -63,10 +58,9 @@ public abstract class OutputStream implements Closeable, Flushable {
     /**
      * Flushes this stream. Implementations of this method should ensure that
      * any buffered data is written out. This implementation does nothing.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while flushing this stream.
-     * @since Android 1.0
      */
     public void flush() throws IOException {
         /* empty */
@@ -75,12 +69,11 @@ public abstract class OutputStream implements Closeable, Flushable {
     /**
      * Writes the entire contents of the byte array {@code buffer} to this
      * stream.
-     * 
+     *
      * @param buffer
      *            the buffer to be written.
      * @throws IOException
      *             if an error occurs while writing to this stream.
-     * @since Android 1.0
      */
     public void write(byte[] buffer) throws IOException {
         // BEGIN android-note
@@ -92,7 +85,7 @@ public abstract class OutputStream implements Closeable, Flushable {
     /**
      * Writes {@code count} bytes from the byte array {@code buffer} starting at
      * position {@code offset} to this stream.
-     * 
+     *
      * @param buffer
      *            the buffer to be written.
      * @param offset
@@ -106,7 +99,6 @@ public abstract class OutputStream implements Closeable, Flushable {
      *             if {@code offset < 0} or {@code count < 0}, or if
      *             {@code offset + count} is bigger than the length of
      *             {@code buffer}.
-     * @since Android 1.0
      */
     public void write(byte[] buffer, int offset, int count) throws IOException {
         // BEGIN android-note
@@ -134,12 +126,11 @@ public abstract class OutputStream implements Closeable, Flushable {
     /**
      * Writes a single byte to this stream. Only the least significant byte of
      * the integer {@code oneByte} is written to the stream.
-     * 
+     *
      * @param oneByte
      *            the byte to be written.
      * @throws IOException
      *             if an error occurs while writing to this stream.
-     * @since Android 1.0
      */
     public abstract void write(int oneByte) throws IOException;
 }

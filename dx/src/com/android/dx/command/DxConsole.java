@@ -20,18 +20,18 @@ import java.io.PrintStream;
 
 /**
  * Provides standard and error PrintStream object to output information.<br>
- * By default the PrintStream objects link to <code>System.out</code> and
- * <code>System.err</code> but they can be changed to link to other
+ * By default the PrintStream objects link to {@code System.out} and
+ * {@code System.err} but they can be changed to link to other
  * PrintStream.
  */
 public class DxConsole {
     /**
-     * Standard output stream. Links to <code>System.out</code> by default.
+     * Standard output stream. Links to {@code System.out} by default.
      */
     public static PrintStream out = System.out;
 
     /**
-     * Error output stream. Links to <code>System.err</code> by default.
+     * Error output stream. Links to {@code System.err} by default.
      */
     public static PrintStream err = System.err;
 }

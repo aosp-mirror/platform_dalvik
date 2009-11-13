@@ -20,8 +20,6 @@ package java.util;
 
 /**
  * This abstract class provides a simple wrapper for objects of type {@code EventListener}.
- *  
- * @since Android 1.0
  */
 public abstract class EventListenerProxy implements EventListener {
 
@@ -32,7 +30,6 @@ public abstract class EventListenerProxy implements EventListener {
      * 
      * @param listener
      *            the listener wrapped by this proxy.
-     * @since Android 1.0
      */
     public EventListenerProxy(EventListener listener) {
         super();
@@ -43,7 +40,6 @@ public abstract class EventListenerProxy implements EventListener {
      * Returns the wrapped {@code EventListener}.
      * 
      * @return the wrapped {@code EventListener}.
-     * @since Android 1.0
      */
     public EventListener getListener() {
         return listener;

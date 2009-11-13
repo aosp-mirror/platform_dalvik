@@ -27,8 +27,6 @@ import java.io.IOException;
  * also possible to configure a system-default {@code CallbackHandler} by
  * setting the {@code auth.login.defaultCallbackHandler} property in the
  * standard {@code security.properties} file.
- * 
- * @since Android 1.0
  */
 public interface CallbackHandler {
 
@@ -42,7 +40,7 @@ public interface CallbackHandler {
      * values. If a {@code CallbackHandler} is not able to handle a specific
      * {@code Callback}, it needs to throw an
      * {@link UnsupportedCallbackException}.
-     * 
+     *
      * @param callbacks
      *            the array of {@code Callback}s that need handling
      * @throws IOException

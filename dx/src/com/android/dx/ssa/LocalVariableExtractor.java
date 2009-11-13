@@ -33,23 +33,23 @@ import java.util.List;
  * converted, and adapted through edge-splitting.
  */
 public class LocalVariableExtractor {
-    /** non-null; method being extracted from */
+    /** {@code non-null;} method being extracted from */
     private final SsaMethod method;
 
-    /** non-null; block list for the method */
+    /** {@code non-null;} block list for the method */
     private final ArrayList<SsaBasicBlock> blocks;
 
-    /** non-null; result in-progress */
+    /** {@code non-null;} result in-progress */
     private final LocalVariableInfo resultInfo;
 
-    /** non-null; work set indicating blocks needing to be processed */
+    /** {@code non-null;} work set indicating blocks needing to be processed */
     private final BitSet workSet;
 
     /**
      * Extracts out all the local variable information from the given method.
      *
-     * @param method non-null; the method to extract from
-     * @return non-null; the extracted information
+     * @param method {@code non-null;} the method to extract from
+     * @return {@code non-null;} the extracted information
      */
     public static LocalVariableInfo extract(SsaMethod method) {
         LocalVariableExtractor lve = new LocalVariableExtractor(method);
@@ -59,7 +59,7 @@ public class LocalVariableExtractor {
     /**
      * Constructs an instance. This method is private. Use {@link #extract}.
      *
-     * @param method non-null; the method to extract from
+     * @param method {@code non-null;} the method to extract from
      */
     private LocalVariableExtractor(SsaMethod method) {
         if (method == null) {
@@ -77,7 +77,7 @@ public class LocalVariableExtractor {
     /**
      * Does the extraction.
      *
-     * @return non-null; the extracted information
+     * @return {@code non-null;} the extracted information
      */
     private LocalVariableInfo doit() {
 
@@ -98,7 +98,7 @@ public class LocalVariableExtractor {
     /**
      * Processes a single block.
      *
-     * @param blockIndex &gt;= 0; block index of the block to process
+     * @param blockIndex {@code >= 0;} block index of the block to process
      */
     private void processBlock(int blockIndex) {
         RegisterSpecSet primaryState

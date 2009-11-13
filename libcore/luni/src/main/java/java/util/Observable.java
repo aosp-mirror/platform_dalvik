@@ -17,7 +17,6 @@
 
 package java.util;
 
-
 /**
  * Observable is used to notify a group of Observer objects when a change
  * occurs. On creation, the set of observers is empty. After a change occurred,
@@ -26,21 +25,17 @@ package java.util;
  * Observers. The order of invocation is not specified. This implementation will
  * call the Observers in the order they registered. Subclasses are completely
  * free in what order they call the update methods.
- * 
+ *
  * @see Observer
- * 
- * @since Android 1.0
  */
 public class Observable {
-    
-    Vector<Observer> observers = new Vector<Observer>();
+
+    List<Observer> observers = new ArrayList<Observer>();
 
     boolean changed = false;
 
     /**
      * Constructs a new {@code Observable} object.
-     * 
-     * @since Android 1.0
      */
     public Observable() {
         super();
@@ -49,68 +44,62 @@ public class Observable {
     /**
      * Adds the specified observer to the list of observers. If it is already
      * registered, it is not added a second time.
-     * 
+     *
      * @param observer
      *            the Observer to add.
-     * @since Android 1.0
      */
-    public synchronized void addObserver(Observer observer) {
+    public void addObserver(Observer observer) {
         if (observer == null) {
             throw new NullPointerException();
         }
-        if (!observers.contains(observer))
-            observers.addElement(observer);
+        synchronized (this) {
+            if (!observers.contains(observer))
+                observers.add(observer);
+        }
     }
 
     /**
      * Clears the changed flag for this {@code Observable}. After calling
      * {@code clearChanged()}, {@code hasChanged()} will return {@code false}.
-     * 
-     * @since Android 1.0
      */
-    protected synchronized void clearChanged() {
+    protected void clearChanged() {
         changed = false;
     }
 
     /**
      * Returns the number of observers registered to this {@code Observable}.
-     * 
+     *
      * @return the number of observers.
-     * @since Android 1.0
      */
-    public synchronized int countObservers() {
+    public int countObservers() {
         return observers.size();
     }
 
     /**
      * Removes the specified observer from the list of observers. Passing null
      * won't do anything.
-     * 
+     *
      * @param observer
      *            the observer to remove.
-     * @since Android 1.0
      */
     public synchronized void deleteObserver(Observer observer) {
-        observers.removeElement(observer);
+        observers.remove(observer);
     }
 
     /**
      * Removes all observers from the list of observers.
-     * 
-     * @since Android 1.0
      */
     public synchronized void deleteObservers() {
-        observers.setSize(0);
+        observers.clear();
     }
 
     /**
      * Returns the changed flag for this {@code Observable}.
-     * 
+     *
      * @return {@code true} when the changed flag for this {@code Observable} is
      *         set, {@code false} otherwise.
-     * @since Android 1.0
      */
-    public synchronized boolean hasChanged() {
+    public boolean hasChanged() {
         return changed;
     }
 
@@ -120,9 +109,6 @@ public class Observable {
      * argument. Afterwards, calls {@code clearChanged()}.
      * <p>
      * Equivalent to calling {@code notifyObservers(null)}.
-     * </p>
-     * 
-     * @since Android 1.0
      */
     public void notifyObservers() {
         notifyObservers(null);
@@ -132,31 +118,34 @@ public class Observable {
      * If {@code hasChanged()} returns {@code true}, calls the {@code update()}
      * method for every Observer in the list of observers using the specified
      * argument. Afterwards calls {@code clearChanged()}.
-     * 
+     *
      * @param data
      *            the argument passed to {@code update()}.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public void notifyObservers(Object data) {
-        if (hasChanged()) {
-            // Must clone the vector in case deleteObserver is called
-            Vector<Observer> clone = (Vector<Observer>)observers.clone();
-            int size = clone.size();
-            for (int i = 0; i < size; i++) {
-                clone.elementAt(i).update(this, data);
+        int size = 0;
+        Observer[] arrays = null;
+        synchronized (this) {
+            if (hasChanged()) {
+                clearChanged();
+                size = observers.size();
+                arrays = new Observer[size];
+                observers.toArray(arrays);
             }
-            clearChanged();
+        }
+        if (arrays != null) {
+            for (Observer observer : arrays) {
+                observer.update(this, data);
+            }
         }
     }
 
     /**
      * Sets the changed flag for this {@code Observable}. After calling
      * {@code setChanged()}, {@code hasChanged()} will return {@code true}.
-     * 
-     * @since Android 1.0
      */
-    protected synchronized void setChanged() {
+    protected void setChanged() {
         changed = true;
     }
 }

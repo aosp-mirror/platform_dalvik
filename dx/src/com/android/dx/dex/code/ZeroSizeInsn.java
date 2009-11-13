@@ -28,9 +28,9 @@ import com.android.dx.util.AnnotatedOutput;
 public abstract class ZeroSizeInsn extends DalvInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
+     * @param position {@code non-null;} source position
      */
     public ZeroSizeInsn(SourcePosition position) {
         super(Dops.SPECIAL_FORMAT, position, RegisterSpecList.EMPTY);

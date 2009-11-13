@@ -19,7 +19,7 @@ package com.android.dx.ssa;
 /**
  * <h1>An introduction to SSA Form</h1>
  *
- * This package contains classes associated with dx's <code>SSA</code>
+ * This package contains classes associated with dx's {@code SSA}
  * intermediate form. This form is a static-single-assignment representation of
  * Rop-form a method with Rop-form-like instructions (with the addition of a
  * {@link PhiInsn phi instriction}. This form is intended to make it easy to
@@ -47,7 +47,7 @@ package com.android.dx.ssa;
  * <li> {@link PhiInsn} instances represent "phi" operators defined in SSA
  * literature. They must be the first N instructions in a basic block.
  * <li> {@link NormalSsaInsn} instances represent instructions that directly
- * correspond to <code>Rop</code> form.
+ * correspond to {@code Rop} form.
  * </ul>
  *
  * <h3>Classes related to optimization steps</h3>
@@ -74,14 +74,14 @@ package com.android.dx.ssa;
  *
  * <h3>Conversion into SSA Form</h3>
  *
- * {@link SsaConverter#convertToSsaMethod} takes a <code>RopMethod</code> and
- * returns a fully-converted <code>SsaMethod</code>. The conversion process
+ * {@link SsaConverter#convertToSsaMethod} takes a {@code RopMethod} and
+ * returns a fully-converted {@code SsaMethod}. The conversion process
  * is roughly as follows:
  *
  * <ol>
  * <li> The Rop-form method, its blocks and their instructions are directly
- * wrapped in <code>SsaMethod</code>, <code>SsaBasicBlock</code> and
- * <code>SsaInsn</code> instances. Nothing else changes.
+ * wrapped in {@code SsaMethod}, {@code SsaBasicBlock} and
+ * {@code SsaInsn} instances. Nothing else changes.
  * <li> Critical control-flow graph edges are {@link SsaConverter#edgeSplit
  * split} and new basic blocks inserted as required to meet the constraints
  * necessary for the ultimate SSA representation.
@@ -89,7 +89,7 @@ package com.android.dx.ssa;
  * Rop registers to local variables necessary during phi placement. This
  * step could also be done in Rop form and then updated through the preceding
  * steps.
- * <li> <code>Phi</code> instructions are {link SsaConverter#placePhiFunctions}
+ * <li> {@code Phi} instructions are {link SsaConverter#placePhiFunctions}
  * placed in a semi-pruned fashion, which requires computation of {@link
  * Dominators dominance graph} and each node's {@link DomFront
  * dominance-frontier set}.

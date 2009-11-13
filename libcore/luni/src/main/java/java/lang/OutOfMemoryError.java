@@ -21,8 +21,6 @@ package java.lang;
  * Thrown when a request for memory is made that can not be satisfied using the
  * available platform resources. Such a request may be made by both the running
  * application or by an internal function of the virtual machine.
- * 
- * @since Android 1.0
  */
 public class OutOfMemoryError extends java.lang.VirtualMachineError {
 
@@ -31,8 +29,6 @@ public class OutOfMemoryError extends java.lang.VirtualMachineError {
     /**
      * Constructs a new {@code OutOfMemoryError} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public OutOfMemoryError() {
         super();
@@ -44,7 +40,6 @@ public class OutOfMemoryError extends java.lang.VirtualMachineError {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public OutOfMemoryError(String detailMessage) {
         super(detailMessage);

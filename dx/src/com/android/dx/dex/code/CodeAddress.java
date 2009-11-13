@@ -29,9 +29,9 @@ import com.android.dx.rop.code.SourcePosition;
 public final class CodeAddress extends ZeroSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
+     * @param position {@code non-null;} source position
      */
     public CodeAddress(SourcePosition position) {
         super(position);

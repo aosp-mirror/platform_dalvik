@@ -19,8 +19,6 @@ package java.text;
 
 /**
  * Thrown when the string being parsed is not in the correct form.
- * 
- * @since Android 1.0
  */
 public class ParseException extends Exception {
 
@@ -36,7 +34,6 @@ public class ParseException extends Exception {
      *            the detail message for this exception.
      * @param location
      *            the index at which the parse exception occurred.
-     * @since Android 1.0
      */
     public ParseException(String detailMessage, int location) {
         super(detailMessage);
@@ -47,7 +44,6 @@ public class ParseException extends Exception {
      * Returns the index at which this parse exception occurred.
      * 
      * @return the location of this exception in the parsed string.
-     * @since Android 1.0
      */
     public int getErrorOffset() {
         return errorOffset;

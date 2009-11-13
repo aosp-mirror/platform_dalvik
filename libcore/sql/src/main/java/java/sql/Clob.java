@@ -31,8 +31,6 @@ import java.io.Writer;
  * The {@code java.sql.Clob} interface provides methods for setting and
  * retrieving data in the {@code Clob}, for querying {@code Clob} data length,
  * for searching for data within the {@code Clob}.
- *  
- * @since Android 1.0
  */
 public interface Clob {
 
@@ -43,7 +41,6 @@ public interface Clob {
      *            {@code Clob} data.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public InputStream getAsciiStream() throws SQLException;
 
@@ -54,7 +51,6 @@ public interface Clob {
      *         Clob} data.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public Reader getCharacterStream() throws SQLException;
 
@@ -68,7 +64,6 @@ public interface Clob {
      * @return A string containing the requested data.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public String getSubString(long pos, int length) throws SQLException;
 
@@ -78,7 +73,6 @@ public interface Clob {
      * @return a long value with the number of character in this {@code Clob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public long length() throws SQLException;
 
@@ -94,7 +88,6 @@ public interface Clob {
      *         Clob} occurs within this {@code Clob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public long position(Clob searchstr, long start) throws SQLException;
 
@@ -111,7 +104,6 @@ public interface Clob {
      *         occurs within this {@code Clob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public long position(String searchstr, long start) throws SQLException;
 
@@ -125,7 +117,6 @@ public interface Clob {
      *         this {@code Clob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public OutputStream setAsciiStream(long pos) throws SQLException;
 
@@ -139,7 +130,6 @@ public interface Clob {
      *         {@code Clob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public Writer setCharacterStream(long pos) throws SQLException;
 
@@ -154,7 +144,6 @@ public interface Clob {
      * @return the number of characters written.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public int setString(long pos, String str) throws SQLException;
 
@@ -173,7 +162,6 @@ public interface Clob {
      * @return the number of characters written.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public int setString(long pos, String str, int offset, int len)
             throws SQLException;
@@ -186,7 +174,6 @@ public interface Clob {
      *            truncate this {@code Clob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Clob}.
-     * @since Android 1.0
      */
     public void truncate(long len) throws SQLException;
 }

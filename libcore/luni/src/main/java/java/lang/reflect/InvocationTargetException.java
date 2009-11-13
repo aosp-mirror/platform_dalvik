@@ -23,8 +23,6 @@ package java.lang.reflect;
  * 
  * @see Method#invoke
  * @see Constructor#newInstance
- * 
- * @since Android 1.0
  */
 public class InvocationTargetException extends Exception {
 
@@ -35,8 +33,6 @@ public class InvocationTargetException extends Exception {
     /**
      * Constructs a new {@code InvocationTargetException} instance with a
      * {@code null} cause / target exception.
-     * 
-     * @since Android 1.0
      */
     protected InvocationTargetException() {
         super((Throwable) null);
@@ -49,8 +45,6 @@ public class InvocationTargetException extends Exception {
      * @param exception
      *            the exception which occurred while running the Method or
      *            Constructor
-     *            
-     * @since Android 1.0
      */
     public InvocationTargetException(Throwable exception) {
         super(null, exception);
@@ -66,8 +60,6 @@ public class InvocationTargetException extends Exception {
      * @param exception
      *            the exception which occurred while running the Method or
      *            Constructor
-     *            
-     * @since Android 1.0
      */
     public InvocationTargetException(Throwable exception, String detailMessage) {
         super(detailMessage, exception);
@@ -78,8 +70,6 @@ public class InvocationTargetException extends Exception {
      * Returns the target exception, which may be {@code null}.
      * 
      * @return the target exception
-     * 
-     * @since Android 1.0
      */
     public Throwable getTargetException() {
         return target;
@@ -89,8 +79,6 @@ public class InvocationTargetException extends Exception {
      * Returns the cause of this exception, which may be {@code null}.
      * 
      * @return the cause of this exception
-     * 
-     * @since Android 1.0
      */
     @Override
     public Throwable getCause() {

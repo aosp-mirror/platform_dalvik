@@ -11,6 +11,7 @@ package tests.api.java.util.concurrent;
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.math.BigInteger;
 import java.security.*;
 
@@ -88,7 +89,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
             Callable c = new StringTask();
             ecs.submit(c);
             Future f = ecs.take();
-            assert(f.isDone());
+            assertTrue(f.isDone());
         } catch (Exception ex) {
             unexpectedException();
         } finally {
@@ -128,7 +129,7 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
             for (;;) {
                 Future f = ecs.poll();
                 if (f != null) {
-                    assert(f.isDone());
+                    assertTrue(f.isDone());
                     break;
                 }
             }
@@ -151,12 +152,11 @@ public class ExecutorCompletionServiceTest extends JSR166TestCase{
             ecs.submit(c);
             Future f = ecs.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
             if (f != null) 
-                assert(f.isDone());
+                assertTrue(f.isDone());
         } catch (Exception ex) {
             unexpectedException();
         } finally {
             joinPool(e);
         }
     }
-
 }

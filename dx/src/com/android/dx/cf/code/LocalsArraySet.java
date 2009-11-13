@@ -51,9 +51,9 @@ public class LocalsArraySet extends LocalsArray {
 
     /**
      * Constructs an instance. The locals array initially consists of
-     * all-uninitialized values (represented as <code>null</code>s).
+     * all-uninitialized values (represented as {@code null}s).
      *
-     * @param maxLocals &gt;= 0; the maximum number of locals this instance
+     * @param maxLocals {@code >= 0;} the maximum number of locals this instance
      * can refer to
      */
     public LocalsArraySet(int maxLocals) {
@@ -65,8 +65,8 @@ public class LocalsArraySet extends LocalsArray {
     /**
      * Constructs an instance with the specified primary and secondaries set.
      *
-     * @param primary non-null; primary locals to use
-     * @param secondaries non-null; secondaries set, indexed by subroutine
+     * @param primary {@code non-null;} primary locals to use
+     * @param secondaries {@code non-null;} secondaries set, indexed by subroutine
      * caller label.
      */
     public LocalsArraySet(OneLocalsArray primary,
@@ -80,7 +80,7 @@ public class LocalsArraySet extends LocalsArray {
     /**
      * Constructs an instance which is a copy of another.
      *
-     * @param toCopy non-null; instance to copy.
+     * @param toCopy {@code non-null;} instance to copy.
      */
     private LocalsArraySet(LocalsArraySet toCopy) {
         super(toCopy.getMaxLocals() > 0);
@@ -89,7 +89,7 @@ public class LocalsArraySet extends LocalsArray {
         secondaries = new ArrayList(toCopy.secondaries.size());
 
         int sz = toCopy.secondaries.size();
-        for(int i = 0; i < sz; i++) {
+        for (int i = 0; i < sz; i++) {
             LocalsArray la = toCopy.secondaries.get(i);
 
             if (la == null) {
@@ -106,7 +106,7 @@ public class LocalsArraySet extends LocalsArray {
     public void setImmutable() {
         primary.setImmutable();
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.setImmutable();
             }
@@ -127,7 +127,7 @@ public class LocalsArraySet extends LocalsArray {
         primary.annotate(ex);
 
         int sz = secondaries.size();
-        for(int label = 0; label < sz; label++) {
+        for (int label = 0; label < sz; label++) {
             LocalsArray la = secondaries.get(label);
 
             if (la != null) {
@@ -149,7 +149,7 @@ public class LocalsArraySet extends LocalsArray {
         sb.append('\n');
 
         int sz = secondaries.size();
-        for(int label = 0; label < sz; label++) {
+        for (int label = 0; label < sz; label++) {
             LocalsArray la = secondaries.get(label);
 
             if (la != null) {
@@ -178,7 +178,7 @@ public class LocalsArraySet extends LocalsArray {
 
         primary.makeInitialized(type);
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.makeInitialized(type);
             }
@@ -198,7 +198,7 @@ public class LocalsArraySet extends LocalsArray {
 
         primary.set(idx, type);
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.set(idx, type);
             }
@@ -218,7 +218,7 @@ public class LocalsArraySet extends LocalsArray {
 
         primary.invalidate(idx);
 
-        for (LocalsArray la: secondaries) {
+        for (LocalsArray la : secondaries) {
             if (la != null) {
                 la.invalidate(idx);
             }
@@ -250,10 +250,10 @@ public class LocalsArraySet extends LocalsArray {
     }
 
     /**
-     * Merges this set with another <code>LocalsArraySet</code> instance.
+     * Merges this set with another {@code LocalsArraySet} instance.
      *
-     * @param other non-null; to merge
-     * @return non-null; this instance if merge was a no-op, or
+     * @param other {@code non-null;} to merge
+     * @return {@code non-null;} this instance if merge was a no-op, or
      * new merged instance.
      */
     private LocalsArraySet mergeWithSet(LocalsArraySet other) {
@@ -301,10 +301,10 @@ public class LocalsArraySet extends LocalsArray {
     }
 
     /**
-     * Merges this set with a <code>OneLocalsArray</code> instance.
+     * Merges this set with a {@code OneLocalsArray} instance.
      *
-     * @param other non-null; to merge
-     * @return non-null; this instance if merge was a no-op, or
+     * @param other {@code non-null;} to merge
+     * @return {@code non-null;} this instance if merge was a no-op, or
      * new merged instance.
      */
     private LocalsArraySet mergeWithOne(OneLocalsArray other) {
@@ -365,11 +365,11 @@ public class LocalsArraySet extends LocalsArray {
     }
 
     /**
-     * Gets the <code>LocalsArray</code> instance for a specified subroutine
+     * Gets the {@code LocalsArray} instance for a specified subroutine
      * caller label, or null if label has no locals associated with it.
      *
-     * @param label &gt;=0 subroutine caller label
-     * @return null-ok; locals if available.
+     * @param label {@code >= 0;} subroutine caller label
+     * @return {@code null-ok;} locals if available.
      */
     private LocalsArray getSecondaryForLabel(int label) {
         if (label >= secondaries.size()) {
@@ -445,8 +445,8 @@ public class LocalsArraySet extends LocalsArray {
      * Returns a LocalsArray instance representing the locals state that should
      * be used when returning to a subroutine caller.
      *
-     * @param subLabel &gt;= 0; A calling label of a subroutine
-     * @return null-ok; an instance for this subroutine, or null if subroutine
+     * @param subLabel {@code >= 0;} A calling label of a subroutine
+     * @return {@code null-ok;} an instance for this subroutine, or null if subroutine
      * is not in this set.
      */
     public LocalsArray subArrayForLabel(int subLabel) {

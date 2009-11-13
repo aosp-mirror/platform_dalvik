@@ -36,42 +36,50 @@ cd "${oldwd}"
 
 jarfile=dx.jar
 libdir="$progdir"
-if [ ! -r "$libdir/$jarfile" ]
-then
+if [ ! -r "$libdir/$jarfile" ]; then
     libdir=`dirname "$progdir"`/tools/lib
 fi
-if [ ! -r "$libdir/$jarfile" ]
-then
+
+if [ ! -r "$libdir/$jarfile" ]; then
     libdir=`dirname "$progdir"`/framework
 fi
-if [ ! -r "$libdir/$jarfile" ]
-then
+
+if [ ! -r "$libdir/$jarfile" ]; then
     echo `basename "$prog"`": can't find $jarfile"
     exit 1
 fi
 
+# By default, give dx a max heap size of 1 gig. This can be overridden
+# by using a "-J" option (see below).
+defaultMx="-Xmx1024M"
+
+# The following will extract any initial parameters of the form
+# "-J<stuff>" from the command line and pass them to the Java
+# invocation (instead of to dx). This makes it possible for you to add
+# a command-line parameter such as "-JXmx256M" in your scripts, for
+# example. "java" (with no args) and "java -X" give a summary of
+# available options.
+
 javaOpts=""
 
-# If you want DX to have more memory when executing, uncomment the following
-# line and adjust the value accordingly. Use "java -X" for a list of options
-# you can pass here.
-# 
-# javaOpts="-Xmx256M"
-
-# Alternatively, this will extract any parameter "-Jxxx" from the command line
-# and pass them to Java (instead of to dx). This makes it possible for you to
-# add a command-line parameter such as "-JXmx256M" in your ant scripts, for
-# example.
 while expr "x$1" : 'x-J' >/dev/null; do
-    opt=`expr "$1" : '-J\(.*\)'`
+    opt=`expr "x$1" : 'x-J\(.*\)'`
     javaOpts="${javaOpts} -${opt}"
+    if expr "x${opt}" : "xXmx[0-9]" >/dev/null; then
+        defaultMx="no"
+    fi
     shift
 done
 
-if [ "$OSTYPE" = "cygwin" ] ; then
-	jarpath=`cygpath -w  "$libdir/$jarfile"`
+if [ "${defaultMx}" != "no" ]; then
+    javaOpts="${javaOpts} ${defaultMx}"
+fi
+
+if [ "$OSTYPE" = "cygwin" ]; then
+    # For Cygwin, convert the jarfile path into native Windows style.
+    jarpath=`cygpath -w "$libdir/$jarfile"`
 else
-	jarpath="$libdir/$jarfile"
+    jarpath="$libdir/$jarfile"
 fi
 
 exec java $javaOpts -jar "$jarpath" "$@"

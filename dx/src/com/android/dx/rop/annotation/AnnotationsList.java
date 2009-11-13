@@ -23,7 +23,7 @@ import com.android.dx.util.FixedSizeList;
  */
 public final class AnnotationsList
         extends FixedSizeList {
-    /** non-null; immutable empty instance */
+    /** {@code non-null;} immutable empty instance */
     public static final AnnotationsList EMPTY = new AnnotationsList(0);
     
     /**
@@ -32,9 +32,9 @@ public final class AnnotationsList
      * same number of elements, and each pair of elements must contain
      * disjoint sets of types.
      * 
-     * @param list1 non-null; an instance
-     * @param list2 non-null; the other instance
-     * @return non-null; the combination
+     * @param list1 {@code non-null;} an instance
+     * @param list2 {@code non-null;} the other instance
+     * @return {@code non-null;} the combination
      */
     public static AnnotationsList combine(AnnotationsList list1,
             AnnotationsList list2) {
@@ -57,7 +57,7 @@ public final class AnnotationsList
     }
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      * 
      * @param size the size of the list
      */
@@ -68,10 +68,10 @@ public final class AnnotationsList
     /**
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
-     * do that, this will throw <code>NullPointerException</code>.
+     * do that, this will throw {@code NullPointerException}.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @return non-null; element at that index
+     * @param n {@code >= 0, < size();} which index
+     * @return {@code non-null;} element at that index
      */
     public Annotations get(int n) {
         return (Annotations) get0(n);
@@ -81,8 +81,8 @@ public final class AnnotationsList
      * Sets the element at the given index. The given element must be
      * immutable.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param a null-ok; the element to set at <code>n</code>
+     * @param n {@code >= 0, < size();} which index
+     * @param a {@code null-ok;} the element to set at {@code n}
      */
     public void set(int n, Annotations a) {
         a.throwIfMutable();

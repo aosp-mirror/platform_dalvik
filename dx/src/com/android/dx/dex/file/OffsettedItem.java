@@ -24,32 +24,32 @@ import com.android.dx.util.ExceptionWithContext;
  */
 public abstract class OffsettedItem extends Item
         implements Comparable<OffsettedItem> {
-    /** &gt; 0; alignment requirement */
+    /** {@code > 0;} alignment requirement */
     private final int alignment;
 
-    /** &gt;= -1; the size of this instance when written, in bytes, or
-     * <code>-1</code> if not yet known */
+    /** {@code >= -1;} the size of this instance when written, in bytes, or
+     * {@code -1} if not yet known */
     private int writeSize;
 
     /**
-     * null-ok; section the item was added to, or <code>null</code> if
+     * {@code null-ok;} section the item was added to, or {@code null} if
      * not yet added 
      */
     private Section addedTo;
 
     /**
-     * &gt;= -1; assigned offset of the item from the start of its section,
-     * or <code>-1</code> if not yet assigned 
+     * {@code >= -1;} assigned offset of the item from the start of its section,
+     * or {@code -1} if not yet assigned 
      */
     private int offset;
 
     /**
-     * Gets the absolute offset of the given item, returning <code>0</code>
-     * if handed <code>null</code>.
+     * Gets the absolute offset of the given item, returning {@code 0}
+     * if handed {@code null}.
      * 
-     * @param item null-ok; the item in question
-     * @return &gt;= 0; the item's absolute offset, or <code>0</code>
-     * if <code>item == null</code>
+     * @param item {@code null-ok;} the item in question
+     * @return {@code >= 0;} the item's absolute offset, or {@code 0}
+     * if {@code item == null}
      */
     public static int getAbsoluteOffsetOr0(OffsettedItem item) {
         if (item == null) {
@@ -62,10 +62,10 @@ public abstract class OffsettedItem extends Item
     /**
      * Constructs an instance. The offset is initially unassigned.
      * 
-     * @param alignment &gt; 0; output alignment requirement; must be a
+     * @param alignment {@code > 0;} output alignment requirement; must be a
      * power of 2
-     * @param writeSize &gt;= -1; the size of this instance when written,
-     * in bytes, or <code>-1</code> if not immediately known
+     * @param writeSize {@code >= -1;} the size of this instance when written,
+     * in bytes, or {@code -1} if not immediately known
      */
     public OffsettedItem(int alignment, int writeSize) {
         Section.validateAlignment(alignment);
@@ -131,7 +131,7 @@ public abstract class OffsettedItem extends Item
      * per instance, and only if the size was unknown upon instance
      * creation.
      * 
-     * @param writeSize &gt; 0; the write size, in bytes
+     * @param writeSize {@code > 0;} the write size, in bytes
      */
     public final void setWriteSize(int writeSize) {
         if (writeSize < 0) {
@@ -182,7 +182,7 @@ public abstract class OffsettedItem extends Item
      * Gets the relative item offset. The offset is from the start of
      * the section which the instance was written to.
      * 
-     * @return &gt;= 0; the offset
+     * @return {@code >= 0;} the offset
      * @throws RuntimeException thrown if the offset is not yet known
      */
     public final int getRelativeOffset() {
@@ -197,7 +197,7 @@ public abstract class OffsettedItem extends Item
      * Gets the absolute item offset. The offset is from the start of
      * the file which the instance was written to.
      * 
-     * @return &gt;= 0; the offset
+     * @return {@code >= 0;} the offset
      * @throws RuntimeException thrown if the offset is not yet known
      */
     public final int getAbsoluteOffset() {
@@ -213,10 +213,11 @@ public abstract class OffsettedItem extends Item
      * the given offset. It is only valid to call this method once per
      * instance.
      * 
-     * @param addedTo non-null; the section this instance has been added to
-     * @param offset &gt;= 0; the desired offset from the start of the
+     * @param addedTo {@code non-null;} the section this instance has
+     * been added to
+     * @param offset {@code >= 0;} the desired offset from the start of the
      * section where this instance was placed
-     * @return &gt;= 0; the offset that this instance should be placed at
+     * @return {@code >= 0;} the offset that this instance should be placed at
      * in order to meet its alignment constraint
      */
     public final int place(Section addedTo, int offset) {
@@ -247,7 +248,7 @@ public abstract class OffsettedItem extends Item
      * Gets the alignment requirement of this instance. An instance should
      * only be written when so aligned.
      * 
-     * @return &gt; 0; the alignment requirement; must be a power of 2
+     * @return {@code > 0;} the alignment requirement; must be a power of 2
      */
     public final int getAlignment() {
         return alignment;
@@ -257,7 +258,7 @@ public abstract class OffsettedItem extends Item
      * Gets the absolute offset of this item as a string, suitable for
      * including in annotations.
      * 
-     * @return non-null; the offset string
+     * @return {@code non-null;} the offset string
      */
     public final String offsetString() {
         return '[' + Integer.toHexString(getAbsoluteOffset()) + ']';
@@ -266,7 +267,7 @@ public abstract class OffsettedItem extends Item
     /**
      * Gets a short human-readable string representing this instance.
      * 
-     * @return non-null; the human form
+     * @return {@code non-null;} the human form
      */
     public abstract String toHuman();
 
@@ -277,8 +278,8 @@ public abstract class OffsettedItem extends Item
      * class needs to actually sort, then it should override this
      * method.
      * 
-     * @param other non-null; instance to compare to
-     * @return <code>-1</code>, <code>0</code>, or <code>1</code>, depending
+     * @param other {@code non-null;} instance to compare to
+     * @return {@code -1}, {@code 0}, or {@code 1}, depending
      * on the sort order of this instance and the other
      */
     protected int compareTo0(OffsettedItem other) {
@@ -293,8 +294,8 @@ public abstract class OffsettedItem extends Item
      * know its write size up-front, then this method is responsible
      * for setting it.
      * 
-     * @param addedTo non-null; the section this instance has been added to
-     * @param offset &gt;= 0; the offset from the start of the
+     * @param addedTo {@code non-null;} the section this instance has been added to
+     * @param offset {@code >= 0;} the offset from the start of the
      * section where this instance was placed
      */
     protected void place0(Section addedTo, int offset) {
@@ -306,8 +307,8 @@ public abstract class OffsettedItem extends Item
      * the given data section. This is called by {@link #writeTo},
      * which will have taken care of ensuring alignment.
      * 
-     * @param file non-null; the file to use for reference
-     * @param out non-null; where to write to
+     * @param file {@code non-null;} the file to use for reference
+     * @param out {@code non-null;} where to write to
      */
     protected abstract void writeTo0(DexFile file, AnnotatedOutput out);
 }

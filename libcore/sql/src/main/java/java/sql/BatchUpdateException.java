@@ -26,7 +26,7 @@ import java.io.Serializable;
  * problem that occurred, compared with a standard {@code SQLException}. It
  * supplies update counts for successful commands which were executed before the
  * exception was encountered.
- * </p>
+ * <p>
  * The element order in the array of update counts matches the order that the
  * commands were added to the batch operation.
  * <p>
@@ -37,9 +37,6 @@ import java.io.Serializable;
  * for every command in the batch, not only those that executed successfully. In
  * this case, the array element for any command which encountered a problem is
  * set to {@code Statement.EXECUTE_FAILED}.
- * </p>
- * 
- * @since Android 1.0
  */
 public class BatchUpdateException extends SQLException implements Serializable {
 
@@ -51,8 +48,6 @@ public class BatchUpdateException extends SQLException implements Serializable {
      * Creates a default {@code BatchUpdateException} with the parameters
      * <i>reason</i>, <i>SQLState</i>, and <i>update counts</i> set to {@code
      * null} and the <i>vendor code</i> set to 0.
-     * 
-     * @since Android 1.0
      */
     public BatchUpdateException() {
         super();
@@ -67,7 +62,6 @@ public class BatchUpdateException extends SQLException implements Serializable {
      *            the array of {@code updateCounts} giving the number of
      *            successful updates (or another status code) for each command
      *            in the batch that was attempted.
-     * @since Android 1.0
      */
     public BatchUpdateException(int[] updateCounts) {
         super();
@@ -86,7 +80,6 @@ public class BatchUpdateException extends SQLException implements Serializable {
      *            the array of {@code updateCounts} giving the number of
      *            successful updates (or another status code) for each command
      *            in the batch that was attempted.
-     * @since Android 1.0
      */
     public BatchUpdateException(String reason, int[] updateCounts) {
         super(reason);
@@ -107,7 +100,6 @@ public class BatchUpdateException extends SQLException implements Serializable {
      *            the array of {@code updateCounts} giving the number of
      *            successful updates (or another status code) for each command
      *            in the batch that was attempted.
-     * @since Android 1.0
      */
     public BatchUpdateException(String reason, String SQLState,
             int[] updateCounts) {
@@ -130,7 +122,6 @@ public class BatchUpdateException extends SQLException implements Serializable {
      *            the array of {@code updateCounts} giving the number of
      *            successful updates (or another status code) for each command
      *            in the batch that was attempted.
-     * @since Android 1.0
      */
     public BatchUpdateException(String reason, String SQLState, int vendorCode,
             int[] updateCounts) {
@@ -162,7 +153,6 @@ public class BatchUpdateException extends SQLException implements Serializable {
      *         <li>{@code Statement.EXECUTE_FAILED} indicating that the command
      *         was unsuccessful.</li>
      *         </ol>
-     * @since Android 1.0
      */
     public int[] getUpdateCounts() {
         return updateCounts;
