@@ -74,7 +74,7 @@ $(foreach dir, \
 
 # Extract out the allowed LOCAL_* variables. Note: $(sort) also
 # removes duplicates.
-core_c_includes := $(sort $(LOCAL_C_INCLUDES) $(JNI_H_INCLUDE))
+core_c_includes := $(sort dalvik/libcore/include $(LOCAL_C_INCLUDES) $(JNI_H_INCLUDE))
 core_shared_libraries := $(sort $(LOCAL_SHARED_LIBRARIES))
 core_static_libraries := $(sort $(LOCAL_STATIC_LIBRARIES))
 

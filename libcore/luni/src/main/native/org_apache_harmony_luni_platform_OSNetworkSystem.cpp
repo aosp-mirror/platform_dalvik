@@ -25,6 +25,7 @@
 
 #include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
+#include "LocalArray.h"
 #include "jni.h"
 
 #include <arpa/inet.h>
@@ -485,13 +486,10 @@ static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv* env, jclass,
         return NULL;
     }
 
-    // We need to reserve two extra bytes for the possible '[' and ']'.
-    char ipString[INET6_ADDRSTRLEN + 2];
+    // Convert the String to UTF bytes.
     size_t byteCount = env->GetStringUTFLength(javaString);
-    if (byteCount + 1 > sizeof(ipString)) {
-        jniThrowException(env, "java/lang/IllegalArgumentException", "string too long");
-        return NULL;
-    }
+    LocalArray<INET6_ADDRSTRLEN> bytes(byteCount + 1);
+    char* ipString = &bytes[0];
     env->GetStringUTFRegion(javaString, 0, env->GetStringLength(javaString), ipString);
 
     // Accept IPv6 addresses (only) in square brackets for compatibility.
