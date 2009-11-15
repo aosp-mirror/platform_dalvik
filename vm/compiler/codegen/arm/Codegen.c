@@ -2568,6 +2568,19 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              */
             ClassObject *classPtr =
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
+            /*
+             * Note: It is possible that classPtr is NULL at this point,
+             * even though this instruction has been successfully interpreted.
+             * If the previous interpretation had a null source, the
+             * interpreter would not have bothered to resolve the clazz.
+             * Bail out to the interpreter in this case, and log it
+             * so that we can tell if it happens frequently.
+             */
+            if (classPtr == NULL) {
+                 LOGD("null clazz in OP_CHECK_CAST, single-stepping");
+                 genInterpSingleStep(cUnit, mir);
+                 return false;
+            }
             flushAllRegs(cUnit);   /* Send everything to home location */
             loadConstant(cUnit, r1, (int) classPtr );
             rlSrc = getSrcLoc(cUnit, mir, 0);
