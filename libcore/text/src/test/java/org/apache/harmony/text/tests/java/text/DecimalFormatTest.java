@@ -31,6 +31,7 @@ import tests.support.Support_BitSet;
 import tests.support.Support_DecimalFormat;
 
 import java.io.ObjectInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.AttributedCharacterIterator;
@@ -40,6 +41,7 @@ import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
+import java.util.BitSet;
 import java.util.Currency;
 import java.util.Locale;
 
@@ -1495,7 +1497,7 @@ public class DecimalFormatTest extends TestCase {
                 .t_format_with_FieldPosition();
 
         int failCount = 0;
-        Support_BitSet failures = new Support_BitSet();
+        BitSet failures = new BitSet();
 
         final DecimalFormatSymbols dfs = new DecimalFormatSymbols(Locale.US);
 
@@ -1729,7 +1731,7 @@ public class DecimalFormatTest extends TestCase {
     @KnownFailure("Something seems wrong with Android implementation, here!")
     public void test_formatJLjava_lang_StringBufferLjava_text_FieldPosition() {
         int failCount = 0;
-        Support_BitSet failures = new Support_BitSet();
+        BitSet failures = new BitSet();
 
         final DecimalFormatSymbols dfs = new DecimalFormatSymbols(Locale.US);
 
@@ -2437,7 +2439,7 @@ public class DecimalFormatTest extends TestCase {
         args = {}
     )
     @KnownFailure("a regression. This didn't fail before")
-    public void test_serializationHarmonyRICompatible() {
+    public void test_serializationHarmonyRICompatible() throws Exception {
         NumberFormat nf = NumberFormat.getInstance(Locale.FRANCE);
 
         DecimalFormat df = null;
@@ -2455,8 +2457,6 @@ public class DecimalFormatTest extends TestCase {
             oinput = new ObjectInputStream(this.getClass().getResource(
                     "/serialization/java/text/DecimalFormat.ser").openStream());
             deserializedDF = (DecimalFormat) oinput.readObject();
-        } catch (Exception e) {
-            fail("Error occurs during deserialization");
         } finally {
             try {
                 if (null != oinput) {
@@ -2473,8 +2473,7 @@ public class DecimalFormatTest extends TestCase {
         assertEquals(df.getPositiveSuffix(), deserializedDF.getPositiveSuffix());
         assertEquals(df.getCurrency(), deserializedDF.getCurrency());
 
-        assertEquals(df.getDecimalFormatSymbols(), deserializedDF
-                .getDecimalFormatSymbols());
+        DecimalFormatSymbolsTest.assertDecimalFormatSymbolsRIFrance(deserializedDF.getDecimalFormatSymbols());
 
         assertEquals(df.getGroupingSize(), df.getGroupingSize());
         assertEquals(df.getMaximumFractionDigits(), deserializedDF
@@ -2545,11 +2544,7 @@ public class DecimalFormatTest extends TestCase {
     )
     public void testSetDecimalFormatSymbolsAsNull() {
         // Regression for HARMONY-1070
-        try {
-            DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance();
-            format.setDecimalFormatSymbols(null);
-        } catch (Exception e) {
-            fail("Unexpected exception caught: " + e);
-        }
+        DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance();
+        format.setDecimalFormatSymbols(null);
     }
 }

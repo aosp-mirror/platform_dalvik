@@ -28,7 +28,7 @@ import com.android.dx.rop.code.SourcePosition;
  */
 public final class LocalStart extends ZeroSizeInsn {
     /**
-     * non-null; register spec representing the local variable introduced
+     * {@code non-null;} register spec representing the local variable introduced
      * by this instance 
      */
     private final RegisterSpec local;
@@ -36,8 +36,8 @@ public final class LocalStart extends ZeroSizeInsn {
     /**
      * Returns the local variable listing string for a single register spec.
      * 
-     * @param spec non-null; the spec to convert
-     * @return non-null; the string form
+     * @param spec {@code non-null;} the spec to convert
+     * @return {@code non-null;} the string form
      */
     public static String localString(RegisterSpec spec) {
         return spec.regString() + ' ' + spec.getLocalItem().toString() + ": " +
@@ -46,10 +46,10 @@ public final class LocalStart extends ZeroSizeInsn {
 
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
-     * @param local non-null; register spec representing the local
+     * @param position {@code non-null;} source position
+     * @param local {@code non-null;} register spec representing the local
      * variable introduced by this instance
      */
     public LocalStart(SourcePosition position, RegisterSpec local) {
@@ -78,7 +78,7 @@ public final class LocalStart extends ZeroSizeInsn {
      * Gets the register spec representing the local variable introduced
      * by this instance.
      * 
-     * @return non-null; the register spec
+     * @return {@code non-null;} the register spec
      */
     public RegisterSpec getLocal() {
         return local;

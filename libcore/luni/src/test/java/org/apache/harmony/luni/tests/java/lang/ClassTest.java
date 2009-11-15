@@ -838,7 +838,6 @@ public class ClassTest extends junit.framework.TestCase {
         args = {}
     )
     public void test_getClassLoader() {
-
         assertEquals(ExtendTestClass.class.getClassLoader(),
                          PublicTestClass.class.getClassLoader());
 
@@ -859,8 +858,8 @@ public class ClassTest extends junit.framework.TestCase {
         System.setSecurityManager(sm);
         try {
             System.class.getClassLoader();
-        } catch (SecurityException e) {
-            fail("SecurityException should not be thrown.");
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException expected) {
         } finally {
             System.setSecurityManager(oldSm);
         }

@@ -110,8 +110,8 @@ public class Main {
     /**
      * Processes one file.
      *
-     * @param name non-null; name of the file
-     * @param bytes non-null; contents of the file
+     * @param name {@code non-null;} name of the file
+     * @param bytes {@code non-null;} contents of the file
      */
     private static void processOne(String name, byte[] bytes) {
         if (parsedArgs.dotDump) {

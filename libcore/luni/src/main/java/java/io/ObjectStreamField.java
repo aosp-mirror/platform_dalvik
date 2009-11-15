@@ -17,21 +17,31 @@
 
 package java.io;
 
+// BEGIN android-note
+// Harmony uses ObjectAccessors to access fields through JNI. Android has not
+// yet migrated that API.
+// END android-note
+
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Comparator;
+
+// BEGIN android-removed
+// import org.apache.harmony.misc.accessors.ObjectAccessor;
+// END android-removed
 
 /**
  * Describes a field for the purpose of serialization. Classes can define the
  * collection of fields that are serialized, which may be different from the set
  * of all declared fields.
- * 
+ *
  * @see ObjectOutputStream#writeFields()
  * @see ObjectInputStream#readFields()
- * 
- * @since Android 1.0
  */
 public class ObjectStreamField implements Comparable<Object> {
+
+    static final int FIELD_IS_NOT_RESOLVED = -1;
+    static final int FIELD_IS_ABSENT = -2;
 
     // Declared name of the field
     private String name;
@@ -49,16 +59,32 @@ public class ObjectStreamField implements Comparable<Object> {
 
     private boolean isDeserialized;
 
+    private long assocFieldID = FIELD_IS_NOT_RESOLVED;
+
+    // BEGIN android-removed
+    // long getFieldID(ObjectAccessor accessor, Class<?> declaringClass) {
+    //     if (assocFieldID != FIELD_IS_NOT_RESOLVED) {
+    //         return assocFieldID;
+    //     } else {
+    //         try {
+    //             assocFieldID = accessor.getFieldID(declaringClass, name);
+    //         } catch(NoSuchFieldError e) {
+    //             assocFieldID = FIELD_IS_ABSENT;
+    //         }
+    //         return assocFieldID;
+    //     }
+    // }
+    // END android-removed
+
     /**
      * Constructs an ObjectStreamField with the specified name and type.
-     * 
+     *
      * @param name
      *            the name of the field.
      * @param cl
      *            the type of the field.
      * @throws NullPointerException
      *             if {@code name} or {@code cl} is {@code null}.
-     * @since Android 1.0
      */
     public ObjectStreamField(String name, Class<?> cl) {
         if (name == null || cl == null) {
@@ -71,7 +97,7 @@ public class ObjectStreamField implements Comparable<Object> {
     /**
      * Constructs an ObjectStreamField with the specified name, type and the
      * indication if it is unshared.
-     * 
+     *
      * @param name
      *            the name of the field.
      * @param cl
@@ -82,7 +108,6 @@ public class ObjectStreamField implements Comparable<Object> {
      * @throws NullPointerException
      *             if {@code name} or {@code cl} is {@code null}.
      * @see ObjectOutputStream#writeUnshared(Object)
-     * @since Android 1.0
      */
     public ObjectStreamField(String name, Class<?> cl, boolean unshared) {
         if (name == null || cl == null) {
@@ -97,7 +122,7 @@ public class ObjectStreamField implements Comparable<Object> {
     /**
      * Constructs an ObjectStreamField with the given name and the given type.
      * The type may be null.
-     * 
+     *
      * @param signature
      *            A String representing the type of the field
      * @param name
@@ -117,13 +142,12 @@ public class ObjectStreamField implements Comparable<Object> {
      * of the compared fields has a primitive type and the other one not. If so,
      * the field with the primitive type is considered to be "smaller". If both
      * fields are equal, their names are compared.
-     * 
+     *
      * @param o
      *            the object to compare with.
      * @return -1 if this field is "smaller" than field {@code o}, 0 if both
      *         fields are equal; 1 if this field is "greater" than field {@code
      *         o}.
-     * @since Android 1.0
      */
     public int compareTo(Object o) {
         ObjectStreamField f = (ObjectStreamField) o;
@@ -139,34 +163,14 @@ public class ObjectStreamField implements Comparable<Object> {
         // Either both primitives or both not primitives. Compare based on name.
         return this.getName().compareTo(f.getName());
     }
-    
+
     // BEGIN android-removed
     // There shouldn't be an implementation of these methods.
-    // /**
-    //  * Indicates if this field descriptor is equal to {@code arg0}. Field
-    //  * descriptors are equal if their name is equal.
-    //  * 
-    //  * @param arg0
-    //  *            the object to check equality with.
-    //  * @return {@code true} if the name of this field descriptor is equal to the
-    //  *         name of {@code arg0}, {@code false} otherwise.
-    //  * @since Android 1.0
-    //  */
     // @Override
     // public boolean equals(Object arg0) {
-    //     // BEGIN android-changed
-    //     // copied from newer harmony version
-    //     return (arg0 instanceof ObjectStreamField) && compareTo(arg0) == 0;
-    //     // END android-changed
+    //     return (arg0 instanceof ObjectStreamField) && (compareTo(arg0) == 0);
     // }
-    // 
-    // /**
-    //  * Returns a hash code for this field descriptor. The hash code of this
-    //  * field's name is returned.
-    //  * 
-    //  * @return the field's hash code.
-    //  * @since Android 1.0
-    //  */
+    //
     // @Override
     // public int hashCode() {
     //     return getName().hashCode();
@@ -175,9 +179,8 @@ public class ObjectStreamField implements Comparable<Object> {
 
     /**
      * Gets the name of this field.
-     * 
+     *
      * @return the field's name.
-     * @since Android 1.0
      */
     public String getName() {
         return name;
@@ -185,9 +188,8 @@ public class ObjectStreamField implements Comparable<Object> {
 
     /**
      * Gets the offset of this field in the object.
-     * 
+     *
      * @return this field's offset.
-     * @since Android 1.0
      */
     public int getOffset() {
         return offset;
@@ -196,7 +198,7 @@ public class ObjectStreamField implements Comparable<Object> {
     /**
      * Return the type of the field the receiver represents, this is an internal
      * method
-     * 
+     *
      * @return A Class object representing the type of the field
      */
     // BEGIN android-note
@@ -211,9 +213,8 @@ public class ObjectStreamField implements Comparable<Object> {
 
     /**
      * Gets the type of this field.
-     * 
+     *
      * @return a {@code Class} object representing the type of the field.
-     * @since Android 1.0
      */
     public Class<?> getType() {
         Class<?> cl = getTypeInternal();
@@ -226,7 +227,7 @@ public class ObjectStreamField implements Comparable<Object> {
     /**
      * Gets a character code for the type of this field. The following codes are
      * used:
-     * 
+     *
      * <pre>
      * B     byte
      * C     char
@@ -239,9 +240,8 @@ public class ObjectStreamField implements Comparable<Object> {
      * Z     boolean
      * [     array
      * </pre>
-     * 
+     *
      * @return the field's type code.
-     * @since Android 1.0
      */
     public char getTypeCode() {
         Class<?> t = getTypeInternal();
@@ -278,10 +278,9 @@ public class ObjectStreamField implements Comparable<Object> {
     /**
      * Gets the type signature used by the VM to represent the type of this
      * field.
-     * 
+     *
      * @return the signature of this field's class or {@code null} if this
      *         field's type is primitive.
-     * @since Android 1.0
      */
     public String getTypeString() {
         if (isPrimitive()) {
@@ -298,10 +297,9 @@ public class ObjectStreamField implements Comparable<Object> {
 
     /**
      * Indicates whether this field's type is a primitive type.
-     * 
+     *
      * @return {@code true} if this field's type is primitive; {@code false} if
      *         the type of this field is a regular class.
-     * @since Android 1.0
      */
     public boolean isPrimitive() {
         Class<?> t = getTypeInternal();
@@ -310,10 +308,9 @@ public class ObjectStreamField implements Comparable<Object> {
 
     /**
      * Sets this field's offset in the object.
-     * 
+     *
      * @param newValue
      *            the field's new offset.
-     * @since Android 1.0
      */
     protected void setOffset(int newValue) {
         this.offset = newValue;
@@ -322,9 +319,8 @@ public class ObjectStreamField implements Comparable<Object> {
     /**
      * Returns a string containing a concise, human-readable description of this
      * field descriptor.
-     * 
+     *
      * @return a printable representation of this descriptor.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -335,7 +331,7 @@ public class ObjectStreamField implements Comparable<Object> {
     /**
      * Sorts the fields for dumping. Primitive types come first, then regular
      * types.
-     * 
+     *
      * @param fields
      *            ObjectStreamField[] fields to be sorted
      */
@@ -396,9 +392,8 @@ public class ObjectStreamField implements Comparable<Object> {
 
     /**
      * Indicats whether this field is unshared.
-     * 
+     *
      * @return {@code true} if this field is unshared, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isUnshared() {
         return unshared;

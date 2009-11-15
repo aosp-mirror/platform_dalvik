@@ -23,8 +23,6 @@ import org.apache.harmony.sql.internal.nls.Messages;
 
 /**
  * An exception class that holds information about Database access warnings.
- * 
- * @since Android 1.0
  */
 public class SQLWarning extends SQLException implements Serializable {
 
@@ -34,8 +32,6 @@ public class SQLWarning extends SQLException implements Serializable {
      * Creates an {@code SQLWarning} object. The reason string is set to {@code
      * null}, the {@code SQLState} string is set to {@code null} and the error
      * code is set to 0.
-     * 
-     * @since Android 1.0
      */
     public SQLWarning() {
         super();
@@ -48,7 +44,6 @@ public class SQLWarning extends SQLException implements Serializable {
      * 
      * @param theReason
      *            the reason why this warning is issued.
-     * @since Android 1.0
      */
     public SQLWarning(String theReason) {
         super(theReason);
@@ -80,7 +75,6 @@ public class SQLWarning extends SQLException implements Serializable {
      *            the X/Open standard specifc error code.
      * @param theErrorCode
      *            a vendor specific error code.
-     * @since Android 1.0
      */
     public SQLWarning(String theReason, String theSQLState, int theErrorCode) {
         super(theReason, theSQLState, theErrorCode);
@@ -92,7 +86,6 @@ public class SQLWarning extends SQLException implements Serializable {
      * @return the {@code SQLWarning} chained to this {@code SQLWarning}.
      *         {@code null} if no {@code SQLWarning} is chained to this {@code
      *         SQLWarning}.
-     * @since Android 1.0
      */
     public SQLWarning getNextWarning() {
         SQLException next = super.getNextException();
@@ -110,7 +103,6 @@ public class SQLWarning extends SQLException implements Serializable {
      * 
      * @param w
      *            the {@code SQLWarning} linked to this {@code SQLWarning}.
-     * @since Android 1.0
      */
     public void setNextWarning(SQLWarning w) {
         super.setNextException(w);

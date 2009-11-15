@@ -20,20 +20,20 @@ import com.android.dx.rop.type.TypeList;
 import com.android.dx.util.MutabilityException;
 
 /**
- * Attribute class for standard <code>Exceptions</code> attributes.
+ * Attribute class for standard {@code Exceptions} attributes.
  */
 public final class AttExceptions extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "Exceptions";
 
-    /** non-null; list of exception classes */
+    /** {@code non-null;} list of exception classes */
     private final TypeList exceptions;
 
     /**
      * Constructs an instance.
      * 
-     * @param exceptions non-null; list of classes, presumed but not
-     * verified to be subclasses of <code>Throwable</code>
+     * @param exceptions {@code non-null;} list of classes, presumed but not
+     * verified to be subclasses of {@code Throwable}
      */
     public AttExceptions(TypeList exceptions) {
         super(ATTRIBUTE_NAME);
@@ -58,9 +58,9 @@ public final class AttExceptions extends BaseAttribute {
     /**
      * Gets the list of classes associated with this instance. In
      * general, these classes are not pre-verified to be subclasses of
-     * <code>Throwable</code>.
+     * {@code Throwable}.
      * 
-     * @return non-null; the list of classes
+     * @return {@code non-null;} the list of classes
      */
     public TypeList getExceptions() {
         return exceptions;

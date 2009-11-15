@@ -56,6 +56,21 @@ static void Dalvik_dalvik_system_VMStack_getCallingClassLoader2(const u4* args,
 }
 
 /*
+ * public static Class<?> getStackClass2()
+ *
+ * Returns the class of the caller's caller's caller.
+ */
+static void Dalvik_dalvik_system_VMStack_getStackClass2(const u4* args,
+    JValue* pResult)
+{
+    ClassObject* clazz = dvmGetCaller3Class(dvmThreadSelf()->curFrame);
+
+    UNUSED_PARAMETER(args);
+
+    RETURN_PTR(clazz);
+}
+
+/*
  * public static Class<?>[] getClasses(int maxDepth, boolean stopAtPrivileged)
  *
  * Create an array of classes for the methods on the stack, skipping the
@@ -212,6 +227,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMStack[] = {
         Dalvik_dalvik_system_VMStack_getCallingClassLoader },
     { "getCallingClassLoader2", "()Ljava/lang/ClassLoader;",
         Dalvik_dalvik_system_VMStack_getCallingClassLoader2 },
+    { "getStackClass2", "()Ljava/lang/Class;",
+        Dalvik_dalvik_system_VMStack_getStackClass2 },
     { "getClasses",             "(IZ)[Ljava/lang/Class;",
         Dalvik_dalvik_system_VMStack_getClasses },
     { "getThreadStackTrace",    "(Ljava/lang/Thread;)[Ljava/lang/StackTraceElement;",

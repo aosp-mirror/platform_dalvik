@@ -40,7 +40,9 @@ r15 (pc) can be tinkered with directly
 r0 holds returns of <= 4 bytes
 r0-r1 hold returns of 8 bytes, low word in r0
 
-Callee must save/restore r4+ (except r12) if it modifies them.
+Callee must save/restore r4+ (except r12) if it modifies them.  If VFP
+is present, registers s16-s31 (a/k/a d8-d15, a/k/a q4-q7) must be preserved,
+s0-s15 (d0-d7, q0-a3) do not need to be.
 
 Stack is "full descending".  Only the arguments that don't fit in the first 4
 registers are placed on the stack.  "sp" points at the first stacked argument
@@ -61,8 +63,8 @@ The following registers have fixed assignments:
   r4  rPC       interpreted program counter, used for fetching instructions
   r5  rFP       interpreted frame pointer, used for accessing locals and args
   r6  rGLUE     MterpGlue pointer
-  r7  rIBASE    interpreted instruction base pointer, used for computed goto
-  r8  rINST     first 16-bit code unit of current instruction
+  r7  rINST     first 16-bit code unit of current instruction
+  r8  rIBASE    interpreted instruction base pointer, used for computed goto
 
 Macros are provided for common operations.  Each macro MUST emit only
 one instruction to make instruction-counting easier.  They MUST NOT alter
@@ -73,8 +75,8 @@ unspecified registers or condition codes.
 #define rPC     r4
 #define rFP     r5
 #define rGLUE   r6
-#define rIBASE  r7
-#define rINST   r8
+#define rINST   r7
+#define rIBASE  r8
 
 /* save/restore the PC and/or FP from the glue struct */
 #define LOAD_PC_FROM_GLUE()     ldr     rPC, [rGLUE, #offGlue_pc]
@@ -124,6 +126,13 @@ unspecified registers or condition codes.
 #define FETCH_ADVANCE_INST(_count) ldrh    rINST, [rPC, #(_count*2)]!
 
 /*
+ * The operation performed here is similar to FETCH_ADVANCE_INST, except the
+ * src and dest registers are parameterized (not hard-wired to rPC and rINST).
+ */
+#define PREFETCH_ADVANCE_INST(_dreg, _sreg, _count) \
+        ldrh    _dreg, [_sreg, #(_count*2)]!
+
+/*
  * Fetch the next instruction from an offset specified by _reg.  Updates
  * rPC to point to the next instruction.  "_reg" must specify the distance
  * in bytes, *not* 16-bit code units, and may be a signed value.
@@ -157,16 +166,34 @@ unspecified registers or condition codes.
 #define GET_INST_OPCODE(_reg)   and     _reg, rINST, #255
 
 /*
+ * Put the prefetched instruction's opcode field into the specified register.
+ */
+#define GET_PREFETCHED_OPCODE(_oreg, _ireg)   and     _oreg, _ireg, #255
+
+/*
  * Begin executing the opcode in _reg.  Because this only jumps within the
  * interpreter, we don't have to worry about pre-ARMv5 THUMB interwork.
  */
 #define GOTO_OPCODE(_reg)       add     pc, rIBASE, _reg, lsl #6
+#define GOTO_OPCODE_IFEQ(_reg)  addeq   pc, rIBASE, _reg, lsl #6
+#define GOTO_OPCODE_IFNE(_reg)  addne   pc, rIBASE, _reg, lsl #6
 
 /*
  * Get/set the 32-bit value from a Dalvik register.
  */
 #define GET_VREG(_reg, _vreg)   ldr     _reg, [rFP, _vreg, lsl #2]
 #define SET_VREG(_reg, _vreg)   str     _reg, [rFP, _vreg, lsl #2]
+
+#if defined(WITH_JIT)
+#define GET_JIT_ENABLED(_reg)       ldr     _reg,[rGLUE,#offGlue_jitEnabled]
+#define GET_JIT_PROF_TABLE(_reg)    ldr     _reg,[rGLUE,#offGlue_pJitProfTable]
+#endif
+
+/*
+ * Convert a virtual register index into an address.
+ */
+#define VREG_INDEX_TO_ADDR(_reg, _vreg) \
+        add     _reg, rFP, _vreg, lsl #2
 
 /*
  * This is a #include, not a %include, because we want the C pre-processor
@@ -282,10 +309,21 @@ dvmMterpStdRun:
     cmp     r1, #kInterpEntryInstr      @ usual case?
     bne     .Lnot_instr                 @ no, handle it
 
+#if defined(WITH_JIT)
+.Lno_singleStep:
+    /* Entry is always a possible trace start */
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_INST()
+    cmp    r0,#0
+    bne    common_updateProfile
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+#else
     /* start executing the instruction at rPC */
     FETCH_INST()                        @ load rINST from rPC
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 .Lnot_instr:
     cmp     r1, #kInterpEntryReturn     @ were we returning from a method?
@@ -294,6 +332,22 @@ dvmMterpStdRun:
 .Lnot_return:
     cmp     r1, #kInterpEntryThrow      @ were we throwing an exception?
     beq     common_exceptionThrown
+
+#if defined(WITH_JIT)
+.Lnot_throw:
+    ldr     r0,[rGLUE, #offGlue_jitResume]
+    ldr     r2,[rGLUE, #offGlue_jitResumePC]
+    cmp     r1, #kInterpEntryResume     @ resuming after Jit single-step?
+    bne     .Lbad_arg
+    cmp     rPC,r2
+    bne     .Lno_singleStep             @ must have branched, don't resume
+    mov     r1, #kInterpEntryInstr
+    strb    r1, [rGLUE, #offGlue_entryPoint]
+    ldr     rINST, .LdvmCompilerTemplate
+    bx      r0                          @ re-enter the translation
+.LdvmCompilerTemplate:
+    .word   dvmCompilerTemplateStart
+#endif
 
 .Lbad_arg:
     ldr     r0, strBadEntryPoint
@@ -450,7 +504,7 @@ dalvik_inst:
     add     r3, rFP, r3, lsl #2         @ r3<- &fp[BBBB]
     add     r2, rFP, r2, lsl #2         @ r2<- &fp[AAAA]
     ldmia   r3, {r0-r1}                 @ r0/r1<- fp[BBBB]
-    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r2, {r0-r1}                 @ fp[AAAA]<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
@@ -818,9 +872,7 @@ dalvik_inst:
     GET_VREG(r1, r2)                    @ r1<- vAA (object)
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
     cmp     r1, #0                      @ null object?
-#ifdef WITH_MONITOR_TRACKING
-    EXPORT_PC()                         @ export PC so we can grab stack trace
-#endif
+    EXPORT_PC()                         @ need for precise GC, MONITOR_TRACKING
     beq     common_errNullObject        @ null object, throw an exception
     FETCH_ADVANCE_INST(1)               @ advance rPC, load rINST
     bl      dvmLockObject               @ call(self, obj)
@@ -956,11 +1008,9 @@ dalvik_inst:
     cmp     r1, #CLASS_INITIALIZED      @ has class been initialized?
     bne     .LOP_NEW_INSTANCE_needinit        @ no, init class now
 .LOP_NEW_INSTANCE_initialized: @ r0=class
-    ldr     r3, [r0, #offClassObject_accessFlags]   @ r3<- clazz->accessFlags
-    tst     r3, #(ACC_INTERFACE|ACC_ABSTRACT)   @ abstract or interface?
     mov     r1, #ALLOC_DONT_TRACK       @ flags for alloc call
-    beq     .LOP_NEW_INSTANCE_finish          @ concrete class, continue
-    b       .LOP_NEW_INSTANCE_abstract        @ fail
+    bl      dvmAllocObject              @ r0<- new object
+    b       .LOP_NEW_INSTANCE_finish          @ continue
 
 /* ------------------------------ */
     .balign 64
@@ -1095,10 +1145,18 @@ dalvik_inst:
     movs    r9, r0, asr #24             @ r9<- ssssssAA (sign-extended)
     mov     r9, r9, lsl #1              @ r9<- byte offset
     bmi     common_backwardBranch       @ backward branch, do periodic checks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
+#endif
 
 /* ------------------------------ */
     .balign 64
@@ -1114,9 +1172,18 @@ dalvik_inst:
     FETCH_S(r0, 1)                      @ r0<- ssssAAAA (sign-extended)
     movs    r9, r0, asl #1              @ r9<- byte offset, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 /* ------------------------------ */
@@ -1141,10 +1208,18 @@ dalvik_inst:
     orrs    r0, r0, r1, lsl #16         @ r0<- AAAAaaaa, check sign
     mov     r9, r0, asl #1              @ r9<- byte offset
     ble     common_backwardBranch       @ backward branch, do periodic checks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-
+#endif
 
 /* ------------------------------ */
     .balign 64
@@ -1170,9 +1245,18 @@ dalvik_inst:
     movs    r9, r0, asl #1              @ r9<- branch byte offset, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
     beq     common_backwardBranch       @ (want to use BLE but V is unknown)
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 /* ------------------------------ */
@@ -1200,9 +1284,18 @@ dalvik_inst:
     movs    r9, r0, asl #1              @ r9<- branch byte offset, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
     beq     common_backwardBranch       @ (want to use BLE but V is unknown)
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1449,9 +1542,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1479,9 +1579,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1509,9 +1616,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1539,9 +1653,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1569,9 +1690,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1599,9 +1727,16 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ yes, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    b        common_testUpdateProfile
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1626,9 +1761,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1653,9 +1798,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1680,9 +1835,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1707,9 +1872,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1734,9 +1909,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -1761,9 +1946,19 @@ dalvik_inst:
     FETCH_S(r9, 1)                      @ r9<- branch offset, in code units
     movs    r9, r9, asl #1              @ convert to bytes, check sign
     bmi     common_backwardBranch       @ backward branch, do periodic checks
-1:  FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+1:
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 
@@ -3826,20 +4021,23 @@ f2i_doconv:
  */
 d2i_doconv:
     stmfd   sp!, {r4, r5, lr}           @ save regs
-    ldr     r2, .LOP_DOUBLE_TO_INT_maxlo       @ (double)maxint, lo
-    ldr     r3, .LOP_DOUBLE_TO_INT_maxhi       @ (double)maxint, hi
+    mov     r2, #0x80000000             @ maxint, as a double (low word)
+    mov     r2, r2, asr #9              @  0xffc00000
     sub     sp, sp, #4                  @ align for EABI
-    mov     r4, r0                      @ save r0
+    mvn     r3, #0xbe000000             @ maxint, as a double (high word)
+    sub     r3, r3, #0x00200000         @  0x41dfffff
+    mov     r4, r0                      @ save a copy of r0
     mov     r5, r1                      @  and r1
     bl      __aeabi_dcmpge              @ is arg >= maxint?
     cmp     r0, #0                      @ nonzero == yes
-    mvnne   r0, #0x80000000             @ return maxint (7fffffff)
+    mvnne   r0, #0x80000000             @ return maxint (0x7fffffff)
     bne     1f
 
     mov     r0, r4                      @ recover arg
     mov     r1, r5
-    ldr     r3, .LOP_DOUBLE_TO_INT_min         @ (double)minint, hi
-    mov     r2, #0                      @ (double)minint, lo
+    mov     r3, #0xc1000000             @ minint, as a double (high word)
+    add     r3, r3, #0x00e00000         @  0xc1e00000
+    mov     r2, #0                      @ minint, as a double (low word)
     bl      __aeabi_dcmple              @ is arg <= minint?
     cmp     r0, #0                      @ nonzero == yes
     movne   r0, #0x80000000             @ return minint (80000000)
@@ -3860,13 +4058,6 @@ d2i_doconv:
 1:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
-
-.LOP_DOUBLE_TO_INT_maxlo:
-    .word   0xffc00000                  @ maxint, as a double (low word)
-.LOP_DOUBLE_TO_INT_maxhi:
-    .word   0x41dfffff                  @ maxint, as a double (high word)
-.LOP_DOUBLE_TO_INT_min:
-    .word   0xc1e00000                  @ minint, as a double (high word)
 #endif
 
 
@@ -5378,8 +5569,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5418,8 +5609,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5459,8 +5650,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5499,8 +5690,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5540,8 +5731,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 1
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5580,8 +5771,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5620,8 +5811,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5660,8 +5851,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5700,8 +5891,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5740,8 +5931,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -5780,8 +5971,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -6224,8 +6415,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -6264,8 +6455,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -6304,8 +6495,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -6344,8 +6535,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -6385,8 +6576,8 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- A+
     mov     r3, rINST, lsr #12          @ r3<- B
     and     r9, r9, #15
-    GET_VREG(r0, r9)                    @ r0<- vA
     GET_VREG(r1, r3)                    @ r1<- vB
+    GET_VREG(r0, r9)                    @ r0<- vA
     .if 0
     cmp     r1, #0                      @ is second operand zero?
     beq     common_errDivideByZero
@@ -7435,11 +7626,20 @@ d2i_doconv:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_ED: /* 0xed */
-/* File: armv5te/OP_UNUSED_ED.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_THROW_VERIFICATION_ERROR: /* 0xed */
+/* File: armv5te/OP_THROW_VERIFICATION_ERROR.S */
+    /*
+     * Handle a throw-verification-error instruction.  This throws an
+     * exception for an error discovered during verification.  The
+     * exception is indicated by AA, with some detail provided by BBBB.
+     */
+    /* op AA, ref@BBBB */
+    ldr     r0, [rGLUE, #offGlue_method]    @ r0<- glue->method
+    FETCH(r2, 1)                        @ r2<- BBBB
+    EXPORT_PC()                         @ export the PC
+    mov     r1, rINST, lsr #8           @ r1<- AA
+    bl      dvmThrowVerificationError   @ always throws
+    b       common_exceptionThrown      @ handle exception
 
 
 /* ------------------------------ */
@@ -7953,8 +8153,7 @@ dvmAsmSisterStart:
 /* continuation for OP_NEW_INSTANCE */
 
     .balign 32                          @ minimize cache lines
-.LOP_NEW_INSTANCE_finish: @ r0=class
-    bl      dvmAllocObject              @ r0<- new object
+.LOP_NEW_INSTANCE_finish: @ r0=new object
     mov     r3, rINST, lsr #8           @ r3<- AA
     cmp     r0, #0                      @ failed?
     beq     common_exceptionThrown      @ yes, handle the exception
@@ -7989,18 +8188,6 @@ dvmAsmSisterStart:
     cmp     r0, #0                      @ got null?
     bne     .LOP_NEW_INSTANCE_resolved        @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
-
-    /*
-     * We can't instantiate an abstract class or interface, so throw an
-     * InstantiationError with the class descriptor as the message.
-     *
-     *  r0 holds class object
-     */
-.LOP_NEW_INSTANCE_abstract:
-    ldr     r1, [r0, #offClassObject_descriptor]
-    ldr     r0, .LstrInstantiationErrorPtr
-    bl      dvmThrowExceptionWithClassMessage
-    b       common_exceptionThrown
 
 .LstrInstantiationErrorPtr:
     .word   .LstrInstantiationError
@@ -9142,10 +9329,11 @@ f2l_doconv:
  */
 d2l_doconv:
     stmfd   sp!, {r4, r5, lr}           @ save regs
-    ldr     r3, .LOP_DOUBLE_TO_LONG_max         @ (double)maxlong, hi
+    mov     r3, #0x43000000             @ maxlong, as a double (high word)
+    add     r3, #0x00e00000             @  0x43e00000
+    mov     r2, #0                      @ maxlong, as a double (low word)
     sub     sp, sp, #4                  @ align for EABI
-    mov     r2, #0                      @ (double)maxlong, lo
-    mov     r4, r0                      @ save r0
+    mov     r4, r0                      @ save a copy of r0
     mov     r5, r1                      @  and r1
     bl      __aeabi_dcmpge              @ is arg >= maxlong?
     cmp     r0, #0                      @ nonzero == yes
@@ -9155,8 +9343,9 @@ d2l_doconv:
 
     mov     r0, r4                      @ recover arg
     mov     r1, r5
-    ldr     r3, .LOP_DOUBLE_TO_LONG_min         @ (double)minlong, hi
-    mov     r2, #0                      @ (double)minlong, lo
+    mov     r3, #0xc3000000             @ minlong, as a double (high word)
+    add     r3, #0x00e00000             @  0xc3e00000
+    mov     r2, #0                      @ minlong, as a double (low word)
     bl      __aeabi_dcmple              @ is arg <= minlong?
     cmp     r0, #0                      @ nonzero == yes
     movne   r0, #0                      @ return minlong (8000000000000000)
@@ -9179,11 +9368,6 @@ d2l_doconv:
 1:
     add     sp, sp, #4
     ldmfd   sp!, {r4, r5, pc}
-
-.LOP_DOUBLE_TO_LONG_max:
-    .word   0x43e00000                  @ maxlong, as a double (high word)
-.LOP_DOUBLE_TO_LONG_min:
-    .word   0xc3e00000                  @ minlong, as a double (high word)
 
 
 /* continuation for OP_MUL_LONG */
@@ -9286,14 +9470,190 @@ d2l_doconv:
 dvmAsmSisterEnd:
 
 /* File: armv5te/footer.S */
+
 /*
  * ===========================================================================
  *  Common subroutines and data
  * ===========================================================================
  */
 
+
+
     .text
     .align  2
+
+#if defined(WITH_JIT)
+/*
+ * Return from the translation cache to the interpreter when the compiler is
+ * having issues translating/executing a Dalvik instruction. We have to skip
+ * the code cache lookup otherwise it is possible to indefinitely bouce
+ * between the interpreter and the code cache if the instruction that fails
+ * to be compiled happens to be at a trace start.
+ */
+    .global dvmJitToInterpPunt
+dvmJitToInterpPunt:
+    mov    rPC, r0
+#ifdef EXIT_STATS
+    mov    r0,lr
+    bl     dvmBumpPunt;
+#endif
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    FETCH_INST()
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+
+/*
+ * Return to the interpreter to handle a single instruction.
+ * On entry:
+ *    r0 <= PC
+ *    r1 <= PC of resume instruction
+ *    lr <= resume point in translation
+ */
+    .global dvmJitToInterpSingleStep
+dvmJitToInterpSingleStep:
+    str    lr,[rGLUE,#offGlue_jitResume]
+    str    r1,[rGLUE,#offGlue_jitResumePC]
+    mov    r1,#kInterpEntryInstr
+    @ enum is 4 byte in aapcs-EABI
+    str    r1, [rGLUE, #offGlue_entryPoint]
+    mov    rPC,r0
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    mov    r2,#kJitSingleStep     @ Ask for single step and then revert
+    str    r2,[rGLUE,#offGlue_jitState]
+    mov    r1,#1                  @ set changeInterp to bail to debug interp
+    b      common_gotoBail
+
+
+/*
+ * Return from the translation cache and immediately request
+ * a translation for the exit target.  Commonly used following
+ * invokes.
+ */
+    .global dvmJitToTraceSelect
+dvmJitToTraceSelect:
+    ldr    rPC,[r14, #-1]           @ get our target PC
+    add    rINST,r14,#-5            @ save start of chain branch
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    cmp    r0,#0
+    beq    2f
+    mov    r1,rINST
+    bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
+    cmp    r0,#0                    @ successful chain?
+    bxne   r0                       @ continue native execution
+    b      toInterpreter            @ didn't chain - resume with interpreter
+
+/* No translation, so request one if profiling isn't disabled*/
+2:
+    adrl   rIBASE, dvmAsmInstructionStart
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_INST()
+    cmp    r0, #0
+    bne    common_selectTrace
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+
+/*
+ * Return from the translation cache to the interpreter.
+ * The return was done with a BLX from thumb mode, and
+ * the following 32-bit word contains the target rPC value.
+ * Note that lr (r14) will have its low-order bit set to denote
+ * its thumb-mode origin.
+ *
+ * We'll need to stash our lr origin away, recover the new
+ * target and then check to see if there is a translation available
+ * for our new target.  If so, we do a translation chain and
+ * go back to native execution.  Otherwise, it's back to the
+ * interpreter (after treating this entry as a potential
+ * trace start).
+ */
+    .global dvmJitToInterpNormal
+dvmJitToInterpNormal:
+    ldr    rPC,[r14, #-1]           @ get our target PC
+    add    rINST,r14,#-5            @ save start of chain branch
+#ifdef EXIT_STATS
+    bl     dvmBumpNormal
+#endif
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    cmp    r0,#0
+    beq    toInterpreter            @ go if not, otherwise do chain
+    mov    r1,rINST
+    bl     dvmJitChain              @ r0<- dvmJitChain(codeAddr,chainAddr)
+    cmp    r0,#0                    @ successful chain?
+    bxne   r0                       @ continue native execution
+    b      toInterpreter            @ didn't chain - resume with interpreter
+
+/*
+ * Return from the translation cache to the interpreter to do method invocation.
+ * Check if translation exists for the callee, but don't chain to it.
+ */
+    .global dvmJitToInterpNoChain
+dvmJitToInterpNoChain:
+#ifdef EXIT_STATS
+    bl     dvmBumpNoChain
+#endif
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    cmp    r0,#0
+    bxne   r0                       @ continue native execution if so
+
+/*
+ * No translation, restore interpreter regs and start interpreting.
+ * rGLUE & rFP were preserved in the translated code, and rPC has
+ * already been restored by the time we get here.  We'll need to set
+ * up rIBASE & rINST, and load the address of the JitTable into r0.
+ */
+toInterpreter:
+    EXPORT_PC()
+    adrl   rIBASE, dvmAsmInstructionStart
+    FETCH_INST()
+    GET_JIT_PROF_TABLE(r0)
+    @ NOTE: intended fallthrough
+/*
+ * Common code to update potential trace start counter, and initiate
+ * a trace-build if appropriate.  On entry, rPC should point to the
+ * next instruction to execute, and rINST should be already loaded with
+ * the next opcode word, and r0 holds a pointer to the jit profile
+ * table (pJitProfTable).
+ */
+common_testUpdateProfile:
+    cmp     r0,#0
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE_IFEQ(ip)       @ if not profiling, fallthrough otherwise */
+
+common_updateProfile:
+    eor     r3,rPC,rPC,lsr #12 @ cheap, but fast hash function
+    lsl     r3,r3,#23          @ shift out excess 511
+    ldrb    r1,[r0,r3,lsr #23] @ get counter
+    GET_INST_OPCODE(ip)
+    subs    r1,r1,#1           @ decrement counter
+    strb    r1,[r0,r3,lsr #23] @ and store it
+    GOTO_OPCODE_IFNE(ip)       @ if not threshold, fallthrough otherwise */
+
+/*
+ * Here, we switch to the debug interpreter to request
+ * trace selection.  First, though, check to see if there
+ * is already a native translation in place (and, if so,
+ * jump to it now).
+ */
+    mov     r1,#255
+    strb    r1,[r0,r3,lsr #23] @ reset counter
+    EXPORT_PC()
+    mov     r0,rPC
+    bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
+    cmp     r0,#0
+    beq     common_selectTrace
+    bxne    r0                          @ jump to the translation
+common_selectTrace:
+    mov     r2,#kJitTSelectRequest      @ ask for trace selection
+    str     r2,[rGLUE,#offGlue_jitState]
+    mov     r1,#1                       @ set changeInterp
+    b       common_gotoBail
+
+#endif
 
 /*
  * Common code when a backward branch is taken.
@@ -9304,9 +9664,18 @@ dvmAsmSisterEnd:
 common_backwardBranch:
     mov     r0, #kInterpEntryInstr
     bl      common_periodicChecks
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
+    FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GET_INST_OPCODE(ip)
+    GOTO_OPCODE(ip)
+#else
     FETCH_ADVANCE_INST_RB(r9)           @ update rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
 
 /*
@@ -9342,7 +9711,7 @@ common_periodicChecks:
 #endif
 
     cmp     r3, #0                      @ suspend pending?
-    bne     2f                          @ yes, check suspend
+    bne     2f                          @ yes, do full suspension check
 
 #if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
 # if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
@@ -9360,6 +9729,7 @@ common_periodicChecks:
 
 2:  @ check suspend
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
+    EXPORT_PC()                         @ need for precise GC
     b       dvmCheckSuspendPending      @ suspend if necessary, then return
 
 3:  @ debugger/profiler enabled, bail out
@@ -9407,10 +9777,12 @@ common_invokeMethodRange:
     @ (very few methods have > 10 args; could unroll for common cases)
     add     r3, rFP, r1, lsl #2         @ r3<- &fp[CCCC]
     sub     r10, r10, r2, lsl #2        @ r10<- "outs" area, for call args
+    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
 1:  ldr     r1, [r3], #4                @ val = *fp++
     subs    r2, r2, #1                  @ count--
     str     r1, [r10], #4               @ *outs++ = val
     bne     1b                          @ ...while count != 0
+    ldrh    r3, [r0, #offMethod_outsSize]   @ r3<- methodToCall->outsSize
     b       .LinvokeArgsDone
 
 /*
@@ -9424,47 +9796,50 @@ common_invokeMethodNoRange:
     @ prepare to copy args to "outs" area of current frame
     movs    r2, rINST, lsr #12          @ r2<- B (arg count) -- test for zero
     SAVEAREA_FROM_FP(r10, rFP)          @ r10<- stack save area
-    beq     .LinvokeArgsDone            @ if no args, skip the rest
-    FETCH(r1, 2)                        @ r1<- GFED
+    FETCH(r1, 2)                        @ r1<- GFED (load here to hide latency)
+    ldrh    r9, [r0, #offMethod_registersSize]  @ r9<- methodToCall->regsSize
+    ldrh    r3, [r0, #offMethod_outsSize]  @ r3<- methodToCall->outsSize
+    beq     .LinvokeArgsDone
 
-    @ r0=methodToCall, r1=GFED, r2=count, r10=outs
+    @ r0=methodToCall, r1=GFED, r3=outSize, r2=count, r9=regSize, r10=outs
 .LinvokeNonRange:
     rsb     r2, r2, #5                  @ r2<- 5-r2
     add     pc, pc, r2, lsl #4          @ computed goto, 4 instrs each
     bl      common_abort                @ (skipped due to ARM prefetch)
 5:  and     ip, rINST, #0x0f00          @ isolate A
-    ldr     r3, [rFP, ip, lsr #6]       @ r3<- vA (shift right 8, left 2)
+    ldr     r2, [rFP, ip, lsr #6]       @ r2<- vA (shift right 8, left 2)
     mov     r0, r0                      @ nop
-    str     r3, [r10, #-4]!             @ *--outs = vA
+    str     r2, [r10, #-4]!             @ *--outs = vA
 4:  and     ip, r1, #0xf000             @ isolate G
-    ldr     r3, [rFP, ip, lsr #10]      @ r3<- vG (shift right 12, left 2)
+    ldr     r2, [rFP, ip, lsr #10]      @ r2<- vG (shift right 12, left 2)
     mov     r0, r0                      @ nop
-    str     r3, [r10, #-4]!             @ *--outs = vG
+    str     r2, [r10, #-4]!             @ *--outs = vG
 3:  and     ip, r1, #0x0f00             @ isolate F
-    ldr     r3, [rFP, ip, lsr #6]       @ r3<- vF
+    ldr     r2, [rFP, ip, lsr #6]       @ r2<- vF
     mov     r0, r0                      @ nop
-    str     r3, [r10, #-4]!             @ *--outs = vF
+    str     r2, [r10, #-4]!             @ *--outs = vF
 2:  and     ip, r1, #0x00f0             @ isolate E
-    ldr     r3, [rFP, ip, lsr #2]       @ r3<- vE
+    ldr     r2, [rFP, ip, lsr #2]       @ r2<- vE
     mov     r0, r0                      @ nop
-    str     r3, [r10, #-4]!             @ *--outs = vE
+    str     r2, [r10, #-4]!             @ *--outs = vE
 1:  and     ip, r1, #0x000f             @ isolate D
-    ldr     r3, [rFP, ip, lsl #2]       @ r3<- vD
+    ldr     r2, [rFP, ip, lsl #2]       @ r2<- vD
     mov     r0, r0                      @ nop
-    str     r3, [r10, #-4]!             @ *--outs = vD
+    str     r2, [r10, #-4]!             @ *--outs = vD
 0:  @ fall through to .LinvokeArgsDone
 
-.LinvokeArgsDone: @ r0=methodToCall
+.LinvokeArgsDone: @ r0=methodToCall, r3=outSize, r9=regSize
+    ldr     r2, [r0, #offMethod_insns]  @ r2<- method->insns
+    ldr     rINST, [r0, #offMethod_clazz]  @ rINST<- method->clazz
     @ find space for the new stack frame, check for overflow
     SAVEAREA_FROM_FP(r1, rFP)           @ r1<- stack save area
-    ldrh    r2, [r0, #offMethod_registersSize]  @ r2<- methodToCall->regsSize
-    ldrh    r3, [r0, #offMethod_outsSize]   @ r3<- methodToCall->outsSize
-    sub     r1, r1, r2, lsl #2          @ r1<- newFp (old savearea - regsSize)
+    sub     r1, r1, r9, lsl #2          @ r1<- newFp (old savearea - regsSize)
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- newSaveArea
 @    bl      common_dumpRegs
     ldr     r9, [rGLUE, #offGlue_interpStackEnd]    @ r9<- interpStackEnd
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
+    ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     blt     .LstackOverflow             @ yes, this frame will overflow stack
 
     @ set up newSaveArea
@@ -9474,9 +9849,11 @@ common_invokeMethodNoRange:
 #endif
     str     rFP, [r10, #offStackSaveArea_prevFrame]
     str     rPC, [r10, #offStackSaveArea_savedPc]
+#if defined(WITH_JIT)
+    mov     r9, #0
+    str     r9, [r10, #offStackSaveArea_returnAddr]
+#endif
     str     r0, [r10, #offStackSaveArea_method]
-
-    ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
     tst     r3, #ACC_NATIVE
     bne     .LinvokeNative
 
@@ -9495,27 +9872,39 @@ common_invokeMethodNoRange:
     ldmfd   sp!, {r0-r3}
     */
 
-    @ Update "glue" values for the new method
-    @ r0=methodToCall, r1=newFp
-    ldr     r3, [r0, #offMethod_clazz]      @ r3<- method->clazz
-    str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
-    ldr     r3, [r3, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
-    ldr     rPC, [r0, #offMethod_insns]     @ rPC<- method->insns
-    str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+    ldrh    r9, [r2]                        @ r9 <- load INST from new PC
+    ldr     r3, [rINST, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
+    mov     rPC, r2                         @ publish new rPC
     ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
-    FETCH_INST()                            @ load rINST from rPC
+
+    @ Update "glue" values for the new method
+    @ r0=methodToCall, r1=newFp, r2=self, r3=newMethodClass, r9=newINST
+    str     r0, [rGLUE, #offGlue_method]    @ glue->method = methodToCall
+    str     r3, [rGLUE, #offGlue_methodClassDex] @ glue->methodClassDex = ...
+#if defined(WITH_JIT)
+    GET_JIT_PROF_TABLE(r0)
     mov     rFP, r1                         @ fp = newFp
-    GET_INST_OPCODE(ip)                     @ extract opcode from rINST
+    GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
+    mov     rINST, r9                       @ publish new rINST
+    str     r1, [r2, #offThread_curFrame]   @ self->curFrame = newFp
+    cmp     r0,#0
+    bne     common_updateProfile
+    GOTO_OPCODE(ip)                         @ jump to next instruction
+#else
+    mov     rFP, r1                         @ fp = newFp
+    GET_PREFETCHED_OPCODE(ip, r9)           @ extract prefetched opcode from r9
+    mov     rINST, r9                       @ publish new rINST
     str     r1, [r2, #offThread_curFrame]   @ self->curFrame = newFp
     GOTO_OPCODE(ip)                         @ jump to next instruction
+#endif
 
 .LinvokeNative:
     @ Prep for the native call
     @ r0=methodToCall, r1=newFp, r10=newSaveArea
     ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
-    ldr     r9, [r3, #offThread_jniLocal_nextEntry] @ r9<- thread->refNext
+    ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
     str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
-    str     r9, [r10, #offStackSaveArea_localRefTop] @newFp->localRefTop=refNext
+    str     r9, [r10, #offStackSaveArea_localRefCookie] @newFp->localRefCookie=top
     mov     r9, r3                      @ r9<- glue->self (preserve)
 
     mov     r2, r0                      @ r2<- methodToCall
@@ -9539,11 +9928,11 @@ dalvik_mterp:
 
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
-    ldr     r0, [r10, #offStackSaveArea_localRefTop] @ r0<- newSave->localRefTop
+    ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved top
     ldr     r1, [r9, #offThread_exception] @ check for exception
     str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
-    str     r0, [r9, #offThread_jniLocal_nextEntry] @ self->refNext<- r0
+    str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
     bne     common_exceptionThrown      @ no, handle exception
 
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
@@ -9600,22 +9989,36 @@ common_returnFromMethod:
 
     SAVEAREA_FROM_FP(r0, rFP)           @ r0<- saveArea (old)
     ldr     rFP, [r0, #offStackSaveArea_prevFrame] @ fp = saveArea->prevFrame
+    ldr     r9, [r0, #offStackSaveArea_savedPc] @ r9 = saveArea->savedPc
     ldr     r2, [rFP, #(offStackSaveArea_method - sizeofStackSaveArea)]
                                         @ r2<- method we're returning to
+    ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     cmp     r2, #0                      @ is this a break frame?
+    ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
     mov     r1, #0                      @ "want switch" = false
     beq     common_gotoBail             @ break frame, bail out completely
 
-    ldr     rPC, [r0, #offStackSaveArea_savedPc] @ pc = saveArea->savedPc
-    ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
-    str     r2, [rGLUE, #offGlue_method]    @ glue->method = newSave->method
+    PREFETCH_ADVANCE_INST(rINST, r9, 3) @ advance r9, update new rINST
+    str     r2, [rGLUE, #offGlue_method]@ glue->method = newSave->method
+    ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
     str     rFP, [r3, #offThread_curFrame]  @ self->curFrame = fp
-    ldr     r1, [r2, #offMethod_clazz]      @ r1<- method->clazz
-    FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
-    ldr     r1, [r1, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
+#if defined(WITH_JIT)
+    ldr     r3, [r0, #offStackSaveArea_returnAddr] @ r3 = saveArea->returnAddr
+    GET_JIT_PROF_TABLE(r0)
+    mov     rPC, r9                     @ publish new rPC
+    str     r1, [rGLUE, #offGlue_methodClassDex]
+    cmp     r3, #0                      @ caller is compiled code
+    blxne   r3
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    cmp     r0,#0
+    bne     common_updateProfile
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+#else
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    mov     rPC, r9                     @ publish new rPC
     str     r1, [rGLUE, #offGlue_methodClassDex]
     GOTO_OPCODE(ip)                     @ jump to next instruction
+#endif
 
     /*
      * Return handling, calls through "glue code".
@@ -9638,11 +10041,18 @@ common_returnFromMethod:
  *
  * This does not return.
  */
+     .global dvmMterpCommonExceptionThrown
+dvmMterpCommonExceptionThrown:
 common_exceptionThrown:
 .LexceptionNew:
     mov     r0, #kInterpEntryThrow
     mov     r9, #0
     bl      common_periodicChecks
+
+#if defined(WITH_JIT)
+    mov     r2,#kJitTSelectAbort        @ abandon trace selection in progress
+    str     r2,[rGLUE,#offGlue_jitState]
+#endif
 
     ldr     r10, [rGLUE, #offGlue_self] @ r10<- glue->self
     ldr     r9, [r10, #offThread_exception] @ r9<- self->exception
@@ -9924,6 +10334,38 @@ common_dumpRegs:
     ldmfd   sp!, {r0, r1, r2, r3, ip, lr}
     bx      lr
     .endif
+
+#if 0
+/*
+ * Experiment on VFP mode.
+ *
+ * uint32_t setFPSCR(uint32_t val, uint32_t mask)
+ *
+ * Updates the bits specified by "mask", setting them to the values in "val".
+ */
+setFPSCR:
+    and     r0, r0, r1                  @ make sure no stray bits are set
+    fmrx    r2, fpscr                   @ get VFP reg
+    mvn     r1, r1                      @ bit-invert mask
+    and     r2, r2, r1                  @ clear masked bits
+    orr     r2, r2, r0                  @ set specified bits
+    fmxr    fpscr, r2                   @ set VFP reg
+    mov     r0, r2                      @ return new value
+    bx      lr
+
+    .align  2
+    .global dvmConfigureFP
+    .type   dvmConfigureFP, %function
+dvmConfigureFP:
+    stmfd   sp!, {ip, lr}
+    /* 0x03000000 sets DN/FZ */
+    /* 0x00009f00 clears the six exception enable flags */
+    bl      common_squeak0
+    mov     r0, #0x03000000             @ r0<- 0x03000000
+    add     r1, r0, #0x9f00             @ r1<- 0x03009f00
+    bl      setFPSCR
+    ldmfd   sp!, {ip, pc}
+#endif
 
 
 /*

@@ -64,20 +64,11 @@ public class PlatformAddressFactory {
      * @return an appropriately-constructed {@code PlatformAddress}
      */
     private static PlatformAddress make(int value, long size) {
-        int idx = value >> 5;
-        for (int probe = 0; probe < MAX_PROBES; probe++) {
-            PlatformAddress cachedObj = cache[(idx + probe) & CACHE_MASK];
-            if (cachedObj == null) {
-                return cache[(idx + probe) & CACHE_MASK] =
-                    new PlatformAddress(value, size);
-            }
-            if (cachedObj.osaddr == value && cachedObj.size == size) {
-                return cachedObj;
-            }
+        if (value == 0) {
+            return PlatformAddress.NULL;
         }
-        replacementIndex = (replacementIndex + 1) % MAX_PROBES;
-        return cache[(idx + replacementIndex) & CACHE_MASK] =
-            new PlatformAddress(value, size);
+
+        return new PlatformAddress(value, size);
     }
     // END android-added
 

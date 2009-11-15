@@ -24,11 +24,11 @@ import com.android.dx.util.ToHuman;
 public abstract class Constant
         implements ToHuman, Comparable<Constant> {
     /**
-     * Returns <code>true</code> if this instance is a category-2 constant,
+     * Returns {@code true} if this instance is a category-2 constant,
      * meaning it takes up two slots in the constant pool, or
-     * <code>false</code> if this instance is category-1.
+     * {@code false} if this instance is category-1.
      *
-     * @return <code>true</code> iff this instance is category-2
+     * @return {@code true} iff this instance is category-2
      */
     public abstract boolean isCategory2();
 
@@ -36,7 +36,7 @@ public abstract class Constant
      * Returns the human name for the particular type of constant
      * this instance is.
      *
-     * @return non-null; the name
+     * @return {@code non-null;} the name
      */
     public abstract String typeName();
 
@@ -60,8 +60,8 @@ public abstract class Constant
      * Compare the values of this and another instance, which are guaranteed
      * to be of the same class. Subclasses must implement this.
      * 
-     * @param other non-null; the instance to compare to
-     * @return <code>-1</code>, <code>0</code>, or <code>1</code>, as usual
+     * @param other {@code non-null;} the instance to compare to
+     * @return {@code -1}, {@code 0}, or {@code 1}, as usual
      * for a comparison
      */
     protected abstract int compareTo0(Constant other);

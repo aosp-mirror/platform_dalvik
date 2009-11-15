@@ -21,22 +21,22 @@ import com.android.dx.util.AnnotatedOutput;
 import java.util.Collection;
 
 /**
- * A section of a <code>.dex</code> file. Each section consists of a list
+ * A section of a {@code .dex} file. Each section consists of a list
  * of items of some sort or other.
  */
 public abstract class Section {
-    /** null-ok; name of this part, for annotation purposes */
+    /** {@code null-ok;} name of this part, for annotation purposes */
     private final String name;
 
-    /** non-null; file that this instance is part of */
+    /** {@code non-null;} file that this instance is part of */
     private final DexFile file;
 
-    /** &gt; 0; alignment requirement for the final output;
+    /** {@code > 0;} alignment requirement for the final output;
      * must be a power of 2 */
     private final int alignment;
 
-    /** &gt;= -1; offset from the start of the file to this part, or
-     * <code>-1</code> if not yet known */
+    /** {@code >= -1;} offset from the start of the file to this part, or
+     * {@code -1} if not yet known */
     private int fileOffset;
 
     /** whether {@link #prepare} has been called successfully on this
@@ -47,7 +47,7 @@ public abstract class Section {
      * Validates an alignment.
      * 
      * @param alignment the alignment
-     * @throws IllegalArgumentException thrown if <code>alignment</code>
+     * @throws IllegalArgumentException thrown if {@code alignment}
      * isn't a positive power of 2
      */
     public static void validateAlignment(int alignment) {
@@ -60,10 +60,10 @@ public abstract class Section {
     /**
      * Constructs an instance. The file offset is initially unknown.
      *
-     * @param name null-ok; the name of this instance, for annotation
+     * @param name {@code null-ok;} the name of this instance, for annotation
      * purposes
-     * @param file non-null; file that this instance is part of
-     * @param alignment &gt; 0; alignment requirement for the final output;
+     * @param file {@code non-null;} file that this instance is part of
+     * @param alignment {@code > 0;} alignment requirement for the final output;
      * must be a power of 2
      */
     public Section(String name, DexFile file, int alignment) {
@@ -83,7 +83,7 @@ public abstract class Section {
     /**
      * Gets the file that this instance is part of.
      *
-     * @return non-null; the file
+     * @return {@code non-null;} the file
      */
     public final DexFile getFile() {
         return file;
@@ -92,7 +92,7 @@ public abstract class Section {
     /** 
      * Gets the alignment for this instance's final output.
      * 
-     * @return &gt; 0; the alignment
+     * @return {@code > 0;} the alignment
      */
     public final int getAlignment() {
         return alignment;
@@ -102,7 +102,7 @@ public abstract class Section {
      * Gets the offset from the start of the file to this part. This
      * throws an exception if the offset has not yet been set.
      *
-     * @return &gt;= 0; the file offset
+     * @return {@code >= 0;} the file offset
      */
     public final int getFileOffset() {
         if (fileOffset < 0) {
@@ -116,9 +116,9 @@ public abstract class Section {
      * Sets the file offset. It is only valid to call this method once
      * once per instance.
      *
-     * @param fileOffset &gt;= 0; the desired offset from the start of the
+     * @param fileOffset {@code >= 0;} the desired offset from the start of the
      * file where this for this instance
-     * @return &gt;= 0; the offset that this instance should be placed at
+     * @return {@code >= 0;} the offset that this instance should be placed at
      * in order to meet its alignment constraint
      */
     public final int setFileOffset(int fileOffset) {
@@ -141,7 +141,7 @@ public abstract class Section {
     /**
      * Writes this instance to the given raw data object.
      *
-     * @param out non-null; where to write to
+     * @param out {@code non-null;} where to write to
      */
     public final void writeTo(AnnotatedOutput out) {
         throwIfNotPrepared();        
@@ -174,8 +174,8 @@ public abstract class Section {
      * once this instance has been assigned a file offset (via {@link
      * #setFileOffset}).
      * 
-     * @param relative &gt;= 0; the relative offset
-     * @return &gt;= 0; the corresponding absolute file offset
+     * @param relative {@code >= 0;} the relative offset
+     * @return {@code >= 0;} the corresponding absolute file offset
      */
     public final int getAbsoluteOffset(int relative) {
         if (relative < 0) {
@@ -198,8 +198,8 @@ public abstract class Section {
      * <p><b>Note:</b> Subclasses must implement this as appropriate for
      * their contents.</p>
      * 
-     * @param item non-null; the item in question
-     * @return &gt;= 0; the item's absolute file offset
+     * @param item {@code non-null;} the item in question
+     * @return {@code >= 0;} the item's absolute file offset
      */
     public abstract int getAbsoluteItemOffset(Item item);
 
@@ -219,7 +219,7 @@ public abstract class Section {
      * Gets the collection of all the items in this section.
      * It is not valid to attempt to change the returned list.
      *
-     * @return non-null; the items
+     * @return {@code non-null;} the items
      */
     public abstract Collection<? extends Item> items();
 
@@ -231,7 +231,7 @@ public abstract class Section {
     /**
      * Gets the size of this instance when output, in bytes.
      *
-     * @return &gt;= 0; the size of this instance, in bytes
+     * @return {@code >= 0;} the size of this instance, in bytes
      */
     public abstract int writeSize();
 
@@ -258,7 +258,7 @@ public abstract class Section {
     /**
      * Aligns the output of the given data to the alignment of this instance.
      * 
-     * @param out non-null; the output to align
+     * @param out {@code non-null;} the output to align
      */
     protected final void align(AnnotatedOutput out) {
         out.alignTo(alignment);
@@ -267,19 +267,19 @@ public abstract class Section {
     /**
      * Writes this instance to the given raw data object. This gets
      * called by {@link #writeTo} after aligning the cursor of
-     * <code>out</code> and verifying that either the assigned file
-     * offset matches the actual cursor <code>out</code> or that the
+     * {@code out} and verifying that either the assigned file
+     * offset matches the actual cursor {@code out} or that the
      * file offset was not previously assigned, in which case it gets
-     * assigned to <code>out</code>'s cursor.
+     * assigned to {@code out}'s cursor.
      * 
-     * @param out non-null; where to write to
+     * @param out {@code non-null;} where to write to
      */
     protected abstract void writeTo0(AnnotatedOutput out);
 
     /**
      * Returns the name of this section, for annotation purposes.
      * 
-     * @return null-ok; name of this part, for annotation purposes
+     * @return {@code null-ok;} name of this part, for annotation purposes
      */
     protected final String getName() {
         return name;

@@ -44,6 +44,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.Collections;
 
 import tests.support.Support_Configuration;
 import tests.support.Support_Proxy_I1;
@@ -2666,50 +2667,28 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("Proxy support broken when user classloader involved")
-    public void test_writeObject_Proxy() {
-        // Test for method void
-        // java.io.ObjectOutputStream.writeObject(java.security.GuardedObject)
+    @KnownFailure(value="bug 2188225")
+    public void test_writeObject_Proxy()
+            throws ClassNotFoundException, IOException {
 
-        Object objToSave = null;
-        Object objLoaded = null;
+        // serialize class
+        Class<?> proxyClass = Proxy.getProxyClass(Support_Proxy_I1.class
+                .getClassLoader(), new Class[]{Support_Proxy_I1.class});
+        Class<?> proxyClassOut = (Class<?>) dumpAndReload(proxyClass);
 
-        try {
-            objToSave = Proxy.getProxyClass(Support_Proxy_I1.class
-                    .getClassLoader(), new Class[] { Support_Proxy_I1.class });
-            if (DEBUG)
-                System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
+        assertTrue(Proxy.isProxyClass(proxyClassOut));
+        assertEquals(Collections.<Class>singletonList(Support_Proxy_I1.class),
+                Arrays.asList(proxyClassOut.getInterfaces()));
 
-            assertTrue(MSG_TEST_FAILED + "not a proxy class", Proxy
-                    .isProxyClass((Class) objLoaded));
-            Class[] interfaces = ((Class) objLoaded).getInterfaces();
-            assertTrue(MSG_TEST_FAILED + "wrong interfaces length",
-                    interfaces.length == 1);
-            assertTrue(MSG_TEST_FAILED + "wrong interface",
-                    interfaces[0] == Support_Proxy_I1.class);
+        // serialize instance
+        InvocationHandler handler = new MyInvocationHandler();
+        Object proxyInstance = Proxy.newProxyInstance(Support_Proxy_I1.class
+                .getClassLoader(), new Class[] { Support_Proxy_I1.class },
+                handler);
 
-            InvocationHandler handler = new MyInvocationHandler();
-            objToSave = Proxy.newProxyInstance(Support_Proxy_I1.class
-                    .getClassLoader(), new Class[] { Support_Proxy_I1.class },
-                    handler);
-            if (DEBUG)
-                System.out.println("Obj = " + objToSave);
-            objLoaded = dumpAndReload(objToSave);
-
-            boolean equals = Proxy.getInvocationHandler(objLoaded).getClass() == MyInvocationHandler.class;
-            assertTrue(MSG_TEST_FAILED + objToSave, equals);
-
-        } catch (IOException e) {
-            fail("Exception serializing " + objToSave + " : " + e.getMessage());
-        } catch (ClassNotFoundException e) {
-            fail("ClassNotFoundException reading Object type: "
-                    + e.getMessage());
-        } catch (Error err) {
-            System.out.println("Error when obj = " + objToSave);
-            // err.printStackTrace();
-            throw err;
-        }
+        Object proxyInstanceOut = dumpAndReload(proxyInstance);
+        assertEquals(MyInvocationHandler.class,
+                Proxy.getInvocationHandler(proxyInstanceOut).getClass());
     }
 
     @TestTargetNew(

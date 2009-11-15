@@ -17,17 +17,16 @@
 
 package java.util;
 
-
 /**
  * MapEntry is an internal class which provides an implementation of Map.Entry.
  */
-class MapEntry<K,V> implements Map.Entry<K,V>, Cloneable {
-    
+class MapEntry<K, V> implements Map.Entry<K, V>, Cloneable {
+
     K key;
     V value;
 
-    interface Type<RT,KT,VT> {
-        RT get(MapEntry<KT,VT> entry);
+    interface Type<RT, KT, VT> {
+        RT get(MapEntry<KT, VT> entry);
     }
 
     MapEntry(K theKey) {
@@ -82,7 +81,7 @@ class MapEntry<K,V> implements Map.Entry<K,V>, Cloneable {
         value = object;
         return result;
     }
-    
+
     @Override
     public String toString() {
         return key + "=" + value;

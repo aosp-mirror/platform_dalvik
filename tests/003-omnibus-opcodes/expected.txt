@@ -23,6 +23,7 @@ IntMath.truncateTest
 IntMath.divideByZero
 IntMath.bigDivideOverflow
 IntMath.checkConsts
+IntMath.jlmTests
 FloatMath.convTest
 FloatMath.floatOperTest
 FloatMath.doubleOperTest
@@ -39,6 +40,7 @@ FloatMath.checkConvD
  2: 123.45600128173828
 -2.005440939E9, -8.6133032459203287E18, 123.4560012817382
 FloatMath.checkConsts
+FloatMath.jlmTests
 IntMath.testIntCompare
 IntMath.testLongCompare
 IntMath.testFloatCompare
@@ -64,8 +66,9 @@ Throw.one
 Throw.twoA
 Throw.twoN
 Throw.rethrow
-Caught: java.lang.VerifyError: UnresTest1
-Caught (retry): java.lang.VerifyError: UnresTest1
-Caught: java.lang.VerifyError: UnresTest2
+UnresTest1...
+UnresTest1...
+UnresTest2...
+UnresTest2 done
 InternedString.run
 Done!

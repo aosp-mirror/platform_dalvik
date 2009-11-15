@@ -440,7 +440,8 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @see ClassLoader#isSystemClassLoader()
      */
     ClassLoader getClassLoaderImpl() {
-        return getClassLoader(this);
+        ClassLoader loader = getClassLoader(this);
+        return loader == null ? BootClassLoader.getInstance() : loader;
     }
 
     /*
@@ -468,6 +469,7 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @param parameterTypes
      *            the parameter types of the requested constructor.
+     *            {@code (Class[]) null} is equivalent to the empty array.
      * @return the constructor described by {@code parameterTypes}.
      * @throws NoSuchMethodException
      *             if the constructor can not be found.
@@ -586,6 +588,7 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @param parameterTypes
      *            the parameter types of the requested constructor.
+     *            {@code (Class[]) null} is equivalent to the empty array.
      * @return the constructor described by {@code parameterTypes}.
      * @throws NoSuchMethodException
      *             if the requested constructor can not be found.
@@ -658,12 +661,14 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
         sb.append(getSimpleName());
         sb.append('(');
         boolean first = true;
-        for (Class<?> p : parameterTypes) {
-            if (!first) {
-                sb.append(',');
+        if (parameterTypes != null) {
+            for (Class<?> p : parameterTypes) {
+                if (!first) {
+                    sb.append(',');
+                }
+                first = false;
+                sb.append(p.getSimpleName());
             }
-            first = false;
-            sb.append(p.getSimpleName());
         }
         sb.append(')');
         throw new NoSuchMethodException(sb.toString());
@@ -740,6 +745,7 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *            the requested method's name.
      * @param parameterTypes
      *            the parameter types of the requested method.
+     *            {@code (Class[]) null} is equivalent to the empty array.
      * @return the method described by {@code name} and {@code parameterTypes}.
      * @throws NoSuchMethodException
      *             if the requested constructor can not be found.
@@ -990,6 +996,7 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *            the requested method's name.
      * @param parameterTypes
      *            the parameter types of the requested method.
+     *            {@code (Class[]) null} is equivalent to the empty array.
      * @return the public field specified by {@code name}.
      * @throws NoSuchMethodException
      *             if the method can not be found.

@@ -46,7 +46,7 @@ import java.util.ArrayList;
  * #translate} method is the thing to call on this class.
  */
 public final class RopTranslator {
-    /** non-null; method to translate */
+    /** {@code non-null;} method to translate */
     private final RopMethod method;
 
     /**
@@ -55,22 +55,22 @@ public final class RopTranslator {
      */
     private final int positionInfo;
 
-    /** null-ok; local variable info to use */
+    /** {@code null-ok;} local variable info to use */
     private final LocalVariableInfo locals;
 
-    /** non-null; container for all the address objects for the method */
+    /** {@code non-null;} container for all the address objects for the method */
     private final BlockAddresses addresses;
 
-    /** non-null; list of output instructions in-progress */
+    /** {@code non-null;} list of output instructions in-progress */
     private final OutputCollector output;
 
-    /** non-null; visitor to use during translation */
+    /** {@code non-null;} visitor to use during translation */
     private final TranslationVisitor translationVisitor;
 
-    /** &gt;= 0; register count for the method */
+    /** {@code >= 0;} register count for the method */
     private final int regCount;
 
-    /** null-ok; block output order; becomes non-null in {@link #pickOrder} */
+    /** {@code null-ok;} block output order; becomes non-null in {@link #pickOrder} */
     private int[] order;
 
     /** size, in register units, of all the parameters to this method */
@@ -86,13 +86,13 @@ public final class RopTranslator {
      * Translates a {@link RopMethod}. This may modify the given
      * input.
      * 
-     * @param method non-null; the original method
+     * @param method {@code non-null;} the original method
      * @param positionInfo how much position info to preserve; one of the
      * static constants in {@link PositionList}
-     * @param locals null-ok; local variable information to use
+     * @param locals {@code null-ok;} local variable information to use
      * @param paramSize size, in register units, of all the parameters to
      * this method
-     * @return non-null; the translated version
+     * @return {@code non-null;} the translated version
      */
     public static DalvCode translate(RopMethod method, int positionInfo,
                                      LocalVariableInfo locals, int paramSize) {
@@ -105,10 +105,10 @@ public final class RopTranslator {
     /**
      * Constructs an instance. This method is private. Use {@link #translate}.
      * 
-     * @param method non-null; the original method
+     * @param method {@code non-null;} the original method
      * @param positionInfo how much position info to preserve; one of the
      * static constants in {@link PositionList}
-     * @param locals null-ok; local variable information to use
+     * @param locals {@code null-ok;} local variable information to use
      * @param paramSize size, in register units, of all the parameters to
      * this method
      */
@@ -177,7 +177,7 @@ public final class RopTranslator {
 
         /*
          * We almost could just check the first block here, but the
-         * <code>cf</code> layer will put in a second move-param in a
+         * {@code cf} layer will put in a second move-param in a
          * subsequent block in the case of synchronized methods.
          */
         method.getBlocks().forEachInsn(new Insn.BaseVisitor() {
@@ -199,7 +199,7 @@ public final class RopTranslator {
     /**
      * Does the translation and returns the result.
      * 
-     * @return non-null; the result
+     * @return {@code non-null;} the result
      */
     private DalvCode translateAndGetResult() {
         pickOrder();
@@ -232,9 +232,9 @@ public final class RopTranslator {
      * Helper for {@link #outputInstructions}, which does the processing
      * and output of one block.
      * 
-     * @param block non-null; the block to process and output
-     * @param nextLabel &gt;= -1; the next block that will be processed, or
-     * <code>-1</code> if there is no next block
+     * @param block {@code non-null;} the block to process and output
+     * @param nextLabel {@code >= -1;} the next block that will be processed, or
+     * {@code -1} if there is no next block
      */
     private void outputBlock(BasicBlock block, int nextLabel) {
         // Append the code address for this block.
@@ -440,8 +440,8 @@ public final class RopTranslator {
      * two register sources, and have a source equal to the result,
      * place that source first.
      *
-     * @param insn non-null; instruction in question
-     * @return non-null; the instruction's complete register list
+     * @param insn {@code non-null;} instruction in question
+     * @return {@code non-null;} the instruction's complete register list
      */
     private static RegisterSpecList getRegs(Insn insn) {
         return getRegs(insn, insn.getResult());
@@ -453,9 +453,9 @@ public final class RopTranslator {
      * two register sources, and have a source equal to the result,
      * place that source first.
      *
-     * @param insn non-null; instruction in question
-     * @param resultReg null-ok; the real result to use (ignore the insn's)
-     * @return non-null; the instruction's complete register list
+     * @param insn {@code non-null;} instruction in question
+     * @param resultReg {@code null-ok;} the real result to use (ignore the insn's)
+     * @return {@code non-null;} the instruction's complete register list
      */
     private static RegisterSpecList getRegs(Insn insn,
             RegisterSpec resultReg) {
@@ -486,14 +486,14 @@ public final class RopTranslator {
      * Instruction visitor class for doing the instruction translation per se.
      */
     private class TranslationVisitor implements Insn.Visitor {
-        /** non-null; list of output instructions in-progress */
+        /** {@code non-null;} list of output instructions in-progress */
         private final OutputCollector output;
 
-        /** non-null; basic block being worked on */
+        /** {@code non-null;} basic block being worked on */
         private BasicBlock block;
 
         /**
-         * null-ok; code address for the salient last instruction of the
+         * {@code null-ok;} code address for the salient last instruction of the
          * block (used before switches and throwing instructions) 
          */
         private CodeAddress lastAddress;
@@ -501,7 +501,7 @@ public final class RopTranslator {
         /**
          * Constructs an instance.
          * 
-         * @param output non-null; destination for instruction output
+         * @param output {@code non-null;} destination for instruction output
          */
         public TranslationVisitor(OutputCollector output) {
             this.output = output;
@@ -510,8 +510,8 @@ public final class RopTranslator {
         /**
          * Sets the block currently being worked on.
          * 
-         * @param block non-null; the block
-         * @param lastAddress non-null; code address for the salient
+         * @param block {@code non-null;} the block
+         * @param lastAddress {@code non-null;} code address for the salient
          * last instruction of the block
          */
         public void setBlock(BasicBlock block, CodeAddress lastAddress) {
@@ -654,7 +654,7 @@ public final class RopTranslator {
          * the RegisterSpec of the result of the move-result-pseudo at the
          * top of that block or null if none.
          *
-         * @return null-ok; result of move-result-pseudo at the beginning of
+         * @return {@code null-ok;} result of move-result-pseudo at the beginning of
          * primary successor
          */
         private RegisterSpec getNextMoveResultPseudo()
@@ -783,7 +783,7 @@ public final class RopTranslator {
         /**
          * Adds to the output.
          * 
-         * @param insn non-null; instruction to add
+         * @param insn {@code non-null;} instruction to add
          */
         protected void addOutput(DalvInsn insn) {
             output.add(insn);
@@ -792,7 +792,7 @@ public final class RopTranslator {
         /**
          * Adds to the output suffix.
          * 
-         * @param insn non-null; instruction to add
+         * @param insn {@code non-null;} instruction to add
          */
         protected void addOutputSuffix(DalvInsn insn) {
             output.addSuffix(insn);
@@ -805,14 +805,14 @@ public final class RopTranslator {
      */
     private class LocalVariableAwareTranslationVisitor
             extends TranslationVisitor {
-        /** non-null; local variable info */
+        /** {@code non-null;} local variable info */
         private LocalVariableInfo locals;
 
         /**
          * Constructs an instance.
          * 
-         * @param output non-null; destination for instruction output
-         * @param locals non-null; the local variable info
+         * @param output {@code non-null;} destination for instruction output
+         * @param locals {@code non-null;} the local variable info
          */
         public LocalVariableAwareTranslationVisitor(OutputCollector output,
                                                     LocalVariableInfo locals) {
@@ -859,7 +859,7 @@ public final class RopTranslator {
          * Adds a {@link LocalStart} to the output if the given
          * instruction in fact introduces a local variable.
          * 
-         * @param insn non-null; instruction in question
+         * @param insn {@code non-null;} instruction in question
          */
         public void addIntroductionIfNecessary(Insn insn) {
             RegisterSpec spec = locals.getAssignment(insn);

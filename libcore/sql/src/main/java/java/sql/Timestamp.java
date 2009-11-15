@@ -17,10 +17,10 @@
 
 package java.sql;
 
-import java.text.DecimalFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import org.apache.harmony.sql.internal.nls.Messages;
 
@@ -32,18 +32,16 @@ import org.apache.harmony.sql.internal.nls.Messages;
  * The {@code Timestamp} class consists of a regular date/time value, where only
  * the integral seconds value is stored, plus a nanoseconds value where the
  * fractional seconds are stored.
- * </p><p>
+ * <p>
  * The addition of the nanosecond value field to the {@code Timestamp} object
  * makes it significantly different from the {@code java.util.Date} object which
  * it extends. Users should be aware that {@code Timestamp} objects are not
  * interchangable with {@code java.util.Date} objects when used outside the
  * confines of the {@code java.sql} package.
- * </p>
- * 
+ *
  * @see Date
  * @see Time
  * @see java.util.Date
- * @since Android 1.0
  */
 public class Timestamp extends Date {
 
@@ -52,12 +50,15 @@ public class Timestamp extends Date {
     // The nanoseconds time value of the Timestamp
     private int nanos;
 
+    // The regex pattern of yyyy-mm-dd hh:mm:ss
+    private static final String TIME_FORMAT_REGEX = "[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}.*"; //$NON-NLS-1$
+
     /**
      * Returns a {@code Timestamp} corresponding to the time specified by the
      * supplied values for <i>Year</i>, <i>Month</i>, <i>Date</i>, <i>Hour</i>,
      * <i>Minutes</i>, <i>Seconds</i> and <i>Nanoseconds</i>.
-     * 
-     * @deprecated Please use the constructor {@link #Timestamp(long)}.
+     *
+     * @deprecated Use the constructor {@link #Timestamp(long)}.
      * @param theYear
      *            specified as the year minus 1900.
      * @param theMonth
@@ -75,7 +76,6 @@ public class Timestamp extends Date {
      *            as an integer in the range [0,999'999'999]
      * @throws IllegalArgumentException
      *             if any of the parameters is out of range.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -96,7 +96,6 @@ public class Timestamp extends Date {
      * @param theTime
      *            a time value in the format of milliseconds since the Epoch
      *            (January 1 1970 00:00:00.000 GMT).
-     * @since Android 1.0
      */
     public Timestamp(long theTime) {
         super(theTime);
@@ -104,7 +103,7 @@ public class Timestamp extends Date {
          * Now set the time for this Timestamp object - which deals with the
          * nanosecond value as well as the base time
          */
-        this.setTime(theTime);
+        setTimeImpl(theTime);
     }
 
     /**
@@ -115,7 +114,6 @@ public class Timestamp extends Date {
      *            the timestamp to compare with this timestamp object.
      * @return {@code true} if this {@code Timestamp} object is later than the
      *         supplied timestamp, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean after(Timestamp theTimestamp) {
         long thisTime = this.getTime();
@@ -148,7 +146,6 @@ public class Timestamp extends Date {
      *            the timestamp to compare with this {@code Timestamp} object.
      * @return {@code true} if this {@code Timestamp} object is earlier than the
      *         supplied timestamp, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean before(Timestamp theTimestamp) {
         long thisTime = this.getTime();
@@ -195,7 +192,6 @@ public class Timestamp extends Date {
      *         </dd>
      * @throws ClassCastException
      *             if the supplied object is not a {@code Timestamp} object.
-     * @since Android 1.0
      */
     @Override
     public int compareTo(Date theObject) throws ClassCastException {
@@ -218,7 +214,6 @@ public class Timestamp extends Date {
      *         <li> {@code > 0}, if this {@code Timestamp} object is after the
      *         supplied {@code Timestamp}</li>
      *         </ul>
-     * @since Android 1.0
      */
     public int compareTo(Timestamp theTimestamp) {
         int result = super.compareTo(theTimestamp);
@@ -245,7 +240,6 @@ public class Timestamp extends Date {
      *         supplied {@code Timestamp} object<br>{@code false} if the object
      *         is not a {@code Timestamp} object or if the object is a {@code
      *         Timestamp} but represents a different instant in time.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object theObject) {
@@ -263,7 +257,6 @@ public class Timestamp extends Date {
      *            passed as an {@code Object}.
      * @return {@code true} if this {@code Timestamp} object is equal to the
      *         supplied {@code Timestamp} object, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean equals(Timestamp theTimestamp) {
         if (theTimestamp == null) {
@@ -278,7 +271,6 @@ public class Timestamp extends Date {
      * 
      * @return The timestamp's nanosecond value, an integer between 0 and
      *         999,999,999.
-     * @since Android 1.0
      */
     public int getNanos() {
         return nanos;
@@ -288,10 +280,9 @@ public class Timestamp extends Date {
      * Returns the time represented by this {@code Timestamp} object, as a long
      * value containing the number of milliseconds since the Epoch (January 1
      * 1970, 00:00:00.000 GMT).
-     * 
+     *
      * @return the number of milliseconds that have passed since January 1 1970,
      *         00:00:00.000 GMT.
-     * @since Android 1.0
      */
     @Override
     public long getTime() {
@@ -302,13 +293,12 @@ public class Timestamp extends Date {
 
     /**
      * Sets the nanosecond value for this {@code Timestamp}.
-     * 
+     *
      * @param n
      *            number of nanoseconds.
      * @throws IllegalArgumentException
      *             if number of nanoseconds smaller than 0 or greater than
      *             999,999,999.
-     * @since Android 1.0
      */
     public void setNanos(int n) throws IllegalArgumentException {
         if ((n < 0) || (n > 999999999)) {
@@ -322,14 +312,17 @@ public class Timestamp extends Date {
      * Sets the time represented by this {@code Timestamp} object to the
      * supplied time, defined as the number of milliseconds since the Epoch
      * (January 1 1970, 00:00:00.000 GMT).
-     * 
+     *
      * @param theTime
      *            number of milliseconds since the Epoch (January 1 1970,
      *            00:00:00.000 GMT).
-     * @since Android 1.0
      */
     @Override
     public void setTime(long theTime) {
+        setTimeImpl(theTime);
+    }
+    
+    private void setTimeImpl(long theTime) {
         /*
          * Deal with the nanoseconds value. The supplied time is in milliseconds -
          * so we must extract the milliseconds value and multiply by 1000000 to
@@ -356,67 +349,47 @@ public class Timestamp extends Date {
      * 
      * @return A string representing the instant defined by the {@code
      *         Timestamp}, in JDBC Timestamp escape format.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Override
     public String toString() {
-        /*
-         * Use a DecimalFormat to lay out the nanosecond value as a simple
-         * string of 9 integers, with leading Zeros
-         */
-        DecimalFormat decimalFormat = new DecimalFormat("0"); //$NON-NLS-1$
-        decimalFormat.setMinimumIntegerDigits(9);
-        decimalFormat.setMaximumIntegerDigits(9);
-        String theNanos = decimalFormat.format(nanos);
-        theNanos = stripTrailingZeros(theNanos);
-        
-        String year = format((getYear() + 1900), 4);
-        String month = format((getMonth() + 1), 2);
-        String date = format(getDate(), 2);
-        String hours = format(getHours(), 2);
-        String minutes = format(getMinutes(), 2);
-        String seconds = format(getSeconds(), 2);
+        StringBuilder sb = new StringBuilder(29);
 
-        return year + '-' + month + '-' + date + ' ' + hours + ':' + minutes
-                + ':' + seconds + '.' + theNanos;
-    }
-
-    /*
-     * Private method to format the time
-     */
-    private String format(int date, int digits) {
-        StringBuilder dateStringBuffer = new StringBuilder(String.valueOf(date));
-        while (dateStringBuffer.length() < digits) {
-            dateStringBuffer = dateStringBuffer.insert(0,'0');
-        }
-        return dateStringBuffer.toString();
-    }
-    
-    /*
-     * Private method to strip trailing '0' characters from a string. @param
-     * inputString the starting string @return a string with the trailing zeros
-     * stripped - will leave a single 0 at the beginning of the string
-     */
-    private String stripTrailingZeros(String inputString) {
-        String finalString;
-
-        int i;
-        for (i = inputString.length(); i > 0; i--) {
-            if (inputString.charAt(i - 1) != '0') {
-                break;
-            }
-            /*
-             * If the string has a 0 as its first character, return a string
-             * with a single '0'
-             */
-            if (i == 1) {
-                return "0"; //$NON-NLS-1$
+        format((getYear() + 1900), 4, sb);
+        sb.append('-');
+        format((getMonth() + 1), 2, sb);
+        sb.append('-');
+        format(getDate(), 2, sb);
+        sb.append(' ');
+        format(getHours(), 2, sb);
+        sb.append(':');
+        format(getMinutes(), 2, sb);
+        sb.append(':');
+        format(getSeconds(), 2, sb);
+        sb.append('.');
+        if (nanos == 0) {
+            sb.append('0');
+        } else {
+            format(nanos, 9, sb);
+            while (sb.charAt(sb.length() - 1) == '0') {
+                sb.setLength(sb.length() - 1);
             }
         }
 
-        finalString = inputString.substring(0, i);
-        return finalString;
+        return sb.toString();
+    }
+
+    private static final String PADDING = "000000000";  //$NON-NLS-1$
+
+    /* 
+    * Private method to format the time 
+    */ 
+    private void format(int date, int digits, StringBuilder sb) { 
+        String str = String.valueOf(date);
+        if (digits - str.length() > 0) {
+            sb.append(PADDING.substring(0, digits - str.length()));
+        }
+        sb.append(str); 
     }
 
     /**
@@ -431,12 +404,17 @@ public class Timestamp extends Date {
      *         supplied {@code String}.
      * @throws IllegalArgumentException
      *             if the provided string is {@code null}.
-     * @since Android 1.0
      */
     public static Timestamp valueOf(String s) throws IllegalArgumentException {
         if (s == null) {
             // sql.3=Argument cannot be null
             throw new IllegalArgumentException(Messages.getString("sql.3")); //$NON-NLS-1$
+        }
+
+        // omit trailing whitespaces
+        s = s.trim();
+        if (!Pattern.matches(TIME_FORMAT_REGEX, s)) {
+            throw new IllegalArgumentException(Messages.getString("sql.2")); //$NON-NLS-1$
         }
 
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //$NON-NLS-1$
@@ -495,7 +473,8 @@ public class Timestamp extends Date {
             // Require the next character to be a "."
             if (s.charAt(position) != '.') {
                 // sql.4=Bad input string format: expected '.' not {0}
-                throw new NumberFormatException(Messages.getString("sql.4", s.charAt(position))); //$NON-NLS-1$
+                throw new NumberFormatException(Messages.getString(
+                        "sql.4", s.charAt(position))); //$NON-NLS-1$
             }
             // Get the length of the number string - need to account for the '.'
             int nanoLength = s.length() - position - 1;

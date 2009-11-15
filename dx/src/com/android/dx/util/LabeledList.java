@@ -58,7 +58,7 @@ public class LabeledList extends FixedSizeList {
     /**
      * Gets the maximum label (exclusive) of any block added to this instance.
      *
-     * @return &gt;= 0; the maximum label
+     * @return {@code >= 0;} the maximum label
      */
     public int getMaxLabel() {
         int sz = labelToIndex.size();
@@ -102,8 +102,8 @@ public class LabeledList extends FixedSizeList {
      * Gets the index of the first item in the list with the given
      * label, if any.
      *
-     * @param label &gt;= 0; the label to look for
-     * @return &gt;= -1; the index of the so-labelled item, or <code>-1</code>
+     * @param label {@code >= 0;} the label to look for
+     * @return {@code >= -1;} the index of the so-labelled item, or {@code -1}
      * if none is found
      */
     public int indexOfLabel(int label) {
@@ -142,8 +142,8 @@ public class LabeledList extends FixedSizeList {
     /**
      * Sets the element at the given index.
      *
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param item null-ok; the value to store
+     * @param n {@code >= 0, < size();} which element
+     * @param item {@code null-ok;} the value to store
      */
     protected void set(int n, LabeledItem item) {
         LabeledItem old = (LabeledItem) getOrNull0(n);

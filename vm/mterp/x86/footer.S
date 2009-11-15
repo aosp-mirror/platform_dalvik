@@ -200,8 +200,8 @@ common_invokeMethodNoRange:
     GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
     movl        offGlue_self(%ecx), %ecx        # %ecx<- glue->self
-    movl        offThread_jniLocal_nextEntry(%ecx), %eax # %eax<- glue->self->thread->refNext
-    movl        %eax, offStackSaveArea_localRefTop(%edx) # newSaveArea->localRefTop<- refNext
+    movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
+    movl        %eax, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
     movl        %edx, OUT_ARG4(%esp)    # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), %edx # %edx<- newFP
     movl        %edx, offThread_curFrame(%ecx)  # glue->self->curFrame<- newFP
@@ -217,10 +217,10 @@ common_invokeMethodNoRange:
     lea         4(%esp), %esp
     movl        OUT_ARG4(%esp), %ecx    # %ecx<- newSaveArea
     movl        OUT_ARG3(%esp), %eax    # %eax<- glue->self
-    movl        offStackSaveArea_localRefTop(%ecx), %edx # %edx<- newSaveArea->localRefTop
+    movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $$0, offThread_exception(%eax) # check for exception
     movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
-    movl        %edx, offThread_jniLocal_nextEntry(%eax) # glue->self<- newSaveArea->localRefTop
+    movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
     UNSPILL(rPC)
     jne         common_exceptionThrown  # handle exception
     FETCH_INST_WORD(3)
@@ -312,6 +312,7 @@ common_periodicChecks:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
+    EXPORT_PC()                         # need for precise GC
     movl    offGlue_self(%ecx),%eax      # eax<- glue->self
     SPILL(rPC)                      # save edx
     push    %ebp

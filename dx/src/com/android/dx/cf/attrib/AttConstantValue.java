@@ -24,22 +24,22 @@ import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.TypedConstant;
 
 /**
- * Attribute class for standard <code>ConstantValue</code> attributes.
+ * Attribute class for standard {@code ConstantValue} attributes.
  */
 public final class AttConstantValue extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "ConstantValue";
 
-    /** non-null; the constant value */
+    /** {@code non-null;} the constant value */
     private final TypedConstant constantValue;
 
     /**
      * Constructs an instance.
      * 
-     * @param constantValue non-null; the constant value, which must
-     * be an instance of one of: <code>CstString</code>,
-     * <code>CstInteger</code>, <code>CstLong</code>,
-     * <code>CstFloat</code>, or <code>CstDouble</code>
+     * @param constantValue {@code non-null;} the constant value, which must
+     * be an instance of one of: {@code CstString},
+     * {@code CstInteger}, {@code CstLong},
+     * {@code CstFloat}, or {@code CstDouble}
      */
     public AttConstantValue(TypedConstant constantValue) {
         super(ATTRIBUTE_NAME);
@@ -65,11 +65,11 @@ public final class AttConstantValue extends BaseAttribute {
 
     /**
      * Gets the constant value of this instance. The returned value
-     * is an instance of one of: <code>CstString</code>,
-     * <code>CstInteger</code>, <code>CstLong</code>,
-     * <code>CstFloat</code>, or <code>CstDouble</code>.
+     * is an instance of one of: {@code CstString},
+     * {@code CstInteger}, {@code CstLong},
+     * {@code CstFloat}, or {@code CstDouble}.
      * 
-     * @return non-null; the constant value
+     * @return {@code non-null;} the constant value
      */
     public TypedConstant getConstantValue() {
         return constantValue;

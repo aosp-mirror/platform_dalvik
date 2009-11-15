@@ -22,10 +22,7 @@ package java.io;
  * example, the validation of a whole graph of objects after all of them have
  * been loaded.
  * 
- * @see ObjectInputStream
  * @see ObjectInputStream#registerValidation(ObjectInputValidation, int)
- * 
- * @since Android 1.0
  */
 public interface ObjectInputValidation {
     /**
@@ -33,7 +30,6 @@ public interface ObjectInputValidation {
      * 
      * @throws InvalidObjectException
      *             if this object fails to validate itself.
-     * @since Android 1.0
      */
     public void validateObject() throws InvalidObjectException;
 }

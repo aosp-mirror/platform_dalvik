@@ -278,7 +278,6 @@ public class DocumentBuilderTest extends TestCase {
         method = "parse",
         args = {java.io.File.class}
     )
-    @KnownFailure("d.getChildNodes returns an unexpected/strange #Text node")
     public void test_parseLjava_io_File() throws IOException {
         File f = resourceToTmpFile("/simple.xml");
 

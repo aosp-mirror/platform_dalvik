@@ -25,7 +25,7 @@ import com.android.dx.rop.type.Type;
  */
 public final class DexTranslationAdvice
         implements TranslationAdvice {
-    /** non-null; standard instance of this class */
+    /** {@code non-null;} standard instance of this class */
     public static final DexTranslationAdvice THE_ONE =
         new DexTranslationAdvice();
 
@@ -98,8 +98,8 @@ public final class DexTranslationAdvice
     /**
      * Calculates the total rop width of the list of SSA registers
      *
-     * @param sources non-null; list of SSA registers
-     * @return &gt;= 0 rop-form width in register units
+     * @param sources {@code non-null;} list of SSA registers
+     * @return {@code >= 0;} rop-form width in register units
      */
     private int totalRopWidth(RegisterSpecList sources) {
         int sz = sources.size();

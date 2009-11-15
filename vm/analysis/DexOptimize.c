@@ -25,6 +25,7 @@
 #include "Dalvik.h"
 #include "libdex/InstrUtils.h"
 #include "libdex/OptInvocation.h"
+#include "analysis/RegisterMap.h"
 
 #include <zlib.h>
 
@@ -50,7 +51,7 @@ typedef struct InlineSub {
 /* fwd */
 static int writeDependencies(int fd, u4 modWhen, u4 crc);
 static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,\
-    const IndexMapSet* pIndexMapSet);
+    const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder);
 static void logFailedWrite(size_t expected, ssize_t actual, const char* msg,
     int err);
 
@@ -365,6 +366,9 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
         char* androidRoot;
         int flags;
 
+        /* change process groups, so we don't clash with ProcessManager */
+        setpgid(0, 0);
+
         /* full path to optimizer */
         androidRoot = getenv("ANDROID_ROOT");
         if (androidRoot == NULL) {
@@ -506,6 +510,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 {
     DexClassLookup* pClassLookup = NULL;
     IndexMapSet* pIndexMapSet = NULL;
+    RegisterMapBuilder* pRegMapBuilder = NULL;
     bool doVerify, doOpt;
     u4 headerFlags = 0;
 
@@ -566,6 +571,13 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
          * Rewrite the file.  Byte reordering, structure realigning,
          * class verification, and bytecode optimization are all performed
          * here.
+         *
+         * In theory the file could change size and bits could shift around.
+         * In practice this would be annoying to deal with, so the file
+         * layout is designed so that it can always be rewritten in place.
+         *
+         * This sets "headerFlags" and creates the class lookup table as
+         * part of doing the processing.
          */
         success = rewriteDex(((u1*) mapAddr) + dexOffset, dexLength,
                     doVerify, doOpt, &headerFlags, &pClassLookup);
@@ -576,6 +588,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 
             if (dvmDexFileOpenPartial(dexAddr, dexLength, &pDvmDex) != 0) {
                 LOGE("Unable to create DexFile\n");
+                success = false;
             } else {
                 /*
                  * If configured to do so, scan the instructions, looking
@@ -586,8 +599,20 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
                  */
                 pIndexMapSet = dvmRewriteConstants(pDvmDex);
 
-                updateChecksum(dexAddr, dexLength,
-                    (DexHeader*) pDvmDex->pHeader);
+                /*
+                 * If configured to do so, generate a full set of register
+                 * maps for all verified classes.
+                 */
+                if (gDvm.generateRegisterMaps) {
+                    pRegMapBuilder = dvmGenerateRegisterMaps(pDvmDex);
+                    if (pRegMapBuilder == NULL) {
+                        LOGE("Failed generating register maps\n");
+                        success = false;
+                    }
+                }
+
+                DexHeader* pHeader = (DexHeader*)pDvmDex->pHeader;
+                updateChecksum(dexAddr, dexLength, pHeader);
 
                 dvmDexFileFree(pDvmDex);
             }
@@ -640,8 +665,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
         goto bail;
     }
 
-
-    /* compute deps length, and adjust aux start for 64-bit alignment */
+    /* compute deps length, then adjust aux start for 64-bit alignment */
     auxOffset = lseek(fd, 0, SEEK_END);
     depsLength = auxOffset - depsOffset;
 
@@ -656,7 +680,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     /*
      * Append any auxillary pre-computed data structures.
      */
-    if (!writeAuxData(fd, pClassLookup, pIndexMapSet)) {
+    if (!writeAuxData(fd, pClassLookup, pIndexMapSet, pRegMapBuilder)) {
         LOGW("Failed writing aux data\n");
         goto bail;
     }
@@ -692,8 +716,11 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     LOGV("Successfully wrote DEX header\n");
     result = true;
 
+    //dvmRegisterMapDumpStats();
+
 bail:
     dvmFreeIndexMapSet(pIndexMapSet);
+    dvmFreeRegisterMapBuilder(pRegMapBuilder);
     free(pClassLookup);
     return result;
 }
@@ -888,7 +915,8 @@ bool dvmCheckOptHeaderAndDependencies(int fd, bool sourceAvail, u4 modWhen,
     }
     val = read4LE(&ptr);
     if (val != DALVIK_VM_BUILD) {
-        LOGI("DexOpt: VM build mismatch (%d vs %d)\n", val, DALVIK_VM_BUILD);
+        LOGD("DexOpt: VM build version mismatch (%d vs %d)\n",
+            val, DALVIK_VM_BUILD);
         goto bail;
     }
 
@@ -1085,19 +1113,28 @@ static bool writeChunk(int fd, u4 type, const void* data, size_t size)
  * so it can be used directly when the file is mapped for reading.
  */
 static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,
-    const IndexMapSet* pIndexMapSet)
+    const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder)
 {
     /* pre-computed class lookup hash table */
-    if (!writeChunk(fd, (u4) kDexChunkClassLookup, pClassLookup,
-            pClassLookup->size))
+    if (!writeChunk(fd, (u4) kDexChunkClassLookup,
+            pClassLookup, pClassLookup->size))
     {
         return false;
     }
 
     /* remapped constants (optional) */
     if (pIndexMapSet != NULL) {
-        if (!writeChunk(fd, pIndexMapSet->chunkType, pIndexMapSet->chunkData,
-                pIndexMapSet->chunkDataLen))
+        if (!writeChunk(fd, pIndexMapSet->chunkType,
+                pIndexMapSet->chunkData, pIndexMapSet->chunkDataLen))
+        {
+            return false;
+        }
+    }
+
+    /* register maps (optional) */
+    if (pRegMapBuilder != NULL) {
+        if (!writeChunk(fd, (u4) kDexChunkRegisterMaps,
+                pRegMapBuilder->data, pRegMapBuilder->size))
         {
             return false;
         }
@@ -1622,8 +1659,11 @@ static void untweakLoader(ClassObject* referrer, ClassObject* resClass)
  * file.
  *
  * Exceptions caused by failures are cleared before returning.
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
-ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
+ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
+    VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     ClassObject* resClass;
@@ -1645,6 +1685,23 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
             LOGV("DexOpt: class %d (%s) not found\n",
                 classIdx,
                 dexStringByTypeIdx(pDvmDex->pDexFile, classIdx));
+            if (pFailure != NULL) {
+                /* dig through the wrappers to find the original failure */
+                Object* excep = dvmGetException(dvmThreadSelf());
+                while (true) {
+                    Object* cause = dvmGetExceptionCause(excep);
+                    if (cause == NULL)
+                        break;
+                    excep = cause;
+                }
+                if (strcmp(excep->clazz->descriptor,
+                    "Ljava/lang/IncompatibleClassChangeError;") == 0)
+                {
+                    *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                } else {
+                    *pFailure = VERIFY_ERROR_NO_CLASS;
+                }
+            }
             dvmClearOptException(dvmThreadSelf());
             return NULL;
         }
@@ -1659,6 +1716,8 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
     if (IS_CLASS_FLAG_SET(resClass, CLASS_MULTIPLE_DEFS)) {
         LOGI("DexOpt: not resolving ambiguous class '%s'\n",
             resClass->descriptor);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_NO_CLASS;
         return NULL;
     }
 
@@ -1669,6 +1728,8 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
     if (!allowed) {
         LOGW("DexOpt: resolve class illegal access: %s -> %s\n",
             referrer->descriptor, resClass->descriptor);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS_CLASS;
         return NULL;
     }
 
@@ -1677,8 +1738,11 @@ ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx)
 
 /*
  * Alternate version of dvmResolveInstField().
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
-InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
+InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
+    VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     InstField* resField;
@@ -1693,20 +1757,31 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
         /*
          * Find the field's class.
          */
-        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx, pFailure);
         if (resClass == NULL) {
             //dvmClearOptException(dvmThreadSelf());
             assert(!dvmCheckException(dvmThreadSelf()));
+            if (pFailure != NULL) { assert(!VERIFY_OK(*pFailure)); }
             return NULL;
         }
 
-        resField = dvmFindInstanceFieldHier(resClass,
+        resField = (InstField*)dvmFindFieldHier(resClass,
             dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
             dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
             LOGD("DexOpt: couldn't find field %s.%s\n",
                 resClass->descriptor,
                 dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_FIELD;
+            return NULL;
+        }
+        if (dvmIsStaticField(&resField->field)) {
+            LOGD("DexOpt: wanted instance, got static for field %s.%s\n",
+                resClass->descriptor,
+                dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_CLASS_CHANGE;
             return NULL;
         }
 
@@ -1724,6 +1799,8 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
         LOGI("DexOpt: access denied from %s to field %s.%s\n",
             referrer->descriptor, resField->field.clazz->descriptor,
             resField->field.name);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return NULL;
     }
 
@@ -1734,8 +1811,11 @@ InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx)
  * Alternate version of dvmResolveStaticField().
  *
  * Does not force initialization of the resolved field's class.
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
-StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx)
+StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
+    VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     StaticField* resField;
@@ -1750,18 +1830,29 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx)
         /*
          * Find the field's class.
          */
-        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pFieldId->classIdx, pFailure);
         if (resClass == NULL) {
             //dvmClearOptException(dvmThreadSelf());
             assert(!dvmCheckException(dvmThreadSelf()));
+            if (pFailure != NULL) { assert(!VERIFY_OK(*pFailure)); }
             return NULL;
         }
 
-        resField = dvmFindStaticFieldHier(resClass,
+        resField = (StaticField*)dvmFindFieldHier(resClass,
                     dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx),
                     dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->typeIdx));
         if (resField == NULL) {
             LOGD("DexOpt: couldn't find static field\n");
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_FIELD;
+            return NULL;
+        }
+        if (!dvmIsStaticField(&resField->field)) {
+            LOGD("DexOpt: wanted static, got instance for field %s.%s\n",
+                resClass->descriptor,
+                dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_CLASS_CHANGE;
             return NULL;
         }
 
@@ -1784,6 +1875,8 @@ StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx)
         LOGI("DexOpt: access denied from %s to field %s.%s\n",
             referrer->descriptor, resField->field.clazz->descriptor,
             resField->field.name);
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return NULL;
     }
 
@@ -1809,7 +1902,7 @@ static void rewriteInstField(Method* method, u2* insns, OpCode newOpc)
     InstField* field;
     int byteOffset;
 
-    field = dvmOptResolveInstField(clazz, fieldIdx);
+    field = dvmOptResolveInstField(clazz, fieldIdx, NULL);
     if (field == NULL) {
         LOGI("DexOpt: unable to optimize field ref 0x%04x at 0x%02x in %s.%s\n",
             fieldIdx, (int) (insns - method->insns), clazz->descriptor,
@@ -1833,14 +1926,18 @@ static void rewriteInstField(Method* method, u2* insns, OpCode newOpc)
  * Alternate version of dvmResolveMethod().
  *
  * Doesn't throw exceptions, and checks access on every lookup.
+ *
+ * On failure, returns NULL, and sets *pFailure if pFailure is not NULL.
  */
 Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
-    MethodType methodType)
+    MethodType methodType, VerifyError* pFailure)
 {
     DvmDex* pDvmDex = referrer->pDvmDex;
     Method* resMethod;
 
-    assert(methodType != METHOD_INTERFACE);
+    assert(methodType == METHOD_DIRECT ||
+           methodType == METHOD_VIRTUAL ||
+           methodType == METHOD_STATIC);
 
     LOGVV("--- resolving method %u (referrer=%s)\n", methodIdx,
         referrer->descriptor);
@@ -1852,16 +1949,22 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
 
         pMethodId = dexGetMethodId(pDvmDex->pDexFile, methodIdx);
 
-        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx, pFailure);
         if (resClass == NULL) {
-            /* can't find the class that the method is a part of */
+            /*
+             * Can't find the class that the method is a part of, or don't
+             * have permission to access the class.
+             */
             LOGV("DexOpt: can't find called method's class (?.%s)\n",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
+            if (pFailure != NULL) { assert(!VERIFY_OK(*pFailure)); }
             return NULL;
         }
         if (dvmIsInterfaceClass(resClass)) {
             /* method is part of an interface; this is wrong method for that */
             LOGW("DexOpt: method is in an interface\n");
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_GENERIC;
             return NULL;
         }
 
@@ -1876,18 +1979,35 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
         if (methodType == METHOD_DIRECT) {
             resMethod = dvmFindDirectMethod(resClass,
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx), &proto);
-        } else if (methodType == METHOD_STATIC) {
-            resMethod = dvmFindDirectMethodHier(resClass,
-                dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx), &proto);
         } else {
-            resMethod = dvmFindVirtualMethodHier(resClass,
+            /* METHOD_STATIC or METHOD_VIRTUAL */
+            resMethod = dvmFindMethodHier(resClass,
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx), &proto);
         }
 
         if (resMethod == NULL) {
             LOGV("DexOpt: couldn't find method '%s'\n",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx));
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_NO_METHOD;
             return NULL;
+        }
+        if (methodType == METHOD_STATIC) {
+            if (!dvmIsStaticMethod(resMethod)) {
+                LOGD("DexOpt: wanted static, got instance for method %s.%s\n",
+                    resClass->descriptor, resMethod->name);
+                if (pFailure != NULL)
+                    *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                return NULL;
+            }
+        } else if (methodType == METHOD_VIRTUAL) {
+            if (dvmIsStaticMethod(resMethod)) {
+                LOGD("DexOpt: wanted instance, got static for method %s.%s\n",
+                    resClass->descriptor, resMethod->name);
+                if (pFailure != NULL)
+                    *pFailure = VERIFY_ERROR_CLASS_CHANGE;
+                return NULL;
+            }
         }
 
         /* see if this is a pure-abstract method */
@@ -1895,6 +2015,8 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
             LOGW("DexOpt: pure-abstract method '%s' in %s\n",
                 dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx),
                 resClass->descriptor);
+            if (pFailure != NULL)
+                *pFailure = VERIFY_ERROR_GENERIC;
             return NULL;
         }
 
@@ -1925,6 +2047,8 @@ Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
                 referrer->descriptor);
             free(desc);
         }
+        if (pFailure != NULL)
+            *pFailure = VERIFY_ERROR_ACCESS_METHOD;
         return NULL;
     }
 
@@ -1945,7 +2069,7 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc)
     Method* baseMethod;
     u2 methodIdx = insns[1];
 
-    baseMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_VIRTUAL);
+    baseMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_VIRTUAL, NULL);
     if (baseMethod == NULL) {
         LOGD("DexOpt: unable to optimize virt call 0x%04x at 0x%02x in %s.%s\n",
             methodIdx,
@@ -1989,7 +2113,7 @@ static bool rewriteDirectInvoke(Method* method, u2* insns)
     Method* calledMethod;
     u2 methodIdx = insns[1];
 
-    calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT);
+    calledMethod = dvmOptResolveMethod(clazz, methodIdx, METHOD_DIRECT, NULL);
     if (calledMethod == NULL) {
         LOGD("DexOpt: unable to opt direct call 0x%04x at 0x%02x in %s.%s\n",
             methodIdx,
@@ -2021,6 +2145,8 @@ static bool rewriteDirectInvoke(Method* method, u2* insns)
 /*
  * Resolve an interface method reference.
  *
+ * No method access check here -- interface methods are always public.
+ *
  * Returns NULL if the method was not found.  Does not throw an exception.
  */
 Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
@@ -2039,7 +2165,7 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
 
         pMethodId = dexGetMethodId(pDvmDex->pDexFile, methodIdx);
 
-        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx);
+        resClass = dvmOptResolveClass(referrer, pMethodId->classIdx, NULL);
         if (resClass == NULL) {
             /* can't find the class that the method is a part of */
             dvmClearOptException(dvmThreadSelf());
@@ -2115,7 +2241,7 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
 
     //return false;
 
-    calledMethod = dvmOptResolveMethod(clazz, methodIdx, methodType);
+    calledMethod = dvmOptResolveMethod(clazz, methodIdx, methodType, NULL);
     if (calledMethod == NULL) {
         LOGV("+++ DexOpt inline: can't find %d\n", methodIdx);
         return false;

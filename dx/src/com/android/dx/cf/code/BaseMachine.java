@@ -33,44 +33,44 @@ import java.util.ArrayList;
  * TypeBearer}.</p>
  */
 public abstract class BaseMachine implements Machine {
-    /* non-null; the prototype for the associated method */
+    /* {@code non-null;} the prototype for the associated method */
     private final Prototype prototype;
     
-    /** non-null; primary arguments */
+    /** {@code non-null;} primary arguments */
     private TypeBearer[] args;
 
-    /** &gt;= 0; number of primary arguments */
+    /** {@code >= 0;} number of primary arguments */
     private int argCount;
 
-    /** null-ok; type of the operation, if salient */
+    /** {@code null-ok;} type of the operation, if salient */
     private Type auxType;
 
-    /** auxiliary <code>int</code> argument */
+    /** auxiliary {@code int} argument */
     private int auxInt;
 
-    /** null-ok; auxiliary constant argument */
+    /** {@code null-ok;} auxiliary constant argument */
     private Constant auxCst;
 
     /** auxiliary branch target argument */
     private int auxTarget;
 
-    /** null-ok; auxiliary switch cases argument */
+    /** {@code null-ok;} auxiliary switch cases argument */
     private SwitchList auxCases;
 
-    /** null-ok; auxiliary initial value list for newarray */
+    /** {@code null-ok;} auxiliary initial value list for newarray */
     private ArrayList<Constant> auxInitValues;
 
-    /** &gt;= -1; last local accessed */
+    /** {@code >= -1;} last local accessed */
     private int localIndex;
 
-    /** null-ok; local target spec, if salient and calculated */
+    /** {@code null-ok;} local target spec, if salient and calculated */
     private RegisterSpec localTarget;
 
-    /** non-null; results */
+    /** {@code non-null;} results */
     private TypeBearer[] results;
 
     /**
-     * &gt;= -1; count of the results, or <code>-1</code> if no results
+     * {@code >= -1;} count of the results, or {@code -1} if no results
      * have been set
      */
     private int resultCount;
@@ -78,7 +78,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Constructs an instance.
      * 
-     * @param prototype non-null; the prototype for the associated method
+     * @param prototype {@code non-null;} the prototype for the associated method
      */
     public BaseMachine(Prototype prototype) {
         if (prototype == null) {
@@ -254,7 +254,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the number of primary arguments.
      * 
-     * @return &gt;= 0; the number of primary arguments
+     * @return {@code >= 0;} the number of primary arguments
      */
     protected final int argCount() {
         return argCount;
@@ -264,7 +264,7 @@ public abstract class BaseMachine implements Machine {
      * Gets the width of the arguments (where a category-2 value counts as
      * two).
      * 
-     * @return &gt;= 0; the argument width
+     * @return {@code >= 0;} the argument width
      */
     protected final int argWidth() {
         int result = 0;
@@ -277,10 +277,10 @@ public abstract class BaseMachine implements Machine {
     }
 
     /**
-     * Gets the <code>n</code>th primary argument.
+     * Gets the {@code n}th primary argument.
      * 
-     * @param n &gt;= 0, &lt; argCount(); which argument
-     * @return non-null; the indicated argument
+     * @param n {@code >= 0, < argCount();} which argument
+     * @return {@code non-null;} the indicated argument
      */
     protected final TypeBearer arg(int n) {
         if (n >= argCount) {
@@ -298,14 +298,14 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the type auxiliary argument.
      * 
-     * @return null-ok; the salient type
+     * @return {@code null-ok;} the salient type
      */
     protected final Type getAuxType() {
         return auxType;
     }
 
     /**
-     * Gets the <code>int</code> auxiliary argument.
+     * Gets the {@code int} auxiliary argument.
      * 
      * @return the argument value
      */
@@ -316,7 +316,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the constant auxiliary argument.
      * 
-     * @return null-ok; the argument value
+     * @return {@code null-ok;} the argument value
      */
     protected final Constant getAuxCst() {
         return auxCst;
@@ -334,7 +334,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the switch cases auxiliary argument.
      * 
-     * @return null-ok; the argument value
+     * @return {@code null-ok;} the argument value
      */
     protected final SwitchList getAuxCases() {
         return auxCases;
@@ -343,7 +343,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the init values auxiliary argument.
      *
-     * @return null-ok; the argument value
+     * @return {@code null-ok;} the argument value
      */
     protected final ArrayList<Constant> getInitValues() {
         return auxInitValues;
@@ -351,7 +351,7 @@ public abstract class BaseMachine implements Machine {
     /**
      * Gets the last local index accessed.
      * 
-     * @return &gt;= -1; the salient local index or <code>-1</code> if none
+     * @return {@code >= -1;} the salient local index or {@code -1} if none
      * was set since the last time {@link #clearArgs} was called
      */
     protected final int getLocalIndex() {
@@ -365,7 +365,7 @@ public abstract class BaseMachine implements Machine {
      * should be the sole result set by a call to {@link #setResult} (or
      * the combination {@link #clearResult} then {@link #addResult}.
      * 
-     * @return null-ok; the salient register spec or <code>null</code> if no
+     * @return {@code null-ok;} the salient register spec or {@code null} if no
      * local target was set since the last time {@link #clearArgs} was
      * called
      */
@@ -417,7 +417,7 @@ public abstract class BaseMachine implements Machine {
      * <p><b>Note:</b> If there is more than one result value, the
      * others may be added by using {@link #addResult}.</p>
      * 
-     * @param result non-null; result value
+     * @param result {@code non-null;} result value
      */
     protected final void setResult(TypeBearer result) {
         if (result == null) {
@@ -433,7 +433,7 @@ public abstract class BaseMachine implements Machine {
      * 
      * @see #setResult
      * 
-     * @param result non-null; result value
+     * @param result {@code non-null;} result value
      */
     protected final void addResult(TypeBearer result) {
         if (result == null) {
@@ -448,7 +448,7 @@ public abstract class BaseMachine implements Machine {
      * Gets the count of results. This throws an exception if results were
      * never set. (Explicitly clearing the results counts as setting them.)
      * 
-     * @return &gt;= 0; the count
+     * @return {@code >= 0;} the count
      */
     protected final int resultCount() {
         if (resultCount < 0) {
@@ -462,7 +462,7 @@ public abstract class BaseMachine implements Machine {
      * Gets the width of the results (where a category-2 value counts as
      * two).
      * 
-     * @return &gt;= 0; the result width
+     * @return {@code >= 0;} the result width
      */
     protected final int resultWidth() {
         int width = 0;
@@ -475,10 +475,10 @@ public abstract class BaseMachine implements Machine {
     }
 
     /**
-     * Gets the <code>n</code>th result value.
+     * Gets the {@code n}th result value.
      * 
-     * @param n &gt;= 0, &lt; resultCount(); which result
-     * @return non-null; the indicated result value
+     * @param n {@code >= 0, < resultCount();} which result
+     * @return {@code non-null;} the indicated result value
      */
     protected final TypeBearer result(int n) {
         if (n >= resultCount) {
@@ -499,7 +499,7 @@ public abstract class BaseMachine implements Machine {
      * result is stored to that target; otherwise any results are pushed
      * onto the stack.
      * 
-     * @param frame non-null; frame to operate on
+     * @param frame {@code non-null;} frame to operate on
      */
     protected final void storeResults(Frame frame) {
         if (resultCount < 0) {
@@ -529,8 +529,8 @@ public abstract class BaseMachine implements Machine {
      * Throws an exception that indicates a mismatch in local variable
      * types.
      * 
-     * @param found non-null; the encountered type
-     * @param local non-null; the local variable's claimed type
+     * @param found {@code non-null;} the encountered type
+     * @param local {@code non-null;} the local variable's claimed type
      */
     public static void throwLocalMismatch(TypeBearer found,
             TypeBearer local) {

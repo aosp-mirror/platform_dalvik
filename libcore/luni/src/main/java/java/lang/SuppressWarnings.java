@@ -1,12 +1,12 @@
-/*
- * Copyright (C) 2007 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,15 +16,9 @@
 
 package java.lang;
 
-import static java.lang.annotation.ElementType.CONSTRUCTOR;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.SOURCE;
-
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
@@ -35,18 +29,17 @@ import java.lang.annotation.Target;
  * <p>
  * It is recommended that programmers always use this annotation on the most
  * deeply nested element where it is actually needed.
- * </p>
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
-@Target(value={TYPE,FIELD,METHOD,PARAMETER,CONSTRUCTOR,LOCAL_VARIABLE})
-@Retention(value=SOURCE)
-public @interface SuppressWarnings
-{
+@Target( { ElementType.TYPE, ElementType.FIELD, ElementType.METHOD,
+        ElementType.PARAMETER, ElementType.CONSTRUCTOR,
+        ElementType.LOCAL_VARIABLE })
+@Retention(RetentionPolicy.SOURCE)
+public @interface SuppressWarnings {
+
     /**
      * The list of warnings a compiler should not issue.
-     * 
-     * @since Android 1.0
      */
-    String[] value();
+    public String[] value();
 }

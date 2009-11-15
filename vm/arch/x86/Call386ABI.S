@@ -131,12 +131,32 @@ isClass:
     /* Is FP? */
     cmpl     $2,%ebx
     jle      isFP
-    /* No need to distinguish between 32/64 - just save both */
+    cmpl     $4,%ebx  /* smaller than 32-bits? */
+    jg       isSmall
+storeRetval:
+    /* Blindly storing 64-bits won't hurt 32-bit case */
     movl     %eax,(%ecx)
     movl     %edx,4(%ecx)
     jmp      cleanUpAndExit
+isSmall:
+    cmpl     $7,%ebx  /* S1? */
+    jne      checkShort
+    movsbl   %al,%eax
+    movl     %eax,(%ecx)
+    jmp      cleanUpAndExit
+checkShort:
+    cmpl     $6,%ebx  /* U2? */
+    jne      isSignedShort
+    movzwl   %ax,%eax
+    movl     %eax,(%ecx)
+    jmp      cleanUpAndExit
+isSignedShort:
+    /* Must be S2 */
+    movswl   %ax,%eax
+    movl     %eax,(%ecx)
+    jmp      cleanUpAndExit
 isFP:
-    /* Is single? */
+    /* Is Float? */
     cmpl    $1,%ebx
     je       saveFloat
     fstpl    (%ecx)

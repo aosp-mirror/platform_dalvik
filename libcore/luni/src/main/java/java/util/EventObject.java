@@ -25,8 +25,6 @@ import java.io.Serializable;
  * add event specific information.
  * 
  * @see EventListener
- *  
- * @since Android 1.0
  */
 public class EventObject implements Serializable {
     
@@ -34,8 +32,6 @@ public class EventObject implements Serializable {
 
     /**
      * The event source.
-     * 
-     * @since Android 1.0
      */
     protected transient Object source;
 
@@ -44,7 +40,6 @@ public class EventObject implements Serializable {
      * 
      * @param source
      *            the object which fired the event.
-     * @since Android 1.0
      */
     public EventObject(Object source) {
         if (source != null) {
@@ -58,7 +53,6 @@ public class EventObject implements Serializable {
      * Returns the event source.
      * 
      * @return the object which fired the event.
-     * @since Android 1.0
      */
     public Object getSource() {
         return source;
@@ -68,7 +62,6 @@ public class EventObject implements Serializable {
      * Returns the string representation of this {@code EventObject}.
      * 
      * @return the string representation of this {@code EventObject}.
-     * @since Android 1.0
      */
     @Override
     public String toString() {

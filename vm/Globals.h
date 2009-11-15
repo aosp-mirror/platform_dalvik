@@ -54,6 +54,9 @@ typedef enum ExecutionMode {
     kExecutionModeUnknown = 0,
     kExecutionModeInterpPortable,
     kExecutionModeInterpFast,
+#if defined(WITH_JIT)
+    kExecutionModeJit,
+#endif
 } ExecutionMode;
 
 /*
@@ -99,6 +102,7 @@ struct DvmGlobals {
 
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
+    bool        preciseGc;
     bool        generateRegisterMaps;
 
     int         assertionCtrlCount;
@@ -190,6 +194,7 @@ struct DvmGlobals {
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
     ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
     ClassObject* classOrgApacheHarmonyNioInternalDirectBuffer;
+    jclass      jclassOrgApacheHarmonyNioInternalDirectBuffer;
 
     /* synthetic classes for arrays of primitives */
     ClassObject* classArrayBoolean;
@@ -338,6 +343,8 @@ struct DvmGlobals {
      *  (3) a thread has hit a breakpoint or exception that the debugger
      *      has marked as a "suspend all" event;
      *  (4) the SignalCatcher caught a signal that requires suspension.
+     *  (5) (if implemented) the JIT needs to perform a heavyweight
+     *      rearrangement of the translation cache or JitTable.
      *
      * Because we use "safe point" self-suspension, it is never safe to
      * do a blocking "lock" call on this mutex -- if it has been acquired,
@@ -363,6 +370,12 @@ struct DvmGlobals {
      * Paired with "threadSuspendCountLock".
      */
     pthread_cond_t  threadSuspendCountCond;
+
+    /*
+     * Sum of all threads' suspendCount fields.  The JIT needs to know if any
+     * thread is suspended.  Guarded by threadSuspendCountLock.
+     */
+    int  sumThreadSuspendCount;
 
     /*
      * MUTEX ORDERING: when locking multiple mutexes, always grab them in
@@ -397,10 +410,20 @@ struct DvmGlobals {
     /*
      * JNI global reference table.
      */
+#ifdef USE_INDIRECT_REF
+    IndirectRefTable jniGlobalRefTable;
+#else
     ReferenceTable  jniGlobalRefTable;
+#endif
     pthread_mutex_t jniGlobalRefLock;
     int         jniGlobalRefHiMark;
     int         jniGlobalRefLoMark;
+
+    /*
+     * JNI pinned object table (used for primitive arrays).
+     */
+    ReferenceTable  jniPinRefTable;
+    pthread_mutex_t jniPinRefLock;
 
     /*
      * Native shared library table.
@@ -417,12 +440,11 @@ struct DvmGlobals {
     GcHeap*     gcHeap;
 
     /*
-     * Pre-allocated object for out-of-memory errors.
+     * Pre-allocated throwables.
      */
     Object*     outOfMemoryObj;
-
-    /* pre-allocated general failure exception */
     Object*     internalErrorObj;
+    Object*     noClassDefFoundErrorObj;
 
     /* Monitor list, so we can free them */
     /*volatile*/ Monitor* monitorList;
@@ -487,9 +509,12 @@ struct DvmGlobals {
 
     /*
      * JDWP debugger support.
+     *
+     * Note "debuggerActive" is accessed from mterp, so its storage size and
+     * meaning must not be changed without updating the assembly sources.
      */
     bool        debuggerConnected;      /* debugger or DDMS is connected */
-    bool        debuggerActive;         /* debugger is making requests */
+    u1          debuggerActive;         /* debugger is making requests */
     JdwpState*  jdwpState;
 
     /*
@@ -608,12 +633,127 @@ struct DvmGlobals {
      */
     pid_t systemServerPid;
 
+    int kernelGroupScheduling;
+
 //#define COUNT_PRECISE_METHODS
 #ifdef COUNT_PRECISE_METHODS
     PointerSet* preciseMethods;
 #endif
+
+    /* some RegisterMap statistics, useful during development */
+    void*       registerMapStats;
 };
 
 extern struct DvmGlobals gDvm;
+
+#if defined(WITH_JIT)
+
+/*
+ * JIT-specific global state
+ */
+struct DvmJitGlobals {
+    /*
+     * Guards writes to Dalvik PC (dPC), translated code address (codeAddr) and
+     * chain fields within the JIT hash table.  Note carefully the access
+     * mechanism.
+     * Only writes are guarded, and the guarded fields must be updated in a
+     * specific order using atomic operations.  Further, once a field is
+     * written it cannot be changed without halting all threads.
+     *
+     * The write order is:
+     *    1) codeAddr
+     *    2) dPC
+     *    3) chain [if necessary]
+     *
+     * This mutex also guards both read and write of curJitTableEntries.
+     */
+    pthread_mutex_t tableLock;
+
+    /* The JIT hash table.  Note that for access speed, copies of this pointer
+     * are stored in each thread. */
+    struct JitEntry *pJitEntryTable;
+
+    /* Array of profile threshold counters */
+    unsigned char *pProfTable;
+    unsigned char *pProfTableCopy;
+
+    /* Size of JIT hash table in entries.  Must be a power of 2 */
+    unsigned int jitTableSize;
+
+    /* Mask used in hash function for JitTable.  Should be jitTableSize-1 */
+    unsigned int jitTableMask;
+
+    /* How many entries in the JitEntryTable are in use */
+    unsigned int jitTableEntriesUsed;
+
+    /* Trigger for trace selection */
+    unsigned short threshold;
+
+    /* JIT Compiler Control */
+    bool               haltCompilerThread;
+    bool               blockingMode;
+    pthread_t          compilerHandle;
+    pthread_mutex_t    compilerLock;
+    pthread_cond_t     compilerQueueActivity;
+    pthread_cond_t     compilerQueueEmpty;
+    int                compilerQueueLength;
+    int                compilerHighWater;
+    int                compilerWorkEnqueueIndex;
+    int                compilerWorkDequeueIndex;
+    CompilerWorkOrder  compilerWorkQueue[COMPILER_WORK_QUEUE_SIZE];
+
+    /* JIT internal stats */
+    int                compilerMaxQueued;
+    int                addrLookupsFound;
+    int                addrLookupsNotFound;
+    int                noChainExit;
+    int                normalExit;
+    int                puntExit;
+    int                translationChains;
+    int                invokeChain;
+    int                invokePredictedChain;
+    int                invokeNative;
+    int                returnOp;
+
+    /* Compiled code cache */
+    void* codeCache;
+
+    /* Bytes used by the code templates */
+    unsigned int templateSize;
+
+    /* Bytes already used in the code cache */
+    unsigned int codeCacheByteUsed;
+
+    /* Number of installed compilations in the cache */
+    unsigned int numCompilations;
+
+    /* Flag to indicate that the code cache is full */
+    bool codeCacheFull;
+
+    /* true/false: compile/reject opcodes specified in the -Xjitop list */
+    bool includeSelectedOp;
+
+    /* true/false: compile/reject methods specified in the -Xjitmethod list */
+    bool includeSelectedMethod;
+
+    /* Disable JIT for selected opcodes - one bit for each opcode */
+    char opList[32];
+
+    /* Disable JIT for selected methods */
+    HashTable *methodTable;
+
+    /* Flag to dump all compiled code */
+    bool printMe;
+
+    /* Flag to count trace execution */
+    bool profile;
+
+    /* Table to track the overall and trace statistics of hot methods */
+    HashTable*  methodStatsTable;
+};
+
+extern struct DvmJitGlobals gDvmJit;
+
+#endif
 
 #endif /*_DALVIK_GLOBALS*/

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net;
 
 import java.io.IOException;
@@ -28,32 +23,38 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 /**
- * Default implementation of javax.net.SocketFactory
- * 
- * @since Android 1.0
+ * Default implementation of {@link javax.net.SocketFactory}
  */
-class DefaultSocketFactory extends SocketFactory {
+final class DefaultSocketFactory extends SocketFactory {
 
+    DefaultSocketFactory() {
+        super();
+    }
+
+    @Override
     public Socket createSocket() throws IOException {
         return new Socket();
     }
 
-    public Socket createSocket(String host, int port) throws IOException,
-            UnknownHostException {
+    @Override
+    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
         return new Socket(host, port);
     }
 
-    public Socket createSocket(String host, int port, InetAddress localHost,
-            int localPort) throws IOException, UnknownHostException {
+    @Override
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+            throws IOException, UnknownHostException {
         return new Socket(host, port, localHost, localPort);
     }
 
+    @Override
     public Socket createSocket(InetAddress host, int port) throws IOException {
         return new Socket(host, port);
     }
 
-    public Socket createSocket(InetAddress address, int port,
-            InetAddress localAddress, int localPort) throws IOException {
+    @Override
+    public Socket createSocket(InetAddress address, int port, InetAddress localAddress,
+            int localPort) throws IOException {
         return new Socket(address, port, localAddress, localPort);
     }
 }

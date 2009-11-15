@@ -20,19 +20,19 @@ import com.android.dx.util.FixedSizeList;
 
 /**
  * List of "line number" entries, which are the contents of
- * <code>LineNumberTable</code> attributes.
+ * {@code LineNumberTable} attributes.
  */
 public final class LineNumberList extends FixedSizeList {
-    /** non-null; zero-size instance */
+    /** {@code non-null;} zero-size instance */
     public static final LineNumberList EMPTY = new LineNumberList(0);
 
     /**
      * Returns an instance which is the concatenation of the two given
      * instances.
      * 
-     * @param list1 non-null; first instance
-     * @param list2 non-null; second instance
-     * @return non-null; combined instance
+     * @param list1 {@code non-null;} first instance
+     * @param list2 {@code non-null;} second instance
+     * @return {@code non-null;} combined instance
      */
     public static LineNumberList concat(LineNumberList list1,
                                         LineNumberList list2) {
@@ -68,8 +68,8 @@ public final class LineNumberList extends FixedSizeList {
     /**
      * Gets the indicated item.
      * 
-     * @param n &gt;= 0; which item
-     * @return null-ok; the indicated item
+     * @param n {@code >= 0;} which item
+     * @return {@code null-ok;} the indicated item
      */
     public Item get(int n) {
         return (Item) get0(n);
@@ -78,8 +78,8 @@ public final class LineNumberList extends FixedSizeList {
     /**
      * Sets the item at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param item non-null; the item
+     * @param n {@code >= 0, < size();} which element
+     * @param item {@code non-null;} the item
      */
     public void set(int n, Item item) {
         if (item == null) {
@@ -92,9 +92,9 @@ public final class LineNumberList extends FixedSizeList {
     /**
      * Sets the item at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param startPc &gt;= 0; start pc of this item
-     * @param lineNumber &gt;= 0; corresponding line number
+     * @param n {@code >= 0, < size();} which element
+     * @param startPc {@code >= 0;} start pc of this item
+     * @param lineNumber {@code >= 0;} corresponding line number
      */
     public void set(int n, int startPc, int lineNumber) {
         set0(n, new Item(startPc, lineNumber));
@@ -103,8 +103,8 @@ public final class LineNumberList extends FixedSizeList {
     /**
      * Gets the line number associated with the given address.
      * 
-     * @param pc &gt;= 0; the address to look up
-     * @return &gt;= -1; the associated line number, or <code>-1</code> if
+     * @param pc {@code >= 0;} the address to look up
+     * @return {@code >= -1;} the associated line number, or {@code -1} if
      * none is known
      */
     public int pcToLine(int pc) {
@@ -138,17 +138,17 @@ public final class LineNumberList extends FixedSizeList {
      * Item in a line number table.
      */
     public static class Item {
-        /** &gt;= 0; start pc of this item */
+        /** {@code >= 0;} start pc of this item */
         private final int startPc;
 
-        /** &gt;= 0; corresponding line number */
+        /** {@code >= 0;} corresponding line number */
         private final int lineNumber;
 
         /**
          * Constructs an instance.
          * 
-         * @param startPc &gt;= 0; start pc of this item
-         * @param lineNumber &gt;= 0; corresponding line number
+         * @param startPc {@code >= 0;} start pc of this item
+         * @param lineNumber {@code >= 0;} corresponding line number
          */
         public Item(int startPc, int lineNumber) {
             if (startPc < 0) {

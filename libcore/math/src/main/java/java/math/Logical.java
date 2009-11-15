@@ -27,13 +27,11 @@ package java.math;
  * <li>or</li>
  * <li>xor</li>
  * </ul>
- * @author Intel Middleware Product Division
- * @author Instituto Tecnologico de Cordoba
  */
 class Logical {
 
     /** Just to denote that this class can't be instantiated. */
-    
+
     private Logical() {}
 
 
@@ -91,7 +89,7 @@ class Logical {
         if (val.equals(BigInteger.MINUS_ONE)) {
             return that;
         }
-        
+
         if (val.sign > 0) {
             if (that.sign > 0) {
                 return andPositive(val, that);
@@ -108,22 +106,22 @@ class Logical {
             }
         }
     }
-    
+
     /** @return sign = 1, magnitude = val.magnitude & that.magnitude*/
     static BigInteger andPositive(BigInteger val, BigInteger that) {
         // PRE: both arguments are positive
         int resLength = Math.min(val.numberLength, that.numberLength);
         int i = Math.max(val.getFirstNonzeroDigit(), that.getFirstNonzeroDigit());
-        
+
         if (i >= resLength) {
             return BigInteger.ZERO;
         }
-        
+
         int resDigits[] = new int[resLength];
         for ( ; i < resLength; i++) {
             resDigits[i] = val.digits[i] & that.digits[i];
         }
-        
+
         BigInteger result = new BigInteger(1, resLength, resDigits);
         result.cutOffLeadingZeroes();
         return result;
@@ -134,7 +132,7 @@ class Logical {
         // PRE: positive is positive and negative is negative
         int iPos = positive.getFirstNonzeroDigit();
         int iNeg = negative.getFirstNonzeroDigit();
-        
+
         // Look if the trailing zeros of the negative will "blank" all
         // the positive digits
         if (iNeg >= positive.numberLength) {
@@ -142,7 +140,7 @@ class Logical {
         }
         int resLength = positive.numberLength;
         int resDigits[] = new int[resLength];
-        
+
         // Must start from max(iPos, iNeg)
         int i = Math.max(iPos, iNeg);
         if (i == iNeg) {
@@ -160,24 +158,24 @@ class Logical {
                 resDigits[i] = positive.digits[i];
             }
         } // else positive ended and must "copy" virtual 0's, do nothing then
-        
+
         BigInteger result = new BigInteger(1, resLength, resDigits);
         result.cutOffLeadingZeroes();
         return result;
     }
-    
+
     /** @return sign = -1, magnitude = -(-longer.magnitude & -shorter.magnitude)*/
     static BigInteger andNegative(BigInteger longer, BigInteger shorter) {
         // PRE: longer and shorter are negative
         // PRE: longer has at least as many digits as shorter
         int iLonger = longer.getFirstNonzeroDigit();
         int iShorter = shorter.getFirstNonzeroDigit();
-        
+
         // Does shorter matter?
         if (iLonger >= shorter.numberLength) {
             return longer;
         }
-        
+
         int resLength;
         int resDigits[];
         int i = Math.max(iShorter, iLonger);
@@ -217,15 +215,13 @@ class Logical {
         for( ; i < longer.numberLength; i++){
             resDigits[i] = longer.digits[i];
         }
-        
+
         BigInteger result = new BigInteger(-1, resLength, resDigits);
         return result;
     }
-    
+
     /** @see BigInteger#andNot(BigInteger) */
     static BigInteger andNot(BigInteger val, BigInteger that) {
-        // BEGIN android-changed
-        // copied from newer version of harmony
         if (that.sign == 0 ) {
             return val;
         }
@@ -238,10 +234,10 @@ class Logical {
         if (that.equals(BigInteger.MINUS_ONE)){
             return BigInteger.ZERO;
         }
-        
+
         //if val == that, return 0
-        
-        if (val.sign > 0) {
+
+       if (val.sign > 0) {
             if (that.sign > 0) {
                 return andNotPositive(val, that);
             } else {
@@ -254,7 +250,6 @@ class Logical {
                 return andNotNegative(val, that);
             }
         }
-        // END android-changed
     }
     
     /** @return sign = 1, magnitude = val.magnitude & ~that.magnitude*/

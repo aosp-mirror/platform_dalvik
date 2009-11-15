@@ -28,14 +28,14 @@ public final class AnnotationSetItem extends OffsettedItem {
     /** the required alignment for instances of this class */
     private static final int ALIGNMENT = 4;
 
-    /** the size of an entry int the set: one <code>uint</code> */
+    /** the size of an entry int the set: one {@code uint} */
     private static final int ENTRY_WRITE_SIZE = 4;
 
-    /** non-null; the set of annotations */
+    /** {@code non-null;} the set of annotations */
     private final Annotations annotations;
     
     /**
-     * non-null; set of annotations as individual items in an array.
+     * {@code non-null;} set of annotations as individual items in an array.
      * <b>Note:</b> The contents have to get sorted by type id before
      * writing.
      */
@@ -44,7 +44,7 @@ public final class AnnotationSetItem extends OffsettedItem {
     /**
      * Constructs an instance.
      * 
-     * @param annotations non-null; set of annotations
+     * @param annotations {@code non-null;} set of annotations
      */
     public AnnotationSetItem(Annotations annotations) {
         super(ALIGNMENT, writeSize(annotations));
@@ -62,8 +62,8 @@ public final class AnnotationSetItem extends OffsettedItem {
     /**
      * Gets the write size for the given set.
      * 
-     * @param annotations non-null; the set
-     * @return &gt; 0; the write size
+     * @param annotations {@code non-null;} the set
+     * @return {@code > 0;} the write size
      */
     private static int writeSize(Annotations annotations) {
         // This includes an int size at the start of the list.
@@ -79,7 +79,7 @@ public final class AnnotationSetItem extends OffsettedItem {
     /**
      * Gets the underlying annotations of this instance
      * 
-     * @return non-null; the annotations
+     * @return {@code non-null;} the annotations
      */
     public Annotations getAnnotations() {
         return annotations;

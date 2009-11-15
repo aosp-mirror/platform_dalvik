@@ -165,6 +165,8 @@ void dvmCreateDefaultProperties(Object* propObj)
     setProperty(propObj, put, "java.io.tmpdir", "/tmp");
     setProperty(propObj, put, "java.library.path", getenv("LD_LIBRARY_PATH"));
 
+    setProperty(propObj, put, "java.net.preferIPv6Addresses", "true");
+
     setProperty(propObj, put, "java.vendor", projectName);
     setProperty(propObj, put, "java.vendor.url", projectUrl);
     setProperty(propObj, put, "java.version", "0");
@@ -185,12 +187,7 @@ void dvmCreateDefaultProperties(Object* propObj)
     setProperty(propObj, put, "java.specification.vendor", projectName);
     setProperty(propObj, put, "java.specification.version", "0.9");
 
-    #define OS_ARCH generic /* TODO: Use an "arch" header. */
-    #define OS_ARCH_QUOTE(x) #x
-    setProperty(propObj, put, "os.arch", OS_ARCH_QUOTE(OS_ARCH));
-    #undef OS_ARCH
-    #undef OS_ARCH_QUOTE
-
+    setProperty(propObj, put, "os.arch", info.machine);
     setProperty(propObj, put, "os.name", info.sysname);
     setProperty(propObj, put, "os.version", info.release);
     setProperty(propObj, put, "user.home", getenv("HOME"));
@@ -285,4 +282,3 @@ bail:
     dvmReleaseTrackedAlloc((Object*)keyObj, NULL);
     return result;
 }
-

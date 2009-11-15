@@ -25,12 +25,10 @@ import java.io.InputStream;
  * <p>
  * An SQL {@code BLOB} type stores a large array of binary data (bytes) as the
  * value in a column of a database.
- * </p>
+ * <p>
  * The {@code java.sql.Blob} interface provides methods for setting and
  * retrieving data in the {@code Blob}, for querying {@code Blob} data length,
  * and for searching for data within the {@code Blob}.
- *  
- * @since Android 1.0
  */
 public interface Blob {
 
@@ -41,7 +39,6 @@ public interface Blob {
      *         data.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public InputStream getBinaryStream() throws SQLException;
 
@@ -57,7 +54,6 @@ public interface Blob {
      *         at {@code pos} and is up to {@code length} bytes long.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public byte[] getBytes(long pos, int length) throws SQLException;
 
@@ -68,7 +64,6 @@ public interface Blob {
      *         bytes.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public long length() throws SQLException;
 
@@ -87,7 +82,6 @@ public interface Blob {
      *         {@code Blob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public long position(Blob pattern, long start) throws SQLException;
 
@@ -106,7 +100,6 @@ public interface Blob {
      *         {@code Blob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public long position(byte[] pattern, long start) throws SQLException;
 
@@ -121,7 +114,6 @@ public interface Blob {
      *         the {@code Blob} starting at the specified position.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public OutputStream setBinaryStream(long pos) throws SQLException;
 
@@ -139,7 +131,6 @@ public interface Blob {
      *         Blob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public int setBytes(long pos, byte[] theBytes) throws SQLException;
 
@@ -162,7 +153,6 @@ public interface Blob {
      *         Blob}.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public int setBytes(long pos, byte[] theBytes, int offset, int len)
             throws SQLException;
@@ -176,7 +166,6 @@ public interface Blob {
      *            is to be truncated.
      * @throws SQLException
      *             if an error occurs accessing the {@code Blob}.
-     * @since Android 1.0
      */
     public void truncate(long len) throws SQLException;
 }

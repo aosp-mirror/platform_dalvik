@@ -19,8 +19,6 @@ package java.lang;
 
 /**
  * Thrown when the an invalid arithmetic operation is attempted.
- * 
- * @since Android 1.0
  */
 public class ArithmeticException extends RuntimeException {
 
@@ -29,8 +27,6 @@ public class ArithmeticException extends RuntimeException {
     /**
      * Constructs a new {@code ArithmeticException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public ArithmeticException() {
         super();
@@ -39,10 +35,9 @@ public class ArithmeticException extends RuntimeException {
     /**
      * Constructs a new {@code ArithmeticException} with the current stack trace
      * and the specified detail message.
-     * 
+     *
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public ArithmeticException(String detailMessage) {
         super(detailMessage);

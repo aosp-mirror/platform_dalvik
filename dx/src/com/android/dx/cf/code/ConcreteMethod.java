@@ -35,38 +35,38 @@ import com.android.dx.rop.type.Prototype;
  * Container for all the giblets that make up a concrete Java bytecode method.
  * It implements {@link Method}, so it provides all the original access
  * (by delegation), but it also constructs and keeps useful versions of
- * stuff extracted from the method's <code>Code</code> attribute.
+ * stuff extracted from the method's {@code Code} attribute.
  */
 public final class ConcreteMethod implements Method {
-    /** non-null; method being wrapped */
+    /** {@code non-null;} method being wrapped */
     private final Method method;
 
     /**
-     * null-ok; the class's <code>SourceFile</code> attribute value,
+     * {@code null-ok;} the class's {@code SourceFile} attribute value,
      * if any 
      */
     private final CstUtf8 sourceFile;
 
     /**
      * whether the class that this method is part of is defined with
-     * <code>ACC_SUPER</code> 
+     * {@code ACC_SUPER} 
      */
     private final boolean accSuper;
 
-    /** non-null; the code attribute */
+    /** {@code non-null;} the code attribute */
     private final AttCode attCode;
 
-    /** non-null; line number list */
+    /** {@code non-null;} line number list */
     private final LineNumberList lineNumbers;
 
-    /** non-null; local variable list */
+    /** {@code non-null;} local variable list */
     private final LocalVariableList localVariables;
 
     /**
      * Constructs an instance.
      * 
-     * @param method non-null; the method to be based on
-     * @param cf non-null; the class file that contains this method
+     * @param method {@code non-null;} the method to be based on
+     * @param cf {@code non-null;} the class file that contains this method
      * @param keepLines whether to keep the line number information
      * (if any)
      * @param keepLocals whether to keep the local variable
@@ -178,9 +178,9 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Gets whether the class that this method is part of is defined with
-     * <code>ACC_SUPER</code>.
+     * {@code ACC_SUPER}.
      * 
-     * @return the <code>ACC_SUPER</code> value
+     * @return the {@code ACC_SUPER} value
      */
     public boolean getAccSuper() {
         return accSuper;
@@ -189,7 +189,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Gets the maximum stack size.
      * 
-     * @return &gt;= 0; the maximum stack size
+     * @return {@code >= 0;} the maximum stack size
      */
     public int getMaxStack() {
         return attCode.getMaxStack();
@@ -198,7 +198,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Gets the number of locals.
      * 
-     * @return &gt;= 0; the number of locals
+     * @return {@code >= 0;} the number of locals
      */
     public int getMaxLocals() {
         return attCode.getMaxLocals();
@@ -207,7 +207,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Gets the bytecode array.
      * 
-     * @return non-null; the bytecode array
+     * @return {@code non-null;} the bytecode array
      */
     public BytecodeArray getCode() {
         return attCode.getCode();
@@ -216,7 +216,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Gets the exception table.
      * 
-     * @return non-null; the exception table
+     * @return {@code non-null;} the exception table
      */
     public ByteCatchList getCatches() {
         return attCode.getCatches();
@@ -225,7 +225,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Gets the line number list.
      * 
-     * @return non-null; the line number list
+     * @return {@code non-null;} the line number list
      */
     public LineNumberList getLineNumbers() {
         return lineNumbers;
@@ -234,7 +234,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Gets the local variable list.
      * 
-     * @return non-null; the local variable list
+     * @return {@code non-null;} the local variable list
      */
     public LocalVariableList getLocalVariables() {
         return localVariables;
@@ -244,8 +244,8 @@ public final class ConcreteMethod implements Method {
      * Returns a {@link SourcePosition} instance corresponding to the
      * given bytecode offset.
      * 
-     * @param offset &gt;= 0; the bytecode offset
-     * @return non-null; an appropriate instance
+     * @param offset {@code >= 0;} the bytecode offset
+     * @return {@code non-null;} an appropriate instance
      */
     public SourcePosition makeSourcePosistion(int offset) {
         return new SourcePosition(sourceFile, offset,

@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "OSMemory"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "utils/misc.h"
+#include "utils/Log.h"
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+/*
+ * Cached dalvik.system.VMRuntime pieces.
+ */
+static struct {
+    jmethodID method_trackExternalAllocation;
+    jmethodID method_trackExternalFree;
+
+    jobject runtimeInstance;
+} gIDCache;
 
 #undef MMAP_READ_ONLY
 #define MMAP_READ_ONLY 1L
@@ -55,11 +67,28 @@ static jint harmony_nio_getPointerSizeImpl(JNIEnv *_env, jclass _this) {
  * Signature: (I)I
  */
 static jint harmony_nio_mallocImpl(JNIEnv *_env, jobject _this, jint size) {
-    void *returnValue = malloc(size);
-    if(returnValue == NULL) {
-        jniThrowException(_env, "java.lang.OutOfMemoryError", "");
+    jboolean allowed = _env->CallBooleanMethod(gIDCache.runtimeInstance,
+        gIDCache.method_trackExternalAllocation, (jlong) size);
+    if (!allowed) {
+        LOGW("External allocation of %d bytes was rejected\n", size);
+        jniThrowException(_env, "java/lang/OutOfMemoryError", NULL);
+        return 0;
     }
-    return (jint)returnValue;
+
+    LOGV("OSMemory alloc %d\n", size);
+    void *returnValue = malloc(size + sizeof(jlong));
+    if (returnValue == NULL) {
+        jniThrowException(_env, "java/lang/OutOfMemoryError", NULL);
+        return 0;
+    }
+
+    /*
+     * Tuck a copy of the size at the head of the buffer.  We need this
+     * so harmony_nio_freeImpl() knows how much memory is being freed.
+     */
+    jlong* adjptr = (jlong*) returnValue;
+    *adjptr++ = size;
+    return (jint)adjptr;
 }
 
 /*
@@ -68,7 +97,12 @@ static jint harmony_nio_mallocImpl(JNIEnv *_env, jobject _this, jint size) {
  * Signature: (I)V
  */
 static void harmony_nio_freeImpl(JNIEnv *_env, jobject _this, jint pointer) {
-    free((void *)pointer);
+    jlong* adjptr = (jlong*) pointer;
+    jint size = *--adjptr;
+    LOGV("OSMemory free %d\n", size);
+    _env->CallVoidMethod(gIDCache.runtimeInstance,
+        gIDCache.method_trackExternalFree, (jlong) size);
+    free((void *)adjptr);
 }
 
 /*
@@ -138,12 +172,10 @@ static void harmony_nio_putBytesImpl(JNIEnv *_env, jobject _this,
 }
 
 static void
-swapShorts(jshort *shorts, int numBytes) {
+swapShorts(jshort *shorts, int count) {
     jbyte *src = (jbyte *) shorts;
     jbyte *dst = src;
-    int i;
-    
-    for (i = 0; i < numBytes; i+=2) {
+    for (int i = 0; i < count; ++i) {
         jbyte b0 = *src++;
         jbyte b1 = *src++;
         *dst++ = b1;
@@ -152,11 +184,10 @@ swapShorts(jshort *shorts, int numBytes) {
 }
 
 static void
-swapInts(jint *ints, int numBytes) {
+swapInts(jint *ints, int count) {
     jbyte *src = (jbyte *) ints;
     jbyte *dst = src;
-    int i;   
-    for (i = 0; i < numBytes; i+=4) {
+    for (int i = 0; i < count; ++i) {
         jbyte b0 = *src++;
         jbyte b1 = *src++;
         jbyte b2 = *src++;
@@ -170,48 +201,30 @@ swapInts(jint *ints, int numBytes) {
 
 /*
  * Class:     org_apache_harmony_luni_platform_OSMemory
- * Method:    putShortsImpl
+ * Method:    setShortArrayImpl
  * Signature: (I[SIIZ)V
  */
-static void harmony_nio_putShortsImpl(JNIEnv *_env, jobject _this,
+static void harmony_nio_setShortArrayImpl(JNIEnv *_env, jobject _this,
        jint pointer, jshortArray src, jint offset, jint length, jboolean swap) {
-       
-    offset = offset << 1;
-    length = length << 1;
-       
-    jshort *src_ =
-        (jshort *)_env->GetPrimitiveArrayCritical(src, (jboolean *)0);
+    jshort* dst = reinterpret_cast<jshort*>(static_cast<uintptr_t>(pointer));
+    _env->GetShortArrayRegion(src, offset, length, dst);
     if (swap) {
-        swapShorts(src_ + offset, length);
+        swapShorts(dst, length);
     }
-    memcpy((jbyte *)pointer, (jbyte *)src_ + offset, length);
-    if (swap) {
-        swapShorts(src_ + offset, length);
-    }
-    _env->ReleasePrimitiveArrayCritical(src, src_, JNI_ABORT);
 }
 
 /*
  * Class:     org_apache_harmony_luni_platform_OSMemory
- * Method:    putIntsImpl
+ * Method:    setIntArrayImpl
  * Signature: (I[IIIZ)V
  */
-static void harmony_nio_putIntsImpl(JNIEnv *_env, jobject _this,
+static void harmony_nio_setIntArrayImpl(JNIEnv *_env, jobject _this,
        jint pointer, jintArray src, jint offset, jint length, jboolean swap) {
-
-    offset = offset << 2;
-    length = length << 2;
-       
-    jint *src_ =
-        (jint *)_env->GetPrimitiveArrayCritical(src, (jboolean *)0);
+    jint* dst = reinterpret_cast<jint*>(static_cast<uintptr_t>(pointer));
+    _env->GetIntArrayRegion(src, offset, length, dst);
     if (swap) {
-        swapInts(src_ + offset, length);
+        swapInts(dst, length);
     }
-    memcpy((jbyte *)pointer, (jbyte *)src_ + offset, length);
-    if (swap) {
-        swapInts(src_ + offset, length);
-    }
-    _env->ReleasePrimitiveArrayCritical(src, src_, JNI_ABORT);
 }
 
 /*
@@ -554,8 +567,8 @@ static JNINativeMethod gMethods[] = {
     { "memmove",            "(IIJ)V",  (void*) harmony_nio_memmove },
     { "getByteArray",       "(I[BII)V",(void*) harmony_nio_getBytesImpl },
     { "setByteArray",       "(I[BII)V",(void*) harmony_nio_putBytesImpl },
-    { "setShortArray",     "(I[SIIZ)V",(void*) harmony_nio_putShortsImpl },
-    { "setIntArray",       "(I[IIIZ)V",(void*) harmony_nio_putIntsImpl },
+    { "setShortArray",     "(I[SIIZ)V",(void*) harmony_nio_setShortArrayImpl },
+    { "setIntArray",       "(I[IIIZ)V",(void*) harmony_nio_setIntArrayImpl },
     { "getByte",            "(I)B",    (void*) harmony_nio_getByteImpl },
     { "setByte",            "(IB)V",   (void*) harmony_nio_putByteImpl },
     { "getShort",           "(I)S",    (void*) harmony_nio_getShortImpl },
@@ -577,6 +590,45 @@ static JNINativeMethod gMethods[] = {
     { "flushImpl",          "(IJ)I",   (void*) harmony_nio_flushImpl }
 };
 int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv *_env) {
-    return jniRegisterNativeMethods(_env, "org/apache/harmony/luni/platform/OSMemory",
+    /*
+     * We need to call VMRuntime.trackExternal{Allocation,Free}.  Cache
+     * method IDs and a reference to the singleton.
+     */
+    static const char* kVMRuntimeName = "dalvik/system/VMRuntime";
+    jmethodID method_getRuntime;
+    jclass clazz;
+
+    clazz = _env->FindClass(kVMRuntimeName);
+    if (clazz == NULL) {
+        LOGE("Unable to find class %s\n", kVMRuntimeName);
+        return -1;
+    }
+    gIDCache.method_trackExternalAllocation = _env->GetMethodID(clazz,
+        "trackExternalAllocation", "(J)Z");
+    gIDCache.method_trackExternalFree = _env->GetMethodID(clazz,
+        "trackExternalFree", "(J)V");
+    method_getRuntime = _env->GetStaticMethodID(clazz,
+        "getRuntime", "()Ldalvik/system/VMRuntime;");
+
+    if (gIDCache.method_trackExternalAllocation == NULL ||
+        gIDCache.method_trackExternalFree == NULL ||
+        method_getRuntime == NULL)
+    {
+        LOGE("Unable to find VMRuntime methods\n");
+        return -1;
+    }
+
+    jobject instance = _env->CallStaticObjectMethod(clazz, method_getRuntime);
+    if (instance == NULL) {
+        LOGE("Unable to obtain VMRuntime instance\n");
+        return -1;
+    }
+    gIDCache.runtimeInstance = _env->NewGlobalRef(instance);
+
+    /*
+     * Register methods.
+     */
+    return jniRegisterNativeMethods(_env,
+                "org/apache/harmony/luni/platform/OSMemory",
                 gMethods, NELEM(gMethods));
 }

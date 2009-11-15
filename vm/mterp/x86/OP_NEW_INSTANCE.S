@@ -27,6 +27,7 @@
 %break
 
 .L${opcode}_initialized:  # on entry, ecx<- class
+    /* TODO: remove test for interface/abstract, now done in verifier */
     testl     $$(ACC_INTERFACE|ACC_ABSTRACT),offClassObject_accessFlags(%ecx)
     movl      $$ALLOC_DONT_TRACK,OUT_ARG1(%esp)
     jne       .L${opcode}_abstract
@@ -77,6 +78,7 @@
     jmp     common_exceptionThrown      # no, handle exception
 
     /*
+     * TODO: remove this
      * We can't instantiate an abstract class or interface, so throw an
      * InstantiationError with the class descriptor as the message.
      *

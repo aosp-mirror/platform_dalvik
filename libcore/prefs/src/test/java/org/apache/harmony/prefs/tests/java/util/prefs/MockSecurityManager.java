@@ -39,6 +39,7 @@ class MockSecurityManager extends SecurityManager {
         System.setSecurityManager(dflt);
     }
 
+    @Override
     public void checkPermission(Permission perm) {
         if (perm instanceof RuntimePermission
                 && perm.getName().equals("preferences")) {
@@ -48,6 +49,7 @@ class MockSecurityManager extends SecurityManager {
         }
     }
 
+    @Override
     public void checkPermission(Permission perm, Object ctx) {
         if (perm instanceof RuntimePermission
                 && perm.getName().equals("preferences")) {

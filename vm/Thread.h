@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * VM thread support.
  */
@@ -22,7 +23,7 @@
 #include "jni.h"
 
 #if defined(CHECK_MUTEX) && !defined(__USE_UNIX98)
-/* Linux lacks this unless you #define __USE_UNIX98 */
+/* glibc lacks this unless you #define __USE_UNIX98 */
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 enum { PTHREAD_MUTEX_ERRORCHECK = PTHREAD_MUTEX_ERRORCHECK_NP };
 #endif
@@ -67,6 +68,7 @@ void dvmThreadShutdown(void);
 void dvmSlayDaemons(void);
 
 
+#define kJniLocalRefMin         32
 #define kJniLocalRefMax         512     /* arbitrary; should be plenty */
 #define kInternalRefDefault     32      /* equally arbitrary */
 #define kInternalRefMax         4096    /* mainly a sanity check */
@@ -74,6 +76,11 @@ void dvmSlayDaemons(void);
 #define kMinStackSize       (512 + STACK_OVERFLOW_RESERVE)
 #define kDefaultStackSize   (12*1024)   /* three 4K pages */
 #define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
+
+/*
+ * System thread state. See native/SystemThread.h.
+ */
+typedef struct SystemThread SystemThread;
 
 /*
  * Our per-thread data.
@@ -88,7 +95,7 @@ typedef struct Thread {
      * Thread's current status.  Can only be changed by the thread itself
      * (i.e. don't mess with this from other threads).
      */
-    ThreadStatus status;
+    volatile ThreadStatus status;
 
     /*
      * This is the number of times the thread has been suspended.  When the
@@ -151,7 +158,11 @@ typedef struct Thread {
     ReferenceTable  internalLocalRefTable;
 
     /* JNI local reference tracking */
+#ifdef USE_INDIRECT_REF
+    IndirectRefTable jniLocalRefTable;
+#else
     ReferenceTable  jniLocalRefTable;
+#endif
 
     /* JNI native monitor reference tracking (initialized on first use) */
     ReferenceTable  jniMonitorRefTable;
@@ -203,6 +214,14 @@ typedef struct Thread {
 #ifdef WITH_JNI_STACK_CHECK
     u4          stackCrc;
 #endif
+
+#if WITH_EXTRA_GC_CHECKS > 1
+    /* PC, saved on every instruction; redundant with StackSaveArea */
+    const u2*   currentPc2;
+#endif
+
+    /* system thread state */
+    SystemThread* systemThread;
 } Thread;
 
 /* start point for an internal thread; mimics pthread args */
@@ -250,6 +269,9 @@ typedef enum SuspendCause {
     SUSPEND_FOR_DEBUG_EVENT,
     SUSPEND_FOR_STACK_DUMP,
     SUSPEND_FOR_DEX_OPT,
+#if defined(WITH_JIT)
+    SUSPEND_FOR_JIT,
+#endif
 } SuspendCause;
 void dvmSuspendThread(Thread* thread);
 void dvmSuspendSelf(bool jdwpActivity);
@@ -277,12 +299,11 @@ void dvmWaitForSuspend(Thread* thread);
 bool dvmCheckSuspendPending(Thread* self);
 
 /*
- * Fast test for use in the interpreter.  If our suspend count is nonzero,
- * do a more rigorous evaluation.
+ * Fast test for use in the interpreter.  Returns "true" if our suspend
+ * count is nonzero.
  */
-INLINE void dvmCheckSuspendQuick(Thread* self) {
-    if (self->suspendCount != 0)
-        dvmCheckSuspendPending(self);
+INLINE bool dvmCheckSuspendQuick(Thread* self) {
+    return (self->suspendCount != 0);
 }
 
 /*
@@ -390,7 +411,7 @@ char* dvmGetThreadName(Thread* thread);
  * thread is part of the GC's root set.
  */
 bool dvmIsOnThreadList(const Thread* thread);
- 
+
 /*
  * Get/set the JNIEnv field.
  */
@@ -398,15 +419,9 @@ INLINE JNIEnv* dvmGetThreadJNIEnv(Thread* self) { return self->jniEnv; }
 INLINE void dvmSetThreadJNIEnv(Thread* self, JNIEnv* env) { self->jniEnv = env;}
 
 /*
- * Change the scheduler group of the current process
- */
-int dvmChangeThreadSchedulerGroup(const char *group);
-
-/*
  * Update the priority value of the underlying pthread.
  */
 void dvmChangeThreadPriority(Thread* thread, int newPriority);
-
 
 /*
  * Debug: dump information about a single thread.
@@ -420,7 +435,6 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
  */
 void dvmDumpAllThreads(bool grabLock);
 void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
-
 
 #ifdef WITH_MONITOR_TRACKING
 /*

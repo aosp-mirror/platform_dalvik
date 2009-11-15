@@ -14,17 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2007, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 // BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
+// changed from ICU to resource bundles
 // END android-note
 
 package java.text;
@@ -34,7 +26,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
+// BEGIN android-added
 import java.util.ResourceBundle;
+// BEGIN android-added
 import java.util.TimeZone;
 
 import org.apache.harmony.text.internal.nls.Messages;
@@ -52,58 +46,52 @@ import org.apache.harmony.text.internal.nls.Messages;
  * styles. The formatting styles include FULL, LONG, MEDIUM, and SHORT. More
  * details and examples for using these styles are provided in the method
  * descriptions.
- * </p>
  * <p>
  * {@code DateFormat} helps you to format and parse dates for any locale. Your
  * code can be completely independent of the locale conventions for months, days
  * of the week, or even the calendar format: lunar vs. solar.
- * </p>
  * <p>
  * To format a date for the current Locale, use one of the static factory
  * methods:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * myString = DateFormat.getDateInstance().format(myDate);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * If you are formatting multiple dates, it is more efficient to get the format
  * and use it multiple times so that the system doesn't have to fetch the
  * information about the local language and country conventions multiple times.
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * DateFormat df = DateFormat.getDateInstance();
  * for (int i = 0; i &lt; a.length; ++i) {
  *     output.println(df.format(myDate[i]) + &quot;; &quot;);
  * }
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * To format a number for a different locale, specify it in the call to
  * {@code getDateInstance}:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * DateFormat df = DateFormat.getDateInstance(DateFormat.LONG, Locale.FRANCE);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * {@code DateFormat} can also be used to parse strings:
- * </p>
  * <blockquote>
- * 
+ *
  * <pre>
  * myDate = df.parse(myString);
  * </pre>
- * 
+ *
  * </blockquote>
  * <p>
  * Use {@code getDateInstance} to get the normal date format for a country.
@@ -112,7 +100,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * date and time format. You can pass in different options to these factory
  * methods to control the length of the result; from SHORT to MEDIUM to LONG to
  * FULL. The exact result depends on the locale, but generally:
- * </p>
  * <ul>
  * <li>SHORT is completely numeric, such as 12.13.52 or 3:30pm
  * <li>MEDIUM is longer, such as Jan 12, 1952
@@ -126,7 +113,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  * from the factory methods to a {@code SimpleDateFormat}. This will work for
  * the majority of countries; just remember to put it in a try block in case you
  * encounter an unusual one.
- * </p>
  * <p>
  * There are versions of the parse and format methods which use
  * {@code ParsePosition} and {@code FieldPosition} to allow you to
@@ -139,13 +125,11 @@ import org.apache.harmony.text.internal.nls.Messages;
  * Date formats are not synchronized. It is recommended to create separate
  * format instances for each thread. If multiple threads access a format
  * concurrently, it must be synchronized externally.
- * </p>
- * 
+ *
  * @see NumberFormat
  * @see SimpleDateFormat
  * @see Calendar
  * @see TimeZone
- * @since Android 1.0
  */
 public abstract class DateFormat extends Format {
 
@@ -154,83 +138,61 @@ public abstract class DateFormat extends Format {
     /**
      * The calendar that this {@code DateFormat} uses to format a number
      * representing a date.
-     * 
-     * @since Android 1.0
      */
     protected Calendar calendar;
 
     /**
      * The number format used to format a number.
-     * 
-     * @since Android 1.0
      */
     protected NumberFormat numberFormat;
 
     /**
      * The format style constant defining the default format style. The default
      * is MEDIUM.
-     * 
-     * @since Android 1.0
      */
     public final static int DEFAULT = 2;
 
     /**
      * The format style constant defining the full style.
-     * 
-     * @since Android 1.0
      */
     public final static int FULL = 0;
 
     /**
      * The format style constant defining the long style.
-     * 
-     * @since Android 1.0
      */
     public final static int LONG = 1;
 
     /**
      * The format style constant defining the medium style.
-     * 
-     * @since Android 1.0
      */
     public final static int MEDIUM = 2;
 
     /**
      * The format style constant defining the short style.
-     * 
-     * @since Android 1.0
      */
     public final static int SHORT = 3;
 
     /**
      * The {@code FieldPosition} selector for 'G' field alignment, corresponds
      * to the {@link Calendar#ERA} field.
-     * 
-     * @since Android 1.0
      */
     public final static int ERA_FIELD = 0;
 
     /**
      * The {@code FieldPosition} selector for 'y' field alignment, corresponds
      * to the {@link Calendar#YEAR} field.
-     * 
-     * @since Android 1.0
      */
     public final static int YEAR_FIELD = 1;
 
     /**
      * The {@code FieldPosition} selector for 'M' field alignment, corresponds
      * to the {@link Calendar#MONTH} field.
-     * 
-     * @since Android 1.0
      */
     public final static int MONTH_FIELD = 2;
 
     /**
      * The {@code FieldPosition} selector for 'd' field alignment, corresponds
      * to the {@link Calendar#DATE} field.
-     * 
-     * @since Android 1.0
      */
     public final static int DATE_FIELD = 3;
 
@@ -239,8 +201,6 @@ public abstract class DateFormat extends Format {
      * to the {@link Calendar#HOUR_OF_DAY} field. {@code HOUR_OF_DAY1_FIELD} is
      * used for the one-based 24-hour clock. For example, 23:59 + 01:00 results
      * in 24:59.
-     * 
-     * @since Android 1.0
      */
     public final static int HOUR_OF_DAY1_FIELD = 4;
 
@@ -249,80 +209,60 @@ public abstract class DateFormat extends Format {
      * to the {@link Calendar#HOUR_OF_DAY} field. {@code HOUR_OF_DAY0_FIELD} is
      * used for the zero-based 24-hour clock. For example, 23:59 + 01:00 results
      * in 00:59.
-     * 
-     * @since Android 1.0
      */
     public final static int HOUR_OF_DAY0_FIELD = 5;
 
     /**
      * FieldPosition selector for 'm' field alignment, corresponds to the
      * {@link Calendar#MINUTE} field.
-     * 
-     * @since Android 1.0
      */
     public final static int MINUTE_FIELD = 6;
 
     /**
      * FieldPosition selector for 's' field alignment, corresponds to the
      * {@link Calendar#SECOND} field.
-     * 
-     * @since Android 1.0
      */
     public final static int SECOND_FIELD = 7;
 
     /**
      * FieldPosition selector for 'S' field alignment, corresponds to the
      * {@link Calendar#MILLISECOND} field.
-     * 
-     * @since Android 1.0
      */
     public final static int MILLISECOND_FIELD = 8;
 
     /**
      * FieldPosition selector for 'E' field alignment, corresponds to the
      * {@link Calendar#DAY_OF_WEEK} field.
-     * 
-     * @since Android 1.0
      */
     public final static int DAY_OF_WEEK_FIELD = 9;
 
     /**
      * FieldPosition selector for 'D' field alignment, corresponds to the
      * {@link Calendar#DAY_OF_YEAR} field.
-     * 
-     * @since Android 1.0
      */
     public final static int DAY_OF_YEAR_FIELD = 10;
 
     /**
      * FieldPosition selector for 'F' field alignment, corresponds to the
      * {@link Calendar#DAY_OF_WEEK_IN_MONTH} field.
-     * 
-     * @since Android 1.0
      */
     public final static int DAY_OF_WEEK_IN_MONTH_FIELD = 11;
 
     /**
      * FieldPosition selector for 'w' field alignment, corresponds to the
      * {@link Calendar#WEEK_OF_YEAR} field.
-     * 
-     * @since Android 1.0
      */
     public final static int WEEK_OF_YEAR_FIELD = 12;
 
     /**
      * FieldPosition selector for 'W' field alignment, corresponds to the
      * {@link Calendar#WEEK_OF_MONTH} field.
-     * 
-     * @since Android 1.0
      */
     public final static int WEEK_OF_MONTH_FIELD = 13;
 
     /**
      * FieldPosition selector for 'a' field alignment, corresponds to the
      * {@link Calendar#AM_PM} field.
-     * 
-     * @since Android 1.0
      */
     public final static int AM_PM_FIELD = 14;
 
@@ -331,8 +271,6 @@ public abstract class DateFormat extends Format {
      * {@link Calendar#HOUR} field. {@code HOUR1_FIELD} is used for the
      * one-based 12-hour clock. For example, 11:30 PM + 1 hour results in 12:30
      * AM.
-     * 
-     * @since Android 1.0
      */
     public final static int HOUR1_FIELD = 15;
 
@@ -340,8 +278,6 @@ public abstract class DateFormat extends Format {
      * The {@code FieldPosition} selector for 'z' field alignment, corresponds
      * to the {@link Calendar#ZONE_OFFSET} and {@link Calendar#DST_OFFSET}
      * fields.
-     * 
-     * @since Android 1.0
      */
     public final static int HOUR0_FIELD = 16;
 
@@ -349,15 +285,11 @@ public abstract class DateFormat extends Format {
      * The {@code FieldPosition} selector for 'z' field alignment, corresponds
      * to the {@link Calendar#ZONE_OFFSET} and {@link Calendar#DST_OFFSET}
      * fields.
-     * 
-     * @since Android 1.0
      */
     public final static int TIMEZONE_FIELD = 17;
 
     /**
      * Constructs a new instance of {@code DateFormat}.
-     * 
-     * @since Android 1.0
      */
     protected DateFormat() {
     }
@@ -368,7 +300,6 @@ public abstract class DateFormat extends Format {
      * @return a shallow copy of this {@code DateFormat}.
      * 
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -388,7 +319,6 @@ public abstract class DateFormat extends Format {
      *         it has the same properties as this date format; {@code false}
      *         otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -417,8 +347,7 @@ public abstract class DateFormat extends Format {
      * a format field, then its {@code beginIndex} and {@code endIndex} members
      * will be updated with the position of the first occurrence of this field
      * in the formatted text.
-     * </p>
-     * 
+     *
      * @param object
      *            the source object to format, must be a {@code Date} or a
      *            {@code Number}. If {@code object} is a number then a date is
@@ -429,10 +358,9 @@ public abstract class DateFormat extends Format {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @exception IllegalArgumentException
-     *                if {@code object} is neither a {@code Date} nor a
-     *                {@code Number} instance.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *            if {@code object} is neither a {@code Date} nor a
+     *            {@code Number} instance.
      */
     @Override
     public final StringBuffer format(Object object, StringBuffer buffer,
@@ -453,7 +381,6 @@ public abstract class DateFormat extends Format {
      * @param date
      *            the date to format.
      * @return the formatted string.
-     * @since Android 1.0
      */
     public final String format(Date date) {
         return format(date, new StringBuffer(), new FieldPosition(0))
@@ -468,8 +395,7 @@ public abstract class DateFormat extends Format {
      * a format field, then its {@code beginIndex} and {@code endIndex} members
      * will be updated with the position of the first occurrence of this field
      * in the formatted text.
-     * </p>
-     * 
+     *
      * @param date
      *            the date to format.
      * @param buffer
@@ -478,7 +404,6 @@ public abstract class DateFormat extends Format {
      *            on input: an optional alignment field; on output: the offsets
      *            of the alignment field in the formatted text.
      * @return the string buffer.
-     * @since Android 1.0
      */
     public abstract StringBuffer format(Date date, StringBuffer buffer,
             FieldPosition field);
@@ -487,7 +412,6 @@ public abstract class DateFormat extends Format {
      * Gets the list of installed locales which support {@code DateFormat}.
      * 
      * @return an array of locales.
-     * @since Android 1.0
      */
     public static Locale[] getAvailableLocales() {
         return Locale.getAvailableLocales();
@@ -497,7 +421,6 @@ public abstract class DateFormat extends Format {
      * Returns the calendar used by this {@code DateFormat}.
      * 
      * @return the calendar used by this date format.
-     * @since Android 1.0
      */
     public Calendar getCalendar() {
         return calendar;
@@ -508,7 +431,6 @@ public abstract class DateFormat extends Format {
      * the DEFAULT style for the default locale.
      * 
      * @return the {@code DateFormat} instance for the default style and locale.
-     * @since Android 1.0
      */
     public final static DateFormat getDateInstance() {
         return getDateInstance(DEFAULT);
@@ -525,7 +447,6 @@ public abstract class DateFormat extends Format {
      * @throws IllegalArgumentException
      *             if {@code style} is not one of SHORT, MEDIUM, LONG, FULL, or
      *             DEFAULT.
-     * @since Android 1.0
      */
     public final static DateFormat getDateInstance(int style) {
         checkDateStyle(style);
@@ -545,13 +466,14 @@ public abstract class DateFormat extends Format {
      *             DEFAULT.
      * @return the {@code DateFormat} instance for {@code style} and
      *         {@code locale}.
-     * @since Android 1.0
      */
     public final static DateFormat getDateInstance(int style, Locale locale) {
         checkDateStyle(style);
+        // BEGIN android-changed
         ResourceBundle bundle = getBundle(locale);
         String pattern = bundle.getString("Date_" + getStyleName(style)); //$NON-NLS-1$
         return new SimpleDateFormat(pattern, locale);
+        // END android-changed
     }
 
     /**
@@ -559,7 +481,6 @@ public abstract class DateFormat extends Format {
      * and time values in the DEFAULT style for the default locale.
      * 
      * @return the {@code DateFormat} instance for the default style and locale.
-     * @since Android 1.0
      */
     public final static DateFormat getDateTimeInstance() {
         return getDateTimeInstance(DEFAULT, DEFAULT);
@@ -578,7 +499,6 @@ public abstract class DateFormat extends Format {
      * @throws IllegalArgumentException
      *             if {@code dateStyle} or {@code timeStyle} is not one of
      *             SHORT, MEDIUM, LONG, FULL, or DEFAULT.
-     * @since Android 1.0
      */
     public final static DateFormat getDateTimeInstance(int dateStyle,
             int timeStyle) {
@@ -602,16 +522,17 @@ public abstract class DateFormat extends Format {
      * @throws IllegalArgumentException
      *             if {@code dateStyle} or {@code timeStyle} is not one of
      *             SHORT, MEDIUM, LONG, FULL, or DEFAULT.
-     * @since Android 1.0
      */
     public final static DateFormat getDateTimeInstance(int dateStyle,
             int timeStyle, Locale locale) {
         checkTimeStyle(timeStyle);
         checkDateStyle(dateStyle);
+        // BEGIN android-changed
         ResourceBundle bundle = getBundle(locale);
         String pattern = bundle.getString("Date_" + getStyleName(dateStyle)) //$NON-NLS-1$
                 + " " + bundle.getString("Time_" + getStyleName(timeStyle)); //$NON-NLS-1$ //$NON-NLS-2$
         return new SimpleDateFormat(pattern, locale);
+        // END android-changed
     }
 
     /**
@@ -620,7 +541,6 @@ public abstract class DateFormat extends Format {
      * 
      * @return the {@code DateFormat} instance for the SHORT style and default
      *         locale.
-     * @since Android 1.0
      */
     public final static DateFormat getInstance() {
         return getDateTimeInstance(SHORT, SHORT);
@@ -630,7 +550,6 @@ public abstract class DateFormat extends Format {
      * Returns the {@code NumberFormat} used by this {@code DateFormat}.
      * 
      * @return the {@code NumberFormat} used by this date format.
-     * @since Android 1.0
      */
     public NumberFormat getNumberFormat() {
         return numberFormat;
@@ -662,7 +581,6 @@ public abstract class DateFormat extends Format {
      * values in the DEFAULT style for the default locale.
      * 
      * @return the {@code DateFormat} instance for the default style and locale.
-     * @since Android 1.0
      */
     public final static DateFormat getTimeInstance() {
         return getTimeInstance(DEFAULT);
@@ -679,7 +597,6 @@ public abstract class DateFormat extends Format {
      * @throws IllegalArgumentException
      *             if {@code style} is not one of SHORT, MEDIUM, LONG, FULL, or
      *             DEFAULT.
-     * @since Android 1.0
      */
     public final static DateFormat getTimeInstance(int style) {
         checkTimeStyle(style);
@@ -699,20 +616,20 @@ public abstract class DateFormat extends Format {
      *             DEFAULT.
      * @return the {@code DateFormat} instance for {@code style} and
      *         {@code locale}.
-     * @since Android 1.0
      */
     public final static DateFormat getTimeInstance(int style, Locale locale) {
         checkTimeStyle(style);
+        // BEGIN android-changed
         ResourceBundle bundle = getBundle(locale);
         String pattern = bundle.getString("Time_" + getStyleName(style)); //$NON-NLS-1$
         return new SimpleDateFormat(pattern, locale);
+        // END android-changed
     }
 
     /**
      * Returns the time zone of this date format's calendar.
      * 
      * @return the time zone of the calendar used by this date format.
-     * @since Android 1.0
      */
     public TimeZone getTimeZone() {
         return calendar.getTimeZone();
@@ -731,7 +648,6 @@ public abstract class DateFormat extends Format {
      * Indicates whether the calendar used by this date format is lenient.
      * 
      * @return {@code true} if the calendar is lenient; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isLenient() {
         return calendar.isLenient();
@@ -744,9 +660,8 @@ public abstract class DateFormat extends Format {
      * @param string
      *            the string to parse.
      * @return the {@code Date} resulting from the parsing.
-     * @exception ParseException
-     *                if an error occurs during parsing.
-     * @since Android 1.0
+     * @throws ParseException
+     *         if an error occurs during parsing.
      */
     public Date parse(String string) throws ParseException {
         ParsePosition position = new ParsePosition(0);
@@ -770,8 +685,7 @@ public abstract class DateFormat extends Format {
      * this object's format method but can still be parsed as a date, then the
      * parse succeeds. Clients may insist on strict adherence to the format by
      * calling {@code setLenient(false)}.
-     * </p>
-     * 
+     *
      * @param string
      *            the string to parse.
      * @param position
@@ -782,7 +696,6 @@ public abstract class DateFormat extends Format {
      *            the index where the error occurred.
      * @return the date resulting from the parse, or {@code null} if there is an
      *         error.
-     * @since Android 1.0
      */
     public abstract Date parse(String string, ParsePosition position);
 
@@ -797,8 +710,7 @@ public abstract class DateFormat extends Format {
      * this object's format method but can still be parsed as a date, then the
      * parse succeeds. Clients may insist on strict adherence to the format by
      * calling {@code setLenient(false)}.
-     * </p>
-     * 
+     *
      * @param string
      *            the string to parse.
      * @param position
@@ -809,7 +721,6 @@ public abstract class DateFormat extends Format {
      *            is set to the index where the error occurred.
      * @return the date resulting from the parsing, or {@code null} if there is
      *         an error.
-     * @since Android 1.0
      */
     @Override
     public Object parseObject(String string, ParsePosition position) {
@@ -821,7 +732,6 @@ public abstract class DateFormat extends Format {
      * 
      * @param cal
      *            the new calendar.
-     * @since Android 1.0
      */
     public void setCalendar(Calendar cal) {
         calendar = cal;
@@ -836,7 +746,6 @@ public abstract class DateFormat extends Format {
      * @param value
      *            {@code true} to set the calendar to be lenient, {@code false}
      *            otherwise.
-     * @since Android 1.0
      */
     public void setLenient(boolean value) {
         calendar.setLenient(value);
@@ -847,7 +756,6 @@ public abstract class DateFormat extends Format {
      * 
      * @param format
      *            the new number format.
-     * @since Android 1.0
      */
     public void setNumberFormat(NumberFormat format) {
         numberFormat = format;
@@ -858,7 +766,6 @@ public abstract class DateFormat extends Format {
      * 
      * @param timezone
      *            the new time zone.
-     * @since Android 1.0
      */
     public void setTimeZone(TimeZone timezone) {
         calendar.setTimeZone(timezone);
@@ -871,8 +778,6 @@ public abstract class DateFormat extends Format {
      * <p>
      * There is no public constructor in this class, the only instances are the
      * constants defined here.
-     * </p>
-     * @since Android 1.0
      */
     public static class Field extends Format.Field {
 
@@ -882,135 +787,99 @@ public abstract class DateFormat extends Format {
 
         /**
          * Marks the era part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field ERA = new Field("era", Calendar.ERA); //$NON-NLS-1$
 
         /**
          * Marks the year part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field YEAR = new Field("year", Calendar.YEAR); //$NON-NLS-1$
 
         /**
          * Marks the month part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field MONTH = new Field("month", Calendar.MONTH); //$NON-NLS-1$
 
         /**
          * Marks the hour of the day part of a date (0-11).
-         * 
-         * @since Android 1.0
          */
         public final static Field HOUR_OF_DAY0 = new Field("hour of day", //$NON-NLS-1$
                 Calendar.HOUR_OF_DAY);
 
         /**
          * Marks the hour of the day part of a date (1-12).
-         * 
-         * @since Android 1.0
          */
         public final static Field HOUR_OF_DAY1 = new Field("hour of day 1", -1); //$NON-NLS-1$
 
         /**
          * Marks the minute part of a time.
-         * 
-         * @since Android 1.0
          */
         public final static Field MINUTE = new Field("minute", Calendar.MINUTE); //$NON-NLS-1$
 
         /**
          * Marks the second part of a time.
-         * 
-         * @since Android 1.0
          */
         public final static Field SECOND = new Field("second", Calendar.SECOND); //$NON-NLS-1$
 
         /**
          * Marks the millisecond part of a time.
-         * 
-         * @since Android 1.0
          */
         public final static Field MILLISECOND = new Field("millisecond", //$NON-NLS-1$
                 Calendar.MILLISECOND);
 
         /**
          * Marks the day of the week part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field DAY_OF_WEEK = new Field("day of week", //$NON-NLS-1$
                 Calendar.DAY_OF_WEEK);
 
         /**
          * Marks the day of the month part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field DAY_OF_MONTH = new Field("day of month", //$NON-NLS-1$
                 Calendar.DAY_OF_MONTH);
 
         /**
          * Marks the day of the year part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field DAY_OF_YEAR = new Field("day of year", //$NON-NLS-1$
                 Calendar.DAY_OF_YEAR);
 
         /**
          * Marks the day of the week in the month part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field DAY_OF_WEEK_IN_MONTH = new Field(
                 "day of week in month", Calendar.DAY_OF_WEEK_IN_MONTH); //$NON-NLS-1$
 
         /**
          * Marks the week of the year part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field WEEK_OF_YEAR = new Field("week of year", //$NON-NLS-1$
                 Calendar.WEEK_OF_YEAR);
 
         /**
          * Marks the week of the month part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field WEEK_OF_MONTH = new Field("week of month", //$NON-NLS-1$
                 Calendar.WEEK_OF_MONTH);
 
         /**
          * Marks the time indicator part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field AM_PM = new Field("am pm", Calendar.AM_PM); //$NON-NLS-1$
 
         /**
          * Marks the hour part of a date (0-11).
-         * 
-         * @since Android 1.0
          */
         public final static Field HOUR0 = new Field("hour", Calendar.HOUR); //$NON-NLS-1$
 
         /**
          * Marks the hour part of a date (1-12).
-         * 
-         * @since Android 1.0
          */
         public final static Field HOUR1 = new Field("hour 1", -1); //$NON-NLS-1$
 
         /**
          * Marks the time zone part of a date.
-         * 
-         * @since Android 1.0
          */
         public final static Field TIME_ZONE = new Field("time zone", -1); //$NON-NLS-1$
 
@@ -1022,12 +891,11 @@ public abstract class DateFormat extends Format {
         /**
          * Constructs a new instance of {@code DateFormat.Field} with the given
          * fieldName and calendar field.
-         * 
+         *
          * @param fieldName
          *            the field name.
          * @param calendarField
          *            the calendar field type of the field.
-         * @since Android 1.0
          */
         protected Field(String fieldName, int calendarField) {
             super(fieldName);
@@ -1042,7 +910,6 @@ public abstract class DateFormat extends Format {
          * Returns the Calendar field that this field represents.
          * 
          * @return the calendar field.
-         * @since Android 1.0
          */
         public int getCalendarField() {
             return calendarField;
@@ -1059,7 +926,6 @@ public abstract class DateFormat extends Format {
          * @throws IllegalArgumentException
          *             if {@code calendarField} is negative or greater than the
          *             field count of {@code Calendar}.
-         * @since Android 1.0
          */
         public static Field ofCalendarField(int calendarField) {
             if (calendarField < 0 || calendarField >= Calendar.FIELD_COUNT) {
@@ -1072,18 +938,23 @@ public abstract class DateFormat extends Format {
         /**
          * Resolves instances that are deserialized to the constant
          * {@code DateFormat.Field} values.
-         * 
+         *
          * @return the resolved field object.
          * @throws InvalidObjectException
          *             if an error occurs while resolving the field object.
-         * @since Android 1.0
          */
         @Override
         protected Object readResolve() throws InvalidObjectException {
+        	if (this.getClass() != Field.class) {
+                // text.0C=cannot resolve subclasses
+                throw new InvalidObjectException(Messages.getString("text.0C")); //$NON-NLS-1$
+            }
+        	
             if (calendarField != -1) {
                 try {
                     Field result = ofCalendarField(calendarField);
-                    if (result != null && this.equals(result)) {
+                    
+                    if (result != null && this.getName().equals(result.getName())) {
                         return result;
                     }
                 } catch (IllegalArgumentException e) {

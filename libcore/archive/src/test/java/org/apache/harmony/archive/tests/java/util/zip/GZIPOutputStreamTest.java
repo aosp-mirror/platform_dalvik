@@ -201,8 +201,6 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
             int r = 0;
             try {
                 outGZIP.write(byteArray, 0, 11);
-            } catch (ArrayIndexOutOfBoundsException e) {
-                r = 1;
             } catch (IndexOutOfBoundsException ee) {
                 r = 1;
             }

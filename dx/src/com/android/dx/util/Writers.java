@@ -20,7 +20,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 
 /**
- * Utilities for dealing with <code>Writer</code>s.
+ * Utilities for dealing with {@code Writer}s.
  */
 public final class Writers {
     /**
@@ -31,12 +31,12 @@ public final class Writers {
     }
 
     /**
-     * Makes a <code>PrintWriter</code> for the given <code>Writer</code>,
+     * Makes a {@code PrintWriter} for the given {@code Writer},
      * returning the given writer if it already happens to be the right
      * class.
      * 
-     * @param writer non-null; writer to (possibly) wrap
-     * @return non-null; an appropriate instance
+     * @param writer {@code non-null;} writer to (possibly) wrap
+     * @return {@code non-null;} an appropriate instance
      */
     public static PrintWriter printWriterFor(Writer writer) {
         if (writer instanceof PrintWriter) {

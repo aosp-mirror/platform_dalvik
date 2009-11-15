@@ -27,17 +27,17 @@ import com.android.dx.util.ToHuman;
  */
 public final class FieldAnnotationStruct
         implements ToHuman, Comparable<FieldAnnotationStruct> {
-    /** non-null; the field in question */
+    /** {@code non-null;} the field in question */
     private final CstFieldRef field;
 
-    /** non-null; the associated annotations */
+    /** {@code non-null;} the associated annotations */
     private AnnotationSetItem annotations;
 
     /**
      * Constructs an instance.
      * 
-     * @param field non-null; the field in question
-     * @param annotations non-null; the associated annotations
+     * @param field {@code non-null;} the field in question
+     * @param annotations {@code non-null;} the associated annotations
      */
     public FieldAnnotationStruct(CstFieldRef field,
             AnnotationSetItem annotations) {
@@ -105,7 +105,7 @@ public final class FieldAnnotationStruct
     /**
      * Gets the field this item is for.
      * 
-     * @return non-null; the field
+     * @return {@code non-null;} the field
      */
     public CstFieldRef getField() {
         return field;
@@ -114,7 +114,7 @@ public final class FieldAnnotationStruct
     /**
      * Gets the associated annotations.
      * 
-     * @return non-null; the annotations
+     * @return {@code non-null;} the annotations
      */
     public Annotations getAnnotations() {
         return annotations.getAnnotations();

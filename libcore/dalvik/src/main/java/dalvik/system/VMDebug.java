@@ -27,8 +27,9 @@ import java.io.IOException;
  * <code>android.os.Debug</code>.
  * 
  * @cts Please complete the spec.
- * 
- * @since Android 1.0
+ *
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
  */
 public final class VMDebug {
     /**
@@ -275,8 +276,22 @@ public final class VMDebug {
      */
     public static native void dumpHprofData(String fileName) throws IOException;
 
-    /* don't ask */
-    static native void printThis(Object thisThing, int count, int thing);
+    /**
+     * Primes the register map cache.
+     *
+     * @hide
+     */
+    public static native boolean cacheRegisterMap(String classAndMethodDesc);
+
+    /**
+     * Crashes the VM.  Seriously.  Dumps the stack trace for the current
+     * thread and then aborts the VM so you can see the native stack trace.
+     * Useful for figuring out how you got somewhere when lots of native
+     * code is involved.
+     *
+     * @hide
+     */
+    public static native void crash();
 
     /*
      * Fake method, inserted into dmtrace output when the garbage collector

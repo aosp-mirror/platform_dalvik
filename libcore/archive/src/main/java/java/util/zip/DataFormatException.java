@@ -20,8 +20,6 @@ package java.util.zip;
 /**
  * {@code DataFormatException} is used to indicate an error in the format of a
  * particular data stream which is to be uncompressed.
- * 
- * @since Android 1.0
  */
 public class DataFormatException extends Exception {
 
@@ -29,8 +27,6 @@ public class DataFormatException extends Exception {
 
     /**
      * Constructs a new {@code DataFormatException} instance.
-     * 
-     * @since Android 1.0
      */
     public DataFormatException() {
         super();
@@ -39,10 +35,9 @@ public class DataFormatException extends Exception {
     /**
      * Constructs a new {@code DataFormatException} instance with the specified
      * message.
-     * 
+     *
      * @param detailMessage
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public DataFormatException(String detailMessage) {
         super(detailMessage);

@@ -21,7 +21,7 @@ import com.android.dx.util.Bits;
 import junit.framework.TestCase;
 
 /**
- * Test the class <code>com.android.dx.util.Bits</code>.
+ * Test the class {@code com.android.dx.util.Bits}.
  */
 public class _Bits
         extends TestCase {

@@ -435,6 +435,15 @@ int dvmStringLen(StringObject* jstr)
 }
 
 /*
+ * Get the char[] object from the String.
+ */
+ArrayObject* dvmStringCharArray(StringObject* jstr)
+{
+    return (ArrayObject*) dvmGetFieldObject((Object*) jstr,
+                                gDvm.offJavaLangString_value);
+}
+
+/*
  * Get the string's data.
  */
 const u2* dvmStringChars(StringObject* jstr)

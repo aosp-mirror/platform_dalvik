@@ -21,11 +21,11 @@ import com.android.dx.util.AnnotatedOutput;
 import com.android.dx.util.Hex;
 
 /**
- * File header section of a <code>.dex</code> file.
+ * File header section of a {@code .dex} file.
  */
 public final class HeaderItem extends IndexedItem {
     /**
-     * non-null; the file format magic number, represented as the
+     * {@code non-null;} the file format magic number, represented as the
      * low-order bytes of a string
      */
     private static final String MAGIC = "dex\n035\0";

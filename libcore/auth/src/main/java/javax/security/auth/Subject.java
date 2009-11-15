@@ -51,8 +51,6 @@ import org.apache.harmony.auth.internal.nls.Messages;
  * <li>Credentials (public and private) such as certificates, keys, or
  * authentication proofs such as tickets</li>
  * </ul>
- * </p>
- * @since Android 1.0
  */
 public final class Subject implements Serializable {
 
@@ -104,7 +102,7 @@ public final class Subject implements Serializable {
     /**
      * The constructor for the subject, setting its public and private
      * credentials and principals according to the arguments.
-     * 
+     *
      * @param readOnly
      *            {@code true} if this {@code Subject} is read-only, thus
      *            preventing any modifications to be done.
@@ -135,7 +133,7 @@ public final class Subject implements Serializable {
     /**
      * Runs the code defined by {@code action} using the permissions granted to
      * the {@code Subject} itself and to the code as well.
-     * 
+     *
      * @param subject
      *            the distinguished {@code Subject}.
      * @param action
@@ -154,7 +152,7 @@ public final class Subject implements Serializable {
      * Run the code defined by {@code action} using the permissions granted to
      * the {@code Subject} and to the code itself, additionally providing a more
      * specific context.
-     * 
+     *
      * @param subject
      *            the distinguished {@code Subject}.
      * @param action
@@ -209,7 +207,7 @@ public final class Subject implements Serializable {
     /**
      * Runs the code defined by {@code action} using the permissions granted to
      * the subject and to the code itself.
-     * 
+     *
      * @param subject
      *            the distinguished {@code Subject}.
      * @param action
@@ -231,7 +229,7 @@ public final class Subject implements Serializable {
      * Runs the code defined by {@code action} using the permissions granted to
      * the subject and to the code itself, additionally providing a more
      * specific context.
-     * 
+     *
      * @param subject
      *            the distinguished {@code Subject}.
      * @param action
@@ -290,7 +288,7 @@ public final class Subject implements Serializable {
      * Checks two Subjects for equality. More specifically if the principals,
      * public and private credentials are equal, equality for two {@code
      * Subjects} is implied.
-     * 
+     *
      * @param obj
      *            the {@code Object} checked for equality with this {@code
      *            Subject}.
@@ -320,18 +318,18 @@ public final class Subject implements Serializable {
 
     /**
      * Returns this {@code Subject}'s {@link Principal}.
-     * 
+     *
      * @return this {@code Subject}'s {@link Principal}.
      */
     public Set<Principal> getPrincipals() {
         return principals;
     }
 
-    
+
     /**
      * Returns this {@code Subject}'s {@link Principal} which is a subclass of
      * the {@code Class} provided.
-     * 
+     *
      * @param c
      *            the {@code Class} as a criteria which the {@code Principal}
      *            returned must satisfy.
@@ -345,7 +343,7 @@ public final class Subject implements Serializable {
 
     /**
      * Returns the private credentials associated with this {@code Subject}.
-     * 
+     *
      * @return the private credentials associated with this {@code Subject}.
      */
     public Set<Object> getPrivateCredentials() {
@@ -355,7 +353,7 @@ public final class Subject implements Serializable {
     /**
      * Returns this {@code Subject}'s private credentials which are a subclass
      * of the {@code Class} provided.
-     * 
+     *
      * @param c
      *            the {@code Class} as a criteria which the private credentials
      *            returned must satisfy.
@@ -369,18 +367,18 @@ public final class Subject implements Serializable {
 
     /**
      * Returns the public credentials associated with this {@code Subject}.
-     * 
+     *
      * @return the public credentials associated with this {@code Subject}.
      */
     public Set<Object> getPublicCredentials() {
         return publicCredentials;
     }
 
-    
+
     /**
      * Returns this {@code Subject}'s public credentials which are a subclass of
      * the {@code Class} provided.
-     * 
+     *
      * @param c
      *            the {@code Class} as a criteria which the public credentials
      *            returned must satisfy.
@@ -394,7 +392,7 @@ public final class Subject implements Serializable {
 
     /**
      * Returns a hash code of this {@code Subject}.
-     * 
+     *
      * @return a hash code of this {@code Subject}.
      */
     @Override
@@ -417,7 +415,7 @@ public final class Subject implements Serializable {
 
     /**
      * Returns whether this {@code Subject} is read-only or not.
-     * 
+     *
      * @return whether this {@code Subject} is read-only or not.
      */
     public boolean isReadOnly() {
@@ -426,7 +424,7 @@ public final class Subject implements Serializable {
 
     /**
      * Returns a {@code String} representation of this {@code Subject}.
-     * 
+     *
      * @return a {@code String} representation of this {@code Subject}.
      */
     @Override
@@ -479,7 +477,7 @@ public final class Subject implements Serializable {
     /**
      * Returns the {@code Subject} that was last associated with the {@code
      * context} provided as argument.
-     * 
+     *
      * @param context
      *            the {@code context} that was associated with the
      *            {@code Subject}.

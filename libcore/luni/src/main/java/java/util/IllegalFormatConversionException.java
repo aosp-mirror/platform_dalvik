@@ -23,7 +23,8 @@ import java.io.Serializable;
  * is incompatible with the corresponding format specifier.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public class IllegalFormatConversionException extends IllegalFormatException
         implements Serializable {

@@ -25,8 +25,6 @@ import java.util.EventListener;
  * implement the {@code RowSetListener} interface and then register itself with
  * the {@code RowSet} of interest using the
  * {@link RowSet#addRowSetListener(RowSetListener)} method.
- * 
- * @since Android 1.0
  */
 public interface RowSetListener extends EventListener {
 
@@ -39,7 +37,6 @@ public interface RowSetListener extends EventListener {
      *            {@code RowSet} involved. This information can be used to
      *            retrieve information about the change, such as the updated
      *            data values.
-     * @since Android 1.0
      */
     public void cursorMoved(RowSetEvent theEvent);
 
@@ -52,7 +49,6 @@ public interface RowSetListener extends EventListener {
      *            {@code RowSet} involved. This information can be used to
      *            retrieve information about the change, such as the new cursor
      *            position.
-     * @since Android 1.0
      */
     public void rowChanged(RowSetEvent theEvent);
 
@@ -66,7 +62,6 @@ public interface RowSetListener extends EventListener {
      *            {@code RowSet} involved. This information can be used to
      *            retrieve information about the change, such as the updated
      *            rows of data.
-     * @since Android 1.0
      */
     public void rowSetChanged(RowSetEvent theEvent);
 }

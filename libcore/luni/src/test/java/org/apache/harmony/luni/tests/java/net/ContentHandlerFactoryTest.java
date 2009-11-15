@@ -67,8 +67,7 @@ public class ContentHandlerFactoryTest extends TestCase {
                 assertTrue(isCreateContentHandlerCalled);
                 assertTrue(isGetContentCalled);
             } catch (Exception e) {
-                fail("Exception during test : " + e.getMessage());
-            
+                throw new RuntimeException(e);
             }
             
             isGetContentCalled = false;
@@ -77,8 +76,7 @@ public class ContentHandlerFactoryTest extends TestCase {
                 con.getContent(new Class[] {});
                 assertTrue(isGetContentCalled);
             } catch (Exception e) {
-                fail("Exception during test : " + e.getMessage());
-            
+                throw new RuntimeException(e);
             }
             
             try {

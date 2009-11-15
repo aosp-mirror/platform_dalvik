@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package java.util.prefs;
 
 import java.io.Serializable;
@@ -28,19 +27,22 @@ import java.io.IOException;
  * This is the event class to indicate that one child of the preference node has
  * been added or deleted.
  * <p>
- * Please note that the serialization functionality has not yet been implemented, so
- * the serialization methods do nothing but throw a {@code NotSerializableException}.
- * </p>
+ * Please note that although the class is marked as {@code Serializable} by
+ * inheritance from {@code EventObject}, this type is not intended to be serialized
+ * so the serialization methods do nothing but throw a {@code NotSerializableException}.
  * 
- * @since Android 1.0
+ * @see java.util.prefs.Preferences
+ * @see java.util.prefs.NodeChangeListener
+ * 
+ * @since 1.4
  */
 public class NodeChangeEvent extends EventObject implements Serializable {
-    
+
     private static final long serialVersionUID = 8068949086596572957L;
-    
+
     private final Preferences parent;
     private final Preferences child;
-    
+
     /**
      * Constructs a new {@code NodeChangeEvent} instance.
      * 
@@ -49,43 +51,40 @@ public class NodeChangeEvent extends EventObject implements Serializable {
      *            considered as the event source.
      * @param c
      *            the child {@code Preferences} instance that was added or deleted.
-     * @since Android 1.0
      */
     public NodeChangeEvent (Preferences p, Preferences c) {
         super(p);
         parent = p;
         child = c;
     }
-    
+
     /**
      * Gets the {@code Preferences} instance that fired this event.
      * 
      * @return the {@code Preferences} instance that fired this event.
-     * @since Android 1.0
      */
     public Preferences getParent() {
         return parent;
     }
-    
+
     /**
      * Gets the child {@code Preferences} node that was added or removed.
      * 
      * @return the added or removed child {@code Preferences} node.
-     * @since Android 1.0
      */
     public Preferences getChild() {
         return child;
     }
-    
-    /*
+
+    /**
      * This method always throws a <code>NotSerializableException</code>,
      * because this object cannot be serialized,
      */
     private void writeObject (ObjectOutputStream out) throws IOException {
         throw new NotSerializableException();
     }
-    
-    /*
+
+    /**
      * This method always throws a <code>NotSerializableException</code>,
      * because this object cannot be serialized,
      */
@@ -93,7 +92,3 @@ public class NodeChangeEvent extends EventObject implements Serializable {
         throw new NotSerializableException();
     }
 }
-
-
-
- 

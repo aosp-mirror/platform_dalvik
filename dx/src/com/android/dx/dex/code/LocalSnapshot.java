@@ -27,15 +27,15 @@ import com.android.dx.rop.code.SourcePosition;
  * the instance in an instruction array.
  */
 public final class LocalSnapshot extends ZeroSizeInsn {
-    /** non-null; local state associated with this instance */
+    /** {@code non-null;} local state associated with this instance */
     private final RegisterSpecSet locals;
 
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
-     * @param position non-null; source position
-     * @param locals non-null; associated local variable state
+     * @param position {@code non-null;} source position
+     * @param locals {@code non-null;} associated local variable state
      */
     public LocalSnapshot(SourcePosition position, RegisterSpecSet locals) {
         super(position);
@@ -62,7 +62,7 @@ public final class LocalSnapshot extends ZeroSizeInsn {
     /**
      * Gets the local state associated with this instance.
      * 
-     * @return non-null; the state
+     * @return {@code non-null;} the state
      */
     public RegisterSpecSet getLocals() {
         return locals;

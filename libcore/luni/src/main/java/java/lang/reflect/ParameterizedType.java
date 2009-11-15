@@ -18,10 +18,10 @@
 package java.lang.reflect;
 
 /**
- * This interface represents a parameterized type such as {@code 
+ * This interface represents a parameterized type such as {@code
  * 'Set&lt;String&gt;'}.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface ParameterizedType extends Type {
 
@@ -32,25 +32,23 @@ public interface ParameterizedType extends Type {
      * parameterized type, this method returns a zero length array. The generic
      * type of the following {@code field} declaration is an example for a
      * parameterized type without type arguments.
-     * 
+     *
      * <pre>
      * A&lt;String&gt;.B field;
-     * 
+     *
      * class A&lt;T&gt; {
      *     class B {
      *     }
      * }</pre>
-     * 
-     * 
+     *
+     *
      * @return the actual type arguments
-     * 
+     *
      * @throws TypeNotPresentException
      *             if one of the type arguments cannot be found
      * @throws MalformedParameterizedTypeException
      *             if one of the type arguments cannot be instantiated for some
      *             reason
-     * 
-     * @since Android 1.0
      */
     Type[] getActualTypeArguments();
 
@@ -59,13 +57,11 @@ public interface ParameterizedType extends Type {
      * {@code null} is returned if this is a top-level type.
      * 
      * @return the owner type or {@code null} if this is a top-level type
-     * 
+     *
      * @throws TypeNotPresentException
      *             if one of the type arguments cannot be found
      * @throws MalformedParameterizedTypeException
      *             if the owner type cannot be instantiated for some reason
-     * 
-     * @since Android 1.0
      */
     Type getOwnerType();
 
@@ -73,10 +69,8 @@ public interface ParameterizedType extends Type {
      * Returns the declaring type of this parameterized type.
      * <p>
      * The raw type of {@code Set&lt;String&gt; field;} is {@code Set}.
-     * 
+     *
      * @return the raw type of this parameterized type
-     * 
-     * @since Android 1.0
      */
     Type getRawType();
 }

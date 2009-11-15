@@ -20,8 +20,6 @@ package java.io;
 /**
  * Signals that the {@link FileDescriptor#sync()} method has failed to
  * complete.
- * 
- * @since Android 1.0
  */
 public class SyncFailedException extends IOException {
 
@@ -33,7 +31,6 @@ public class SyncFailedException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public SyncFailedException(String detailMessage) {
         super(detailMessage);

@@ -47,13 +47,13 @@ import java.util.ArrayList;
  * Machine implementation for use by {@link Ropper}.
  */
 /*package*/ final class RopperMachine extends ValueAwareMachine {
-    /** non-null; array reflection class */
+    /** {@code non-null;} array reflection class */
     private static final CstType ARRAY_REFLECT_TYPE =
         new CstType(Type.internClassName("java/lang/reflect/Array"));
 
     /**
-     * non-null; method constant for use in converting
-     * <code>multianewarray</code> instructions 
+     * {@code non-null;} method constant for use in converting
+     * {@code multianewarray} instructions 
      */
     private static final CstMethodRef MULTIANEWARRAY_METHOD =
         new CstMethodRef(ARRAY_REFLECT_TYPE,
@@ -61,34 +61,34 @@ import java.util.ArrayList;
                                     new CstUtf8("(Ljava/lang/Class;[I)" +
                                                 "Ljava/lang/Object;")));
 
-    /** non-null; {@link Ropper} controlling this instance */
+    /** {@code non-null;} {@link Ropper} controlling this instance */
     private final Ropper ropper;
 
-    /** non-null; method being converted */
+    /** {@code non-null;} method being converted */
     private final ConcreteMethod method;
 
-    /** non-null; translation advice */
+    /** {@code non-null;} translation advice */
     private final TranslationAdvice advice;
 
     /** max locals of the method */
     private final int maxLocals;
 
-    /** non-null; instructions for the rop basic block in-progress */
+    /** {@code non-null;} instructions for the rop basic block in-progress */
     private final ArrayList<Insn> insns;
 
-    /** non-null; catches for the block currently being processed */
+    /** {@code non-null;} catches for the block currently being processed */
     private TypeList catches;
 
     /** whether the catches have been used in an instruction */
     private boolean catchesUsed;
 
-    /** whether the block contains a <code>return</code> */
+    /** whether the block contains a {@code return} */
     private boolean returns;
 
     /** primary successor index */
     private int primarySuccessorIndex;
 
-    /** &gt;= 0; number of extra basic blocks required */
+    /** {@code >= 0;} number of extra basic blocks required */
     private int extraBlockCount;
 
     /** true if last processed block ends with a jsr or jsr_W*/
@@ -105,13 +105,13 @@ import java.util.ArrayList;
     private ReturnAddress returnAddress;
 
     /**
-     * null-ok; the appropriate <code>return</code> op or <code>null</code>
+     * {@code null-ok;} the appropriate {@code return} op or {@code null}
      * if it is not yet known 
      */
     private Rop returnOp;
 
     /**
-     * null-ok; the source position for the return block or <code>null</code>
+     * {@code null-ok;} the source position for the return block or {@code null}
      * if it is not yet known 
      */
     private SourcePosition returnPosition;
@@ -119,9 +119,9 @@ import java.util.ArrayList;
     /**
      * Constructs an instance.
      * 
-     * @param ropper non-null; ropper controlling this instance
-     * @param method non-null; method being converted
-     * @param advice non-null; translation advice to use
+     * @param ropper {@code non-null;} ropper controlling this instance
+     * @param method {@code non-null;} method being converted
+     * @param advice {@code non-null;} translation advice to use
      */
     public RopperMachine(Ropper ropper, ConcreteMethod method,
             TranslationAdvice advice) {
@@ -154,7 +154,7 @@ import java.util.ArrayList;
      * Gets the instructions array. It is shared and gets modified by
      * subsequent calls to this instance.
      * 
-     * @return non-null; the instructions array
+     * @return {@code non-null;} the instructions array
      */
     public ArrayList<Insn> getInsns() {
         return insns;
@@ -163,7 +163,7 @@ import java.util.ArrayList;
     /**
      * Gets the return opcode encountered, if any.
      * 
-     * @return null-ok; the return opcode
+     * @return {@code null-ok;} the return opcode
      */
     public Rop getReturnOp() {
         return returnOp;
@@ -172,7 +172,7 @@ import java.util.ArrayList;
     /**
      * Gets the return position, if known.
      * 
-     * @return null-ok; the return position
+     * @return {@code null-ok;} the return position
      */
     public SourcePosition getReturnPosition() {
         return returnPosition;
@@ -182,7 +182,7 @@ import java.util.ArrayList;
      * Gets ready to start working on a new block. This will clear the
      * {@link #insns} list, set {@link #catches}, reset whether it has
      * been used, reset whether the block contains a
-     * <code>return</code>, and reset {@link #primarySuccessorIndex}.
+     * {@code return}, and reset {@link #primarySuccessorIndex}.
      */
     public void startBlock(TypeList catches) {
         this.catches = catches;
@@ -201,7 +201,7 @@ import java.util.ArrayList;
      * Gets whether {@link #catches} was used. This indicates that the
      * last instruction in the block is one of the ones that can throw.
      * 
-     * @return whether <code>catches</code> has been used
+     * @return whether {@code catches} has been used
      */
     public boolean wereCatchesUsed() {
         return catchesUsed;
@@ -209,7 +209,7 @@ import java.util.ArrayList;
 
     /**
      * Gets whether the block just processed ended with a
-     * <code>return</code>.
+     * {@code return}.
      * 
      * @return whether the block returns
      */
@@ -220,12 +220,12 @@ import java.util.ArrayList;
     /**
      * Gets the primary successor index. This is the index into the
      * successors list where the primary may be found or
-     * <code>-1</code> if there are successors but no primary
+     * {@code -1} if there are successors but no primary
      * successor. This may return something other than
-     * <code>-1</code> in the case of an instruction with no
+     * {@code -1} in the case of an instruction with no
      * successors at all (primary or otherwise).
      * 
-     * @return &gt;= -1; the primary successor index
+     * @return {@code >= -1;} the primary successor index
      */
     public int getPrimarySuccessorIndex() {
         return primarySuccessorIndex;
@@ -236,7 +236,7 @@ import java.util.ArrayList;
      * block currently being translated. Each extra block should consist
      * of one instruction from the end of the original block.
      * 
-     * @return &gt;= 0; the number of extra blocks needed
+     * @return {@code >= 0;} the number of extra blocks needed
      */
     public int getExtraBlockCount() {
         return extraBlockCount;
@@ -259,16 +259,17 @@ import java.util.ArrayList;
     }
 
     /**
-     * @return true if a RET has ben encountered since the last call to 
-     * startBlock()
+     * @return {@code true} if a {@code ret} has ben encountered since
+     * the last call to {@code startBlock()}
      */
     public boolean hasRet() {
         return returnAddress != null;
     }
 
     /**
-     * @return null-ok; return address of a ret instruction if encountered
-     * since last call to startBlock(). null if no ret instruction encountered.
+     * @return {@code null-ok;} return address of a {@code ret}
+     * instruction if encountered since last call to startBlock().
+     * {@code null} if no ret instruction encountered.
      */
     public ReturnAddress getReturnAddress() {
         return returnAddress;
@@ -444,7 +445,7 @@ import java.util.ArrayList;
                     catches, MULTIANEWARRAY_METHOD);
             insns.add(insn);
 
-            // Add a move-result
+            // Add a move-result.
             rop = Rops.opMoveResult(MULTIANEWARRAY_METHOD.getPrototype()
                     .getReturnType());
             insn = new PlainInsn(rop, pos, objectReg, RegisterSpecList.EMPTY);
@@ -457,7 +458,6 @@ import java.util.ArrayList;
 
             opcode = ByteOps.CHECKCAST;
             sources = RegisterSpecList.make(objectReg);
-
         } else if (opcode == ByteOps.JSR) {
             // JSR has no Rop instruction
             hasJsr = true;
@@ -474,12 +474,14 @@ import java.util.ArrayList;
         }
 
         ropOpcode = jopToRopOpcode(opcode, cst);
-
         rop = Rops.ropFor(ropOpcode, destType, sources, cst);
 
         Insn moveResult = null;
         if (dest != null && rop.isCallLike()) {
-            // We're going to want to have a move-result in the next basic block
+            /*
+             * We're going to want to have a move-result in the next
+             * basic block.
+             */
             extraBlockCount++;
 
             moveResult = new PlainInsn(
@@ -488,8 +490,10 @@ import java.util.ArrayList;
 
             dest = null;
         } else if (dest != null && rop.canThrow()) {
-            // We're going to want to have a move-result-pseudo
-            // in the next basic block
+            /*
+             * We're going to want to have a move-result-pseudo in the
+             * next basic block.
+             */
             extraBlockCount++;
 
             moveResult = new PlainInsn(
@@ -599,11 +603,12 @@ import java.util.ArrayList;
         }
 
         /*
-         * If initValues is non-null, it means that the parser has seen a group
-         * of compatible constant initialization bytecodes that are applied to
-         * the current newarray. The action we take here is to convert these
-         * initialization bytecodes into a single fill-array-data ROP which lays
-         * out all the constant values in a table.
+         * If initValues is non-null, it means that the parser has
+         * seen a group of compatible constant initialization
+         * bytecodes that are applied to the current newarray. The
+         * action we take here is to convert these initialization
+         * bytecodes into a single fill-array-data ROP which lays out
+         * all the constant values in a table.
          */ 
         if (initValues != null) {
             extraBlockCount++;
@@ -619,9 +624,9 @@ import java.util.ArrayList;
      * instruction.
      * 
      * @param opcode the opcode being translated
-     * @param stackPointer &gt;= 0; the stack pointer after the instruction's
-     * arguments have been popped
-     * @return non-null; the sources
+     * @param stackPointer {@code >= 0;} the stack pointer after the
+     * instruction's arguments have been popped
+     * @return {@code non-null;} the sources
      */
     private RegisterSpecList getSources(int opcode, int stackPointer) {
         int count = argCount();
@@ -692,8 +697,8 @@ import java.util.ArrayList;
     /**
      * Sets or updates the information about the return block.
      * 
-     * @param op non-null; the opcode to use
-     * @param pos non-null; the position to use
+     * @param op {@code non-null;} the opcode to use
+     * @param pos {@code non-null;} the position to use
      */
     private void updateReturnOp(Rop op, SourcePosition pos) {
         if (op == null) {
@@ -723,9 +728,9 @@ import java.util.ArrayList;
     /**
      * Gets the register opcode for the given Java opcode.
      * 
-     * @param jop &gt;= 0; the Java opcode
-     * @param cst null-ok; the constant argument, if any
-     * @return &gt;= 0; the corresponding register opcode
+     * @param jop {@code >= 0;} the Java opcode
+     * @param cst {@code null-ok;} the constant argument, if any
+     * @return {@code >= 0;} the corresponding register opcode
      */
     private int jopToRopOpcode(int jop, Constant cst) {
         switch (jop) {

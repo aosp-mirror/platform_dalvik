@@ -20,19 +20,16 @@ package javax.net.ssl;
 /**
  * The exception that is thrown when an error in the operation of the SSL
  * protocol is encountered.
- * 
- * @since Android 1.0
  */
 public class SSLProtocolException extends SSLException {
-    
+
     private static final long serialVersionUID = 5445067063799134928L;
 
     /**
      * Creates a new {@code SSLProtocolException} with the specified message.
-     * 
+     *
      * @param reason
      *            the detail message for the exception.
-     * @since Android 1.0
      */
     public SSLProtocolException(String reason) {
         super(reason);

@@ -17,7 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -30,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
@@ -174,8 +174,6 @@ public class ZipInputStreamTest extends TestCase {
         method = "close",
         args = {}
     )
-    @KnownFailure("after an exception has been thrown wile reading a "
-            + "call to close also throws an exception.")
     public void test_closeAfterException() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
@@ -281,6 +279,31 @@ public class ZipInputStreamTest extends TestCase {
         }
     }
 
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            method = "read",
+            args = {byte[].class, int.class, int.class}
+    )
+    public void testReadOneByteAtATime() throws IOException {
+        InputStream in = new FilterInputStream(Support_Resources.getStream("hyts_ZipFile.zip")) {
+            @Override
+            public int read(byte[] buffer, int offset, int count) throws IOException {
+                return super.read(buffer, offset, 1); // one byte at a time
+            }
+
+            @Override
+            public int read(byte[] buffer) throws IOException {
+                return super.read(buffer, 0, 1); // one byte at a time
+            }
+        };
+
+        zis = new ZipInputStream(in);
+        while ((zentry = zis.getNextEntry()) != null) {
+            zentry.getName();
+        }
+        zis.close();
+    }
+
     /**
      * @tests java.util.zip.ZipInputStream#skip(long)
      */
@@ -360,19 +383,19 @@ public class ZipInputStreamTest extends TestCase {
         long entrySize = entry.getSize();
         assertTrue("Entry size was < 1", entrySize > 0);
         int i = 0;
-        for (i = 0; i < entrySize; i++) {
+        while (zis1.available() > 0) {
             zis1.skip(1);
-            if (zis1.available() == 0) break;
+            i++;
         }
         if (i != entrySize) {
             fail("ZipInputStream.available or ZipInputStream.skip does not " +
                     "working properly. Only skipped " + i +
                     " bytes instead of " + entrySize);
         }
-        zis1.skip(1);
-        assertTrue(zis1.available() == 0);
+        assertEquals(0, zis1.skip(1));
+        assertEquals(0, zis1.available());
         zis1.closeEntry();
-        assertFalse(zis.available() == 0);
+        assertEquals(1, zis.available());
         zis1.close();
         try {
             zis1.available();

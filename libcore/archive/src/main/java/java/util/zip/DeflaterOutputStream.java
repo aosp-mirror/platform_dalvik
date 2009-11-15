@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,24 +27,19 @@ import org.apache.harmony.archive.internal.nls.Messages;
  * This class provides an implementation of {@code FilterOutputStream} that
  * compresses data using the <i>DEFLATE</i> algorithm. Basically it wraps the
  * {@code Deflater} class and takes care of the buffering.
- * 
+ *
  * @see Deflater
- * @since Android 1.0
  */
 public class DeflaterOutputStream extends FilterOutputStream {
     static final int BUF_SIZE = 512;
 
     /**
      * The buffer for the data to be written to.
-     * 
-     * @since Android 1.0
      */
     protected byte[] buf;
 
     /**
      * The deflater used.
-     * 
-     * @since Android 1.0
      */
     protected Deflater def;
 
@@ -61,7 +55,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * @param def
      *            is the specific {@code Deflater} that is used to compress
      *            data.
-     * @since Android 1.0
      */
     public DeflaterOutputStream(OutputStream os, Deflater def) {
         this(os, def, BUF_SIZE);
@@ -76,7 +69,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * 
      * @param os
      *            is the OutputStream where to write the compressed data to.
-     * @since Android 1.0
      */
     public DeflaterOutputStream(OutputStream os) {
         this(os, new Deflater());
@@ -94,7 +86,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
      *            data.
      * @param bsize
      *            is the size to be used for the internal buffer.
-     * @since Android 1.0
      */
     public DeflaterOutputStream(OutputStream os, Deflater def, int bsize) {
         super(os);
@@ -114,7 +105,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * 
      * @throws IOException
      *             If an error occurs during deflation.
-     * @since Android 1.0
      */
     protected void deflate() throws IOException {
         int x = 0;
@@ -132,7 +122,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * @throws IOException
      *             If an error occurs while closing the data compression
      *             process.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -149,7 +138,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * 
      * @throws IOException
      *             If an error occurs.
-     * @since Android 1.0
      */
     public void finish() throws IOException {
         if (done) {
@@ -186,7 +174,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
      *            the number of bytes of data to read from the buffer.
      * @throws IOException
      *             If an error occurs during writing.
-     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer, int off, int nbytes) throws IOException {

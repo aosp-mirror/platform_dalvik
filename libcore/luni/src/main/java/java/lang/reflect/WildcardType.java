@@ -22,24 +22,21 @@ package java.lang.reflect;
  * {@code '?'}, the upper bounded wildcard {@code '? extends Closeable'}, the
  * multiple upper bounded wildcard {@code '? extends Closeable & Flushable'} or
  * the lower bounded wildcard {@code '? super OutputStream'}.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface WildcardType extends Type {
-    
     /**
      * Returns the array of types that represent the upper bounds of this type.
      * The default upper bound is {@code Object}.
      *
      * @return an array containing the upper bounds types
-     * 
+     *
      * @throws TypeNotPresentException
      *             if any of the bounds points to a missing type
      * @throws MalformedParameterizedTypeException
      *             if any bound points to a type that cannot be instantiated for
      *             some reason
-     * 
-     * @since Android 1.0
      */
     Type[] getUpperBounds();
 
@@ -48,16 +45,14 @@ public interface WildcardType extends Type {
      * The default lower bound is {@code null}, in which case an empty array is
      * returned. Since only one lower bound is allowed, the returned array's
      * length will never exceed one.
-     * 
+     *
      * @return an array containing the lower bounds types
-     * 
+     *
      * @throws TypeNotPresentException
      *             if any of the bounds points to a missing type
      * @throws MalformedParameterizedTypeException
      *             if any of the bounds points to a type that cannot be
      *             instantiated for some reason
-     * 
-     * @since Android 1.0
      */
     Type[] getLowerBounds();
 }

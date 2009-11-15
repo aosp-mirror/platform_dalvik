@@ -33,7 +33,7 @@ public abstract class Item {
     /**
      * Returns the item type for this instance.
      * 
-     * @return non-null; the item type
+     * @return {@code non-null;} the item type
      */
     public abstract ItemType itemType();
     
@@ -41,7 +41,7 @@ public abstract class Item {
      * Returns the human name for the particular type of item this
      * instance is.
      * 
-     * @return non-null; the name
+     * @return {@code non-null;} the name
      */
     public final String typeName() {
         return itemType().toHuman();
@@ -50,7 +50,7 @@ public abstract class Item {
     /**
      * Gets the size of this instance when written, in bytes.
      * 
-     * @return &gt;= 0; the write size
+     * @return {@code >= 0;} the write size
      */
     public abstract int writeSize();
 
@@ -62,7 +62,7 @@ public abstract class Item {
      * <p><b>Note:</b> Subclasses must override this to do something
      * appropriate.</p>
      * 
-     * @param file non-null; the file to populate
+     * @param file {@code non-null;} the file to populate
      */
     public abstract void addContents(DexFile file);
 
@@ -73,8 +73,8 @@ public abstract class Item {
      * note the written offset and will also throw an exception if this
      * instance has already been written.
      * 
-     * @param file non-null; the file to use for reference
-     * @param out non-null; where to write to
+     * @param file {@code non-null;} the file to use for reference
+     * @param out {@code non-null;} where to write to
      */
     public abstract void writeTo(DexFile file, AnnotatedOutput out);
 }

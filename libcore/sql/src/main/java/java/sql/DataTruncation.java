@@ -24,8 +24,6 @@ import java.io.Serializable;
  * value either when reading (resulting in warning), or when writing data
  * (resulting in an error). The {@code SQLState} error code for truncated data
  * is {@code 01004}.
- *  
- * @since Android 1.0
  */
 public class DataTruncation extends SQLWarning implements Serializable {
 
@@ -66,7 +64,6 @@ public class DataTruncation extends SQLWarning implements Serializable {
      *            the original size of the truncated data.
      * @param transferSize
      *            the size of the data after truncation.
-     * @since Android 1.0
      */
     public DataTruncation(int index, boolean parameter, boolean read,
             int dataSize, int transferSize) {
@@ -83,7 +80,6 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * 
      * @return the number of bytes that should have been read or written. The
      *         value is set to {@code -1} if the size is unknown.
-     * @since Android 1.0
      */
     public int getDataSize() {
         return dataSize;
@@ -93,7 +89,6 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * Gets the index of the column or of the parameter that was truncated.
      * 
      * @return the index number of the column or of the parameter.
-     * @since Android 1.0
      */
     public int getIndex() {
         return index;
@@ -104,7 +99,6 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * 
      * @return {@code true} if the value truncated was a parameter value,
      *         {@code false} if it was a column value.
-     * @since Android 1.0
      */
     public boolean getParameter() {
         return parameter;
@@ -116,7 +110,6 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * 
      * @return {@code true} if the value was truncated on a read operation,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean getRead() {
         return read;
@@ -127,7 +120,6 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * 
      * @return the number of bytes actually read/written. The value may be set
      *         to {@code -1} if the size is unknown.
-     * @since Android 1.0
      */
     public int getTransferSize() {
         return transferSize;

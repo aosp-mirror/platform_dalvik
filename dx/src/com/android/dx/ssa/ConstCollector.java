@@ -17,19 +17,20 @@
 package com.android.dx.ssa;
 
 import com.android.dx.rop.code.*;
-import com.android.dx.rop.type.TypeBearer;
+import com.android.dx.rop.cst.Constant;
+import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.TypedConstant;
 import com.android.dx.rop.type.StdTypeList;
 import com.android.dx.rop.type.Type;
-import com.android.dx.rop.cst.Constant;
-import com.android.dx.rop.cst.TypedConstant;
-import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.type.TypeBearer;
 
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Collects constants that are used more than once at the top of the
@@ -37,7 +38,6 @@ import java.util.HashSet;
  * insn size by about 3%.
  */
 public class ConstCollector {
-
     /** Maximum constants to collect per method. Puts cap on reg use */
     private static final int MAX_COLLECTED_CONSTANTS = 5;
 
@@ -60,18 +60,20 @@ public class ConstCollector {
     private final SsaMethod ssaMeth;
 
     /**
-     * Process a method.
+     * Processes a method.
      *
-     * @param ssaMethod non-null; method to process
+     * @param ssaMethod {@code non-null;} method to process
      */
     public static void process(SsaMethod ssaMethod) {
-        ConstCollector dc;
-
-        dc = new ConstCollector(ssaMethod);
-            
-        dc.run();
+        ConstCollector cc = new ConstCollector(ssaMethod);
+        cc.run();
     }
 
+    /**
+     * Constructs an instance.
+     * 
+     * @param ssaMethod {@code non-null;} method to process
+     */
     private ConstCollector(SsaMethod ssaMethod) {
         this.ssaMeth = ssaMethod;
     }
@@ -111,9 +113,7 @@ public class ConstCollector {
                 SsaBasicBlock successorBlock
                         = entryBlock.getPrimarySuccessor();
 
-                /*
-                 * Insert a block containing the const insn
-                 */
+                // Insert a block containing the const insn.
                 SsaBasicBlock constBlock
                         = entryBlock.insertNewSuccessor(successorBlock);
 
@@ -122,18 +122,17 @@ public class ConstCollector {
                                 RegisterSpecList.EMPTY,
                                 StdTypeList.EMPTY, cst));
 
-                /*
-                 * Insert a block containing the move-result-pseudo insn
-                 */
+                // Insert a block containing the move-result-pseudo insn.
 
                 SsaBasicBlock resultBlock
                         = constBlock.insertNewSuccessor(successorBlock);
+                PlainInsn insn 
+                    = new PlainInsn(
+                            Rops.opMoveResultPseudo(result.getTypeBearer()),
+                            SourcePosition.NO_INFO,
+                            result, RegisterSpecList.EMPTY);
 
-                resultBlock.addInsnToHead(
-                        new PlainInsn(
-                                Rops.opMoveResultPseudo(result.getTypeBearer()),
-                                SourcePosition.NO_INFO,
-                                result, RegisterSpecList.EMPTY));
+                resultBlock.addInsnToHead(insn);
             }
 
             newRegs.put(cst, result);
@@ -147,7 +146,7 @@ public class ConstCollector {
      * sorted by most used first. Skips non-collectable consts, such as
      * non-string object constants
      *
-     * @return non-null; list of constants in most-to-least used order
+     * @return {@code non-null;} list of constants in most-to-least used order
      */
     private ArrayList<TypedConstant> getConstsSortedByCountUse() {
         int regSz = ssaMeth.getRegCount();
@@ -155,20 +154,21 @@ public class ConstCollector {
         final HashMap<TypedConstant, Integer> countUses
                 = new HashMap<TypedConstant, Integer>();
 
-        // Each collected constant can be used by just one local
-        // (used only if COLLECT_ONE_LOCAL is true)
+        /*
+         * Each collected constant can be used by just one local
+         * (used only if COLLECT_ONE_LOCAL is true).
+         */
         final HashSet<TypedConstant> usedByLocal
                 = new HashSet<TypedConstant>();
 
-        // Count how many times each const value is used
+        // Count how many times each const value is used.
         for (int i = 0; i < regSz; i++) {
             SsaInsn insn = ssaMeth.getDefinitionForRegister(i);
 
             if (insn == null) continue;
 
             RegisterSpec result = insn.getResult();
-
-            TypeBearer typeBearer = insn.getResult().getTypeBearer();
+            TypeBearer typeBearer = result.getTypeBearer();
 
             if (!typeBearer.isConstant()) continue;
 
@@ -177,28 +177,30 @@ public class ConstCollector {
             if (insn.canThrow()) {
                 /*
                  * Don't move anything other than strings -- the risk
-                 * of changing where an exception is thrown is too high.                
+                 * of changing where an exception is thrown is too high.
                  */
                 if (!(cst instanceof CstString) || !COLLECT_STRINGS) {
                     continue;
                 }
                 /*
-                 * We can't move any throwable const whose throw will be caught,
-                 * so don't count them.                 
+                 * We can't move any throwable const whose throw will be
+                 * caught, so don't count them.                 
                  */
                 if (insn.getBlock().getSuccessors().cardinality() > 1) {
                     continue;
                 }
             }
 
-            // TODO might be nice to try and figure out which local wins most
-            // when collected
+            /*
+             * TODO: Might be nice to try and figure out which local
+             * wins most when collected.
+             */
             if (ssaMeth.isRegALocal(result)) {
                 if (!COLLECT_ONE_LOCAL) {
                     continue;
                 } else {
                     if (usedByLocal.contains(cst)) {
-                        // Count one local usage only
+                        // Count one local usage only.
                         continue;
                     } else {
                         usedByLocal.add(cst);
@@ -214,18 +216,15 @@ public class ConstCollector {
             }
         }
 
-        // Collect constants that have been reused
-        Iterator<TypedConstant> it = countUses.keySet().iterator();
+        // Collect constants that have been reused.
         ArrayList<TypedConstant> constantList = new ArrayList<TypedConstant>();
-        while (it.hasNext()) {
-            TypedConstant cst = it.next();
-
-            if (countUses.get(cst) > 1) {
-                constantList.add(cst);
+        for (Map.Entry<TypedConstant, Integer> entry : countUses.entrySet()) {
+            if (entry.getValue() > 1) {
+                constantList.add(entry.getKey());
             }
         }
 
-        // Sort by use, with most used at the beginning of the list
+        // Sort by use, with most used at the beginning of the list.
         Collections.sort(constantList, new Comparator<Constant>() {
             public int compare(Constant a, Constant b) {
                 int ret;
@@ -241,47 +240,48 @@ public class ConstCollector {
 
                 return ret;
             }
+
             public boolean equals (Object obj) {
                 return obj == this;
             }
         });
+
         return constantList;
     }
 
     /**
      * Inserts mark-locals if necessary when changing a register. If
-     * the definition of <code>origReg</code> is associated with a local
-     * variable, then insert a mark-local for <code>newReg</code> just below
-     * it. We expect the definition of  <code>origReg</code> to ultimately
+     * the definition of {@code origReg} is associated with a local
+     * variable, then insert a mark-local for {@code newReg} just below
+     * it. We expect the definition of  {@code origReg} to ultimately
      * be removed by the dead code eliminator
      * 
-     * @param origReg non-null; original register
-     * @param newReg non-null; new register that will replace
-     * <code>origReg</code>
+     * @param origReg {@code non-null;} original register
+     * @param newReg {@code non-null;} new register that will replace
+     * {@code origReg}
      */
-    private void fixLocalAssignment(RegisterSpec origReg, RegisterSpec newReg) {
-        for (SsaInsn use: ssaMeth.getUseListForRegister(origReg.getReg())) {
+    private void fixLocalAssignment(RegisterSpec origReg,
+            RegisterSpec newReg) {
+        for (SsaInsn use : ssaMeth.getUseListForRegister(origReg.getReg())) {
             RegisterSpec localAssignment = use.getLocalAssignment();
             if (localAssignment == null) {
                 continue;
             }
 
             if (use.getResult() == null) {
-                // this is a mark-local. it will be updated when all uses
-                // are updated
+                /*
+                 * This is a mark-local. it will be updated when all uses
+                 * are updated.
+                 */
                 continue;
             }
 
             LocalItem local = localAssignment.getLocalItem();
 
-            /*
-             * un-associate original use
-             */
+            // Un-associate original use.
             use.setResultLocal(null);
 
-            /*
-             * now add a mark-local to the new reg immediately after
-             */                       
+            // Now add a mark-local to the new reg immediately after.
             newReg = newReg.withLocalItem(local);
 
             SsaInsn newInsn
@@ -301,15 +301,17 @@ public class ConstCollector {
      * Updates all uses of various consts to use the values in the newly
      * assigned registers.
      *
-     * @param newRegs non-null; mapping between constant and new reg
-     * @param origRegCount &gt;=0; original SSA reg count, not including
+     * @param newRegs {@code non-null;} mapping between constant and new reg
+     * @param origRegCount {@code >=0;} original SSA reg count, not including
      * newly added constant regs
      */
     private void updateConstUses(HashMap<TypedConstant, RegisterSpec> newRegs,
             int origRegCount) {
 
-        // Set of constants associated with a local variable
-        // Used only if COLLECT_ONE_LOCAL is true
+        /*
+         * set of constants associated with a local variable; used
+         * only if COLLECT_ONE_LOCAL is true.
+         */
         final HashSet<TypedConstant> usedByLocal
                 = new HashSet<TypedConstant>();
 
@@ -338,8 +340,11 @@ public class ConstCollector {
                 if (!COLLECT_ONE_LOCAL) {
                     continue;                    
                 } else {
-                    // TODO if the same local gets the same cst multiple times,
-                    // it would be nice to reuse the register
+                    /*
+                     * TODO: If the same local gets the same cst
+                     * multiple times, it would be nice to reuse the
+                     * register.
+                     */
                     if (usedByLocal.contains(cst)) {
                         continue;
                     } else {
@@ -349,7 +354,7 @@ public class ConstCollector {
                 }
             }
 
-            // Maps an original const register to the new collected register
+            // maps an original const register to the new collected register
             RegisterMapper mapper = new RegisterMapper() {
                 @Override
                 public int getNewRegisterCount() {
@@ -359,14 +364,15 @@ public class ConstCollector {
                 @Override
                 public RegisterSpec map(RegisterSpec registerSpec) {
                     if (registerSpec.getReg() == origReg.getReg()) {
-                        return newReg.withLocalItem(registerSpec.getLocalItem());
+                        return newReg.withLocalItem(
+                                registerSpec.getLocalItem());
                     }
 
                     return registerSpec;
                 }
             };
 
-            for (SsaInsn use: useList[origReg.getReg()]) {
+            for (SsaInsn use : useList[origReg.getReg()]) {
                 if (use.canThrow()
                         && use.getBlock().getSuccessors().cardinality() > 1) {
                     continue;

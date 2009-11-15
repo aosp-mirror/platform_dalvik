@@ -217,8 +217,6 @@ public class FileTest extends junit.framework.TestCase {
         method = "File",
         args = {java.lang.String.class, java.lang.String.class}
     )
-    @AndroidOnly("Test 3 incorrectly fails on the RI; Android is more " +
-            "better at resolving path names.")
     public void test_ConstructorLjava_lang_StringLjava_lang_String_112270() {
         File ref1 = new File("/dir1/file1");
 
@@ -230,10 +228,10 @@ public class FileTest extends junit.framework.TestCase {
                 ref1.getPath()));
         File file3 = new File("\\", "\\dir1\\file1");
         assertTrue("wrong result 3: " + file3, file3.getPath().equals(
-                ref1.getPath()));
+                "\\/\\dir1\\file1"));
         File file4 = new File("\\", "\\\\dir1\\file1");
         assertTrue("wrong result 4: " + file4, file4.getPath().equals(
-                ref1.getPath()));
+                "\\/\\\\dir1\\file1"));
 
         File ref2 = new File("/lib/content-types.properties");
         File file5 = new File("/", "lib/content-types.properties");
@@ -250,8 +248,6 @@ public class FileTest extends junit.framework.TestCase {
         method = "File",
         args = {java.io.File.class, java.lang.String.class}
     )    
-    @AndroidOnly("Test 3 incorrectly fails on the RI; Android is more " +
-            "better at resolving path names.")
     public void test_ConstructorLjava_io_FileLjava_lang_String_112270() {
         File ref1 = new File("/dir1/file1");
 
@@ -264,10 +260,10 @@ public class FileTest extends junit.framework.TestCase {
                 ref1.getPath()));
         File file3 = new File(root, "\\dir1\\file1");
         assertTrue("wrong result 3: " + file3, file3.getPath().equals(
-                ref1.getPath()));
+                "/\\dir1\\file1"));
         File file4 = new File(root, "\\\\dir1\\file1");
         assertTrue("wrong result 4: " + file4, file4.getPath().equals(
-                ref1.getPath()));
+                "/\\\\dir1\\file1"));
 
         File ref2 = new File("/lib/content-types.properties");
         File file5 = new File(root, "lib/content-types.properties");
@@ -692,8 +688,9 @@ public class FileTest extends junit.framework.TestCase {
         method = "delete",
         args = {}
     )
-    @KnownFailure("Non empty directories are deleted on Android.")
     public void test_delete() {
+        // this test passes in the emulator, but it fails on the device
+
         // Test for method boolean java.io.File.delete()
         try {
             File dir = new File(System.getProperty("java.io.tmpdir"), platformId

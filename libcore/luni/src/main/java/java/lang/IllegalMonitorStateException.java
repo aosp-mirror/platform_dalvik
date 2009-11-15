@@ -21,8 +21,6 @@ package java.lang;
  * Thrown when a monitor operation is attempted when the monitor is not in the
  * correct state, for example when a thread attempts to exit a monitor which it
  * does not own.
- * 
- * @since Android 1.0
  */
 public class IllegalMonitorStateException extends RuntimeException {
 
@@ -31,8 +29,6 @@ public class IllegalMonitorStateException extends RuntimeException {
     /**
      * Constructs a new {@code IllegalMonitorStateException} that includes the
      * current stack trace.
-     * 
-     * @since Android 1.0
      */
     public IllegalMonitorStateException() {
         super();
@@ -44,7 +40,6 @@ public class IllegalMonitorStateException extends RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public IllegalMonitorStateException(String detailMessage) {
         super(detailMessage);

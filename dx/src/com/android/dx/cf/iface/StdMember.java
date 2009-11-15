@@ -25,25 +25,25 @@ import com.android.dx.rop.cst.CstUtf8;
  * all the associated data.
  */
 public abstract class StdMember implements Member {
-    /** non-null; the defining class */
+    /** {@code non-null;} the defining class */
     private final CstType definingClass;
 
     /** access flags */
     private final int accessFlags;
 
-    /** non-null; member name and type */
+    /** {@code non-null;} member name and type */
     private final CstNat nat;
 
-    /** non-null; list of associated attributes */
+    /** {@code non-null;} list of associated attributes */
     private final AttributeList attributes;
 
     /**
      * Constructs an instance.
      * 
-     * @param definingClass non-null; the defining class
+     * @param definingClass {@code non-null;} the defining class
      * @param accessFlags access flags
-     * @param nat non-null; member name and type (descriptor)
-     * @param attributes non-null; list of associated attributes
+     * @param nat {@code non-null;} member name and type (descriptor)
+     * @param attributes {@code non-null;} list of associated attributes
      */
     public StdMember(CstType definingClass, int accessFlags, CstNat nat,
                      AttributeList attributes) {

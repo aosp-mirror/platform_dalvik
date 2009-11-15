@@ -23,48 +23,38 @@ import org.apache.harmony.luni.util.Msg;
 
 /**
  * A specialized {@link InputStream } for reading the contents of a byte array.
- * 
+ *
  * @see ByteArrayOutputStream
- * 
- * @since Android 1.0
  */
 public class ByteArrayInputStream extends InputStream {
     /**
      * The {@code byte} array containing the bytes to stream over.
-     * 
-     * @since Android 1.0
      */
     protected byte[] buf;
 
     /**
      * The current position within the byte array.
-     * 
-     * @since Android 1.0
      */
     protected int pos;
 
     /**
-     * The current mark position.
-     * 
-     * @since Android 1.0
+     * The current mark position. Initially set to 0 or the <code>offset</code>
+     * parameter within the constructor.
      */
     protected int mark;
 
     /**
      * The total number of bytes initially available in the byte array
      * {@code buf}.
-     * 
-     * @since Android 1.0
      */
     protected int count;
 
     /**
      * Constructs a new {@code ByteArrayInputStream} on the byte array
      * {@code buf}.
-     * 
+     *
      * @param buf
      *            the byte array to stream over.
-     * @since Android 1.0
      */
     public ByteArrayInputStream(byte buf[]) {
         this.mark = 0;
@@ -76,14 +66,13 @@ public class ByteArrayInputStream extends InputStream {
      * Constructs a new {@code ByteArrayInputStream} on the byte array
      * {@code buf} with the initial position set to {@code offset} and the
      * number of bytes available set to {@code offset} + {@code length}.
-     * 
+     *
      * @param buf
      *            the byte array to stream over.
      * @param offset
      *            the initial position in {@code buf} to start streaming from.
      * @param length
      *            the number of bytes available for streaming.
-     * @since Android 1.0
      */
     public ByteArrayInputStream(byte[] buf, int offset, int length) {
         // BEGIN android-note
@@ -99,9 +88,8 @@ public class ByteArrayInputStream extends InputStream {
      * Returns the number of bytes that are available before this stream will
      * block. This method returns the number of bytes yet to be read from the
      * source byte array.
-     * 
+     *
      * @return the number of bytes available before blocking.
-     * @since Android 1.0
      */
     @Override
     public synchronized int available() {
@@ -110,10 +98,9 @@ public class ByteArrayInputStream extends InputStream {
 
     /**
      * Closes this stream and frees resources associated with this stream.
-     * 
+     *
      * @throws IOException
      *             if an I/O error occurs while closing this stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -124,12 +111,11 @@ public class ByteArrayInputStream extends InputStream {
      * Sets a mark position in this ByteArrayInputStream. The parameter
      * {@code readlimit} is ignored. Sending {@code reset()} will reposition the
      * stream back to the marked position.
-     * 
+     *
      * @param readlimit
      *            ignored.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public synchronized void mark(int readlimit) {
@@ -140,11 +126,10 @@ public class ByteArrayInputStream extends InputStream {
      * Indicates whether this stream supports the {@code mark()} and
      * {@code reset()} methods. Returns {@code true} since this class supports
      * these methods.
-     * 
+     *
      * @return always {@code true}.
      * @see #mark(int)
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -155,9 +140,8 @@ public class ByteArrayInputStream extends InputStream {
      * Reads a single byte from the source byte array and returns it as an
      * integer in the range from 0 to 255. Returns -1 if the end of the source
      * array has been reached.
-     * 
+     *
      * @return the byte read or -1 if the end of this stream has been reached.
-     * @since Android 1.0
      */
     @Override
     public synchronized int read() {
@@ -168,7 +152,7 @@ public class ByteArrayInputStream extends InputStream {
      * Reads at most {@code len} bytes from this stream and stores
      * them in byte array {@code b} starting at {@code offset}. This
      * implementation reads bytes from the source byte array.
-     * 
+     *
      * @param b
      *            the byte array in which to store the bytes read.
      * @param offset
@@ -183,8 +167,7 @@ public class ByteArrayInputStream extends InputStream {
      *             {@code offset + length} is greater than the size of
      *             {@code b}.
      * @throws NullPointerException
-     *             if {@code b} is null.
-     * @since Android 1.0
+     *             if {@code b} is {@code null}.
      */
     @Override
     public synchronized int read(byte[] b, int offset, int length) {
@@ -222,9 +205,8 @@ public class ByteArrayInputStream extends InputStream {
      * Resets this stream to the last marked location. This implementation
      * resets the position to either the marked position, the start position
      * supplied in the constructor or 0 if neither has been provided.
-     * 
+     *
      * @see #mark(int)
-     * @since Android 1.0
      */
     @Override
     public synchronized void reset() {
@@ -236,11 +218,10 @@ public class ByteArrayInputStream extends InputStream {
      * {@code read()}s will not return these bytes unless {@code reset()} is
      * used. This implementation skips {@code count} number of bytes in the
      * target stream. It does nothing and returns 0 if {@code n} is negative.
-     * 
+     *
      * @param n
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
-     * @since Android 1.0
      */
     @Override
     public synchronized long skip(long n) {

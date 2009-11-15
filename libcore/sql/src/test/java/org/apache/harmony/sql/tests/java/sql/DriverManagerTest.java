@@ -24,6 +24,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
@@ -31,10 +32,12 @@ import java.security.Permission;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLPermission;
 import java.util.Enumeration;
 import java.util.Properties;
+import tests.support.Support_Exec;
 
 import junit.framework.TestCase;
 @TestTargetClass(DriverManager.class)
@@ -683,6 +686,77 @@ public class DriverManagerTest extends TestCase {
         } // end method checkPermission( Permission )
 
     } // end class TestSecurityManager
+
+    /**
+     * @tests {@link java.sql.DriverManager#registerDriver(Driver)}
+     *
+     * Registers a driver for multiple times and deregisters it only once.
+     *
+     * Regression for HARMONY-4205
+     */
+    public void test_registerDriver_MultiTimes() throws SQLException {
+        int register_count = 10;
+        int deregister_count = 1;
+
+        Driver dummy = new DummyDriver();
+        DriverManager.registerDriver(new BadDummyDriver());
+        for (int i = 0; i < register_count; i++) {
+            DriverManager.registerDriver(dummy);
+        }
+        DriverManager.registerDriver(new BadDummyDriver());
+        for (int i = 0; i < deregister_count; i++) {
+            DriverManager.deregisterDriver(dummy);
+        }
+        Driver d = DriverManager.getDriver("jdbc:dummy_protocol:dummy_subname");
+        assertNotNull(d);
+    }
+
+    /**
+     * Regression for HARMONY-4303
+     */
+    @KnownFailure(value="bug 2002061")
+    public void test_initClass() throws Exception {
+        String[] arg = new String[1];
+        arg[0] = "org/apache/harmony/sql/tests/java/sql/TestMainForDriver";
+        String result = Support_Exec.execJava(arg, null, true);
+        assertEquals("", result);
+    }
+
+    private static class BadDummyDriver extends DummyDriver {
+        public boolean acceptsURL(String url) {
+            return false;
+        }
+    }
+
+    private static class DummyDriver implements Driver {
+
+        String goodurl = "jdbc:dummy_protocol:dummy_subname";
+
+        public boolean acceptsURL(String url) {
+            return url.equals(goodurl);
+        }
+
+        public Connection connect(String url, Properties info) {
+            return null;
+        }
+
+        public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) {
+            return null;
+        }
+
+        public int getMajorVersion() {
+            return 0;
+        }
+
+        public int getMinorVersion() {
+            return 0;
+        }
+
+        public boolean jdbcCompliant() {
+            return true;
+        }
+
+    }
 
 } // end class DriverManagerTest
 

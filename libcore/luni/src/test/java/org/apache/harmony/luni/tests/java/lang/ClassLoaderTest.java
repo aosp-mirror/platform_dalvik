@@ -45,6 +45,7 @@ import java.util.NoSuchElementException;
 @TestTargetClass(ClassLoader.class) 
 public class ClassLoaderTest extends TestCase {
     
+    private static final String SYSTEM_RESOURCE_PATH = "META-INF/MANIFEST.MF";
     public static volatile int flag;
 
     @TestTargetNew(
@@ -605,7 +606,7 @@ public class ClassLoaderTest extends TestCase {
         // java.lang.ClassLoader.getSystemClassLoader()
         ClassLoader cl = ClassLoader.getSystemClassLoader();
 
-        java.io.InputStream is = cl.getResourceAsStream("classes.dex");
+        java.io.InputStream is = cl.getResourceAsStream(SYSTEM_RESOURCE_PATH);
         assertNotNull("Failed to find resource from system classpath", is);
         try {
             is.close();
@@ -674,8 +675,8 @@ public class ClassLoaderTest extends TestCase {
         //assertNotNull("Failed to find resource: " + classResource, 
         //        ClassLoader.getSystemResource(classResource));   
         
-        URL url = getClass().getClassLoader().getSystemResource("classes.dex");
-        assertNotNull("Failed to find resource: classes.dex", url);
+        URL url = getClass().getClassLoader().getSystemResource(SYSTEM_RESOURCE_PATH);
+        assertNotNull(String.format("Failed to find resource: %s", SYSTEM_RESOURCE_PATH), url);
         java.io.InputStream is = url.openStream();
 
         assertTrue("System resource not found", is.available() > 0);
@@ -701,8 +702,8 @@ public class ClassLoaderTest extends TestCase {
         //            ClassLoader.getSystemResourceAsStream(classResource));   
 
         java.io.InputStream is = getClass().getClassLoader()
-                .getSystemResourceAsStream("classes.dex");
-        assertNotNull("Failed to find resource: classes.dex", is);
+                .getSystemResourceAsStream(SYSTEM_RESOURCE_PATH);
+        assertNotNull(String.format("Failed to find resource: %s", SYSTEM_RESOURCE_PATH), is);
         
         assertTrue("System resource not found", is.available() > 0);
         
@@ -720,7 +721,7 @@ public class ClassLoaderTest extends TestCase {
             + "that is sure to exist.")
     public void test_getSystemResources() {
         
-        String textResource = "classes.dex";
+        String textResource = SYSTEM_RESOURCE_PATH;
         
         try {
             Enumeration<URL> urls = ClassLoader.getSystemResources(textResource);

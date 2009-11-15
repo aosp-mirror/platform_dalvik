@@ -28,18 +28,22 @@ import java.io.ObjectStreamException;
  * address ({@code b.bbb} ) allows to represent a class A network address as
  * <i>net.host</i>. If there is only one part ({@code bbbb} ) the address is
  * represented without any byte rearrangement.
- * 
- * @since Android 1.0
  */
 public final class Inet4Address extends InetAddress {
 
     private static final long serialVersionUID = 3286316764910316507L;
 
+    final static InetAddress ANY = new Inet4Address(new byte[] { 0, 0, 0, 0 });
+    final static InetAddress LOOPBACK = new Inet4Address(
+            new byte[] { 127, 0, 0, 1 }, "localhost"); //$NON-NLS-1$
+
     Inet4Address(byte[] address) {
+        family = AF_INET;
         ipaddress = address;
     }
 
     Inet4Address(byte[] address, String name) {
+        family = AF_INET;
         ipaddress = address;
         hostName = name;
     }
@@ -50,7 +54,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a multicast address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMulticastAddress() {
@@ -63,7 +66,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents the wildcard ANY
      *         address, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isAnyLocalAddress() {
@@ -81,7 +83,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a lookback address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isLoopbackAddress() {
@@ -95,11 +96,9 @@ public final class Inet4Address extends InetAddress {
      * Default Address Selection for Internet Protocol Version 6 (IPv6) states
      * IPv4 auto-configuration addresses, prefix 169.254/16, IPv4 loopback
      * addresses, prefix 127/8, are assigned link-local scope.
-     * </p>
-     * 
+     *
      * @return {@code true} if this instance represents a link-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isLinkLocalAddress() {
@@ -115,11 +114,9 @@ public final class Inet4Address extends InetAddress {
      * Default Address Selection for Internet Protocol Version 6 (IPv6) states
      * IPv4 private addresses, prefixes 10/8, 172.16/12, and 192.168/16, are
      * assigned site-local scope.
-     * </p>
      * 
      * @return {@code true} if this instance represents a site-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isSiteLocalAddress() {
@@ -135,7 +132,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if the address is in the global multicast group,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCGlobal() {
@@ -174,7 +170,6 @@ public final class Inet4Address extends InetAddress {
      * addresses.
      * 
      * @return {@code false} for all IPv4 addresses.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCNodeLocal() {
@@ -188,7 +183,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a link-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCLinkLocal() {
@@ -202,7 +196,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a site-local address,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCSiteLocal() {
@@ -217,7 +210,6 @@ public final class Inet4Address extends InetAddress {
      * 
      * @return {@code true} if this instance represents a organization-local
      *         address, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean isMCOrgLocal() {
@@ -225,51 +217,22 @@ public final class Inet4Address extends InetAddress {
         return prefix >= 0xEFC0 && prefix <= 0xEFC3;
     }
 
-    /**
-     * Returns a textual representation of this IP address.
-     * 
-     * @return the textual representation of this host address.
-     * @since Android 1.0
-     */
-    @Override
-    public String getHostAddress() {
-        String hostAddress = ""; //$NON-NLS-1$
-        for (int i = 0; i < 4; i++) {
-            hostAddress += ipaddress[i] & 255;
-            if (i != 3) {
-                hostAddress += "."; //$NON-NLS-1$
-            }
-        }
-        return hostAddress;
-    }
+    // BEGIN android-removed
+    // public String getHostAddress() {
+    // }
+    // END android-removed
 
-    /**
-     * Gets the hashcode of the represented IP address.
-     * 
-     * @return the appropriate hashcode value.
-     * @since Android 1.0
-     */
-    @Override
-    public int hashCode() {
-        return InetAddress.bytesToInt(ipaddress, 0);
-    }
+    // BEGIN android-removed
+    // public int hashCode() {
+    // }
+    // END android-removed
 
-    /**
-     * Compares this instance with the IP address in the object {@code obj} and
-     * returns {@code true} if they are of the same type and represent the same
-     * IP address, {@code false} otherwise.
-     * 
-     * @param obj
-     *            the object to be tested for equality.
-     * @return {@code true} if the addresses are equal, {@code false} otherwise.
-     * @since Android 1.0
-     */
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
-    }
+    // BEGIN android-removed
+    // public boolean equals(Object obj) {
+    // }
+    // END android-removed
 
     private Object writeReplace() throws ObjectStreamException {
-        return new InetAddress(ipaddress, hostName);
+        return new Inet4Address(ipaddress, hostName);
     }
 }

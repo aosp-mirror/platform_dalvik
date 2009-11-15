@@ -24,7 +24,7 @@ import java.io.PrintWriter;
  */
 public class ExceptionWithContext
         extends RuntimeException {
-    /** non-null; human-oriented context of the exception */
+    /** {@code non-null;} human-oriented context of the exception */
     private StringBuffer context;
 
     /**
@@ -33,9 +33,9 @@ public class ExceptionWithContext
      * {@link ExceptionWithContext}, or a newly-constructed exception if it
      * was not.
      *
-     * @param ex non-null; the exception to augment
-     * @param str non-null; context to add
-     * @return non-null; an appropriate instance
+     * @param ex {@code non-null;} the exception to augment
+     * @param str {@code non-null;} context to add
+     * @return {@code non-null;} an appropriate instance
      */
     public static ExceptionWithContext withContext(Throwable ex, String str) {
         ExceptionWithContext ewc;
@@ -62,7 +62,7 @@ public class ExceptionWithContext
     /**
      * Constructs an instance.
      *
-     * @param cause null-ok; exception that caused this one
+     * @param cause {@code null-ok;} exception that caused this one
      */
     public ExceptionWithContext(Throwable cause) {
         this(null, cause);
@@ -72,7 +72,7 @@ public class ExceptionWithContext
      * Constructs an instance.
      *
      * @param message human-oriented message
-     * @param cause null-ok; exception that caused this one
+     * @param cause {@code null-ok;} exception that caused this one
      */
     public ExceptionWithContext(String message, Throwable cause) {
         super((message != null) ? message :
@@ -105,7 +105,7 @@ public class ExceptionWithContext
     /**
      * Adds a line of context to this instance.
      *
-     * @param str non-null; new context
+     * @param str {@code non-null;} new context
      */
     public void addContext(String str) {
         if (str == null) {
@@ -121,7 +121,7 @@ public class ExceptionWithContext
     /**
      * Gets the context.
      *
-     * @return non-null; the context
+     * @return {@code non-null;} the context
      */
     public String getContext() {
         return context.toString();
@@ -130,7 +130,7 @@ public class ExceptionWithContext
     /**
      * Prints the message and context.
      *
-     * @param out non-null; where to print to
+     * @param out {@code non-null;} where to print to
      */
     public void printContext(PrintStream out) {
         out.println(getMessage());
@@ -140,7 +140,7 @@ public class ExceptionWithContext
     /**
      * Prints the message and context.
      *
-     * @param out non-null; where to print to
+     * @param out {@code non-null;} where to print to
      */
     public void printContext(PrintWriter out) {
         out.println(getMessage());

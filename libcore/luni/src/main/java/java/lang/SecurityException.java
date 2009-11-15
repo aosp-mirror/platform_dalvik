@@ -19,8 +19,6 @@ package java.lang;
 
 /**
  * Thrown when a security manager check fails.
- * 
- * @since Android 1.0
  */
 public class SecurityException extends java.lang.RuntimeException {
 
@@ -29,8 +27,6 @@ public class SecurityException extends java.lang.RuntimeException {
     /**
      * Constructs a new {@code SecurityException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public SecurityException() {
         super();
@@ -42,7 +38,6 @@ public class SecurityException extends java.lang.RuntimeException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public SecurityException(String detailMessage) {
         super(detailMessage);
@@ -56,7 +51,7 @@ public class SecurityException extends java.lang.RuntimeException {
      *            the detail message for this exception.
      * @param cause
      *            the optional cause of this exception, may be {@code null}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public SecurityException(String message, Throwable cause) {
         super(message, cause);
@@ -68,7 +63,7 @@ public class SecurityException extends java.lang.RuntimeException {
      * 
      * @param cause
      *            the optional cause of this exception, may be {@code null}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public SecurityException(Throwable cause) {
         super((cause == null ? null : cause.toString()), cause);

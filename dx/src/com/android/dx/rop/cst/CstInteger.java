@@ -20,40 +20,40 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.util.Hex;
 
 /**
- * Constants of type <code>CONSTANT_Integer_info</code>.
+ * Constants of type {@code CONSTANT_Integer_info}.
  */
 public final class CstInteger
         extends CstLiteral32 {
-    /** non-null; array of cached instances */
+    /** {@code non-null;} array of cached instances */
     private static final CstInteger[] cache = new CstInteger[511];
 
-    /** non-null; instance representing <code>-1</code> */
+    /** {@code non-null;} instance representing {@code -1} */
     public static final CstInteger VALUE_M1 = make(-1);
 
-    /** non-null; instance representing <code>0</code> */
+    /** {@code non-null;} instance representing {@code 0} */
     public static final CstInteger VALUE_0 = make(0);
 
-    /** non-null; instance representing <code>1</code> */
+    /** {@code non-null;} instance representing {@code 1} */
     public static final CstInteger VALUE_1 = make(1);
 
-    /** non-null; instance representing <code>2</code> */
+    /** {@code non-null;} instance representing {@code 2} */
     public static final CstInteger VALUE_2 = make(2);
 
-    /** non-null; instance representing <code>3</code> */
+    /** {@code non-null;} instance representing {@code 3} */
     public static final CstInteger VALUE_3 = make(3);
 
-    /** non-null; instance representing <code>4</code> */
+    /** {@code non-null;} instance representing {@code 4} */
     public static final CstInteger VALUE_4 = make(4);
 
-    /** non-null; instance representing <code>5</code> */
+    /** {@code non-null;} instance representing {@code 5} */
     public static final CstInteger VALUE_5 = make(5);
 
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
      * 
-     * @param value the <code>int</code> value
-     * @return non-null; the appropriate instance
+     * @param value the {@code int} value
+     * @return {@code non-null;} the appropriate instance
      */
     public static CstInteger make(int value) {
         /*
@@ -76,7 +76,7 @@ public final class CstInteger
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
      * 
-     * @param value the <code>int</code> value
+     * @param value the {@code int} value
      */
     private CstInteger(int value) {
         super(value);
@@ -106,7 +106,7 @@ public final class CstInteger
     }
 
     /**
-     * Gets the <code>int</code> value.
+     * Gets the {@code int} value.
      * 
      * @return the value
      */

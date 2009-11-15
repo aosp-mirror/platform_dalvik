@@ -26,15 +26,11 @@ package java.io;
  * class.
  * 
  * @see FilterWriter
- * 
- * @since Android 1.0
  */
 public abstract class FilterReader extends Reader {
 
     /**
      * The target Reader which is being filtered.
-     * 
-     * @since Android 1.0
      */
     protected Reader in;
 
@@ -43,7 +39,6 @@ public abstract class FilterReader extends Reader {
      * 
      * @param in
      *            The non-null Reader to filter reads on.
-     * @since Android 1.0
      */
     protected FilterReader(Reader in) {
         super(in);
@@ -55,7 +50,6 @@ public abstract class FilterReader extends Reader {
      * 
      * @throws IOException
      *             if an error occurs while closing this reader.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -71,7 +65,6 @@ public abstract class FilterReader extends Reader {
      * position, provided that {@code readlimit} has not been surpassed.
      * <p>
      * This implementation sets a mark in the filtered reader.
-     * </p>
      * 
      * @param readlimit
      *            the number of bytes that can be read from this reader before
@@ -80,7 +73,6 @@ public abstract class FilterReader extends Reader {
      *             if an error occurs while marking this reader.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public synchronized void mark(int readlimit) throws IOException {
@@ -98,7 +90,6 @@ public abstract class FilterReader extends Reader {
      * @see #mark(int)
      * @see #reset()
      * @see #skip(long)
-     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -116,7 +107,6 @@ public abstract class FilterReader extends Reader {
      *         been reached.
      * @throws IOException
      *             if an error occurs while reading from this reader.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -142,7 +132,6 @@ public abstract class FilterReader extends Reader {
      *         filtered reader has been reached while reading.
      * @throws IOException
      *             if an error occurs while reading from this reader.
-     * @since Android 1.0
      */
     @Override
     public int read(char[] buffer, int offset, int count) throws IOException {
@@ -161,7 +150,6 @@ public abstract class FilterReader extends Reader {
      *         is called, {@code false} if unknown or blocking will occur.
      * @throws IOException
      *             if the reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public boolean ready() throws IOException {
@@ -182,7 +170,6 @@ public abstract class FilterReader extends Reader {
      *             {@code mark()} and {@code reset()}.
      * @see #mark(int)
      * @see #markSupported()
-     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -205,7 +192,6 @@ public abstract class FilterReader extends Reader {
      * @see #mark(int)
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     @Override
     public long skip(long count) throws IOException {

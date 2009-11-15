@@ -64,6 +64,8 @@
 #define TRACE_MAGIC         0x574f4c53
 #define TRACE_HEADER_LEN    32
 
+#define FILL_PATTERN        0xeeeeeeee
+
 
 /*
  * Get the wall-clock date/time, in usec.
@@ -364,7 +366,7 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         dvmThrowException("Ljava/lang/RuntimeException;", "file open failed");
         goto fail;
     }
-    memset(state->buf, 0xee, bufferSize);
+    memset(state->buf, (char)FILL_PATTERN, bufferSize);
 
     state->bufferSize = bufferSize;
     state->overflow = false;
@@ -418,10 +420,10 @@ fail:
  * Run through the data buffer and pull out the methods that were visited.
  * Set a mark so that we know which ones to output.
  */
-static void markTouchedMethods(void)
+static void markTouchedMethods(int endOffset)
 {
     u1* ptr = gDvm.methodTrace.buf + TRACE_HEADER_LEN;
-    u1* end = gDvm.methodTrace.buf + gDvm.methodTrace.curOffset;
+    u1* end = gDvm.methodTrace.buf + endOffset;
     unsigned int methodVal;
     Method* method;
 
@@ -508,13 +510,56 @@ void dvmMethodTraceStop(void)
     state->traceEnabled = false;
     MEM_BARRIER();
     sched_yield();
+    usleep(250 * 1000);
 
     if ((state->flags & TRACE_ALLOC_COUNTS) != 0)
         dvmStopAllocCounting();
 
+    /*
+     * It's possible under some circumstances for a thread to have advanced
+     * the data pointer but not written the method value.  It's possible
+     * (though less likely) for the data pointer to be advanced, or partial
+     * data written, while we're doing work here.
+     *
+     * To avoid seeing partially-written data, we grab state->curOffset here,
+     * and use our local copy from here on.  We then scan through what's
+     * already written.  If we see the fill pattern in what should be the
+     * method pointer, we cut things off early.  (If we don't, we'll fail
+     * when we dereference the pointer.)
+     *
+     * There's a theoretical possibility of interrupting another thread
+     * after it has partially written the method pointer, in which case
+     * we'll likely crash when we dereference it.  The possibility of
+     * this actually happening should be at or near zero.  Fixing it
+     * completely could be done by writing the thread number last and
+     * using a sentinel value to indicate a partially-written record,
+     * but that requires memory barriers.
+     */
+    int finalCurOffset = state->curOffset;
+
+    if (finalCurOffset > TRACE_HEADER_LEN) {
+        u4 fillVal = METHOD_ID(FILL_PATTERN);
+        u1* scanPtr = state->buf + TRACE_HEADER_LEN;
+
+        while (scanPtr < state->buf + finalCurOffset) {
+            u4 methodVal = scanPtr[1] | (scanPtr[2] << 8) | (scanPtr[3] << 16)
+                        | (scanPtr[4] << 24);
+            if (METHOD_ID(methodVal) == fillVal) {
+                u1* scanBase = state->buf + TRACE_HEADER_LEN;
+                LOGW("Found unfilled record at %d (of %d)\n",
+                    (scanPtr - scanBase) / TRACE_REC_SIZE,
+                    (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
+                finalCurOffset = scanPtr - state->buf;
+                break;
+            }
+
+            scanPtr += TRACE_REC_SIZE;
+        }
+    }
+
     LOGI("TRACE STOPPED%s: writing %d records\n",
         state->overflow ? " (NOTE: overflowed buffer)" : "",
-        (state->curOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
+        (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
     if (gDvm.debuggerActive) {
         LOGW("WARNING: a debugger is active; method-tracing results "
              "will be skewed\n");
@@ -525,7 +570,7 @@ void dvmMethodTraceStop(void)
      */
     u4 clockNsec = getClockOverhead();
 
-    markTouchedMethods();
+    markTouchedMethods(finalCurOffset);
 
     fprintf(state->traceFile, "%cversion\n", TOKEN_CHAR);
     fprintf(state->traceFile, "%d\n", TRACE_VERSION);
@@ -538,7 +583,7 @@ void dvmMethodTraceStop(void)
 #endif
     fprintf(state->traceFile, "elapsed-time-usec=%llu\n", elapsed);
     fprintf(state->traceFile, "num-method-calls=%d\n",
-        (state->curOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
+        (finalCurOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
     fprintf(state->traceFile, "clock-call-overhead-nsec=%d\n", clockNsec);
     fprintf(state->traceFile, "vm=dalvik\n");
     if ((state->flags & TRACE_ALLOC_COUNTS) != 0) {
@@ -555,8 +600,8 @@ void dvmMethodTraceStop(void)
     dumpMethodList(state->traceFile);
     fprintf(state->traceFile, "%cend\n", TOKEN_CHAR);
 
-    if (fwrite(state->buf, state->curOffset, 1, state->traceFile) != 1) {
-        LOGE("trace fwrite(%d) failed, errno=%d\n", state->curOffset, errno);
+    if (fwrite(state->buf, finalCurOffset, 1, state->traceFile) != 1) {
+        LOGE("trace fwrite(%d) failed, errno=%d\n", finalCurOffset, errno);
         dvmThrowException("Ljava/lang/RuntimeException;", "data write failed");
         goto bail;
     }
@@ -674,7 +719,7 @@ void dvmEmitEmulatorTrace(const Method* method, int action)
          * Fortunately, the trace tools can get by without the address, but
          * it would be nice to fix this.
          */
-         addr = method->nativeFunc;
+         addr = (u4) method->nativeFunc;
     } else {
         /*
          * The dexlist output shows the &DexCode.insns offset value, which

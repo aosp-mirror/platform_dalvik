@@ -23,7 +23,7 @@ import com.android.dx.rop.cst.CstType;
  */
 public abstract class IdItem extends IndexedItem {
     /**
-     * non-null; the type constant for the defining class of
+     * {@code non-null;} the type constant for the defining class of
      * the reference 
      */
     private final CstType type;
@@ -31,7 +31,7 @@ public abstract class IdItem extends IndexedItem {
     /**
      * Constructs an instance.
      * 
-     * @param type non-null; the type constant for the defining
+     * @param type {@code non-null;} the type constant for the defining
      * class of the reference
      */
     public IdItem(CstType type) {
@@ -53,7 +53,7 @@ public abstract class IdItem extends IndexedItem {
      * Gets the type constant for the defining class of the
      * reference.
      * 
-     * @return non-null; the type constant
+     * @return {@code non-null;} the type constant
      */
     public final CstType getDefiningClass() {
         return type;

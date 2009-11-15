@@ -24,21 +24,18 @@ package java.io;
 /**
  * An interface for filtering {@link File} objects based on their names
  * or other information.
- * 
+ *
  * @see File#listFiles(FileFilter)
- * 
- * @since Android 1.0
  */
 public interface FileFilter {
 
     /**
      * Indicating whether a specific file should be included in a pathname list.
-     * 
+     *
      * @param pathname
      *            the abstract file to check.
      * @return {@code true} if the file should be included, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     public abstract boolean accept(File pathname);
 }

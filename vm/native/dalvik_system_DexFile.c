@@ -63,6 +63,8 @@ static int hashcmpDexOrJar(const void* tableVal, const void* newVal)
  * Verify that the "cookie" is a DEX file we opened.
  *
  * Expects that the hash table will be *unlocked* here.
+ *
+ * If the cookie is invalid, we throw an exception and return "false".
  */
 static bool validateCookie(int cookie)
 {
@@ -78,8 +80,11 @@ static bool validateCookie(int cookie)
     void* result = dvmHashTableLookup(gDvm.userDexFiles, hash, pDexOrJar,
                 hashcmpDexOrJar, false);
     dvmHashTableUnlock(gDvm.userDexFiles);
-    if (result == NULL)
+    if (result == NULL) {
+        dvmThrowException("Ljava/lang/RuntimeException;",
+            "invalid DexFile cookie");
         return false;
+    }
 
     return true;
 }
@@ -213,7 +218,7 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
     LOGV("Closing DEX file %p (%s)\n", pDexOrJar, pDexOrJar->fileName);
 
     if (!validateCookie(cookie))
-        dvmAbort();
+        RETURN_VOID();
 
     /*
      * We can't just free arbitrary DEX files because they have bits and
@@ -249,6 +254,8 @@ static void Dalvik_dalvik_system_DexFile_closeDexFile(const u4* args,
  * creation of a specific class.  The difference is that the search for and
  * reading of the bytes is done within the VM.
  *
+ * The class name is a "binary name", e.g. "java.lang.String".
+ *
  * Returns a null pointer with no exception if the class was not found.
  * Throws an exception on other failures.
  */
@@ -266,12 +273,12 @@ static void Dalvik_dalvik_system_DexFile_defineClass(const u4* args,
     char* descriptor;
 
     name = dvmCreateCstrFromString(nameObj);
-    descriptor = dvmNameToDescriptor(name);
-    LOGV("--- Explicit class load '%s' 0x%08x\n", name, cookie);
+    descriptor = dvmDotToDescriptor(name);
+    LOGV("--- Explicit class load '%s' 0x%08x\n", descriptor, cookie);
     free(name);
 
     if (!validateCookie(cookie))
-        dvmAbort();
+        RETURN_VOID();
 
     if (pDexOrJar->isDex)
         pDvmDex = dvmGetRawDexFileDex(pDexOrJar->pRawDexFile);
@@ -331,7 +338,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
     ArrayObject* stringArray;
 
     if (!validateCookie(cookie))
-        dvmAbort();
+        RETURN_VOID();
 
     if (pDexOrJar->isDex)
         pDvmDex = dvmGetRawDexFileDex(pDexOrJar->pRawDexFile);

@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.harmony.luni.internal.net.www.protocol.https;
 
 import java.io.IOException;
@@ -22,10 +21,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ProtocolException;
 import java.net.Proxy;
-// BEGIN andorid-removed
-// copied from newer version of harmony
-// import java.net.Socket;
-// END android-removed
 import java.net.URL;
 import java.security.Permission;
 import java.security.Principal;
@@ -390,10 +385,7 @@ public class HttpsURLConnection extends javax.net.ssl.HttpsURLConnection {
                             responseMessage, responseCode));
                 }
                 // if there are some remaining data in the stream - read it out
-                // BEGIN andorid-changed
-                // copied from newer version of harmony
                 InputStream is = connection.getInputStream();
-                // END android-changed
                 while (is.available() != 0) {
                     is.read();
                 }
@@ -403,11 +395,8 @@ public class HttpsURLConnection extends javax.net.ssl.HttpsURLConnection {
                 super.connect();
             }
             if (!makingSSLTunnel) {
-                // BEGIN andorid-changed
-                // copied from newer version of harmony
                 sslSocket = connection.getSecureSocket(getSSLSocketFactory(), getHostnameVerifier());
                 setUpTransportIO(connection);
-                // END android-changed
             }
         }
 
@@ -430,23 +419,5 @@ public class HttpsURLConnection extends javax.net.ssl.HttpsURLConnection {
             return super.requestString();
         }
 
-        // BEGIN android-removed
-        // /**
-        //  * Create the secure socket over the connected socket and verify remote
-        //  * hostname.
-        //  */
-        // private Socket wrapConnection(Socket socket) throws IOException {
-        //     String hostname = url.getHost();
-        //     // create the wrapper over connected socket
-        //     sslSocket = (SSLSocket) getSSLSocketFactory().createSocket(socket,
-        //             hostname, url.getPort(), true);
-        //     sslSocket.setUseClientMode(true);
-        //     sslSocket.startHandshake();
-        //     if (!getHostnameVerifier().verify(hostname, sslSocket.getSession())) {
-        //         throw new IOException(Messages.getString("luni.02", hostname)); //$NON-NLS-1$
-        //     }
-        //     return sslSocket;
-        // }
-        // END android-removed
     }
 }

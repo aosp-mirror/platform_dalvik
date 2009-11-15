@@ -122,11 +122,6 @@ public class ListIntSet implements IntSet {
 
                 return ints.get(idx++);
             }
-
-            /** @inheritDoc */
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
         };
     }
 

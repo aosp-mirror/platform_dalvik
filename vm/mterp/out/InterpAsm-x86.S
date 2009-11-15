@@ -682,9 +682,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     FETCH_INST_WORD(1)
     testl   %eax,%eax                   # null object?
-#ifdef WITH_MONITOR_TRACKING
-    EXPORT_PC()
-#endif
+    EXPORT_PC()                         # need for precise GC, MONITOR_TRACKING
     jne     .LOP_MONITOR_ENTER_continue
     jmp     common_errNullObject
 
@@ -5807,10 +5805,26 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_ED: /* 0xed */
-/* File: x86/OP_UNUSED_ED.S */
-/* File: x86/unused.S */
-    jmp     common_abort
+.L_OP_THROW_VERIFICATION_ERROR: /* 0xed */
+/* File: x86/OP_THROW_VERIFICATION_ERROR.S */
+    /*
+     * Handle a throw-verification-error instruction.  This throws an
+     * exception for an error discovered during verification.  The
+     * exception is indicated by AA, with some detail provided by BBBB.
+     */
+    /* op AA, ref@BBBB */
+    GET_GLUE(%ecx)
+    movzwl   2(rPC),%eax                     # eax<- BBBB
+    movl     offGlue_method(%ecx),%ecx       # ecx<- glue->method
+    EXPORT_PC()
+    movzbl   rINST_HI,rINST_FULL             # rINST_FULL<- AA
+    movl     %eax,OUT_ARG2(%esp)             # arg2<- BBBB
+    movl     rINST_FULL,OUT_ARG1(%esp)       # arg1<- AA
+    movl     %ecx,OUT_ARG0(%esp)             # arg0<- method
+    SPILL(rPC)
+    call     dvmThrowVerificationError       # call(method, kind, ref)
+    UNSPILL(rPC)
+    jmp      common_exceptionThrown          # handle exception
 
 
 /* ------------------------------ */
@@ -6393,6 +6407,7 @@ dvmAsmSisterStart:
 /* continuation for OP_NEW_INSTANCE */
 
 .LOP_NEW_INSTANCE_initialized:  # on entry, ecx<- class
+    /* TODO: remove test for interface/abstract, now done in verifier */
     testl     $(ACC_INTERFACE|ACC_ABSTRACT),offClassObject_accessFlags(%ecx)
     movl      $ALLOC_DONT_TRACK,OUT_ARG1(%esp)
     jne       .LOP_NEW_INSTANCE_abstract
@@ -6443,6 +6458,7 @@ dvmAsmSisterStart:
     jmp     common_exceptionThrown      # no, handle exception
 
     /*
+     * TODO: remove this
      * We can't instantiate an abstract class or interface, so throw an
      * InstantiationError with the class descriptor as the message.
      *
@@ -8684,8 +8700,8 @@ common_invokeMethodNoRange:
     GET_GLUE(%ecx)                      # %ecx<- pMterpGlue
     movl        %eax, OUT_ARG1(%esp)    # push parameter methodToCall
     movl        offGlue_self(%ecx), %ecx        # %ecx<- glue->self
-    movl        offThread_jniLocal_nextEntry(%ecx), %eax # %eax<- glue->self->thread->refNext
-    movl        %eax, offStackSaveArea_localRefTop(%edx) # newSaveArea->localRefTop<- refNext
+    movl        offThread_jniLocal_topCookie(%ecx), %eax # %eax<- self->localRef->...
+    movl        %eax, offStackSaveArea_localRefCookie(%edx) # newSaveArea->localRefCookie<- top
     movl        %edx, OUT_ARG4(%esp)    # save newSaveArea
     movl        LOCAL1_OFFSET(%ebp), %edx # %edx<- newFP
     movl        %edx, offThread_curFrame(%ecx)  # glue->self->curFrame<- newFP
@@ -8701,10 +8717,10 @@ common_invokeMethodNoRange:
     lea         4(%esp), %esp
     movl        OUT_ARG4(%esp), %ecx    # %ecx<- newSaveArea
     movl        OUT_ARG3(%esp), %eax    # %eax<- glue->self
-    movl        offStackSaveArea_localRefTop(%ecx), %edx # %edx<- newSaveArea->localRefTop
+    movl        offStackSaveArea_localRefCookie(%ecx), %edx # %edx<- old top
     cmp         $0, offThread_exception(%eax) # check for exception
     movl        rFP, offThread_curFrame(%eax) # glue->self->curFrame<- rFP
-    movl        %edx, offThread_jniLocal_nextEntry(%eax) # glue->self<- newSaveArea->localRefTop
+    movl        %edx, offThread_jniLocal_topCookie(%eax) # new top <- old top
     UNSPILL(rPC)
     jne         common_exceptionThrown  # handle exception
     FETCH_INST_WORD(3)
@@ -8796,6 +8812,7 @@ common_periodicChecks:
      *      bool dvmCheckSuspendPending(Thread* self)
      *  Because we reached here via a call, go ahead and build a new frame.
      */
+    EXPORT_PC()                         # need for precise GC
     movl    offGlue_self(%ecx),%eax      # eax<- glue->self
     SPILL(rPC)                      # save edx
     push    %ebp

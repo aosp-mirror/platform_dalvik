@@ -24,32 +24,32 @@ import com.android.dx.util.LabeledItem;
  * Representation of a basic block in a bytecode array.
  */
 public final class ByteBlock implements LabeledItem {
-    /** &gt;= 0; label for this block */
+    /** {@code >= 0;} label for this block */
     private final int label;
 
-    /** &gt;= 0; bytecode offset (inclusive) of the start of the block */
+    /** {@code >= 0;} bytecode offset (inclusive) of the start of the block */
     private final int start;
 
-    /** &gt; start; bytecode offset (exclusive) of the end of the block */
+    /** {@code > start;} bytecode offset (exclusive) of the end of the block */
     private final int end;
 
-    /** non-null; list of successors that this block may branch to */
+    /** {@code non-null;} list of successors that this block may branch to */
     private final IntList successors;
 
-    /** non-null; list of exceptions caught and their handler targets */
+    /** {@code non-null;} list of exceptions caught and their handler targets */
     private final ByteCatchList catches;
 
     /**
      * Constructs an instance. 
      * 
-     * @param label &gt;= 0; target label for this block
-     * @param start &gt;= 0; bytecode offset (inclusive) of the start
+     * @param label {@code >= 0;} target label for this block
+     * @param start {@code >= 0;} bytecode offset (inclusive) of the start
      * of the block
-     * @param end &gt; start; bytecode offset (exclusive) of the end
+     * @param end {@code > start;} bytecode offset (exclusive) of the end
      * of the block
-     * @param successors non-null; list of successors that this block may
+     * @param successors {@code non-null;} list of successors that this block may
      * branch to
-     * @param catches non-null; list of exceptions caught and their
+     * @param catches {@code non-null;} list of exceptions caught and their
      * handler targets
      */
     public ByteBlock(int label, int start, int end, IntList successors,
@@ -100,7 +100,7 @@ public final class ByteBlock implements LabeledItem {
     /**
      * Gets the label of this block.
      * 
-     * @return &gt;= 0; the label
+     * @return {@code >= 0;} the label
      */
     public int getLabel() {
         return label;
@@ -109,7 +109,7 @@ public final class ByteBlock implements LabeledItem {
     /**
      * Gets the bytecode offset (inclusive) of the start of this block.
      * 
-     * @return &gt;= 0; the start offset
+     * @return {@code >= 0;} the start offset
      */
     public int getStart() {
         return start;
@@ -118,7 +118,7 @@ public final class ByteBlock implements LabeledItem {
     /**
      * Gets the bytecode offset (exclusive) of the end of this block.
      * 
-     * @return &gt; getStart(); the end offset
+     * @return {@code > getStart();} the end offset
      */
     public int getEnd() {
         return end;
@@ -128,7 +128,7 @@ public final class ByteBlock implements LabeledItem {
      * Gets the list of successors that this block may branch to 
      * non-exceptionally.
      * 
-     * @return non-null; the successor list
+     * @return {@code non-null;} the successor list
      */
     public IntList getSuccessors() {
         return successors;
@@ -137,7 +137,7 @@ public final class ByteBlock implements LabeledItem {
     /**
      * Gets the list of exceptions caught and their handler targets.
      * 
-     * @return non-null; the catch list
+     * @return {@code non-null;} the catch list
      */
     public ByteCatchList getCatches() {
         return catches;

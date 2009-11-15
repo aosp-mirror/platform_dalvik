@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when the virtual machine notices that an attempt is made to load a
  * class which does not pass the class verification phase.
- * 
- * @since Android 1.0
  */
 public class VerifyError extends LinkageError {
 
@@ -30,8 +28,6 @@ public class VerifyError extends LinkageError {
     /**
      * Constructs a new {@code VerifyError} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public VerifyError() {
         super();
@@ -43,7 +39,6 @@ public class VerifyError extends LinkageError {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public VerifyError(String detailMessage) {
         super(detailMessage);

@@ -180,7 +180,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
     const StackSaveArea* saveArea;
     void* fp;
     void* prevFp = NULL;
-    
+
     for (fp = thread->curFrame; fp != NULL; fp = saveArea->prevFrame) {
         const Method* method;
 
@@ -225,7 +225,7 @@ bool dvmAddSingleStep(Thread* thread, int size, int depth)
     } else {
         pCtrl->line = dvmLineNumFromPC(saveArea->method,
                         saveArea->xtra.currentPc - saveArea->method->insns);
-        pCtrl->pAddressSet 
+        pCtrl->pAddressSet
                 = dvmAddressSetForLine(saveArea->method, pCtrl->line);
     }
     pCtrl->frameDepth = dvmComputeVagueFrameDepth(thread, thread->curFrame);
@@ -374,7 +374,7 @@ void dvmDumpRegs(const Method* method, const u4* framePtr, bool inOnly)
  * ===========================================================================
  */
 
-/* 
+/*
  * Construct an s4 from two consecutive half-words of switch data.
  * This needs to check endianness because the DEX optimizer only swaps
  * half-words in instruction stream.
@@ -479,7 +479,7 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
 
     size = *switchData++;
     assert(size > 0);
-    
+
     /* The keys are guaranteed to be aligned on a 32-bit boundary;
      * we can treat them as a native int array.
      */
@@ -512,6 +512,62 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
 
     LOGVV("Value %d not found in switch\n", testVal);
     return kInstrLen;
+}
+
+/*
+ * Copy data for a fill-array-data instruction.  On a little-endian machine
+ * we can just do a memcpy(), on a big-endian system we have work to do.
+ *
+ * The trick here is that dexopt has byte-swapped each code unit, which is
+ * exactly what we want for short/char data.  For byte data we need to undo
+ * the swap, and for 4- or 8-byte values we need to swap pieces within
+ * each word.
+ */
+static void copySwappedArrayData(void* dest, const u2* src, u4 size, u2 width)
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    memcpy(dest, src, size*width);
+#else
+    int i;
+
+    switch (width) {
+    case 1:
+        /* un-swap pairs of bytes as we go */
+        for (i = (size-1) & ~1; i >= 0; i -= 2) {
+            ((u1*)dest)[i] = ((u1*)src)[i+1];
+            ((u1*)dest)[i+1] = ((u1*)src)[i];
+        }
+        /*
+         * "src" is padded to end on a two-byte boundary, but we don't want to
+         * assume "dest" is, so we handle odd length specially.
+         */
+        if ((size & 1) != 0) {
+            ((u1*)dest)[size-1] = ((u1*)src)[size];
+        }
+        break;
+    case 2:
+        /* already swapped correctly */
+        memcpy(dest, src, size*width);
+        break;
+    case 4:
+        /* swap word halves */
+        for (i = 0; i < (int) size; i++) {
+            ((u4*)dest)[i] = (src[(i << 1) + 1] << 16) | src[i << 1];
+        }
+        break;
+    case 8:
+        /* swap word halves and words */
+        for (i = 0; i < (int) (size << 1); i += 2) {
+            ((int*)dest)[i] = (src[(i << 1) + 3] << 16) | src[(i << 1) + 2];
+            ((int*)dest)[i+1] = (src[(i << 1) + 1] << 16) | src[i << 1];
+        }
+        break;
+    default:
+        LOGE("Unexpected width %d in copySwappedArrayData\n", width);
+        dvmAbort();
+        break;
+    }
+#endif
 }
 
 /*
@@ -552,7 +608,7 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
         dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", NULL);
         return false;
     }
-    memcpy(arrayObj->contents, &arrayData[4], size*width);
+    copySwappedArrayData(arrayObj->contents, &arrayData[4], size, width);
     return true;
 }
 
@@ -635,6 +691,189 @@ Method* dvmInterpFindInterfaceMethod(ClassObject* thisClass, u4 methodIdx,
 }
 
 
+
+/*
+ * Helpers for dvmThrowVerificationError().
+ *
+ * Each returns a newly-allocated string.
+ */
+#define kThrowShow_accessFromClass     1
+static char* classNameFromIndex(const Method* method, int ref,
+    VerifyErrorRefType refType, int flags)
+{
+    static const int kBufLen = 256;
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+
+    if (refType == VERIFY_ERROR_REF_FIELD) {
+        /* get class ID from field ID */
+        const DexFieldId* pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
+        ref = pFieldId->classIdx;
+    } else if (refType == VERIFY_ERROR_REF_METHOD) {
+        /* get class ID from method ID */
+        const DexMethodId* pMethodId = dexGetMethodId(pDvmDex->pDexFile, ref);
+        ref = pMethodId->classIdx;
+    }
+
+    const char* className = dexStringByTypeIdx(pDvmDex->pDexFile, ref);
+    char* dotClassName = dvmDescriptorToDot(className);
+    if (flags == 0)
+        return dotClassName;
+
+    char* result = (char*) malloc(kBufLen);
+
+    if ((flags & kThrowShow_accessFromClass) != 0) {
+        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        snprintf(result, kBufLen, "tried to access class %s from class %s",
+            dotClassName, dotFromName);
+        free(dotFromName);
+    } else {
+        assert(false);      // should've been caught above
+        result[0] = '\0';
+    }
+
+    free(dotClassName);
+    return result;
+}
+static char* fieldNameFromIndex(const Method* method, int ref,
+    VerifyErrorRefType refType, int flags)
+{
+    static const int kBufLen = 256;
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+    const DexFieldId* pFieldId;
+    const char* className;
+    const char* fieldName;
+
+    if (refType != VERIFY_ERROR_REF_FIELD) {
+        LOGW("Expected ref type %d, got %d\n", VERIFY_ERROR_REF_FIELD, refType);
+        return NULL;    /* no message */
+    }
+
+    pFieldId = dexGetFieldId(pDvmDex->pDexFile, ref);
+    className = dexStringByTypeIdx(pDvmDex->pDexFile, pFieldId->classIdx);
+    fieldName = dexStringById(pDvmDex->pDexFile, pFieldId->nameIdx);
+
+    char* dotName = dvmDescriptorToDot(className);
+    char* result = (char*) malloc(kBufLen);
+
+    if ((flags & kThrowShow_accessFromClass) != 0) {
+        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        snprintf(result, kBufLen, "tried to access field %s.%s from class %s",
+            dotName, fieldName, dotFromName);
+        free(dotFromName);
+    } else {
+        snprintf(result, kBufLen, "%s.%s", dotName, fieldName);
+    }
+
+    free(dotName);
+    return result;
+}
+static char* methodNameFromIndex(const Method* method, int ref,
+    VerifyErrorRefType refType, int flags)
+{
+    static const int kBufLen = 384;
+    const DvmDex* pDvmDex = method->clazz->pDvmDex;
+    const DexMethodId* pMethodId;
+    const char* className;
+    const char* methodName;
+
+    if (refType != VERIFY_ERROR_REF_METHOD) {
+        LOGW("Expected ref type %d, got %d\n", VERIFY_ERROR_REF_METHOD,refType);
+        return NULL;    /* no message */
+    }
+
+    pMethodId = dexGetMethodId(pDvmDex->pDexFile, ref);
+    className = dexStringByTypeIdx(pDvmDex->pDexFile, pMethodId->classIdx);
+    methodName = dexStringById(pDvmDex->pDexFile, pMethodId->nameIdx);
+
+    char* dotName = dvmDescriptorToDot(className);
+    char* result = (char*) malloc(kBufLen);
+
+    if ((flags & kThrowShow_accessFromClass) != 0) {
+        char* dotFromName = dvmDescriptorToDot(method->clazz->descriptor);
+        char* desc = dexProtoCopyMethodDescriptor(&method->prototype);
+        snprintf(result, kBufLen,
+            "tried to access method %s.%s:%s from class %s",
+            dotName, methodName, desc, dotFromName);
+        free(dotFromName);
+        free(desc);
+    } else {
+        snprintf(result, kBufLen, "%s.%s", dotName, methodName);
+    }
+
+    free(dotName);
+    return result;
+}
+
+/*
+ * Throw an exception for a problem identified by the verifier.
+ *
+ * This is used by the invoke-verification-error instruction.  It always
+ * throws an exception.
+ *
+ * "kind" indicates the kind of failure encountered by the verifier.  It
+ * has two parts, an error code and an indication of the reference type.
+ */
+void dvmThrowVerificationError(const Method* method, int kind, int ref)
+{
+    const int typeMask = 0xff << kVerifyErrorRefTypeShift;
+    VerifyError errorKind = kind & ~typeMask;
+    VerifyErrorRefType refType = kind >> kVerifyErrorRefTypeShift;
+    const char* exceptionName = "Ljava/lang/VerifyError;";
+    char* msg = NULL;
+
+    switch ((VerifyError) errorKind) {
+    case VERIFY_ERROR_NO_CLASS:
+        exceptionName = "Ljava/lang/NoClassDefFoundError;";
+        msg = classNameFromIndex(method, ref, refType, 0);
+        break;
+    case VERIFY_ERROR_NO_FIELD:
+        exceptionName = "Ljava/lang/NoSuchFieldError;";
+        msg = fieldNameFromIndex(method, ref, refType, 0);
+        break;
+    case VERIFY_ERROR_NO_METHOD:
+        exceptionName = "Ljava/lang/NoSuchMethodError;";
+        msg = methodNameFromIndex(method, ref, refType, 0);
+        break;
+    case VERIFY_ERROR_ACCESS_CLASS:
+        exceptionName = "Ljava/lang/IllegalAccessError;";
+        msg = classNameFromIndex(method, ref, refType,
+            kThrowShow_accessFromClass);
+        break;
+    case VERIFY_ERROR_ACCESS_FIELD:
+        exceptionName = "Ljava/lang/IllegalAccessError;";
+        msg = fieldNameFromIndex(method, ref, refType,
+            kThrowShow_accessFromClass);
+        break;
+    case VERIFY_ERROR_ACCESS_METHOD:
+        exceptionName = "Ljava/lang/IllegalAccessError;";
+        msg = methodNameFromIndex(method, ref, refType,
+            kThrowShow_accessFromClass);
+        break;
+    case VERIFY_ERROR_CLASS_CHANGE:
+        exceptionName = "Ljava/lang/IncompatibleClassChangeError;";
+        msg = classNameFromIndex(method, ref, refType, 0);
+        break;
+    case VERIFY_ERROR_INSTANTIATION:
+        exceptionName = "Ljava/lang/InstantiationError;";
+        msg = classNameFromIndex(method, ref, refType, 0);
+        break;
+
+    case VERIFY_ERROR_GENERIC:
+        /* generic VerifyError; use default exception, no message */
+        break;
+    case VERIFY_ERROR_NONE:
+        /* should never happen; use default exception */
+        assert(false);
+        msg = strdup("weird - no error specified");
+        break;
+
+    /* no default clause -- want warning if enum updated */
+    }
+
+    dvmThrowException(exceptionName, msg);
+    free(msg);
+}
+
 /*
  * Main interpreter loop entry point.  Select "standard" or "debug"
  * interpreter and switch between them as required.
@@ -650,6 +889,29 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 {
     InterpState interpState;
     bool change;
+#if defined(WITH_JIT)
+    /* Interpreter entry points from compiled code */
+    extern void dvmJitToInterpNormal();
+    extern void dvmJitToInterpNoChain();
+    extern void dvmJitToInterpPunt();
+    extern void dvmJitToInterpSingleStep();
+    extern void dvmJitToTraceSelect();
+    extern void dvmJitToPatchPredictedChain();
+
+    /*
+     * Reserve a static entity here to quickly setup runtime contents as
+     * gcc will issue block copy instructions.
+     */
+    static struct JitToInterpEntries jitToInterpEntries = {
+        dvmJitToInterpNormal,
+        dvmJitToInterpNoChain,
+        dvmJitToInterpPunt,
+        dvmJitToInterpSingleStep,
+        dvmJitToTraceSelect,
+        dvmJitToPatchPredictedChain,
+    };
+#endif
+
 
 #if defined(WITH_TRACKREF_CHECKS)
     interpState.debugTrackedRefStart =
@@ -657,6 +919,19 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #endif
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
     interpState.debugIsMethodEntry = true;
+#endif
+#if defined(WITH_JIT)
+    interpState.jitState = gDvmJit.pJitEntryTable ? kJitNormal : kJitOff;
+
+    /* Setup the Jit-to-interpreter entry points */
+    interpState.jitToInterpEntries = jitToInterpEntries;
+
+    /*
+     * Initialize the threshold filter [don't bother to zero out the
+     * actual table.  We're looking for matches, and an occasional
+     * false positive is acceptible.
+     */
+    interpState.lastThreshFilter = 0;
 #endif
 
     /*
@@ -693,6 +968,14 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     Interpreter stdInterp;
     if (gDvm.executionMode == kExecutionModeInterpFast)
         stdInterp = dvmMterpStd;
+#if defined(WITH_JIT)
+    else if (gDvm.executionMode == kExecutionModeJit)
+/* If profiling overhead can be kept low enough, we can use a profiling
+ * mterp fast for both Jit and "fast" modes.  If overhead is too high,
+ * create a specialized profiling interpreter.
+ */
+        stdInterp = dvmMterpStd;
+#endif
     else
         stdInterp = dvmInterpretStd;
 
@@ -703,7 +986,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
             LOGVV("threadid=%d: interp STD\n", self->threadId);
             change = (*stdInterp)(self, &interpState);
             break;
-#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
+#if defined(WITH_PROFILER) || defined(WITH_DEBUGGER) || defined(WITH_JIT)
         case INTERP_DBG:
             LOGVV("threadid=%d: interp DBG\n", self->threadId);
             change = dvmInterpretDbg(self, &interpState);
@@ -716,4 +999,3 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
     *pResult = interpState.retval;
 }
-

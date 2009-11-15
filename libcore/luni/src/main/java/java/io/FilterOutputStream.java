@@ -26,27 +26,22 @@ import org.apache.harmony.luni.util.Msg;
  * decompression of the underlying stream. Output streams that wrap another
  * output stream and provide some additional functionality on top of it usually
  * inherit from this class.
- * 
+ *
  * @see FilterOutputStream
- * 
- * @since Android 1.0
  */
 public class FilterOutputStream extends OutputStream {
 
     /**
      * The target output stream for this filter stream.
-     * 
-     * @since Android 1.0
      */
     protected OutputStream out;
 
     /**
      * Constructs a new {@code FilterOutputStream} with {@code out} as its
      * target stream.
-     * 
+     *
      * @param out
      *            the target stream that this stream writes to.
-     * @since Android 1.0
      */
     public FilterOutputStream(OutputStream out) {
         this.out = out;
@@ -54,10 +49,9 @@ public class FilterOutputStream extends OutputStream {
 
     /**
      * Closes this stream. This implementation closes the target stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs attempting to close this stream.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -73,10 +67,9 @@ public class FilterOutputStream extends OutputStream {
     /**
      * Ensures that all pending data is sent out to the target stream. This
      * implementation flushes the target stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs attempting to flush this stream.
-     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -87,12 +80,11 @@ public class FilterOutputStream extends OutputStream {
      * Writes the entire contents of the byte array {@code buffer} to this
      * stream. This implementation writes the {@code buffer} to the target
      * stream.
-     * 
+     *
      * @param buffer
      *            the buffer to be written.
      * @throws IOException
      *             if an I/O error occurs while writing to this stream.
-     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer) throws IOException {
@@ -105,7 +97,7 @@ public class FilterOutputStream extends OutputStream {
     /**
      * Writes {@code count} bytes from the byte array {@code buffer} starting at
      * {@code offset} to the target stream.
-     * 
+     *
      * @param buffer
      *            the buffer to write.
      * @param offset
@@ -118,7 +110,6 @@ public class FilterOutputStream extends OutputStream {
      *             {@code buffer}.
      * @throws IOException
      *             if an I/O error occurs while writing to this stream.
-     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer, int offset, int count) throws IOException {
@@ -149,12 +140,11 @@ public class FilterOutputStream extends OutputStream {
     /**
      * Writes one byte to the target stream. Only the low order byte of the
      * integer {@code oneByte} is written.
-     * 
+     *
      * @param oneByte
      *            the byte to be written.
      * @throws IOException
      *             if an I/O error occurs while writing to this stream.
-     * @since Android 1.0
      */
     @Override
     public void write(int oneByte) throws IOException {

@@ -30,6 +30,7 @@ import java.util.prefs.Preferences;
 import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
+import tests.util.PrefsTester;
 
 /**
  * 
@@ -37,7 +38,19 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 @TestTargetClass(NodeChangeEvent.class)
 public class NodeChangeEventTest extends TestCase {
 
+    private final PrefsTester prefsTester = new PrefsTester();
+
     NodeChangeEvent event;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        prefsTester.setUp();
+    }
+
+    protected void tearDown() throws Exception {
+        prefsTester.tearDown();
+        super.tearDown();
+    }
 
     @TestTargetNew(
         level = TestLevel.COMPLETE,

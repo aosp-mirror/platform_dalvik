@@ -16,11 +16,14 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.DateFormatSymbols;
 import java.util.Arrays;
 import java.util.Locale;
@@ -42,11 +45,7 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     public void test_Constructor() {
         // Test for method java.text.DateFormatSymbols()
         // Used in tests
-        try {
-            new DateFormatSymbols();
-        } catch (Exception e) {
-            fail("Constructor failed.");
-        }
+        new DateFormatSymbols();
     }
 
     /**
@@ -60,11 +59,7 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     )
     public void test_ConstructorLjava_util_Locale() {
         // Test for method java.text.DateFormatSymbols(java.util.Locale)
-        try {
-            new DateFormatSymbols(new Locale("en", "us"));
-        } catch (Exception e) {
-            fail("Constructor failed.");
-        }
+        new DateFormatSymbols(new Locale("en", "us"));
     }
 
     /**
@@ -156,8 +151,10 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
         String retVal = dfs.getLocalPatternChars();
 
         String val = "GyMdkHmsSEDFwWahKzZ";
+        // Harmony uses a different set of pattern chars
+        // String val = "GyMdkHmsSEDFwWahKzYeugAZvcLQqV";
 
-        assertTrue("Returned incorrect pattern string", retVal.equals(val));
+        assertEquals("Returned incorrect pattern string", val, retVal);
     }
 
     /**
@@ -175,9 +172,9 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
         String[] retVal = dfs.getMonths();
         String[] val = { "January", "February", "March", "April", "May",
                 "June", "July", "August", "September", "October", "November",
-                "December", "" };
-        if (retVal.length != val.length)
-            fail("Returned wrong array: " + retVal.length);
+                "December", ""};
+        // Note: Harmony doesn't include "" at the end of the array
+        assertEquals("Returned wrong array: ", val.length, retVal.length);
         for (int i = 0; i < val.length; i++)
             assertTrue("Array values do not match", retVal[i].equals(val[i]));
     }
@@ -196,9 +193,9 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
         // java.text.DateFormatSymbols.getShortMonths()
         String[] retVal = dfs.getShortMonths();
         String[] val = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-                "Aug", "Sep", "Oct", "Nov", "Dec", "" };
-        if (retVal.length != val.length)
-            fail("Returned wrong array");
+                "Aug", "Sep", "Oct", "Nov", "Dec", ""};
+        // Note: Harmony doesn't include "" at the end of the array
+        assertEquals("Returned wrong array: ", val.length, retVal.length);
         for (int i = 0; i < val.length; i++)
             assertTrue("Array values do not match", retVal[i].equals(val[i]));
     }
@@ -481,5 +478,33 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
      * method is called after a test is executed.
      */
     protected void tearDown() {
+    }
+
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Checks serialization mechanism.",
+            method = "!SerializationSelf",
+            args = {}
+    )
+    public void test_serialization() throws Exception {
+        DateFormatSymbols symbols = new DateFormatSymbols(Locale.FRANCE);
+        String[][] zoneStrings = symbols.getZoneStrings();
+        assertNotNull(zoneStrings);
+
+        // serialize
+        ByteArrayOutputStream byteOStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOStream = new ObjectOutputStream(byteOStream);
+        objectOStream.writeObject(symbols);
+
+        // and deserialize
+        ObjectInputStream objectIStream = new ObjectInputStream(
+                new ByteArrayInputStream(byteOStream.toByteArray()));
+        DateFormatSymbols symbolsD = (DateFormatSymbols) objectIStream
+                .readObject();
+
+        // The associated currency will not persist
+        String[][] zoneStringsD = symbolsD.getZoneStrings();
+        assertNotNull(zoneStringsD);
+        assertEquals(symbols, symbolsD);
     }
 }

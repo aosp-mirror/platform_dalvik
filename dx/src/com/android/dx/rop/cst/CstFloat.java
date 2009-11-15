@@ -20,24 +20,24 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.util.Hex;
 
 /**
- * Constants of type <code>CONSTANT_Float_info</code>.
+ * Constants of type {@code CONSTANT_Float_info}.
  */
 public final class CstFloat
         extends CstLiteral32 {
-    /** non-null; instance representing <code>0</code> */
+    /** {@code non-null;} instance representing {@code 0} */
     public static final CstFloat VALUE_0 = make(Float.floatToIntBits(0.0f));
 
-    /** non-null; instance representing <code>1</code> */
+    /** {@code non-null;} instance representing {@code 1} */
     public static final CstFloat VALUE_1 = make(Float.floatToIntBits(1.0f));
 
-    /** non-null; instance representing <code>2</code> */
+    /** {@code non-null;} instance representing {@code 2} */
     public static final CstFloat VALUE_2 = make(Float.floatToIntBits(2.0f));
 
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
      * 
-     * @param bits the <code>float</code> value as <code>int</code> bits
+     * @param bits the {@code float} value as {@code int} bits
      */
     public static CstFloat make(int bits) {
         /*
@@ -50,7 +50,7 @@ public final class CstFloat
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
      * 
-     * @param bits the <code>float</code> value as <code>int</code> bits
+     * @param bits the {@code float} value as {@code int} bits
      */
     private CstFloat(int bits) {
         super(bits);
@@ -81,7 +81,7 @@ public final class CstFloat
     }
 
     /**
-     * Gets the <code>float</code> value.
+     * Gets the {@code float} value.
      * 
      * @return the value
      */

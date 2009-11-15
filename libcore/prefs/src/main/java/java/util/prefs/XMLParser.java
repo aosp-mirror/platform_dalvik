@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package java.util.prefs;
 
 import java.io.BufferedInputStream;
@@ -27,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
+import java.io.Writer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.security.AccessController;
@@ -64,9 +64,7 @@ import org.w3c.dom.Node;
 // END android-added
 
 /**
- * Utility class for importing and exporting {@code Preferences} data from an XML file.
- * 
- * @since Android 1.0
+ * Utility class for the Preferences import/export from XML file.
  */
 class XMLParser {
 
@@ -79,15 +77,15 @@ class XMLParser {
      * Constant - the DTD string
      */
     static final String PREFS_DTD = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" //$NON-NLS-1$
-            + "    <!ELEMENT preferences (root)>" //$NON-NLS-1$
-            + "    <!ATTLIST preferences EXTERNAL_XML_VERSION CDATA \"0.0\" >" //$NON-NLS-1$
-            + "    <!ELEMENT root (map, node*) >" //$NON-NLS-1$
-            + "    <!ATTLIST root type (system|user) #REQUIRED >" //$NON-NLS-1$
-            + "    <!ELEMENT node (map, node*) >" //$NON-NLS-1$
-            + "    <!ATTLIST node name CDATA #REQUIRED >" //$NON-NLS-1$
-            + "    <!ELEMENT map (entry*) >" //$NON-NLS-1$
-            + "    <!ELEMENT entry EMPTY >" //$NON-NLS-1$
-            + "    <!ATTLIST entry key   CDATA #REQUIRED value CDATA #REQUIRED >"; //$NON-NLS-1$
+        + "    <!ELEMENT preferences (root)>" //$NON-NLS-1$
+        + "    <!ATTLIST preferences EXTERNAL_XML_VERSION CDATA \"0.0\" >" //$NON-NLS-1$
+        + "    <!ELEMENT root (map, node*) >" //$NON-NLS-1$
+        + "    <!ATTLIST root type (system|user) #REQUIRED >" //$NON-NLS-1$
+        + "    <!ELEMENT node (map, node*) >" //$NON-NLS-1$
+        + "    <!ATTLIST node name CDATA #REQUIRED >" //$NON-NLS-1$
+        + "    <!ELEMENT map (entry*) >" //$NON-NLS-1$
+        + "    <!ELEMENT entry EMPTY >" //$NON-NLS-1$
+        + "    <!ATTLIST entry key   CDATA #REQUIRED value CDATA #REQUIRED >"; //$NON-NLS-1$
 
     /*
      * Constant - the specified header
@@ -103,24 +101,24 @@ class XMLParser {
      * empty string array constant
      */
     private static final String[] EMPTY_SARRAY = new String[0];
-    
+
     /*
-     * Constant - used by FilePreferencesImpl, which is default implementation of Linux platform 
+     * Constant - used by FilePreferencesImpl, which is default implementation of Linux platform
      */
     private static final String FILE_PREFS = "<!DOCTYPE map SYSTEM 'http://java.sun.com/dtd/preferences.dtd'>"; //$NON-NLS-1$
 
     /*
      * Constant - specify the DTD version
      */
-    private static final float XML_VERSION = 1.0f;    
-    
+    private static final float XML_VERSION = 1.0f;
+
     /*
      * DOM builder
      */
     private static final DocumentBuilder builder;
 
     /*
-     * specify the indent level 
+     * specify the indent level
      */
     private static int indent = -1;
 
@@ -139,7 +137,7 @@ class XMLParser {
         }
         builder.setEntityResolver(new EntityResolver() {
             public InputSource resolveEntity(String publicId, String systemId)
-                    throws SAXException, IOException {
+            throws SAXException, IOException {
                 if (systemId.equals(PREFS_DTD_NAME)) {
                     InputSource result = new InputSource(new StringReader(
                             PREFS_DTD));
@@ -196,7 +194,7 @@ class XMLParser {
         flushEmptyElement("map", out); //$NON-NLS-1$
 
         StringTokenizer ancestors = new StringTokenizer(prefs.absolutePath(),
-                "/"); //$NON-NLS-1$
+        "/"); //$NON-NLS-1$
         exportNode(ancestors, prefs, withSubTree, out);
 
         flushEndTag("root", out); //$NON-NLS-1$
@@ -207,7 +205,7 @@ class XMLParser {
 
     private static void exportNode(StringTokenizer ancestors,
             Preferences prefs, boolean withSubTree, BufferedWriter out)
-            throws IOException, BackingStoreException {
+    throws IOException, BackingStoreException {
         if (ancestors.hasMoreTokens()) {
             String name = ancestors.nextToken();
             flushStartTag(
@@ -226,7 +224,7 @@ class XMLParser {
     }
 
     private static void exportSubTree(Preferences prefs, BufferedWriter out)
-            throws BackingStoreException, IOException {
+    throws BackingStoreException, IOException {
         String[] names = prefs.childrenNames();
         if (names.length > 0) {
             for (int i = 0; i < names.length; i++) {
@@ -241,7 +239,7 @@ class XMLParser {
     }
 
     private static void exportEntries(Preferences prefs, BufferedWriter out)
-            throws BackingStoreException, IOException {
+    throws BackingStoreException, IOException {
         String[] keys = prefs.keys();
         String[] values = new String[keys.length];
         for (int i = 0; i < keys.length; i++) {
@@ -267,7 +265,7 @@ class XMLParser {
     }
 
     private static void flushEndTag(String tagName, BufferedWriter out)
-            throws IOException {
+    throws IOException {
         flushIndent(indent--, out);
         out.write("</"); //$NON-NLS-1$
         out.write(tagName);
@@ -276,7 +274,7 @@ class XMLParser {
     }
 
     private static void flushEmptyElement(String tagName, BufferedWriter out)
-            throws IOException {
+    throws IOException {
         flushIndent(++indent, out);
         out.write("<"); //$NON-NLS-1$
         out.write(tagName);
@@ -308,7 +306,7 @@ class XMLParser {
     }
 
     private static void flushIndent(int ind, BufferedWriter out)
-            throws IOException {
+    throws IOException {
         for (int i = 0; i < ind; i++) {
             out.write("  "); //$NON-NLS-1$
         }
@@ -325,7 +323,7 @@ class XMLParser {
     }
 
     private static void flushStartTag(String tagName, BufferedWriter out)
-            throws IOException {
+    throws IOException {
         flushIndent(++indent, out);
         out.write("<"); //$NON-NLS-1$
         out.write(tagName);
@@ -365,7 +363,7 @@ class XMLParser {
      * utilities for Preferences import
      **************************************************************************/
     static void importPrefs(InputStream in) throws IOException,
-            InvalidPreferencesFormatException {
+    InvalidPreferencesFormatException {
         try {
             // load XML document
             Document doc = builder.parse(new InputSource(in));
@@ -382,7 +380,7 @@ class XMLParser {
 
             // check preferences root's type
             Element root = (Element) preferences
-                    .getElementsByTagName("root").item(0); //$NON-NLS-1$
+            .getElementsByTagName("root").item(0); //$NON-NLS-1$
             Preferences prefsRoot = null;
             String type = root.getAttribute("type"); //$NON-NLS-1$
             if (type.equals("user")) { //$NON-NLS-1$
@@ -445,15 +443,15 @@ class XMLParser {
     // TODO dirty implementation of a method from javax.xml.xpath
     // should be replaced with a call to a good impl of this method
     private static NodeList selectNodeList(Element documentElement, String string) {
-        
+
         NodeList result = null;
-                
+
         ArrayList<Node> input = new ArrayList<Node>();
-        
+
         String[] path = string.split("/");
-        
+
         NodeList childNodes = documentElement.getChildNodes();
-        
+
         if(path[0].equals("entry") || path[0].equals("node")) {
             for(int i = 0; i < childNodes.getLength(); i++) {
                 Object next = childNodes.item(i);
@@ -483,21 +481,21 @@ class XMLParser {
                 }
             }
         }
-        
+
         result = new NodeSet(input.iterator());
-        
+
         return result;
     }
     // END android-added
-    
+
     /***************************************************************************
      * utilities for FilePreferencesImpl, which is default implementation of Linux platform
      **************************************************************************/
     /**
      * load preferences from file, if cannot load, create a new one FIXME: need
      * lock or not?
-     * 
-     * @param file  the XML file to be read
+     *
+     * @param file	the XML file to be read
      * @return Properties instance which indicates the preferences key-value pairs
      */
     static Properties loadFilePrefs(final File file) {
@@ -506,14 +504,6 @@ class XMLParser {
                 return loadFilePrefsImpl(file);
             }
         });
-
-        // try {
-        // //FIXME: lines below can be deleted, because it is not required to
-        // persistent at the very beginning
-        // flushFilePrefs(file, result);
-        // } catch (IOException e) {
-        // e.printStackTrace();
-        // }
     }
 
     static Properties loadFilePrefsImpl(final File file) {
@@ -524,7 +514,6 @@ class XMLParser {
             InputStream in = null;
             FileLock lock = null;
             try {
-
                 FileInputStream istream = new FileInputStream(file);
                 // BEGIN android-modified
                 in = new BufferedInputStream(istream, 8192);
@@ -544,17 +533,16 @@ class XMLParser {
                     result.setProperty(key, value);
                 }
                 return result;
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (IOException e) {
+            } catch (SAXException e) {
+            // BEGIN android-removed
+            // } catch (TransformerException e) {
+            //     // transform shouldn't fail for xpath call
+            //     throw new AssertionError(e);
+            // END android-removed
             } finally {
-                try {
-                    lock.release();
-                } catch (Exception e) {//ignore
-                }
-                try {
-                    in.close();
-                } catch (Exception e) {//ignore
-                }
+                releaseQuietly(lock);
+                closeQuietly(in);
             }
         } else {
             file.delete();
@@ -563,7 +551,7 @@ class XMLParser {
     }
 
     /**
-     * 
+     *
      * @param file
      * @param prefs
      * @throws PrivilegedActionException
@@ -576,7 +564,7 @@ class XMLParser {
             }
         });
     }
-    
+
     static void flushFilePrefsImpl(File file, Properties prefs) throws IOException {
         BufferedWriter out = null;
         FileLock lock = null;
@@ -604,18 +592,35 @@ class XMLParser {
             }
             out.flush();
         } finally {
-            try {
-                lock.release();
-            } catch (Exception e) {//ignore
-            }
-            try {
-                if (null != out) {
-                    out.close();
-                }
-            } catch (Exception e) {//ignore
-            }
+            releaseQuietly(lock);
+            closeQuietly(out);
         }
     }
+
+    private static void releaseQuietly(FileLock lock) {
+        if (lock == null) {
+            return;
+        }
+        try {
+            lock.release();
+        } catch (IOException e) {}
+    }
+
+    private static void closeQuietly(Writer out) {
+        if (out == null) {
+            return;
+        }
+        try {
+            out.close();
+        } catch (IOException e) {}
+    }
+
+    private static void closeQuietly(InputStream in) {
+        if (in == null) {
+            return;
+        }
+        try {
+            in.close();
+        } catch (IOException e) {}
+    }
 }
-
-

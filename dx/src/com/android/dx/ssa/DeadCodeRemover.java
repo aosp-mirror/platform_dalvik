@@ -36,55 +36,55 @@ import java.util.HashSet;
  * block to entry block.
  */
 public class DeadCodeRemover {
-
     /** method we're processing */
-    private SsaMethod ssaMeth;
+    private final SsaMethod ssaMeth;
+
     /** ssaMeth.getRegCount() */
-    private int regCount;
+    private final int regCount;
 
     /**
      * indexed by register: whether reg should be examined
      * (does it correspond to a no-side-effect insn?)
      */
-    private BitSet worklist;
+    private final BitSet worklist;
 
     /** use list indexed by register; modified during operation */
-    private ArrayList<SsaInsn>[] useList;
+    private final ArrayList<SsaInsn>[] useList;
 
     /**
      * Process a method with the dead-code remver
+     * 
      * @param ssaMethod method to process
      */
     public static void process(SsaMethod ssaMethod) {
-        DeadCodeRemover dc;
-
-        dc = new DeadCodeRemover(ssaMethod);
-            
+        DeadCodeRemover dc = new DeadCodeRemover(ssaMethod);
         dc.run();
     }
 
+    /**
+     * Constructs an instance.
+     * 
+     * @param ssaMethod method to process
+     */
     private DeadCodeRemover(SsaMethod ssaMethod) {
         this.ssaMeth = ssaMethod;
 
         regCount = ssaMethod.getRegCount();
-
         worklist = new BitSet(regCount);
-
         useList = ssaMeth.getUseListCopy();
     }
 
     /**
-     * Run the dead code remover
+     * Runs the dead code remover.
      */
     private void run() {
-
         HashSet<SsaInsn> deletedInsns = (HashSet<SsaInsn>) new HashSet();
 
         ssaMeth.forEachInsn(new NoSideEffectVisitor(worklist));
 
         int regV;
 
-        while ( 0 <=  (regV = worklist.nextSetBit(0)) ) {
+        while ( 0 <= (regV = worklist.nextSetBit(0)) ) {
             worklist.clear(regV);
 
             if (useList[regV].size() == 0
@@ -92,7 +92,7 @@ public class DeadCodeRemover {
 
                 SsaInsn insnS = ssaMeth.getDefinitionForRegister(regV);
 
-                // This insn has already been deleted
+                // This insn has already been deleted.
                 if (deletedInsns.contains(insnS)) {
                     continue;
                 }
@@ -101,8 +101,7 @@ public class DeadCodeRemover {
 
                 int sz = sources.size();
                 for (int i = 0; i < sz; i++) {
-
-                    // Delete this insn from all usage lists
+                    // Delete this insn from all usage lists.
                     RegisterSpec source = sources.get(i);
                     useList[source.getReg()].remove(insnS);
 
@@ -110,14 +109,14 @@ public class DeadCodeRemover {
                             ssaMeth.getDefinitionForRegister(
                                     source.getReg()))) {
                         /*
-                         * Only registers who's definition has no side effect
-                         * should be added back to the worklist
+                         * Only registers whose definition has no side effect
+                         * should be added back to the worklist.
                          */
                         worklist.set(source.getReg());
                     }
                 }
 
-                // Schedule this insn for later deletion
+                // Schedule this insn for later deletion.
                 deletedInsns.add(insnS);
             }
         }
@@ -127,7 +126,8 @@ public class DeadCodeRemover {
 
     /**
      * Returns true if the only uses of this register form a circle of
-     * operations with no side effects
+     * operations with no side effects.
+     * 
      * @param regV register to examine
      * @param set a set of registers that we've already determined
      * are only used as sources in operations with no side effect or null
@@ -139,7 +139,7 @@ public class DeadCodeRemover {
             return true;
         }
 
-        for (SsaInsn use: useList[regV]) {
+        for (SsaInsn use : useList[regV]) {
             if (hasSideEffect(use)) {
                 return false;
             }
@@ -152,7 +152,7 @@ public class DeadCodeRemover {
         // This register is only used in operations that have no side effect.
         set.set(regV);
 
-        for (SsaInsn use: useList[regV]) {
+        for (SsaInsn use : useList[regV]) {
             RegisterSpec result = use.getResult();
 
             if (result == null
@@ -167,13 +167,14 @@ public class DeadCodeRemover {
     /**
      * Returns true if this insn has a side-effect. Returns true
      * if the insn is null for reasons stated in the code block.
-     * @param insn null-ok; instruction in question
+     *
+     * @param insn {@code null-ok;} instruction in question
      * @return true if it has a side-effect
      */
     private static boolean hasSideEffect(SsaInsn insn) {
         if (insn == null) {
-            /* while false would seem to make more sense here, true
-             * prevents us from adding this back to a worklist unnecessarally
+            /* While false would seem to make more sense here, true
+             * prevents us from adding this back to a worklist unnecessarally.
              */
             return true;
         }
@@ -185,7 +186,7 @@ public class DeadCodeRemover {
      * A callback class used to build up the initial worklist of
      * registers defined by an instruction with no side effect.
      */
-    static class NoSideEffectVisitor implements SsaInsn.Visitor {
+    static private class NoSideEffectVisitor implements SsaInsn.Visitor {
         BitSet noSideEffectRegs;
 
         /**
@@ -195,13 +196,13 @@ public class DeadCodeRemover {
          * @param noSideEffectRegs to-build bitset of regs that are
          * results of regs with no side effects
          */
-        NoSideEffectVisitor(BitSet noSideEffectRegs) {
+        public NoSideEffectVisitor(BitSet noSideEffectRegs) {
             this.noSideEffectRegs = noSideEffectRegs;
         }
 
         /** {@inheritDoc} */
         public void visitMoveInsn (NormalSsaInsn insn) {
-            // If we're tracking local vars, some moves have side effects
+            // If we're tracking local vars, some moves have side effects.
             if (!hasSideEffect(insn)) {
                 noSideEffectRegs.set(insn.getResult().getReg());
             }
@@ -209,7 +210,7 @@ public class DeadCodeRemover {
 
         /** {@inheritDoc} */
         public void visitPhiInsn (PhiInsn phi) {
-            // If we're tracking local vars, then some phis have side effects
+            // If we're tracking local vars, then some phis have side effects.
             if (!hasSideEffect(phi)) {
                 noSideEffectRegs.set(phi.getResult().getReg());
             }

@@ -34,7 +34,7 @@ public class DebugInfoItem extends OffsettedItem {
 
     private static final boolean ENABLE_ENCODER_SELF_CHECK = false;
 
-    /** non-null; the code this item represents */
+    /** {@code non-null;} the code this item represents */
     private final DalvCode code;
     
     private byte[] encoded;
@@ -93,9 +93,9 @@ public class DebugInfoItem extends OffsettedItem {
      * directly after a code dump (with the real local list actually
      * existing elsewhere in the output).
      *
-     * @param file non-null; the file to use for referencing other sections
-     * @param out non-null; where to annotate to
-     * @param prefix null-ok; prefix to attach to each line of output
+     * @param file {@code non-null;} the file to use for referencing other sections
+     * @param out {@code non-null;} where to annotate to
+     * @param prefix {@code null-ok;} prefix to attach to each line of output
      */
     public void annotateTo(DexFile file, AnnotatedOutput out, String prefix) {
         encode(file, prefix, null, out, false);
@@ -104,8 +104,8 @@ public class DebugInfoItem extends OffsettedItem {
     /**
      * Does a human-friendly dump of this instance.
      *
-     * @param out non-null; where to dump
-     * @param prefix non-null; prefix to attach to each line of output
+     * @param out {@code non-null;} where to dump
+     * @param prefix {@code non-null;} prefix to attach to each line of output
      */
     public void debugPrint(PrintWriter out, String prefix) {
         encode(null, prefix, out, null, false);
@@ -130,14 +130,14 @@ public class DebugInfoItem extends OffsettedItem {
     /**
      * Performs debug info encoding.
      *
-     * @param file null-ok; file to refer to during encoding
-     * @param prefix null-ok; prefix to attach to each line of output
-     * @param debugPrint null-ok; if specified, an alternate output for
+     * @param file {@code null-ok;} file to refer to during encoding
+     * @param prefix {@code null-ok;} prefix to attach to each line of output
+     * @param debugPrint {@code null-ok;} if specified, an alternate output for
      * annotations
-     * @param out null-ok; if specified, where annotations should go
+     * @param out {@code null-ok;} if specified, where annotations should go
      * @param consume whether to claim to have consumed output for
-     * <code>out</code>
-     * @return non-null; the encoded array
+     * {@code out}
+     * @return {@code non-null;} the encoded array
      */
     private byte[] encode(DexFile file, String prefix, PrintWriter debugPrint,
             AnnotatedOutput out, boolean consume) {
@@ -161,14 +161,14 @@ public class DebugInfoItem extends OffsettedItem {
     /**
      * Helper for {@link #encode} to do most of the work.
      *
-     * @param file null-ok; file to refer to during encoding
-     * @param prefix null-ok; prefix to attach to each line of output
-     * @param debugPrint null-ok; if specified, an alternate output for
+     * @param file {@code null-ok;} file to refer to during encoding
+     * @param prefix {@code null-ok;} prefix to attach to each line of output
+     * @param debugPrint {@code null-ok;} if specified, an alternate output for
      * annotations
-     * @param out null-ok; if specified, where annotations should go
+     * @param out {@code null-ok;} if specified, where annotations should go
      * @param consume whether to claim to have consumed output for
-     * <code>out</code>
-     * @return non-null; the encoded array
+     * {@code out}
+     * @return {@code non-null;} the encoded array
      */
     private byte[] encode0(DexFile file, String prefix, PrintWriter debugPrint,
             AnnotatedOutput out, boolean consume) {

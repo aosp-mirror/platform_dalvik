@@ -23,7 +23,6 @@ package java.lang;
  * during the operation of the virtual machine.
  * 
  * @see Error
- * @since Android 1.0
  */
 public abstract class VirtualMachineError extends Error {
 
@@ -32,8 +31,6 @@ public abstract class VirtualMachineError extends Error {
     /**
      * Constructs a new {@code VirtualMachineError} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public VirtualMachineError() {
         super();
@@ -45,7 +42,6 @@ public abstract class VirtualMachineError extends Error {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public VirtualMachineError(String detailMessage) {
         super(detailMessage);

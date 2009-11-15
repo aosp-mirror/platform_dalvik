@@ -14,7 +14,7 @@
 <li> <a href="#JavaVM_and_JNIEnv">JavaVM and JNIEnv</a>
 
 </li>
-<li> <a href="#jclassID_jmethodID_and_jfieldID">jclassID, jmethodID, and jfieldID</a>
+<li> <a href="#jclass_jmethodID_and_jfieldID">jclass, jmethodID, and jfieldID</a>
 </li>
 <li> <a href="#local_vs_global_references">Local vs. Global References</a>
 </li>
@@ -79,7 +79,7 @@ header file requires "#ifdef __cplusplus", you may have to do some extra work if
 that header refers to JNIEnv.)
 </p><p>
 </p><p>
-</p><h2><a name="jclassID_jmethodID_and_jfieldID"> jclassID, jmethodID, and jfieldID </a></h2>
+</p><h2><a name="jclass_jmethodID_and_jfieldID"> jclass, jmethodID, and jfieldID </a></h2>
 <p>
 If you want to access an object's field from native code, you would do the following:
 </p><p>
@@ -104,7 +104,8 @@ to store this data in a static local structure.
 </p><p>
 The class references, field IDs, and method IDs are guaranteed valid until the class is unloaded.  Classes
 are only unloaded if all classes associated with a ClassLoader can be garbage collected,
-which is rare but will not be impossible in our system.  The jclassID
+which is rare but will not be impossible in our system.  Note however that
+the <code>jclass</code>
 is a class reference and <strong>must be protected</strong> with a call
 to <code>NewGlobalRef</code> (see the next section).
 </p><p>
@@ -145,23 +146,40 @@ for an example in our source tree.)
 Every object that JNI returns is a "local reference".  This means that it's valid for the
 duration of the current native method in the current thread.
 <strong>Even if the object itself continues to live on after the native method returns, the reference is not valid.</strong>
-This applies to all sub-classes of jobject, including jclass and jarray.
-(Dalvik VM will warn you about this when -Xcheck:jni is enabled.)
+This applies to all sub-classes of <code>jobject</code>, including
+<code>jclass</code>, <code>jstring</code>, and <code>jarray</code>.
+(Dalvik VM will warn you about most reference mis-uses when extended JNI
+checks are enabled.)
 </p><p>
 
-If you want to hold on to a reference for a longer period, you must use a "global" reference.
-The <code>NewGlobalRef</code> function takes the local reference as
-an argument and returns a global one:
-
-<p><pre>jobject* localRef = [...];
-jobject* globalRef;
-globalRef = env-&gt;NewGlobalRef(localRef);
-</pre>
-
+If you want to hold on to a reference for a longer period, you must use
+a "global" reference.  The <code>NewGlobalRef</code> function takes the
+local reference as an argument and returns a global one.
 The global reference is guaranteed to be valid until you call
 <code>DeleteGlobalRef</code>.
+
+</p><p>
+This pattern is commonly used when caching copies of class objects obtained
+from <code>FindClass</code>, e.g.:
+<p><pre>jclass* localClass = env-&gt;FindClass("MyClass");
+jclass* globalClass = (jclass*) env-&gt;NewGlobalRef(localClass);
+</pre>
+
 </p><p>
 All JNI methods accept both local and global references as arguments.
+It's possible for references to the same object to have different values;
+for example, the return values from consecutive calls to
+<code>NewGlobalRef</code> on the same object may be different.
+<strong>To see if two references refer to the same object,
+you must use the <code>IsSameObject</code> function.</strong>  Never compare
+references with "==" in native code.
+</p><p>
+One consequence of this is that you
+<strong>must not assume object references are constant or unique</strong>
+in native code.  The 32-bit value representing an object may be different
+from one invocation of a method to the next, and it's possible that two
+different objects could have the same 32-bit value on consecutive calls.  Do
+not use <code>jobject</code> values as keys.
 </p><p>
 Programmers are required to "not excessively allocate" local references.  In practical terms this means
 that if you're creating large numbers of local references, perhaps while running through an array of
@@ -179,8 +197,8 @@ and <code>GetByteArrayElements</code> are also not objects.
 One unusual case deserves separate mention.  If you attach a native
 thread to the VM with AttachCurrentThread, the code you are running will
 never "return" to the VM until the thread detaches from the VM.  Any local
-references you create will have to be deleted manually unless the thread
-is about to exit or detach.
+references you create will have to be deleted manually unless you're going
+to detach the thread soon.
 </p><p>
 </p><p>
 </p><p>
@@ -201,9 +219,10 @@ so you need to hang on to the string length as well as
 the string pointer.
 
 </p><p>
-<strong>Don't forget to Release the strings you Get</strong>.  The string functions return <code>jchar*</code> or <code>jbyte*</code>, which
-are pointers to primitive types rather than local references.  They are
-guaranteed valid until Release is called, which means they are not
+<strong>Don't forget to Release the strings you Get</strong>.  The
+string functions return <code>jchar*</code> or <code>jbyte*</code>, which
+are C-style pointers to primitive data rather than local references.  They
+are guaranteed valid until Release is called, which means they are not
 released when the native method returns.
 </p><p>
 </p><p>
@@ -305,10 +324,10 @@ We can accomplish the same thing with this:
 </p><p>
 This accomplishes the same thing, with several advantages:
 <ul>
-    <li>Requires one JNI call instead of 3, reducing overhead.
+    <li>Requires one JNI call instead of 2, reducing overhead.
     <li>Doesn't require pinning or extra data copies.
-    <li>Reduces the risk of programmer error -- no need to match up
-    <code>Get</code> and <code>Release</code> calls.
+    <li>Reduces the risk of programmer error -- no risk of forgetting
+    to call <code>Release</code> after something fails.
 </ul>
 </p><p>
 Similarly, you can use the <code>Set&lt;Type&gt;ArrayRegion</code> call
@@ -366,7 +385,7 @@ hand to printf or a LOG macro.
 </p><p>
 </p><h2><a name="Extended_checking"> Extended Checking </a></h2>
 <p>
-JNI does very little error checking.  Calling <code>SetFieldInt</code>
+JNI does very little error checking.  Calling <code>SetIntField</code>
 on an Object field will succeed, even if the field is marked
 <code>private</code> and <code>final</code>.  The
 goal is to minimize the overhead on the assumption that, if you've written it in native code,
@@ -377,7 +396,7 @@ puts a different table of functions into the JavaVM and JNIEnv pointers.  These 
 an extended series of checks before calling the standard implementation.
 
 </p><p>
-Some things that may be verified:
+Some things that may be checked:
 </p><p>
 </p>
 <ul>
@@ -420,6 +439,7 @@ flag.  Currently supported values include:
 are over-allocated and surrounded with a guard pattern to help identify
 code writing outside the buffer, and the contents are erased before the
 storage is freed to trip up code that uses the data after calling Release.
+This will have a noticeable performance impact on some applications.
 <dt>warnonly
 <dd>By default, JNI "warnings" cause the VM to abort.  With this flag
 it continues on.
@@ -434,7 +454,10 @@ You can load native code from shared libraries with the standard
 preferred way to get at your native code is:
 </p><p>
 </p><ul>
-<li> Call <code>System.loadLibrary()</code> from a static class initializer.  (See the earlier example, where one is used to call nativeClassInit().)  The argument is the "undecorated" library name, e.g. to load "libfubar.so" you would pass in "fubar".
+<li> Call <code>System.loadLibrary()</code> from a static class
+initializer.  (See the earlier example, where one is used to call
+<code>nativeClassInit()</code>.)  The argument is the "undecorated"
+library name, e.g. to load "libfubar.so" you would pass in "fubar".
 
 </li>
 <li> Provide a native function: <code><strong>jint JNI_OnLoad(JavaVM* vm, void* reserved)</strong></code>
@@ -462,16 +485,26 @@ written in C:
 </pre></blockquote>
 </p><p>
 You can also call <code>System.load()</code> with the full path name of the
-shared library.  For Android apps, you can get the full path to the
-application's private data storage area from the context object.
+shared library.  For Android apps, you may find it useful to get the full
+path to the application's private data storage area from the context object.
 </p><p>
-Dalvik does support "discovery" of native methods that are named in a
+This is the recommended approach, but not the only approach.  The VM does
+not require explicit registration, nor that you provide a
+<code>JNI_OnLoad</code> function.
+You can instead use "discovery" of native methods that are named in a
 specific way (see <a href="http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/design.html#wp615">
-    the JNI spec</a> for details), but this is a less desirable
-approach.  It requires more space in the shared object symbol table,
+    the JNI spec</a> for details), though this is less desirable.
+It requires more space in the shared object symbol table,
 loading is slower because it requires string searches through all of the
 loaded shared libraries, and if a method signature is wrong you won't know
 about it until the first time the method is actually used.
+</p><p>
+One other note about <code>JNI_OnLoad</code>: any <code>FindClass</code>
+calls you make from there will happen in the context of the class loader
+that was used to load the shared library.  Normally <code>FindClass</code>
+uses the loader associated with the method at the top of the interpreted
+stack, or if there isn't one (because the thread was just attached to
+the VM) it uses the "system" class loader.
 </p><p>
 
 

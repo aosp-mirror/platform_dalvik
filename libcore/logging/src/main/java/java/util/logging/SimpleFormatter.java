@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package java.util.logging;
 
 import java.io.PrintWriter;
@@ -26,13 +25,10 @@ import java.util.Date;
 /**
  * {@code SimpleFormatter} can be used to print a summary of the information
  * contained in a {@code LogRecord} object in a human readable format.
- * @since Android 1.0
  */
 public class SimpleFormatter extends Formatter {
     /**
      * Constructs a new {@code SimpleFormatter}.
-     * 
-     * @since Android 1.0
      */
     public SimpleFormatter() {
         super();
@@ -41,11 +37,10 @@ public class SimpleFormatter extends Formatter {
     /**
      * Converts a {@link LogRecord} object into a human readable string
      * representation.
-     * 
+     *
      * @param r
      *            the log record to be formatted into a string.
      * @return the formatted string.
-     * @since Android 1.0
      */
     @Override
     public String format(LogRecord r) {
@@ -53,7 +48,8 @@ public class SimpleFormatter extends Formatter {
         sb.append(MessageFormat.format("{0, date} {0, time} ", //$NON-NLS-1$
                 new Object[] { new Date(r.getMillis()) }));
         sb.append(r.getSourceClassName()).append(" "); //$NON-NLS-1$
-        sb.append(r.getSourceMethodName()).append(LogManager.getSystemLineSeparator()); //$NON-NLS-1$
+        sb.append(r.getSourceMethodName()).append(
+                LogManager.getSystemLineSeparator());
         sb.append(r.getLevel().getName()).append(": "); //$NON-NLS-1$
         sb.append(formatMessage(r)).append(LogManager.getSystemLineSeparator());
         if (null != r.getThrown()) {
@@ -66,7 +62,7 @@ public class SimpleFormatter extends Formatter {
                 t.printStackTrace(pw);
                 sb.append(sw.toString());
             } finally {
-                if(pw != null){
+                if (pw != null) {
                     try {
                         pw.close();
                     } catch (Exception e) {
@@ -78,4 +74,3 @@ public class SimpleFormatter extends Formatter {
         return sb.toString();
     }
 }
-

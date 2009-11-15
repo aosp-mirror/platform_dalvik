@@ -23,10 +23,8 @@ import org.apache.harmony.luni.util.Msg;
  * Receives information on a communications pipe. When two threads want to pass
  * data back and forth, one creates a piped writer and the other creates a piped
  * reader.
- * 
+ *
  * @see PipedWriter
- * 
- * @since Android 1.0
  */
 public class PipedReader extends Reader {
 
@@ -66,9 +64,8 @@ public class PipedReader extends Reader {
      * Constructs a new unconnected {@code PipedReader}. The resulting reader
      * must be connected to a {@code PipedWriter} before data may be read from
      * it.
-     * 
+     *
      * @see PipedWriter
-     * @since Android 1.0
      */
     public PipedReader() {
         data = new char[PIPE_SIZE];
@@ -78,12 +75,11 @@ public class PipedReader extends Reader {
      * Constructs a new {@code PipedReader} connected to the {@link PipedWriter}
      * {@code out}. Any data written to the writer can be read from the this
      * reader.
-     * 
+     *
      * @param out
      *            the {@code PipedWriter} to connect to.
      * @throws IOException
      *             if {@code out} is already connected.
-     * @since Android 1.0
      */
     public PipedReader(PipedWriter out) throws IOException {
         this();
@@ -93,10 +89,9 @@ public class PipedReader extends Reader {
     /**
      * Closes this reader. This implementation releases the buffer used for
      * the pipe and notifies all threads waiting to read or write.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this reader.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -112,13 +107,12 @@ public class PipedReader extends Reader {
     /**
      * Connects this {@code PipedReader} to a {@link PipedWriter}. Any data
      * written to the writer becomes readable in this reader.
-     * 
+     *
      * @param src
      *            the writer to connect to.
      * @throws IOException
      *             if this reader is closed or already connected, or if {@code
      *             src} is already connected.
-     * @since Android 1.0
      */
     public void connect(PipedWriter src) throws IOException {
         synchronized (lock) {
@@ -128,7 +122,7 @@ public class PipedReader extends Reader {
 
     /**
      * Establishes the connection to the PipedWriter.
-     * 
+     *
      * @throws IOException
      *             If this Reader is already connected.
      */
@@ -154,13 +148,11 @@ public class PipedReader extends Reader {
      * Separate threads should be used to read from a {@code PipedReader} and to
      * write to the connected {@link PipedWriter}. If the same thread is used,
      * a deadlock may occur.
-     * </p>
-     * 
+     *
      * @return the character read or -1 if the end of the reader has been
      *         reached.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -179,8 +171,7 @@ public class PipedReader extends Reader {
      * Separate threads should be used to read from a {@code PipedReader} and to
      * write to the connected {@link PipedWriter}. If the same thread is used, a
      * deadlock may occur.
-     * </p>
-     * 
+     *
      * @param buffer
      *            the character array in which to store the characters read.
      * @param offset
@@ -298,14 +289,13 @@ public class PipedReader extends Reader {
      * called, {@code false} if unknown or blocking will occur. This
      * implementation returns {@code true} if the internal buffer contains
      * characters that can be read.
-     * 
+     *
      * @return always {@code false}.
      * @throws IOException
      *             if this reader is closed or not connected, or if some other
      *             I/O error occurs.
      * @see #read()
      * @see #read(char[], int, int)
-     * @since Android 1.0
      */
     @Override
     public boolean ready() throws IOException {
@@ -326,10 +316,10 @@ public class PipedReader extends Reader {
      * <P>
      * If the buffer is full and the thread sending #receive is interrupted, the
      * InterruptedIOException will be thrown.
-     * 
+     *
      * @param oneChar
      *            the char to store into the pipe.
-     * 
+     *
      * @throws IOException
      *             If the stream is already closed or another IOException
      *             occurs.
@@ -380,14 +370,14 @@ public class PipedReader extends Reader {
      * <P>
      * If the buffer is full and the thread sending #receive is interrupted, the
      * InterruptedIOException will be thrown.
-     * 
+     *
      * @param chars
      *            the char array to store into the pipe.
      * @param offset
      *            offset to start reading from
      * @param count
      *            total characters to read
-     * 
+     *
      * @throws IOException
      *             If the stream is already closed or another IOException
      *             occurs.

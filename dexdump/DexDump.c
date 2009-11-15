@@ -60,10 +60,12 @@ typedef enum OutputFormat {
 
 /* command-line options */
 struct {
+    bool checksumOnly;
     bool disassemble;
     bool showFileHeaders;
     bool showSectionHeaders;
     bool ignoreBadChecksum;
+    bool dumpRegisterMaps;
     OutputFormat outputFormat;
     const char* tempFileName;
     bool exportsOnly;
@@ -83,6 +85,14 @@ typedef struct FieldMethodInfo {
 static inline u2 get2LE(unsigned char const* pSrc)
 {
     return pSrc[0] | (pSrc[1] << 8);
+}   
+
+/*
+ * Get 4 little-endian bytes. 
+ */ 
+static inline u4 get4LE(unsigned char const* pSrc)
+{
+    return pSrc[0] | (pSrc[1] << 8) | (pSrc[2] << 16) | (pSrc[3] << 24);
 }   
 
 /*
@@ -1193,6 +1203,8 @@ void dumpIField(const DexFile* pDexFile, const DexField* pIField, int i)
 /*
  * Dump the class.
  *
+ * Note "idx" is a DexClassDef index, not a DexTypeId index.
+ *
  * If "*pLastPackage" is NULL or does not match the current class' package,
  * the value will be replaced with a newly-allocated string.
  */
@@ -1365,6 +1377,208 @@ bail:
     free(accessStr);
 }
 
+
+/*
+ * Advance "ptr" to ensure 32-bit alignment.
+ */
+static inline const u1* align32(const u1* ptr)
+{
+    return (u1*) (((int) ptr + 3) & ~0x03);
+}
+
+
+/*
+ * Dump a map in the "differential" format.
+ *
+ * TODO: show a hex dump of the compressed data.  (We can show the
+ * uncompressed data if we move the compression code to libdex; otherwise
+ * it's too complex to merit a fast & fragile implementation here.)
+ */
+void dumpDifferentialCompressedMap(const u1** pData)
+{
+    const u1* data = *pData;
+    const u1* dataStart = data -1;      // format byte already removed
+    u1 regWidth;
+    u2 numEntries;
+
+    /* standard header */
+    regWidth = *data++;
+    numEntries = *data++;
+    numEntries |= (*data++) << 8;
+
+    /* compressed data begins with the compressed data length */
+    int compressedLen = readUnsignedLeb128(&data);
+    int addrWidth = 1;
+    if ((*data & 0x80) != 0)
+        addrWidth++;
+
+    int origLen = 4 + (addrWidth + regWidth) * numEntries;
+    int compLen = (data - dataStart) + compressedLen;
+
+    printf("        (differential compression %d -> %d [%d -> %d])\n",
+        origLen, compLen,
+        (addrWidth + regWidth) * numEntries, compressedLen);
+
+    /* skip past end of entry */
+    data += compressedLen;
+
+    *pData = data;
+}
+
+/*
+ * Dump register map contents of the current method.
+ *
+ * "*pData" should point to the start of the register map data.  Advances
+ * "*pData" to the start of the next map.
+ */
+void dumpMethodMap(DexFile* pDexFile, const DexMethod* pDexMethod, int idx,
+    const u1** pData)
+{
+    const u1* data = *pData;
+    const DexMethodId* pMethodId;
+    const char* name;
+    int offset = data - (u1*) pDexFile->pOptHeader;
+
+    pMethodId = dexGetMethodId(pDexFile, pDexMethod->methodIdx);
+    name = dexStringById(pDexFile, pMethodId->nameIdx);
+    printf("      #%d: 0x%08x %s\n", idx, offset, name);
+
+    u1 format;
+    int addrWidth;
+
+    format = *data++;
+    if (format == 1) {              /* kRegMapFormatNone */
+        /* no map */
+        printf("        (no map)\n");
+        addrWidth = 0;
+    } else if (format == 2) {       /* kRegMapFormatCompact8 */
+        addrWidth = 1;
+    } else if (format == 3) {       /* kRegMapFormatCompact16 */
+        addrWidth = 2;
+    } else if (format == 4) {       /* kRegMapFormatDifferential */
+        dumpDifferentialCompressedMap(&data);
+        goto bail;
+    } else {
+        printf("        (unknown format %d!)\n", format);
+        /* don't know how to skip data; failure will cascade to end of class */
+        goto bail;
+    }
+
+    if (addrWidth > 0) {
+        u1 regWidth;
+        u2 numEntries;
+        int idx, addr, byte;
+
+        regWidth = *data++;
+        numEntries = *data++;
+        numEntries |= (*data++) << 8;
+
+        for (idx = 0; idx < numEntries; idx++) {
+            addr = *data++;
+            if (addrWidth > 1)
+                addr |= (*data++) << 8;
+
+            printf("        %4x:", addr);
+            for (byte = 0; byte < regWidth; byte++) {
+                printf(" %02x", *data++);
+            }
+            printf("\n");
+        }
+    }
+
+bail:
+    //if (addrWidth >= 0)
+    //    *pData = align32(data);
+    *pData = data;
+}
+
+/*
+ * Dump the contents of the register map area.
+ *
+ * These are only present in optimized DEX files, and the structure is
+ * not really exposed to other parts of the VM itself.  We're going to
+ * dig through them here, but this is pretty fragile.  DO NOT rely on
+ * this or derive other code from it.
+ */
+void dumpRegisterMaps(DexFile* pDexFile)
+{
+    const u1* pClassPool = pDexFile->pRegisterMapPool;
+    const u4* classOffsets;
+    const u1* ptr;
+    u4 numClasses;
+    int baseFileOffset = (u1*) pClassPool - (u1*) pDexFile->pOptHeader;
+    int idx;
+
+    if (pClassPool == NULL) {
+        printf("No register maps found\n");
+        return;
+    }
+
+    ptr = pClassPool;
+    numClasses = get4LE(ptr);
+    ptr += sizeof(u4);
+    classOffsets = (const u4*) ptr;
+
+    printf("RMAP begins at offset 0x%07x\n", baseFileOffset);
+    printf("Maps for %d classes\n", numClasses);
+    for (idx = 0; idx < (int) numClasses; idx++) {
+        const DexClassDef* pClassDef;
+        const char* classDescriptor;
+
+        pClassDef = dexGetClassDef(pDexFile, idx);
+        classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
+
+        printf("%4d: +%d (0x%08x) %s\n", idx, classOffsets[idx],
+            baseFileOffset + classOffsets[idx], classDescriptor);
+
+        if (classOffsets[idx] == 0)
+            continue;
+
+        /*
+         * What follows is a series of RegisterMap entries, one for every
+         * direct method, then one for every virtual method.
+         */
+        DexClassData* pClassData;
+        const u1* pEncodedData;
+        const u1* data = (u1*) pClassPool + classOffsets[idx];
+        u2 methodCount;
+        int i;
+
+        pEncodedData = dexGetClassData(pDexFile, pClassDef);
+        pClassData = dexReadAndVerifyClassData(&pEncodedData, NULL);
+        if (pClassData == NULL) {
+            fprintf(stderr, "Trouble reading class data\n");
+            continue;
+        }
+
+        methodCount = *data++;
+        methodCount |= (*data++) << 8;
+        data += 2;      /* two pad bytes follow methodCount */
+        if (methodCount != pClassData->header.directMethodsSize
+                            + pClassData->header.virtualMethodsSize)
+        {
+            printf("NOTE: method count discrepancy (%d != %d + %d)\n",
+                methodCount, pClassData->header.directMethodsSize,
+                pClassData->header.virtualMethodsSize);
+            /* this is bad, but keep going anyway */
+        }
+
+        printf("    direct methods: %d\n",
+            pClassData->header.directMethodsSize);
+        for (i = 0; i < (int) pClassData->header.directMethodsSize; i++) {
+            dumpMethodMap(pDexFile, &pClassData->directMethods[i], i, &data);
+        }
+
+        printf("    virtual methods: %d\n",
+            pClassData->header.virtualMethodsSize);
+        for (i = 0; i < (int) pClassData->header.virtualMethodsSize; i++) {
+            dumpMethodMap(pDexFile, &pClassData->virtualMethods[i], i, &data);
+        }
+
+        free(pClassData);
+    }
+}
+
 /*
  * Dump the requested sections of the file.
  */
@@ -1376,6 +1590,11 @@ void processDexFile(const char* fileName, DexFile* pDexFile)
     if (gOptions.verbose) {
         printf("Opened '%s', DEX version '%.3s'\n", fileName,
             pDexFile->pHeader->magic +4);
+    }
+
+    if (gOptions.dumpRegisterMaps) {
+        dumpRegisterMaps(pDexFile);
+        return;
     }
 
     if (gOptions.showFileHeaders)
@@ -1429,7 +1648,11 @@ int process(const char* fileName)
         goto bail;
     }
 
-    processDexFile(fileName, pDexFile);
+    if (gOptions.checksumOnly) {
+        printf("Checksum verified\n");
+    } else {
+        processDexFile(fileName, pDexFile);
+    }
 
     result = 0;
 
@@ -1449,14 +1672,16 @@ void usage(void)
 {
     fprintf(stderr, "Copyright (C) 2007 The Android Open Source Project\n\n");
     fprintf(stderr,
-        "%s: [-d] [-f] [-h] [-i] [-l layout] [-t tempfile] dexfile...\n",
+        "%s: [-c] [-d] [-f] [-h] [-i] [-l layout] [-m] [-t tempfile] dexfile...\n",
         gProgName);
     fprintf(stderr, "\n");
+    fprintf(stderr, " -c : verify checksum and exit\n");
     fprintf(stderr, " -d : disassemble code sections\n");
     fprintf(stderr, " -f : display summary information from file header\n");
     fprintf(stderr, " -h : display file header details\n");
     fprintf(stderr, " -i : ignore checksum failures\n");
     fprintf(stderr, " -l : output layout, either 'plain' or 'xml'\n");
+    fprintf(stderr, " -m : dump register maps (and nothing else)\n");
     fprintf(stderr, " -t : temp file name (defaults to /sdcard/dex-temp-*)\n");
 }
 
@@ -1474,11 +1699,14 @@ int main(int argc, char* const argv[])
     gOptions.verbose = true;
 
     while (1) {
-        ic = getopt(argc, argv, "dfhil:t:");
+        ic = getopt(argc, argv, "cdfhil:mt:");
         if (ic < 0)
             break;
 
         switch (ic) {
+        case 'c':       // verify the checksum then exit
+            gOptions.checksumOnly = true;
+            break;
         case 'd':       // disassemble Dalvik instructions
             gOptions.disassemble = true;
             break;
@@ -1502,6 +1730,9 @@ int main(int argc, char* const argv[])
                 wantUsage = true;
             }
             break;
+        case 'm':       // dump register maps only
+            gOptions.dumpRegisterMaps = true;
+            break;
         case 't':       // temp file, used when opening compressed Jar
             gOptions.tempFileName = optarg;
             break;
@@ -1516,6 +1747,11 @@ int main(int argc, char* const argv[])
         wantUsage = true;
     }
 
+    if (gOptions.checksumOnly && gOptions.ignoreBadChecksum) {
+        fprintf(stderr, "Can't specify both -c and -i\n");
+        wantUsage = true;
+    }
+
     /* initialize some VM tables */
     gInstrWidth = dexCreateInstrWidthTable();
     gInstrFormat = dexCreateInstrFormatTable();
@@ -1525,12 +1761,14 @@ int main(int argc, char* const argv[])
         return 2;
     }
 
-    while (optind < argc)
-        process(argv[optind++]);
+    int result = 0;
+    while (optind < argc) {
+        result |= process(argv[optind++]);
+    }
 
     free(gInstrWidth);
     free(gInstrFormat);
 
-    return 0;
+    return (result != 0);
 }
 

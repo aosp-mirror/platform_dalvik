@@ -38,11 +38,13 @@ public final class DexFile {
 
     /**
      * Opens a DEX file from a given File object. This will usually be a ZIP/JAR
-     * file with a "classes.dex" inside. The method should not be used for files
-     * inside the Dalvik cache.
-     * 
-     * @cts What will happen if we refer to the Dalvik cache? Should be either
-     *      specified or throw an exception...
+     * file with a "classes.dex" inside.
+     *
+     * The VM will generate the name of the coresponding file in
+     * /data/dalvik-cache and open it, possibly creating or updating
+     * it first if system permissions allow.  Don't pass in the name of
+     * a file in /data/dalvik-cache, as the named file is expected to be
+     * in its original (pre-dexopt) state.
      * 
      * @param file
      *            the File object referencing the actual DEX file
@@ -57,11 +59,13 @@ public final class DexFile {
 
     /**
      * Opens a DEX file from a given filename. This will usually be a ZIP/JAR
-     * file with a "classes.dex" inside. The method should not be used for files
-     * inside the Dalvik cache.
-     * 
-     * @cts What will happen if we refer to the Dalvik cache? Should be either
-     *      specified or throw an exception...
+     * file with a "classes.dex" inside.
+     *
+     * The VM will generate the name of the coresponding file in
+     * /data/dalvik-cache and open it, possibly creating or updating
+     * it first if system permissions allow.  Don't pass in the name of
+     * a file in /data/dalvik-cache, as the named file is expected to be
+     * in its original (pre-dexopt) state.
      * 
      * @param fileName
      *            the filename of the DEX file
@@ -190,11 +194,23 @@ public final class DexFile {
      * @cts Exception comment is a bit cryptic. What exception will be thrown?
      */
     public Class loadClass(String name, ClassLoader loader) {
+        String slashName = name.replace('.', '/');
+        return loadClassBinaryName(slashName, loader);
+    }
+
+    /**
+     * See {@link #loadClass(String, ClassLoader)}.
+     *
+     * This takes a "binary" class name to better match ClassLoader semantics.
+     *
+     * {@hide}
+     */
+    public Class loadClassBinaryName(String name, ClassLoader loader) {
         return defineClass(name, loader, mCookie,
             null);
             //new ProtectionDomain(name) /*DEBUG ONLY*/);
     }
-    
+
     native private static Class defineClass(String name, ClassLoader loader,
         int cookie, ProtectionDomain pd);
 

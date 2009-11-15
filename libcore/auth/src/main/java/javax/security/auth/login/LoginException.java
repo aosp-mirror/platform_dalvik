@@ -21,8 +21,6 @@ import java.security.GeneralSecurityException;
 
 /**
  * Base class for exceptions that are thrown when a login error occurs.
- * 
- * @since Android 1.0
  */
 public class LoginException extends GeneralSecurityException {
 
@@ -37,7 +35,7 @@ public class LoginException extends GeneralSecurityException {
 
     /**
      * Creates a new exception instance and initializes it with a given message.
-     * 
+     *
      * @param message the error message
      */
     public LoginException(String message) {

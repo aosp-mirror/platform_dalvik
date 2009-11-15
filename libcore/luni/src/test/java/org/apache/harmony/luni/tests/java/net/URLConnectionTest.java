@@ -22,9 +22,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
-
 import junit.framework.TestCase;
-
 import tests.support.Support_Configuration;
 import tests.support.Support_PortManager;
 import tests.support.Support_TestWebData;
@@ -59,7 +57,6 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.UnknownServiceException;
 import java.security.Permission;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -461,6 +458,29 @@ public class URLConnectionTest extends TestCase {
         } catch (UnsupportedOperationException e) {
             // Expected
         }
+    }
+
+    @KnownFailure(value="bug 2002061")
+    public void testHttpPostHeaders() throws IOException {
+        String path = "/" + Math.random();
+        HttpURLConnection connection = (HttpURLConnection)
+                new URL("http://localhost:" + port + path).openConnection();
+
+        // post a request
+        connection.setDoOutput(true);
+        OutputStreamWriter writer
+                = new OutputStreamWriter(connection.getOutputStream());
+        writer.write("hello");
+        writer.flush();
+        assertEquals(200, connection.getResponseCode());
+
+        // validate the request by asking the server what was received
+        Map<String, String> headers = server.pathToRequest().get(path).getHeaders();
+        assertEquals("*, */*", headers.get("Accept"));
+        assertEquals("application/x-www-form-urlencoded", headers.get("Content-Type"));
+        assertEquals("5", headers.get("Content-Length"));
+        assertEquals("localhost:" + port, headers.get("Host"));
+        // TODO: test User-Agent?
     }
 
     /**
@@ -1069,8 +1089,6 @@ public class URLConnectionTest extends TestCase {
         method = "getHeaderFieldDate",
         args = {java.lang.String.class, long.class}
     )
-    @KnownFailure("getHeaderFieldDate on Content-Length throws an exception."
-            + " The RI just returns the default value")
     public void test_getHeaderFieldDateLjava_lang_StringJ() {
         Support_TestWebData params = Support_TestWebData.testParams[0];
 
@@ -1612,7 +1630,6 @@ public class URLConnectionTest extends TestCase {
         method = "guessContentTypeFromStream",
         args = {java.io.InputStream.class}
     )
-    @KnownFailure("'<?xml' recognised as text/html instead of application/xml")
     public void test_guessContentTypeFromStreamLjava_io_InputStream()
             throws IOException {
         assertContentTypeEquals("ASCII", "text/html", "<html>");

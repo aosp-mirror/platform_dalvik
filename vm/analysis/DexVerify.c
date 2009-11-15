@@ -36,7 +36,14 @@ bool dvmVerificationStartup(void)
     gDvm.instrWidth = dexCreateInstrWidthTable();
     gDvm.instrFormat = dexCreateInstrFormatTable();
     gDvm.instrFlags = dexCreateInstrFlagsTable();
-    return (gDvm.instrWidth != NULL && gDvm.instrFormat!= NULL);
+    if (gDvm.instrWidth == NULL || gDvm.instrFormat == NULL ||
+        gDvm.instrFlags == NULL)
+    {
+        LOGE("Unable to create instruction tables\n");
+        return false;
+    }
+
+    return true;
 }
 
 /*
@@ -533,15 +540,36 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
     dvmInsnSetBranchTarget(insnFlags, 0, true);
 
     for (i = 0; i < insnCount; /**/) {
-        static int gcMask = kInstrCanBranch | kInstrCanSwitch |
+        /*
+         * These types of instructions can be GC points.  To support precise
+         * GC, all such instructions must export the PC in the interpreter,
+         * or the GC won't be able to identify the current PC for the thread.
+         */
+        static const int gcMask = kInstrCanBranch | kInstrCanSwitch |
             kInstrCanThrow | kInstrCanReturn;
+
         int width = dvmInsnGetWidth(insnFlags, i);
         OpCode opcode = *insns & 0xff;
         InstructionFlags opFlags = dexGetInstrFlags(gDvm.instrFlags, opcode);
         int offset, absOffset;
 
-        if ((opFlags & gcMask) != 0)
-            dvmInsnSetGcPoint(insnFlags, i, true);
+        if ((opFlags & gcMask) != 0) {
+            /*
+             * This instruction is probably a GC point.  Branch instructions
+             * only qualify if they go backward, so we need to check the
+             * offset.
+             */
+            int offset = -1;
+            bool unused;
+            if (dvmGetBranchTarget(meth, insnFlags, i, &offset, &unused)) {
+                if (offset < 0) {
+                    dvmInsnSetGcPoint(insnFlags, i, true);
+                }
+            } else {
+                /* not a branch target */
+                dvmInsnSetGcPoint(insnFlags, i, true);
+            }
+        }
 
         switch (opcode) {
         case OP_NOP:

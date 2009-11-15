@@ -30,27 +30,34 @@ import java.util.BitSet;
  * Harvey, and Kennedy; transliterated to Java.
  */
 public class DomFront {
+    /** local debug flag */
     private static boolean DEBUG = false;
 
+    /** {@code non-null;} method being processed */
     private final SsaMethod meth;
+
     private final ArrayList<SsaBasicBlock> nodes;
+    
     private final DomInfo[] domInfos;
 
     /**
      * Dominance-frontier information for a single basic block.
      */
     public static class DomInfo {
-        /** non-null; the dominance frontier set indexed by block index */
-        IntSet dominanceFrontiers;
-        /** &gt= 0 after run(); the index of the immediate dominator */
-        int idom = -1;
-        /** depth-first traversal index */
-        int traversalIndex;
+        /**
+         * {@code null-ok;} the dominance frontier set indexed by
+         * block index
+         */
+        public IntSet dominanceFrontiers;
+
+        /** {@code >= 0 after run();} the index of the immediate dominator */
+        public int idom = -1;
     }
 
     /**
      * Constructs instance. Call {@link DomFront#run} to process. 
-     * @param meth
+     * 
+     * @param meth {@code non-null;} method to process
      */
     public DomFront(SsaMethod meth) {
         this.meth = meth;
@@ -67,7 +74,7 @@ public class DomFront {
     /**
      * Calculates the dominance frontier information for the method.
      *
-     * @return non-null; an array of DomInfo structures
+     * @return {@code non-null;} an array of DomInfo structures
      */
     public DomInfo[] run() {
         int szNodes = nodes.size();
@@ -80,8 +87,7 @@ public class DomFront {
             }
         }
 
-        Dominators methDom = new Dominators(domInfos, false);
-        methDom.run(meth);
+        Dominators methDom = Dominators.make(meth, domInfos, false);
 
         if (DEBUG) {
             for (int i = 0; i < szNodes; i++) {
@@ -123,7 +129,7 @@ public class DomFront {
 
             sb.append('{');
             boolean comma = false;
-            for (SsaBasicBlock child: node.getDomChildren()) {
+            for (SsaBasicBlock child : node.getDomChildren()) {
                 if (comma) {
                     sb.append(',');
                 }
@@ -164,20 +170,25 @@ public class DomFront {
             SsaBasicBlock nb = nodes.get(b);
             DomInfo nbInfo = domInfos[b];
             BitSet pred = nb.getPredecessors();
+
             if (pred.cardinality() > 1) {
                 for (int i = pred.nextSetBit(0); i >= 0;
                      i = pred.nextSetBit(i + 1)) {
 
-                    for(int runnerIndex = i
-                            ; runnerIndex != nbInfo.idom
-                            ;) {
-                        // We can stop if we hit a block we already
-                        // added label to, since we must be at a part
-                        // of the dom tree we have seen before.
+                    for (int runnerIndex = i;
+                         runnerIndex != nbInfo.idom; /* empty */) {
+                        /*
+                         * We can stop if we hit a block we already
+                         * added label to, since we must be at a part
+                         * of the dom tree we have seen before.
+                         */
                         DomInfo runnerInfo = domInfos[runnerIndex];
-                        if (runnerInfo.dominanceFrontiers.has(b))
+
+                        if (runnerInfo.dominanceFrontiers.has(b)) {
                             break;
-                        // "add b to runner's dominance frontier set"
+                        }
+
+                        // Add b to runner's dominance frontier set.
                         runnerInfo.dominanceFrontiers.add(b);
                         runnerIndex = runnerInfo.idom;
                     }

@@ -33,24 +33,18 @@ import java.nio.ReadOnlyBufferException;
  * <p>
  * Many specialized readers for purposes like reading from a file already exist
  * in this package.
- * 
+ *
  * @see Writer
- * 
- * @since Android 1.0
  */
 public abstract class Reader implements Readable, Closeable {
     /**
      * The object used to synchronize access to the reader.
-     * 
-     * @since Android 1.0
      */
     protected Object lock;
 
     /**
      * Constructs a new {@code Reader} with {@code this} as the object used to
      * synchronize critical sections.
-     * 
-     * @since Android 1.0
      */
     protected Reader() {
         super();
@@ -60,12 +54,11 @@ public abstract class Reader implements Readable, Closeable {
     /**
      * Constructs a new {@code Reader} with {@code lock} used to synchronize
      * critical sections.
-     * 
+     *
      * @param lock
      *            the {@code Object} used to synchronize critical sections.
      * @throws NullPointerException
      *             if {@code lock} is {@code null}.
-     * @since Android 1.0
      */
     protected Reader(Object lock) {
         if (lock == null) {
@@ -77,10 +70,9 @@ public abstract class Reader implements Readable, Closeable {
     /**
      * Closes this reader. Implementations of this method should free any
      * resources associated with the reader.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this reader.
-     * @since Android 1.0
      */
     public abstract void close() throws IOException;
 
@@ -92,8 +84,7 @@ public abstract class Reader implements Readable, Closeable {
      * <p>
      * This default implementation simply throws an {@code IOException};
      * subclasses must provide their own implementation.
-     * </p>
-     * 
+     *
      * @param readLimit
      *            the number of characters that can be read before the mark is
      *            invalidated.
@@ -103,7 +94,6 @@ public abstract class Reader implements Readable, Closeable {
      *             if an error occurs while setting a mark in this reader.
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     public void mark(int readLimit) throws IOException {
         throw new IOException();
@@ -113,9 +103,8 @@ public abstract class Reader implements Readable, Closeable {
      * Indicates whether this reader supports the {@code mark()} and
      * {@code reset()} methods. This default implementation returns
      * {@code false}.
-     * 
+     *
      * @return always {@code false}.
-     * @since Android 1.0
      */
     public boolean markSupported() {
         return false;
@@ -125,12 +114,11 @@ public abstract class Reader implements Readable, Closeable {
      * Reads a single character from this reader and returns it as an integer
      * with the two higher-order bytes set to 0. Returns -1 if the end of the
      * reader has been reached.
-     * 
+     *
      * @return the character read or -1 if the end of the reader has been
      *         reached.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     public int read() throws IOException {
         synchronized (lock) {
@@ -146,14 +134,13 @@ public abstract class Reader implements Readable, Closeable {
      * Reads characters from this reader and stores them in the character array
      * {@code buf} starting at offset 0. Returns the number of characters
      * actually read or -1 if the end of the reader has been reached.
-     * 
+     *
      * @param buf
      *            character array to store the characters read.
      * @return the number of characters read or -1 if the end of the reader has
      *         been reached.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     public int read(char[] buf) throws IOException {
         // BEGIN android-note
@@ -167,7 +154,7 @@ public abstract class Reader implements Readable, Closeable {
      * at {@code offset} in the character array {@code buf}. Returns the number
      * of characters actually read or -1 if the end of the reader has been
      * reached.
-     * 
+     *
      * @param buf
      *            the character array to store the characters read.
      * @param offset
@@ -179,7 +166,6 @@ public abstract class Reader implements Readable, Closeable {
      *         been reached.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
-     * @since Android 1.0
      */
     public abstract int read(char[] buf, int offset, int count)
             throws IOException;
@@ -192,14 +178,13 @@ public abstract class Reader implements Readable, Closeable {
      * Returns {@code true} if this reader will not block when {@code read} is
      * called, {@code false} if unknown or blocking will occur. This default
      * implementation always returns {@code false}.
-     * 
+     *
      * @return always {@code false}.
      * @throws IOException
      *             if this reader is closed or some other I/O error occurs.
      * @see #read()
      * @see #read(char[])
      * @see #read(char[], int, int)
-     * @since Android 1.0
      */
     public boolean ready() throws IOException {
         return false;
@@ -211,12 +196,11 @@ public abstract class Reader implements Readable, Closeable {
      * location. If this reader has not been marked, the behavior of
      * {@code reset()} is implementation specific. This default
      * implementation throws an {@code IOException}.
-     * 
+     *
      * @throws IOException
      *             always thrown in this default implementation.
      * @see #mark(int)
      * @see #markSupported()
-     * @since Android 1.0
      */
     public void reset() throws IOException {
         throw new IOException();
@@ -227,7 +211,7 @@ public abstract class Reader implements Readable, Closeable {
      * {@code read} methods will not return these characters unless {@code
      * reset()} is used. This method may perform multiple reads to read {@code
      * count} characters.
-     * 
+     *
      * @param count
      *            the maximum number of characters to skip.
      * @return the number of characters actually skipped.
@@ -238,7 +222,6 @@ public abstract class Reader implements Readable, Closeable {
      * @see #mark(int)
      * @see #markSupported()
      * @see #reset()
-     * @since Android 1.0
      */
     public long skip(long count) throws IOException {
         if (count < 0) {
@@ -267,7 +250,7 @@ public abstract class Reader implements Readable, Closeable {
 
     /**
      * Reads characters and puts them into the {@code target} character buffer.
-     * 
+     *
      * @param target
      *            the destination character buffer.
      * @return the number of characters put into {@code target} or -1 if the end
@@ -278,7 +261,6 @@ public abstract class Reader implements Readable, Closeable {
      *             if {@code target} is {@code null}.
      * @throws ReadOnlyBufferException
      *             if {@code target} is read-only.
-     * @since Android 1.0
      */
     public int read(CharBuffer target) throws IOException {
         if (null == target) {

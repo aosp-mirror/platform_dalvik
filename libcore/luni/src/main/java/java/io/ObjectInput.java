@@ -22,8 +22,6 @@ package java.io;
  * 
  * @see ObjectInputStream
  * @see ObjectOutput
- * 
- * @since Android 1.0
  */
 public interface ObjectInput extends DataInput {
     /**
@@ -33,7 +31,6 @@ public interface ObjectInput extends DataInput {
      * @return the number of bytes available.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public int available() throws IOException;
 
@@ -43,7 +40,6 @@ public interface ObjectInput extends DataInput {
      * 
      * @throws IOException
      *             if an I/O error occurs while closing the input stream.
-     * @since Android 1.0
      */
     public void close() throws IOException;
 
@@ -55,7 +51,6 @@ public interface ObjectInput extends DataInput {
      * @return the byte read or -1 if the end of this stream has been reached.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public int read() throws IOException;
 
@@ -69,7 +64,6 @@ public interface ObjectInput extends DataInput {
      *         reached.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public int read(byte[] buffer) throws IOException;
 
@@ -89,7 +83,6 @@ public interface ObjectInput extends DataInput {
      *         reached.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public int read(byte[] buffer, int offset, int count) throws IOException;
 
@@ -102,7 +95,6 @@ public interface ObjectInput extends DataInput {
      *             if the object's class cannot be found.
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     public Object readObject() throws ClassNotFoundException, IOException;
 
@@ -117,7 +109,6 @@ public interface ObjectInput extends DataInput {
      * 
      * @throws IOException
      *             if this stream is closed or another I/O error occurs.
-     * @since Android 1.0             
      */
     public long skip(long toSkip) throws IOException;
 }

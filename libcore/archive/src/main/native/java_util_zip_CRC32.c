@@ -16,6 +16,7 @@
  */
 
 #include "hy2sie.h"
+#include "sieb.h"
 
 #include "zlib.h"
 
@@ -28,8 +29,10 @@ Java_java_util_zip_CRC32_updateImpl (JNIEnv * env, jobject recv,
   jlong result;
 
   b = ((*env)->GetPrimitiveArrayCritical (env, buf, 0));
-  if (b == NULL)
+  if (b == NULL) {
+    throwNewOutOfMemoryError(env, "");
     return -1;
+  }
   result = crc32 ((uLong) crc, (Bytef *) (b + off), (uInt) len);
   ((*env)->ReleasePrimitiveArrayCritical (env, buf, b, JNI_ABORT));
   return result;

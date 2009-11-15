@@ -14,32 +14,17 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2006, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 package java.util;
 
-
-// BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
-// END android-note
 /**
- * <p>
  * The {@code StringTokenizer} class allows an application to break a string
  * into tokens by performing code point comparison. The {@code StringTokenizer}
  * methods do not distinguish among identifiers, numbers, and quoted strings,
  * nor do they recognize and skip comments.
- * </p>
  * <p>
  * The set of delimiters (the codepoints that separate tokens) may be specified
  * either at creation time or on a per-token basis.
- * </p>
  * <p>
  * An instance of {@code StringTokenizer} behaves in one of three ways,
  * depending on whether it was created with the {@code returnDelimiters} flag
@@ -55,45 +40,40 @@ package java.util;
  * <p>
  * A token is thus either one delimiter code point, or a maximal sequence of
  * consecutive code points that are not delimiters.
- * </p>
  * <p>
  * A {@code StringTokenizer} object internally maintains a current position
  * within the string to be tokenized. Some operations advance this current
  * position past the code point processed.
- * </p>
  * <p>
  * A token is returned by taking a substring of the string that was used to
  * create the {@code StringTokenizer} object.
- * </p>
  * <p>
  * Here's an example of the use of the default delimiter {@code StringTokenizer}
  * : <blockquote>
- * 
+ *
  * <pre>
  * StringTokenizer st = new StringTokenizer(&quot;this is a test&quot;);
  * while (st.hasMoreTokens()) {
  *     println(st.nextToken());
  * }
  * </pre>
- * 
+ *
  * </blockquote>
- * </p>
  * <p>
  * This prints the following output: <blockquote>
- * 
+ *
  * <pre>
  *     this
  *     is
  *     a
  *     test
  * </pre>
- * 
+ *
  * </blockquote>
- * </p>
  * <p>
  * Here's an example of how to use a {@code StringTokenizer} with a user
  * specified delimiter: <blockquote>
- * 
+ *
  * <pre>
  * StringTokenizer st = new StringTokenizer(
  *         &quot;this is a test with supplementary characters \ud800\ud800\udc00\udc00&quot;,
@@ -102,12 +82,11 @@ package java.util;
  *     println(st.nextToken());
  * }
  * </pre>
- * 
+ *
  * </blockquote>
- * </p>
  * <p>
  * This prints the following output: <blockquote>
- * 
+ *
  * <pre>
  *     this
  *     is
@@ -119,14 +98,11 @@ package java.util;
  *     \ud800
  *     \udc00
  * </pre>
- * 
+ *
  * </blockquote>
- * </p>
- * 
- * @since Android 1.0
  */
 public class StringTokenizer implements Enumeration<Object> {
-    
+
     private String string;
 
     private String delimiters;
@@ -139,10 +115,9 @@ public class StringTokenizer implements Enumeration<Object> {
      * Constructs a new {@code StringTokenizer} for the parameter string using
      * whitespace as the delimiter. The {@code returnDelimiters} flag is set to
      * {@code false}.
-     * 
+     *
      * @param string
      *            the string to be tokenized.
-     * @since Android 1.0
      */
     public StringTokenizer(String string) {
         this(string, " \t\n\r\f", false); //$NON-NLS-1$
@@ -154,12 +129,11 @@ public class StringTokenizer implements Enumeration<Object> {
      * {@code false}. If {@code delimiters} is {@code null}, this constructor
      * doesn't throw an {@code Exception}, but later calls to some methods might
      * throw a {@code NullPointerException}.
-     * 
+     *
      * @param string
      *            the string to be tokenized.
      * @param delimiters
      *            the delimiters to use.
-     * @since Android 1.0
      */
     public StringTokenizer(String string, String delimiters) {
         this(string, delimiters, false);
@@ -171,14 +145,13 @@ public class StringTokenizer implements Enumeration<Object> {
      * parameter {@code returnDelimiters} is {@code true}. If {@code delimiters}
      * is null this constructor doesn't throw an {@code Exception}, but later
      * calls to some methods might throw a {@code NullPointerException}.
-     * 
+     *
      * @param string
      *            the string to be tokenized.
      * @param delimiters
      *            the delimiters to use.
      * @param returnDelimiters
      *            {@code true} to return each delimiter as a token.
-     * @since Android 1.0
      */
     public StringTokenizer(String string, String delimiters,
             boolean returnDelimiters) {
@@ -193,10 +166,9 @@ public class StringTokenizer implements Enumeration<Object> {
 
     /**
      * Returns the number of unprocessed tokens remaining in the string.
-     * 
+     *
      * @return number of tokens that can be retreived before an {@code
      *         Exception} will result from a call to {@code nextToken()}.
-     * @since Android 1.0
      */
     public int countTokens() {
         int count = 0;
@@ -221,9 +193,8 @@ public class StringTokenizer implements Enumeration<Object> {
     /**
      * Returns {@code true} if unprocessed tokens remain. This method is
      * implemented in order to satisfy the {@code Enumeration} interface.
-     * 
+     *
      * @return {@code true} if unprocessed tokens remain.
-     * @since Android 1.0
      */
     public boolean hasMoreElements() {
         return hasMoreTokens();
@@ -231,11 +202,13 @@ public class StringTokenizer implements Enumeration<Object> {
 
     /**
      * Returns {@code true} if unprocessed tokens remain.
-     * 
+     *
      * @return {@code true} if unprocessed tokens remain.
-     * @since Android 1.0
      */
     public boolean hasMoreTokens() {
+        if (delimiters == null) {
+            throw new NullPointerException();
+        }
         int length = string.length();
         if (position < length) {
             if (returnDelimiters)
@@ -253,11 +226,10 @@ public class StringTokenizer implements Enumeration<Object> {
     /**
      * Returns the next token in the string as an {@code Object}. This method is
      * implemented in order to satisfy the {@code Enumeration} interface.
-     * 
+     *
      * @return next token in the string as an {@code Object}
-     * @exception NoSuchElementException
+     * @throws NoSuchElementException
      *                if no tokens remain.
-     * @since Android 1.0
      */
     public Object nextElement() {
         return nextToken();
@@ -265,13 +237,15 @@ public class StringTokenizer implements Enumeration<Object> {
 
     /**
      * Returns the next token in the string as a {@code String}.
-     * 
+     *
      * @return next token in the string as a {@code String}.
-     * @exception NoSuchElementException
+     * @throws NoSuchElementException
      *                if no tokens remain.
-     * @since Android 1.0
      */
     public String nextToken() {
+        if (delimiters == null) {
+            throw new NullPointerException();
+        }
         int i = position;
         int length = string.length();
 
@@ -301,20 +275,14 @@ public class StringTokenizer implements Enumeration<Object> {
     /**
      * Returns the next token in the string as a {@code String}. The delimiters
      * used are changed to the specified delimiters.
-     * 
+     *
      * @param delims
      *            the new delimiters to use.
      * @return next token in the string as a {@code String}.
-     * @exception NoSuchElementException
+     * @throws NoSuchElementException
      *                if no tokens remain.
-     * @since Android 1.0
      */
     public String nextToken(String delims) {
-        // BEGIN android-added
-        if (delims == null) {
-            throw new NullPointerException();
-        }
-        // END android-added
         this.delimiters = delims;
         return nextToken();
     }

@@ -23,7 +23,7 @@ import java.util.HashSet;
 
 /**
  * Container for all the pieces of a concrete method. Each instance
- * corresponds to a <code>code</code> structure in a <code>.dex</code> file.
+ * corresponds to a {@code code} structure in a {@code .dex} file.
  */
 public final class DalvCode {
     /**
@@ -33,37 +33,37 @@ public final class DalvCode {
     private final int positionInfo;
 
     /**
-     * null-ok; the instruction list, ready for final processing;
+     * {@code null-ok;} the instruction list, ready for final processing;
      * nulled out in {@link #finishProcessingIfNecessary}
      */
     private OutputFinisher unprocessedInsns;
 
     /**
-     * non-null; unprocessed catch table;
+     * {@code non-null;} unprocessed catch table;
      * nulled out in {@link #finishProcessingIfNecessary}
      */
     private CatchBuilder unprocessedCatches;
 
     /**
-     * null-ok; catch table; set in
+     * {@code null-ok;} catch table; set in
      * {@link #finishProcessingIfNecessary} 
      */
     private CatchTable catches;
 
     /**
-     * null-ok; source positions list; set in
+     * {@code null-ok;} source positions list; set in
      * {@link #finishProcessingIfNecessary} 
      */
     private PositionList positions;
 
     /**
-     * null-ok; local variable list; set in
+     * {@code null-ok;} local variable list; set in
      * {@link #finishProcessingIfNecessary}
      */
     private LocalList locals;
 
     /**
-     * null-ok; the processed instruction list; set in
+     * {@code null-ok;} the processed instruction list; set in
      * {@link #finishProcessingIfNecessary}
      */
     private DalvInsnList insns;
@@ -73,9 +73,9 @@ public final class DalvCode {
      *
      * @param positionInfo how much position info to preserve; one of the
      * static constants in {@link PositionList}
-     * @param unprocessedInsns non-null; the instruction list, ready
+     * @param unprocessedInsns {@code non-null;} the instruction list, ready
      * for final processing
-     * @param unprocessedCatches non-null; unprocessed catch
+     * @param unprocessedCatches {@code non-null;} unprocessed catch
      * (exception handler) table
      */
     public DalvCode(int positionInfo, OutputFinisher unprocessedInsns,
@@ -120,7 +120,7 @@ public final class DalvCode {
      * given callback to perform lookups. This must be called before
      * {@link #getInsns}.
      * 
-     * @param callback non-null; callback object
+     * @param callback {@code non-null;} callback object
      */
     public void assignIndices(AssignIndicesCallback callback) {
         unprocessedInsns.assignIndices(callback);
@@ -129,7 +129,7 @@ public final class DalvCode {
     /**
      * Gets whether this instance has any position data to represent.
      * 
-     * @return <code>true</code> iff this instance has any position
+     * @return {@code true} iff this instance has any position
      * data to represent
      */
     public boolean hasPositions() {
@@ -140,7 +140,7 @@ public final class DalvCode {
     /**
      * Gets whether this instance has any local variable data to represent.
      * 
-     * @return <code>true</code> iff this instance has any local variable
+     * @return {@code true} iff this instance has any local variable
      * data to represent
      */
     public boolean hasLocals() {
@@ -160,7 +160,7 @@ public final class DalvCode {
     /**
      * Gets the set of catch types handled anywhere in the code.
      * 
-     * @return non-null; the set of catch types
+     * @return {@code non-null;} the set of catch types
      */
     public HashSet<Type> getCatchTypes() {
         return unprocessedCatches.getCatchTypes();
@@ -170,7 +170,7 @@ public final class DalvCode {
      * Gets the set of all constants referred to by instructions in
      * the code.
      * 
-     * @return non-null; the set of constants
+     * @return {@code non-null;} the set of constants
      */
     public HashSet<Constant> getInsnConstants() {
         return unprocessedInsns.getAllConstants();
@@ -179,7 +179,7 @@ public final class DalvCode {
     /**
      * Gets the list of instructions.
      * 
-     * @return non-null; the instruction list
+     * @return {@code non-null;} the instruction list
      */
     public DalvInsnList getInsns() {
         finishProcessingIfNecessary();
@@ -189,7 +189,7 @@ public final class DalvCode {
     /**
      * Gets the catch (exception handler) table.
      * 
-     * @return non-null; the catch table
+     * @return {@code non-null;} the catch table
      */
     public CatchTable getCatches() {
         finishProcessingIfNecessary();
@@ -199,7 +199,7 @@ public final class DalvCode {
     /**
      * Gets the source positions list.
      * 
-     * @return non-null; the source positions list
+     * @return {@code non-null;} the source positions list
      */
     public PositionList getPositions() {
         finishProcessingIfNecessary();
@@ -209,7 +209,7 @@ public final class DalvCode {
     /**
      * Gets the source positions list.
      * 
-     * @return non-null; the source positions list
+     * @return {@code non-null;} the source positions list
      */
     public LocalList getLocals() {
         finishProcessingIfNecessary();
@@ -223,8 +223,8 @@ public final class DalvCode {
         /**
          * Gets the index for the given constant.
          * 
-         * @param cst non-null; the constant
-         * @return &gt;= -1; the index or <code>-1</code> if the constant
+         * @param cst {@code non-null;} the constant
+         * @return {@code >= -1;} the index or {@code -1} if the constant
          * shouldn't actually be reified with an index
          */
         public int getIndex(Constant cst);

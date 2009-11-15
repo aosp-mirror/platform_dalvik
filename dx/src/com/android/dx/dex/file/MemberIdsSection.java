@@ -17,15 +17,15 @@
 package com.android.dx.dex.file;
 
 /**
- * Member (field or method) refs list section of a <code>.dex</code> file.
+ * Member (field or method) refs list section of a {@code .dex} file.
  */
 public abstract class MemberIdsSection extends UniformItemSection {
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param name null-ok; the name of this instance, for annotation
+     * @param name {@code null-ok;} the name of this instance, for annotation
      * purposes
-     * @param file non-null; file that this instance is part of
+     * @param file {@code non-null;} file that this instance is part of
      */
     public MemberIdsSection(String name, DexFile file) {
         super(name, file, 4);

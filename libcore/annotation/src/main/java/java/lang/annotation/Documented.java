@@ -20,8 +20,8 @@ package java.lang.annotation;
 /**
  * Defines a meta-annotation for indicating that an annotation is documented and
  * considered part of the public API.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

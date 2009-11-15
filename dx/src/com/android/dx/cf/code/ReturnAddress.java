@@ -28,13 +28,13 @@ import com.android.dx.util.Hex;
  * what instances of this class hang onto.
  */
 public final class ReturnAddress implements TypeBearer {
-    /** &gt;= 0; the start address of the subroutine being returned from */
+    /** {@code >= 0;} the start address of the subroutine being returned from */
     private final int subroutineAddress;
 
     /**
      * Constructs an instance.
      * 
-     * @param subroutineAddress &gt;= 0; the start address of the
+     * @param subroutineAddress {@code >= 0;} the start address of the
      * subroutine being returned from
      */
     public ReturnAddress(int subroutineAddress) {
@@ -100,7 +100,7 @@ public final class ReturnAddress implements TypeBearer {
     /**
      * Gets the subroutine address.
      * 
-     * @return &gt;= 0; the subroutine address
+     * @return {@code >= 0;} the subroutine address
      */
     public int getSubroutineAddress() {
         return subroutineAddress;

@@ -26,15 +26,12 @@ package java.lang;
  * @see Throwable
  * @see Error
  * @see RuntimeException
- * @since Android 1.0
  */
 public class Exception extends Throwable {
     private static final long serialVersionUID = -3387516993124229948L;
 
     /**
      * Constructs a new {@code Exception} that includes the current stack trace.
-     * 
-     * @since Android 1.0
      */
     public Exception() {
         super();
@@ -46,7 +43,6 @@ public class Exception extends Throwable {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public Exception(String detailMessage) {
         super(detailMessage);
@@ -60,7 +56,6 @@ public class Exception extends Throwable {
      *            the detail message for this exception.
      * @param throwable
      *            the cause of this exception.
-     * @since Android 1.0
      */
     public Exception(String detailMessage, Throwable throwable) {
         super(detailMessage, throwable);
@@ -72,7 +67,6 @@ public class Exception extends Throwable {
      * 
      * @param throwable
      *            the cause of this exception.
-     * @since Android 1.0
      */
     public Exception(Throwable throwable) {
         super(throwable);

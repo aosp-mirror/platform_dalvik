@@ -17,7 +17,6 @@
 
 package java.util.zip;
 
-
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -26,8 +25,6 @@ import java.io.OutputStream;
  * of all data written to a stream. The purpose of this checksum is to establish
  * data integrity, by publishing the checksum to other parties wanting to read
  * the non corrupted data.
- * 
- * @since Android 1.0
  */
 public class CheckedOutputStream extends java.io.FilterOutputStream {
 
@@ -42,7 +39,6 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
      *            the output stream to calculate checksum for.
      * @param cs
      *            an entity implementing the checksum algorithm.
-     * @since Android 1.0
      */
     public CheckedOutputStream(OutputStream os, Checksum cs) {
         super(os);
@@ -53,7 +49,6 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
      * Returns the checksum calculated on the stream read so far.
      * 
      * @return the updated checksum.
-     * @since Android 1.0
      */
     public Checksum getChecksum() {
         return check;
@@ -67,7 +62,6 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
      *            the data value to written to the output stream.
      * @throws IOException
      *             if an IO error has occurred.
-     * @since Android 1.0
      */
     @Override
     public void write(int val) throws IOException {
@@ -88,7 +82,6 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
      *            number of bytes to write to the output stream.
      * @throws IOException
      *             if an IO error has occurred.
-     * @since Android 1.0
      */
     @Override
     public void write(byte[] buf, int off, int nbytes) throws IOException {

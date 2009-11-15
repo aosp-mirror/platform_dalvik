@@ -45,47 +45,47 @@ public final class ClassDefItem extends IndexedItem {
     /** size of instances when written out to a file, in bytes */
     public static final int WRITE_SIZE = 32;
 
-    /** non-null; type constant for this class */
+    /** {@code non-null;} type constant for this class */
     private final CstType thisClass;
 
     /** access flags */
     private final int accessFlags;
 
     /**
-     * null-ok; superclass or <code>null</code> if this class is a/the
+     * {@code null-ok;} superclass or {@code null} if this class is a/the
      * root class 
      */
     private final CstType superclass;
 
-    /** null-ok; list of implemented interfaces */
+    /** {@code null-ok;} list of implemented interfaces */
     private TypeListItem interfaces;
 
-    /** null-ok; source file name or <code>null</code> if unknown */
+    /** {@code null-ok;} source file name or {@code null} if unknown */
     private final CstUtf8 sourceFile;
 
-    /** non-null; associated class data object */
+    /** {@code non-null;} associated class data object */
     private final ClassDataItem classData;
 
     /**
-     * null-ok; item wrapper for the static values, initialized
+     * {@code null-ok;} item wrapper for the static values, initialized
      * in {@link #addContents}
      */
     private EncodedArrayItem staticValuesItem;
 
-    /** non-null; annotations directory */
+    /** {@code non-null;} annotations directory */
     private AnnotationsDirectoryItem annotationsDirectory;
 
     /**
      * Constructs an instance. Its sets of members and annotations are
      * initially empty.
      * 
-     * @param thisClass non-null; type constant for this class
+     * @param thisClass {@code non-null;} type constant for this class
      * @param accessFlags access flags
-     * @param superclass null-ok; superclass or <code>null</code> if
+     * @param superclass {@code null-ok;} superclass or {@code null} if
      * this class is a/the root class
-     * @param interfaces non-null; list of implemented interfaces
-     * @param sourceFile null-ok; source file name or
-     * <code>null</code> if unknown
+     * @param interfaces {@code non-null;} list of implemented interfaces
+     * @param sourceFile {@code null-ok;} source file name or
+     * {@code null} if unknown
      */
     public ClassDefItem(CstType thisClass, int accessFlags,
             CstType superclass, TypeList interfaces, CstUtf8 sourceFile) {
@@ -223,7 +223,7 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Gets the constant corresponding to this class.
      * 
-     * @return non-null; the constant
+     * @return {@code non-null;} the constant
      */
     public CstType getThisClass() {
         return thisClass;
@@ -241,7 +241,7 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Gets the superclass.
      * 
-     * @return null-ok; the superclass or <code>null</code> if
+     * @return {@code null-ok;} the superclass or {@code null} if
      * this class is a/the root class
      */
     public CstType getSuperclass() {
@@ -251,7 +251,7 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Gets the list of interfaces implemented.
      * 
-     * @return non-null; the interfaces list
+     * @return {@code non-null;} the interfaces list
      */
     public TypeList getInterfaces() {
         if (interfaces == null) {
@@ -264,7 +264,7 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Gets the source file name.
      * 
-     * @return null-ok; the source file name or <code>null</code> if unknown
+     * @return {@code null-ok;} the source file name or {@code null} if unknown
      */
     public CstUtf8 getSourceFile() {
         return sourceFile;
@@ -273,8 +273,8 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Adds a static field.
      * 
-     * @param field non-null; the field to add
-     * @param value null-ok; initial value for the field, if any
+     * @param field {@code non-null;} the field to add
+     * @param value {@code null-ok;} initial value for the field, if any
      */
     public void addStaticField(EncodedField field, Constant value) {
         classData.addStaticField(field, value);
@@ -283,16 +283,16 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Adds an instance field.
      * 
-     * @param field non-null; the field to add
+     * @param field {@code non-null;} the field to add
      */
     public void addInstanceField(EncodedField field) {
         classData.addInstanceField(field);
     }
 
     /**
-     * Adds a direct (<code>static</code> and/or <code>private</code>) method.
+     * Adds a direct ({@code static} and/or {@code private}) method.
      * 
-     * @param method non-null; the method to add
+     * @param method {@code non-null;} the method to add
      */
     public void addDirectMethod(EncodedMethod method) {
         classData.addDirectMethod(method);
@@ -301,7 +301,7 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Adds a virtual method.
      * 
-     * @param method non-null; the method to add
+     * @param method {@code non-null;} the method to add
      */
     public void addVirtualMethod(EncodedMethod method) {
         classData.addVirtualMethod(method);
@@ -312,7 +312,7 @@ public final class ClassDefItem extends IndexedItem {
      * in any way to the underlying lists contained in this instance, but
      * the objects contained in the list are shared.
      * 
-     * @return non-null; list of all methods
+     * @return {@code non-null;} list of all methods
      */
     public ArrayList<EncodedMethod> getMethods() {
         return classData.getMethods();
@@ -323,7 +323,7 @@ public final class ClassDefItem extends IndexedItem {
      * made on the class, per se, as opposed to on one of its members.
      * It is only valid to call this method at most once per instance.
      * 
-     * @param annotations non-null; annotations to set for this class
+     * @param annotations {@code non-null;} annotations to set for this class
      */
     public void setClassAnnotations(Annotations annotations) {
         annotationsDirectory.setClassAnnotations(annotations);
@@ -332,8 +332,8 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Adds a field annotations item to this class.
      * 
-     * @param field non-null; field in question
-     * @param annotations non-null; associated annotations to add
+     * @param field {@code non-null;} field in question
+     * @param annotations {@code non-null;} associated annotations to add
      */
     public void addFieldAnnotations(CstFieldRef field,
             Annotations annotations) {
@@ -343,8 +343,8 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Adds a method annotations item to this class.
      * 
-     * @param method non-null; method in question
-     * @param annotations non-null; associated annotations to add
+     * @param method {@code non-null;} method in question
+     * @param annotations {@code non-null;} associated annotations to add
      */
     public void addMethodAnnotations(CstMethodRef method,
             Annotations annotations) {
@@ -354,8 +354,8 @@ public final class ClassDefItem extends IndexedItem {
     /**
      * Adds a parameter annotations item to this class.
      * 
-     * @param method non-null; method in question
-     * @param list non-null; associated list of annotation sets to add
+     * @param method {@code non-null;} method in question
+     * @param list {@code non-null;} associated list of annotation sets to add
      */
     public void addParameterAnnotations(CstMethodRef method,
             AnnotationsList list) {
@@ -366,8 +366,8 @@ public final class ClassDefItem extends IndexedItem {
      * Gets the method annotations for a given method, if any. This is
      * meant for use by debugging / dumping code.
      * 
-     * @param method non-null; the method
-     * @return null-ok; the method annotations, if any
+     * @param method {@code non-null;} the method
+     * @return {@code null-ok;} the method annotations, if any
      */
     public Annotations getMethodAnnotations(CstMethodRef method) {
         return annotationsDirectory.getMethodAnnotations(method);
@@ -377,8 +377,8 @@ public final class ClassDefItem extends IndexedItem {
      * Gets the parameter annotations for a given method, if any. This is
      * meant for use by debugging / dumping code.
      * 
-     * @param method non-null; the method
-     * @return null-ok; the parameter annotations, if any
+     * @param method {@code non-null;} the method
+     * @return {@code null-ok;} the parameter annotations, if any
      */
     public AnnotationsList getParameterAnnotations(CstMethodRef method) {
         return annotationsDirectory.getParameterAnnotations(method);
@@ -388,7 +388,7 @@ public final class ClassDefItem extends IndexedItem {
      * Prints out the contents of this instance, in a debugging-friendly
      * way.
      * 
-     * @param out non-null; where to output to
+     * @param out {@code non-null;} where to output to
      * @param verbose whether to be verbose with the output
      */
     public void debugPrint(Writer out, boolean verbose) {

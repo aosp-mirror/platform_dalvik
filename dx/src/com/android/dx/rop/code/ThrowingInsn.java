@@ -20,22 +20,22 @@ import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeList;
 
 /**
- * Instruction which possibly throws. The <code>successors</code> list in the
+ * Instruction which possibly throws. The {@code successors} list in the
  * basic block an instance of this class is inside corresponds in-order to
  * the list of exceptions handled by this instruction, with the
  * no-exception case appended as the final target.
  */
 public final class ThrowingInsn
         extends Insn {
-    /** non-null; list of exceptions caught */
+    /** {@code non-null;} list of exceptions caught */
     private final TypeList catches;
 
     /**
      * Gets the string form of a register spec list to be used as a catches
      * list.
      * 
-     * @param catches non-null; the catches list
-     * @return non-null; the string form
+     * @param catches {@code non-null;} the catches list
+     * @return {@code non-null;} the string form
      */
     public static String toCatchString(TypeList catches) {
         StringBuffer sb = new StringBuffer(100);
@@ -54,10 +54,10 @@ public final class ThrowingInsn
     /**
      * Constructs an instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param sources non-null; specs for all the sources
-     * @param catches non-null; list of exceptions caught
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param sources {@code non-null;} specs for all the sources
+     * @param catches {@code non-null;} list of exceptions caught
      */
     public ThrowingInsn(Rop opcode, SourcePosition position,
                         RegisterSpecList sources,

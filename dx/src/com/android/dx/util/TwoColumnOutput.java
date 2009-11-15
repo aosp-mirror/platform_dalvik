@@ -28,34 +28,34 @@ import java.io.Writer;
  * one which goes on the right.
  */
 public final class TwoColumnOutput {
-    /** non-null; underlying writer for final output */
+    /** {@code non-null;} underlying writer for final output */
     private final Writer out;
 
-    /** &gt; 0; the left column width */
+    /** {@code > 0;} the left column width */
     private final int leftWidth;
 
-    /** non-null; pending left column output */
+    /** {@code non-null;} pending left column output */
     private final StringBuffer leftBuf;
 
-    /** non-null; pending right column output */
+    /** {@code non-null;} pending right column output */
     private final StringBuffer rightBuf;
 
-    /** non-null; left column writer */
+    /** {@code non-null;} left column writer */
     private final IndentingWriter leftColumn;
 
-    /** non-null; right column writer */
+    /** {@code non-null;} right column writer */
     private final IndentingWriter rightColumn;
 
     /**
      * Turns the given two strings (with widths) and spacer into a formatted
      * two-column string.
      * 
-     * @param s1 non-null; first string
-     * @param width1 &gt; 0; width of the first column
-     * @param spacer non-null; spacer string
-     * @param s2 non-null; second string
-     * @param width2 &gt; 0; width of the second column
-     * @return non-null; an appropriately-formatted string
+     * @param s1 {@code non-null;} first string
+     * @param width1 {@code > 0;} width of the first column
+     * @param spacer {@code non-null;} spacer string
+     * @param s2 {@code non-null;} second string
+     * @param width2 {@code > 0;} width of the second column
+     * @return {@code non-null;} an appropriately-formatted string
      */
     public static String toString(String s1, int width1, String spacer,
                                   String s2, int width2) {
@@ -80,10 +80,10 @@ public final class TwoColumnOutput {
     /**
      * Constructs an instance.
      * 
-     * @param out non-null; writer to send final output to
-     * @param leftWidth &gt; 0; width of the left column, in characters
-     * @param rightWidth &gt; 0; width of the right column, in characters
-     * @param spacer non-null; spacer string to sit between the two columns
+     * @param out {@code non-null;} writer to send final output to
+     * @param leftWidth {@code > 0;} width of the left column, in characters
+     * @param rightWidth {@code > 0;} width of the right column, in characters
+     * @param spacer {@code non-null;} spacer string to sit between the two columns
      */
     public TwoColumnOutput(Writer out, int leftWidth, int rightWidth,
                            String spacer) {
@@ -118,10 +118,10 @@ public final class TwoColumnOutput {
     /**
      * Constructs an instance.
      * 
-     * @param out non-null; stream to send final output to
-     * @param leftWidth &gt;= 1; width of the left column, in characters
-     * @param rightWidth &gt;= 1; width of the right column, in characters
-     * @param spacer non-null; spacer string to sit between the two columns
+     * @param out {@code non-null;} stream to send final output to
+     * @param leftWidth {@code >= 1;} width of the left column, in characters
+     * @param rightWidth {@code >= 1;} width of the right column, in characters
+     * @param spacer {@code non-null;} spacer string to sit between the two columns
      */
     public TwoColumnOutput(OutputStream out, int leftWidth, int rightWidth,
                            String spacer) {
@@ -131,7 +131,7 @@ public final class TwoColumnOutput {
     /**
      * Gets the writer to use to write to the left column.
      * 
-     * @return non-null; the left column writer
+     * @return {@code non-null;} the left column writer
      */
     public Writer getLeft() {
         return leftColumn;
@@ -140,7 +140,7 @@ public final class TwoColumnOutput {
     /**
      * Gets the writer to use to write to the right column.
      * 
-     * @return non-null; the right column writer
+     * @return {@code non-null;} the right column writer
      */
     public Writer getRight() {
         return rightColumn;
@@ -226,8 +226,8 @@ public final class TwoColumnOutput {
      * Appends a newline to the given buffer via the given writer, but
      * only if it isn't empty and doesn't already end with one.
      * 
-     * @param buf non-null; the buffer in question
-     * @param out non-null; the writer to use
+     * @param buf {@code non-null;} the buffer in question
+     * @param out {@code non-null;} the writer to use
      */
     private static void appendNewlineIfNecessary(StringBuffer buf,
                                                  Writer out) 
@@ -242,8 +242,8 @@ public final class TwoColumnOutput {
     /**
      * Writes the given number of spaces to the given writer.
      * 
-     * @param out non-null; where to write
-     * @param amt &gt;= 0; the number of spaces to write
+     * @param out {@code non-null;} where to write
+     * @param amt {@code >= 0;} the number of spaces to write
      */
     private static void writeSpaces(Writer out, int amt) throws IOException {
         while (amt > 0) {

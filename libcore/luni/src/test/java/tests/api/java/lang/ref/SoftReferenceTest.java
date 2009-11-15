@@ -21,6 +21,7 @@ import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.BrokenTest;
+import dalvik.annotation.SideEffect;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -107,6 +108,7 @@ public class SoftReferenceTest extends junit.framework.TestCase {
         method = "get",
         args = {}
     )
+    @SideEffect("Causes OutOfMemoryError to test finalization")
     public void test_get_SoftReference() {
 
         class TestObject {

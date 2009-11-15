@@ -10,9 +10,7 @@
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     FETCH_INST_WORD(1)
     testl   %eax,%eax                   # null object?
-#ifdef WITH_MONITOR_TRACKING
-    EXPORT_PC()
-#endif
+    EXPORT_PC()                         # need for precise GC, MONITOR_TRACKING
     jne     .L${opcode}_continue
     jmp     common_errNullObject
 %break

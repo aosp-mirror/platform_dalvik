@@ -20,9 +20,8 @@ package java.net;
 import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 
-import org.apache.harmony.luni.net.SocketImplProvider;
+import org.apache.harmony.luni.net.PlainServerSocketImpl;
 import org.apache.harmony.luni.platform.Platform;
-
 import org.apache.harmony.luni.util.Msg;
 
 /**
@@ -30,8 +29,6 @@ import org.apache.harmony.luni.util.Msg;
  * connections. A {@code ServerSocket} handles the requests and sends back an
  * appropriate reply. The actual tasks that a server socket must accomplish are
  * implemented by an internal {@code SocketImpl} instance.
- * 
- * @since Android 1.0
  */
 public class ServerSocket {
 
@@ -44,7 +41,7 @@ public class ServerSocket {
     private boolean isBound;
 
     private boolean isClosed;
-    
+
     static {
         Platform.getNetworkSystem().oneTimeInitialization(true);
     }
@@ -52,14 +49,13 @@ public class ServerSocket {
     /**
      * Constructs a new {@code ServerSocket} instance which is not bound to any
      * port. The default number of pending connections may be backlogged.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while creating the server socket.
-     * @since Android 1.0
      */
     public ServerSocket() throws IOException {
         impl = factory != null ? factory.createSocketImpl()
-                : SocketImplProvider.getServerSocketImpl();
+                : new PlainServerSocketImpl();
     }
 
     /**
@@ -81,15 +77,14 @@ public class ServerSocket {
      * Constructs a new {@code ServerSocket} instance bound to the nominated
      * port on the localhost. The default number of pending connections may be
      * backlogged. If {@code aport} is 0 a free port is assigned to the socket.
-     * 
+     *
      * @param aport
      *            the port number to listen for connection requests on.
      * @throws IOException
      *             if an error occurs while creating the server socket.
-     * @since Android 1.0
      */
     public ServerSocket(int aport) throws IOException {
-        this(aport, defaultBacklog(), InetAddress.ANY);
+        this(aport, defaultBacklog(), Inet4Address.ANY);
     }
 
     /**
@@ -97,7 +92,7 @@ public class ServerSocket {
      * port on the localhost. The number of pending connections that may be
      * backlogged is specified by {@code backlog}. If {@code aport} is 0 a free
      * port is assigned to the socket.
-     * 
+     *
      * @param aport
      *            the port number to listen for connection requests on.
      * @param backlog
@@ -105,10 +100,9 @@ public class ServerSocket {
      *            will be rejected.
      * @throws IOException
      *             if an error occurs while creating the server socket.
-     * @since Android 1.0
      */
     public ServerSocket(int aport, int backlog) throws IOException {
-        this(aport, backlog, InetAddress.ANY);
+        this(aport, backlog, Inet4Address.ANY);
     }
 
     /**
@@ -116,7 +110,7 @@ public class ServerSocket {
      * local host address and port. The number of pending connections that may
      * be backlogged is specified by {@code backlog}. If {@code aport} is 0 a
      * free port is assigned to the socket.
-     * 
+     *
      * @param aport
      *            the port number to listen for connection requests on.
      * @param localAddr
@@ -126,15 +120,14 @@ public class ServerSocket {
      *            will be rejected.
      * @throws IOException
      *             if an error occurs while creating the server socket.
-     * @since Android 1.0
      */
     public ServerSocket(int aport, int backlog, InetAddress localAddr)
             throws IOException {
         super();
         checkListen(aport);
         impl = factory != null ? factory.createSocketImpl()
-                : SocketImplProvider.getServerSocketImpl();
-        InetAddress addr = localAddr == null ? InetAddress.ANY : localAddr;
+                : new PlainServerSocketImpl();
+        InetAddress addr = localAddr == null ? Inet4Address.ANY : localAddr;
 
         synchronized (this) {
             impl.create(true);
@@ -154,11 +147,10 @@ public class ServerSocket {
      * Waits for an incoming request and blocks until the connection is opened.
      * This method returns a socket object representing the just opened
      * connection.
-     * 
+     *
      * @return the connection representing socket.
      * @throws IOException
      *             if an error occurs while accepting a new connection.
-     * @since Android 1.0
      */
     public Socket accept() throws IOException {
         checkClosedAndCreate(false);
@@ -190,10 +182,9 @@ public class ServerSocket {
      * Checks whether the server may listen for connection requests on {@code
      * aport}. Throws an exception if the port is outside the valid range
      * {@code 0 <= aport <= 65535 }or does not satisfy the security policy.
-     * 
+     *
      * @param aPort
      *            the candidate port to listen on.
-     * @since Android 1.0
      */
     void checkListen(int aPort) {
         if (aPort < 0 || aPort > 65535) {
@@ -208,10 +199,9 @@ public class ServerSocket {
     /**
      * Closes this server socket and its implementation. Any attempt to connect
      * to this socket thereafter will fail.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this socket.
-     * @since Android 1.0
      */
     public void close() throws IOException {
         isClosed = true;
@@ -222,7 +212,7 @@ public class ServerSocket {
      * Answer the default number of pending connections on a server socket. If
      * the backlog value maximum is reached, any subsequent incoming request is
      * rejected.
-     * 
+     *
      * @return int the default number of pending connection requests
      */
     static int defaultBacklog() {
@@ -232,9 +222,8 @@ public class ServerSocket {
     /**
      * Gets the local IP address of this server socket or {@code null} if the
      * socket is unbound. This is useful for multihomed hosts.
-     * 
+     *
      * @return the local address of this server socket.
-     * @since Android 1.0
      */
     public InetAddress getInetAddress() {
         if (!isBound()) {
@@ -246,9 +235,8 @@ public class ServerSocket {
     /**
      * Gets the local port of this server socket or {@code -1} if the socket is
      * unbound.
-     * 
+     *
      * @return the local port this server is listening on.
-     * @since Android 1.0
      */
     public int getLocalPort() {
         if (!isBound()) {
@@ -260,11 +248,10 @@ public class ServerSocket {
     /**
      * Gets the timeout period of this server socket. This is the time the
      * server will wait listening for accepted connections before exiting.
-     * 
+     *
      * @return the listening timeout value of this server socket.
      * @throws IOException
      *             if the option cannot be retrieved.
-     * @since Android 1.0
      */
     public synchronized int getSoTimeout() throws IOException {
         if (!isCreated) {
@@ -287,13 +274,12 @@ public class ServerSocket {
     /**
      * Invokes the server socket implementation to accept a connection on the
      * given socket {@code aSocket}.
-     * 
+     *
      * @param aSocket
      *            the concrete {@code SocketImpl} to accept the connection
      *            request on.
      * @throws IOException
      *             if the connection cannot be accepted.
-     * @since Android 1.0
      */
     protected final void implAccept(Socket aSocket) throws IOException {
         impl.accept(aSocket.impl);
@@ -304,13 +290,12 @@ public class ServerSocket {
      * Sets the server socket implementation factory of this instance. This
      * method may only be invoked with sufficient security privilege and only
      * once during the application lifetime.
-     * 
+     *
      * @param aFactory
      *            the streaming socket factory to be used for further socket
      *            instantiations.
      * @throws IOException
      *             if the factory could not be set or is already set.
-     * @since Android 1.0
      */
     public static synchronized void setSocketFactory(SocketImplFactory aFactory)
             throws IOException {
@@ -328,12 +313,11 @@ public class ServerSocket {
      * Sets the timeout period of this server socket. This is the time the
      * server will wait listening for accepted connections before exiting. This
      * value must be a positive number.
-     * 
+     *
      * @param timeout
      *            the listening timeout value of this server socket.
      * @throws SocketException
      *             if an error occurs while setting the option.
-     * @since Android 1.0
      */
     public synchronized void setSoTimeout(int timeout) throws SocketException {
         checkClosedAndCreate(true);
@@ -347,13 +331,12 @@ public class ServerSocket {
      * Returns a textual representation of this server socket including the
      * address, port and the state. The port field is set to {@code 0} if there
      * is no connection to the server socket.
-     * 
+     *
      * @return the textual socket representation.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
-        StringBuffer result = new StringBuffer(64);
+        StringBuilder result = new StringBuilder(64);
         result.append("ServerSocket["); //$NON-NLS-1$
         if (!isBound()) {
             return result.append("unbound]").toString(); //$NON-NLS-1$
@@ -371,7 +354,7 @@ public class ServerSocket {
      * number of pending connections may be backlogged. If the {@code localAddr}
      * is set to {@code null} the socket will be bound to an available local
      * address on any free port of the system.
-     * 
+     *
      * @param localAddr
      *            the local address and port to bind on.
      * @throws IllegalArgumentException
@@ -379,7 +362,6 @@ public class ServerSocket {
      * @throws IOException
      *             if the socket is already bound or a problem occurs during
      *             binding.
-     * @since Android 1.0
      */
     public void bind(SocketAddress localAddr) throws IOException {
         bind(localAddr, defaultBacklog());
@@ -391,7 +373,7 @@ public class ServerSocket {
      * available local address on any free port of the system. The value for
      * {@code backlog} must e greater than {@code 0} otherwise the default value
      * will be used.
-     * 
+     *
      * @param localAddr
      *            the local machine address and port to bind on.
      * @param backlog
@@ -402,7 +384,6 @@ public class ServerSocket {
      * @throws IOException
      *             if the socket is already bound or a problem occurs during
      *             binding.
-     * @since Android 1.0
      */
     public void bind(SocketAddress localAddr, int backlog) throws IOException {
         checkClosedAndCreate(true);
@@ -410,7 +391,7 @@ public class ServerSocket {
             throw new BindException(Msg.getString("K0315")); //$NON-NLS-1$
         }
         int port = 0;
-        InetAddress addr = InetAddress.ANY;
+        InetAddress addr = Inet4Address.ANY;
         if (localAddr != null) {
             if (!(localAddr instanceof InetSocketAddress)) {
                 throw new IllegalArgumentException(Msg.getString(
@@ -443,9 +424,8 @@ public class ServerSocket {
     /**
      * Gets the local socket address of this server socket or {@code null} if
      * the socket is unbound. This is useful on multihomed hosts.
-     * 
+     *
      * @return the local socket address and port this socket is bound to.
-     * @since Android 1.0
      */
     public SocketAddress getLocalSocketAddress() {
         if (!isBound()) {
@@ -457,9 +437,8 @@ public class ServerSocket {
     /**
      * Returns whether this server socket is bound to a local address and port
      * or not.
-     * 
+     *
      * @return {@code true} if this socket is bound, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isBound() {
         return isBound;
@@ -467,9 +446,8 @@ public class ServerSocket {
 
     /**
      * Returns whether this server socket is closed or not.
-     * 
+     *
      * @return {@code true} if this socket is closed, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isClosed() {
         return isClosed;
@@ -504,12 +482,11 @@ public class ServerSocket {
 
     /**
      * Sets the value for the socket option {@code SocketOptions.SO_REUSEADDR}.
-     * 
+     *
      * @param reuse
      *            the socket option setting.
      * @throws SocketException
      *             if an error occurs while setting the option value.
-     * @since Android 1.0
      */
     public void setReuseAddress(boolean reuse) throws SocketException {
         checkClosedAndCreate(true);
@@ -519,11 +496,10 @@ public class ServerSocket {
 
     /**
      * Gets the value of the socket option {@code SocketOptions.SO_REUSEADDR}.
-     * 
+     *
      * @return {@code true} if the option is enabled, {@code false} otherwise.
      * @throws SocketException
      *             if an error occurs while reading the option value.
-     * @since Android 1.0
      */
     public boolean getReuseAddress() throws SocketException {
         checkClosedAndCreate(true);
@@ -534,13 +510,12 @@ public class ServerSocket {
     /**
      * Sets the server socket receive buffer size {@code
      * SocketOptions.SO_RCVBUF}.
-     * 
+     *
      * @param size
      *            the buffer size in bytes.
      * @throws SocketException
      *             if an error occurs while setting the size or the size is
      *             invalid.
-     * @since Android 1.0
      */
     public void setReceiveBufferSize(int size) throws SocketException {
         checkClosedAndCreate(true);
@@ -553,11 +528,10 @@ public class ServerSocket {
     /**
      * Gets the value for the receive buffer size socket option {@code
      * SocketOptions.SO_RCVBUF}.
-     * 
+     *
      * @return the receive buffer size of this socket.
      * @throws SocketException
      *             if an error occurs while reading the option value.
-     * @since Android 1.0
      */
     public int getReceiveBufferSize() throws SocketException {
         checkClosedAndCreate(true);
@@ -568,9 +542,8 @@ public class ServerSocket {
      * Gets the related channel if this instance was created by a
      * {@code ServerSocketChannel}. The current implementation returns always {@code
      * null}.
-     * 
+     *
      * @return the related {@code ServerSocketChannel} if any.
-     * @since Android 1.0
      */
     public ServerSocketChannel getChannel() {
         return null;
@@ -580,8 +553,7 @@ public class ServerSocket {
      * Sets performance preferences for connection time, latency and bandwidth.
      * <p>
      * This method does currently nothing.
-     * </p>
-     * 
+     *
      * @param connectionTime
      *            the value representing the importance of a short connecting
      *            time.
@@ -589,7 +561,6 @@ public class ServerSocket {
      *            the value representing the importance of low latency.
      * @param bandwidth
      *            the value representing the importance of high bandwidth.
-     * @since Android 1.0
      */
     public void setPerformancePreferences(int connectionTime, int latency,
             int bandwidth) {

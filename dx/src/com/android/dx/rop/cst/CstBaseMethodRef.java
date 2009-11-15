@@ -28,20 +28,20 @@ import com.android.dx.rop.type.TypeBearer;
  */
 public abstract class CstBaseMethodRef
         extends CstMemberRef {
-    /** non-null; the raw prototype for this method */
+    /** {@code non-null;} the raw prototype for this method */
     private final Prototype prototype;
 
     /**
-     * null-ok; the prototype for this method taken to be an instance
-     * method, or <code>null</code> if not yet calculated
+     * {@code null-ok;} the prototype for this method taken to be an instance
+     * method, or {@code null} if not yet calculated
      */
     private Prototype instancePrototype;
 
     /**
      * Constructs an instance.
      *
-     * @param definingClass non-null; the type of the defining class
-     * @param nat non-null; the name-and-type
+     * @param definingClass {@code non-null;} the type of the defining class
+     * @param nat {@code non-null;} the name-and-type
      */
     /*package*/ CstBaseMethodRef(CstType definingClass, CstNat nat) {
         super(definingClass, nat);
@@ -53,9 +53,9 @@ public abstract class CstBaseMethodRef
 
     /**
      * Gets the raw prototype of this method. This doesn't include a
-     * <code>this</code> argument.
+     * {@code this} argument.
      *
-     * @return non-null; the method prototype
+     * @return {@code non-null;} the method prototype
      */
     public final Prototype getPrototype() {
         return prototype;
@@ -63,14 +63,14 @@ public abstract class CstBaseMethodRef
 
     /**
      * Gets the prototype of this method as either a
-     * <code>static</code> or instance method. In the case of a
-     * <code>static</code> method, this is the same as the raw
+     * {@code static} or instance method. In the case of a
+     * {@code static} method, this is the same as the raw
      * prototype. In the case of an instance method, this has an
-     * appropriately-typed <code>this</code> argument as the first
+     * appropriately-typed {@code this} argument as the first
      * one.
      *
      * @param isStatic whether the method should be considered static
-     * @return non-null; the method prototype
+     * @return {@code non-null;} the method prototype
      */
     public final Prototype getPrototype(boolean isStatic) {
         if (isStatic) {
@@ -102,7 +102,7 @@ public abstract class CstBaseMethodRef
      * 
      * In this case, this method returns the <i>return type</i> of this method.
      *
-     * @return non-null; the method's return type
+     * @return {@code non-null;} the method's return type
      */
     public final Type getType() {
         return prototype.getReturnType();
@@ -111,15 +111,15 @@ public abstract class CstBaseMethodRef
     /**
      * Gets the number of words of parameters required by this
      * method's descriptor. Since instances of this class have no way
-     * to know if they will be used in a <code>static</code> or
+     * to know if they will be used in a {@code static} or
      * instance context, one has to indicate this explicitly as an
      * argument. This method is just a convenient shorthand for
-     * <code>getPrototype().getParameterTypes().getWordCount()</code>,
-     * plus <code>1</code> if the method is to be treated as an
+     * {@code getPrototype().getParameterTypes().getWordCount()},
+     * plus {@code 1} if the method is to be treated as an
      * instance method.
      * 
      * @param isStatic whether the method should be considered static
-     * @return &gt;= 0; the argument word count
+     * @return {@code >= 0;} the argument word count
      */
     public final int getParameterWordCount(boolean isStatic) {
         return getPrototype(isStatic).getParameterTypes().getWordCount();
@@ -128,9 +128,9 @@ public abstract class CstBaseMethodRef
     /**
      * Gets whether this is a reference to an instance initialization
      * method. This is just a convenient shorthand for
-     * <code>getNat().isInstanceInit()</code>.
+     * {@code getNat().isInstanceInit()}.
      *
-     * @return <code>true</code> iff this is a reference to an
+     * @return {@code true} iff this is a reference to an
      * instance initialization method
      */
     public final boolean isInstanceInit() {
@@ -140,9 +140,9 @@ public abstract class CstBaseMethodRef
     /**
      * Gets whether this is a reference to a class initialization
      * method. This is just a convenient shorthand for
-     * <code>getNat().isClassInit()</code>.
+     * {@code getNat().isClassInit()}.
      *
-     * @return <code>true</code> iff this is a reference to an
+     * @return {@code true} iff this is a reference to an
      * instance initialization method
      */
     public final boolean isClassInit() {

@@ -22,8 +22,6 @@ package java.io;
  * 
  * @see ObjectOutputStream
  * @see ObjectInput
- * 
- * @since Android 1.0
  */
 public interface ObjectOutput extends DataOutput {
     /**
@@ -32,7 +30,6 @@ public interface ObjectOutput extends DataOutput {
      * 
      * @throws IOException
      *             if an error occurs while closing the target stream.
-     * @since Android 1.0
      */
     public void close() throws IOException;
 
@@ -42,7 +39,6 @@ public interface ObjectOutput extends DataOutput {
      * 
      * @throws IOException
      *             if an error occurs while flushing the target stream.
-     * @since Android 1.0
      */
     public void flush() throws IOException;
 
@@ -54,7 +50,6 @@ public interface ObjectOutput extends DataOutput {
      *            the buffer to write.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void write(byte[] buffer) throws IOException;
 
@@ -72,7 +67,6 @@ public interface ObjectOutput extends DataOutput {
      *            stream.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void write(byte[] buffer, int offset, int count) throws IOException;
 
@@ -85,7 +79,6 @@ public interface ObjectOutput extends DataOutput {
      *            the byte to write.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void write(int value) throws IOException;
 
@@ -96,7 +89,6 @@ public interface ObjectOutput extends DataOutput {
      *            the object to write.
      * @throws IOException
      *             if an error occurs while writing to the target stream.
-     * @since Android 1.0
      */
     public void writeObject(Object obj) throws IOException;
 }

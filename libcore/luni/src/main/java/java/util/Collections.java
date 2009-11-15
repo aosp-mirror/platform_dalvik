@@ -27,8 +27,8 @@ import org.apache.harmony.luni.internal.nls.Messages;
 /**
  * {@code Collections} contains static methods which operate on
  * {@code Collection} classes.
- * 
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public class Collections {
 
@@ -69,7 +69,7 @@ public class Collections {
 
     @SuppressWarnings("unchecked")
     private static final class EmptyList extends AbstractList implements
-            Serializable {
+            RandomAccess, Serializable {
         private static final long serialVersionUID = 8842843931221139166L;
 
         @Override
@@ -171,24 +171,18 @@ public class Collections {
 
     /**
      * An empty immutable instance of {@link List}.
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final List EMPTY_LIST = new EmptyList();
 
     /**
      * An empty immutable instance of {@link Set}.
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final Set EMPTY_SET = new EmptySet();
 
     /**
      * An empty immutable instance of {@link Map}.
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final Map EMPTY_MAP = new EmptyMap();
@@ -532,9 +526,9 @@ public class Collections {
          * problems. This is necessary since RandomAccess API was introduced
          * only in 1.4.
          * <p>
-         * 
+         *
          * @return SynchronizedList
-         * 
+         *
          * @see SynchronizedList#readResolve()
          */
         private Object writeReplace() {
@@ -591,15 +585,51 @@ public class Collections {
         }
 
         public int indexOf(Object object) {
+            final int size;
+            final Object[] array;
             synchronized (mutex) {
-                return list.indexOf(object);
+                size = list.size();
+                array = new Object[size];
+                list.toArray(array);
             }
+            if (null != object)
+                for (int i = 0; i < size; i++) {
+                    if (object.equals(array[i])) {
+                        return i;
+                    }
+                }
+            else {
+                for (int i = 0; i < size; i++) {
+                    if (null == array[i]) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
         }
 
         public int lastIndexOf(Object object) {
+            final int size;
+            final Object[] array;
             synchronized (mutex) {
-                return list.lastIndexOf(object);
+                size = list.size();
+                array = new Object[size];
+                list.toArray(array);
             }
+            if (null != object)
+                for (int i = size - 1; i >= 0; i--) {
+                    if (object.equals(array[i])) {
+                        return i;
+                    }
+                }
+            else {
+                for (int i = size - 1; i >= 0; i--) {
+                    if (null == array[i]) {
+                        return i;
+                    }
+                }
+            }
+            return -1;
         }
 
         public ListIterator<E> listIterator() {
@@ -646,10 +676,10 @@ public class Collections {
          * replaced with SynchronizedList instances during serialization for
          * compliance with JREs before 1.4.
          * <p>
-         * 
+         *
          * @return a SynchronizedList instance if the underlying list implements
          *         RandomAccess interface, or this same object if not.
-         * 
+         *
          * @see SynchronizedRandomAccessList#writeReplace()
          */
         private Object readResolve() {
@@ -1033,9 +1063,9 @@ public class Collections {
          * problems. This is necessary since RandomAccess API was introduced
          * only in 1.4.
          * <p>
-         * 
+         *
          * @return UnmodifiableList
-         * 
+         *
          * @see UnmodifiableList#readResolve()
          */
         private Object writeReplace() {
@@ -1150,11 +1180,11 @@ public class Collections {
          * replaced with UnmodifiableList instances during serialization for
          * compliance with JREs before 1.4.
          * <p>
-         * 
+         *
          * @return an UnmodifiableList instance if the underlying list
          *         implements RandomAccess interface, or this same object if
          *         not.
-         * 
+         *
          * @see UnmodifiableRandomAccessList#writeReplace()
          */
         private Object readResolve() {
@@ -1429,13 +1459,13 @@ public class Collections {
 
     /**
      * Performs a binary search for the specified element in the specified
-     * sorted List. The List needs to be already sorted in natural sorting
+     * sorted list. The list needs to be already sorted in natural sorting
      * order. Searching in an unsorted array has an undefined result. It's also
      * undefined which element is found if there are multiple occurrences of the
      * same element.
-     * 
+     *
      * @param list
-     *            the sorted List to search.
+     *            the sorted list to search.
      * @param object
      *            the element to find.
      * @return the non-negative index of the element, or a negative index which
@@ -1443,7 +1473,6 @@ public class Collections {
      * @throws ClassCastException
      *             if an element in the List or the search element does not
      *             implement Comparable, or cannot be compared to each other.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <T> int binarySearch(
@@ -1455,12 +1484,12 @@ public class Collections {
             return -1;
         }
 
-        Comparable<T> key = (Comparable<T>) object;
+
         if (!(list instanceof RandomAccess)) {
-            ListIterator<T> it = (ListIterator<T>) list.listIterator();
+            ListIterator<? extends Comparable<? super T>> it = list.listIterator();
             while (it.hasNext()) {
                 int result;
-                if ((result = key.compareTo(it.next())) <= 0) {
+                if ((result = -it.next().compareTo(object)) <= 0) {
                     if (result == 0) {
                         return it.previousIndex();
                     }
@@ -1473,7 +1502,7 @@ public class Collections {
         int low = 0, mid = list.size(), high = mid - 1, result = -1;
         while (low <= high) {
             mid = (low + high) >> 1;
-            if ((result = key.compareTo((T) list.get(mid))) > 0) {
+            if ((result = -list.get(mid).compareTo(object)) > 0) {
                 low = mid + 1;
             } else if (result == 0) {
                 return mid;
@@ -1486,26 +1515,28 @@ public class Collections {
 
     /**
      * Performs a binary search for the specified element in the specified
-     * sorted List using the specified Comparator. The List needs to be already
+     * sorted list using the specified comparator. The list needs to be already
      * sorted according to the comparator passed. Searching in an unsorted array
      * has an undefined result. It's also undefined which element is found if
      * there are multiple occurrences of the same element.
-     * 
+     *
      * @param list
      *            the sorted List to search.
      * @param object
      *            the element to find.
      * @param comparator
-     *            the Comparator. If the comparator is {@code null} then the
+     *            the comparator. If the comparator is {@code null} then the
      *            search uses the objects' natural ordering.
      * @return the non-negative index of the element, or a negative index which
      *         is the {@code -index - 1} where the element would be inserted.
      * @throws ClassCastException
      *             when an element in the list and the searched element cannot
-     *             be compared to each other using the Comparator.
-     * @since Android 1.0
+     *             be compared to each other using the comparator.
      */
     @SuppressWarnings("unchecked")
+    // BEGIN android-note
+    // removed "@param <T> The element type", which is rejected by apicheck
+    // END android-note
     public static <T> int binarySearch(List<? extends T> list, T object,
             Comparator<? super T> comparator) {
         if (comparator == null) {
@@ -1516,7 +1547,7 @@ public class Collections {
             ListIterator<? extends T> it = list.listIterator();
             while (it.hasNext()) {
                 int result;
-                if ((result = comparator.compare(object, it.next())) <= 0) {
+                if ((result = -comparator.compare(it.next(), object)) <= 0) {
                     if (result == 0) {
                         return it.previousIndex();
                     }
@@ -1529,7 +1560,7 @@ public class Collections {
         int low = 0, mid = list.size(), high = mid - 1, result = -1;
         while (low <= high) {
             mid = (low + high) >> 1;
-            if ((result = comparator.compare(object, list.get(mid))) > 0) {
+            if ((result = -comparator.compare(list.get(mid),object)) > 0) {
                 low = mid + 1;
             } else if (result == 0) {
                 return mid;
@@ -1545,17 +1576,16 @@ public class Collections {
      * end both lists will have the same objects at the same index. If the
      * destination array is larger than the source list, the elements in the
      * destination list with {@code index >= source.size()} will be unchanged.
-     * 
+     *
      * @param destination
      *            the list whose elements are set from the source list.
      * @param source
      *            the list with the elements to be copied into the destination.
      * @throws IndexOutOfBoundsException
-     *             when the destination List is smaller than the source List.
+     *             when the destination list is smaller than the source list.
      * @throws UnsupportedOperationException
      *             when replacing an element in the destination list is not
      *             supported.
-     * @since Android 1.0
      */
     public static <T> void copy(List<? super T> destination,
             List<? extends T> source) {
@@ -1576,11 +1606,10 @@ public class Collections {
 
     /**
      * Returns an {@code Enumeration} on the specified collection.
-     * 
+     *
      * @param collection
      *            the collection to enumerate.
      * @return an Enumeration.
-     * @since Android 1.0
      */
     public static <T> Enumeration<T> enumeration(Collection<T> collection) {
         final Collection<T> c = collection;
@@ -1598,15 +1627,14 @@ public class Collections {
     }
 
     /**
-     * Fills the specified List with the specified element.
-     * 
+     * Fills the specified list with the specified element.
+     *
      * @param list
-     *            the List to fill.
+     *            the list to fill.
      * @param object
      *            the element to fill the list with.
      * @throws UnsupportedOperationException
      *             when replacing an element in the List is not supported.
-     * @since Android 1.0
      */
     public static <T> void fill(List<? super T> list, T object) {
         ListIterator<? super T> it = list.listIterator();
@@ -1617,16 +1645,15 @@ public class Collections {
     }
 
     /**
-     * Searches the specified Collection for the maximum element.
-     * 
+     * Searches the specified collection for the maximum element.
+     *
      * @param collection
-     *            the Collection to search.
+     *            the collection to search.
      * @return the maximum element in the Collection.
      * @throws ClassCastException
-     *             when an element in the Collection does not implement
+     *             when an element in the collection does not implement
      *             {@code Comparable} or elements cannot be compared to each
      *             other.
-     * @since Android 1.0
      */
     public static <T extends Object & Comparable<? super T>> T max(
             Collection<? extends T> collection) {
@@ -1642,18 +1669,17 @@ public class Collections {
     }
 
     /**
-     * Searches the specified Collection for the maximum element using the
-     * specified Comparator.
-     * 
+     * Searches the specified collection for the maximum element using the
+     * specified comparator.
+     *
      * @param collection
-     *            the Collection to search.
+     *            the collection to search.
      * @param comparator
-     *            the Comparator.
+     *            the comparator.
      * @return the maximum element in the Collection.
      * @throws ClassCastException
-     *             when elements in the Collection cannot be compared to each
+     *             when elements in the collection cannot be compared to each
      *             other using the {@code Comparator}.
-     * @since Android 1.0
      */
     public static <T> T max(Collection<? extends T> collection,
             Comparator<? super T> comparator) {
@@ -1669,16 +1695,15 @@ public class Collections {
     }
 
     /**
-     * Searches the specified Collection for the minimum element.
-     * 
+     * Searches the specified collection for the minimum element.
+     *
      * @param collection
-     *            the Collection to search.
-     * @return the minimum element in the Collection.
+     *            the collection to search.
+     * @return the minimum element in the collection.
      * @throws ClassCastException
-     *             when an element in the Collection does not implement
+     *             when an element in the collection does not implement
      *             {@code Comparable} or elements cannot be compared to each
      *             other.
-     * @since Android 1.0
      */
     public static <T extends Object & Comparable<? super T>> T min(
             Collection<? extends T> collection) {
@@ -1694,18 +1719,17 @@ public class Collections {
     }
 
     /**
-     * Searches the specified Collection for the minimum element using the
-     * specified Comparator.
-     * 
+     * Searches the specified collection for the minimum element using the
+     * specified comparator.
+     *
      * @param collection
-     *            the Collection to search.
+     *            the collection to search.
      * @param comparator
-     *            the Comparator.
-     * @return the minimum element in the Collection.
+     *            the comparator.
+     * @return the minimum element in the collection.
      * @throws ClassCastException
-     *             when elements in the Collection cannot be compared to each
+     *             when elements in the collection cannot be compared to each
      *             other using the {@code Comparator}.
-     * @since Android 1.0
      */
     public static <T> T min(Collection<? extends T> collection,
             Comparator<? super T> comparator) {
@@ -1721,17 +1745,16 @@ public class Collections {
     }
 
     /**
-     * Returns a List containing the specified number of the specified element.
+     * Returns a list containing the specified number of the specified element.
      * The list cannot be modified. The list is serializable.
-     * 
+     *
      * @param length
      *            the size of the returned list.
      * @param object
      *            the element to be added {@code length} times to a list.
-     * @return a List containing {@code length} copies of the element.
+     * @return a list containing {@code length} copies of the element.
      * @throws IllegalArgumentException
      *             when {@code length < 0}.
-     * @since Android 1.0
      */
     public static <T> List<T> nCopies(final int length, T object) {
         return new CopiesList<T>(length, object);
@@ -1740,12 +1763,11 @@ public class Collections {
     /**
      * Modifies the specified {@code List} by reversing the order of the
      * elements.
-     * 
+     *
      * @param list
-     *            the List to reverse.
+     *            the list to reverse.
      * @throws UnsupportedOperationException
      *             when replacing an element in the List is not supported.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static void reverse(List<?> list) {
@@ -1762,14 +1784,13 @@ public class Collections {
     }
 
     /**
-     * A Comparator which reverses the natural order of the elements. The
+     * A comparator which reverses the natural order of the elements. The
      * {@code Comparator} that's returned is {@link Serializable}.
-     * 
+     *
      * @return a {@code Comparator} instance.
      * @see Comparator
      * @see Comparable
      * @see Serializable
-     * @since Android 1.0
      */
     public static <T> Comparator<T> reverseOrder() {
         return new ReverseComparator<T>();
@@ -1782,13 +1803,12 @@ public class Collections {
      * <p>
      * The {@code Comparator} that's returned is {@link Serializable} if the
      * {@code Comparator} passed is serializable or {@code null}.
-     * </p>
-     * 
+     *
      * @param c
      *            the {@code Comparator} to reverse or {@code null}.
      * @return a {@code Comparator} instance.
      * @see Comparator
-     * @since Android 1.0
+     * @since 1.5
      */
     public static <T> Comparator<T> reverseOrder(Comparator<T> c) {
         if (c == null) {
@@ -1798,38 +1818,35 @@ public class Collections {
     }
 
     /**
-     * Moves every element of the List to a random new position in the list.
-     * 
+     * Moves every element of the list to a random new position in the list.
+     *
      * @param list
      *            the List to shuffle.
-     * 
+     *
      * @throws UnsupportedOperationException
      *             when replacing an element in the List is not supported.
-     * @since Android 1.0
      */
     public static void shuffle(List<?> list) {
         shuffle(list, new Random());
     }
 
     /**
-     * Moves every element of the List to a random new position in the list
+     * Moves every element of the list to a random new position in the list
      * using the specified random number generator.
-     * 
+     *
      * @param list
-     *            the List to shuffle.
+     *            the list to shuffle.
      * @param random
      *            the random number generator.
-     * 
      * @throws UnsupportedOperationException
-     *             when replacing an element in the List is not supported.
-     * @since Android 1.0
+     *             when replacing an element in the list is not supported.
      */
     @SuppressWarnings("unchecked")
     public static void shuffle(List<?> list, Random random) {
         if (!(list instanceof RandomAccess)) {
             Object[] array = list.toArray();
             for (int i = array.length - 1; i > 0; i--) {
-                int index = random.nextInt() % (i + 1);
+                int index = random.nextInt(i + 1);
                 if (index < 0) {
                     index = -index;
                 }
@@ -1848,7 +1865,7 @@ public class Collections {
         } else {
             List<Object> rawList = (List<Object>) list;
             for (int i = rawList.size() - 1; i > 0; i--) {
-                int index = random.nextInt() % (i + 1);
+                int index = random.nextInt(i + 1);
                 if (index < 0) {
                     index = -index;
                 }
@@ -1858,26 +1875,24 @@ public class Collections {
     }
 
     /**
-     * Returns a Set containing the specified element. The set cannot be
+     * Returns a set containing the specified element. The set cannot be
      * modified. The set is serializable.
-     * 
+     *
      * @param object
      *            the element.
-     * @return a Set containing the element.
-     * @since Android 1.0
+     * @return a set containing the element.
      */
     public static <E> Set<E> singleton(E object) {
         return new SingletonSet<E>(object);
     }
 
     /**
-     * Returns a List containing the specified element. The list cannot be
+     * Returns a list containing the specified element. The list cannot be
      * modified. The list is serializable.
-     * 
+     *
      * @param object
      *            the element.
-     * @return a List containing the element.
-     * @since Android 1.0
+     * @return a list containing the element.
      */
     public static <E> List<E> singletonList(E object) {
         return new SingletonList<E>(object);
@@ -1886,28 +1901,26 @@ public class Collections {
     /**
      * Returns a Map containing the specified key and value. The map cannot be
      * modified. The map is serializable.
-     * 
+     *
      * @param key
      *            the key.
      * @param value
      *            the value.
      * @return a Map containing the key and value.
-     * @since Android 1.0
      */
     public static <K, V> Map<K, V> singletonMap(K key, V value) {
         return new SingletonMap<K, V>(key, value);
     }
 
     /**
-     * Sorts the specified List in ascending natural order. The algorithm is
+     * Sorts the specified list in ascending natural order. The algorithm is
      * stable which means equal elements don't get reordered.
-     * 
+     *
      * @param list
-     *            the List to be sorted.
+     *            the list to be sorted.
      * @throws ClassCastException
      *             when an element in the List does not implement Comparable or
      *             elements cannot be compared to each other.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <T extends Comparable<? super T>> void sort(List<T> list) {
@@ -1922,17 +1935,16 @@ public class Collections {
     }
 
     /**
-     * Sorts the specified List using the specified Comparator. The algorithm is
+     * Sorts the specified list using the specified comparator. The algorithm is
      * stable which means equal elements don't get reordered.
-     * 
+     *
      * @param list
-     *            the List to be sorted.
+     *            the list to be sorted.
      * @param comparator
-     *            the Comparator.
+     *            the comparator.
      * @throws ClassCastException
-     *             when elements in the List cannot be compared to each other
-     *             using the Comparator.
-     * @since Android 1.0
+     *             when elements in the list cannot be compared to each other
+     *             using the comparator.
      */
     @SuppressWarnings("unchecked")
     public static <T> void sort(List<T> list, Comparator<? super T> comparator) {
@@ -1947,25 +1959,29 @@ public class Collections {
     }
 
     /**
-     * Swaps the elements of List {@code list} at indices {@code index1} and
+     * Swaps the elements of list {@code list} at indices {@code index1} and
      * {@code index2}.
-     * 
+     *
      * @param list
-     *            the List to manipulate.
+     *            the list to manipulate.
      * @param index1
      *            position of the first element to swap with the element in
      *            index2.
      * @param index2
      *            position of the other element.
-     * 
+     *
      * @throws IndexOutOfBoundsException
      *             if index1 or index2 is out of range of this list.
-     * @since Android 1.0
+     * @since 1.4
      */
     @SuppressWarnings("unchecked")
     public static void swap(List<?> list, int index1, int index2) {
         if (list == null) {
             throw new NullPointerException();
+        }
+        final int size = list.size();
+        if (index1 < 0 || index1 >= size || index2 < 0 || index2 >= size) {
+            throw new IndexOutOfBoundsException();
         }
         if (index1 == index2) {
             return;
@@ -1978,20 +1994,18 @@ public class Collections {
      * Replaces all occurrences of Object {@code obj} in {@code list} with
      * {@code newObj}. If the {@code obj} is {@code null}, then all
      * occurrences of {@code null} are replaced with {@code newObj}.
-     * 
+     *
      * @param list
-     *            the List to modify.
+     *            the list to modify.
      * @param obj
-     *            the Object to find and replace occurrences of.
+     *            the object to find and replace occurrences of.
      * @param obj2
-     *            the Object to replace all occurrences of {@code obj} in
+     *            the object to replace all occurrences of {@code obj} in
      *            {@code list}.
      * @return true, if at least one occurrence of {@code obj} has been found in
      *         {@code list}.
-     * 
      * @throws UnsupportedOperationException
      *             if the list does not support setting elements.
-     * @since Android 1.0
      */
     public static <T> boolean replaceAll(List<T> list, T obj, T obj2) {
         int index;
@@ -2005,19 +2019,17 @@ public class Collections {
     }
 
     /**
-     * Rotates the elements in List {@code list} by the distance {@code dist}
+     * Rotates the elements in {@code list} by the distance {@code dist}
      * <p>
      * e.g. for a given list with elements [1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
      * calling rotate(list, 3) or rotate(list, -7) would modify the list to look
      * like this: [8, 9, 0, 1, 2, 3, 4, 5, 6, 7]
-     * </p>
-     * 
+     *
      * @param lst
      *            the list whose elements are to be rotated.
      * @param dist
      *            is the distance the list is rotated. This can be any valid
      *            integer. Negative values rotate the list backwards.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static void rotate(List<?> lst, int dist) {
@@ -2069,14 +2081,13 @@ public class Collections {
      * index of the first occurrence.
      * <p>
      * -1 is returned if the {@code sublist} does not exist in {@code list}.
-     * 
+     *
      * @param list
      *            the List to search {@code sublist} in.
      * @param sublist
      *            the List to search in {@code list}.
      * @return the beginning index of the first occurrence of {@code sublist} in
      *         {@code list}, or -1.
-     * @since Android 1.0
      */
     public static int indexOfSubList(List<?> list, List<?> sublist) {
         int size = list.size();
@@ -2137,14 +2148,13 @@ public class Collections {
      * index of the last occurrence.
      * <p>
      * -1 is returned if the {@code sublist} does not exist in {@code list}.
-     * 
+     *
      * @param list
-     *            the List to search {@code sublist} in.
+     *            the list to search {@code sublist} in.
      * @param sublist
-     *            the List to search in {@code list}.
+     *            the list to search in {@code list}.
      * @return the beginning index of the last occurrence of {@code sublist} in
      *         {@code list}, or -1.
-     * @since Android 1.0
      */
     public static int lastIndexOfSubList(List<?> list, List<?> sublist) {
         int sublistSize = sublist.size();
@@ -2198,14 +2208,13 @@ public class Collections {
     }
 
     /**
-     * Returns an {@code ArrayList} with all the elements in the
-     * {@code enumeration}. The elements in the returned ArrayList are in the
+     * Returns an {@code ArrayList} with all the elements in the {@code
+     * enumeration}. The elements in the returned {@code ArrayList} are in the
      * same order as in the {@code enumeration}.
-     * 
+     *
      * @param enumeration
      *            the source {@link Enumeration}.
      * @return an {@code ArrayList} from {@code enumeration}.
-     * @since Android 1.0
      */
     public static <T> ArrayList<T> list(Enumeration<T> enumeration) {
         ArrayList<T> list = new ArrayList<T>();
@@ -2216,13 +2225,12 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified Collection which synchronizes all
-     * access to the Collection.
-     * 
+     * Returns a wrapper on the specified collection which synchronizes all
+     * access to the collection.
+     *
      * @param collection
      *            the Collection to wrap in a synchronized collection.
      * @return a synchronized Collection.
-     * @since Android 1.0
      */
     public static <T> Collection<T> synchronizedCollection(
             Collection<T> collection) {
@@ -2235,11 +2243,10 @@ public class Collections {
     /**
      * Returns a wrapper on the specified List which synchronizes all access to
      * the List.
-     * 
+     *
      * @param list
      *            the List to wrap in a synchronized list.
      * @return a synchronized List.
-     * @since Android 1.0
      */
     public static <T> List<T> synchronizedList(List<T> list) {
         if (list == null) {
@@ -2252,13 +2259,12 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified Map which synchronizes all access to
-     * the Map.
-     * 
+     * Returns a wrapper on the specified map which synchronizes all access to
+     * the map.
+     *
      * @param map
-     *            the Map to wrap in a synchronized map.
+     *            the map to wrap in a synchronized map.
      * @return a synchronized Map.
-     * @since Android 1.0
      */
     public static <K, V> Map<K, V> synchronizedMap(Map<K, V> map) {
         if (map == null) {
@@ -2268,13 +2274,12 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified Set which synchronizes all access to
-     * the Set.
-     * 
+     * Returns a wrapper on the specified set which synchronizes all access to
+     * the set.
+     *
      * @param set
-     *            the Set to wrap in a synchronized set.
-     * @return a synchronized Set.
-     * @since Android 1.0
+     *            the set to wrap in a synchronized set.
+     * @return a synchronized set.
      */
     public static <E> Set<E> synchronizedSet(Set<E> set) {
         if (set == null) {
@@ -2284,13 +2289,12 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified SortedMap which synchronizes all
-     * access to the SortedMap.
-     * 
+     * Returns a wrapper on the specified sorted map which synchronizes all
+     * access to the sorted map.
+     *
      * @param map
-     *            the SortedMap to wrap in a synchronized sorted map.
-     * @return a synchronized SortedMap.
-     * @since Android 1.0
+     *            the sorted map to wrap in a synchronized sorted map.
+     * @return a synchronized sorted map.
      */
     public static <K, V> SortedMap<K, V> synchronizedSortedMap(
             SortedMap<K, V> map) {
@@ -2301,13 +2305,12 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified SortedSet which synchronizes all
-     * access to the SortedSet.
-     * 
+     * Returns a wrapper on the specified sorted set which synchronizes all
+     * access to the sorted set.
+     *
      * @param set
-     *            the SortedSet to wrap in a synchronized sorted set.
-     * @return a synchronized SortedSet.
-     * @since Android 1.0
+     *            the sorted set to wrap in a synchronized sorted set.
+     * @return a synchronized sorted set.
      */
     public static <E> SortedSet<E> synchronizedSortedSet(SortedSet<E> set) {
         if (set == null) {
@@ -2317,14 +2320,13 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified Collection which throws an
+     * Returns a wrapper on the specified collection which throws an
      * {@code UnsupportedOperationException} whenever an attempt is made to
-     * modify the Collection.
-     * 
+     * modify the collection.
+     *
      * @param collection
-     *            the Collection to wrap in an unmodifiable collection.
-     * @return an unmodifiable Collection.
-     * @since Android 1.0
+     *            the collection to wrap in an unmodifiable collection.
+     * @return an unmodifiable collection.
      */
     @SuppressWarnings("unchecked")
     public static <E> Collection<E> unmodifiableCollection(
@@ -2336,14 +2338,13 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified List which throws an
+     * Returns a wrapper on the specified list which throws an
      * {@code UnsupportedOperationException} whenever an attempt is made to
-     * modify the List.
-     * 
+     * modify the list.
+     *
      * @param list
-     *            the List to wrap in an unmodifiable list.
+     *            the list to wrap in an unmodifiable list.
      * @return an unmodifiable List.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <E> List<E> unmodifiableList(List<? extends E> list) {
@@ -2357,14 +2358,13 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified Map which throws an
+     * Returns a wrapper on the specified map which throws an
      * {@code UnsupportedOperationException} whenever an attempt is made to
-     * modify the Map.
-     * 
+     * modify the map.
+     *
      * @param map
-     *            the Map to wrap in an unmodifiable map.
-     * @return a unmodifiable Map.
-     * @since Android 1.0
+     *            the map to wrap in an unmodifiable map.
+     * @return a unmodifiable map.
      */
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> unmodifiableMap(
@@ -2376,14 +2376,13 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified Set which throws an
+     * Returns a wrapper on the specified set which throws an
      * {@code UnsupportedOperationException} whenever an attempt is made to
-     * modify the Set.
-     * 
+     * modify the set.
+     *
      * @param set
-     *            the Set to wrap in an unmodifiable set.
-     * @return a unmodifiable Set.
-     * @since Android 1.0
+     *            the set to wrap in an unmodifiable set.
+     * @return a unmodifiable set
      */
     @SuppressWarnings("unchecked")
     public static <E> Set<E> unmodifiableSet(Set<? extends E> set) {
@@ -2394,14 +2393,13 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified SortedMap which throws an
+     * Returns a wrapper on the specified sorted map which throws an
      * {@code UnsupportedOperationException} whenever an attempt is made to
-     * modify the SortedMap.
-     * 
+     * modify the sorted map.
+     *
      * @param map
-     *            the SortedMap to wrap in an unmodifiable sorted map.
-     * @return a unmodifiable SortedMap.
-     * @since Android 1.0
+     *            the sorted map to wrap in an unmodifiable sorted map.
+     * @return a unmodifiable sorted map
      */
     @SuppressWarnings("unchecked")
     public static <K, V> SortedMap<K, V> unmodifiableSortedMap(
@@ -2413,14 +2411,13 @@ public class Collections {
     }
 
     /**
-     * Returns a wrapper on the specified SortedSet which throws an
+     * Returns a wrapper on the specified sorted set which throws an
      * {@code UnsupportedOperationException} whenever an attempt is made to
-     * modify the SortedSet.
-     * 
+     * modify the sorted set.
+     *
      * @param set
-     *            the SortedSet to wrap in an unmodifiable sorted set.
-     * @return a unmodifiable SortedSet.
-     * @since Android 1.0
+     *            the sorted set to wrap in an unmodifiable sorted set.
+     * @return a unmodifiable sorted set.
      */
     public static <E> SortedSet<E> unmodifiableSortedSet(SortedSet<E> set) {
         if (set == null) {
@@ -2433,8 +2430,7 @@ public class Collections {
      * Returns the number of elements in the {@code Collection} that match the
      * {@code Object} passed. If the {@code Object} is {@code null}, then the
      * number of {@code null} elements is returned.
-     * </p>
-     * 
+     *
      * @param c
      *            the {@code Collection} to search.
      * @param o
@@ -2442,7 +2438,7 @@ public class Collections {
      * @return the number of matching elements.
      * @throws NullPointerException
      *             if the {@code Collection} parameter is {@code null}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int frequency(Collection<?> c, Object o) {
         if (c == null) {
@@ -2464,10 +2460,10 @@ public class Collections {
 
     /**
      * Returns a type-safe empty, immutable {@link List}.
-     * 
+     *
      * @return an empty {@link List}.
+     * @since 1.5
      * @see #EMPTY_LIST
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final <T> List<T> emptyList() {
@@ -2476,10 +2472,10 @@ public class Collections {
 
     /**
      * Returns a type-safe empty, immutable {@link Set}.
-     * 
+     *
      * @return an empty {@link Set}.
+     * @since 1.5
      * @see #EMPTY_SET
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final <T> Set<T> emptySet() {
@@ -2488,10 +2484,10 @@ public class Collections {
 
     /**
      * Returns a type-safe empty, immutable {@link Map}.
-     * 
+     *
      * @return an empty {@link Map}.
+     * @since 1.5
      * @see #EMPTY_MAP
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final <K, V> Map<K, V> emptyMap() {
@@ -2503,13 +2499,12 @@ public class Collections {
      * to insert an element of the wrong type into this collection throws a
      * {@code ClassCastException}. At creation time the types in {@code c} are
      * not checked for correct type.
-     * 
+     *
      * @param c
      *            the collection to be wrapped in a typesafe collection.
      * @param type
      *            the type of the elements permitted to insert.
      * @return a typesafe collection.
-     * @since Android 1.0
      */
     public static <E> Collection<E> checkedCollection(Collection<E> c,
             Class<E> type) {
@@ -2521,7 +2516,7 @@ public class Collections {
      * insert an element of the wrong type into this map throws a
      * {@code ClassCastException}. At creation time the types in {@code m} are
      * not checked for correct type.
-     * 
+     *
      * @param m
      *            the map to be wrapped in a typesafe map.
      * @param keyType
@@ -2529,7 +2524,6 @@ public class Collections {
      * @param valueType
      *            the type of the values permitted to insert.
      * @return a typesafe map.
-     * @since Android 1.0
      */
     public static <K, V> Map<K, V> checkedMap(Map<K, V> m, Class<K> keyType,
             Class<V> valueType) {
@@ -2541,13 +2535,12 @@ public class Collections {
      * insert an element of the wrong type into this list throws a
      * {@code ClassCastException}. At creation time the types in {@code list}
      * are not checked for correct type.
-     * 
+     *
      * @param list
      *            the list to be wrapped in a typesafe list.
      * @param type
      *            the type of the elements permitted to insert.
      * @return a typesafe list.
-     * @since Android 1.0
      */
     public static <E> List<E> checkedList(List<E> list, Class<E> type) {
         if (list instanceof RandomAccess) {
@@ -2561,13 +2554,12 @@ public class Collections {
      * insert an element of the wrong type into this set throws a
      * {@code ClassCastException}. At creation time the types in {@code s} are
      * not checked for correct type.
-     * 
+     *
      * @param s
      *            the set to be wrapped in a typesafe set.
      * @param type
      *            the type of the elements permitted to insert.
      * @return a typesafe set.
-     * @since Android 1.0
      */
     public static <E> Set<E> checkedSet(Set<E> s, Class<E> type) {
         return new CheckedSet<E>(s, type);
@@ -2578,7 +2570,7 @@ public class Collections {
      * to insert an element of the wrong type into this sorted map throws a
      * {@code ClassCastException}. At creation time the types in {@code m} are
      * not checked for correct type.
-     * 
+     *
      * @param m
      *            the sorted map to be wrapped in a typesafe sorted map.
      * @param keyType
@@ -2586,7 +2578,6 @@ public class Collections {
      * @param valueType
      *            the type of the values permitted to insert.
      * @return a typesafe sorted map.
-     * @since Android 1.0
      */
     public static <K, V> SortedMap<K, V> checkedSortedMap(SortedMap<K, V> m,
             Class<K> keyType, Class<V> valueType) {
@@ -2598,13 +2589,12 @@ public class Collections {
      * to insert an element of the wrong type into this sorted set throws a
      * {@code ClassCastException}. At creation time the types in {@code s} are
      * not checked for correct type.
-     * 
+     *
      * @param s
      *            the sorted set to be wrapped in a typesafe sorted set.
      * @param type
      *            the type of the elements permitted to insert.
      * @return a typesafe sorted set.
-     * @since Android 1.0
      */
     public static <E> SortedSet<E> checkedSortedSet(SortedSet<E> s,
             Class<E> type) {
@@ -2613,7 +2603,7 @@ public class Collections {
 
     /**
      * Adds all the specified elements to the specified collection.
-     * 
+     *
      * @param c
      *            the collection the elements are to be inserted into.
      * @param a
@@ -2628,7 +2618,6 @@ public class Collections {
      * @throws IllegalArgumentException
      *             if at least one of the elements can't be inserted into the
      *             collection.
-     * @since Android 1.0
      */
     public static <T> boolean addAll(Collection<? super T> c, T... a) {
         boolean modified = false;
@@ -2640,7 +2629,7 @@ public class Collections {
 
     /**
      * Returns whether the specified collections have no elements in common.
-     * 
+     *
      * @param c1
      *            the first collection.
      * @param c2
@@ -2649,7 +2638,6 @@ public class Collections {
      *         {@code false} otherwise.
      * @throws NullPointerException
      *             if one of the collections is {@code null}.
-     * @since Android 1.0
      */
     public static boolean disjoint(Collection<?> c1, Collection<?> c2) {
         if ((c1 instanceof Set) && !(c2 instanceof Set)
@@ -2670,7 +2658,7 @@ public class Collections {
     /**
      * Checks if specified object is instance of specified class. Used for a
      * dynamically typesafe view of the collections.
-     * 
+     *
      * @param obj -
      *            object is to be checked
      * @param type -
@@ -2701,7 +2689,7 @@ public class Collections {
 
         /**
          * Constructs a dynamically typesafe view of the specified collection.
-         * 
+         *
          * @param c -
          *            the collection for which an unmodifiable view is to be
          *            constructed.
@@ -2844,7 +2832,7 @@ public class Collections {
 
         /**
          * Constructs a dynamically typesafe view of the specified ListIterator.
-         * 
+         *
          * @param i -
          *            the listIterator for which a dynamically typesafe view to
          *            be constructed.
@@ -2930,7 +2918,7 @@ public class Collections {
 
         /**
          * Constructs a dynamically typesafe view of the specified list.
-         * 
+         *
          * @param l -
          *            the list for which a dynamically typesafe view is to be
          *            constructed.
@@ -3049,7 +3037,7 @@ public class Collections {
         /**
          * Constructs a dynamically typesafe view of the specified
          * randomAccessList.
-         * 
+         *
          * @param l -
          *            the randomAccessList for which a dynamically typesafe view
          *            is to be constructed.
@@ -3069,7 +3057,7 @@ public class Collections {
 
         /**
          * Constructs a dynamically typesafe view of the specified set.
-         * 
+         *
          * @param s -
          *            the set for which a dynamically typesafe view is to be
          *            constructed.
@@ -3111,7 +3099,7 @@ public class Collections {
 
         /**
          * Constructs a dynamically typesafe view of the specified map.
-         * 
+         *
          * @param m -
          *            the map for which a dynamically typesafe view is to be
          *            constructed.
@@ -3262,10 +3250,12 @@ public class Collections {
             /**
              * Constructs a dynamically typesafe view of the specified map
              * entry.
-             * 
-             * @param e -
+             *
+             * @param e
              *            the map entry for which a dynamically typesafe view is
              *            to be constructed.
+             * @param valueType
+             *            the type of the value
              */
             public CheckedEntry(Map.Entry<K, V> e, Class<V> valueType) {
                 if (e == null) {

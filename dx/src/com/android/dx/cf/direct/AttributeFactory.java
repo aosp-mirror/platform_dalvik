@@ -58,13 +58,13 @@ public class AttributeFactory {
      * the name, and then does all the setup to call on to {@link #parse0},
      * which does the actual construction.
      * 
-     * @param cf non-null; class file to parse from
-     * @param context context to parse in; one of the <code>CTX_*</code>
+     * @param cf {@code non-null;} class file to parse from
+     * @param context context to parse in; one of the {@code CTX_*}
      * constants
-     * @param offset offset into <code>dcf</code>'s <code>bytes</code>
+     * @param offset offset into {@code dcf}'s {@code bytes}
      * to start parsing at
-     * @param observer null-ok; parse observer to report to, if any
-     * @return non-null; an appropriately-constructed {@link Attribute}
+     * @param observer {@code null-ok;} parse observer to report to, if any
+     * @return {@code non-null;} an appropriately-constructed {@link Attribute}
      */
     public final Attribute parse(DirectClassFile cf, int context, int offset,
                                  ParseObserver observer) {
@@ -108,15 +108,15 @@ public class AttributeFactory {
      * an instance of {@link RawAttribute}. Subclasses are expected to
      * override this to do something better in most cases.
      * 
-     * @param cf non-null; class file to parse from
-     * @param context context to parse in; one of the <code>CTX_*</code>
+     * @param cf {@code non-null;} class file to parse from
+     * @param context context to parse in; one of the {@code CTX_*}
      * constants
-     * @param name non-null; the attribute name
-     * @param offset offset into <code>bytes</code> to start parsing at; this
+     * @param name {@code non-null;} the attribute name
+     * @param offset offset into {@code bytes} to start parsing at; this
      * is the offset to the start of attribute data, not to the header
      * @param length the length of the attribute data
-     * @param observer null-ok; parse observer to report to, if any
-     * @return non-null; an appropriately-constructed {@link Attribute}
+     * @param observer {@code null-ok;} parse observer to report to, if any
+     * @return {@code non-null;} an appropriately-constructed {@link Attribute}
      */
     protected Attribute parse0(DirectClassFile cf, int context, String name,
                                int offset, int length,

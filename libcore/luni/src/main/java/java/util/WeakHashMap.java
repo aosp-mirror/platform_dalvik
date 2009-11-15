@@ -26,10 +26,10 @@ import java.lang.ref.WeakReference;
  * optional operations (adding and removing) are supported. Keys and values can
  * be any objects. Note that the garbage collector acts similar to a second
  * thread on this collection, possibly removing keys.
- * 
+ *
+ * @since 1.2
  * @see HashMap
  * @see WeakReference
- * @since Android 1.0
  */
 public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
@@ -127,7 +127,7 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
         }
 
         public boolean hasNext() {
-            if (nextEntry != null) {
+            if (nextEntry != null && (nextKey != null || nextEntry.isNull)) {
                 return true;
             }
             while (true) {
@@ -183,8 +183,6 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Constructs a new empty {@code WeakHashMap} instance.
-     * 
-     * @since Android 1.0
      */
     public WeakHashMap() {
         this(DEFAULT_SIZE);
@@ -193,12 +191,11 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
     /**
      * Constructs a new {@code WeakHashMap} instance with the specified
      * capacity.
-     * 
+     *
      * @param capacity
      *            the initial capacity of this map.
      * @throws IllegalArgumentException
      *                if the capacity is less than zero.
-     * @since Android 1.0
      */
     public WeakHashMap(int capacity) {
         if (capacity >= 0) {
@@ -215,7 +212,7 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
     /**
      * Constructs a new {@code WeakHashMap} instance with the specified capacity
      * and load factor.
-     * 
+     *
      * @param capacity
      *            the initial capacity of this map.
      * @param loadFactor
@@ -223,7 +220,6 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
      * @throws IllegalArgumentException
      *             if the capacity is less than zero or the load factor is less
      *             or equal to zero.
-     * @since Android 1.0
      */
     public WeakHashMap(int capacity, float loadFactor) {
         if (capacity >= 0 && loadFactor > 0) {
@@ -240,10 +236,9 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
     /**
      * Constructs a new {@code WeakHashMap} instance containing the mappings
      * from the specified map.
-     * 
+     *
      * @param map
      *            the mappings to add.
-     * @since Android 1.0
      */
     public WeakHashMap(Map<? extends K, ? extends V> map) {
         this(map.size() < 6 ? 11 : map.size() * 2);
@@ -252,10 +247,9 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Removes all mappings from this map, leaving it empty.
-     * 
+     *
      * @see #isEmpty()
      * @see #size()
-     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -275,12 +269,11 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns whether this map contains the specified key.
-     * 
+     *
      * @param key
      *            the key to search for.
      * @return {@code true} if this map contains the specified key,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean containsKey(Object key) {
@@ -292,9 +285,8 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
      * an instance of {@link Map.Entry}. As the set is backed by this map,
      * changes in one will be reflected in the other. It does not support adding
      * operations.
-     * 
+     *
      * @return a set of the mappings.
-     * @since Android 1.0
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
@@ -351,9 +343,8 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
      * Returns a set of the keys contained in this map. The set is backed by
      * this map so changes to one are reflected by the other. The set does not
      * support adding.
-     * 
+     *
      * @return a set of the keys.
-     * @since Android 1.0
      */
     @Override
     public Set<K> keySet() {
@@ -392,6 +383,26 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
                         }
                     });
                 }
+
+                @Override
+                public Object[] toArray() {
+                    Collection<K> coll = new ArrayList<K>(size());
+
+                    for (Iterator<K> iter = iterator(); iter.hasNext();) {
+                        coll.add(iter.next());
+                    }
+                    return coll.toArray();
+                }
+
+                @Override
+                public <T> T[] toArray(T[] contents) {
+                    Collection<K> coll = new ArrayList<K>(size());
+
+                    for (Iterator<K> iter = iterator(); iter.hasNext();) {
+                        coll.add(iter.next());
+                    }
+                    return coll.toArray(contents);
+                }
             };
         }
         return keySet;
@@ -408,16 +419,13 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
      * "wrapper object" over the iterator of map's entrySet(). The size method
      * wraps the map's size method and the contains method wraps the map's
      * containsValue method.
-     * </p>
      * <p>
      * The collection is created when this method is called at first time and
      * returned in response to all subsequent calls. This method may return
      * different Collection when multiple calls to this method, since it has no
      * synchronization performed.
-     * </p>
-     * 
+     *
      * @return a collection of the values contained in this map.
-     * @since Android 1.0
      */
     @Override
     public Collection<V> values() {
@@ -454,12 +462,11 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns the value of the mapping with the specified key.
-     * 
+     *
      * @param key
      *            the key.
      * @return the value of the mapping with the specified key, or {@code null}
      *         if no mapping for the specified key is found.
-     * @since Android 1.0
      */
     @Override
     public V get(Object key) {
@@ -510,12 +517,11 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns whether this map contains the specified value.
-     * 
+     *
      * @param value
      *            the value to search for.
      * @return {@code true} if this map contains the specified value,
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean containsValue(Object value) {
@@ -549,9 +555,8 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns the number of elements in this map.
-     * 
+     *
      * @return the number of elements in this map.
-     * @since Android 1.0
      */
     @Override
     public boolean isEmpty() {
@@ -590,14 +595,13 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Maps the specified key to the specified value.
-     * 
+     *
      * @param key
      *            the key.
      * @param value
      *            the value.
      * @return the value of any previous mapping with the specified key or
      *         {@code null} if there was no mapping.
-     * @since Android 1.0
      */
     @Override
     public V put(K key, V value) {
@@ -658,10 +662,11 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
      * Copies all the mappings in the given map to this map. These mappings will
      * replace all mappings that this map had for any of the keys currently in
      * the given map.
-     * 
+     *
      * @param map
      *            the map to copy mappings from.
-     * @since Android 1.0
+     * @throws NullPointerException
+     *             if {@code map} is {@code null}.
      */
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
@@ -670,12 +675,11 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Removes the mapping with the specified key from this map.
-     * 
+     *
      * @param key
      *            the key of the mapping to remove.
      * @return the value of the removed mapping or {@code null} if no mapping
      *         for the specified key was found.
-     * @since Android 1.0
      */
     @Override
     public V remove(Object key) {
@@ -711,9 +715,8 @@ public class WeakHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V> {
 
     /**
      * Returns the number of elements in this map.
-     * 
+     *
      * @return the number of elements in this map.
-     * @since Android 1.0
      */
     @Override
     public int size() {

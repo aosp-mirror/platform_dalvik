@@ -23,11 +23,11 @@ import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.util.AnnotatedOutput;
 
 /**
- * Instruction format <code>22x</code>. See the instruction format spec
+ * Instruction format {@code 22x}. See the instruction format spec
  * for details.
  */
 public final class Form22x extends InsnFormat {
-    /** non-null; unique instance of this class */
+    /** {@code non-null;} unique instance of this class */
     public static final InsnFormat THE_ONE = new Form22x();
 
     /**

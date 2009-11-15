@@ -92,6 +92,8 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
             currentElementMask = unProcessedBits[bitsPosition]
                     & (-unProcessedBits[bitsPosition]);
             unProcessedBits[bitsPosition] -= currentElementMask;
+            int index = Long.numberOfTrailingZeros(currentElementMask)
+                    + bitsPosition * BIT_IN_LONG;
             if (0 == unProcessedBits[bitsPosition]) {
                 int oldBitsPosition = bitsPosition;
                 findNextNoneZeroPosition(bitsPosition + 1);
@@ -99,8 +101,7 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
                     canProcess = false;
                 }
             }
-            return enums[Long.numberOfTrailingZeros(currentElementMask)
-                    + bitsPosition * BIT_IN_LONG];
+            return enums[index];
         }
 
         public void remove() {
@@ -185,6 +186,7 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
         }
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public boolean contains(Object object) {
         if (null == object) {
@@ -329,7 +331,7 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
 
             // endElementInBits + 1 is the number of consecutive ones.
             // 63 - endElementInBits is the following zeros of the right most one.
-            range = -1l >>> (BIT_IN_LONG - (endElementInBits + 1)) << (63 - endElementInBits);
+            range = -1l >>> (BIT_IN_LONG - (endElementInBits + 1));
             size -= Long.bitCount(bits[endBitsIndex]);
             bits[endBitsIndex] |= range;
             size += Long.bitCount(bits[endBitsIndex]);

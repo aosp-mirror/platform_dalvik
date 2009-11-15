@@ -26,25 +26,25 @@ public final class Dop {
     /** DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode family */
     private final int family;
 
-    /** non-null; the instruction format */
+    /** {@code non-null;} the instruction format */
     private final InsnFormat format;
 
     /** whether this opcode uses a result register */
     private final boolean hasResult;
 
-    /** non-null; the name */
+    /** {@code non-null;} the name */
     private final String name;
 
     /**
      * Constructs an instance.
      * 
-     * @param opcode DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode
+     * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode
      * value itself
-     * @param family DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode family
-     * @param format non-null; the instruction format
+     * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
+     * @param format {@code non-null;} the instruction format
      * @param hasResult whether the opcode has a result register; if so it
      * is always the first register
-     * @param name non-null; the name
+     * @param name {@code non-null;} the name
      */
     public Dop(int opcode, int family, InsnFormat format,
                boolean hasResult, String name) {
@@ -80,7 +80,7 @@ public final class Dop {
     /**
      * Gets the opcode value.
      * 
-     * @return DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode value
+     * @return {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
      */
     public int getOpcode() {
         return opcode;
@@ -90,7 +90,7 @@ public final class Dop {
      * Gets the opcode family. The opcode family is the unmarked (no
      * "/...") opcode that has equivalent semantics to this one.
      * 
-     * @return DalvOps.MIN_VALUE..DalvOps.MAX_VALUE; the opcode family
+     * @return {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
      */
     public int getFamily() {
         return family;
@@ -99,7 +99,7 @@ public final class Dop {
     /**
      * Gets the instruction format.
      * 
-     * @return non-null; the instruction format
+     * @return {@code non-null;} the instruction format
      */
     public InsnFormat getFormat() {
         return format;
@@ -108,7 +108,7 @@ public final class Dop {
     /**
      * Returns whether this opcode uses a result register.
      * 
-     * @return <code>true</code> iff this opcode uses a result register
+     * @return {@code true} iff this opcode uses a result register
      */
     public boolean hasResult() {
         return hasResult;
@@ -117,7 +117,7 @@ public final class Dop {
     /**
      * Gets the opcode name.
      * 
-     * @return non-null; the opcode name
+     * @return {@code non-null;} the opcode name
      */
     public String getName() {
         return name;
@@ -127,7 +127,7 @@ public final class Dop {
      * Gets the opcode for the opposite test of this instance. This is only
      * valid for opcodes which are in fact tests.
      * 
-     * @return non-null; the opposite test
+     * @return {@code non-null;} the opposite test
      */
     public Dop getOppositeTest() {
         switch (opcode) {

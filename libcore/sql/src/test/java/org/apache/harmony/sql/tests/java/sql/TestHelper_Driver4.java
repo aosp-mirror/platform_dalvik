@@ -92,10 +92,13 @@ public class TestHelper_Driver4 implements Driver {
                         String user = (String) info.get(userProperty);
                         String password = (String) info.get(passwordProperty);
                         if (user == null || password == null) {
-                            throw new SQLException("Userid and/or password not supplied");
+                            throw new SQLException(
+                                    "Userid and/or password not supplied");
                         }
-                        if (!user.equals(validuser) || !password.equals(validpassword)) {
-                            throw new SQLException("Userid and/or password not valid");
+                        if (!user.equals(validuser)
+                                || !password.equals(validpassword)) {
+                            throw new SQLException(
+                                    "Userid and/or password not valid");
                         } // end if
                     } // end if
                     // It all checks out - so return a connection
@@ -117,7 +120,8 @@ public class TestHelper_Driver4 implements Driver {
 
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
             throws SQLException {
-        DriverPropertyInfo[] theInfos = { new DriverPropertyInfo(userProperty, "*"),
+        DriverPropertyInfo[] theInfos = {
+                new DriverPropertyInfo(userProperty, "*"),
                 new DriverPropertyInfo(passwordProperty, "*"), };
         return theInfos;
     }

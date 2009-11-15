@@ -65,7 +65,7 @@ public class AnnotationTypeMismatchExceptionTest extends TestCase {
         Method m = methods[0];
         AnnotationTypeMismatchException e = new AnnotationTypeMismatchException(
                 m, "some type");
-        assertNotNull("can not instanciate AnnotationTypeMismatchException", e);
+        assertNotNull("can not instantiate AnnotationTypeMismatchException", e);
         assertSame("wrong method name", m, e.element());
         assertEquals("wrong found type", "some type", e.foundType());
     }

@@ -21,15 +21,15 @@ import com.android.dx.util.MutabilityControl;
 
 /**
  * List of (value, target) mappings representing the choices of a
- * <code>tableswitch</code> or <code>lookupswitch</code> instruction. It
+ * {@code tableswitch} or {@code lookupswitch} instruction. It
  * also holds the default target for the switch.
  */
 public final class SwitchList extends MutabilityControl {
-    /** non-null; list of test values */
+    /** {@code non-null;} list of test values */
     private final IntList values;
 
     /**
-     * non-null; list of targets corresponding to the test values; there
+     * {@code non-null;} list of targets corresponding to the test values; there
      * is always one extra element in the target list, to hold the
      * default target 
      */
@@ -41,7 +41,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Constructs an instance.
      * 
-     * @param size &gt;= 0; the number of elements to be in the table
+     * @param size {@code >= 0;} the number of elements to be in the table
      */
     public SwitchList(int size) {
         super(true);
@@ -61,7 +61,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Gets the size of the list.
      * 
-     * @return &gt;= 0; the list size
+     * @return {@code >= 0;} the list size
      */
     public int size() {
         return size;
@@ -70,7 +70,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Gets the indicated test value.
      * 
-     * @param n &gt;= 0;, &lt; size(); which index
+     * @param n {@code >= 0;}, &lt; size(); which index
      * @return the test value 
      */
     public int getValue(int n) {
@@ -78,11 +78,11 @@ public final class SwitchList extends MutabilityControl {
     }
 
     /**
-     * Gets the indicated target. Asking for the target at <code>size()</code>
+     * Gets the indicated target. Asking for the target at {@code size()}
      * returns the default target.
      * 
-     * @param n &gt;= 0, &lt;= size(); which index
-     * @return &gt;= 0; the target
+     * @param n {@code >= 0, <= size();} which index
+     * @return {@code >= 0;} the target
      */
     public int getTarget(int n) {
         return targets.get(n);
@@ -90,9 +90,9 @@ public final class SwitchList extends MutabilityControl {
 
     /**
      * Gets the default target. This is just a shorthand for
-     * <code>getTarget(size())</code>.
+     * {@code getTarget(size())}.
      * 
-     * @return &gt;= 0; the default target
+     * @return {@code >= 0;} the default target
      */
     public int getDefaultTarget() {
         return targets.get(size);
@@ -102,7 +102,7 @@ public final class SwitchList extends MutabilityControl {
      * Gets the list of all targets. This includes one extra element at the
      * end of the list, which holds the default target.
      * 
-     * @return non-null; the target list
+     * @return {@code non-null;} the target list
      */
     public IntList getTargets() {
         return targets;
@@ -111,7 +111,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Gets the list of all case values.
      * 
-     * @return non-null; the case value list
+     * @return {@code non-null;} the case value list
      */
     public IntList getValues() {
         return values;
@@ -121,7 +121,7 @@ public final class SwitchList extends MutabilityControl {
      * Sets the default target. It is only valid to call this method
      * when all the non-default elements have been set.
      * 
-     * @param target &gt;= 0; the absolute (not relative) default target
+     * @param target {@code >= 0;} the absolute (not relative) default target
      * address
      */
     public void setDefaultTarget(int target) {
@@ -142,7 +142,7 @@ public final class SwitchList extends MutabilityControl {
      * Adds the given item.
      * 
      * @param value the test value
-     * @param target &gt;= 0; the absolute (not relative) target address
+     * @param target {@code >= 0;} the absolute (not relative) target address
      */
     public void add(int value, int target) {
         throwIfImmutable();

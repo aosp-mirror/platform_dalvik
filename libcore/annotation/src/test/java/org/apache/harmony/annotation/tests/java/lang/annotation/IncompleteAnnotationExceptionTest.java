@@ -80,7 +80,7 @@ public class IncompleteAnnotationExceptionTest extends TestCase {
         String elementName = "some element";
         IncompleteAnnotationException e = new IncompleteAnnotationException(
                 clazz, elementName);
-        assertNotNull("can not instanciate IncompleteAnnotationException", e);
+        assertNotNull("can not instantiate IncompleteAnnotationException", e);
         assertSame("wrong annotation type", clazz, e.annotationType());
         assertSame("wrong element name", elementName, e.elementName());
     }

@@ -280,6 +280,7 @@ bool dvmSetBit(BitVector* pBits, int num)
         pBits->storage = realloc(pBits->storage, newSize * sizeof(u4));
         memset(&pBits->storage[pBits->storageSize], 0x00,
             (newSize - pBits->storageSize) * sizeof(u4));
+        pBits->storageSize = newSize;
     }
 
     pBits->storage[num >> 5] |= 1 << (num & 0x1f);
@@ -294,6 +295,15 @@ void dvmClearBit(BitVector* pBits, int num)
     assert(num >= 0 && num < (int) pBits->storageSize * (int)sizeof(u4) * 8);
 
     pBits->storage[num >> 5] &= ~(1 << (num & 0x1f));
+}
+
+/*
+ * Mark all bits bit as "clear".
+ */
+void dvmClearAllBits(BitVector* pBits)
+{
+    int count = pBits->storageSize;
+    memset(pBits->storage, 0, count * sizeof(u4));
 }
 
 /*
@@ -333,7 +343,6 @@ int dvmCountSetBits(const BitVector* pBits)
 
     return count;
 }
-
 
 /*
  * Return a newly-allocated string in which all occurrences of '.' have

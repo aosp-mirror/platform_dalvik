@@ -25,8 +25,8 @@ package java.util;
  * method has to return zero for each pair of elements (a,b) where a.equals(b)
  * holds true. It is recommended that a {@code Comparator} implements
  * {@link java.io.Serializable}.
- *  
- * @since Android 1.0
+ *
+ * @since 1.2
  */
 public interface Comparator<T> {
     /**
@@ -42,15 +42,15 @@ public interface Comparator<T> {
      * follow {@code compare(a,c) > 0} for all possible combinations of {@code
      * (a,b,c)}</li>
      * </ul>
-     * 
+     *
      * @param object1
      *            an {@code Object}.
      * @param object2
      *            a second {@code Object} to compare with {@code object1}.
      * @return an integer < 0 if {@code object1} is less than {@code object2}, 0 if they are
      *         equal, and > 0 if {@code object1} is greater than {@code object2}.
-     * @exception ClassCastException
-     *                when objects are not of the correct type.
+     * @throws ClassCastException
+     *                if objects are not of the correct type.
      */
     public int compare(T object1, T object2);
 
@@ -61,7 +61,7 @@ public interface Comparator<T> {
      * <p>
      * A {@code Comparator} never needs to override this method, but may choose so for
      * performance reasons.
-     * 
+     *
      * @param object
      *            the {@code Object} to compare with this comparator.
      * @return boolean {@code true} if specified {@code Object} is the same as this

@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -39,17 +38,14 @@ import org.apache.harmony.archive.util.Util;
 /**
  * {@code JarFile} is used to read jar entries and their associated data from
  * jar files.
- * 
+ *
  * @see JarInputStream
  * @see JarEntry
- * @since Android 1.0
  */
 public class JarFile extends ZipFile {
 
     /**
      * The MANIFEST file name.
-     * 
-     * @since Android 1.0
      */
     public static final String MANIFEST_NAME = "META-INF/MANIFEST.MF"; //$NON-NLS-1$
 
@@ -70,62 +66,87 @@ public class JarFile extends ZipFile {
 
         private ZipEntry zipEntry;
 
-        private JarVerifier verifier;
-
         private JarVerifier.VerifierEntry entry;
 
-        private MessageDigest digest;
+        // BEGIN android-added
+        private boolean done = false;
+        // END android-added
 
-        JarFileInputStream(InputStream is, ZipEntry ze, JarVerifier ver) {
+        JarFileInputStream(InputStream is, ZipEntry ze,
+                JarVerifier.VerifierEntry e) {
             super(is);
-            if (ver != null) {
-                zipEntry = ze;
-                verifier = ver;
-                count = zipEntry.getSize();
-                entry = verifier.initEntry(ze.getName());
-                if (entry != null) {
-                    digest = entry.digest;
-                }
-            }
+            zipEntry = ze;
+            count = zipEntry.getSize();
+            entry = e;
         }
 
         @Override
         public int read() throws IOException {
-            int r = super.read();
-            if (entry != null) {
-                if (r != -1) {
-                    digest.update((byte) r);
-                    count--;
-                }
-                if (r == -1 || count <= 0) {
-                    JarVerifier.VerifierEntry temp = entry;
-                    entry = null;
-                    verifier.verifySignatures(temp, zipEntry);
-                }
+            // BEGIN android-changed
+            if (done) {
+                return -1;
             }
-            return r;
+            if (count > 0) {
+                int r = super.read();
+                if (r != -1) {
+                    entry.write(r);
+                    count--;
+                } else {
+                    count = 0;
+                }
+                if (count == 0) {
+                    done = true;
+                    entry.verify();
+                }
+                return r;
+            } else {
+                done = true;
+                entry.verify();
+                return -1;
+            }
+            // END android-changed
         }
 
         @Override
         public int read(byte[] buf, int off, int nbytes) throws IOException {
-            int r = super.read(buf, off, nbytes);
-            if (entry != null) {
+            // BEGIN android-changed
+            if (done) {
+                return -1;
+            }
+            if (count > 0) {
+                int r = super.read(buf, off, nbytes);
                 if (r != -1) {
                     int size = r;
                     if (count < size) {
                         size = (int) count;
                     }
-                    digest.update(buf, off, size);
-                    count -= r;
+                    entry.write(buf, off, size);
+                    count -= size;
+                } else {
+                    count = 0;
                 }
-                if (r == -1 || count <= 0) {
-                    JarVerifier.VerifierEntry temp = entry;
-                    entry = null;
-                    verifier.verifySignatures(temp, zipEntry);
+                if (count == 0) {
+                    done = true;
+                    entry.verify();
                 }
+                return r;
+            } else {
+                done = true;
+                entry.verify();
+                return -1;
             }
-            return r;
+            // END android-changed
         }
+
+        // BEGIN android-added
+        @Override
+        public int available() throws IOException {
+            if (done) {
+                return 0;
+            }
+            return super.available();
+        }
+        // END android-added
 
         @Override
         public long skip(long nbytes) throws IOException {
@@ -146,12 +167,11 @@ public class JarFile extends ZipFile {
 
     /**
      * Create a new {@code JarFile} using the contents of the specified file.
-     * 
+     *
      * @param file
      *            the JAR file as {@link File}.
      * @throws IOException
      *             If the file cannot be read.
-     * @since Android 1.0
      */
     public JarFile(File file) throws IOException {
         this(file, true);
@@ -159,14 +179,13 @@ public class JarFile extends ZipFile {
 
     /**
      * Create a new {@code JarFile} using the contents of the specified file.
-     * 
+     *
      * @param file
      *            the JAR file as {@link File}.
      * @param verify
      *            if this JAR file is signed whether it must be verified.
      * @throws IOException
      *             If the file cannot be read.
-     * @since Android 1.0
      */
     public JarFile(File file, boolean verify) throws IOException {
         super(file);
@@ -178,7 +197,7 @@ public class JarFile extends ZipFile {
 
     /**
      * Create a new {@code JarFile} using the contents of file.
-     * 
+     *
      * @param file
      *            the JAR file as {@link File}.
      * @param verify
@@ -188,7 +207,6 @@ public class JarFile extends ZipFile {
      *            {@link ZipFile#OPEN_DELETE OPEN_DELETE}.
      * @throws IOException
      *             If the file cannot be read.
-     * @since Android 1.0
      */
     public JarFile(File file, boolean verify, int mode) throws IOException {
         super(file, mode);
@@ -201,12 +219,11 @@ public class JarFile extends ZipFile {
     /**
      * Create a new {@code JarFile} from the contents of the file specified by
      * filename.
-     * 
+     *
      * @param filename
      *            the file name referring to the JAR file.
      * @throws IOException
      *             if file name cannot be opened for reading.
-     * @since Android 1.0
      */
     public JarFile(String filename) throws IOException {
         this(filename, true);
@@ -216,14 +233,13 @@ public class JarFile extends ZipFile {
     /**
      * Create a new {@code JarFile} from the contents of the file specified by
      * {@code filename}.
-     * 
+     *
      * @param filename
      *            the file name referring to the JAR file.
      * @param verify
      *            if this JAR filed is signed whether it must be verified.
      * @throws IOException
      *             If file cannot be opened or read.
-     * @since Android 1.0
      */
     public JarFile(String filename, boolean verify) throws IOException {
         super(filename);
@@ -236,11 +252,10 @@ public class JarFile extends ZipFile {
     /**
      * Return an enumeration containing the {@code JarEntrys} contained in this
      * {@code JarFile}.
-     * 
+     *
      * @return the {@code Enumeration} containing the JAR entries.
      * @throws IllegalStateException
      *             if this {@code JarFile} is closed.
-     * @since Android 1.0
      */
     @Override
     public Enumeration<JarEntry> entries() {
@@ -260,7 +275,7 @@ public class JarFile extends ZipFile {
 
             public JarEntry nextElement() {
                 JarEntry je = new JarEntry(ze.nextElement());
-                je.parentJar = jf;                
+                je.parentJar = jf;
                 return je;
             }
         }
@@ -270,11 +285,10 @@ public class JarFile extends ZipFile {
     /**
      * Return the {@code JarEntry} specified by its name or {@code null} if no
      * such entry exists.
-     * 
+     *
      * @param name
      *            the name of the entry in the JAR file.
      * @return the JAR entry defined by the name.
-     * @since Android 1.0
      */
     public JarEntry getJarEntry(String name) {
         return (JarEntry) getEntry(name);
@@ -302,14 +316,13 @@ public class JarFile extends ZipFile {
     /**
      * Returns the {@code Manifest} object associated with this {@code JarFile}
      * or {@code null} if no MANIFEST entry exists.
-     * 
+     *
      * @return the MANIFEST.
      * @throws IOException
      *             if an error occurs reading the MANIFEST file.
      * @throws IllegalStateException
      *             if the jar file is closed.
      * @see Manifest
-     * @since Android 1.0
      */
     public Manifest getManifest() throws IOException {
         // BEGIN android-added
@@ -358,10 +371,14 @@ public class JarFile extends ZipFile {
                     if (verifier == null) {
                         break;
                     }
-                } else if (verifier != null && entryName.length() > dirLength
-                        && (Util.ASCIIIgnoreCaseRegionMatches(entryName, entryName.length() - 3, ".SF", 0 ,3) //$NON-NLS-1$
-                           || Util.ASCIIIgnoreCaseRegionMatches(entryName, entryName.length() - 4, ".DSA", 0 ,4) //$NON-NLS-1$
-                           || Util.ASCIIIgnoreCaseRegionMatches(entryName, entryName.length() - 4, ".RSA", 0 ,4))){ //$NON-NLS-1$
+                } else if (verifier != null
+                        && entryName.length() > dirLength
+                        && (Util.ASCIIIgnoreCaseRegionMatches(entryName,
+                                entryName.length() - 3, ".SF", 0, 3) //$NON-NLS-1$
+                                || Util.ASCIIIgnoreCaseRegionMatches(entryName,
+                                        entryName.length() - 4, ".DSA", 0, 4) //$NON-NLS-1$
+                        || Util.ASCIIIgnoreCaseRegionMatches(entryName,
+                                entryName.length() - 4, ".RSA", 0, 4))) { //$NON-NLS-1$
                     signed = true;
                     InputStream is = super.getInputStream(entry);
                     // BEGIN android-modified
@@ -379,13 +396,12 @@ public class JarFile extends ZipFile {
     /**
      * Return an {@code InputStream} for reading the decompressed contents of
      * ZIP entry.
-     * 
+     *
      * @param ze
      *            the ZIP entry to be read.
      * @return the input stream to read from.
      * @throws IOException
      *             if an error occurred while creating the input stream.
-     * @since Android 1.0
      */
     @Override
     public InputStream getInputStream(ZipEntry ze) throws IOException {
@@ -395,8 +411,7 @@ public class JarFile extends ZipFile {
         if (verifier != null) {
             verifier.setManifest(getManifest());
             if (manifest != null) {
-                verifier.mainAttributesChunk = manifest
-                        .getMainAttributesChunk();
+                verifier.mainAttributesEnd = manifest.getMainAttributesEnd();
             }
             if (verifier.readCertificates()) {
                 verifier.removeMetaEntries();
@@ -412,19 +427,24 @@ public class JarFile extends ZipFile {
         if (in == null) {
             return null;
         }
-        return new JarFileInputStream(in, ze, ze.getSize() >= 0 ? verifier
-                : null);
+        if (verifier == null || ze.getSize() == -1) {
+            return in;
+        }
+        JarVerifier.VerifierEntry entry = verifier.initEntry(ze.getName());
+        if (entry == null) {
+            return in;
+        }
+        return new JarFileInputStream(in, ze, entry);
     }
 
     /**
      * Return the {@code JarEntry} specified by name or {@code null} if no such
      * entry exists.
-     * 
+     *
      * @param name
      *            the name of the entry in the JAR file.
      * @return the ZIP entry extracted.
-     * @since Android 1.0
-     */         
+     */
     @Override
     public ZipEntry getEntry(String name) {
         ZipEntry ze = super.getEntry(name);
@@ -432,16 +452,16 @@ public class JarFile extends ZipFile {
             return ze;
         }
         JarEntry je = new JarEntry(ze);
-        je.parentJar = this;        
+        je.parentJar = this;
         return je;
     }
 
     // BEGIN android-modified
     private ZipEntry[] getMetaEntriesImpl(byte[] buf) {
         int n = 0;
-        
+
         List<ZipEntry> list = new ArrayList<ZipEntry>();
-        
+
         Enumeration<? extends ZipEntry> allEntries = entries();
         while (allEntries.hasMoreElements()) {
             ZipEntry ze = allEntries.nextElement();
@@ -463,10 +483,9 @@ public class JarFile extends ZipFile {
     // BEGIN android-added
     /**
      * Closes this {@code JarFile}.
-     * 
+     *
      * @throws IOException
      *             if an error occurs.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {

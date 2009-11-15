@@ -86,7 +86,7 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         ZipEntry ze = new ZipEntry("testEntry");
         ze.setTime(System.currentTimeMillis());
         zos.putNextEntry(ze);
-        zos.write("Hello World".getBytes());
+        zos.write("Hello World".getBytes("UTF-8"));
         zos.closeEntry();
         assertTrue("closeEntry failed to update required fields",
                 ze.getSize() == 11 && ze.getCompressedSize() == 13);
@@ -170,11 +170,8 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     public void test_setCommentLjava_lang_String() {
         // There is no way to get the comment back, so no way to determine if
         // the comment is set correct
-        try {
-            zos.setComment("test setComment");
-        } catch (Exception e) {
-            fail("Trying to set comment failed");
-        }
+        zos.setComment("test setComment");
+
         try {
             zos.setComment(new String(new byte[0xFFFF + 1]));
             fail("Comment over 0xFFFF in length should throw exception");
@@ -301,6 +298,17 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         } catch (IndexOutOfBoundsException e) {
             // expected
         }
+        
+        // Regression for HARMONY-4405
+        try {
+            zip.write(null, 0, -2);
+            fail("Should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
+
+        // Close stream because ZIP is invalid
+        stream.close();
     }
 
     /**
@@ -337,6 +345,8 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
         } catch (IOException e2) {
             // expected
         }
+        
+        zip1.close();
     }
 
     @Override

@@ -39,14 +39,15 @@ import java.util.prefs.NodeChangeListener;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
+import tests.util.PrefsTester;
+
 /**
  * 
  */
 @TestTargetClass(Preferences.class)
 public class PreferencesTest extends TestCase {
 
-    private String oldJavaHome;
-    private String oldUserHome;
+    private final PrefsTester prefsTester = new PrefsTester();
 
     MockSecurityManager manager = new MockSecurityManager();
 
@@ -74,39 +75,24 @@ public class PreferencesTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         in = new ByteArrayInputStream(
                 "<!DOCTYPE preferences SYSTEM \"http://java.sun.com/dtd/preferences.dtd\"><preferences><root type=\"user\"><map></map></root></preferences>"
                         .getBytes("UTF-8"));
         stream = new MockInputStream(in);
-
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
-
-        Preferences p = Preferences.userNodeForPackage(Preferences.class);
-        p.clear();
-        try {
-            p.removeNode();
-        } catch (BackingStoreException e) {
-        }
+        prefsTester.setUp();
     }
 
     /*
      * @see TestCase#tearDown()
      */
+    @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
         stream.close();
-        Preferences p = Preferences.userNodeForPackage(Preferences.class);
-        p.clear();        
-        try {
-            p.removeNode();
-        } catch (BackingStoreException e) {
-        }
-
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
+        prefsTester.tearDown();
+        super.tearDown();
     }
 
     @TestTargetNew(
@@ -1826,6 +1812,7 @@ public class PreferencesTest extends TestCase {
             wrapper = in;
         }
 
+        @Override
         public int read() throws IOException {
             checkException();
             return wrapper.read();
@@ -1839,136 +1826,170 @@ public class PreferencesTest extends TestCase {
             super();
         }
 
+        @Override
         public String absolutePath() {
             return null;
         }
 
+        @Override
         public String[] childrenNames() throws BackingStoreException {
             return null;
         }
 
+        @Override
         public void clear() throws BackingStoreException {
         }
 
+        @Override
         public void exportNode(OutputStream ostream) throws IOException,
                 BackingStoreException {
         }
 
+        @Override
         public void exportSubtree(OutputStream ostream) throws IOException,
                 BackingStoreException {
         }
 
+        @Override
         public void flush() throws BackingStoreException {
         }
 
+        @Override
         public String get(String key, String deflt) {
             return null;
         }
 
+        @Override
         public boolean getBoolean(String key, boolean deflt) {
             return false;
         }
 
+        @Override
         public byte[] getByteArray(String key, byte[] deflt) {
             return null;
         }
 
+        @Override
         public double getDouble(String key, double deflt) {
             return 0;
         }
 
+        @Override
         public float getFloat(String key, float deflt) {
             return 0;
         }
 
+        @Override
         public int getInt(String key, int deflt) {
             return 0;
         }
 
+        @Override
         public long getLong(String key, long deflt) {
             return 0;
         }
 
+        @Override
         public boolean isUserNode() {
             return false;
         }
 
+        @Override
         public String[] keys() throws BackingStoreException {
             return null;
         }
 
+        @Override
         public String name() {
             return null;
         }
 
+        @Override
         public Preferences node(String name) {
             return null;
         }
 
+        @Override
         public boolean nodeExists(String name) throws BackingStoreException {
             return false;
         }
 
+        @Override
         public Preferences parent() {
             return null;
         }
 
+        @Override
         public void put(String key, String value) {
 
         }
 
+        @Override
         public void putBoolean(String key, boolean value) {
 
         }
 
+        @Override
         public void putByteArray(String key, byte[] value) {
 
         }
 
+        @Override
         public void putDouble(String key, double value) {
 
         }
 
+        @Override
         public void putFloat(String key, float value) {
 
         }
 
+        @Override
         public void putInt(String key, int value) {
 
         }
 
+        @Override
         public void putLong(String key, long value) {
 
         }
 
+        @Override
         public void remove(String key) {
 
         }
 
+        @Override
         public void removeNode() throws BackingStoreException {
 
         }
 
+        @Override
         public void addNodeChangeListener(NodeChangeListener ncl) {
 
         }
 
+        @Override
         public void addPreferenceChangeListener(PreferenceChangeListener pcl) {
 
         }
 
+        @Override
         public void removeNodeChangeListener(NodeChangeListener ncl) {
 
         }
 
+        @Override
         public void removePreferenceChangeListener(PreferenceChangeListener pcl) {
 
         }
 
+        @Override
         public void sync() throws BackingStoreException {
 
         }
 
+        @Override
         public String toString() {
             return null;
         }

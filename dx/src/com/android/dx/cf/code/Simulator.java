@@ -35,34 +35,37 @@ import java.util.ArrayList;
 
 /**
  * Class which knows how to simulate the effects of executing bytecode.
- * 
+ *
  * <p><b>Note:</b> This class is not thread-safe. If multiple threads
  * need to use a single instance, they must synchronize access explicitly
  * between themselves.</p>
  */
 public class Simulator {
-    /** non-null; canned error message for local variable table mismatches */
-    private static final String LOCAL_MISMATCH_ERROR = 
+    /**
+     * {@code non-null;} canned error message for local variable
+     * table mismatches
+     */
+    private static final String LOCAL_MISMATCH_ERROR =
         "This is symptomatic of .class transformation tools that ignore " +
         "local variable information.";
     
-    /** non-null; machine to use when simulating */
+    /** {@code non-null;} machine to use when simulating */
     private final Machine machine;
 
-    /** non-null; array of bytecode */
+    /** {@code non-null;} array of bytecode */
     private final BytecodeArray code;
 
-    /** non-null; local variable information */
+    /** {@code non-null;} local variable information */
     private final LocalVariableList localVariables;
 
-    /** non-null; visitor instance to use */
+    /** {@code non-null;} visitor instance to use */
     private final SimVisitor visitor;
 
     /**
      * Constructs an instance.
      * 
-     * @param machine non-null; machine to use when simulating
-     * @param method non-null; method data to use
+     * @param machine {@code non-null;} machine to use when simulating
+     * @param method {@code non-null;} method data to use
      */
     public Simulator(Machine machine, ConcreteMethod method) {
         if (machine == null) {
@@ -83,8 +86,8 @@ public class Simulator {
      * Simulates the effect of executing the given basic block. This modifies
      * the passed-in frame to represent the end result.
      * 
-     * @param bb non-null; the basic block
-     * @param frame non-null; frame to operate on
+     * @param bb {@code non-null;} the basic block
+     * @param frame {@code non-null;} frame to operate on
      */
     public void simulate(ByteBlock bb, Frame frame) {
         int end = bb.getEnd();
@@ -107,8 +110,8 @@ public class Simulator {
      * Simulates the effect of the instruction at the given offset, by
      * making appropriate calls on the given frame.
      * 
-     * @param offset &gt;= 0; offset of the instruction to simulate
-     * @param frame non-null; frame to operate on
+     * @param offset {@code >= 0;} offset of the instruction to simulate
+     * @param frame {@code non-null;} frame to operate on
      * @return the length of the instruction, in bytes
      */
     public int simulate(int offset, Frame frame) {
@@ -130,13 +133,13 @@ public class Simulator {
      */
     private class SimVisitor implements BytecodeArray.Visitor {
         /**
-         * non-null; machine instance to use (just to avoid excessive
-         * cross-object field access) 
+         * {@code non-null;} machine instance to use (just to avoid excessive
+         * cross-object field access)
          */
         private final Machine machine;
 
         /**
-         * null-ok; frame to use; set with each call to 
+         * {@code null-ok;} frame to use; set with each call to 
          * {@link Simulator#simulate}
          */
         private Frame frame;
@@ -155,7 +158,7 @@ public class Simulator {
         /**
          * Sets the frame to act on.
          * 
-         * @param frame non-null; the frame
+         * @param frame {@code non-null;} the frame
          */
         public void setFrame(Frame frame) {
             if (frame == null) {
@@ -255,25 +258,21 @@ public class Simulator {
                     /*
                      * Change the type (which is to be pushed) to
                      * reflect the actual component type of the array
-                     * being popped.
+                     * being popped, unless it turns out to be a
+                     * known-null, in which case we just use the type
+                     * implied by the original instruction.
                      */
-                    Type requireType = type.getArrayType();
-                    type = frame.getStack().peekType(1);
-                    if (type == Type.KNOWN_NULL) {
-                        /*
-                         * The type is a known-null: Just treat the
-                         * popped type as whatever is expected. In
-                         * reality, unless this frame is revisited
-                         * (due to a branch merge), execution will
-                         * result in the throwing of a
-                         * NullPointerException, but claiming the
-                         * expected type at here should be good enough
-                         * for the purposes at this level.
-                         */
-                        type = requireType;
+                    Type foundArrayType = frame.getStack().peekType(1);
+                    Type requireArrayType;
+
+                    if (foundArrayType != Type.KNOWN_NULL) {
+                        requireArrayType = foundArrayType;
+                        type = foundArrayType.getComponentType();
+                    } else {
+                        requireArrayType = type.getArrayType();
                     }
-                    type = type.getComponentType();
-                    machine.popArgs(frame, requireType, Type.INT);
+
+                    machine.popArgs(frame, requireArrayType, Type.INT);
                     break;
                 }
                 case ByteOps.IADD:
@@ -292,7 +291,7 @@ public class Simulator {
                 case ByteOps.IUSHR: {
                     machine.popArgs(frame, type, Type.INT);
                     break;
-                }                    
+                }
                 case ByteOps.LCMP: {
                     machine.popArgs(frame, Type.LONG, Type.LONG);
                     break;
@@ -308,8 +307,28 @@ public class Simulator {
                     break;
                 }
                 case ByteOps.IASTORE: {
-                    Type arrayType = type.getArrayType();
-                    machine.popArgs(frame, arrayType, Type.INT, type);
+                    /*
+                     * Change the type (which is the type of the
+                     * element) to reflect the actual component type
+                     * of the array being popped, unless it turns out
+                     * to be a known-null, in which case we just use
+                     * the type implied by the original instruction.
+                     * The category 1 vs. 2 thing here is that, if the
+                     * element type is category 2, we have to skip over
+                     * one extra stack slot to find the array.
+                     */
+                    Type foundArrayType =
+                        frame.getStack().peekType(type.isCategory1() ? 2 : 3);
+                    Type requireArrayType;
+
+                    if (foundArrayType != Type.KNOWN_NULL) {
+                        requireArrayType = foundArrayType;
+                        type = foundArrayType.getComponentType();
+                    } else {
+                        requireArrayType = type.getArrayType();
+                    }
+
+                    machine.popArgs(frame, requireArrayType, Type.INT, type);
                     break;
                 }
                 case ByteOps.POP2:
@@ -456,7 +475,7 @@ public class Simulator {
          * Checks whether the prototype is compatible with returning the
          * given type, and throws if not.
          * 
-         * @param encountered non-null; the encountered return type
+         * @param encountered {@code non-null;} the encountered return type
          */
         private void checkReturnType(Type encountered) {
             Type returnType = machine.getPrototype().getReturnType();

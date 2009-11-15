@@ -19,16 +19,16 @@ package com.android.dx.cf.attrib;
 import com.android.dx.cf.code.LocalVariableList;
 
 /**
- * Attribute class for standard <code>LocalVariableTable</code> attributes.
+ * Attribute class for standard {@code LocalVariableTable} attributes.
  */
 public final class AttLocalVariableTable extends BaseLocalVariables {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "LocalVariableTable";
 
     /**
      * Constructs an instance.
      * 
-     * @param localVariables non-null; list of local variable entries
+     * @param localVariables {@code non-null;} list of local variable entries
      */
     public AttLocalVariableTable(LocalVariableList localVariables) {
         super(ATTRIBUTE_NAME, localVariables);

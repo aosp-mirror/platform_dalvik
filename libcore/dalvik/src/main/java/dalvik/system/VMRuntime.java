@@ -20,7 +20,10 @@ package dalvik.system;
  * Provides an interface to VM-global, Dalvik-specific features.
  * An application cannot create its own Runtime instance, and must obtain
  * one from the getRuntime method.
- * 
+ *
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
+ *
  * @since Android 1.0
  */
 public final class VMRuntime {
@@ -62,6 +65,8 @@ public final class VMRuntime {
      * be resized so that (size of live objects) / (size of heap) is
      * equal to this number.
      *
+     * <p>This is only a hint to the garbage collector and may be ignored.
+     *
      * @param newTarget the new suggested ideal heap utilization.
      *                  This value may be adjusted internally.
      * @return the previous ideal heap utilization
@@ -98,7 +103,9 @@ public final class VMRuntime {
      * size, the maximum size will be used.  If size is zero
      * or negative, the minimum size constraint will be removed.
      *
-     * Synchronized to make the order of the exchange reliable.
+     * <p>Synchronized to make the order of the exchange reliable.
+     *
+     * <p>This is only a hint to the garbage collector and may be ignored.
      *
      * @param size the new suggested minimum heap size, in bytes
      * @return the old minimum heap size value
@@ -175,7 +182,7 @@ public final class VMRuntime {
     /**
      * Returns the number of externally-allocated bytes being tracked by
      * trackExternalAllocation/Free().
-     * 
+     *
      * @return the number of bytes
      */
     public native long getExternalBytesAllocated();

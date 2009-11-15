@@ -6,12 +6,14 @@
 # Options:
 #   --quiet       -- don't chatter
 #   --fast        -- use the fast interpreter (the default)
+#   --jit         -- use the jit
 #   --portable    -- use the portable interpreter
 #   --debug       -- wait for debugger to attach
 #   --zygote      -- use the zygote (if so, all other options are ignored)
 #   --dev         -- development mode
 #   --no-verify   -- turn off verification (on by default)
 #   --no-optimize -- turn off optimization (on by default)
+#   --no-precise  -- turn off precise GC (on by default)
 
 msg() {
     if [ "$QUIET" = "n" ]; then
@@ -25,6 +27,7 @@ VERIFY="y"
 OPTIMIZE="y"
 ZYGOTE="n"
 QUIET="n"
+PRECISE="y"
 
 while true; do
     if [ "x$1" = "x--quiet" ]; then
@@ -33,6 +36,10 @@ while true; do
     elif [ "x$1" = "x--fast" ]; then
         INTERP="fast"
         msg "Using fast interpreter"
+        shift
+    elif [ "x$1" = "x--jit" ]; then
+        INTERP="jit"
+        msg "Using jit"
         shift
     elif [ "x$1" = "x--portable" ]; then
         INTERP="portable"
@@ -53,6 +60,9 @@ while true; do
         shift
     elif [ "x$1" = "x--no-optimize" ]; then
         OPTIMIZE="n"
+        shift
+    elif [ "x$1" = "x--no-precise" ]; then
+        PRECISE="n"
         shift
     elif [ "x$1" = "x--" ]; then
         shift
@@ -106,9 +116,15 @@ if [ "$DEBUG" = "y" ]; then
     DEX_DEBUG="-agentlib:jdwp=transport=dt_android_adb,server=y,suspend=y"
 fi
 
+if [ "$PRECISE" = "y" ]; then
+    GC_OPTS="-Xgc:precise -Xgenregmap"
+else
+    GC_OPTS="-Xgc:noprecise"
+fi
+
 if [ "$ZYGOTE" = "y" ]; then
     adb shell cd /data \; dvz -classpath test.jar Main "$@"
 else
     adb shell cd /data \; dalvikvm $DEX_VERIFY $DEX_OPTIMIZE $DEX_DEBUG \
-        -cp test.jar "-Xint:${INTERP}" -ea Main "$@"
+        $GC_OPTS -cp test.jar "-Xint:${INTERP}" -ea Main "$@"
 fi

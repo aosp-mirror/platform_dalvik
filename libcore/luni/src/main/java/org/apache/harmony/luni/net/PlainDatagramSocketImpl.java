@@ -42,7 +42,7 @@ import org.apache.harmony.luni.util.PriviAction;
  * support security checks. Alternative types of DatagramSocketImpl's may be
  * used by setting the <code>impl.prefix</code> system property.
  */
-class PlainDatagramSocketImpl extends DatagramSocketImpl {
+public class PlainDatagramSocketImpl extends DatagramSocketImpl {
 
     static final int MULTICAST_IF = 1;
 
@@ -70,7 +70,8 @@ class PlainDatagramSocketImpl extends DatagramSocketImpl {
      */
     static final int REUSEADDR_AND_REUSEPORT = 10001;
 
-    private boolean bindToDevice;
+    // Ignored in native code
+    private boolean bindToDevice = false;
 
     private byte[] ipaddress = { 0, 0, 0, 0 };
 
@@ -116,7 +117,7 @@ class PlainDatagramSocketImpl extends DatagramSocketImpl {
     public void bind(int port, InetAddress addr) throws SocketException {
         String prop = AccessController.doPrivileged(new PriviAction<String>("bindToDevice")); //$NON-NLS-1$
         boolean useBindToDevice = prop != null && prop.toLowerCase().equals("true"); //$NON-NLS-1$
-        bindToDevice = netImpl.bind2(fd, port, useBindToDevice, addr);
+        netImpl.bind(fd, addr, port);
         if (0 != port) {
             localPort = port;
         } else {

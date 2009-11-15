@@ -21,9 +21,8 @@ package java.io;
  * An interface for filtering {@link File} objects based on their names
  * or the directory they reside in.
  * 
+ * @see File
  * @see File#list(FilenameFilter)
- * 
- * @since Android 1.0
  */
 public interface FilenameFilter {
 
@@ -34,10 +33,9 @@ public interface FilenameFilter {
      *            the directory in which the {@code filename} was found.
      * @param filename
      *            the name of the file in {@code dir} to test.
-     * @return  {@code true} if the filename matches the filter 
-     *            and can be included in the list, {@code false} 
+     * @return  {@code true} if the filename matches the filter
+     *            and can be included in the list, {@code false}
      *            otherwise.
-     * @since Android 1.0
      */
     public abstract boolean accept(File dir, String filename);
 }

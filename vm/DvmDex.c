@@ -171,8 +171,10 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex)
     int parseFlags = kDexParseDefault;
     int result = -1;
 
+    /* -- file is incomplete, new checksum has not yet been calculated
     if (gDvm.verifyDexChecksum)
         parseFlags |= kDexParseVerifyChecksum;
+    */
 
     pDexFile = dexFileParse(addr, len, parseFlags);
     if (pDexFile == NULL) {

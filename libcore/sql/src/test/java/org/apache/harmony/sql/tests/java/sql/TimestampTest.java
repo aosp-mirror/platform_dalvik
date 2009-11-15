@@ -37,6 +37,22 @@ import junit.framework.TestCase;
 
 public class TimestampTest extends TestCase {
 
+    static class MockTimestamp extends Timestamp{
+        private String holiday;
+
+        public MockTimestamp(long theTime) {
+            super(theTime);
+            holiday = "Christmas";
+        }
+
+        // Constructor should not call this public API,
+        // since it may be overrided to use variables uninitialized.
+        public void setTime(long theTime){
+            super.setTime(theTime);
+            holiday.hashCode();
+        }
+    }
+
     static long TIME_TEST1 = 38720231; // 10:45:20.231 GMT
 
     static long TIME_TEST2 = 80279000; // 22:17:59.000 GMT
@@ -126,6 +142,9 @@ public class TimestampTest extends TestCase {
 
         // The Timestamp should have been created
         assertNotNull(theTimestamp);
+
+        Timestamp mockTimestamp = new MockTimestamp(TIME_TEST1);
+        assertNotNull(mockTimestamp);
     } // end method testTimestamplong
 
     /*
@@ -277,6 +296,7 @@ public class TimestampTest extends TestCase {
     )
     @SuppressWarnings("deprecation")
     public void testGetDate() {
+    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
             assertEquals(DATE_ARRAY[i], theTimestamp.getDate());
@@ -295,6 +315,7 @@ public class TimestampTest extends TestCase {
     )
     @SuppressWarnings("deprecation")
     public void testGetHours() {
+    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
             assertEquals(HOURS_ARRAY[i], theTimestamp.getHours());
@@ -350,6 +371,7 @@ public class TimestampTest extends TestCase {
         args = {java.lang.String.class}
     )
     public void testValueOfString() {
+    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
             Timestamp theTimestamp2 = Timestamp.valueOf(STRING_GMT_ARRAY[i]);
@@ -370,7 +392,7 @@ public class TimestampTest extends TestCase {
                 Timestamp.valueOf(element);
                 fail("Should throw IllegalArgumentException.");
             } catch (IllegalArgumentException e) {
-                //expected
+                // expected
             } // end try
 
         } // end for
@@ -387,6 +409,7 @@ public class TimestampTest extends TestCase {
         args = {java.lang.String.class}
     )
     public void testValueOfString1() {
+    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 
         Timestamp theReturn;
 
@@ -439,7 +462,36 @@ public class TimestampTest extends TestCase {
             }
         }
 
+        // Regression test for HARMONY-5506
+        String date = "1970-01-01 22:17:59.0                 ";
+        Timestamp t = Timestamp.valueOf(date);
+        assertEquals(80279000,t.getTime());
+
     } // end method testValueOfString
+
+    public void testValueOf_IAE() {
+        try {
+            java.sql.Timestamp.valueOf("2008-12-22 15:00:01.");
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+
+        try {
+            // bug of RI 5, passed on RI 6
+            java.sql.Timestamp.valueOf("178548938-12-22 15:00:01.000000001");
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+
+        try {
+            java.sql.Timestamp.valueOf("2008-12-22 15:00:01.0000000011");
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+    }
 
     /*
      * Method test for toString
@@ -451,13 +503,35 @@ public class TimestampTest extends TestCase {
         args = {}
     )
     public void testToString() {
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
             assertEquals("Wrong conversion for test " + i, STRING_GMT_ARRAY[i],
                     theTimestamp.toString());
         } // end for
 
+		Timestamp t1 = new Timestamp(Long.MIN_VALUE);
+		assertEquals("292278994-08-17 07:12:55.192", t1.toString()); //$NON-NLS-1$
+
+		Timestamp t2 = new Timestamp(Long.MIN_VALUE + 1);
+		assertEquals("292278994-08-17 07:12:55.193", t2.toString()); //$NON-NLS-1$
+
+		Timestamp t3 = new Timestamp(Long.MIN_VALUE + 807);
+		assertEquals("292278994-08-17 07:12:55.999", t3.toString()); //$NON-NLS-1$
+
+		Timestamp t4 = new Timestamp(Long.MIN_VALUE + 808);
+		assertEquals("292269055-12-02 16:47:05.0", t4.toString()); //$NON-NLS-1$
     } // end method testtoString
+
+    private void testToString(String timeZone, long[] theTimeStamps, String[] theTimeStampStrings) {
+    	TimeZone.setDefault(TimeZone.getTimeZone(timeZone));
+        for (int i = 0; i < TIME_ARRAY.length; i++) {
+            Timestamp theTimestamp = new Timestamp(theTimeStamps[i]);
+            assertEquals(theTimeStampStrings[i], theTimestamp.toString());
+        } // end for
+
+    }
 
     /*
      * Method test for getNanos
@@ -487,6 +561,8 @@ public class TimestampTest extends TestCase {
         args = {int.class}
     )
     public void testSetNanosint() {
+    	TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+
         int[] NANOS_INVALID = { -137891990, 1635665198, -1 };
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
@@ -787,5 +863,11 @@ public class TimestampTest extends TestCase {
         Timestamp t4 = new Timestamp(Long.MIN_VALUE + 808);
         assertEquals("292269055-12-02 16:47:05.0", t4.toString()); //$NON-NLS-1$
     }
- 
+
+    // Reset defualt timezone
+    TimeZone defaultTimeZone = TimeZone.getDefault();
+
+    protected void tearDown() {
+        TimeZone.setDefault(defaultTimeZone);
+    }
 } // end class TimestampTest

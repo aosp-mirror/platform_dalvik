@@ -22,11 +22,11 @@ package com.android.dx.cf.iface;
 public interface AttributeList {
     /**
      * Get whether this instance is mutable. Note that the
-     * <code>AttributeList</code> interface itself doesn't provide any means
+     * {@code AttributeList} interface itself doesn't provide any means
      * of mutation, but that doesn't mean that there isn't a non-interface
      * way of mutating an instance.
      *
-     * @return <code>true</code> iff this instance is somehow mutable
+     * @return {@code true} iff this instance is somehow mutable
      */
     public boolean isMutable();
 
@@ -38,28 +38,28 @@ public interface AttributeList {
     public int size();
 
     /**
-     * Get the <code>n</code>th attribute.
+     * Get the {@code n}th attribute.
      *
-     * @param n <code>n &gt;= 0, n &lt; size()</code>; which attribute
-     * @return non-null; the attribute in question
+     * @param n {@code n >= 0, n < size();} which attribute
+     * @return {@code non-null;} the attribute in question
      */
     public Attribute get(int n);
 
     /**
      * Get the total length of this list in bytes, when part of a
      * class file. The returned value includes the two bytes for the
-     * <code>attributes_count</code> length indicator.
+     * {@code attributes_count} length indicator.
      *
-     * @return &gt;= 2; the total length, in bytes
+     * @return {@code >= 2;} the total length, in bytes
      */
     public int byteLength();
 
     /**
      * Get the first attribute in the list with the given name, if any.
      *
-     * @param name non-null; attribute name
-     * @return null-ok; first attribute in the list with the given name,
-     * or <code>null</code> if there is none
+     * @param name {@code non-null;} attribute name
+     * @return {@code null-ok;} first attribute in the list with the given name,
+     * or {@code null} if there is none
      */
     public Attribute findFirst(String name);
 
@@ -67,9 +67,9 @@ public interface AttributeList {
      * Get the next attribute in the list after the given one, with the same
      * name, if any.
      *
-     * @param attrib non-null; attribute to start looking after
-     * @return null-ok; next attribute after <code>attrib</code> with the
-     * same name as <code>attrib</code>
+     * @param attrib {@code non-null;} attribute to start looking after
+     * @return {@code null-ok;} next attribute after {@code attrib} with the
+     * same name as {@code attrib}
      */
     public Attribute findNext(Attribute attrib);
 }

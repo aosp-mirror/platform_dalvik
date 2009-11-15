@@ -24,10 +24,9 @@ package java.lang;
  * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
  * Delight, (Addison Wesley, 2002)</a> as well as <a
  * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
- * </p>
- * 
+ *
  * @see java.lang.Number
- * @since Android 1.0
+ * @since 1.1
  */
 public final class Integer extends Number implements Comparable<Integer> {
 
@@ -40,30 +39,32 @@ public final class Integer extends Number implements Comparable<Integer> {
 
     /**
      * Constant for the maximum {@code int} value, 2<sup>31</sup>-1.
-     * 
-     * @since Android 1.0
      */
     public static final int MAX_VALUE = 0x7FFFFFFF;
 
     /**
      * Constant for the minimum {@code int} value, -2<sup>31</sup>.
-     * 
-     * @since Android 1.0
      */
     public static final int MIN_VALUE = 0x80000000;
 
     /**
      * Constant for the number of bits needed to represent an {@code int} in
      * two's complement form.
-     * 
-     * @since Android 1.0
+     *
+     * @since 1.5
      */
     public static final int SIZE = 32;
 
+    /*
+     * Progressively smaller decimal order of magnitude that can be represented
+     * by an instance of Integer. Used to help compute the String
+     * representation.
+     */
+    private static final int[] decimalScale = new int[] { 1000000000, 100000000,
+            10000000, 1000000, 100000, 10000, 1000, 100, 10, 1 };
+
     /**
      * The {@link Class} object that represents the primitive type {@code int}.
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final Class<Integer> TYPE = (Class<Integer>) new int[0]
@@ -75,10 +76,9 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Constructs a new {@code Integer} with the specified primitive integer
      * value.
-     * 
+     *
      * @param value
      *            the primitive integer value to store in the new instance.
-     * @since Android 1.0
      */
     public Integer(int value) {
         this.value = value;
@@ -86,13 +86,12 @@ public final class Integer extends Number implements Comparable<Integer> {
 
     /**
      * Constructs a new {@code Integer} from the specified string.
-     * 
+     *
      * @param string
      *            the string representation of an integer value.
      * @throws NumberFormatException
      *             if {@code string} can not be decoded into an integer value.
      * @see #parseInt(String)
-     * @since Android 1.0
      */
     public Integer(String string) throws NumberFormatException {
         this(parseInt(string));
@@ -106,7 +105,7 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Compares this object to the specified integer object to determine their
      * relative order.
-     * 
+     *
      * @param object
      *            the integer object to compare this object to.
      * @return a negative value if the value of this integer is less than the
@@ -114,7 +113,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      *         value of {@code object} are equal; a positive value if the value
      *         of this integer is greater than the value of {@code object}.
      * @see java.lang.Comparable
-     * @since Android 1.0
+     * @since 1.2
      */
     public int compareTo(Integer object) {
         return value > object.value ? 1 : (value < object.value ? -1 : 0);
@@ -125,14 +124,13 @@ public final class Integer extends Number implements Comparable<Integer> {
      * string can be decoded into an integer value. The string may be an
      * optional minus sign "-" followed by a hexadecimal ("0x..." or "#..."),
      * octal ("0..."), or decimal ("...") representation of an integer.
-     * 
+     *
      * @param string
      *            a string representation of an integer value.
      * @return an {@code Integer} containing the value represented by
      *         {@code string}.
      * @throws NumberFormatException
      *             if {@code string} can not be parsed as an integer value.
-     * @since Android 1.0
      */
     public static Integer decode(String string) throws NumberFormatException {
         int length = string.length(), i = 0;
@@ -158,23 +156,21 @@ public final class Integer extends Number implements Comparable<Integer> {
                 return valueOf(0);
             }
             if ((firstDigit = string.charAt(i)) == 'x' || firstDigit == 'X') {
-                if (i == length) {
+                if (++i == length) {
                     // BEGIN android-changed
                     throw new NumberFormatException("unable to parse '"+string+"' as integer");
                     // END android-changed
                 }
-                i++;
                 base = 16;
             } else {
                 base = 8;
             }
         } else if (firstDigit == '#') {
-            if (i == length) {
+            if (++i == length) {
                 // BEGIN android-changed
                 throw new NumberFormatException("unable to parse '"+string+"' as integer");
                 // END android-changed
             }
-            i++;
             base = 16;
         }
 
@@ -191,12 +187,11 @@ public final class Integer extends Number implements Comparable<Integer> {
      * Compares this instance with the specified object and indicates if they
      * are equal. In order to be equal, {@code o} must be an instance of
      * {@code Integer} and have the same integer value as this object.
-     * 
+     *
      * @param o
      *            the object to compare this integer with.
      * @return {@code true} if the specified object is equal to this
      *         {@code Integer}; {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -214,12 +209,11 @@ public final class Integer extends Number implements Comparable<Integer> {
      * {@code string}. Returns {@code null} if {@code string} is {@code null}
      * or empty, if the property can not be found or if its value can not be
      * parsed as an integer.
-     * 
+     *
      * @param string
      *            the name of the requested system property.
      * @return the requested property's value as an {@code Integer} or
      *         {@code null}.
-     * @since Android 1.0        
      */
     public static Integer getInteger(String string) {
         if (string == null || string.length() == 0) {
@@ -241,7 +235,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * {@code string}. Returns the specified default value if {@code string} is
      * {@code null} or empty, if the property can not be found or if its value
      * can not be parsed as an integer.
-     * 
+     *
      * @param string
      *            the name of the requested system property.
      * @param defaultValue
@@ -249,7 +243,6 @@ public final class Integer extends Number implements Comparable<Integer> {
      *            system property with the requested name.
      * @return the requested property's value as an {@code Integer} or the
      *         default value.
-     * @since Android 1.0        
      */
     public static Integer getInteger(String string, int defaultValue) {
         if (string == null || string.length() == 0) {
@@ -271,7 +264,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * {@code string}. Returns the specified default value if {@code string} is
      * {@code null} or empty, if the property can not be found or if its value
      * can not be parsed as an integer.
-     * 
+     *
      * @param string
      *            the name of the requested system property.
      * @param defaultValue
@@ -279,7 +272,6 @@ public final class Integer extends Number implements Comparable<Integer> {
      *            system property with the requested name.
      * @return the requested property's value as an {@code Integer} or the
      *         default value.
-     * @since Android 1.0        
      */
     public static Integer getInteger(String string, Integer defaultValue) {
         if (string == null || string.length() == 0) {
@@ -303,9 +295,8 @@ public final class Integer extends Number implements Comparable<Integer> {
 
     /**
      * Gets the primitive value of this int.
-     * 
+     *
      * @return this object's primitive value.
-     * @since Android 1.0
      */
     @Override
     public int intValue() {
@@ -320,14 +311,13 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Parses the specified string as a signed decimal integer value. The ASCII
      * character \u002d ('-') is recognized as the minus sign.
-     * 
+     *
      * @param string
      *            the string representation of an integer value.
      * @return the primitive integer value represented by {@code string}.
      * @throws NumberFormatException
      *             if {@code string} is {@code null}, has a length of zero or
      *             can not be parsed as an integer value.
-     * @since Android 1.0
      */
     public static int parseInt(String string) throws NumberFormatException {
         return parseInt(string, 10);
@@ -336,7 +326,7 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Parses the specified string as a signed integer value using the specified
      * radix. The ASCII character \u002d ('-') is recognized as the minus sign.
-     * 
+     *
      * @param string
      *            the string representation of an integer value.
      * @param radix
@@ -348,7 +338,6 @@ public final class Integer extends Number implements Comparable<Integer> {
      *             {@code radix < Character.MIN_RADIX},
      *             {@code radix > Character.MAX_RADIX}, or if {@code string}
      *             can not be parsed as an integer value.
-     * @since Android 1.0
      */
     public static int parseInt(String string, int radix)
             throws NumberFormatException {
@@ -417,11 +406,10 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Converts the specified integer into its binary string representation. The
      * returned string is a concatenation of '0' and '1' characters.
-     * 
+     *
      * @param i
      *            the integer to convert.
      * @return the binary string representation of {@code i}.
-     * @since Android 1.0
      */
     public static String toBinaryString(int i) {
         int count = 1, j = i;
@@ -446,12 +434,11 @@ public final class Integer extends Number implements Comparable<Integer> {
      * Converts the specified integer into its hexadecimal string
      * representation. The returned string is a concatenation of characters from
      * '0' to '9' and 'a' to 'f'.
-     * 
+     *
      * @param i
      *            the integer to convert.
      * @return the hexadecimal string representation of {@code i}.
-     * @since Android 1.0
-     */    
+     */
     public static String toHexString(int i) {
         int count = 1, j = i;
 
@@ -480,12 +467,11 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Converts the specified integer into its octal string representation. The
      * returned string is a concatenation of characters from '0' to '7'.
-     * 
+     *
      * @param i
      *            the integer to convert.
      * @return the octal string representation of {@code i}.
-     * @since Android 1.0
-     */    
+     */
     public static String toOctalString(int i) {
         int count = 1, j = i;
 
@@ -514,14 +500,102 @@ public final class Integer extends Number implements Comparable<Integer> {
      * Converts the specified integer into its decimal string representation.
      * The returned string is a concatenation of a minus sign if the number is
      * negative and characters from '0' to '9'.
-     * 
-     * @param i
+     *
+     * @param value
      *            the integer to convert.
-     * @return the decimal string representation of {@code i}.
-     * @since Android 1.0
-     */    
-    public static String toString(int i) {
-        return toString(i, 10);
+     * @return the decimal string representation of {@code value}.
+     */
+    public static String toString(int value) {
+        // BEGIN android-note
+        // cache the strings in the range 0..99 to save allocations?
+        // END android-note
+        if (value == 0) {
+            return "0"; //$NON-NLS-1$
+        }
+
+        // Faster algorithm for smaller Integers
+        if (value < 1000 && value > -1000) {
+            char[] buffer = new char[4];
+            int positive_value = value < 0 ? -value : value;
+            int first_digit = 0;
+            if (value < 0) {
+                buffer[0] = '-';
+                first_digit++;
+            }
+            int last_digit = first_digit;
+            int quot = positive_value;
+            do {
+                int res = quot / 10;
+                int digit_value = quot - (res * 10);
+                digit_value += '0';
+                buffer[last_digit++] = (char) digit_value;
+                quot = res;
+            } while (quot != 0);
+
+            int count = last_digit--;
+            do {
+                char tmp = buffer[last_digit];
+                buffer[last_digit--] = buffer[first_digit];
+                buffer[first_digit++] = tmp;
+            } while (first_digit < last_digit);
+            return new String(0, count, buffer);
+        }
+        if (value == MIN_VALUE) {
+            return "-2147483648";//$NON-NLS-1$
+        }
+
+        char[] buffer = new char[11];
+        int positive_value = value < 0 ? -value : value;
+        byte first_digit = 0;
+        if (value < 0) {
+            buffer[0] = '-';
+            first_digit++;
+        }
+        byte last_digit = first_digit;
+        byte count;
+        int number;
+        boolean start = false;
+        for (int i = 0; i < 9; i++) {
+            count = 0;
+            if (positive_value < (number = decimalScale[i])) {
+                if (start) {
+                    buffer[last_digit++] = '0';
+                }
+                continue;
+            }
+
+            if (i > 0) {
+                number = (decimalScale[i] << 3);
+                if (positive_value >= number) {
+                    positive_value -= number;
+                    count += 8;
+                }
+                number = (decimalScale[i] << 2);
+                if (positive_value >= number) {
+                    positive_value -= number;
+                    count += 4;
+                }
+            }
+            number = (decimalScale[i] << 1);
+            if (positive_value >= number) {
+                positive_value -= number;
+                count += 2;
+            }
+            if (positive_value >= decimalScale[i]) {
+                positive_value -= decimalScale[i];
+                count++;
+            }
+            if (count > 0 && !start) {
+                start = true;
+            }
+            if (start) {
+                buffer[last_digit++] = (char) (count + '0');
+            }
+        }
+
+        buffer[last_digit++] = (char) (positive_value + '0');
+        count = last_digit--;
+        return new String(0, count, buffer);
     }
 
     /**
@@ -531,15 +605,18 @@ public final class Integer extends Number implements Comparable<Integer> {
      * depending on the radix. If {@code radix} is not in the interval defined
      * by {@code Character.MIN_RADIX} and {@code Character.MAX_RADIX} then 10 is
      * used as the base for the conversion.
-     * 
+     *
      * @param i
      *            the integer to convert.
      * @param radix
      *            the base to use for the conversion.
      * @return the string representation of {@code i}.
-     * @since Android 1.0
-     */    
+     */
     public static String toString(int i, int radix) {
+        // BEGIN android-note
+        // if radix==10, call thru to faster Integer.toString(int) ?
+        // only worthwhile if 10 is a popular parameter
+        // END android-note
         if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX) {
             radix = 10;
         }
@@ -575,7 +652,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 
     /**
      * Parses the specified string as a signed decimal integer value.
-     * 
+     *
      * @param string
      *            the string representation of an integer value.
      * @return an {@code Integer} instance containing the integer value
@@ -584,7 +661,6 @@ public final class Integer extends Number implements Comparable<Integer> {
      *             if {@code string} is {@code null}, has a length of zero or
      *             can not be parsed as an integer value.
      * @see #parseInt(String)
-     * @since Android 1.0
      */
     public static Integer valueOf(String string) throws NumberFormatException {
         return valueOf(parseInt(string));
@@ -593,7 +669,7 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Parses the specified string as a signed integer value using the specified
      * radix.
-     * 
+     *
      * @param string
      *            the string representation of an integer value.
      * @param radix
@@ -606,7 +682,6 @@ public final class Integer extends Number implements Comparable<Integer> {
      *             {@code radix > Character.MAX_RADIX}, or if {@code string}
      *             can not be parsed as an integer value.
      * @see #parseInt(String, int)
-     * @since Android 1.0
      */
     public static Integer valueOf(String string, int radix)
             throws NumberFormatException {
@@ -618,11 +693,11 @@ public final class Integer extends Number implements Comparable<Integer> {
      * and returns the bit mask value for that bit. This is also referred to as
      * the Most Significant 1 Bit. Returns zero if the specified integer is
      * zero.
-     * 
+     *
      * @param i
      *            the integer to examine.
      * @return the bit mask indicating the highest 1 bit in {@code i}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int highestOneBit(int i) {
         i |= (i >> 1);
@@ -638,11 +713,11 @@ public final class Integer extends Number implements Comparable<Integer> {
      * and returns the bit mask value for that bit. This is also referred
      * to as the Least Significant 1 Bit. Returns zero if the specified integer
      * is zero.
-     * 
+     *
      * @param i
      *            the integer to examine.
      * @return the bit mask indicating the lowest 1 bit in {@code i}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int lowestOneBit(int i) {
         return (i & (-i));
@@ -651,11 +726,11 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Determines the number of leading zeros in the specified integer prior to
      * the {@link #highestOneBit(int) highest one bit}.
-     * 
+     *
      * @param i
      *            the integer to examine.
      * @return the number of leading zeros in {@code i}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int numberOfLeadingZeros(int i) {
         i |= i >> 1;
@@ -669,11 +744,11 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Determines the number of trailing zeros in the specified integer after
      * the {@link #lowestOneBit(int) lowest one bit}.
-     * 
+     *
      * @param i
      *            the integer to examine.
      * @return the number of trailing zeros in {@code i}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int numberOfTrailingZeros(int i) {
         return bitCount((i & -i) - 1);
@@ -682,11 +757,11 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Counts the number of 1 bits in the specified integer; this is also
      * referred to as population count.
-     * 
+     *
      * @param i
      *            the integer to examine.
      * @return the number of 1 bits in {@code i}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int bitCount(int i) {
         i -= ((i >> 1) & 0x55555555);
@@ -700,13 +775,13 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Rotates the bits of the specified integer to the left by the specified
      * number of bits.
-     * 
+     *
      * @param i
      *            the integer value to rotate left.
      * @param distance
      *            the number of bits to rotate.
      * @return the rotated value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int rotateLeft(int i, int distance) {
         if (distance == 0) {
@@ -723,13 +798,13 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Rotates the bits of the specified integer to the right by the specified
      * number of bits.
-     * 
+     *
      * @param i
      *            the integer value to rotate right.
      * @param distance
      *            the number of bits to rotate.
      * @return the rotated value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int rotateRight(int i, int distance) {
         if (distance == 0) {
@@ -745,11 +820,11 @@ public final class Integer extends Number implements Comparable<Integer> {
 
     /**
      * Reverses the order of the bytes of the specified integer.
-     * 
+     *
      * @param i
      *            the integer value for which to reverse the byte order.
      * @return the reversed value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int reverseBytes(int i) {
         int b3 = i >>> 24;
@@ -761,11 +836,11 @@ public final class Integer extends Number implements Comparable<Integer> {
 
     /**
      * Reverses the order of the bits of the specified integer.
-     * 
+     *
      * @param i
      *            the integer value for which to reverse the bit order.
      * @return the reversed value.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int reverse(int i) {
         // From Hacker's Delight, 7-1, Figure 7-1
@@ -778,12 +853,12 @@ public final class Integer extends Number implements Comparable<Integer> {
     /**
      * Returns the value of the {@code signum} function for the specified
      * integer.
-     * 
+     *
      * @param i
      *            the integer value to check.
      * @return -1 if {@code i} is negative, 1 if {@code i} is positive, 0 if
      *         {@code i} is zero.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static int signum(int i) {
         return (i == 0 ? 0 : (i < 0 ? -1 : 1));
@@ -795,12 +870,11 @@ public final class Integer extends Number implements Comparable<Integer> {
      * If it is not necessary to get a new {@code Integer} instance, it is
      * recommended to use this method instead of the constructor, since it
      * maintains a cache of instances which may result in better performance.
-     * </p>
-     * 
+     *
      * @param i
      *            the integer value to store in the instance.
      * @return a {@code Integer} instance containing {@code i}.
-     * @since Android 1.0
+     * @since 1.5
      */
     public static Integer valueOf(int i) {
         if (i < -128 || i > 127) {
@@ -814,7 +888,6 @@ public final class Integer extends Number implements Comparable<Integer> {
         /**
          * <p>
          * A cache of instances used by {@link Integer#valueOf(int)} and auto-boxing.
-         * </p>
          */
         static final Integer[] CACHE = new Integer[256];
 

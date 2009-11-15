@@ -31,14 +31,14 @@ import com.android.dx.util.MutabilityControl;
  * com.android.dx.rop.type.TypeBearer}.</p>
  */
 public class OneLocalsArray extends LocalsArray {
-    /** non-null; actual array */
+    /** {@code non-null;} actual array */
     private final TypeBearer[] locals;
 
     /**
      * Constructs an instance. The locals array initially consists of
-     * all-uninitialized values (represented as <code>null</code>s).
+     * all-uninitialized values (represented as {@code null}s).
      *
-     * @param maxLocals &gt;= 0; the maximum number of locals this instance
+     * @param maxLocals {@code >= 0;} the maximum number of locals this instance
      * can refer to
      */
     public OneLocalsArray(int maxLocals) {
@@ -237,7 +237,7 @@ public class OneLocalsArray extends LocalsArray {
      * Throws a properly-formatted exception.
      *
      * @param idx the salient local index
-     * @param msg non-null; useful message
+     * @param msg {@code non-null;} useful message
      * @return never (keeps compiler happy)
      */
     private static TypeBearer throwSimException(int idx, String msg) {

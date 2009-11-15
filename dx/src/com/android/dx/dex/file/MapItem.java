@@ -28,29 +28,29 @@ public final class MapItem extends OffsettedItem {
     /** file alignment of this class, in bytes */
     private static final int ALIGNMENT = 4;
 
-    /** write size of this class, in bytes: three <code>uint</code>s */
+    /** write size of this class, in bytes: three {@code uint}s */
     private static final int WRITE_SIZE = (4 * 3);
 
-    /** non-null; item type this instance covers */
+    /** {@code non-null;} item type this instance covers */
     private final ItemType type;
 
-    /** non-null; section this instance covers */
+    /** {@code non-null;} section this instance covers */
     private final Section section;
 
     /**
-     * null-ok; first item covered or <code>null</code> if this is
+     * {@code null-ok;} first item covered or {@code null} if this is
      * a self-reference
      */
     private final Item firstItem;
 
     /**
-     * null-ok; last item covered or <code>null</code> if this is
+     * {@code null-ok;} last item covered or {@code null} if this is
      * a self-reference
      */
     private final Item lastItem;
 
     /**
-     * &gt; 0; count of items covered; <code>1</code> if this
+     * {@code > 0;} count of items covered; {@code 1} if this
      * is a self-reference
      */
     private final int itemCount;
@@ -60,8 +60,8 @@ public final class MapItem extends OffsettedItem {
      * the contents of the given array of sections, adding it to the
      * given map section.
      *
-     * @param sections non-null; the sections
-     * @param mapSection non-null; the section that the resulting map
+     * @param sections {@code non-null;} the sections
+     * @param mapSection {@code non-null;} the section that the resulting map
      * should be added to; it should be empty on entry to this method
      */
     public static void addMap(Section[] sections,
@@ -115,11 +115,11 @@ public final class MapItem extends OffsettedItem {
     /**
      * Constructs an instance.
      * 
-     * @param type non-null; item type this instance covers
-     * @param section non-null; section this instance covers
-     * @param firstItem non-null; first item covered
-     * @param lastItem non-null; last item covered
-     * @param itemCount &gt; 0; count of items covered
+     * @param type {@code non-null;} item type this instance covers
+     * @param section {@code non-null;} section this instance covers
+     * @param firstItem {@code non-null;} first item covered
+     * @param lastItem {@code non-null;} last item covered
+     * @param itemCount {@code > 0;} count of items covered
      */
     private MapItem(ItemType type, Section section, Item firstItem,
             Item lastItem, int itemCount) {
@@ -154,9 +154,9 @@ public final class MapItem extends OffsettedItem {
 
     /**
      * Constructs a self-referential instance. This instance is meant to
-     * represent the section containing the <code>map_list</code>.
+     * represent the section containing the {@code map_list}.
      * 
-     * @param section non-null; section this instance covers
+     * @param section {@code non-null;} section this instance covers
      */
     private MapItem(Section section) {
         super(ALIGNMENT, WRITE_SIZE);

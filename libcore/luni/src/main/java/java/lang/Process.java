@@ -17,25 +17,20 @@
 
 package java.lang;
 
-
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
  * Represents an external process. Enables writing to, reading from, destroying,
  * and waiting for the external process, as well as querying its exit value.
- * 
+ *
  * @see Runtime#exec
  * @see ProcessBuilder#start()
- * 
- * @since Android 1.0
  */
 public abstract class Process {
 
     /**
      * Terminates this process and closes any associated streams.
-     * 
-     * @since Android 1.0
      */
     abstract public void destroy();
 
@@ -46,7 +41,6 @@ public abstract class Process {
      * @return the exit value of this process.
      * @throws IllegalThreadStateException
      *             if this process has not terminated.
-     * @since Android 1.0
      */
     abstract public int exitValue();
 
@@ -56,7 +50,6 @@ public abstract class Process {
      * 
      * @return the input stream to read from the error stream associated with
      *         the native process.
-     * @since Android 1.0
      */
     abstract public InputStream getErrorStream();
 
@@ -66,7 +59,6 @@ public abstract class Process {
      * 
      * @return the input stream to read from the output stream associated with
      *         the native process.
-     * @since Android 1.0
      */
     abstract public InputStream getInputStream();
 
@@ -76,7 +68,6 @@ public abstract class Process {
      * 
      * @return the output stream to write to the input stream associated with
      *         the native process.
-     * @since Android 1.0
      */
     abstract public OutputStream getOutputStream();
 
@@ -87,7 +78,6 @@ public abstract class Process {
      * @return the exit value of the native process being waited on.
      * @throws InterruptedException
      *             if the calling thread is interrupted.
-     * @since Android 1.0
      */
     abstract public int waitFor() throws InterruptedException;
 }

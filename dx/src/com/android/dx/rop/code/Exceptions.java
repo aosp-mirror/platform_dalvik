@@ -23,78 +23,78 @@ import com.android.dx.rop.type.Type;
  * Common exception types.
  */
 public final class Exceptions {
-    /** non-null; the type <code>java.lang.ArithmeticException</code> */
+    /** {@code non-null;} the type {@code java.lang.ArithmeticException} */
     public static final Type TYPE_ArithmeticException =
         Type.intern("Ljava/lang/ArithmeticException;");
 
     /**
-     * non-null; the type
-     * <code>java.lang.ArrayIndexOutOfBoundsException</code> 
+     * {@code non-null;} the type
+     * {@code java.lang.ArrayIndexOutOfBoundsException} 
      */
     public static final Type TYPE_ArrayIndexOutOfBoundsException =
         Type.intern("Ljava/lang/ArrayIndexOutOfBoundsException;");
 
-    /** non-null; the type <code>java.lang.ArrayStoreException</code> */
+    /** {@code non-null;} the type {@code java.lang.ArrayStoreException} */
     public static final Type TYPE_ArrayStoreException =
         Type.intern("Ljava/lang/ArrayStoreException;");
 
-    /** non-null; the type <code>java.lang.ClassCastException</code> */
+    /** {@code non-null;} the type {@code java.lang.ClassCastException} */
     public static final Type TYPE_ClassCastException =
         Type.intern("Ljava/lang/ClassCastException;");
 
-    /** non-null; the type <code>java.lang.Error</code> */
+    /** {@code non-null;} the type {@code java.lang.Error} */
     public static final Type TYPE_Error = Type.intern("Ljava/lang/Error;");
 
     /**
-     * non-null; the type
-     * <code>java.lang.IllegalMonitorStateException</code> 
+     * {@code non-null;} the type
+     * {@code java.lang.IllegalMonitorStateException} 
      */
     public static final Type TYPE_IllegalMonitorStateException =
         Type.intern("Ljava/lang/IllegalMonitorStateException;");
 
-    /** non-null; the type <code>java.lang.NegativeArraySizeException</code> */
+    /** {@code non-null;} the type {@code java.lang.NegativeArraySizeException} */
     public static final Type TYPE_NegativeArraySizeException =
         Type.intern("Ljava/lang/NegativeArraySizeException;");
 
-    /** non-null; the type <code>java.lang.NullPointerException</code> */
+    /** {@code non-null;} the type {@code java.lang.NullPointerException} */
     public static final Type TYPE_NullPointerException =
         Type.intern("Ljava/lang/NullPointerException;");
 
-    /** non-null; the list <code>[java.lang.Error]</code> */
+    /** {@code non-null;} the list {@code [java.lang.Error]} */
     public static final StdTypeList LIST_Error = StdTypeList.make(TYPE_Error);
 
     /**
-     * non-null; the list <code>[java.lang.Error,
-     * java.lang.ArithmeticException]</code> 
+     * {@code non-null;} the list {@code[java.lang.Error,
+     * java.lang.ArithmeticException]}
      */
     public static final StdTypeList LIST_Error_ArithmeticException =
         StdTypeList.make(TYPE_Error, TYPE_ArithmeticException);
 
     /**
-     * non-null; the list <code>[java.lang.Error,
-     * java.lang.ClassCastException]</code> 
+     * {@code non-null;} the list {@code[java.lang.Error,
+     * java.lang.ClassCastException]}
      */
     public static final StdTypeList LIST_Error_ClassCastException =
         StdTypeList.make(TYPE_Error, TYPE_ClassCastException);
 
     /**
-     * non-null; the list <code>[java.lang.Error,
-     * java.lang.NegativeArraySizeException]</code> 
+     * {@code non-null;} the list {@code [java.lang.Error,
+     * java.lang.NegativeArraySizeException]} 
      */
     public static final StdTypeList LIST_Error_NegativeArraySizeException =
         StdTypeList.make(TYPE_Error, TYPE_NegativeArraySizeException);
 
     /**
-     * non-null; the list <code>[java.lang.Error,
-     * java.lang.NullPointerException]</code> 
+     * {@code non-null;} the list {@code [java.lang.Error,
+     * java.lang.NullPointerException]}
      */
     public static final StdTypeList LIST_Error_NullPointerException =
         StdTypeList.make(TYPE_Error, TYPE_NullPointerException);
 
     /**
-     * non-null; the list <code>[java.lang.Error,
+     * {@code non-null;} the list {@code [java.lang.Error,
      * java.lang.NullPointerException,
-     * java.lang.ArrayIndexOutOfBoundsException]</code> 
+     * java.lang.ArrayIndexOutOfBoundsException]}
      */
     public static final StdTypeList LIST_Error_Null_ArrayIndexOutOfBounds =
         StdTypeList.make(TYPE_Error,
@@ -102,10 +102,10 @@ public final class Exceptions {
                       TYPE_ArrayIndexOutOfBoundsException);
 
     /**
-     * non-null; the list <code>[java.lang.Error,
+     * {@code non-null;} the list {@code [java.lang.Error,
      * java.lang.NullPointerException,
      * java.lang.ArrayIndexOutOfBoundsException,
-     * java.lang.ArrayStoreException]</code> 
+     * java.lang.ArrayStoreException]}
      */
     public static final StdTypeList LIST_Error_Null_ArrayIndex_ArrayStore =
         StdTypeList.make(TYPE_Error,
@@ -114,9 +114,9 @@ public final class Exceptions {
                       TYPE_ArrayStoreException);
 
     /**
-     * non-null; the list <code>[java.lang.Error,
+     * {@code non-null;} the list {@code [java.lang.Error,
      * java.lang.NullPointerException,
-     * java.lang.IllegalMonitorStateException]</code> 
+     * java.lang.IllegalMonitorStateException]}
      */
     public static final StdTypeList
         LIST_Error_Null_IllegalMonitorStateException =

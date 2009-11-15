@@ -24,7 +24,6 @@ import org.apache.harmony.luni.util.Msg;
  * that refers to a missing argument.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class MissingFormatArgumentException extends IllegalFormatException {
     private static final long serialVersionUID = 19190115L;

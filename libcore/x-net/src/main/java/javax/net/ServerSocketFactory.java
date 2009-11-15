@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net;
 
 import java.io.IOException;
@@ -30,66 +25,59 @@ import java.net.SocketException;
 /**
  * This abstract class defines methods to create server sockets. It can be
  * subclassed to create specific server socket types.
- * 
- * @since Android 1.0
  */
 public abstract class ServerSocketFactory {
-    static ServerSocketFactory defaultFactory;
-    
-    /**
-     * Creates a new {@code ServerSocketFactory} instance.
-     * 
-     * @since Android 1.0
-     */
-    protected ServerSocketFactory() {
-    }
+    private static ServerSocketFactory defaultFactory;
 
     /**
      * Gets the default server socket factory of the system which can be used to
      * create new server sockets without creating a subclass of this factory.
-     * 
+     *
      * @return the system default server socket factory.
-     * @since Android 1.0
      */
     public static synchronized ServerSocketFactory getDefault() {
         if (defaultFactory == null) {
-                defaultFactory = new DefaultServerSocketFactory();
+            defaultFactory = new DefaultServerSocketFactory();
         }
         return defaultFactory;
+    }
+
+    /**
+     * Creates a new {@code ServerSocketFactory} instance.
+     */
+    protected ServerSocketFactory() {
+        super();
     }
 
     /**
      * Creates a new server socket which is not bound to any local address. This
      * method has to be overridden by a subclass otherwise a {@code
      * SocketException} is thrown.
-     * 
+     *
      * @return the created unbound server socket.
      * @throws IOException
      *             if an error occurs while creating a new server socket.
-     * @since Android 1.0
      */
     public ServerSocket createServerSocket() throws IOException {
-        // follow RI's behavior 
+        // follow RI's behavior
         throw new SocketException("Unbound server sockets not implemented");
     }
 
     /**
      * Creates a new server socket which is bound to the given port.
-     * 
+     *
      * @param port
      *            the port on which the created socket has to listen.
      * @return the created bound server socket.
      * @throws IOException
      *             if an error occurs while creating a new server socket.
-     * @since Android 1.0
      */
-    public abstract ServerSocket createServerSocket(int port)
-            throws IOException;
+    public abstract ServerSocket createServerSocket(int port) throws IOException;
 
     /**
      * Creates a new server socket which is bound to the given port and
      * configures its maximum of queued connections.
-     * 
+     *
      * @param port
      *            the port on which the created socket has to listen.
      * @param backlog
@@ -97,15 +85,13 @@ public abstract class ServerSocketFactory {
      * @return the created bound server socket.
      * @throws IOException
      *             if an error occurs while creating a new server socket.
-     * @since Android 1.0
      */
-    public abstract ServerSocket createServerSocket(int port, int backlog)
-            throws IOException;
+    public abstract ServerSocket createServerSocket(int port, int backlog) throws IOException;
 
     /**
      * Creates a new server socket which is bound to the given address on the
      * specified port and configures its maximum of queued connections.
-     * 
+     *
      * @param port
      *            the port on which the created socket has to listen.
      * @param backlog
@@ -116,9 +102,8 @@ public abstract class ServerSocketFactory {
      * @return the created bound server socket.
      * @throws IOException
      *             if an error occurs while creating a new server socket.
-     * @since Android 1.0
      */
-    public abstract ServerSocket createServerSocket(int port, int backlog,
-            InetAddress iAddress) throws IOException;
+    public abstract ServerSocket createServerSocket(int port, int backlog, InetAddress iAddress)
+            throws IOException;
 
 }

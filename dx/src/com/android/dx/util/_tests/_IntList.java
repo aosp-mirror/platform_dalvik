@@ -21,7 +21,7 @@ import com.android.dx.util.IntList;
 import junit.framework.TestCase;
 
 /**
- * Test the class <code>com.android.dx.util.IntList</code>.
+ * Test the class {@code com.android.dx.util.IntList}.
  */
 public class _IntList
     extends TestCase {

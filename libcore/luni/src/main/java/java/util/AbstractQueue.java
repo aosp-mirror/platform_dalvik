@@ -22,18 +22,15 @@ package java.util;
  * {@code element} are based on {@code offer, poll}, and {@code peek} except
  * that they throw exceptions to indicate some error instead of returning true
  * or false.
- * 
+ *
  * @param <E>
  *            the type of the element in the collection.
- * @since Android 1.0
  */
 public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
         Queue<E> {
 
     /**
      * Constructor to be used by subclasses.
-     * 
-     * @since Android 1.0
      */
     protected AbstractQueue() {
         super();
@@ -47,7 +44,6 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
      * @return {@code true} if the operation succeeds, otherwise {@code false}.
      * @throws IllegalStateException
      *             if the element is not allowed to be added to the queue.
-     * @since Android 1.0
      */
     @Override
     public boolean add(E o) {
@@ -76,7 +72,6 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
      * @throws IllegalArgumentException
      *             If the collection to be added to the queue is the queue
      *             itself.
-     * @since Android 1.0
      */
     @Override
     public boolean addAll(Collection<? extends E> c) {
@@ -95,7 +90,6 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
      * @return the element at the head of the queue.
      * @throws NoSuchElementException
      *             if the queue is empty.
-     * @since Android 1.0
      */
     public E remove() {
         E o = poll();
@@ -111,7 +105,6 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
      * @return the element at the head of the queue.
      * @throws NoSuchElementException
      *             if the queue is empty.
-     * @since Android 1.0
      */
     public E element() {
         E o = peek();
@@ -123,8 +116,6 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
 
     /**
      * Removes all elements of the queue, leaving it empty.
-     * 
-     * @since Android 1.0
      */
     @Override
     public void clear() {

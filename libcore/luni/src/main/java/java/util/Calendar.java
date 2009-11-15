@@ -14,15 +14,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-/**
-*******************************************************************************
-* Copyright (C) 1996-2008, International Business Machines Corporation and    *
-* others. All Rights Reserved.                                                *
-*******************************************************************************
-*/
 
 package java.util;
-
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -30,11 +23,6 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
 
-// BEGIN android-note
-// The class javadoc and some of the method descriptions are copied from ICU4J
-// source files. Changes have been made to the copied descriptions.
-// The icu license header was added to this file. 
-// END android-note
 /**
  * {@code Calendar} is an abstract base class for converting between a
  * {@code Date} object and a set of integer fields such as
@@ -42,22 +30,22 @@ import java.io.Serializable;
  * {@code HOUR}, and so on. (A {@code Date} object represents a
  * specific instant in time with millisecond precision. See {@link Date} for
  * information about the {@code Date} class.)
- * 
+ *
  * <p>
  * Subclasses of {@code Calendar} interpret a {@code Date}
  * according to the rules of a specific calendar system.
- * 
+ *
  * <p>
  * Like other locale-sensitive classes, {@code Calendar} provides a class
  * method, {@code getInstance}, for getting a default instance of
  * this class for general use. {@code Calendar}'s {@code getInstance} method
  * returns a calendar whose locale is based on system settings and whose time fields
  * have been initialized with the current date and time: <blockquote>
- * 
+ *
  * <pre>Calendar rightNow = Calendar.getInstance()</pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * <p>
  * A {@code Calendar} object can produce all the time field values needed
  * to implement the date-time formatting for a particular language and calendar
@@ -68,7 +56,7 @@ import java.io.Serializable;
  * Other values are defined by the concrete subclass, such as {@code ERA}
  * and {@code YEAR}. See individual field documentation and subclass
  * documentation for details.
- * 
+ *
  * <p>
  * When a {@code Calendar} is <em>lenient</em>, it accepts a wider
  * range of field values than it produces. For example, a lenient
@@ -79,14 +67,14 @@ import java.io.Serializable;
  * by {@code get()}, they normalize them. For example, a
  * {@code GregorianCalendar} always produces {@code DAY_OF_MONTH}
  * values between 1 and the length of the month.
- * 
+ *
  * <p>
  * {@code Calendar} defines a locale-specific seven day week using two
  * parameters: the first day of the week and the minimal days in first week
  * (from 1 to 7). These numbers are taken from the locale resource data when a
  * {@code Calendar} is constructed. They may also be specified explicitly
  * through the API.
- * 
+ *
  * <p>
  * When setting or getting the {@code WEEK_OF_MONTH} or
  * {@code WEEK_OF_YEAR} fields, {@code Calendar} must determine
@@ -99,76 +87,74 @@ import java.io.Serializable;
  * be different. For example, a specific {@code Calendar} subclass may
  * designate the week before week 1 of a year as week <em>n</em> of the
  * previous year.
- * 
+ *
  * <p>
  * When computing a {@code Date} from time fields, two special
  * circumstances may arise: there may be insufficient information to compute the
  * {@code Date} (such as only year and month but no day in the month), or
  * there may be inconsistent information (such as "Tuesday, July 15, 1996" --
  * July 15, 1996 is actually a Monday).
- * 
+ *
  * <p>
  * <strong>Insufficient information.</strong> The calendar will use default
  * information to specify the missing fields. This may vary by calendar; for the
  * Gregorian calendar, the default for a field is the same as that of the start
  * of the epoch: i.e., YEAR = 1970, MONTH = JANUARY, DATE = 1, etc.
- * 
+ *
  * <p>
  * <strong>Inconsistent information.</strong> If fields conflict, the calendar
  * will give preference to fields set more recently. For example, when
  * determining the day, the calendar will look for one of the following
  * combinations of fields. The most recent combination, as determined by the
  * most recently set single field, will be used.
- * 
+ *
  * <blockquote>
- * 
+ *
  * <pre>
  * MONTH + DAY_OF_MONTH
  * MONTH + WEEK_OF_MONTH + DAY_OF_WEEK
  * MONTH + DAY_OF_WEEK_IN_MONTH + DAY_OF_WEEK
  * DAY_OF_YEAR
  * DAY_OF_WEEK + WEEK_OF_YEAR</pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * For the time of day:
- * 
+ *
  * <blockquote>
- * 
+ *
  * <pre>
  * HOUR_OF_DAY
  * AM_PM + HOUR</pre>
- * 
+ *
  * </blockquote>
- * 
+ *
  * <p>
  * <strong>Note:</strong> There are certain possible ambiguities in
  * interpretation of certain singular times, which are resolved in the following
  * ways:
  * <ol>
  * <li> 24:00:00 "belongs" to the following day. That is, 23:59 on Dec 31, 1969
- * &lt; 24:00 on Jan 1, 1970 &lt; 24:01:00 on Jan 1, 1970 form a sequence of 
- * three consecutive minutes in time. 
- * 
+ * &lt; 24:00 on Jan 1, 1970 &lt; 24:01:00 on Jan 1, 1970 form a sequence of
+ * three consecutive minutes in time.
+ *
  * <li> Although historically not precise, midnight also belongs to "am", and
  * noon belongs to "pm", so on the same day, we have 12:00 am (midnight) &lt; 12:01 am,
  * and 12:00 pm (noon) &lt; 12:01 pm
  * </ol>
- * 
+ *
  * <p>
  * The date or time format strings are not part of the definition of a calendar,
  * as those must be modifiable or overridable by the user at runtime. Use
  * {@link java.text.DateFormat} to format dates.
- * 
+ *
  * <p>
  * <strong>Field manipulation methods</strong>
- * </p>
- * 
+ *
  * <p>
  * {@code Calendar} fields can be changed using three methods:
  * {@code set()}, {@code add()}, and {@code roll()}.
- * </p>
- * 
+ *
  * <p>
  * <strong>{@code set(f, value)}</strong> changes field {@code f}
  * to {@code value}. In addition, it sets an internal member variable to
@@ -182,8 +168,7 @@ import java.io.Serializable;
  * the calendar system. In addition, {@code get(f)} will not necessarily
  * return {@code value} after the fields have been recomputed. The
  * specifics are determined by the concrete calendar class.
- * </p>
- * 
+ *
  * <p>
  * <em>Example</em>: Consider a {@code GregorianCalendar} originally
  * set to August 31, 1999. Calling <code>set(Calendar.MONTH,
@@ -193,15 +178,13 @@ import java.io.Serializable;
  * then called. However, a call to {@code set(Calendar.DAY_OF_MONTH, 30)}
  * before the call to {@code getTime()} sets the calendar to September
  * 30, 1999, since no recomputation occurs after {@code set()} itself.
- * </p>
- * 
+ *
  * <p>
  * <strong>{@code add(f, delta)}</strong> adds {@code delta} to
  * field {@code f}. This is equivalent to calling <code>set(f,
  * get(f) + delta)</code>
  * with two adjustments:
- * </p>
- * 
+ *
  * <blockquote>
  * <p>
  * <strong>Add rule 1</strong>. The value of field {@code f} after the
@@ -210,8 +193,7 @@ import java.io.Serializable;
  * {@code f}. Overflow occurs when a field value exceeds its range and,
  * as a result, the next larger field is incremented or decremented and the
  * field value is adjusted back into its range.
- * </p>
- * 
+ *
  * <p>
  * <strong>Add rule 2</strong>. If a smaller field is expected to be invariant,
  * but &nbsp; it is impossible for it to be equal to its prior value because of
@@ -221,14 +203,12 @@ import java.io.Serializable;
  * smaller field than {@code DAY_OF_MONTH}. No adjustment is made to
  * smaller fields that are not expected to be invariant. The calendar system
  * determines what fields are expected to be invariant.
- * </p>
  * </blockquote>
- * 
+ *
  * <p>
  * In addition, unlike {@code set()}, {@code add()} forces an
  * immediate recomputation of the calendar's milliseconds and all fields.
- * </p>
- * 
+ *
  * <p>
  * <em>Example</em>: Consider a {@code GregorianCalendar} originally
  * set to August 31, 1999. Calling {@code add(Calendar.MONTH, 13)} sets
@@ -240,22 +220,19 @@ import java.io.Serializable;
  * Although it is a smaller field, {@code DAY_OF_WEEK} is not adjusted by
  * rule 2, since it is expected to change when the month changes in a
  * {@code GregorianCalendar}.
- * </p>
- * 
+ *
  * <p>
  * <strong>{@code roll(f, delta)}</strong> adds {@code delta} to
  * field {@code f} without changing larger fields. This is equivalent to
  * calling {@code add(f, delta)} with the following adjustment:
- * </p>
- * 
+ *
  * <blockquote>
  * <p>
  * <strong>Roll rule</strong>. Larger fields are unchanged after the call. A
  * larger field represents a larger unit of time. {@code DAY_OF_MONTH} is
  * a larger field than {@code HOUR}.
- * </p>
  * </blockquote>
- * 
+ *
  * <p>
  * <em>Example</em>: Consider a {@code GregorianCalendar} originally
  * set to August 31, 1999. Calling <code>roll(Calendar.MONTH,
@@ -265,8 +242,7 @@ import java.io.Serializable;
  * the {@code DAY_OF_MONTH} cannot be 31 in the month April. Add rule 2
  * sets it to the closest possible value, 30. Finally, the <strong>roll rule</strong>
  * maintains the {@code YEAR} field value of 1999.
- * </p>
- * 
+ *
  * <p>
  * <em>Example</em>: Consider a {@code GregorianCalendar} originally
  * set to Sunday June 6, 1999. Calling
@@ -279,8 +255,7 @@ import java.io.Serializable;
  * According to add rule 2, the {@code DAY_OF_WEEK}, an invariant when
  * changing the {@code WEEK_OF_MONTH}, is set to Tuesday, the closest
  * possible value to Sunday (where Sunday is the first day of the week).
- * </p>
- * 
+ *
  * <p>
  * <strong>Usage model</strong>. To motivate the behavior of {@code add()}
  * and {@code roll()}, consider a user interface component with
@@ -294,8 +269,7 @@ import java.io.Serializable;
  * {@code add()} or {@code roll()}, depending on whether larger
  * fields should be affected, the user interface can behave as most users will
  * intuitively expect.
- * </p>
- * 
+ *
  * <p>
  * <b>Note:</b> You should always use {@code roll} and {@code add} rather than
  * attempting to perform arithmetic operations directly on the fields of a
@@ -304,11 +278,10 @@ import java.io.Serializable;
  * during non-leap years. The subclasses' <tt>add</tt> and <tt>roll</tt>
  * methods will take this into account, while simple arithmetic manipulations
  * may give invalid results.
- * 
+ *
  * @see Date
  * @see GregorianCalendar
  * @see TimeZone
- * @since Android 1.0
  */
 public abstract class Calendar implements Serializable, Cloneable,
         Comparable<Calendar> {
@@ -318,38 +291,28 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Set to {@code true} when the calendar fields have been set from the time, set to
      * {@code false} when a field is changed and the fields must be recomputed.
-     * 
-     * @since Android 1.0
      */
     protected boolean areFieldsSet;
 
     /**
      * An integer array of calendar fields. The length is {@code FIELD_COUNT}.
-     * 
-     * @since Android 1.0
      */
     protected int[] fields;
 
     /**
      * A boolean array. Each element indicates if the corresponding field has
      * been set. The length is {@code FIELD_COUNT}.
-     * 
-     * @since Android 1.0
      */
     protected boolean[] isSet;
 
     /**
      * Set to {@code true} when the time has been set, set to {@code false} when a field is
      * changed and the time must be recomputed.
-     * 
-     * @since Android 1.0
      */
     protected boolean isTimeSet;
 
     /**
      * The time in milliseconds since January 1, 1970.
-     * 
-     * @since Android 1.0
      */
     protected long time;
 
@@ -365,100 +328,75 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     private TimeZone zone;
 
-    // BEGIN android-changed
     /**
      * Value of the {@code MONTH} field indicating the first month of the
      * year.
-     * 
-     * @since Android 1.0
      */
     public static final int JANUARY = 0;
 
     /**
      * Value of the {@code MONTH} field indicating the second month of
      * the year.
-     * 
-     * @since Android 1.0
      */
     public static final int FEBRUARY = 1;
 
     /**
      * Value of the {@code MONTH} field indicating the third month of the
      * year.
-     * 
-     * @since Android 1.0
      */
     public static final int MARCH = 2;
 
     /**
      * Value of the {@code MONTH} field indicating the fourth month of
      * the year.
-     * 
-     * @since Android 1.0
      */
     public static final int APRIL = 3;
 
     /**
      * Value of the {@code MONTH} field indicating the fifth month of the
      * year.
-     * 
-     * @since Android 1.0
      */
     public static final int MAY = 4;
 
     /**
      * Value of the {@code MONTH} field indicating the sixth month of the
      * year.
-     * 
-     * @since Android 1.0
      */
     public static final int JUNE = 5;
 
     /**
      * Value of the {@code MONTH} field indicating the seventh month of
      * the year.
-     * 
-     * @since Android 1.0
      */
     public static final int JULY = 6;
 
     /**
      * Value of the {@code MONTH} field indicating the eighth month of
      * the year.
-     * 
-     * @since Android 1.0
      */
     public static final int AUGUST = 7;
 
     /**
      * Value of the {@code MONTH} field indicating the ninth month of the
      * year.
-     * 
-     * @since Android 1.0
      */
     public static final int SEPTEMBER = 8;
 
     /**
      * Value of the {@code MONTH} field indicating the tenth month of the
      * year.
-     * 
-     * @since Android 1.0
      */
     public static final int OCTOBER = 9;
 
     /**
      * Value of the {@code MONTH} field indicating the eleventh month of
      * the year.
-     * 
-     * @since Android 1.0
      */
     public static final int NOVEMBER = 10;
 
     /**
      * Value of the {@code MONTH} field indicating the twelfth month of
      * the year.
-     * 
-     * @since Android 1.0
      */
     public static final int DECEMBER = 11;
 
@@ -466,57 +404,41 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Value of the {@code MONTH} field indicating the thirteenth month
      * of the year. Although {@code GregorianCalendar} does not use this
      * value, lunar calendars do.
-     * 
-     * @since Android 1.0
      */
     public static final int UNDECIMBER = 12;
 
     /**
      * Value of the {@code DAY_OF_WEEK} field indicating Sunday.
-     * 
-     * @since Android 1.0
      */
     public static final int SUNDAY = 1;
 
     /**
      * Value of the {@code DAY_OF_WEEK} field indicating Monday.
-     * 
-     * @since Android 1.0
      */
     public static final int MONDAY = 2;
 
     /**
      * Value of the {@code DAY_OF_WEEK} field indicating Tuesday.
-     * 
-     * @since Android 1.0
      */
     public static final int TUESDAY = 3;
 
     /**
      * Value of the {@code DAY_OF_WEEK} field indicating Wednesday.
-     * 
-     * @since Android 1.0
      */
     public static final int WEDNESDAY = 4;
 
     /**
      * Value of the {@code DAY_OF_WEEK} field indicating Thursday.
-     * 
-     * @since Android 1.0
      */
     public static final int THURSDAY = 5;
 
     /**
      * Value of the {@code DAY_OF_WEEK} field indicating Friday.
-     * 
-     * @since Android 1.0
      */
     public static final int FRIDAY = 6;
 
     /**
      * Value of the {@code DAY_OF_WEEK} field indicating Saturday.
-     * 
-     * @since Android 1.0
      */
     public static final int SATURDAY = 7;
 
@@ -524,19 +446,15 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * era, e.g., AD or BC in the Julian calendar. This is a calendar-specific
      * value; see subclass documentation.
-     * 
+     *
      * @see GregorianCalendar#AD
      * @see GregorianCalendar#BC
-     * 
-     * @since Android 1.0
      */
     public static final int ERA = 0;
 
     /**
      * Field number for {@code get} and {@code set} indicating the
      * year. This is a calendar-specific value; see subclass documentation.
-     * 
-     * @since Android 1.0
      */
     public static final int YEAR = 1;
 
@@ -545,7 +463,7 @@ public abstract class Calendar implements Serializable, Cloneable,
      * month. This is a calendar-specific value. The first month of the year is
      * {@code JANUARY}; the last depends on the number of months in a
      * year.
-     * 
+     *
      * @see #JANUARY
      * @see #FEBRUARY
      * @see #MARCH
@@ -559,8 +477,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      * @see #NOVEMBER
      * @see #DECEMBER
      * @see #UNDECIMBER
-     * 
-     * @since Android 1.0
      */
     public static final int MONTH = 2;
 
@@ -571,11 +487,9 @@ public abstract class Calendar implements Serializable, Cloneable,
      * {@code getMinimalDaysInFirstWeek()}, has value 1. Subclasses
      * define the value of {@code WEEK_OF_YEAR} for days before the first
      * week of the year.
-     * 
+     *
      * @see #getFirstDayOfWeek
      * @see #getMinimalDaysInFirstWeek
-     * 
-     * @since Android 1.0
      */
     public static final int WEEK_OF_YEAR = 3;
 
@@ -586,11 +500,9 @@ public abstract class Calendar implements Serializable, Cloneable,
      * {@code getMinimalDaysInFirstWeek()}, has value 1. Subclasses
      * define the value of {@code WEEK_OF_MONTH} for days before the
      * first week of the month.
-     * 
+     *
      * @see #getFirstDayOfWeek
      * @see #getMinimalDaysInFirstWeek
-     * 
-     * @since Android 1.0
      */
     public static final int WEEK_OF_MONTH = 4;
 
@@ -598,10 +510,8 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * day of the month. This is a synonym for {@code DAY_OF_MONTH}. The
      * first day of the month has value 1.
-     * 
+     *
      * @see #DAY_OF_MONTH
-     * 
-     * @since Android 1.0
      */
     public static final int DATE = 5;
 
@@ -609,10 +519,8 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * day of the month. This is a synonym for {@code DATE}. The first
      * day of the month has value 1.
-     * 
+     *
      * @see #DATE
-     * 
-     * @since Android 1.0
      */
     public static final int DAY_OF_MONTH = 5;
 
@@ -620,8 +528,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * day number within the current year. The first day of the year has value
      * 1.
-     * 
-     * @since Android 1.0
      */
     public static final int DAY_OF_YEAR = 6;
 
@@ -631,7 +537,7 @@ public abstract class Calendar implements Serializable, Cloneable,
      * {@code MONDAY}, {@code TUESDAY}, {@code WEDNESDAY},
      * {@code THURSDAY}, {@code FRIDAY}, and
      * {@code SATURDAY}.
-     * 
+     *
      * @see #SUNDAY
      * @see #MONDAY
      * @see #TUESDAY
@@ -639,8 +545,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      * @see #THURSDAY
      * @see #FRIDAY
      * @see #SATURDAY
-     * 
-     * @since Android 1.0
      */
     public static final int DAY_OF_WEEK = 7;
 
@@ -664,11 +568,9 @@ public abstract class Calendar implements Serializable, Cloneable,
      * within the month than positive values. For example, if a month has 31
      * days, {@code DAY_OF_WEEK_IN_MONTH -1} will overlap
      * {@code DAY_OF_WEEK_IN_MONTH 5} and the end of {@code 4}.
-     * 
+     *
      * @see #DAY_OF_WEEK
      * @see #WEEK_OF_MONTH
-     * 
-     * @since Android 1.0
      */
     public static final int DAY_OF_WEEK_IN_MONTH = 8;
 
@@ -676,12 +578,10 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating
      * whether the {@code HOUR} is before or after noon. E.g., at
      * 10:04:15.250 PM the {@code AM_PM} is {@code PM}.
-     * 
+     *
      * @see #AM
      * @see #PM
      * @see #HOUR
-     * 
-     * @since Android 1.0
      */
     public static final int AM_PM = 9;
 
@@ -689,11 +589,9 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * hour of the morning or afternoon. {@code HOUR} is used for the
      * 12-hour clock. E.g., at 10:04:15.250 PM the {@code HOUR} is 10.
-     * 
+     *
      * @see #AM_PM
      * @see #HOUR_OF_DAY
-     * 
-     * @since Android 1.0
      */
     public static final int HOUR = 10;
 
@@ -701,10 +599,8 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * hour of the day. {@code HOUR_OF_DAY} is used for the 24-hour
      * clock. E.g., at 10:04:15.250 PM the {@code HOUR_OF_DAY} is 22.
-     * 
+     *
      * @see #HOUR
-     * 
-     * @since Android 1.0
      */
     public static final int HOUR_OF_DAY = 11;
 
@@ -712,8 +608,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * minute within the hour. E.g., at 10:04:15.250 PM the {@code MINUTE}
      * is 4.
-     * 
-     * @since Android 1.0
      */
     public static final int MINUTE = 12;
 
@@ -721,8 +615,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * second within the minute. E.g., at 10:04:15.250 PM the
      * {@code SECOND} is 15.
-     * 
-     * @since Android 1.0
      */
     public static final int SECOND = 13;
 
@@ -730,61 +622,46 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Field number for {@code get} and {@code set} indicating the
      * millisecond within the second. E.g., at 10:04:15.250 PM the
      * {@code MILLISECOND} is 250.
-     * 
-     * @since Android 1.0
      */
     public static final int MILLISECOND = 14;
 
     /**
      * Field number for {@code get} and {@code set} indicating the
      * raw offset from GMT in milliseconds.
-     * 
-     * @since Android 1.0
      */
     public static final int ZONE_OFFSET = 15;
 
     /**
      * Field number for {@code get} and {@code set} indicating the
      * daylight savings offset in milliseconds.
-     * 
-     * @since Android 1.0
      */
     public static final int DST_OFFSET = 16;
 
     /**
      * This is the total number of fields in this calendar.
-     * 
-     * @since Android 1.0
      */
     public static final int FIELD_COUNT = 17;
 
     /**
      * Value of the {@code AM_PM} field indicating the period of the day
      * from midnight to just before noon.
-     * 
-     * @since Android 1.0
      */
     public static final int AM = 0;
 
     /**
      * Value of the {@code AM_PM} field indicating the period of the day
      * from noon to just before midnight.
-     * 
-     * @since Android 1.0
      */
     public static final int PM = 1;
-    // END android-changed
 
     private static String[] fieldNames = { "ERA=", "YEAR=", "MONTH=", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            "WEEK_OF_YEAR=", "WEEK_OF_MONTH=", "DAY_OF_MONTH=", "DAY_OF_YEAR=",  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            "DAY_OF_WEEK=", "DAY_OF_WEEK_IN_MONTH=", "AM_PM=", "HOUR=",   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$
+            "WEEK_OF_YEAR=", "WEEK_OF_MONTH=", "DAY_OF_MONTH=", "DAY_OF_YEAR=", //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            "DAY_OF_WEEK=", "DAY_OF_WEEK_IN_MONTH=", "AM_PM=", "HOUR=", //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$
             "HOUR_OF_DAY", "MINUTE=", "SECOND=", "MILLISECOND=", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             "ZONE_OFFSET=", "DST_OFFSET=" }; //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Constructs a {@code Calendar} instance using the default {@code TimeZone} and {@code Locale}.
-     * 
-     * @since Android 1.0
      */
     protected Calendar() {
         this(TimeZone.getDefault(), Locale.getDefault());
@@ -800,30 +677,38 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Constructs a {@code Calendar} instance using the specified {@code TimeZone} and {@code Locale}.
-     * 
+     *
      * @param timezone
      *            the timezone.
      * @param locale
      *            the locale.
-     * 
-     * @since Android 1.0
      */
     protected Calendar(TimeZone timezone, Locale locale) {
         this(timezone);
+        // BEGIN android-changed
+        // com.ibm.icu.util.Calendar icuCalendar = com.ibm.icu.util.Calendar
+        //         .getInstance(com.ibm.icu.util.SimpleTimeZone
+        //                 .getTimeZone(timezone.getID()), locale);
+        // setFirstDayOfWeek(icuCalendar.getFirstDayOfWeek());
+        // setMinimalDaysInFirstWeek(icuCalendar.getMinimalDaysInFirstWeek());
         ResourceBundle bundle = Locale.getBundle("Locale", locale); //$NON-NLS-1$
         setFirstDayOfWeek(((Integer) bundle.getObject("First_Day")).intValue()); //$NON-NLS-1$
         setMinimalDaysInFirstWeek(((Integer) bundle.getObject("Minimal_Days")) //$NON-NLS-1$
                 .intValue());
+        // END android-changed
     }
+
 
     /**
      * Adds the specified amount to a {@code Calendar} field.
-     * 
+     *
      * @param field
      *            the {@code Calendar} field to modify.
      * @param value
      *            the amount to add to the field.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if {@code field} is {@code DST_OFFSET} or {@code
+     *                ZONE_OFFSET}.
      */
     abstract public void add(int field, int value);
 
@@ -831,11 +716,13 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Returns whether the {@code Date} specified by this {@code Calendar} instance is after the {@code Date}
      * specified by the parameter. The comparison is not dependent on the time
      * zones of the {@code Calendar}.
-     * 
+     *
      * @param calendar
      *            the {@code Calendar} instance to compare.
      * @return {@code true} when this Calendar is after calendar, {@code false} otherwise.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if the time is not set and the time cannot be computed
+     *                from the current field values.
      */
     public boolean after(Object calendar) {
         if (!(calendar instanceof Calendar)) {
@@ -848,11 +735,13 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Returns whether the {@code Date} specified by this {@code Calendar} instance is before the
      * {@code Date} specified by the parameter. The comparison is not dependent on the
      * time zones of the {@code Calendar}.
-     * 
+     *
      * @param calendar
      *            the {@code Calendar} instance to compare.
      * @return {@code true} when this Calendar is before calendar, {@code false} otherwise.
-     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *                if the time is not set and the time cannot be computed
+     *                from the current field values.
      */
     public boolean before(Object calendar) {
         if (!(calendar instanceof Calendar)) {
@@ -864,8 +753,6 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Clears all of the fields of this {@code Calendar}. All fields are initialized to
      * zero.
-     * 
-     * @since Android 1.0
      */
     public final void clear() {
         for (int i = 0; i < FIELD_COUNT; i++) {
@@ -877,10 +764,9 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Clears the specified field to zero and sets the isSet flag to {@code false}.
-     * 
+     *
      * @param field
      *            the field to clear.
-     * @since Android 1.0
      */
     public final void clear(int field) {
         fields[field] = 0;
@@ -890,11 +776,10 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Returns a new {@code Calendar} with the same properties.
-     * 
+     *
      * @return a shallow copy of this {@code Calendar}.
-     * 
+     *
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -912,11 +797,10 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Computes the time from the fields if the time has not already been set.
      * Computes the fields from the time if the fields are not already set.
-     * 
-     * @exception IllegalArgumentException
-     *                when the time is not set and the time cannot be computed
+     *
+     * @throws IllegalArgumentException
+     *                if the time is not set and the time cannot be computed
      *                from the current field values.
-     * @since Android 1.0
      */
     protected void complete() {
         if (!isTimeSet) {
@@ -931,18 +815,15 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Computes the {@code Calendar} fields from {@code time}.
-     * 
-     * @since Android 1.0
      */
     protected abstract void computeFields();
 
     /**
      * Computes {@code time} from the Calendar fields.
-     * 
-     * @exception IllegalArgumentException
-     *                when the time cannot be computed from the current field
+     *
+     * @throws IllegalArgumentException
+     *                if the time cannot be computed from the current field
      *                values.
-     * @since Android 1.0
      */
     protected abstract void computeTime();
 
@@ -950,12 +831,11 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Compares the specified object to this {@code Calendar} and returns whether they are
      * equal. The object must be an instance of {@code Calendar} and have the same
      * properties.
-     * 
+     *
      * @param object
      *            the object to compare with this object.
      * @return {@code true} if the specified object is equal to this {@code Calendar}, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -977,18 +857,17 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Gets the value of the specified field after computing the field values by
      * calling {@code complete()} first.
-     * 
+     *
      * @param field
      *            the field to get.
      * @return the value of the specified field.
-     * 
-     * @exception IllegalArgumentException
-     *                when the fields are not set, the time is not set, and the
+     *
+     * @throws IllegalArgumentException
+     *                if the fields are not set, the time is not set, and the
      *                time cannot be computed from the current field values.
-     * @exception ArrayIndexOutOfBoundsException
+     * @throws ArrayIndexOutOfBoundsException
      *                if the field is not inside the range of possible fields.
      *                The range is starting at 0 up to {@code FIELD_COUNT}.
-     * @since Android 1.0
      */
     public int get(int field) {
         complete();
@@ -997,11 +876,10 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Gets the maximum value of the specified field for the current date.
-     * 
+     *
      * @param field
      *            the field.
      * @return the maximum value of the specified field.
-     * @since Android 1.0
      */
     public int getActualMaximum(int field) {
         int value, next;
@@ -1023,11 +901,10 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Gets the minimum value of the specified field for the current date.
-     * 
+     *
      * @param field
      *            the field.
      * @return the minimum value of the specified field.
-     * @since Android 1.0
      */
     public int getActualMinimum(int field) {
         int value, next;
@@ -1049,9 +926,8 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Gets the list of installed {@code Locale}s which support {@code Calendar}.
-     * 
+     *
      * @return an array of {@code Locale}.
-     * @since Android 1.0
      */
     public static synchronized Locale[] getAvailableLocales() {
         return Locale.getAvailableLocales();
@@ -1059,9 +935,8 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Gets the first day of the week for this {@code Calendar}.
-     * 
+     *
      * @return the first day of the week.
-     * @since Android 1.0
      */
     public int getFirstDayOfWeek() {
         return firstDayOfWeek;
@@ -1071,21 +946,19 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Gets the greatest minimum value of the specified field. This is the
      * biggest value that {@code getActualMinimum} can return for any possible
      * time.
-     * 
+     *
      * @param field
      *            the field.
      * @return the greatest minimum value of the specified field.
-     * @since Android 1.0
      */
     abstract public int getGreatestMinimum(int field);
 
     /**
      * Constructs a new instance of the {@code Calendar} subclass appropriate for the
      * default {@code Locale}.
-     * 
+     *
      * @return a {@code Calendar} subclass instance set to the current date and time in
      *         the default {@code Timezone}.
-     * @since Android 1.0
      */
     public static synchronized Calendar getInstance() {
         return new GregorianCalendar();
@@ -1094,11 +967,10 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Constructs a new instance of the {@code Calendar} subclass appropriate for the
      * specified {@code Locale}.
-     * 
+     *
      * @param locale
      *            the locale to use.
      * @return a {@code Calendar} subclass instance set to the current date and time.
-     * @since Android 1.0
      */
     public static synchronized Calendar getInstance(Locale locale) {
         return new GregorianCalendar(locale);
@@ -1107,12 +979,11 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Constructs a new instance of the {@code Calendar} subclass appropriate for the
      * default {@code Locale}, using the specified {@code TimeZone}.
-     * 
+     *
      * @param timezone
      *            the {@code TimeZone} to use.
      * @return a {@code Calendar} subclass instance set to the current date and time in
      *         the specified timezone.
-     * @since Android 1.0
      */
     public static synchronized Calendar getInstance(TimeZone timezone) {
         return new GregorianCalendar(timezone);
@@ -1121,14 +992,13 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Constructs a new instance of the {@code Calendar} subclass appropriate for the
      * specified {@code Locale}.
-     * 
+     *
      * @param timezone
      *            the {@code TimeZone} to use.
      * @param locale
      *            the {@code Locale} to use.
      * @return a {@code Calendar} subclass instance set to the current date and time in
      *         the specified timezone.
-     * @since Android 1.0
      */
     public static synchronized Calendar getInstance(TimeZone timezone,
             Locale locale) {
@@ -1139,30 +1009,27 @@ public abstract class Calendar implements Serializable, Cloneable,
      * Gets the smallest maximum value of the specified field. This is the
      * smallest value that {@code getActualMaximum()} can return for any
      * possible time.
-     * 
+     *
      * @param field
      *            the field number.
      * @return the smallest maximum value of the specified field.
-     * @since Android 1.0
      */
     abstract public int getLeastMaximum(int field);
 
     /**
      * Gets the greatest maximum value of the specified field. This returns the
      * biggest value that {@code get} can return for the specified field.
-     * 
+     *
      * @param field
      *            the field.
      * @return the greatest maximum value of the specified field.
-     * @since Android 1.0
      */
     abstract public int getMaximum(int field);
 
     /**
      * Gets the minimal days in the first week of the year.
-     * 
+     *
      * @return the minimal days in the first week of the year.
-     * @since Android 1.0
      */
     public int getMinimalDaysInFirstWeek() {
         return minimalDaysInFirstWeek;
@@ -1171,23 +1038,21 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Gets the smallest minimum value of the specified field. this returns the
      * smallest value thet {@code get} can return for the specified field.
-     * 
+     *
      * @param field
      *            the field number.
      * @return the smallest minimum value of the specified field.
-     * @since Android 1.0
      */
     abstract public int getMinimum(int field);
 
     /**
      * Gets the time of this {@code Calendar} as a {@code Date} object.
-     * 
+     *
      * @return a new {@code Date} initialized to the time of this {@code Calendar}.
-     * 
-     * @exception IllegalArgumentException
-     *                when the time is not set and the time cannot be computed
+     *
+     * @throws IllegalArgumentException
+     *                if the time is not set and the time cannot be computed
      *                from the current field values.
-     * @since Android 1.0
      */
     public final Date getTime() {
         return new Date(getTimeInMillis());
@@ -1195,13 +1060,12 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Computes the time from the fields if required and returns the time.
-     * 
+     *
      * @return the time of this {@code Calendar}.
-     * 
-     * @exception IllegalArgumentException
-     *                when the time is not set and the time cannot be computed
+     *
+     * @throws IllegalArgumentException
+     *                if the time is not set and the time cannot be computed
      *                from the current field values.
-     * @since Android 1.0
      */
     public long getTimeInMillis() {
         if (!isTimeSet) {
@@ -1213,9 +1077,8 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Gets the timezone of this {@code Calendar}.
-     * 
+     *
      * @return the {@code TimeZone} used by this {@code Calendar}.
-     * @since Android 1.0
      */
     public TimeZone getTimeZone() {
         return zone;
@@ -1224,11 +1087,10 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Returns an integer hash code for the receiver. Objects which are equal
      * return the same value for this method.
-     * 
+     *
      * @return the receiver's hash.
-     * 
+     *
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -1238,11 +1100,10 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Gets the value of the specified field without recomputing.
-     * 
+     *
      * @param field
      *            the field.
      * @return the value of the specified field.
-     * @since Android 1.0
      */
     protected final int internalGet(int field) {
         return fields[field];
@@ -1251,9 +1112,8 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Returns if this {@code Calendar} accepts field values which are outside the valid
      * range for the field.
-     * 
+     *
      * @return {@code true} if this {@code Calendar} is lenient, {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isLenient() {
         return lenient;
@@ -1261,11 +1121,10 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Returns whether the specified field is set.
-     * 
+     *
      * @param field
      *            a {@code Calendar} field number.
      * @return {@code true} if the specified field is set, {@code false} otherwise.
-     * @since Android 1.0
      */
     public final boolean isSet(int field) {
         return isSet[field];
@@ -1276,12 +1135,11 @@ public abstract class Calendar implements Serializable, Cloneable,
      * the field when it goes beyond the maximum or minimum value for the
      * current date. Other fields will be adjusted as required to maintain a
      * consistent date.
-     * 
+     *
      * @param field
      *            the field to roll.
      * @param value
      *            the amount to add.
-     * @since Android 1.0
      */
     public void roll(int field, int value) {
         boolean increment = value >= 0;
@@ -1296,23 +1154,21 @@ public abstract class Calendar implements Serializable, Cloneable,
      * field when it goes beyond the maximum or minimum value for the current
      * date. Other fields will be adjusted as required to maintain a consistent
      * date.
-     * 
+     *
      * @param field
      *            the number indicating the field to roll.
      * @param increment
      *            {@code true} to increment the field, {@code false} to decrement.
-     * @since Android 1.0
      */
     abstract public void roll(int field, boolean increment);
 
     /**
      * Sets a field to the specified value.
-     * 
+     *
      * @param field
      *            the code indicating the {@code Calendar} field to modify.
      * @param value
      *            the value.
-     * @since Android 1.0
      */
     public void set(int field, int value) {
         fields[field] = value;
@@ -1332,14 +1188,13 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Sets the year, month and day of the month fields. Other fields are not
      * changed.
-     * 
+     *
      * @param year
      *            the year.
      * @param month
      *            the month.
      * @param day
      *            the day of the month.
-     * @since Android 1.0
      */
     public final void set(int year, int month, int day) {
         set(YEAR, year);
@@ -1350,7 +1205,7 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Sets the year, month, day of the month, hour of day and minute fields.
      * Other fields are not changed.
-     * 
+     *
      * @param year
      *            the year.
      * @param month
@@ -1361,7 +1216,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      *            the hour of day.
      * @param minute
      *            the minute.
-     * @since Android 1.0
      */
     public final void set(int year, int month, int day, int hourOfDay,
             int minute) {
@@ -1373,7 +1227,7 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Sets the year, month, day of the month, hour of day, minute and second
      * fields. Other fields are not changed.
-     * 
+     *
      * @param year
      *            the year.
      * @param month
@@ -1386,7 +1240,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      *            the minute.
      * @param second
      *            the second.
-     * @since Android 1.0
      */
     public final void set(int year, int month, int day, int hourOfDay,
             int minute, int second) {
@@ -1396,10 +1249,9 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Sets the first day of the week for this {@code Calendar}.
-     * 
+     *
      * @param value
      *            a {@code Calendar} day of the week.
-     * @since Android 1.0
      */
     public void setFirstDayOfWeek(int value) {
         firstDayOfWeek = value;
@@ -1408,10 +1260,9 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Sets this {@code Calendar} to accept field values which are outside the valid
      * range for the field.
-     * 
+     *
      * @param value
      *            a boolean value.
-     * @since Android 1.0
      */
     public void setLenient(boolean value) {
         lenient = value;
@@ -1419,10 +1270,9 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Sets the minimal days in the first week of the year.
-     * 
+     *
      * @param value
      *            the minimal days in the first week of the year.
-     * @since Android 1.0
      */
     public void setMinimalDaysInFirstWeek(int value) {
         minimalDaysInFirstWeek = value;
@@ -1430,10 +1280,9 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Sets the time of this {@code Calendar}.
-     * 
+     *
      * @param date
      *            a {@code Date} object.
-     * @since Android 1.0
      */
     public final void setTime(Date date) {
         setTimeInMillis(date.getTime());
@@ -1441,43 +1290,45 @@ public abstract class Calendar implements Serializable, Cloneable,
 
     /**
      * Sets the time of this {@code Calendar}.
-     * 
+     *
      * @param milliseconds
      *            the time as the number of milliseconds since Jan. 1, 1970.
-     * @since Android 1.0
      */
     public void setTimeInMillis(long milliseconds) {
-        time = milliseconds;
-        isTimeSet = true;
-        areFieldsSet = false;
-        complete();
+        if (!isTimeSet || !areFieldsSet || time != milliseconds) {
+            time = milliseconds;
+            isTimeSet = true;
+            areFieldsSet = false;
+            complete();
+        }
     }
 
     /**
      * Sets the {@code TimeZone} used by this Calendar.
-     * 
+     *
      * @param timezone
      *            a {@code TimeZone}.
-     * @since Android 1.0
      */
     public void setTimeZone(TimeZone timezone) {
         zone = timezone;
+        areFieldsSet = false;
     }
 
     /**
      * Returns the string representation of this {@code Calendar}.
-     * 
+     *
      * @return the string representation of this {@code Calendar}.
-     * @since Android 1.0
      */
     @Override
+    @SuppressWarnings("nls")
     public String toString() {
-        StringBuffer result = new StringBuffer(getClass().getName() + "[time=" //$NON-NLS-1$
-                + (isTimeSet ? String.valueOf(time) : "?") + ",areFieldsSet="  //$NON-NLS-1$//$NON-NLS-2$
-                + areFieldsSet +
-                // ",areAllFieldsSet=" + areAllFieldsSet +
-                ",lenient=" + lenient + ",zone=" + zone + ",firstDayOfWeek=" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                + firstDayOfWeek + ",minimalDaysInFirstWeek=" //$NON-NLS-1$
+        StringBuilder result = new StringBuilder(getClass().getName() + "[time="
+                + (isTimeSet ? String.valueOf(time) : "?")
+                + ",areFieldsSet="
+                + areFieldsSet
+                + // ",areAllFieldsSet=" + areAllFieldsSet +
+                ",lenient=" + lenient + ",zone=" + zone + ",firstDayOfWeek="
+                + firstDayOfWeek + ",minimalDaysInFirstWeek="
                 + minimalDaysInFirstWeek);
         for (int i = 0; i < FIELD_COUNT; i++) {
             result.append(',');
@@ -1496,7 +1347,7 @@ public abstract class Calendar implements Serializable, Cloneable,
     /**
      * Compares the times of the two {@code Calendar}, which represent the milliseconds
      * from the January 1, 1970 00:00:00.000 GMT (Gregorian).
-     * 
+     *
      * @param anotherCalendar
      *            another calendar that this one is compared with.
      * @return 0 if the times of the two {@code Calendar}s are equal, -1 if the time of
@@ -1507,7 +1358,6 @@ public abstract class Calendar implements Serializable, Cloneable,
      * @throws IllegalArgumentException
      *             if the argument does not include a valid time
      *             value.
-     * @since Android 1.0
      */
     public int compareTo(Calendar anotherCalendar) {
         if (null == anotherCalendar) {
@@ -1524,6 +1374,7 @@ public abstract class Calendar implements Serializable, Cloneable,
         return -1;
     }
 
+    @SuppressWarnings("nls")
     private static final ObjectStreamField[] serialPersistentFields = {
             new ObjectStreamField("areFieldsSet", Boolean.TYPE), //$NON-NLS-1$
             new ObjectStreamField("fields", int[].class), //$NON-NLS-1$
@@ -1537,6 +1388,7 @@ public abstract class Calendar implements Serializable, Cloneable,
             new ObjectStreamField("time", Long.TYPE), //$NON-NLS-1$
             new ObjectStreamField("zone", TimeZone.class), }; //$NON-NLS-1$
 
+    @SuppressWarnings("nls")
     private void writeObject(ObjectOutputStream stream) throws IOException {
         complete();
         ObjectOutputStream.PutField putFields = stream.putFields();
@@ -1554,6 +1406,7 @@ public abstract class Calendar implements Serializable, Cloneable,
         stream.writeFields();
     }
 
+    @SuppressWarnings("nls")
     private void readObject(ObjectInputStream stream) throws IOException,
             ClassNotFoundException {
         ObjectInputStream.GetField readFields = stream.readFields();

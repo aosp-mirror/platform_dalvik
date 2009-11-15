@@ -26,18 +26,18 @@ import java.util.TreeMap;
 
 /**
  * Proto (method prototype) identifiers list section of a
- * <code>.dex</code> file.
+ * {@code .dex} file.
  */
 public final class ProtoIdsSection extends UniformItemSection {
     /**
-     * non-null; map from method prototypes to {@link ProtoIdItem} instances
+     * {@code non-null;} map from method prototypes to {@link ProtoIdItem} instances
      */
     private final TreeMap<Prototype, ProtoIdItem> protoIds;
 
     /**
      * Constructs an instance. The file offset is initially unknown.
      * 
-     * @param file non-null; file that this instance is part of
+     * @param file {@code non-null;} file that this instance is part of
      */
     public ProtoIdsSection(DexFile file) {
         super("proto_ids", file, 4);
@@ -60,7 +60,7 @@ public final class ProtoIdsSection extends UniformItemSection {
     /**
      * Writes the portion of the file header that refers to this instance.
      * 
-     * @param out non-null; where to write
+     * @param out {@code non-null;} where to write
      */
     public void writeHeaderPart(AnnotatedOutput out) {
         throwIfNotPrepared();
@@ -84,8 +84,8 @@ public final class ProtoIdsSection extends UniformItemSection {
     /**
      * Interns an element into this instance.
      * 
-     * @param prototype non-null; the prototype to intern
-     * @return non-null; the interned reference
+     * @param prototype {@code non-null;} the prototype to intern
+     * @return {@code non-null;} the interned reference
      */
     public ProtoIdItem intern(Prototype prototype) {
         if (prototype == null) {
@@ -108,8 +108,8 @@ public final class ProtoIdsSection extends UniformItemSection {
      * Gets the index of the given prototype, which must have
      * been added to this instance.
      * 
-     * @param prototype non-null; the prototype to look up
-     * @return &gt;= 0; the reference's index
+     * @param prototype {@code non-null;} the prototype to look up
+     * @return {@code >= 0;} the reference's index
      */
     public int indexOf(Prototype prototype) {
         if (prototype == null) {

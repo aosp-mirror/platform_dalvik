@@ -28,8 +28,6 @@ import org.apache.harmony.luni.util.Msg;
  * Concatenates two or more existing {@link InputStream}s. Reads are taken from
  * the first stream until it ends, then the next stream is used, until the last
  * stream returns end of file.
- * 
- * @since Android 1.0
  */
 public class SequenceInputStream extends InputStream {
     /**
@@ -45,14 +43,13 @@ public class SequenceInputStream extends InputStream {
     /**
      * Constructs a new {@code SequenceInputStream} using the two streams
      * {@code s1} and {@code s2} as the sequence of streams to read from.
-     * 
+     *
      * @param s1
      *            the first stream to get bytes from.
      * @param s2
      *            the second stream to get bytes from.
      * @throws NullPointerException
      *             if {@code s1} is {@code null}.
-     * @since Android 1.0
      */
     public SequenceInputStream(InputStream s1, InputStream s2) {
         if (s1 == null) {
@@ -68,12 +65,11 @@ public class SequenceInputStream extends InputStream {
      * Constructs a new SequenceInputStream using the elements returned from
      * Enumeration {@code e} as the stream sequence. The instances returned by
      * {@code e.nextElement()} must be of type {@link InputStream}.
-     * 
+     *
      * @param e
      *            the enumeration of {@code InputStreams} to get bytes from.
      * @throws NullPointerException
      *             if any of the elements in {@code e} is {@code null}.
-     * @since Android 1.0
      */
     public SequenceInputStream(Enumeration<? extends InputStream> e) {
         this.e = e;
@@ -87,12 +83,11 @@ public class SequenceInputStream extends InputStream {
 
     /**
      * Returns the number of bytes that are available before the current input stream will
-     * block. 
-     * 
+     * block.
+     *
      * @return the number of bytes available in the current input stream before blocking.
      * @throws IOException
      *             if an I/O error occurs in the current input stream.
-     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -103,11 +98,10 @@ public class SequenceInputStream extends InputStream {
     }
 
     /**
-     * Closes all streams in this sequence of input stream. 
-     * 
+     * Closes all streams in this sequence of input stream.
+     *
      * @throws IOException
      *             if an error occurs while closing any of the input streams.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -119,7 +113,7 @@ public class SequenceInputStream extends InputStream {
 
     /**
      * Sets up the next InputStream or leaves it alone if there are none left.
-     * 
+     *
      * @throws IOException
      */
     private void nextStream() throws IOException {
@@ -142,14 +136,13 @@ public class SequenceInputStream extends InputStream {
      * stream first; if the end of this stream has been reached, it reads from
      * the next one. Blocks until one byte has been read, the end of the last
      * input stream in the sequence has been reached, or an exception is thrown.
-     * 
+     *
      * @return the byte read or -1 if either the end of the last stream in the
      *         sequence has been reached or this input stream sequence is
      *         closed.
      * @throws IOException
      *             if an error occurs while reading the current source input
      *             stream.
-     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -179,7 +172,7 @@ public class SequenceInputStream extends InputStream {
      * If a substream has already reached the end when this call is made, it
      * will close that substream and start with the next one. If there are no
      * more substreams it will return -1.
-     * 
+     *
      * @param buffer
      *            the array in which to store the bytes read.
      * @param offset
@@ -197,7 +190,6 @@ public class SequenceInputStream extends InputStream {
      *             if an I/O error occurs.
      * @throws NullPointerException
      *             if {@code buffer} is {@code null}.
-     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer, int offset, int count) throws IOException {

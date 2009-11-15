@@ -36,10 +36,9 @@ import java.util.GregorianCalendar;
  * itself. For example when reading a <i>ZIP-file</i> you will first retrieve
  * all its entries in a collection and then read the data for a specific entry
  * through an input stream.
- * 
+ *
  * @see ZipFile
  * @see ZipOutputStream
- * @since Android 1.0
  */
 public class ZipEntry implements ZipConstants, Cloneable {
     String name, comment;
@@ -94,26 +93,21 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Zip entry state: Deflated.
-     * 
-     * @since Android 1.0
      */
     public static final int DEFLATED = 8;
 
     /**
      * Zip entry state: Stored.
-     * 
-     * @since Android 1.0
      */
     public static final int STORED = 0;
 
     /**
      * Constructs a new {@code ZipEntry} with the specified name.
-     * 
+     *
      * @param name
      *            the name of the ZIP entry.
      * @throws IllegalArgumentException
      *             if the name length is outside the range (> 0xFFFF).
-     * @since Android 1.0
      */
     public ZipEntry(String name) {
         if (name == null) {
@@ -147,11 +141,10 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the comment for this {@code ZipEntry}.
-     * 
+     *
      * @return the comment for this {@code ZipEntry}, or {@code null} if there
      *         is no comment. If we're reading an archive with
      *         {@code ZipInputStream} the comment is not available.
-     * @since Android 1.0
      */
     public String getComment() {
         return comment;
@@ -159,10 +152,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the compressed size of this {@code ZipEntry}.
-     * 
+     *
      * @return the compressed size, or -1 if the compressed size has not been
      *         set.
-     * @since Android 1.0
      */
     public long getCompressedSize() {
         return compressedSize;
@@ -170,9 +162,8 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the checksum for this {@code ZipEntry}.
-     * 
+     *
      * @return the checksum, or -1 if the checksum has not been set.
-     * @since Android 1.0
      */
     public long getCrc() {
         return crc;
@@ -180,10 +171,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the extra information for this {@code ZipEntry}.
-     * 
+     *
      * @return a byte array containing the extra information, or {@code null} if
      *         there is none.
-     * @since Android 1.0
      */
     public byte[] getExtra() {
         return extra;
@@ -191,10 +181,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the compression method for this {@code ZipEntry}.
-     * 
+     *
      * @return the compression method, either {@code DEFLATED}, {@code STORED}
      *         or -1 if the compression method has not been set.
-     * @since Android 1.0
      */
     public int getMethod() {
         return compressionMethod;
@@ -202,9 +191,8 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the name of this {@code ZipEntry}.
-     * 
+     *
      * @return the entry name.
-     * @since Android 1.0
      */
     public String getName() {
         return name;
@@ -212,10 +200,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the uncompressed size of this {@code ZipEntry}.
-     * 
+     *
      * @return the uncompressed size, or {@code -1} if the size has not been
      *         set.
-     * @since Android 1.0
      */
     public long getSize() {
         return size;
@@ -223,10 +210,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Gets the last modification time of this {@code ZipEntry}.
-     * 
+     *
      * @return the last modification time as the number of milliseconds since
      *         Jan. 1, 1970.
-     * @since Android 1.0
      */
     public long getTime() {
         if (time != -1) {
@@ -242,10 +228,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Determine whether or not this {@code ZipEntry} is a directory.
-     * 
+     *
      * @return {@code true} when this {@code ZipEntry} is a directory, {@code
      *         false} otherwise.
-     * @since Android 1.0
      */
     public boolean isDirectory() {
         return name.charAt(name.length() - 1) == '/';
@@ -253,10 +238,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Sets the comment for this {@code ZipEntry}.
-     * 
+     *
      * @param string
      *            the comment for this entry.
-     * @since Android 1.0
      */
     public void setComment(String string) {
         if (string == null || string.length() <= 0xFFFF) {
@@ -268,10 +252,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Sets the compressed size for this {@code ZipEntry}.
-     * 
+     *
      * @param value
      *            the compressed size (in bytes).
-     * @since Android 1.0
      */
     public void setCompressedSize(long value) {
         compressedSize = value;
@@ -279,12 +262,11 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Sets the checksum for this {@code ZipEntry}.
-     * 
+     *
      * @param value
      *            the checksum for this entry.
      * @throws IllegalArgumentException
      *             if {@code value} is < 0 or > 0xFFFFFFFFL.
-     * @since Android 1.0
      */
     public void setCrc(long value) {
         if (value >= 0 && value <= 0xFFFFFFFFL) {
@@ -296,12 +278,11 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Sets the extra information for this {@code ZipEntry}.
-     * 
+     *
      * @param data
      *            a byte array containing the extra information.
      * @throws IllegalArgumentException
      *             when the length of data is greater than 0xFFFF bytes.
-     * @since Android 1.0
      */
     public void setExtra(byte[] data) {
         if (data == null || data.length <= 0xFFFF) {
@@ -313,13 +294,12 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Sets the compression method for this {@code ZipEntry}.
-     * 
+     *
      * @param value
      *            the compression method, either {@code DEFLATED} or {@code
      *            STORED}.
      * @throws IllegalArgumentException
      *             when value is not {@code DEFLATED} or {@code STORED}.
-     * @since Android 1.0
      */
     public void setMethod(int value) {
         if (value != STORED && value != DEFLATED) {
@@ -330,12 +310,11 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Sets the uncompressed size of this {@code ZipEntry}.
-     * 
+     *
      * @param value
      *            the uncompressed size for this entry.
      * @throws IllegalArgumentException
      *             if {@code value} < 0 or {@code value} > 0xFFFFFFFFL.
-     * @since Android 1.0
      */
     public void setSize(long value) {
         if (value >= 0 && value <= 0xFFFFFFFFL) {
@@ -347,11 +326,10 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Sets the modification time of this {@code ZipEntry}.
-     * 
+     *
      * @param value
      *            the modification time as the number of milliseconds since Jan.
      *            1, 1970.
-     * @since Android 1.0
      */
     public void setTime(long value) {
         GregorianCalendar cal = new GregorianCalendar();
@@ -372,9 +350,8 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Returns the string representation of this {@code ZipEntry}.
-     * 
+     *
      * @return the string representation of this {@code ZipEntry}.
-     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -401,10 +378,9 @@ public class ZipEntry implements ZipConstants, Cloneable {
     /**
      * Constructs a new {@code ZipEntry} using the values obtained from {@code
      * ze}.
-     * 
+     *
      * @param ze
      *            the {@code ZipEntry} from which to obtain values.
-     * @since Android 1.0
      */
     public ZipEntry(ZipEntry ze) {
         name = ze.name;
@@ -434,9 +410,8 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Returns a shallow copy of this entry.
-     * 
+     *
      * @return a copy of this entry.
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -445,9 +420,8 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
     /**
      * Returns the hash code for this {@code ZipEntry}.
-     * 
+     *
      * @return the hash code of the entry.
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -471,7 +445,7 @@ public class ZipEntry implements ZipConstants, Cloneable {
          * readIntLE, so we're going to read the entire header at once
          * and then parse the results out without using any function calls.
          * Uglier, but should be much faster.
-         * 
+         *
          * Note that some lines look a bit different, because the corresponding
          * fields or locals are long and so we need to do & 0xffffffffl to avoid
          * problems induced by sign extension.
@@ -549,7 +523,7 @@ public class ZipEntry implements ZipConstants, Cloneable {
         int count;
         int len = b.length;
         int off = 0;
-    
+
         while (len > 0) {
             count = in.read(b, off, len);
             if (count <= 0)

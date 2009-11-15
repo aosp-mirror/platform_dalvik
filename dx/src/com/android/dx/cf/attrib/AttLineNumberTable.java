@@ -20,19 +20,19 @@ import com.android.dx.cf.code.LineNumberList;
 import com.android.dx.util.MutabilityException;
 
 /**
- * Attribute class for standard <code>LineNumberTable</code> attributes.
+ * Attribute class for standard {@code LineNumberTable} attributes.
  */
 public final class AttLineNumberTable extends BaseAttribute {
-    /** non-null; attribute name for attributes of this type */
+    /** {@code non-null;} attribute name for attributes of this type */
     public static final String ATTRIBUTE_NAME = "LineNumberTable";
 
-    /** non-null; list of line number entries */
+    /** {@code non-null;} list of line number entries */
     private final LineNumberList lineNumbers;
 
     /**
      * Constructs an instance.
      * 
-     * @param lineNumbers non-null; list of line number entries
+     * @param lineNumbers {@code non-null;} list of line number entries
      */
     public AttLineNumberTable(LineNumberList lineNumbers) {
         super(ATTRIBUTE_NAME);
@@ -57,7 +57,7 @@ public final class AttLineNumberTable extends BaseAttribute {
     /**
      * Gets the list of "line number" entries associated with this instance.
      * 
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public LineNumberList getLineNumbers() {
         return lineNumbers;

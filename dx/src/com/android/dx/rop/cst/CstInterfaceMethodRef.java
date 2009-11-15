@@ -17,12 +17,12 @@
 package com.android.dx.rop.cst;
 
 /**
- * Constants of type <code>CONSTANT_InterfaceMethodref_info</code>.
+ * Constants of type {@code CONSTANT_InterfaceMethodref_info}.
  */
 public final class CstInterfaceMethodRef
         extends CstBaseMethodRef {
     /**
-     * null-ok; normal {@link CstMethodRef} that corresponds to this
+     * {@code null-ok;} normal {@link CstMethodRef} that corresponds to this
      * instance, if calculated 
      */
     private CstMethodRef methodRef;
@@ -30,8 +30,8 @@ public final class CstInterfaceMethodRef
     /**
      * Constructs an instance.
      * 
-     * @param definingClass non-null; the type of the defining class
-     * @param nat non-null; the name-and-type
+     * @param definingClass {@code non-null;} the type of the defining class
+     * @param nat {@code non-null;} the name-and-type
      */
     public CstInterfaceMethodRef(CstType definingClass, CstNat nat) {
         super(definingClass, nat);
@@ -48,7 +48,7 @@ public final class CstInterfaceMethodRef
      * Gets a normal (non-interface) {@link CstMethodRef} that corresponds to
      * this instance.
      * 
-     * @return non-null; an appropriate instance
+     * @return {@code non-null;} an appropriate instance
      */
     public CstMethodRef toMethodRef() {
         if (methodRef == null) {

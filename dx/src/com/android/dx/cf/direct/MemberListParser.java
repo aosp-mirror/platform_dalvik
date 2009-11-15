@@ -32,32 +32,32 @@ import com.android.dx.util.Hex;
  * Parser for lists of class file members (that is, fields and methods).
  */
 abstract /*package*/ class MemberListParser {
-    /** non-null; the class file to parse from */
+    /** {@code non-null;} the class file to parse from */
     private final DirectClassFile cf;
 
-    /** non-null; class being defined */
+    /** {@code non-null;} class being defined */
     private final CstType definer;
 
     /** offset in the byte array of the classfile to the start of the list */
     private final int offset;
 
-    /** non-null; attribute factory to use */
+    /** {@code non-null;} attribute factory to use */
     private final AttributeFactory attributeFactory;
 
-    /** &gt;= -1; the end offset of this list in the byte array of the
-     * classfile, or <code>-1</code> if not yet parsed */
+    /** {@code >= -1;} the end offset of this list in the byte array of the
+     * classfile, or {@code -1} if not yet parsed */
     private int endOffset;
 
-    /** null-ok; parse observer, if any */
+    /** {@code null-ok;} parse observer, if any */
     private ParseObserver observer;
 
     /**
      * Constructs an instance.
      *
-     * @param cf non-null; the class file to parse from
-     * @param definer non-null; class being defined
-     * @param offset offset in <code>bytes</code> to the start of the list
-     * @param attributeFactory non-null; attribute factory to use
+     * @param cf {@code non-null;} the class file to parse from
+     * @param definer {@code non-null;} class being defined
+     * @param offset offset in {@code bytes} to the start of the list
+     * @param attributeFactory {@code non-null;} attribute factory to use
      */
     public MemberListParser(DirectClassFile cf, CstType definer,
             int offset, AttributeFactory attributeFactory) {
@@ -81,10 +81,10 @@ abstract /*package*/ class MemberListParser {
     }
 
     /**
-     * Gets the end offset of this constant pool in the <code>byte[]</code>
+     * Gets the end offset of this constant pool in the {@code byte[]}
      * which it came from.
      *
-     * @return &gt;= 0; the end offset
+     * @return {@code >= 0;} the end offset
      */
     public int getEndOffset() {
         parseIfNecessary();
@@ -94,7 +94,7 @@ abstract /*package*/ class MemberListParser {
     /**
      * Sets the parse observer for this instance.
      *
-     * @param observer null-ok; the observer
+     * @param observer {@code null-ok;} the observer
      */
     public final void setObserver(ParseObserver observer) {
         this.observer = observer;
@@ -122,7 +122,7 @@ abstract /*package*/ class MemberListParser {
     /**
      * Gets the class file being defined.
      *
-     * @return non-null; the class
+     * @return {@code non-null;} the class
      */
     protected final CstType getDefiner() {
         return definer;
@@ -132,7 +132,7 @@ abstract /*package*/ class MemberListParser {
      * Gets the human-oriented name for what this instance is parsing.
      * Subclasses must override this method.
      * 
-     * @return non-null; the human oriented name
+     * @return {@code non-null;} the human oriented name
      */
     protected abstract String humanName();
 
@@ -141,15 +141,15 @@ abstract /*package*/ class MemberListParser {
      * Subclasses must override this method.
      *
      * @param accessFlags the flags
-     * @return non-null; the string form
+     * @return {@code non-null;} the string form
      */
     protected abstract String humanAccessFlags(int accessFlags);
 
     /**
-     * Gets the <code>CTX_*</code> constant to use when parsing attributes.
+     * Gets the {@code CTX_*} constant to use when parsing attributes.
      * Subclasses must override this method.
      * 
-     * @return non-null; the human oriented name
+     * @return {@code non-null;} the human oriented name
      */
     protected abstract int getAttributeContext();
 
@@ -157,11 +157,11 @@ abstract /*package*/ class MemberListParser {
      * Sets an element in the list. Subclasses must override this method.
      *
      * @param n which element
-     * @param accessFlags the <code>access_flags</code>
+     * @param accessFlags the {@code access_flags}
      * @param nat the interpreted name and type (based on the two
-     * <code>*_index</code> fields)
+     * {@code *_index} fields)
      * @param attributes list of parsed attributes
-     * @return non-null; the constructed member
+     * @return {@code non-null;} the constructed member
      */
     protected abstract Member set(int n, int accessFlags, CstNat nat,
             AttributeList attributes);

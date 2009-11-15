@@ -23,16 +23,16 @@ public interface Attribute {
     /**
      * Get the name of the attribute.
      *
-     * @return non-null; the name
+     * @return {@code non-null;} the name
      */
     public String getName();
 
     /**
      * Get the total length of the attribute in bytes, including the
      * header. Since the header is always six bytes, the result of
-     * this method is always at least <code>6</code>.
+     * this method is always at least {@code 6}.
      *
-     * @return &gt;= 6; the total length, in bytes
+     * @return {@code >= 6;} the total length, in bytes
      */
     public int byteLength();
 }

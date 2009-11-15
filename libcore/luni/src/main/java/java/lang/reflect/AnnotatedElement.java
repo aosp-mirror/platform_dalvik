@@ -21,8 +21,8 @@ import java.lang.annotation.Annotation;
 
 /**
  * This interface provides reflective access to annotation information.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public interface AnnotatedElement {
 
@@ -33,13 +33,9 @@ public interface AnnotatedElement {
      * 
      * @param annotationType
      *            the type of the annotation to search for
-     *            
      * @return the annotation with the specified type or {@code null}
-     * 
      * @throws NullPointerException
      *             if {@code annotationType} is {@code null}
-     * 
-     * @since Android 1.0
      */
     <T extends Annotation> T getAnnotation(Class<T> annotationType);
 
@@ -49,8 +45,6 @@ public interface AnnotatedElement {
      * returns a zero length array.
      * 
      * @return an array of all annotations for this element
-     * 
-     * @since Android 1.0
      */
     Annotation[] getAnnotations();
 
@@ -60,8 +54,6 @@ public interface AnnotatedElement {
      * method returns a zero length array.
      * 
      * @return an array of annotations declared for this element
-     * 
-     * @since Android 1.0
      */
     Annotation[] getDeclaredAnnotations();
 
@@ -71,13 +63,9 @@ public interface AnnotatedElement {
      * 
      * @param annotationType
      *            the type of the annotation to search for
-     *            
      * @return {@code true} if the annotation exists, {@code false} otherwise
-     * 
      * @throws NullPointerException
      *             if {@code annotationType} is {@code null}
-     * 
-     * @since Android 1.0
      */
     boolean isAnnotationPresent(Class<? extends Annotation> annotationType);
 }

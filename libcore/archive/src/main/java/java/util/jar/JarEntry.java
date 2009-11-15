@@ -33,27 +33,27 @@ import javax.security.auth.x500.X500Principal;
 /**
  * Represents a single file in a JAR archive together with the manifest
  * attributes and digital signatures associated with it.
- * 
- * @since Android 1.0
+ *
+ * @see JarFile
+ * @see JarInputStream
  */
 public class JarEntry extends ZipEntry {
     private Attributes attributes;
 
     JarFile parentJar;
-   
+
     CodeSigner signers[];
 
     // Cached factory used to build CertPath-s in <code>getCodeSigners()</code>.
     private CertificateFactory factory;
 
-    private boolean isFactoryChecked = false;     
+    private boolean isFactoryChecked = false;
 
     /**
      * Creates a new {@code JarEntry} named name.
      * 
      * @param name
      *            The name of the new {@code JarEntry}.
-     * @since Android 1.0
      */
     public JarEntry(String name) {
         super(name);
@@ -64,7 +64,6 @@ public class JarEntry extends ZipEntry {
      * 
      * @param entry
      *            The ZipEntry to obtain values from.
-     * @since Android 1.0
      */
     public JarEntry(ZipEntry entry) {
         super(entry);
@@ -78,7 +77,6 @@ public class JarEntry extends ZipEntry {
      * @exception IOException
      *                If an error occurs obtaining the {@code Attributes}.
      * @see Attributes
-     * @since Android 1.0
      */
     public Attributes getAttributes() throws IOException {
         if (attributes != null || parentJar == null) {
@@ -99,7 +97,6 @@ public class JarEntry extends ZipEntry {
      * 
      * @return the certificate for this entry.
      * @see java.security.cert.Certificate
-     * @since Android 1.0
      */
     public Certificate[] getCertificates() {
         if (null == parentJar) {
@@ -122,12 +119,11 @@ public class JarEntry extends ZipEntry {
      * 
      * @param je
      *            The {@code JarEntry} to obtain values from.
-     * @since Android 1.0
      */
     public JarEntry(JarEntry je) {
         super(je);
         parentJar = je.parentJar;
-        attributes = je.attributes;        
+        attributes = je.attributes;
         signers = je.signers;
     }
 
@@ -139,7 +135,6 @@ public class JarEntry extends ZipEntry {
      * 
      * @return the code signers for the JAR entry.
      * @see CodeSigner
-     * @since Android 1.0
      */
     public CodeSigner[] getCodeSigners() {
         if (null == signers) {
@@ -155,7 +150,7 @@ public class JarEntry extends ZipEntry {
     }
 
     private CodeSigner[] getCodeSigners(Certificate[] certs) {
-        if(null == certs) {
+        if (null == certs) {
             return null;
         }
 

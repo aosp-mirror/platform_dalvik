@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -414,6 +415,7 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
         method = "receive",
         args = {int.class}
     )
+    @BrokenTest(value="bug 2002061")
     public void test_receive() throws IOException {
         pis = new PipedInputStream();
         pos = new PipedOutputStream();

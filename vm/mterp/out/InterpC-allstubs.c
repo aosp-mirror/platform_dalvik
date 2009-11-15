@@ -26,6 +26,7 @@
 #include "interp/InterpDefs.h"
 #include "mterp/Mterp.h"
 #include <math.h>                   // needed for fmod, fmodf
+#include "mterp/common/FindInterface.h"
 
 /*
  * Configuration defines.  These affect the C implementations, i.e. the
@@ -53,7 +54,7 @@
  */
 #define THREADED_INTERP             /* threaded vs. while-loop interpreter */
 
-#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia */
+#ifdef WITH_INSTR_CHECKS            /* instruction-level paranoia (slow!) */
 # define CHECK_BRANCH_OFFSETS
 # define CHECK_REGISTER_INDICES
 #endif
@@ -93,6 +94,18 @@
 #endif
 
 /*
+ * Export another copy of the PC on every instruction; this is largely
+ * redundant with EXPORT_PC and the debugger code.  This value can be
+ * compared against what we have stored on the stack with EXPORT_PC to
+ * help ensure that we aren't missing any export calls.
+ */
+#if WITH_EXTRA_GC_CHECKS > 1
+# define EXPORT_EXTRA_PC() (self->currentPc2 = pc)
+#else
+# define EXPORT_EXTRA_PC()
+#endif
+
+/*
  * Adjust the program counter.  "_offset" is a signed int, in 16-bit units.
  *
  * Assumes the existence of "const u2* pc" and "const u2* curMethod->insns".
@@ -116,9 +129,13 @@
             dvmAbort();                                                     \
         }                                                                   \
         pc += myoff;                                                        \
+        EXPORT_EXTRA_PC();                                                  \
     } while (false)
 #else
-# define ADJUST_PC(_offset) (pc += _offset)
+# define ADJUST_PC(_offset) do {                                            \
+        pc += _offset;                                                      \
+        EXPORT_EXTRA_PC();                                                  \
+    } while (false)
 #endif
 
 /*
@@ -303,6 +320,8 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * within the current method won't be shown correctly.  See the notes
  * in Exception.c.
  *
+ * This is also used to determine the address for precise GC.
+ *
  * Assumes existence of "u4* fp" and "const u2* pc".
  */
 #define EXPORT_PC()         (SAVEAREA_FROM_FP(fp)->xtra.currentPc = pc)
@@ -316,27 +335,19 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
  * If we're building without debug and profiling support, we never switch.
  */
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
+#if defined(WITH_JIT)
+# define NEED_INTERP_SWITCH(_current) (                                     \
+    (_current == INTERP_STD) ?                                              \
+        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
+        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+#else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
         dvmDebuggerOrProfilerActive() : !dvmDebuggerOrProfilerActive() )
+#endif
 #else
 # define NEED_INTERP_SWITCH(_current) (false)
 #endif
-
-/*
- * Look up an interface on a class using the cache.
- */
-INLINE Method* dvmFindInterfaceMethodInCache(ClassObject* thisClass,
-    u4 methodIdx, const Method* method, DvmDex* methodClassDex)
-{
-#define ATOMIC_CACHE_CALC \
-    dvmInterpFindInterfaceMethod(thisClass, methodIdx, method, methodClassDex)
-
-    return (Method*) ATOMIC_CACHE_LOOKUP(methodClassDex->pInterfaceCache,
-                DEX_INTERFACE_CACHE_SIZE, thisClass, methodIdx);
-
-#undef ATOMIC_CACHE_CALC
-}
 
 /*
  * Check to see if "obj" is NULL.  If so, throw an exception.  Assumes the
@@ -401,7 +412,6 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #endif
     return true;
 }
-
 
 /* File: cstubs/stubdefs.c */
 /* this is a standard (no debug support) interpreter */
@@ -513,12 +523,15 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
  * started.  If so, switch to a different "goto" table.
  */
 #define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
-        dvmCheckSuspendQuick(self);                                         \
+        if (dvmCheckSuspendQuick(self)) {                                   \
+            EXPORT_PC();  /* need for precise GC */                         \
+            dvmCheckSuspendPending(self);                                   \
+        }                                                                   \
         if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
             ADJUST_PC(_pcadj);                                              \
             glue->entryPoint = _entryPoint;                                 \
             LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                glue->self->threadId, (_entryPoint), (_pcadj));             \
+                self->threadId, (_entryPoint), (_pcadj));                   \
             GOTO_bail_switch();                                             \
         }                                                                   \
     }
@@ -1525,9 +1538,7 @@ HANDLE_OPCODE(OP_MONITOR_ENTER /*vAA*/)
         if (!checkForNullExportPC(obj, fp, pc))
             GOTO_exceptionThrown();
         ILOGV("+ locking %p %s\n", obj, obj->clazz->descriptor);
-#ifdef WITH_MONITOR_TRACKING
-        EXPORT_PC();        /* need for stack trace */
-#endif
+        EXPORT_PC();    /* need for precise GC, also WITH_MONITOR_TRACKING */
         dvmLockObject(self, obj);
 #ifdef WITH_DEADLOCK_PREDICTION
         if (dvmCheckException(self))
@@ -1674,21 +1685,13 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
             GOTO_exceptionThrown();
 
         /*
-         * Note: the verifier can ensure that this never happens, allowing us
-         * to remove the check.  However, the spec requires we throw the
-         * exception at runtime, not verify time, so the verifier would
-         * need to replace the new-instance call with a magic "throw
-         * InstantiationError" instruction.
-         *
-         * Since this relies on the verifier, which is optional, we would
-         * also need a "new-instance-quick" instruction to identify instances
-         * that don't require the check.
+         * Verifier now tests for interface/abstract class.
          */
-        if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
-            dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationError;",
-                clazz->descriptor);
-            GOTO_exceptionThrown();
-        }
+        //if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
+        //    dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationError;",
+        //        clazz->descriptor);
+        //    GOTO_exceptionThrown();
+        //}
         newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
         if (newObj == NULL)
             GOTO_exceptionThrown();
@@ -2784,8 +2787,13 @@ OP_END
 HANDLE_OPCODE(OP_UNUSED_EC)
 OP_END
 
-/* File: c/OP_UNUSED_ED.c */
-HANDLE_OPCODE(OP_UNUSED_ED)
+/* File: c/OP_THROW_VERIFICATION_ERROR.c */
+HANDLE_OPCODE(OP_THROW_VERIFICATION_ERROR)
+    EXPORT_PC();
+    vsrc1 = INST_AA(inst);
+    ref = FETCH(1);             /* class/field/method ref */
+    dvmThrowVerificationError(curMethod, vsrc1, ref);
+    GOTO_exceptionThrown();
 OP_END
 
 /* File: c/OP_EXECUTE_INLINE.c */
@@ -3861,6 +3869,9 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 #endif
         newSaveArea->prevFrame = fp;
         newSaveArea->savedPc = pc;
+#if defined(WITH_JIT)
+        newSaveArea->returnAddr = 0;
+#endif
         newSaveArea->method = methodToCall;
 
         if (!dvmIsNativeMethod(methodToCall)) {
@@ -3884,7 +3895,11 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
             FINISH(0);                              // jump to method start
         } else {
             /* set this up for JNI locals, even if not a JNI native */
-            newSaveArea->xtra.localRefTop = self->jniLocalRefTable.nextEntry;
+#ifdef USE_INDIRECT_REF
+            newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.segmentState.all;
+#else
+            newSaveArea->xtra.localRefCookie = self->jniLocalRefTable.nextEntry;
+#endif
 
             self->curFrame = newFp;
 
@@ -3954,7 +3969,6 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
     }
     assert(false);      // should not get here
 GOTO_TARGET_END
-
 
 /* File: cstubs/enddefs.c */
 

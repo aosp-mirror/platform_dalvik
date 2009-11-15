@@ -29,13 +29,13 @@ public final class AnnotationSetRefItem extends OffsettedItem {
     /** write size of this class, in bytes */
     private static final int WRITE_SIZE = 4;
 
-    /** non-null; the annotation set to refer to */
+    /** {@code non-null;} the annotation set to refer to */
     private AnnotationSetItem annotations;
 
     /**
      * Constructs an instance.
      * 
-     * @param annotations non-null; the annotation set to refer to
+     * @param annotations {@code non-null;} the annotation set to refer to
      */
     public AnnotationSetRefItem(AnnotationSetItem annotations) {
         super(ALIGNMENT, WRITE_SIZE);

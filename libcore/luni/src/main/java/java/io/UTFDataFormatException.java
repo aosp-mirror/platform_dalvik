@@ -22,9 +22,7 @@ package java.io;
  * likely while reading some {@link DataInputStream}.
  * 
  * @see DataInputStream#readUTF()
-  * 
- * @since Android 1.0
-*/
+ */
 public class UTFDataFormatException extends IOException {
 
     private static final long serialVersionUID = 420743449228280612L;
@@ -32,8 +30,6 @@ public class UTFDataFormatException extends IOException {
     /**
      * Constructs a new {@code UTFDataFormatException} with its stack trace
      * filled in.
-     * 
-     * @since Android 1.0
      */
     public UTFDataFormatException() {
         super();
@@ -45,7 +41,6 @@ public class UTFDataFormatException extends IOException {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public UTFDataFormatException(String detailMessage) {
         super(detailMessage);

@@ -19,8 +19,9 @@ package dalvik.system;
 /**
  * Provides a limited interface to the Dalvik VM stack. This class is mostly
  * used for implementing security checks.
- * 
- * @since Android 1.0
+ *
+ * @deprecated this is an internal Dalvik class that is not appropriate for
+ *      general use. It will be removed from the public API in a future release.
  */
 public final class VMStack {
     /**
@@ -38,6 +39,14 @@ public final class VMStack {
      *         bootstrap class loader.
      */
     native public static ClassLoader getCallingClassLoader2();
+
+    /**
+     * Returns the class of the caller's caller's caller.
+     *
+     * @hide
+     * @return the requested class, or {@code null}.
+     */
+    native public static Class<?> getStackClass2();
 
     /**
      * Creates an array of classes from the methods at the top of the stack.

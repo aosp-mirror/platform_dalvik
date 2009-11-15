@@ -25,6 +25,8 @@ public class Main {
         FancyLoader loader;
 
         loader = new FancyLoader(ClassLoader.getSystemClassLoader());
+        //System.out.println("SYSTEM: " + ClassLoader.getSystemClassLoader());
+        //System.out.println("ALTERN: " + loader);
 
         /*
          * This statement has no effect on this program, but it can
@@ -51,6 +53,9 @@ public class Main {
         testAccess3(loader);
 
         testExtend(loader);
+        testExtendOkay(loader);
+        testInterface(loader);
+        testAbstract(loader);
         testImplement(loader);
         testIfaceImplement(loader);
     }
@@ -172,6 +177,146 @@ public class Main {
             System.out.println("Got expected LinkageError on DE");
             return;
         }
+    }
+
+    /**
+     * Test a doubled class that extends the base class, but is okay since
+     * it doesn't override the base class method.
+     */
+    static void testExtendOkay(ClassLoader loader) {
+        Class doubledExtendOkayClass;
+        Object obj;
+
+        /* get the "alternate" version of DoubledExtendOkay */
+        try {
+            doubledExtendOkayClass = loader.loadClass("DoubledExtendOkay");
+        } catch (ClassNotFoundException cnfe) {
+            System.err.println("loadClass failed: " + cnfe);
+            return;
+        }
+
+        /* instantiate */
+        try {
+            obj = doubledExtendOkayClass.newInstance();
+        } catch (InstantiationException ie) {
+            System.err.println("newInstance failed: " + ie);
+            return;
+        } catch (IllegalAccessException iae) {
+            System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            System.err.println("Got unexpected LinkageError on DEO");
+            le.printStackTrace();
+            return;
+        }
+
+        /* use the base class reference to get a CL-specific instance */
+        BaseOkay baseRef = (BaseOkay) obj;
+        DoubledExtendOkay de = baseRef.getExtended();
+
+        /* try to call through it */
+        try {
+            String result;
+
+            result = BaseOkay.doStuff(de);
+            System.out.println("Got DEO result " + result);
+        } catch (LinkageError le) {
+            System.err.println("Got unexpected LinkageError on DEO");
+            le.printStackTrace();
+            return;
+        }
+    }
+
+    /**
+     * Try to access a doubled class through a class that implements
+     * an interface declared in a different class.
+     */
+    static void testInterface(ClassLoader loader) {
+        Class getDoubledClass;
+        Object obj;
+
+        /* get GetDoubled from the "alternate" class loader */
+        try {
+            getDoubledClass = loader.loadClass("GetDoubled");
+        } catch (ClassNotFoundException cnfe) {
+            System.err.println("loadClass failed: " + cnfe);
+            return;
+        }
+
+        /* instantiate */
+        try {
+            obj = getDoubledClass.newInstance();
+        } catch (InstantiationException ie) {
+            System.err.println("newInstance failed: " + ie);
+            return;
+        } catch (IllegalAccessException iae) {
+            System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            // Dalvik bails here
+            System.out.println("Got LinkageError on GD");
+            return;
+        }
+
+        /*
+         * Cast the object to the interface, and try to use it.
+         */
+        IGetDoubled iface = (IGetDoubled) obj;
+        try {
+            /* "de" will be the wrong variety of DoubledExtendOkay */
+            DoubledExtendOkay de = iface.getDoubled();
+            // reference impl bails here
+            String str = de.getStr();
+        } catch (LinkageError le) {
+            System.out.println("Got LinkageError on GD");
+            return;
+        }
+        System.err.println("Should have failed by now on GetDoubled");
+    }
+
+    /**
+     * Throw an abstract class into the middle and see what happens.
+     */
+    static void testAbstract(ClassLoader loader) {
+        Class abstractGetClass;
+        Object obj;
+
+        /* get AbstractGet from the "alternate" loader */
+        try {
+            abstractGetClass = loader.loadClass("AbstractGet");
+        } catch (ClassNotFoundException cnfe) {
+            System.err.println("loadClass ta failed: " + cnfe);
+            return;
+        }
+
+        /* instantiate */
+        try {
+            obj = abstractGetClass.newInstance();
+        } catch (InstantiationException ie) {
+            System.err.println("newInstance failed: " + ie);
+            return;
+        } catch (IllegalAccessException iae) {
+            System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            System.out.println("Got LinkageError on TA");
+            return;
+        }
+
+        /* use the base class reference to get a CL-specific instance */
+        BaseOkay baseRef = (BaseOkay) obj;
+        DoubledExtendOkay de = baseRef.getExtended();
+
+        /* try to call through it */
+        try {
+            String result;
+
+            result = BaseOkay.doStuff(de);
+        } catch (LinkageError le) {
+            System.out.println("Got LinkageError on TA");
+            return;
+        }
+        System.err.println("Should have failed by now in testAbstract");
     }
 
     /**

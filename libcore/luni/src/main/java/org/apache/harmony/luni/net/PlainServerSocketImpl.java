@@ -24,14 +24,10 @@ import org.apache.harmony.luni.net.NetUtil;
 import org.apache.harmony.luni.net.PlainSocketImpl;
 
 /**
- * This class was added so we can create sockets with options that are needed
- * for server sockets. It just overrides create so that we call new natives
- * which only set the options required for server sockets. In order to preserve
- * behaviour of older versions the create PlainSocketImpl was left as is and
- * this new class was added. For newer versions an instance of this class is
- * used, for earlier versions the original PlainSocketImpl is used.
+ * This class overrides create to call natives that set the options required
+ * for server sockets.
  */
-class PlainServerSocketImpl extends PlainSocketImpl {
+public class PlainServerSocketImpl extends PlainSocketImpl {
 
     public PlainServerSocketImpl() {
         super();

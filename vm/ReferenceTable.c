@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Reference table management.
  */
@@ -58,11 +59,15 @@ bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
     assert(dvmIsValidObject(obj));
     assert(obj != NULL);
     assert(pRef->table != NULL);
+    assert(pRef->allocEntries <= pRef->maxEntries);
 
-    if (pRef->nextEntry == pRef->table + pRef->maxEntries) {
-        LOGW("ReferenceTable overflow (max=%d)\n", pRef->maxEntries);
-        return false;
-    } else if (pRef->nextEntry == pRef->table + pRef->allocEntries) {
+    if (pRef->nextEntry == pRef->table + pRef->allocEntries) {
+        /* reached end of allocated space; did we hit buffer max? */
+        if (pRef->nextEntry == pRef->table + pRef->maxEntries) {
+            LOGW("ReferenceTable overflow (max=%d)\n", pRef->maxEntries);
+            return false;
+        }
+
         Object** newTable;
         int newSize;
 
@@ -92,13 +97,13 @@ bool dvmAddToReferenceTable(ReferenceTable* pRef, Object* obj)
 /*
  * Returns NULL if not found.
  */
-Object** dvmFindInReferenceTable(const ReferenceTable* pRef, Object** top,
+Object** dvmFindInReferenceTable(const ReferenceTable* pRef, Object** bottom,
     Object* obj)
 {
     Object** ptr;
 
     ptr = pRef->nextEntry;
-    while (--ptr >= top) {
+    while (--ptr >= bottom) {
         if (*ptr == obj)
             return ptr;
     }
@@ -108,12 +113,12 @@ Object** dvmFindInReferenceTable(const ReferenceTable* pRef, Object** top,
 /*
  * Remove "obj" from "pRef".  We start at the end of the list (where the
  * most-recently-added element is), and stop searching for a match after
- * examining the element at "top".
+ * examining the element at "bottom".
  *
  * Most of the time "obj" is at or near the end of the list.  If not, we
  * compact it down.
  */
-bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** top,
+bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** bottom,
     Object* obj)
 {
     Object** ptr;
@@ -121,10 +126,10 @@ bool dvmRemoveFromReferenceTable(ReferenceTable* pRef, Object** top,
     assert(pRef->table != NULL);
 
     /*
-     * Scan from the most-recently-added entry up to the top entry for
+     * Scan from the most-recently-added entry up to the bottom entry for
      * this frame.
      */
-    ptr = dvmFindInReferenceTable(pRef, top, obj);
+    ptr = dvmFindInReferenceTable(pRef, bottom, obj);
     if (ptr == NULL)
         return false;
 

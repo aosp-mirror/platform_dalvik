@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package java.util.prefs;
 
 import java.io.IOException;
@@ -28,16 +27,19 @@ import java.util.EventObject;
  * This is the event class to indicate that a preference has been added, deleted
  * or updated.
  * <p>
- * Please note that the serialization functionality has not yet been implemented, so
- * the serialization methods do nothing but throw a {@code NotSerializableException}.
- * </p>
+ * Please note that although the class is marked as {@code Serializable} by
+ * inheritance from {@code EventObject}, this type is not intended to be serialized
+ * so the serialization methods do nothing but throw a {@code NotSerializableException}.
  * 
- * @since Android 1.0
+ * @see java.util.prefs.Preferences
+ * @see java.util.prefs.PreferenceChangeListener
+ * 
+ * @since 1.4
  */
 public class PreferenceChangeEvent extends EventObject implements Serializable {
 
     private static final long serialVersionUID = 793724513368024975L;
-    
+
     private final Preferences node;
 
     private final String key;
@@ -55,7 +57,6 @@ public class PreferenceChangeEvent extends EventObject implements Serializable {
      * @param v
      *            the new value of the changed preference, this value can be
      *            {@code null}, which means the preference has been removed.
-     * @since Android 1.0
      */
     public PreferenceChangeEvent(Preferences p, String k, String v) {
         super(p);
@@ -68,7 +69,6 @@ public class PreferenceChangeEvent extends EventObject implements Serializable {
      * Gets the key of the changed preference.
      * 
      * @return the changed preference's key.
-     * @since Android 1.0
      */
     public String getKey() {
         return key;
@@ -78,9 +78,8 @@ public class PreferenceChangeEvent extends EventObject implements Serializable {
      * Gets the new value of the changed preference or {@code null} if the
      * preference has been removed.
      * 
-     * @return the new value of the changed preference or null if the preference
-     *         has been removed.
-     * @since Android 1.0
+     * @return the new value of the changed preference or {@code null} if the
+     *         preference has been removed.
      */
     public String getNewValue() {
         return value;
@@ -90,13 +89,12 @@ public class PreferenceChangeEvent extends EventObject implements Serializable {
      * Gets the {@code Preferences} instance that fired this event.
      * 
      * @return the {@code Preferences} instance that fired this event.
-     * @since Android 1.0
      */
     public Preferences getNode() {
         return node;
     }
 
-    /*
+    /**
      * This method always throws a <code>NotSerializableException</code>,
      * because this object cannot be serialized,
      */
@@ -104,7 +102,7 @@ public class PreferenceChangeEvent extends EventObject implements Serializable {
         throw new NotSerializableException();
     }
 
-    /*
+    /**
      * This method always throws a <code>NotSerializableException</code>,
      * because this object cannot be serialized,
      */
@@ -112,5 +110,3 @@ public class PreferenceChangeEvent extends EventObject implements Serializable {
         throw new NotSerializableException();
     }
 }
-
-

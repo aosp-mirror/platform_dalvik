@@ -23,11 +23,11 @@ public interface FieldList
 {
     /**
      * Get whether this instance is mutable. Note that the
-     * <code>FieldList</code> interface itself doesn't provide any means
+     * {@code FieldList} interface itself doesn't provide any means
      * of mutation, but that doesn't mean that there isn't a non-interface
      * way of mutating an instance.
      *
-     * @return <code>true</code> iff this instance is somehow mutable
+     * @return {@code true} iff this instance is somehow mutable
      */
     public boolean isMutable();
 
@@ -39,10 +39,10 @@ public interface FieldList
     public int size();
 
     /**
-     * Get the <code>n</code>th field.
+     * Get the {@code n}th field.
      *
-     * @param n <code>n &gt;= 0, n &lt; size()</code>; which field
-     * @return non-null; the field in question
+     * @param n {@code n >= 0, n < size();} which field
+     * @return {@code non-null;} the field in question
      */
     public Field get(int n);
 }

@@ -24,9 +24,6 @@ package java.lang;
  * <p>
  * Note that this error can only occur when inconsistent class files are loaded,
  * since it would normally be detected at compile time.
- * </p>
- * 
- * @since Android 1.0
  */
 public class ClassCircularityError extends LinkageError {
 
@@ -35,8 +32,6 @@ public class ClassCircularityError extends LinkageError {
     /**
      * Constructs a new {@code ClassCircularityError} that include the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public ClassCircularityError() {
         super();
@@ -45,10 +40,9 @@ public class ClassCircularityError extends LinkageError {
     /**
      * Constructs a new {@code ClassCircularityError} with the current stack
      * trace and the specified detail message.
-     * 
+     *
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public ClassCircularityError(String detailMessage) {
         super(detailMessage);

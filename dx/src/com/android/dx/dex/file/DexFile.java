@@ -38,67 +38,67 @@ import java.util.zip.Adler32;
 import static com.android.dx.dex.file.MixedItemSection.SortType;
 
 /**
- * Representation of an entire <code>.dex</code> (Dalvik EXecutable)
+ * Representation of an entire {@code .dex} (Dalvik EXecutable)
  * file, which itself consists of a set of Dalvik classes.
  */
 public final class DexFile {
-    /** non-null; word data section */
+    /** {@code non-null;} word data section */
     private final MixedItemSection wordData;
 
     /** 
-     * non-null; type lists section. This is word data, but separating
+     * {@code non-null;} type lists section. This is word data, but separating
      * it from {@link #wordData} helps break what would otherwise be a
      * circular dependency between the that and {@link #protoIds}.
      */
     private final MixedItemSection typeLists;
 
     /**
-     * non-null; map section. The map needs to be in a section by itself
+     * {@code non-null;} map section. The map needs to be in a section by itself
      * for the self-reference mechanics to work in a reasonably
      * straightforward way. See {@link MapItem#addMap} for more detail.
      */
     private final MixedItemSection map;
 
-    /** non-null; string data section */
+    /** {@code non-null;} string data section */
     private final MixedItemSection stringData;
 
-    /** non-null; string identifiers section */
+    /** {@code non-null;} string identifiers section */
     private final StringIdsSection stringIds;
 
-    /** non-null; type identifiers section */
+    /** {@code non-null;} type identifiers section */
     private final TypeIdsSection typeIds;
 
-    /** non-null; prototype identifiers section */
+    /** {@code non-null;} prototype identifiers section */
     private final ProtoIdsSection protoIds;
 
-    /** non-null; field identifiers section */
+    /** {@code non-null;} field identifiers section */
     private final FieldIdsSection fieldIds;
 
-    /** non-null; method identifiers section */
+    /** {@code non-null;} method identifiers section */
     private final MethodIdsSection methodIds;
 
-    /** non-null; class definitions section */
+    /** {@code non-null;} class definitions section */
     private final ClassDefsSection classDefs;
 
-    /** non-null; class data section */
+    /** {@code non-null;} class data section */
     private final MixedItemSection classData;
 
-    /** non-null; byte data section */
+    /** {@code non-null;} byte data section */
     private final MixedItemSection byteData;
 
-    /** non-null; file header */
+    /** {@code non-null;} file header */
     private final HeaderSection header;
 
     /**
-     * non-null; array of sections in the order they will appear in the
+     * {@code non-null;} array of sections in the order they will appear in the
      * final output file
      */
     private final Section[] sections;
 
-    /** &gt;= -1; total file size or <code>-1</code> if unknown */
+    /** {@code >= -1;} total file size or {@code -1} if unknown */
     private int fileSize;
 
-    /** &gt;= 40; maximum width of the file dump */
+    /** {@code >= 40;} maximum width of the file dump */
     private int dumpWidth;
 
     /**
@@ -137,7 +137,7 @@ public final class DexFile {
      * Adds a class to this instance. It is illegal to attempt to add more
      * than one class with the same name.
      * 
-     * @param clazz non-null; the class to add
+     * @param clazz {@code non-null;} the class to add
      */
     public void add(ClassDefItem clazz) {
         classDefs.add(clazz);
@@ -146,8 +146,8 @@ public final class DexFile {
     /**
      * Gets the class definition with the given name, if any.
      * 
-     * @param name non-null; the class name to look for
-     * @return null-ok; the class with the given name, or <code>null</code>
+     * @param name {@code non-null;} the class name to look for
+     * @return {@code null-ok;} the class with the given name, or {@code null}
      * if there is no such class
      */
     public ClassDefItem getClassOrNull(String name) {
@@ -164,8 +164,8 @@ public final class DexFile {
      * Writes the contents of this instance as either a binary or a
      * human-readable form, or both.
      * 
-     * @param out null-ok; where to write to
-     * @param humanOut null-ok; where to write human-oriented output to
+     * @param out {@code null-ok;} where to write to
+     * @param humanOut {@code null-ok;} where to write human-oriented output to
      * @param verbose whether to be verbose when writing human-oriented output
      */
     public void writeTo(OutputStream out, Writer humanOut, boolean verbose)
@@ -183,12 +183,12 @@ public final class DexFile {
     }
 
     /**
-     * Returns the contents of this instance as a <code>.dex</code> file,
-     * in <code>byte[]</code> form.
+     * Returns the contents of this instance as a {@code .dex} file,
+     * in {@code byte[]} form.
      * 
-     * @param humanOut null-ok; where to write human-oriented output to
+     * @param humanOut {@code null-ok;} where to write human-oriented output to
      * @param verbose whether to be verbose when writing human-oriented output
-     * @return non-null; a <code>.dex</code> file for this instance
+     * @return {@code non-null;} a {@code .dex} file for this instance
      */
     public byte[] toDex(Writer humanOut, boolean verbose) 
         throws IOException {
@@ -205,7 +205,7 @@ public final class DexFile {
     /**
      * Sets the maximum width of the human-oriented dump of the instance.
      * 
-     * @param dumpWidth &gt;= 40; the width
+     * @param dumpWidth {@code >= 40;} the width
      */
     public void setDumpWidth(int dumpWidth) {
         if (dumpWidth < 40) {
@@ -221,7 +221,7 @@ public final class DexFile {
      * <p>This is package-scope in order to allow
      * the {@link HeaderSection} to set itself up properly.</p>
      * 
-     * @return &gt;= 0; the total file size
+     * @return {@code >= 0;} the total file size
      * @throws RuntimeException thrown if the file size is not yet known
      */
     /*package*/ int getFileSize() {
@@ -239,7 +239,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the string data section
+     * @return {@code non-null;} the string data section
      */
     /*package*/ MixedItemSection getStringData() {
         return stringData;
@@ -252,7 +252,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the word data section
+     * @return {@code non-null;} the word data section
      */
     /*package*/ MixedItemSection getWordData() {
         return wordData;
@@ -265,7 +265,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the word data section
+     * @return {@code non-null;} the word data section
      */
     /*package*/ MixedItemSection getTypeLists() {
         return typeLists;
@@ -277,7 +277,7 @@ public final class DexFile {
      * <p>This is package-scope in order to allow the header section
      * to query it.</p>
      * 
-     * @return non-null; the map section
+     * @return {@code non-null;} the map section
      */
     /*package*/ MixedItemSection getMap() {
         return map;
@@ -290,7 +290,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the string identifiers section
+     * @return {@code non-null;} the string identifiers section
      */
     /*package*/ StringIdsSection getStringIds() {
         return stringIds;
@@ -303,7 +303,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the class definitions section
+     * @return {@code non-null;} the class definitions section
      */
     /*package*/ ClassDefsSection getClassDefs() {
         return classDefs;
@@ -316,7 +316,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the class data section
+     * @return {@code non-null;} the class data section
      */
     /*package*/ MixedItemSection getClassData() {
         return classData;
@@ -329,7 +329,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the class identifiers section
+     * @return {@code non-null;} the class identifiers section
      */
     /*package*/ TypeIdsSection getTypeIds() {
         return typeIds;
@@ -342,7 +342,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the prototype identifiers section
+     * @return {@code non-null;} the prototype identifiers section
      */
     /*package*/ ProtoIdsSection getProtoIds() {
         return protoIds;
@@ -355,7 +355,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the field identifiers section
+     * @return {@code non-null;} the field identifiers section
      */
     /*package*/ FieldIdsSection getFieldIds() {
         return fieldIds;
@@ -368,7 +368,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      * 
-     * @return non-null; the method identifiers section
+     * @return {@code non-null;} the method identifiers section
      */
     /*package*/ MethodIdsSection getMethodIds() {
         return methodIds;
@@ -381,7 +381,7 @@ public final class DexFile {
      * the various {@link Item} instances to add items to the
      * instance.</p>
      *
-     * @return non-null; the byte data section
+     * @return {@code non-null;} the byte data section
      */
     /*package*/ MixedItemSection getByteData() {
         return byteData;
@@ -394,7 +394,7 @@ public final class DexFile {
      * <p>This is package-scope in order to allow the header section
      * to query it.</p>
      * 
-     * @return non-null; the section
+     * @return {@code non-null;} the section
      */
     /*package*/ Section getFirstDataSection() {
         return wordData;
@@ -407,7 +407,7 @@ public final class DexFile {
      * <p>This is package-scope in order to allow the header section
      * to query it.</p>
      * 
-     * @return non-null; the section
+     * @return {@code non-null;} the section
      */
     /*package*/ Section getLastDataSection() {
         return map;
@@ -418,7 +418,7 @@ public final class DexFile {
      * instance, or do nothing if the given constant isn't the sort
      * that should be interned.
      * 
-     * @param cst non-null; constant to possibly intern
+     * @param cst {@code non-null;} constant to possibly intern
      */
     /*package*/ void internIfAppropriate(Constant cst) {
         if (cst instanceof CstString) {
@@ -441,13 +441,13 @@ public final class DexFile {
     /**
      * Gets the {@link IndexedItem} corresponding to the given constant,
      * if it is a constant that has such a correspondence, or return
-     * <code>null</code> if it isn't such a constant. This will throw
+     * {@code null} if it isn't such a constant. This will throw
      * an exception if the given constant <i>should</i> have been found
      * but wasn't.
      * 
-     * @param cst non-null; the constant to look up
-     * @return null-ok; its corresponding item, if it has a corresponding
-     * item, or <code>null</code> if it's not that sort of constant
+     * @param cst {@code non-null;} the constant to look up
+     * @return {@code null-ok;} its corresponding item, if it has a corresponding
+     * item, or {@code null} if it's not that sort of constant
      */
     /*package*/ IndexedItem findItemOrNull(Constant cst) {
         IndexedItem item;
@@ -466,12 +466,12 @@ public final class DexFile {
     }
 
     /**
-     * Returns the contents of this instance as a <code>.dex</code> file,
+     * Returns the contents of this instance as a {@code .dex} file,
      * in a {@link ByteArrayAnnotatedOutput} instance.
      * 
      * @param annotate whether or not to keep annotations
      * @param verbose if annotating, whether to be verbose
-     * @return non-null; a <code>.dex</code> file for this instance
+     * @return {@code non-null;} a {@code .dex} file for this instance
      */
     private ByteArrayAnnotatedOutput toDex0(boolean annotate,
             boolean verbose) {
@@ -586,7 +586,7 @@ public final class DexFile {
     /**
      * Generates and returns statistics for all the items in the file.
      * 
-     * @return non-null; the statistics
+     * @return {@code non-null;} the statistics
      */
     public Statistics getStatistics() {
         Statistics stats = new Statistics();
@@ -599,10 +599,10 @@ public final class DexFile {
     }
 
     /**
-     * Calculates the signature for the <code>.dex</code> file in the
+     * Calculates the signature for the {@code .dex} file in the
      * given array, and modify the array to contain it.
      * 
-     * @param bytes non-null; the bytes of the file
+     * @param bytes {@code non-null;} the bytes of the file
      */
     private static void calcSignature(byte[] bytes) {
         MessageDigest md;
@@ -627,10 +627,10 @@ public final class DexFile {
     }
 
     /**
-     * Calculates the checksum for the <code>.dex</code> file in the
+     * Calculates the checksum for the {@code .dex} file in the
      * given array, and modify the array to contain it.
      * 
-     * @param bytes non-null; the bytes of the file
+     * @param bytes {@code non-null;} the bytes of the file
      */
     private static void calcChecksum(byte[] bytes) {
         Adler32 a32 = new Adler32();

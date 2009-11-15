@@ -15,6 +15,7 @@
  */
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 
 /**
@@ -28,10 +29,49 @@ public class Main {
     private static final String LIB_DIR = "/nowhere/nothing/";
 
     /**
+     * Prep the environment then run the test.
+     */
+    public static void main(String[] args) {
+        Process p;
+        try {
+            /*
+             * Create a sub-process to see if the ProcessManager wait
+             * interferes with the dexopt invocation wait.
+             *
+             * /dev/random never hits EOF, so we're sure that we'll still
+             * be waiting for the process to complete.  On the device it
+             * stops pretty quickly (which means the child won't be
+             * spinning).
+             */
+            ProcessBuilder pb = new ProcessBuilder("cat", "/dev/random");
+            p = pb.start();
+        } catch (IOException ioe) {
+            System.err.println("cmd failed: " + ioe.getMessage());
+            p = null;
+        }
+
+        try {
+            testDexClassLoader();
+        } finally {
+            // shouldn't be necessary, but it's good to be tidy
+            if (p != null)
+                p.destroy();
+
+            // let the ProcessManager's daemon thread finish before we shut down
+            // (avoids the occasional segmentation fault)
+            try {
+                Thread.sleep(500);
+            } catch (Exception ex) {}
+        }
+
+        System.out.println("done");
+    }
+
+    /**
      * Create a class loader, explicitly specifying the source DEX and
      * the location for the optimized DEX.
      */
-    public static void main(String[] args) {
+    private static void testDexClassLoader() {
         ClassLoader dexClassLoader = getDexClassLoader();
 
         Class anotherClass;
@@ -50,10 +90,8 @@ public class Main {
             throw new RuntimeException("new another", ie);
         }
 
-        /* not expected to work; just exercises the call */
+        // not expected to work; just exercises the call
         dexClassLoader.getResource("nonexistent");
-
-        System.out.println("done");
     }
 
     /*
@@ -94,6 +132,7 @@ public class Main {
             throw new RuntimeException("DCL ctor", nsme);
         }
 
+        // create an instance, using the path we found
         Object dclObj;
         try {
             dclObj = ctor.newInstance(CLASS_PATH, odexDir, LIB_DIR, myLoader);

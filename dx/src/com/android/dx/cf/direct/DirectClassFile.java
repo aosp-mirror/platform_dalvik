@@ -38,14 +38,14 @@ import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
 
 /**
- * Class file with info taken from a <code>byte[]</code> or slice thereof.
+ * Class file with info taken from a {@code byte[]} or slice thereof.
  */
 public class DirectClassFile implements ClassFile {
     /** the expected value of the ClassFile.magic field */
     private static final int CLASS_FILE_MAGIC = 0xcafebabe;
 
     /**
-     * minimum <code>.class</code> file major version
+     * minimum {@code .class} file major version
      * 
      * The class file definition (vmspec/2nd-edition) says:
      * 
@@ -64,92 +64,92 @@ public class DirectClassFile implements ClassFile {
      */
     private static final int CLASS_FILE_MIN_MAJOR_VERSION = 45;
 
-    /** maximum <code>.class</code> file major version */
+    /** maximum {@code .class} file major version */
     private static final int CLASS_FILE_MAX_MAJOR_VERSION = 50;
 
-    /** maximum <code>.class</code> file minor version */
+    /** maximum {@code .class} file minor version */
     private static final int CLASS_FILE_MAX_MINOR_VERSION = 0;
 
     /**
-     * non-null; the file path for the class, excluding any base directory
+     * {@code non-null;} the file path for the class, excluding any base directory
      * specification 
      */
     private final String filePath;
 
-    /** non-null; the bytes of the file */
+    /** {@code non-null;} the bytes of the file */
     private final ByteArray bytes;
 
     /**
      * whether to be strict about parsing; if
-     * <code>false</code>, this avoids doing checks that only exist
+     * {@code false}, this avoids doing checks that only exist
      * for purposes of verification (such as magic number matching and
      * path-package consistency checking) 
      */
     private final boolean strictParse;
 
     /**
-     * null-ok; the constant pool; only ever <code>null</code>
+     * {@code null-ok;} the constant pool; only ever {@code null}
      * before the constant pool is successfully parsed 
      */
     private StdConstantPool pool;
 
     /**
-     * the class file field <code>access_flags</code>; will be <code>-1</code>
+     * the class file field {@code access_flags}; will be {@code -1}
      * before the file is successfully parsed 
      */
     private int accessFlags;
 
     /**
-     * null-ok; the class file field <code>this_class</code>,
-     * interpreted as a type constant; only ever <code>null</code>
+     * {@code null-ok;} the class file field {@code this_class},
+     * interpreted as a type constant; only ever {@code null}
      * before the file is successfully parsed
      */
     private CstType thisClass;
 
     /**
-     * null-ok; the class file field <code>super_class</code>, interpreted
+     * {@code null-ok;} the class file field {@code super_class}, interpreted
      * as a type constant if non-zero 
      */
     private CstType superClass;
 
     /**
-     * null-ok; the class file field <code>interfaces</code>; only
-     * ever <code>null</code> before the file is successfully
+     * {@code null-ok;} the class file field {@code interfaces}; only
+     * ever {@code null} before the file is successfully
      * parsed 
      */
     private TypeList interfaces;
 
     /**
-     * null-ok; the class file field <code>fields</code>; only ever
-     * <code>null</code> before the file is successfully parsed 
+     * {@code null-ok;} the class file field {@code fields}; only ever
+     * {@code null} before the file is successfully parsed 
      */
     private FieldList fields;
 
     /**
-     * null-ok; the class file field <code>methods</code>; only ever
-     * <code>null</code> before the file is successfully parsed 
+     * {@code null-ok;} the class file field {@code methods}; only ever
+     * {@code null} before the file is successfully parsed 
      */
     private MethodList methods;
 
     /**
-     * null-ok; the class file field <code>attributes</code>; only
-     * ever <code>null</code> before the file is successfully
+     * {@code null-ok;} the class file field {@code attributes}; only
+     * ever {@code null} before the file is successfully
      * parsed 
      */
     private StdAttributeList attributes;
 
-    /** null-ok; attribute factory, if any */
+    /** {@code null-ok;} attribute factory, if any */
     private AttributeFactory attributeFactory;
 
-    /** null-ok; parse observer, if any */
+    /** {@code null-ok;} parse observer, if any */
     private ParseObserver observer;
 
     /**
-     * Returns the string form of an object or <code>"(none)"</code>
-     * (rather than <code>"null"</code>) for <code>null</code>.
+     * Returns the string form of an object or {@code "(none)"}
+     * (rather than {@code "null"}) for {@code null}.
      * 
-     * @param obj null-ok; the object to stringify
-     * @return non-null; the appropriate string form
+     * @param obj {@code null-ok;} the object to stringify
+     * @return {@code non-null;} the appropriate string form
      */
     public static String stringOrNone(Object obj) {
         if (obj == null) {
@@ -162,11 +162,11 @@ public class DirectClassFile implements ClassFile {
     /**
      * Constructs an instance.
      * 
-     * @param bytes non-null; the bytes of the file
-     * @param filePath non-null; the file path for the class,
+     * @param bytes {@code non-null;} the bytes of the file
+     * @param filePath {@code non-null;} the file path for the class,
      * excluding any base directory specification
      * @param strictParse whether to be strict about parsing; if
-     * <code>false</code>, this avoids doing checks that only exist
+     * {@code false}, this avoids doing checks that only exist
      * for purposes of verification (such as magic number matching and
      * path-package consistency checking)
      */
@@ -189,11 +189,11 @@ public class DirectClassFile implements ClassFile {
     /**
      * Constructs an instance.
      * 
-     * @param bytes non-null; the bytes of the file
-     * @param filePath non-null; the file path for the class,
+     * @param bytes {@code non-null;} the bytes of the file
+     * @param filePath {@code non-null;} the file path for the class,
      * excluding any base directory specification
      * @param strictParse whether to be strict about parsing; if
-     * <code>false</code>, this avoids doing checks that only exist
+     * {@code false}, this avoids doing checks that only exist
      * for purposes of verification (such as magic number matching and
      * path-package consistency checking)
      */
@@ -205,7 +205,7 @@ public class DirectClassFile implements ClassFile {
     /**
      * Sets the parse observer for this instance.
      * 
-     * @param observer null-ok; the observer
+     * @param observer {@code null-ok;} the observer
      */
     public void setObserver(ParseObserver observer) {
         this.observer = observer;
@@ -214,7 +214,7 @@ public class DirectClassFile implements ClassFile {
     /**
      * Sets the attribute factory to use.
      * 
-     * @param attributeFactory non-null; the attribute factory
+     * @param attributeFactory {@code non-null;} the attribute factory
      */
     public void setAttributeFactory(AttributeFactory attributeFactory) {
         if (attributeFactory == null) {
@@ -227,7 +227,7 @@ public class DirectClassFile implements ClassFile {
     /**
      * Gets the {@link ByteArray} that this instance's data comes from.
      * 
-     * @return non-null; the bytes
+     * @return {@code non-null;} the bytes
      */
     public ByteArray getBytes() {
         return bytes;
@@ -317,12 +317,12 @@ public class DirectClassFile implements ClassFile {
      * list of constant pool indices for classes, which are in turn
      * translated to type constants. Instance construction will fail
      * if any of the (alleged) indices turn out not to refer to
-     * constant pool entries of type <code>Class</code>.
+     * constant pool entries of type {@code Class}.
      * 
      * @param offset offset into {@link #bytes} for the start of the
      * data
      * @param size number of elements in the list (not number of bytes)
-     * @return non-null; an appropriately-constructed class list
+     * @return {@code non-null;} an appropriately-constructed class list
      */
     public TypeList makeTypeList(int offset, int size) {
         if (size == 0) {
@@ -337,7 +337,7 @@ public class DirectClassFile implements ClassFile {
     }
 
     /**
-     * Gets the class file field <code>magic</code>, but without doing any
+     * Gets the class file field {@code magic}, but without doing any
      * checks or parsing first.
      * 
      * @return the magic value
@@ -347,7 +347,7 @@ public class DirectClassFile implements ClassFile {
     }
 
     /**
-     * Gets the class file field <code>minor_version</code>, but
+     * Gets the class file field {@code minor_version}, but
      * without doing any checks or parsing first.
      * 
      * @return the minor version
@@ -357,7 +357,7 @@ public class DirectClassFile implements ClassFile {
     }
 
     /**
-     * Gets the class file field <code>major_version</code>, but
+     * Gets the class file field {@code major_version}, but
      * without doing any checks or parsing first.
      * 
      * @return the major version
@@ -554,27 +554,27 @@ public class DirectClassFile implements ClassFile {
      * which are in turn returned as type constants. Instance
      * construction will fail if any of the (alleged) indices turn out
      * not to refer to constant pool entries of type
-     * <code>Class</code>.
+     * {@code Class}.
      */
     private static class DcfTypeList implements TypeList {
-        /** non-null; array containing the data */
+        /** {@code non-null;} array containing the data */
         private final ByteArray bytes;
         
         /** number of elements in the list (not number of bytes) */
         private final int size;
 
-        /** non-null; the constant pool */
+        /** {@code non-null;} the constant pool */
         private final StdConstantPool pool;
 
         /**
          * Constructs an instance.
          * 
-         * @param bytes non-null; original classfile's bytes
+         * @param bytes {@code non-null;} original classfile's bytes
          * @param offset offset into {@link #bytes} for the start of the
          * data
          * @param size number of elements in the list (not number of bytes)
-         * @param pool non-null; the constant pool to use
-         * @param observer null-ok; parse observer to use, if any
+         * @param pool {@code non-null;} the constant pool to use
+         * @param observer {@code null-ok;} parse observer to use, if any
          */
         public DcfTypeList(ByteArray bytes, int offset, int size,
                 StdConstantPool pool, ParseObserver observer) {

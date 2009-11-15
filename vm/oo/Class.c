@@ -157,7 +157,6 @@ may not be worth the performance hit.
  */
 #define INITIAL_CLASS_SERIAL_NUMBER 0x50000000
 
-
 /*
  * Constant used to size an auxillary class object data structure.
  * For optimum memory use this should be equal to or slightly larger than
@@ -273,6 +272,12 @@ static void linearAllocTests()
 
     char* str = dvmLinearStrdup(NULL, "This is a test!");
     LOGI("GOT: '%s'\n", str);
+
+    /* try to check the bounds; allocator may round allocation size up */
+    fiddle = dvmLinearAlloc(NULL, 12);
+    LOGI("Should be 1: %d\n", dvmLinearAllocContains(fiddle, 12));
+    LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle, 13));
+    LOGI("Should be 0: %d\n", dvmLinearAllocContains(fiddle - 128*1024, 1));
 
     dvmLinearAllocDump(NULL);
     dvmLinearFree(NULL, str);
@@ -481,7 +486,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
 
     cc = stat(cpe->fileName, &sb);
     if (cc < 0) {
-        LOGW("Unable to stat classpath element '%s'\n", cpe->fileName);
+        LOGD("Unable to stat classpath element '%s'\n", cpe->fileName);
         return false;
     }
     if (S_ISDIR(sb.st_mode)) {
@@ -513,6 +518,7 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
         return true;
     }
 
+    LOGD("Unable to process classpath element '%s'\n", cpe->fileName);
     return false;
 }
 
@@ -520,13 +526,13 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
  * Convert a colon-separated list of directories, Zip files, and DEX files
  * into an array of ClassPathEntry structs.
  *
- * If we're unable to load a bootstrap class path entry, we fail.  This
- * is necessary to preserve the dependencies implied by optimized DEX files
- * (e.g. if the same class appears in multiple places).
- *
  * During normal startup we fail if there are no entries, because we won't
  * get very far without the basic language support classes, but if we're
  * optimizing a DEX file we allow it.
+ *
+ * If entries are added or removed from the bootstrap class path, the
+ * dependencies in the DEX files will break, and everything except the
+ * very first entry will need to be regenerated.
  */
 static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
 {
@@ -586,16 +592,8 @@ static ClassPathEntry* processClassPath(const char* pathStr, bool isBootstrap)
             cpe[idx].ptr = NULL;
 
             if (!prepareCpe(&tmp, isBootstrap)) {
-                LOGD("Failed on '%s' (boot=%d)\n", tmp.fileName, isBootstrap);
                 /* drop from list and continue on */
                 free(tmp.fileName);
-
-                if (isBootstrap || gDvm.optimizing) {
-                    /* if boot path entry or we're optimizing, this is fatal */
-                    free(cpe);
-                    cpe = NULL;
-                    goto bail;
-                }
             } else {
                 /* copy over, pointers and all */
                 if (tmp.fileName[0] != '/')
@@ -1424,8 +1422,14 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,
         }
 
         if (pDvmDex == NULL || pClassDef == NULL) {
-            dvmThrowExceptionWithClassMessage(
-                "Ljava/lang/NoClassDefFoundError;", descriptor);
+            if (gDvm.noClassDefFoundErrorObj != NULL) {
+                /* usual case -- use prefabricated object */
+                dvmSetException(self, gDvm.noClassDefFoundErrorObj);
+            } else {
+                /* dexopt case -- can't guarantee prefab (core.jar) */
+                dvmThrowExceptionWithClassMessage(
+                    "Ljava/lang/NoClassDefFoundError;", descriptor);
+            }
             goto bail;
         }
 
@@ -1763,7 +1767,39 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         dvmLinearReadOnly(classLoader, newClass->ifields);
     }
 
-    /* load method definitions */
+    /*
+     * Load method definitions.  We do this in two batches, direct then
+     * virtual.
+     *
+     * If register maps have already been generated for this class, and
+     * precise GC is enabled, we pull out pointers to them.  We know that
+     * they were streamed to the DEX file in the same order in which the
+     * methods appear.
+     *
+     * If the class wasn't pre-verified, the maps will be generated when
+     * the class is verified during class initialization.
+     */
+    u4 classDefIdx = dexGetIndexForClassDef(pDexFile, pClassDef);
+    const void* classMapData;
+    u4 numMethods;
+
+    if (gDvm.preciseGc) {
+        classMapData =
+            dvmRegisterMapGetClassData(pDexFile, classDefIdx, &numMethods);
+
+        /* sanity check */
+        if (classMapData != NULL &&
+            pHeader->directMethodsSize + pHeader->virtualMethodsSize != numMethods)
+        {
+            LOGE("ERROR: in %s, direct=%d virtual=%d, maps have %d\n",
+                newClass->descriptor, pHeader->directMethodsSize,
+                pHeader->virtualMethodsSize, numMethods);
+            assert(false);
+            classMapData = NULL;        /* abandon */
+        }
+    } else {
+        classMapData = NULL;
+    }
 
     if (pHeader->directMethodsSize != 0) {
         int count = (int) pHeader->directMethodsSize;
@@ -1776,6 +1812,15 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         for (i = 0; i < count; i++) {
             dexReadClassDataMethod(&pEncodedData, &method, &lastIndex);
             loadMethodFromDex(newClass, &method, &newClass->directMethods[i]);
+            if (classMapData != NULL) {
+                const RegisterMap* pMap = dvmRegisterMapGetNext(&classMapData);
+                if (dvmRegisterMapGetFormat(pMap) != kRegMapFormatNone) {
+                    newClass->directMethods[i].registerMap = pMap;
+                    /* TODO: add rigorous checks */
+                    assert((newClass->directMethods[i].registersSize+7) / 8 ==
+                        newClass->directMethods[i].registerMap->regWidth);
+                }
+            }
         }
         dvmLinearReadOnly(classLoader, newClass->directMethods);
     }
@@ -1791,6 +1836,15 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         for (i = 0; i < count; i++) {
             dexReadClassDataMethod(&pEncodedData, &method, &lastIndex);
             loadMethodFromDex(newClass, &method, &newClass->virtualMethods[i]);
+            if (classMapData != NULL) {
+                const RegisterMap* pMap = dvmRegisterMapGetNext(&classMapData);
+                if (dvmRegisterMapGetFormat(pMap) != kRegMapFormatNone) {
+                    newClass->virtualMethods[i].registerMap = pMap;
+                    /* TODO: add rigorous checks */
+                    assert((newClass->virtualMethods[i].registersSize+7) / 8 ==
+                        newClass->virtualMethods[i].registerMap->regWidth);
+                }
+            }
         }
         dvmLinearReadOnly(classLoader, newClass->virtualMethods);
     }
@@ -1915,9 +1969,11 @@ void dvmFreeClassInnards(ClassObject* clazz)
         int directMethodCount = clazz->directMethodCount;
         clazz->directMethods = NULL;
         clazz->directMethodCount = -1;
+        dvmLinearReadWrite(clazz->classLoader, directMethods);
         for (i = 0; i < directMethodCount; i++) {
             freeMethodInnards(&directMethods[i]);
         }
+        dvmLinearReadOnly(clazz->classLoader, directMethods);
         dvmLinearFree(clazz->classLoader, directMethods);
     }
     if (clazz->virtualMethods != NULL) {
@@ -1925,9 +1981,11 @@ void dvmFreeClassInnards(ClassObject* clazz)
         int virtualMethodCount = clazz->virtualMethodCount;
         clazz->virtualMethodCount = -1;
         clazz->virtualMethods = NULL;
+        dvmLinearReadWrite(clazz->classLoader, virtualMethods);
         for (i = 0; i < virtualMethodCount; i++) {
             freeMethodInnards(&virtualMethods[i]);
         }
+        dvmLinearReadOnly(clazz->classLoader, virtualMethods);
         dvmLinearFree(clazz->classLoader, virtualMethods);
     }
 
@@ -1956,6 +2014,8 @@ void dvmFreeClassInnards(ClassObject* clazz)
 
 /*
  * Free anything in a Method that was allocated on the system heap.
+ *
+ * The containing class is largely torn down by this point.
  */
 static void freeMethodInnards(Method* meth)
 {
@@ -1963,26 +2023,39 @@ static void freeMethodInnards(Method* meth)
     free(meth->exceptions);
     free(meth->lines);
     free(meth->locals);
-#else
-    // TODO: call dvmFreeRegisterMap() if meth->registerMap was allocated
-    //       on the system heap
-    UNUSED_PARAMETER(meth);
 #endif
+
+    /*
+     * Some register maps are allocated on the heap, either because of late
+     * verification or because we're caching an uncompressed form.
+     */
+    const RegisterMap* pMap = meth->registerMap;
+    if (pMap != NULL && dvmRegisterMapGetOnHeap(pMap)) {
+        dvmFreeRegisterMap((RegisterMap*) pMap);
+        meth->registerMap = NULL;
+    }
+
+    /*
+     * We may have copied the instructions.
+     */
+    if (IS_METHOD_FLAG_SET(meth, METHOD_ISWRITABLE)) {
+        DexCode* methodDexCode = (DexCode*) dvmGetMethodCode(meth);
+        dvmLinearFree(meth->clazz->classLoader, methodDexCode);
+    }
 }
 
 /*
  * Clone a Method, making new copies of anything that will be freed up
- * by freeMethodInnards().
+ * by freeMethodInnards().  This is used for "miranda" methods.
  */
 static void cloneMethod(Method* dst, const Method* src)
 {
+    if (src->registerMap != NULL) {
+        LOGE("GLITCH: only expected abstract methods here\n");
+        LOGE("        cloning %s.%s\n", src->clazz->descriptor, src->name);
+        dvmAbort();
+    }
     memcpy(dst, src, sizeof(Method));
-#if 0
-    /* for current usage, these are never set, so no need to implement copy */
-    assert(dst->exceptions == NULL);
-    assert(dst->lines == NULL);
-    assert(dst->locals == NULL);
-#endif
 }
 
 /*
@@ -2045,6 +2118,55 @@ static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
 }
 
 /*
+ * We usually map bytecode directly out of the DEX file, which is mapped
+ * shared read-only.  If we want to be able to modify it, we have to make
+ * a new copy.
+ *
+ * Once copied, the code will be in the LinearAlloc region, which may be
+ * marked read-only.
+ *
+ * The bytecode instructions are embedded inside a DexCode structure, so we
+ * need to copy all of that.  (The dvmGetMethodCode function backs up the
+ * instruction pointer to find the start of the DexCode.)
+ */
+void dvmMakeCodeReadWrite(Method* meth)
+{
+    DexCode* methodDexCode = (DexCode*) dvmGetMethodCode(meth);
+
+    if (IS_METHOD_FLAG_SET(meth, METHOD_ISWRITABLE)) {
+        dvmLinearReadWrite(meth->clazz->classLoader, methodDexCode);
+        return;
+    }
+
+    assert(!dvmIsNativeMethod(meth) && !dvmIsAbstractMethod(meth));
+
+    size_t dexCodeSize = dexGetDexCodeSize(methodDexCode);
+    LOGD("Making a copy of %s.%s code (%d bytes)\n",
+        meth->clazz->descriptor, meth->name, dexCodeSize);
+
+    DexCode* newCode =
+        (DexCode*) dvmLinearAlloc(meth->clazz->classLoader, dexCodeSize);
+    memcpy(newCode, methodDexCode, dexCodeSize);
+
+    meth->insns = newCode->insns;
+    SET_METHOD_FLAG(meth, METHOD_ISWRITABLE);
+}
+
+/*
+ * Mark the bytecode read-only.
+ *
+ * If the contents of the DexCode haven't actually changed, we could revert
+ * to the original shared page.
+ */
+void dvmMakeCodeReadOnly(Method* meth)
+{
+    DexCode* methodDexCode = (DexCode*) dvmGetMethodCode(meth);
+    LOGV("+++ marking %p read-only\n", methodDexCode);
+    dvmLinearReadOnly(meth->clazz->classLoader, methodDexCode);
+}
+
+
+/*
  * jniArgInfo (32-bit int) layout:
  *   SRRRHHHH HHHHHHHH HHHHHHHH HHHHHHHH
  *
@@ -2080,6 +2202,16 @@ static int computeJniArgInfo(const DexProto* proto)
         break;
     case 'J':
         returnType = DALVIK_JNI_RETURN_S8;
+        break;
+    case 'Z':
+    case 'B':
+        returnType = DALVIK_JNI_RETURN_S1;
+        break;
+    case 'C':
+        returnType = DALVIK_JNI_RETURN_U2;
+        break;
+    case 'S':
+        returnType = DALVIK_JNI_RETURN_S2;
         break;
     default:
         returnType = DALVIK_JNI_RETURN_S4;
@@ -3171,6 +3303,7 @@ static bool createIftable(ClassObject* clazz)
     }
 
     if (mirandaCount != 0) {
+        static const int kManyMirandas = 150;   /* arbitrary */
         Method* newVirtualMethods;
         Method* meth;
         int oldMethodCount, oldVtableCount;
@@ -3178,6 +3311,17 @@ static bool createIftable(ClassObject* clazz)
         for (i = 0; i < mirandaCount; i++) {
             LOGVV("MIRANDA %d: %s.%s\n", i,
                 mirandaList[i]->clazz->descriptor, mirandaList[i]->name);
+        }
+        if (mirandaCount > kManyMirandas) {
+            /*
+             * Some obfuscators like to create an interface with a huge
+             * pile of methods, declare classes as implementing it, and then
+             * only define a couple of methods.  This leads to a rather
+             * massive collection of Miranda methods and a lot of wasted
+             * space, sometimes enough to blow out the LinearAlloc cap.
+             */
+            LOGD("Note: class %s has %d unimplemented (abstract) methods\n",
+                clazz->descriptor, mirandaCount);
         }
 
         /*
@@ -3245,6 +3389,9 @@ static bool createIftable(ClassObject* clazz)
          * Now we need to create the fake methods.  We clone the abstract
          * method definition from the interface and then replace a few
          * things.
+         *
+         * The Method will be an "abstract native", with nativeFunc set to
+         * dvmAbstractMethodStub().
          */
         meth = clazz->virtualMethods + oldMethodCount;
         for (i = 0; i < mirandaCount; i++, meth++) {
@@ -3930,17 +4077,32 @@ static bool checkMethodDescriptorClasses(const Method* meth,
  *
  * What we need to do is ensure that the classes named in the method
  * descriptors in our ancestors and ourselves resolve to the same class
- * objects.  The only time this matters is when the classes come from
- * different class loaders, and the resolver might come up with a
- * different answer for the same class name depending on context.
+ * objects.  We can get conflicts when the classes come from different
+ * class loaders, and the resolver comes up with different results for
+ * the same class name in different contexts.
  *
- * We don't need to check to see if an interface's methods match with
- * its superinterface's methods, because you can't instantiate an
- * interface and do something inappropriate with it.  If interface I1
- * extends I2 and is implemented by C, and I1 and I2 are in separate
- * class loaders and have conflicting views of other classes, we will
- * catch the conflict when we process C.  Anything that implements I1 is
- * doomed to failure, but we don't need to catch that while processing I1.
+ * An easy way to cause the problem is to declare a base class that uses
+ * class Foo in a method signature (e.g. as the return type).  Then,
+ * define a subclass and a different version of Foo, and load them from a
+ * different class loader.  If the subclass overrides the method, it will
+ * have a different concept of what Foo is than its parent does, so even
+ * though the method signature strings are identical, they actually mean
+ * different things.
+ *
+ * A call to the method through a base-class reference would be treated
+ * differently than a call to the method through a subclass reference, which
+ * isn't the way polymorphism works, so we have to reject the subclass.
+ * If the subclass doesn't override the base method, then there's no
+ * problem, because calls through base-class references and subclass
+ * references end up in the same place.
+ *
+ * We don't need to check to see if an interface's methods match with its
+ * superinterface's methods, because you can't instantiate an interface
+ * and do something inappropriate with it.  If interface I1 extends I2
+ * and is implemented by C, and I1 and I2 are in separate class loaders
+ * and have conflicting views of other classes, we will catch the conflict
+ * when we process C.  Anything that implements I1 is doomed to failure,
+ * but we don't need to catch that while processing I1.
  *
  * On failure, throws an exception and returns "false".
  */
@@ -3958,15 +4120,18 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
         clazz->classLoader != clazz->super->classLoader)
     {
         /*
-         * Walk through every method declared in the superclass, and
-         * compare resolved descriptor components.  We pull the Method
-         * structs out of the vtable.  It doesn't matter whether we get
-         * the struct from the parent or child, since we just need the
-         * UTF-8 descriptor, which must match.
+         * Walk through every overridden method and compare resolved
+         * descriptor components.  We pull the Method structs out of
+         * the vtable.  It doesn't matter whether we get the struct from
+         * the parent or child, since we just need the UTF-8 descriptor,
+         * which must match.
          *
          * We need to do this even for the stuff inherited from Object,
          * because it's possible that the new class loader has redefined
          * a basic class like String.
+         *
+         * We don't need to check stuff defined in a superclass because
+         * it was checked when the superclass was loaded.
          */
         const Method* meth;
 
@@ -3975,7 +4140,9 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
         //    clazz->super->descriptor, clazz->super->classLoader);
         for (i = clazz->super->vtableCount - 1; i >= 0; i--) {
             meth = clazz->vtable[i];
-            if (!checkMethodDescriptorClasses(meth, clazz->super, clazz)) {
+            if (meth != clazz->super->vtable[i] &&
+                !checkMethodDescriptorClasses(meth, clazz->super, clazz))
+            {
                 LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)\n",
                     meth->name, clazz->descriptor, clazz->classLoader,
                     clazz->super->descriptor, clazz->super->classLoader);
@@ -3987,7 +4154,12 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
     }
 
     /*
-     * Check all interfaces we implement.
+     * Check the methods defined by this class against the interfaces it
+     * implements.  If we inherited the implementation from a superclass,
+     * we have to check it against the superclass (which might be in a
+     * different class loader).  If the superclass also implements the
+     * interface, we could skip the check since by definition it was
+     * performed when the class was loaded.
      */
     for (i = 0; i < clazz->iftableCount; i++) {
         const InterfaceEntry* iftable = &clazz->iftable[i];
@@ -4003,7 +4175,7 @@ static bool validateSuperDescriptors(const ClassObject* clazz)
                 vtableIndex = iftable->methodIndexArray[j];
                 meth = clazz->vtable[vtableIndex];
 
-                if (!checkMethodDescriptorClasses(meth, iface, clazz)) {
+                if (!checkMethodDescriptorClasses(meth, iface, meth->clazz)) {
                     LOGW("Method mismatch: %s in %s (cl=%p) and "
                             "iface %s (cl=%p)\n",
                         meth->name, clazz->descriptor, clazz->classLoader,
@@ -4365,19 +4537,21 @@ void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
 
 /*
  * Add a RegisterMap to a Method.  This is done when we verify the class
- * and compute the register maps at class initialization time, which means
- * that "pMap" is on the heap and should be freed when the Method is
- * discarded.
+ * and compute the register maps at class initialization time (i.e. when
+ * we don't have a pre-generated map).  This means "pMap" is on the heap
+ * and should be freed when the Method is discarded.
  */
 void dvmSetRegisterMap(Method* method, const RegisterMap* pMap)
 {
     ClassObject* clazz = method->clazz;
 
     if (method->registerMap != NULL) {
-        LOGW("WARNING: registerMap already set for %s.%s\n",
+        /* unexpected during class loading, okay on first use (uncompress) */
+        LOGV("NOTE: registerMap already set for %s.%s\n",
             method->clazz->descriptor, method->name);
         /* keep going */
     }
+    assert(!dvmIsNativeMethod(method) && !dvmIsAbstractMethod(method));
 
     /* might be virtual or direct */
     dvmLinearReadWrite(clazz->classLoader, clazz->virtualMethods);

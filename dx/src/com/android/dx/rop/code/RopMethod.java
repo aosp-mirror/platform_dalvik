@@ -24,20 +24,20 @@ import com.android.dx.util.IntList;
  * All of the parts that make up a method at the rop layer.
  */
 public final class RopMethod {
-    /** non-null; basic block list of the method */
+    /** {@code non-null;} basic block list of the method */
     private final BasicBlockList blocks;
 
-    /** &gt;= 0; label for the block which starts the method */
+    /** {@code >= 0;} label for the block which starts the method */
     private final int firstLabel;
 
     /**
-     * null-ok; array of predecessors for each block, indexed by block
+     * {@code null-ok;} array of predecessors for each block, indexed by block
      * label 
      */
     private IntList[] predecessors;
 
     /**
-     * null-ok; the predecessors for the implicit "exit" block, that is
+     * {@code null-ok;} the predecessors for the implicit "exit" block, that is
      * the labels for the blocks that return, if calculated 
      */
     private IntList exitPredecessors;
@@ -45,8 +45,8 @@ public final class RopMethod {
     /**
      * Constructs an instance.
      * 
-     * @param blocks non-null; basic block list of the method
-     * @param firstLabel &gt;= 0; the label of the first block to execute
+     * @param blocks {@code non-null;} basic block list of the method
+     * @param firstLabel {@code >= 0;} the label of the first block to execute
      */
     public RopMethod(BasicBlockList blocks, int firstLabel) {
         if (blocks == null) {
@@ -67,7 +67,7 @@ public final class RopMethod {
     /**
      * Gets the basic block list for this method.
      * 
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public BasicBlockList getBlocks() {
         return blocks;
@@ -77,7 +77,7 @@ public final class RopMethod {
      * Gets the label for the first block in the method that this list
      * represents.
      * 
-     * @return &gt;= 0; the first-block label
+     * @return {@code >= 0;} the first-block label
      */
     public int getFirstLabel() {
         return firstLabel;
@@ -87,8 +87,8 @@ public final class RopMethod {
      * Gets the predecessors associated with the given block. This throws
      * an exception if there is no block with the given label.
      * 
-     * @param label &gt;= 0; the label of the block in question
-     * @return non-null; the predecessors of that block
+     * @param label {@code >= 0;} the label of the block in question
+     * @return {@code non-null;} the predecessors of that block
      */
     public IntList labelToPredecessors(int label) {
         if (exitPredecessors == null) {
@@ -107,7 +107,7 @@ public final class RopMethod {
     /**
      * Gets the exit predecessors for this instance.
      * 
-     * @return non-null; the exit predecessors
+     * @return {@code non-null;} the exit predecessors
      */
     public IntList getExitPredecessors() {
         if (exitPredecessors == null) {
@@ -124,7 +124,7 @@ public final class RopMethod {
      * amount.
      * 
      * @param delta the amount to offset register numbers by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RopMethod withRegisterOffset(int delta) {
         RopMethod result = new RopMethod(blocks.withRegisterOffset(delta),

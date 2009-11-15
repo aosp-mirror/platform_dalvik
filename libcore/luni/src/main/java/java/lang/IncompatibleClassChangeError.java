@@ -24,7 +24,6 @@ package java.lang;
  * the same running image.
  * 
  * @see Error
- * @since Android 1.0
  */
 public class IncompatibleClassChangeError extends LinkageError {
 
@@ -33,8 +32,6 @@ public class IncompatibleClassChangeError extends LinkageError {
     /**
      * Constructs a new {@code IncompatibleClassChangeError} that includes the
      * current stack trace.
-     * 
-     * @since Android 1.0
      */
     public IncompatibleClassChangeError() {
         super();
@@ -46,7 +43,6 @@ public class IncompatibleClassChangeError extends LinkageError {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public IncompatibleClassChangeError(String detailMessage) {
         super(detailMessage);

@@ -14,9 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-// BEGIN andorid-note
-// This class was copied from a newer version of harmony
-// END andorid-note
 
 package java.net;
 
@@ -57,16 +54,13 @@ import org.apache.harmony.luni.util.Msg;
  * <i>LOW-HIGH</i> where <i>LOW</i> and <i>HIGH</i> are valid port numbers. If
  * either <i>LOW</i> or <i>HIGH</i> is omitted it is equivalent to entering the
  * lowest or highest possible value respectively. For example:
- * 
+ *
  * <pre>
  * {@code SocketPermission(&quot;www.company.com:7000-&quot;, &quot;connect,accept&quot;)}
  * </pre>
- * 
+ *
  * represents the permission to connect to and accept connections from {@code
  * www.company.com} on ports in the range {@code 7000} to {@code 65535}.
- * </p>
- * 
- * @since Android 1.0
  */
 public final class SocketPermission extends Permission implements Serializable {
 
@@ -122,13 +116,11 @@ public final class SocketPermission extends Permission implements Serializable {
      * possible operations {@code "connect"}, {@code "listen"}, {@code "accept"}
      * , and {@code "resolve"}. They are case-insensitive and can be put
      * together in any order. {@code "resolve"} is implied per default.
-     * </p>
-     * 
+     *
      * @param host
      *            the hostname this permission is valid for.
      * @param action
      *            the action string of this permission.
-     * @since Android 1.0
      */
     public SocketPermission(String host, String action) {
         super(host.equals("") ? "localhost" : host); //$NON-NLS-1$ //$NON-NLS-2$
@@ -149,14 +141,13 @@ public final class SocketPermission extends Permission implements Serializable {
     /**
      * Compares the argument {@code o} to this instance and returns {@code true}
      * if they represent the same permission using a class specific comparison.
-     * 
+     *
      * @param o
      *            the object to compare with this {@code SocketPermission}
      *            instance.
      * @return {@code true} if they represent the same permission, {@code false}
      *         otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -187,10 +178,9 @@ public final class SocketPermission extends Permission implements Serializable {
      * Returns the hash value for this {@code SocketPermission} instance. Any
      * two objects which returns {@code true} when passed to {@code equals()}
      * must return the same value as a result of this method.
-     * 
+     *
      * @return the hashcode value for this instance.
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -201,9 +191,8 @@ public final class SocketPermission extends Permission implements Serializable {
      * Gets a comma-separated list of all actions allowed by this permission. If
      * more than one action is returned they follow this order: {@code connect},
      * {@code listen}, {@code accept}, {@code resolve}.
-     * 
+     *
      * @return the comma-separated action list.
-     * @since Android 1.0
      */
     @Override
     public String getActions() {
@@ -212,7 +201,7 @@ public final class SocketPermission extends Permission implements Serializable {
 
     /**
      * Stores the actions for this permission as a bit field.
-     * 
+     *
      * @param actions
      *            java.lang.String the action list
      */
@@ -222,7 +211,7 @@ public final class SocketPermission extends Permission implements Serializable {
         }
         boolean parsing = true;
         String action;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int pos = 0, length = actions.length();
         while (parsing) {
             char c;
@@ -255,13 +244,12 @@ public final class SocketPermission extends Permission implements Serializable {
      * permission actions, hosts and ports must be implied by this permission
      * instance in order to return {@code true}. This permission may imply
      * additional actions not present in the argument permission.
-     * 
+     *
      * @param p
      *            the socket permission which has to be implied by this
      *            instance.
      * @return {@code true} if this permission instance implies all permissions
      *         represented by {@code p}, {@code false} otherwise.
-     * @since Android 1.0
      */
     @Override
     public boolean implies(Permission p) {
@@ -293,15 +281,14 @@ public final class SocketPermission extends Permission implements Serializable {
     /**
      * Creates a new {@code PermissionCollection} to store {@code
      * SocketPermission} objects.
-     * 
+     *
      * @return the new permission collection.
-     * @since Android 1.0
      */
     @Override
     public PermissionCollection newPermissionCollection() {
         return new SocketPermissionCollection();
     }
-    
+
     /**
      * Parse the port, including the minPort, maxPort
      * @param hostPort the host[:port] one
@@ -319,14 +306,14 @@ public final class SocketPermission extends Permission implements Serializable {
            portMax = 80;
            return;
        }
-       
+
        if (":*".equals(port)) {
            // The port range should be 0-65535
            portMin = 0;
            portMax = 65535;
            return;
        }
-       
+
        // Omit ':'
        port = port.substring(1);
        int negIdx = port.indexOf('-');
@@ -349,21 +336,23 @@ public final class SocketPermission extends Permission implements Serializable {
        try {
            portMin = Integer.valueOf(strPortMin).intValue();
            portMax = Integer.valueOf(strPortMax).intValue();
-           
+
            if (portMin > portMax) {
-               throw new IllegalArgumentException(Msg.getString("K0049") + " " + port); //$NON-NLS-1$
+               // K0049=MinPort is greater than MaxPort\: {0}
+               throw new IllegalArgumentException(Msg.getString("K0049", port)); //$NON-NLS-1$
            }
        } catch (NumberFormatException e) {
-           throw new IllegalArgumentException(Msg.getString("K004a") + " " + port); //$NON-NLS-1$
+           // K004a=Invalid port number specified\: {0}
+           throw new IllegalArgumentException(Msg.getString("K004a", port)); //$NON-NLS-1$
        }
     }
 
     /**
      * Creates a canonical action list.
-     * 
+     *
      * @param action
      *            java.lang.String
-     * 
+     *
      * @return java.lang.String
      */
     private String toCanonicalActionString(String action) {
@@ -371,7 +360,7 @@ public final class SocketPermission extends Permission implements Serializable {
             return actionNames[SP_RESOLVE]; // If none specified return the
         }
         // implied action resolve
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if ((actionsMask & SP_CONNECT) == SP_CONNECT) {
             sb.append(',');
             sb.append(actionNames[SP_CONNECT]);
@@ -403,15 +392,20 @@ public final class SocketPermission extends Permission implements Serializable {
     }
 
     /**
-     * Get the host part from the host[:port] one.
-     * The host should be
+     * Get the host part from the host[:port] one. The host should be
+     *
+     * <pre>
      *      host = (hostname | IPv4address | IPv6reference | IPv6 in full uncompressed form)
-     * The wildcard "*" may be included once in a DNS name host specification. If it is included, 
-     * it must be in the leftmost position
-     * 
+     * </pre>
+     *
+     * The wildcard "*" may be included once in a DNS name host specification.
+     * If it is included, it must be in the leftmost position
+     *
      * @param host
-     * @return
-     * @throws IllegalArgumentException   if the host is invalid.
+     *            the {@code host[:port]} string.
+     * @return the host name.
+     * @throws IllegalArgumentException
+     *             if the host is invalid.
      */
     private String getHostString(String host) throws IllegalArgumentException {
         host = host.trim();
@@ -431,7 +425,7 @@ public final class SocketPermission extends Permission implements Serializable {
         }
 
         int lastIdx = host.lastIndexOf(':');
-        
+
         if (idx == lastIdx) {
             if (-1 != idx) {
                 // only one colon, should be port
@@ -456,21 +450,22 @@ public final class SocketPermission extends Permission implements Serializable {
             if (Inet6Util.isIP6AddressInFullForm(host)) {
                 return host.toLowerCase();
             }
-            throw new IllegalArgumentException(Msg.getString("K004a") + " "
-                    + host);
+            // K004a=Invalid port number specified\: {0}
+            throw new IllegalArgumentException(Msg.getString("K004a", host));
         }
         // forward bracket found
         int bbracketIdx = host.indexOf(']');
         if (-1 == bbracketIdx) {
             // no back bracket found, wrong
-            throw new IllegalArgumentException(Msg.getString("K004a") + " "
-                    + host);
+            // K004a=Invalid port number specified\: {0}
+            throw new IllegalArgumentException(Msg.getString("K004a", host));
         }
         host = host.substring(0, bbracketIdx + 1);
         if (Inet6Util.isValidIP6Address(host)) {
             return host.toLowerCase();
         }
-        throw new IllegalArgumentException(Msg.getString("K004a") + " " + host);
+        // K004a=Invalid port number specified\: {0}
+        throw new IllegalArgumentException(Msg.getString("K004a", host));
     }
 
     /**

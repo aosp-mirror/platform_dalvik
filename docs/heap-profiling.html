@@ -95,11 +95,10 @@ $ rm head.hprof tail.hprof
 
 </p><p>
 You now have the hprof dump in <code>dump.hprof</code>.
-
 </p><p>
 
 
-<h3>"Cupcake" release (1.5)</h3>
+<h3>Android 1.5 ("Cupcake")</h3>
 <p>
 Some steps were taken to make this simpler.  Notably, the two output
 files are now combined for you, and a new API call was added that allows
@@ -140,6 +139,21 @@ your choice, e.g. <code>/sdcard/myapp.hprof</code>.  Because you're
 initiating the action from within the app, and can write the file to
 removable storage or the app's private data area, you can do this on a
 device without root access.
+
+
+
+<h3>Android 1.6 ("Donut")</h3>
+<p>
+In 1.6, features were added that allow DDMS to request a heap dump on
+demand, and automatically pull the result across.  Select your application
+and click the "dump HPROF file" button.
+</p><p>
+However, 1.6 also introduced the <code>WRITE_EXTERNAL_STORAGE</code>
+permission, which is required to write data to the SD card.  To use
+the DDMS feature, which always writes files to the SD card,
+you must have a card inserted and the permission enabled in your application.
+</p><p>
+Otherwise, things are the same as they were in 1.5.
 
 
 <h2>Examining the data</h2>

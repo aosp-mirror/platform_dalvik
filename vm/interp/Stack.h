@@ -138,14 +138,20 @@ struct StackSaveArea {
     const Method* method;
 
     union {
-        /* for JNI native methods: top of local reference storage */
-        Object**    localRefTop;
+        /* for JNI native methods: bottom of local reference segment */
+#ifdef USE_INDIRECT_REF
+        u4          localRefCookie;
+#else
+        Object**    localRefCookie;
+#endif
 
         /* for interpreted methods: saved current PC, for exception stack
          * traces and debugger traces */
         const u2*   currentPc;
     } xtra;
 
+    /* Native return pointer for JIT, or 0 if interpreted */
+    const u2* returnAddr;
 #ifdef PAD_SAVE_AREA
     u4          pad3, pad4, pad5;
 #endif
@@ -189,16 +195,18 @@ bool dvmPushLocalFrame(Thread* thread, const Method* method);
 bool dvmPopLocalFrame(Thread* thread);
 
 /*
- * Call an interpreted method from native code.
+ * Call an interpreted method from native code.  If this is being called
+ * from a JNI function, references in the argument list will be converted
+ * back to pointers.
  *
  * "obj" should be NULL for "direct" methods.
  */
-void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, va_list args);
-void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
-    JValue* pResult, const jvalue* args);
 void dvmCallMethod(Thread* self, const Method* method, Object* obj,
     JValue* pResult, ...);
+void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
+    bool fromJni, JValue* pResult, va_list args);
+void dvmCallMethodA(Thread* self, const Method* method, Object* obj,
+    bool fromJni, JValue* pResult, const jvalue* args);
 
 /*
  * Invoke a method, using the specified arguments and return type, through

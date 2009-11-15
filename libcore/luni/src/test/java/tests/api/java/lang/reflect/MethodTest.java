@@ -226,7 +226,41 @@ public class MethodTest extends junit.framework.TestCase {
         }
         assertTrue("Inherited method returned not-equal", m1.equals(m2));
     }
-
+    
+    /**
+     * @tests java.lang.Class#getMethod(java.lang.String, java.lang.Class[])
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMethod",
+        args = {java.lang.String.class, java.lang.Class[].class},
+        clazz = java.lang.Class.class
+    )
+    public void test_getMethod() throws NoSuchMethodException, SecurityException {
+        // Check that getMethod treats null parameterTypes the same as an empty array.
+        Method m1 = TestMethod.class.getMethod("invokeInstanceTest", new Class[0]);
+        Method m2 = TestMethod.class.getMethod("invokeInstanceTest", (Class[]) null);
+        assertEquals(m1, m2);
+    }
+    
+    /**
+     * @tests java.lang.Class#getDeclaredMethod(java.lang.String, java.lang.Class[])
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDeclaredMethod",
+        args = {java.lang.String.class, java.lang.Class[].class},
+        clazz = java.lang.Class.class
+    )
+    public void test_getDeclaredMethod() throws NoSuchMethodException, SecurityException {
+        // Check that getDeclaredMethod treats null parameterTypes the same as an empty array.
+        Method m1 = TestMethod.class.getDeclaredMethod("invokeInstanceTest", new Class[0]);
+        Method m2 = TestMethod.class.getDeclaredMethod("invokeInstanceTest", (Class[]) null);
+        assertEquals(m1, m2);
+    }
+    
     /**
      * @tests java.lang.reflect.Method#getDeclaringClass()
      */

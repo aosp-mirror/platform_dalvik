@@ -26,7 +26,7 @@ import java.io.PrintStream;
  * code.
  */
 public final class CodeStatistics {
-    /** set to <code>true</code> to enable development-time debugging code */
+    /** set to {@code true} to enable development-time debugging code */
     private static final boolean DEBUG = false;
 
     /**
@@ -76,7 +76,7 @@ public final class CodeStatistics {
     /**
      * Updates the number of original bytecode bytes processed.
      * 
-     * @param count &gt;= 0; the number of bytes to add
+     * @param count {@code >= 0;} the number of bytes to add
      */
     public static void updateOriginalByteCount(int count) {
         runningOriginalBytes += count;
@@ -146,7 +146,7 @@ public final class CodeStatistics {
     /**
      * Prints out the collected statistics.
      * 
-     * @param out non-null; where to output to
+     * @param out {@code non-null;} where to output to
      */
     public static void dumpStatistics(PrintStream out) {
         out.printf("Optimizer Delta Rop Insns: %d total: %d "

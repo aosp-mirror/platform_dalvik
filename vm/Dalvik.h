@@ -44,6 +44,7 @@
 #include "UtfString.h"
 #include "Intern.h"
 #include "ReferenceTable.h"
+#include "IndirectRefTable.h"
 #include "AtomicCache.h"
 #include "Thread.h"
 #include "Ddm.h"
@@ -67,11 +68,15 @@
 #include "LinearAlloc.h"
 #include "analysis/DexVerify.h"
 #include "analysis/DexOptimize.h"
+#include "analysis/RegisterMap.h"
 #include "Init.h"
 #include "libdex/OpCode.h"
 #include "libdex/InstrUtils.h"
 #include "AllocTracker.h"
 #include "PointerSet.h"
+#if defined(WITH_JIT)
+#include "compiler/Compiler.h"
+#endif
 #include "Globals.h"
 #include "reflect/Reflect.h"
 #include "oo/TypeCheck.h"

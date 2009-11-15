@@ -29,7 +29,6 @@ import org.apache.harmony.luni.util.Msg;
  * @see URL
  * @see URLConnection
  * @see URLStreamHandler
- * @since Android 1.0
  */
 public abstract class HttpURLConnection extends URLConnection {
     @SuppressWarnings("nls")
@@ -39,8 +38,6 @@ public abstract class HttpURLConnection extends URLConnection {
    /**
      * The HTTP request method of this {@code HttpURLConnection}. The default
      * value is {@code "GET"}.
-     * 
-     * @since Android 1.0
      */
     protected String method = "GET"; //$NON-NLS-1$
 
@@ -53,24 +50,17 @@ public abstract class HttpURLConnection extends URLConnection {
      * <li>3xx: Relocation/Redirection</li>
      * <li>4xx: Client Error</li>
      * <li>5xx: Server Error</li>
-     * </p>
-     * 
-     * @since Android 1.0
      */
     protected int responseCode = -1;
 
     /**
      * The HTTP response message which corresponds to the response code.
-     * 
-     * @since Android 1.0
      */
     protected String responseMessage;
 
     /**
      * Flag to define whether the protocol will automatically follow redirects
      * or not. The default value is {@code true}.
-     * 
-     * @since Android 1.0
      */
     protected boolean instanceFollowRedirects = followRedirects;
 
@@ -80,8 +70,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * If the HTTP chunked encoding is enabled this parameter defines the
      * chunk-length. Default value is {@code -1} that means the chunked encoding
      * mode is disabled.
-     * 
-     * @since Android 1.0
      */
     protected int chunkLength = -1;
 
@@ -89,8 +77,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * If using HTTP fixed-length streaming mode this parameter defines the
      * fixed length of content. Default value is {@code -1} that means the
      * fixed-length streaming mode is disabled.
-     * 
-     * @since Android 1.0
      */
     protected int fixedContentLength = -1;
 
@@ -102,255 +88,184 @@ public abstract class HttpURLConnection extends URLConnection {
     // 5XX: server error
     /**
      * Numeric status code, 202: Accepted
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_ACCEPTED = 202;
 
     /**
      * Numeric status code, 502: Bad Gateway
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_BAD_GATEWAY = 502;
 
     /**
      * Numeric status code, 405: Bad Method
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_BAD_METHOD = 405;
 
     /**
      * Numeric status code, 400: Bad Request
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_BAD_REQUEST = 400;
 
     /**
      * Numeric status code, 408: Client Timeout
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_CLIENT_TIMEOUT = 408;
 
     /**
      * Numeric status code, 409: Conflict
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_CONFLICT = 409;
 
     /**
      * Numeric status code, 201: Created
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_CREATED = 201;
 
     /**
      * Numeric status code, 413: Entity too large
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_ENTITY_TOO_LARGE = 413;
 
     /**
      * Numeric status code, 403: Forbidden
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_FORBIDDEN = 403;
 
     /**
      * Numeric status code, 504: Gateway timeout
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_GATEWAY_TIMEOUT = 504;
 
     /**
      * Numeric status code, 410: Gone
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_GONE = 410;
 
     /**
      * Numeric status code, 500: Internal error
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_INTERNAL_ERROR = 500;
 
     /**
      * Numeric status code, 411: Length required
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_LENGTH_REQUIRED = 411;
 
     /**
      * Numeric status code, 301 Moved permanently
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_MOVED_PERM = 301;
 
     /**
      * Numeric status code, 302: Moved temporarily
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_MOVED_TEMP = 302;
 
     /**
      * Numeric status code, 300: Multiple choices
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_MULT_CHOICE = 300;
 
     /**
      * Numeric status code, 204: No content
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_NO_CONTENT = 204;
 
     /**
      * Numeric status code, 406: Not acceptable
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_NOT_ACCEPTABLE = 406;
 
     /**
      * Numeric status code, 203: Not authoritative
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_NOT_AUTHORITATIVE = 203;
 
     /**
      * Numeric status code, 404: Not found
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_NOT_FOUND = 404;
 
     /**
      * Numeric status code, 501: Not implemented
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_NOT_IMPLEMENTED = 501;
 
     /**
      * Numeric status code, 304: Not modified
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_NOT_MODIFIED = 304;
 
     /**
      * Numeric status code, 200: OK
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_OK = 200;
 
     /**
      * Numeric status code, 206: Partial
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_PARTIAL = 206;
 
     /**
      * Numeric status code, 402: Payment required
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_PAYMENT_REQUIRED = 402;
 
     /**
      * Numeric status code, 412: Precondition failed
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_PRECON_FAILED = 412;
 
     /**
      * Numeric status code, 407: Proxy authentication required
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_PROXY_AUTH = 407;
 
     /**
      * Numeric status code, 414: Request too long
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_REQ_TOO_LONG = 414;
 
     /**
      * Numeric status code, 205: Reset
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_RESET = 205;
 
     /**
      * Numeric status code, 303: See other
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_SEE_OTHER = 303;
 
     /**
      * Numeric status code, 500: Internal error
-     * 
+     *
      * @deprecated Use {@link #HTTP_INTERNAL_ERROR}
-     * @since Android 1.0
      */
     @Deprecated
     public final static int HTTP_SERVER_ERROR = 500;
 
     /**
      * Numeric status code, 305: Use proxy
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_USE_PROXY = 305;
 
     /**
      * Numeric status code, 401: Unauthorized
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_UNAUTHORIZED = 401;
 
     /**
      * Numeric status code, 415: Unsupported type
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_UNSUPPORTED_TYPE = 415;
 
     /**
      * Numeric status code, 503: Unavailable
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_UNAVAILABLE = 503;
 
     /**
      * Numeric status code, 505: Version not supported
-     * 
-     * @since Android 1.0
      */
     public final static int HTTP_VERSION = 505;
 
@@ -362,7 +277,6 @@ public abstract class HttpURLConnection extends URLConnection {
      *            the URL of this connection.
      * @see URL
      * @see URLConnection
-     * @since Android 1.0
      */
     protected HttpURLConnection(URL url) {
         super(url);
@@ -373,7 +287,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * 
      * @see URLConnection#connect()
      * @see URLConnection#connected
-     * @since Android 1.0
      */
     public abstract void disconnect();
 
@@ -383,7 +296,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * can be used to read the data the server will send back.
      * 
      * @return the error input stream returned by the server.
-     * @since Android 1.0
      */
     public java.io.InputStream getErrorStream() {
         return null;
@@ -396,7 +308,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * 
      * @return the value of the flag.
      * @see #setFollowRedirects
-     * @since Android 1.0
      */
     public static boolean getFollowRedirects() {
         return followRedirects;
@@ -412,7 +323,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * @throws IOException
      *             if an IO exception occurs during the creation of the
      *             permission object.
-     * @since Android 1.0
      */
     @Override
     public java.security.Permission getPermission() throws IOException {
@@ -432,7 +342,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * @return the request method string.
      * @see #method
      * @see #setRequestMethod
-     * @since Android 1.0
      */
     public String getRequestMethod() {
         return method;
@@ -445,7 +354,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * @throws IOException
      *             if there is an IO error during the retrieval.
      * @see #getResponseMessage
-     * @since Android 1.0
      */
     public int getResponseCode() throws IOException {
         // Call getInputStream() first since getHeaderField() doesn't return
@@ -478,7 +386,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * @throws IOException
      *             if there is an error during the retrieval.
      * @see #getResponseCode()
-     * @since Android 1.0
      */
     public String getResponseMessage() throws IOException {
         if (responseMessage != null) {
@@ -496,7 +403,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * @param auto
      *            the value to enable or disable this option.
      * @see SecurityManager#checkSetFactory()
-     * @since Android 1.0
      */
     public static void setFollowRedirects(boolean auto) {
         SecurityManager security = System.getSecurityManager();
@@ -517,7 +423,6 @@ public abstract class HttpURLConnection extends URLConnection {
      *             supported by this HTTP implementation.
      * @see #getRequestMethod()
      * @see #method
-     * @since Android 1.0
      */
     public void setRequestMethod(String method) throws ProtocolException {
         if (connected) {
@@ -540,7 +445,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * 
      * @return {@code true} if this connection passes a proxy server, false
      *         otherwise.
-     * @since Android 1.0
      */
     public abstract boolean usingProxy();
 
@@ -549,7 +453,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * 
      * @return {@code true} if this connection follows redirects, false
      *         otherwise.
-     * @since Android 1.0
      */
     public boolean getInstanceFollowRedirects() {
         return instanceFollowRedirects;
@@ -561,7 +464,6 @@ public abstract class HttpURLConnection extends URLConnection {
      * @param followRedirects
      *            {@code true} if this connection will follows redirects, false
      *            otherwise.
-     * @since Android 1.0
      */
     public void setInstanceFollowRedirects(boolean followRedirects) {
         instanceFollowRedirects = followRedirects;
@@ -579,7 +481,6 @@ public abstract class HttpURLConnection extends URLConnection {
      *            found.
      * @return the header field represented in milliseconds since January 1,
      *         1970 GMT.
-     * @since Android 1.0
      */
     @Override
     public long getHeaderFieldDate(String field, long defaultValue) {
@@ -598,7 +499,6 @@ public abstract class HttpURLConnection extends URLConnection {
      *             if already connected or an other mode already set.
      * @throws IllegalArgumentException
      *             if {@code contentLength} is less than zero.
-     * @since Android 1.0
      */
     public void setFixedLengthStreamingMode(int contentLength) {
         if (super.connected) {
@@ -624,7 +524,6 @@ public abstract class HttpURLConnection extends URLConnection {
      *            the length of a chunk.
      * @throws IllegalStateException
      *             if already connected or an other mode already set.
-     * @since Android 1.0
      */
     public void setChunkedStreamingMode(int chunklen) {
         if (super.connected) {

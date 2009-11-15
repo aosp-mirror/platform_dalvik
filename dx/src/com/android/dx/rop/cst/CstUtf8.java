@@ -20,19 +20,19 @@ import com.android.dx.util.ByteArray;
 import com.android.dx.util.Hex;
 
 /**
- * Constants of type <code>CONSTANT_Utf8_info</code>.
+ * Constants of type {@code CONSTANT_Utf8_info}.
  */
 public final class CstUtf8 extends Constant {
     /** 
-     * non-null; instance representing <code>""</code>, that is, the
+     * {@code non-null;} instance representing {@code ""}, that is, the
      * empty string 
      */
     public static final CstUtf8 EMPTY_STRING = new CstUtf8("");
     
-    /** non-null; the UTF-8 value as a string */
+    /** {@code non-null;} the UTF-8 value as a string */
     private final String string;
 
-    /** non-null; the UTF-8 value as bytes */
+    /** {@code non-null;} the UTF-8 value as bytes */
     private final ByteArray bytes;
 
     /**
@@ -40,8 +40,8 @@ public final class CstUtf8 extends Constant {
      * differs from normal UTF-8 in the handling of character '\0' and
      * surrogate pairs.
      * 
-     * @param string non-null; the string to convert
-     * @return non-null; the UTF-8 bytes for it
+     * @param string {@code non-null;} the string to convert
+     * @return {@code non-null;} the UTF-8 bytes for it
      */
     public static byte[] stringToUtf8Bytes(String string) {
         int len = string.length();
@@ -73,8 +73,8 @@ public final class CstUtf8 extends Constant {
     /**
      * Converts an array of UTF-8 bytes into a string.
      * 
-     * @param bytes non-null; the bytes to convert
-     * @return non-null; the converted string
+     * @param bytes {@code non-null;} the bytes to convert
+     * @return {@code non-null;} the converted string
      */
     public static String utf8BytesToString(ByteArray bytes) {
         int length = bytes.size();
@@ -173,9 +173,9 @@ public final class CstUtf8 extends Constant {
     }
 
     /**
-     * Constructs an instance from a <code>String</code>.
+     * Constructs an instance from a {@code String}.
      * 
-     * @param string non-null; the UTF-8 value as a string
+     * @param string {@code non-null;} the UTF-8 value as a string
      */
     public CstUtf8(String string) {
         if (string == null) {
@@ -189,7 +189,7 @@ public final class CstUtf8 extends Constant {
     /**
      * Constructs an instance from some UTF-8 bytes.
      * 
-     * @param bytes non-null; array of the UTF-8 bytes
+     * @param bytes {@code non-null;} array of the UTF-8 bytes
      */
     public CstUtf8(ByteArray bytes) {
         if (bytes == null) {
@@ -299,7 +299,7 @@ public final class CstUtf8 extends Constant {
      * Gets the value as a human-oriented string, surrounded by double
      * quotes.
      * 
-     * @return non-null; the quoted string
+     * @return {@code non-null;} the quoted string
      */
     public String toQuoted() {
         return '\"' + toHuman() + '\"';
@@ -310,8 +310,8 @@ public final class CstUtf8 extends Constant {
      * quotes, but ellipsizes the result if it is longer than the given
      * maximum length
      * 
-     * @param maxLength &gt;= 5; the maximum length of the string to return
-     * @return non-null; the quoted string
+     * @param maxLength {@code >= 5;} the maximum length of the string to return
+     * @return {@code non-null;} the quoted string
      */
     public String toQuoted(int maxLength) {
         String string = toHuman();
@@ -332,7 +332,7 @@ public final class CstUtf8 extends Constant {
      * Gets the UTF-8 value as a string.
      * The returned string is always already interned.
      * 
-     * @return non-null; the UTF-8 value as a string
+     * @return {@code non-null;} the UTF-8 value as a string
      */
     public String getString() {
         return string;
@@ -341,7 +341,7 @@ public final class CstUtf8 extends Constant {
     /**
      * Gets the UTF-8 value as UTF-8 encoded bytes.
      * 
-     * @return non-null; an array of the UTF-8 bytes
+     * @return {@code non-null;} an array of the UTF-8 bytes
      */
     public ByteArray getBytes() {
         return bytes;
@@ -351,7 +351,7 @@ public final class CstUtf8 extends Constant {
      * Gets the size of this instance as UTF-8 code points. That is,
      * get the number of bytes in the UTF-8 encoding of this instance.
      * 
-     * @return &gt;= 0; the UTF-8 size
+     * @return {@code >= 0;} the UTF-8 size
      */
     public int getUtf8Size() {
         return bytes.size();
@@ -360,10 +360,10 @@ public final class CstUtf8 extends Constant {
     /**
      * Gets the size of this instance as UTF-16 code points. That is,
      * get the number of 16-bit chars in the UTF-16 encoding of this
-     * instance. This is the same as the <code>length</code> of the
-     * Java <code>String</code> representation of this instance.
+     * instance. This is the same as the {@code length} of the
+     * Java {@code String} representation of this instance.
      * 
-     * @return &gt;= 0; the UTF-16 size
+     * @return {@code >= 0;} the UTF-16 size
      */
     public int getUtf16Size() {
         return string.length();

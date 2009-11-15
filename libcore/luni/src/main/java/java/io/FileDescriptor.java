@@ -30,33 +30,25 @@ package java.io;
  * System.err streams respectively.
  * <p>
  * Applications should not create new FileDescriptors.
- * 
+ *
  * @see FileInputStream#getFD()
  * @see FileOutputStream#getFD()
  * @see RandomAccessFile#getFD()
- * 
- * @since Android 1.0
  */
 public final class FileDescriptor {
 
     /**
      * The FileDescriptor representing standard input.
-     * 
-     * @since Android 1.0
      */
     public static final FileDescriptor in = new FileDescriptor();
 
     /**
      * FileDescriptor representing standard out.
-     * 
-     * @since Android 1.0
      */
     public static final FileDescriptor out = new FileDescriptor();
 
     /**
      * FileDescriptor representing standard error.
-     * 
-     * @since Android 1.0
      */
     public static final FileDescriptor err = new FileDescriptor();
 
@@ -68,8 +60,8 @@ public final class FileDescriptor {
      */
     int descriptor = -1;
     // END android-changed
-    
-    boolean readOnly = false; 
+
+    boolean readOnly = false;
 
     private static native void oneTimeInitialization();
 
@@ -84,8 +76,6 @@ public final class FileDescriptor {
     /**
      * Constructs a new FileDescriptor containing an invalid handle. The
      * contained handle is usually modified by native code at a later point.
-     * 
-     * @since Android 1.0
      */
     public FileDescriptor() {
         super();
@@ -94,10 +84,9 @@ public final class FileDescriptor {
     /**
      * Ensures that data which is buffered within the underlying implementation
      * is written out to the appropriate device before returning.
-     * 
+     *
      * @throws SyncFailedException
      *             when the operation fails.
-     * @since Android 1.0
      */
     public void sync() throws SyncFailedException {
         // if the descriptor is a read-only one, do nothing
@@ -105,15 +94,16 @@ public final class FileDescriptor {
             syncImpl();
         }
     }
-    
+
     private native void syncImpl() throws SyncFailedException;
 
     /**
      * Indicates whether this FileDescriptor is valid.
-     * 
+     *
      * @return {@code true} if this FileDescriptor is valid, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
-    public native boolean valid();
+    public boolean valid() {
+        return descriptor != -1;
+    }
 }

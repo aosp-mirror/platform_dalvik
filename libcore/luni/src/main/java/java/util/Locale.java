@@ -17,7 +17,8 @@
 
 package java.util;
 
-import java.io.File;
+// BEGIN android-changed
+// import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,19 +26,14 @@ import java.io.ObjectStreamField;
 import java.io.Serializable;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+// import java.util.zip.ZipEntry;
+// import java.util.zip.ZipFile;
 
-// BEGIN android-removed
-//import org.apache.harmony.luni.internal.locale.Country;
-//import org.apache.harmony.luni.internal.locale.Language;
-// END android-removed
 import org.apache.harmony.luni.util.PriviAction;
 import org.apache.harmony.luni.util.Util;
 
-//BEGIN android-added
 import com.ibm.icu4jni.util.Resources;
-// END android-added
+// END android-changed
 
 /**
  * {@code Locale} represents a language/country/variant combination. It is an identifier
@@ -45,15 +41,14 @@ import com.ibm.icu4jni.util.Resources;
  * The language codes are two letter lowercase codes as defined by ISO-639. The
  * country codes are three letter uppercase codes as defined by ISO-3166. The
  * variant codes are unspecified.
- * 
+ *
  * @see ResourceBundle
- * @since Android 1.0
  */
 public final class Locale implements Cloneable, Serializable {
-    
+
     private static final long serialVersionUID = 9149081749638150636L;
 
-    private static Locale[] availableLocales;
+    private static volatile Locale[] availableLocales;
 
     // Initialize a default which is used during static
     // initialization of the default for the platform.
@@ -61,200 +56,159 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Locale constant for en_CA.
-     * 
-     * @since Android 1.0
      */
     public static final Locale CANADA = new Locale("en", "CA"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for fr_CA.
-     * 
-     * @since Android 1.0
      */
     public static final Locale CANADA_FRENCH = new Locale("fr", "CA"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for zh_CN.
-     * 
-     * @since Android 1.0
      */
     public static final Locale CHINA = new Locale("zh", "CN"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for zh.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale CHINESE = new Locale("zh", "");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale CHINESE = new Locale("zh", ""); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for en.
-     * 
-     * @since Android 1.0
      */
     public static final Locale ENGLISH = new Locale("en", ""); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for fr_FR.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale FRANCE = new Locale("fr", "FR");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale FRANCE = new Locale("fr", "FR"); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for fr.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale FRENCH = new Locale("fr", "");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale FRENCH = new Locale("fr", ""); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for de.
-     * 
-     * @since Android 1.0
      */
     public static final Locale GERMAN = new Locale("de", ""); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for de_DE.
-     * 
-     * @since Android 1.0
      */
     public static final Locale GERMANY = new Locale("de", "DE"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for it.
-     * 
-     * @since Android 1.0
      */
     public static final Locale ITALIAN = new Locale("it", ""); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for it_IT.
-     * 
-     * @since Android 1.0
      */
     public static final Locale ITALY = new Locale("it", "IT"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for ja_JP.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale JAPAN = new Locale("ja", "JP");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale JAPAN = new Locale("ja", "JP"); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for ja.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale JAPANESE = new Locale("ja", "");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale JAPANESE = new Locale("ja", ""); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for ko_KR.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale KOREA = new Locale("ko", "KR");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale KOREA = new Locale("ko", "KR"); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for ko.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale KOREAN = new Locale("ko", "");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale KOREAN = new Locale("ko", ""); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for zh_CN.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale PRC = new Locale("zh", "CN");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale PRC = new Locale("zh", "CN"); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for zh_CN.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale SIMPLIFIED_CHINESE = new Locale("zh", "CN");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale SIMPLIFIED_CHINESE = new Locale("zh", "CN"); //$NON-NLS-1$//$NON-NLS-2$
 
     /**
      * Locale constant for zh_TW.
-     * 
-     * @since Android 1.0
      */
     public static final Locale TAIWAN = new Locale("zh", "TW"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for zh_TW.
-     * 
-     * @since Android 1.0
      */
     public static final Locale TRADITIONAL_CHINESE = new Locale("zh", "TW"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for en_GB.
-     * 
-     * @since Android 1.0
      */
     public static final Locale UK = new Locale("en", "GB"); //$NON-NLS-1$ //$NON-NLS-2$
 
     /**
      * Locale constant for en_US.
-     * 
-     * @since Android 1.0
      */
-    public static final Locale US = new Locale("en", "US");  //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale US = new Locale("en", "US"); //$NON-NLS-1$//$NON-NLS-2$
 
     private static final PropertyPermission setLocalePermission = new PropertyPermission(
-            "user.language", "write");  //$NON-NLS-1$//$NON-NLS-2$
+            "user.language", "write"); //$NON-NLS-1$//$NON-NLS-2$
 
     static {
         String language = AccessController
                 .doPrivileged(new PriviAction<String>("user.language", "en")); //$NON-NLS-1$ //$NON-NLS-2$
         // BEGIN android-changed
-        String region = AccessController
-                .doPrivileged(new PriviAction<String>("user.region", "US")); //$NON-NLS-1$ //$NON-NLS-2$
+        String region = AccessController.doPrivileged(new PriviAction<String>(
+                "user.region", "US")); //$NON-NLS-1$ //$NON-NLS-2$
         // END android-changed
-        String variant = AccessController
-                .doPrivileged(new PriviAction<String>("user.variant", "")); //$NON-NLS-1$ //$NON-NLS-2$
+        String variant = AccessController.doPrivileged(new PriviAction<String>(
+                "user.variant", "")); //$NON-NLS-1$ //$NON-NLS-2$
         defaultLocale = new Locale(language, region, variant);
     }
-    
+
     private transient String countryCode;
     private transient String languageCode;
     private transient String variantCode;
 
-    /**
-     * Constructs a default which is used during static initialization of the
-     * default for the platform.
-     */
-    private Locale() {
-        languageCode = "en"; //$NON-NLS-1$
-        countryCode = "US"; //$NON-NLS-1$
-        variantCode = ""; //$NON-NLS-1$
-    }
+    // BEGIN android-removed
+    // private transient ULocale uLocale;
+    // END android-removed
+
+	/**
+	 * Constructs a default which is used during static initialization of the
+	 * default for the platform.
+	 */
+	private Locale() {
+		languageCode = "en"; //$NON-NLS-1$
+		countryCode = "US"; //$NON-NLS-1$
+		variantCode = ""; //$NON-NLS-1$
+	}
 
     /**
      * Constructs a new {@code Locale} using the specified language.
-     * 
+     *
      * @param language
      *            the language this {@code Locale} represents.
-     * 
-     * @since Android 1.0
      */
     public Locale(String language) {
-        this(language, "", "");  //$NON-NLS-1$//$NON-NLS-2$
+        this(language, "", ""); //$NON-NLS-1$//$NON-NLS-2$
     }
 
     /**
      * Constructs a new {@code Locale} using the specified language and country codes.
-     * 
+     *
      * @param language
      *            the language this {@code Locale} represents.
      * @param country
      *            the country this {@code Locale} represents.
-     * @since Android 1.0
      */
     public Locale(String language, String country) {
         this(language, country, ""); //$NON-NLS-1$
@@ -263,7 +217,7 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Constructs a new {@code Locale} using the specified language, country, and
      * variant codes.
-     * 
+     *
      * @param language
      *            the language this {@code Locale} represents.
      * @param country
@@ -273,13 +227,22 @@ public final class Locale implements Cloneable, Serializable {
      * @throws NullPointerException
      *             if {@code language}, {@code country}, or
      *             {@code variant} is {@code null}.
-     * @since Android 1.0
      */
     public Locale(String language, String country, String variant) {
         if (language == null || country == null || variant == null) {
             throw new NullPointerException();
         }
+        if(language.length() == 0 && country.length() == 0){
+            languageCode = "";
+            countryCode = "";
+            variantCode = variant;
+            return;
+        }
+        // BEGIN android-changed
+        // this.uLocale = new ULocale(language, country, variant);
+        // languageCode = uLocale.getLanguage();
         languageCode = Util.toASCIILowerCase(language);
+        // END android-changed
         // Map new language codes to the obsolete language
         // codes so the correct resource bundles will be used.
         if (languageCode.equals("he")) {//$NON-NLS-1$
@@ -291,18 +254,21 @@ public final class Locale implements Cloneable, Serializable {
         }
 
         // countryCode is defined in ASCII character set
+        // BEGIN android-changed
+        // countryCode = country.length()!=0?uLocale.getCountry():"";
         countryCode = Util.toASCIIUpperCase(country);
+        // END android-changed
 
+        // Work around for be compatible with RI
         variantCode = variant;
     }
 
     /**
      * Returns a new {@code Locale} with the same language, country and variant codes as
      * this {@code Locale}.
-     * 
+     *
      * @return a shallow copy of this {@code Locale}.
      * @see java.lang.Cloneable
-     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -317,13 +283,12 @@ public final class Locale implements Cloneable, Serializable {
      * Compares the specified object to this {@code Locale} and returns whether they are
      * equal. The object must be an instance of {@code Locale} and have the same
      * language, country and variant.
-     * 
+     *
      * @param object
      *            the object to compare with this object.
      * @return {@code true} if the specified object is equal to this {@code Locale},
      *         {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -347,13 +312,8 @@ public final class Locale implements Cloneable, Serializable {
     //     final String classPrefix = prefix.substring(last + 1, length);
     //     Set<String> result = new HashSet<String>();
     //     StringTokenizer paths = new StringTokenizer(System.getProperty(
-    //             // BEGIN android-removed
-    //             // "org.apache.harmony.boot.class.path", ""), System.getProperty( //$NON-NLS-1$ //$NON-NLS-2$
-    //             // END android-removed
-    //             // BEGIN android-added
-    //             "java.boot.class.path", ""), System.getProperty( //$NON-NLS-1$ //$NON-NLS-2$
-    //             // END android-added
-    //             "path.separator", ";"));  //$NON-NLS-1$//$NON-NLS-2$
+    //             "org.apache.harmony.boot.class.path", ""), System.getProperty( //$NON-NLS-1$ //$NON-NLS-2$
+    //             "path.separator", ";")); //$NON-NLS-1$//$NON-NLS-2$
     //     while (paths.hasMoreTokens()) {
     //         String nextToken = paths.nextToken();
     //         File directory = new File(nextToken);
@@ -378,12 +338,13 @@ public final class Locale implements Cloneable, Serializable {
     //                         String name = list[i];
     //                         if (name.startsWith(classPrefix)
     //                                 && name.endsWith(".class")) { //$NON-NLS-1$
-    //                             result.add(name.substring(0,
+    //                             result
+    //                                     .add(name.substring(0,
     //                                             name.length() - 6));
     //                         }
     //                     }
     //                 }
-    //                 
+    //
     //             } else {
     //                 // Handle ZIP/JAR files.
     //                 try {
@@ -394,25 +355,26 @@ public final class Locale implements Cloneable, Serializable {
     //                         String name = e.getName();
     //                         if (name.startsWith(prefix)
     //                                 && name.endsWith(".class")) {//$NON-NLS-1$
-    //                             result.add(name.substring(last+1, name.length() - 6));
+    //                             result.add(name.substring(last + 1, name
+    //                                     .length() - 6));
     //                         }
     //                     }
     //                     zip.close();
     //                 } catch (IOException e) {
-    //                    // Empty
+    //                     // Empty
     //                 }
     //             }
     //         }
     //     }
     //     Locale[] locales = new Locale[result.size()];
     //     int i = 0;
-    //     for (String name: result) {
+    //     for (String name : result) {
     //         int index = name.indexOf('_');
     //         int nextIndex = name.indexOf('_', index + 1);
     //         if (nextIndex == -1) {
-    //             locales[i++] = new Locale(name
-    //                     .substring(index + 1, name.length()), ""); //$NON-NLS-1$
-    //         }else{
+    //             locales[i++] = new Locale(name.substring(index + 1, name
+    //                     .length()), ""); //$NON-NLS-1$
+    //         } else {
     //             String language = name.substring(index + 1, nextIndex);
     //             String variant;
     //             if ((index = name.indexOf('_', nextIndex + 1)) == -1) {
@@ -437,7 +399,7 @@ public final class Locale implements Cloneable, Serializable {
             String s = locales[i];
             int first = s.indexOf('_');
             int second = s.indexOf('_', first + 1);
-            
+
             if (first == -1) {
                 // Language only
                 temp.add(new Locale(s));
@@ -454,37 +416,32 @@ public final class Locale implements Cloneable, Serializable {
     }
     // END android-added
 
-    /**
+	/**
      * Gets the list of installed {@code Locale}. At least a {@code Locale} that is equal to
      * {@code Locale.US} must be contained in this array.
-     * 
+     *
      * @return an array of {@code Locale}s.
-     * @since Android 1.0
-     */
-    public static Locale[] getAvailableLocales() {
+	 */
+	public static Locale[] getAvailableLocales() {
+        // BEGIN android-changed
+        // ULocale[] ulocales =  ULocale.getAvailableLocales();
+        // Locale[] locales = new Locale[ulocales.length];
+        // for (int i = 0; i < locales.length; i++) {
+        //     locales[i] = ulocales[i].toLocale();
+        // }
+        // return locales;
         if (availableLocales == null) {
-            // BEGIN android-removed
-            // availableLocales = AccessController
-            //         .doPrivileged(new PrivilegedAction<Locale[]>() {
-            //             public Locale[] run() {
-            //                 return find("org/apache/harmony/luni/internal/locale/Locale_"); //$NON-NLS-1$
-            //             }
-            //         });
-            // END android-removed
-            
-            // BEGIN android-added
             availableLocales = find();
-            // END android-added
         }
         return availableLocales.clone();
-    }
+        // END android-changed
+	}
 
     /**
      * Gets the country code for this {@code Locale} or an empty string of no country
      * was set.
-     * 
+     *
      * @return a country code.
-     * @since Android 1.0
      */
     public String getCountry() {
         return countryCode;
@@ -492,9 +449,8 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Gets the default {@code Locale}.
-     * 
+     *
      * @return the default {@code Locale}.
-     * @since Android 1.0
      */
     public static Locale getDefault() {
         return defaultLocale;
@@ -504,9 +460,8 @@ public final class Locale implements Cloneable, Serializable {
      * Gets the full country name in the default {@code Locale} for the country code of
      * this {@code Locale}. If there is no matching country name, the country code is
      * returned.
-     * 
+     *
      * @return a country name.
-     * @since Android 1.0
      */
     public final String getDisplayCountry() {
         return getDisplayCountry(getDefault());
@@ -516,22 +471,21 @@ public final class Locale implements Cloneable, Serializable {
      * Gets the full country name in the specified {@code Locale} for the country code
      * of this {@code Locale}. If there is no matching country name, the country code is
      * returned.
-     * 
+     *
      * @param locale
      *            the {@code Locale} for which the display name is retrieved.
      * @return a country name.
-     * @since Android 1.0
      */
-    public String getDisplayCountry(Locale locale) {
+	public String getDisplayCountry(Locale locale) {
+        // BEGIN android-changed
+		// return ULocale.forLocale(this).getDisplayCountry(ULocale.forLocale(locale));
         if (countryCode.length() == 0) {
             return countryCode;
         }
         try {
             // First try the specified locale
             ResourceBundle bundle = getBundle("Country", locale); //$NON-NLS-1$
-            // BEGIN android-changed
             String result = bundle.getString(this.toString());
-            // END android-changed
             if (result != null) {
                 return result;
             }
@@ -543,15 +497,15 @@ public final class Locale implements Cloneable, Serializable {
         } catch (MissingResourceException e) {
             return countryCode;
         }
-    }
+        // END android-changed
+	}
 
     /**
      * Gets the full language name in the default {@code Locale} for the language code
      * of this {@code Locale}. If there is no matching language name, the language code
      * is returned.
-     * 
+     *
      * @return a language name.
-     * @since Android 1.0
      */
     public final String getDisplayLanguage() {
         return getDisplayLanguage(getDefault());
@@ -561,22 +515,21 @@ public final class Locale implements Cloneable, Serializable {
      * Gets the full language name in the specified {@code Locale} for the language code
      * of this {@code Locale}. If there is no matching language name, the language code
      * is returned.
-     * 
+     *
      * @param locale
      *            the {@code Locale} for which the display name is retrieved.
      * @return a language name.
-     * @since Android 1.0
      */
-    public String getDisplayLanguage(Locale locale) {
+	public String getDisplayLanguage(Locale locale) {
+        // BEGIN android-changed
+        // return ULocale.forLocale(this).getDisplayLanguage(ULocale.forLocale(locale));
         if (languageCode.length() == 0) {
             return languageCode;
         }
         try {
             // First try the specified locale
             ResourceBundle bundle = getBundle("Language", locale); //$NON-NLS-1$
-            // BEGIN android-changed
             String result = bundle.getString(this.toString());
-            // END android-changed
             if (result != null) {
                 return result;
             }
@@ -588,14 +541,14 @@ public final class Locale implements Cloneable, Serializable {
         } catch (MissingResourceException e) {
             return languageCode;
         }
-    }
+        // END android-changed
+	}
 
     /**
      * Gets the full language, country, and variant names in the default {@code Locale}
      * for the codes of this {@code Locale}.
-     * 
+     *
      * @return a {@code Locale} name.
-     * @since Android 1.0
      */
     public final String getDisplayName() {
         return getDisplayName(getDefault());
@@ -604,15 +557,14 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Gets the full language, country, and variant names in the specified
      * Locale for the codes of this {@code Locale}.
-     * 
+     *
      * @param locale
      *            the {@code Locale} for which the display name is retrieved.
      * @return a {@code Locale} name.
-     * @since Android 1.0
      */
     public String getDisplayName(Locale locale) {
         int count = 0;
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (languageCode.length() > 0) {
             buffer.append(getDisplayLanguage(locale));
             count++;
@@ -643,9 +595,8 @@ public final class Locale implements Cloneable, Serializable {
      * Gets the full variant name in the default {@code Locale} for the variant code of
      * this {@code Locale}. If there is no matching variant name, the variant code is
      * returned.
-     * 
+     *
      * @return a variant name.
-     * @since Android 1.0
      */
     public final String getDisplayVariant() {
         return getDisplayVariant(getDefault());
@@ -655,41 +606,17 @@ public final class Locale implements Cloneable, Serializable {
      * Gets the full variant name in the specified {@code Locale} for the variant code
      * of this {@code Locale}. If there is no matching variant name, the variant code is
      * returned.
-     * 
+     *
      * @param locale
      *            the {@code Locale} for which the display name is retrieved.
      * @return a variant name.
-     * @since Android 1.0
      */
-    public String getDisplayVariant(Locale locale) {
+	public String getDisplayVariant(Locale locale) {
+        // BEGIN android-changed
+        // return ULocale.forLocale(this).getDisplayVariant(ULocale.forLocale(locale));
         if (variantCode.length() == 0) {
             return variantCode;
         }
-// BEGIN android-removed
-//         ResourceBundle bundle;
-//         try {
-//             bundle = getBundle("Variant", locale); //$NON-NLS-1$
-//         } catch (MissingResourceException e) {
-//             return variantCode.replace('_', ',');
-//         }
-// 
-//         StringBuffer result = new StringBuffer();
-//         StringTokenizer tokens = new StringTokenizer(variantCode, "_"); //$NON-NLS-1$
-//         while (tokens.hasMoreTokens()) {
-//             String code, variant = tokens.nextToken();
-//             try {
-//                 code = bundle.getString(variant);
-//             } catch (MissingResourceException e) {
-//                 code = variant;
-//             }
-//             result.append(code);
-//             if (tokens.hasMoreTokens()) {
-//                 result.append(',');
-//             }
-//         }
-//         return result.toString();
-// END android-removed
-// BEGIN android-added
         try {
             // First try the specified locale
             ResourceBundle bundle = getBundle("Variant", locale); //$NON-NLS-1$
@@ -705,105 +632,78 @@ public final class Locale implements Cloneable, Serializable {
         } catch (MissingResourceException e) {
             return variantCode;
         }
-// END android-added
-    }
+        // END android-changed
+	}
 
     /**
      * Gets the three letter ISO country code which corresponds to the country
      * code for this {@code Locale}.
-     * 
+     *
      * @return a three letter ISO language code.
-     * @exception MissingResourceException
-     *                when there is no matching three letter ISO country code.
-     * @since Android 1.0
+     * @throws MissingResourceException
+     *                if there is no matching three letter ISO country code.
      */
-    public String getISO3Country() throws MissingResourceException {
+	public String getISO3Country() throws MissingResourceException {
+        // BEGIN android-changed
+        // return ULocale.forLocale(this).getISO3Country();
         if (countryCode.length() == 0) {
             return ""; //$NON-NLS-1$
         }
         ResourceBundle bundle = getBundle("ISO3Countries", this); //$NON-NLS-1$
-        // BEGIN android-changed
         return bundle.getString(this.toString());
         // END android-changed
-    }
+	}
 
     /**
      * Gets the three letter ISO language code which corresponds to the language
      * code for this {@code Locale}.
-     * 
+     *
      * @return a three letter ISO language code.
-     * @exception MissingResourceException
-     *                when there is no matching three letter ISO language code.
-     * @since Android 1.0
+     * @throws MissingResourceException
+     *                if there is no matching three letter ISO language code.
      */
-    public String getISO3Language() throws MissingResourceException {
+	public String getISO3Language() throws MissingResourceException {
+        // BEGIN android-changed
+        // return ULocale.forLocale(this).getISO3Language();
         if (languageCode.length() == 0) {
             return ""; //$NON-NLS-1$
         }
         ResourceBundle bundle = getBundle("ISO3Languages", this); //$NON-NLS-1$
-        // BEGIN android-changed
         return bundle.getString(this.toString());
         // END android-changed
-    }
+	}
 
     /**
      * Gets the list of two letter ISO country codes which can be used as the
      * country code for a {@code Locale}.
-     * 
+     *
      * @return an array of strings.
-     * @since Android 1.0
      */
     public static String[] getISOCountries() {
-        // BEGIN android-removed
-        // ListResourceBundle bundle = new Country();
-        // 
-        // // To initialize the table
-        // Enumeration<String> keys = bundle.getKeys();
-        // int size = bundle.table.size();
-        // String[] result = new String[size];
-        // int index = 0;
-        // while (keys.hasMoreElements()) {
-        //     String element = keys.nextElement();
-        //     result[index++] = element;
-        // }
-        // return result;
-        // END android-removed
-        
-        // BEGIN android-added
+        // BEGIN android-changed
+        // return ULocale.getISOCountries();
         return Resources.getISOCountries();
-        // END android-added
+        // END android-changed
     }
 
     /**
      * Gets the list of two letter ISO language codes which can be used as the
      * language code for a {@code Locale}.
-     * 
+     *
      * @return an array of strings.
-     * @since Android 1.0
      */
-    public static String[] getISOLanguages() {
-        // BEGIN android-removed
-        // ListResourceBundle bundle = new Language();
-        // Enumeration<String> keys = bundle.getKeys(); // to initialize the table
-        // String[] result = new String[bundle.table.size()];
-        // int index = 0;
-        // while (keys.hasMoreElements()) {
-        //     result[index++] = keys.nextElement();
-        // }
-        // return result;
-        // END android-removed
-        
-        // BEGIN android-added
+	public static String[] getISOLanguages() {
+        // BEGIN android-changed
+        // return ULocale.getISOLanguages();
         return Resources.getISOLanguages();
-        // END android-added
-    }
+        // END android-changed
+	}
 
     /**
      * Gets the language code for this {@code Locale} or the empty string of no language
      * was set.
-     * 
+     *
      * @return a language code.
-     * @since Android 1.0
      */
     public String getLanguage() {
         return languageCode;
@@ -812,9 +712,8 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Gets the variant code for this {@code Locale} or an empty {@code String} of no variant
      * was set.
-     * 
+     *
      * @return a variant code.
-     * @since Android 1.0
      */
     public String getVariant() {
         return variantCode;
@@ -823,10 +722,9 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Returns an integer hash code for the receiver. Objects which are equal
      * return the same value for this method.
-     * 
+     *
      * @return the receiver's hash.
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public synchronized int hashCode() {
@@ -836,13 +734,12 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Sets the default {@code Locale} to the specified {@code Locale}.
-     * 
+     *
      * @param locale
      *            the new default {@code Locale}.
-     * @exception SecurityException
+     * @throws SecurityException
      *                if there is a {@code SecurityManager} in place which does not allow this
      *                operation.
-     * @since Android 1.0
      */
     public synchronized static void setDefault(Locale locale) {
         if (locale != null) {
@@ -864,11 +761,10 @@ public final class Locale implements Cloneable, Serializable {
      * between the language and the variant. the variant alone canot be defined
      * without a language and/or a country (in this case this method would
      * return the empty string).
-     * 
+     *
      * Examples: "en", "en_US", "_US", "en__POSIX", "en_US_POSIX"
-     * 
+     *
      * @return the string representation of this {@code Locale}.
-     * @since Android 1.0
      */
     @Override
     public final String toString() {
@@ -878,7 +774,7 @@ public final class Locale implements Cloneable, Serializable {
             result.append('_');
             result.append(countryCode);
         }
-        if (variantCode.length() > 0 && result.length() > 0 ) {
+        if (variantCode.length() > 0 && result.length() > 0) {
             if (0 == countryCode.length()) {
                 result.append("__"); //$NON-NLS-1$
             } else {
@@ -889,14 +785,16 @@ public final class Locale implements Cloneable, Serializable {
         return result.toString();
     }
 
+    // BEGIN android-added
     static ResourceBundle getBundle(final String clName, final Locale locale) {
         return AccessController.doPrivileged(new PrivilegedAction<ResourceBundle>() {
-                    public ResourceBundle run() {
-                        return ResourceBundle.getBundle("org.apache.harmony.luni.internal.locale." //$NON-NLS-1$
-                                + clName, locale);
-                    }
-                });
+            public ResourceBundle run() {
+                return ResourceBundle.getBundle("org.apache.harmony.luni.internal.locale." //$NON-NLS-1$
+                        + clName, locale);
+            }
+        });
     }
+    // END android-added
 
     private static final ObjectStreamField[] serialPersistentFields = {
             new ObjectStreamField("country", String.class), //$NON-NLS-1$
@@ -916,9 +814,8 @@ public final class Locale implements Cloneable, Serializable {
     private void readObject(ObjectInputStream stream) throws IOException,
             ClassNotFoundException {
         ObjectInputStream.GetField fields = stream.readFields();
-        countryCode = (String) fields.get("country", "");  //$NON-NLS-1$//$NON-NLS-2$
-        languageCode = (String) fields.get("language", "");  //$NON-NLS-1$//$NON-NLS-2$
-        variantCode = (String) fields.get("variant", "");  //$NON-NLS-1$//$NON-NLS-2$
+        countryCode = (String) fields.get("country", ""); //$NON-NLS-1$//$NON-NLS-2$
+        languageCode = (String) fields.get("language", ""); //$NON-NLS-1$//$NON-NLS-2$
+        variantCode = (String) fields.get("variant", ""); //$NON-NLS-1$//$NON-NLS-2$
     }
 }
-

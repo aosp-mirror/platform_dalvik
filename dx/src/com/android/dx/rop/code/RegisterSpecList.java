@@ -25,14 +25,14 @@ import com.android.dx.util.FixedSizeList;
  */
 public final class RegisterSpecList
         extends FixedSizeList implements TypeList {
-    /** non-null; no-element instance */
+    /** {@code non-null;} no-element instance */
     public static final RegisterSpecList EMPTY = new RegisterSpecList(0);
 
     /**
      * Makes a single-element instance.
      * 
-     * @param spec non-null; the element
-     * @return non-null; an appropriately-constructed instance
+     * @param spec {@code non-null;} the element
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static RegisterSpecList make(RegisterSpec spec) {
         RegisterSpecList result = new RegisterSpecList(1);
@@ -43,9 +43,9 @@ public final class RegisterSpecList
     /**
      * Makes a two-element instance.
      * 
-     * @param spec0 non-null; the first element
-     * @param spec1 non-null; the second element
-     * @return non-null; an appropriately-constructed instance
+     * @param spec0 {@code non-null;} the first element
+     * @param spec1 {@code non-null;} the second element
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static RegisterSpecList make(RegisterSpec spec0,
                                         RegisterSpec spec1) {
@@ -58,10 +58,10 @@ public final class RegisterSpecList
     /**
      * Makes a three-element instance.
      * 
-     * @param spec0 non-null; the first element
-     * @param spec1 non-null; the second element
-     * @param spec2 non-null; the third element
-     * @return non-null; an appropriately-constructed instance
+     * @param spec0 {@code non-null;} the first element
+     * @param spec1 {@code non-null;} the second element
+     * @param spec2 {@code non-null;} the third element
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static RegisterSpecList make(RegisterSpec spec0, RegisterSpec spec1,
                                         RegisterSpec spec2) {
@@ -75,11 +75,11 @@ public final class RegisterSpecList
     /**
      * Makes a four-element instance.
      * 
-     * @param spec0 non-null; the first element
-     * @param spec1 non-null; the second element
-     * @param spec2 non-null; the third element
-     * @param spec3 non-null; the fourth element
-     * @return non-null; an appropriately-constructed instance
+     * @param spec0 {@code non-null;} the first element
+     * @param spec1 {@code non-null;} the second element
+     * @param spec2 {@code non-null;} the third element
+     * @param spec3 {@code non-null;} the fourth element
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static RegisterSpecList make(RegisterSpec spec0, RegisterSpec spec1,
                                         RegisterSpec spec2,
@@ -93,7 +93,7 @@ public final class RegisterSpecList
     }
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      * 
      * @param size the size of the list
      */
@@ -126,10 +126,10 @@ public final class RegisterSpecList
     /**
      * Gets the indicated element. It is an error to call this with the
      * index for an element which was never set; if you do that, this
-     * will throw <code>NullPointerException</code>.
+     * will throw {@code NullPointerException}.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @return non-null; the indicated element
+     * @param n {@code >= 0, < size();} which element
+     * @return {@code non-null;} the indicated element
      */
     public RegisterSpec get(int n) {
         return (RegisterSpec) get0(n);
@@ -180,8 +180,8 @@ public final class RegisterSpecList
     /**
      * Sets the element at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
-     * @param spec non-null; the value to store
+     * @param n {@code >= 0, < size();} which element
+     * @param spec {@code non-null;} the value to store
      */
     public void set(int n, RegisterSpec spec) {
         set0(n, spec);
@@ -193,7 +193,7 @@ public final class RegisterSpecList
      * to plus the widest width (largest category) of the type used in
      * that register.
      * 
-     * @return &gt;= 0; the required registers size
+     * @return {@code >= 0;} the required registers size
      */
     public int getRegistersSize() {
         int sz = size();
@@ -217,8 +217,8 @@ public final class RegisterSpecList
      * except that it has an additional element prepended to the original.
      * Mutability of the result is inherited from the original.
      * 
-     * @param spec non-null; the new first spec (to prepend)
-     * @return non-null; an appropriately-constructed instance
+     * @param spec {@code non-null;} the new first spec (to prepend)
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecList withFirst(RegisterSpec spec) {
         int sz = size();
@@ -241,7 +241,7 @@ public final class RegisterSpecList
      * except that its first element is removed. Mutability of the
      * result is inherited from the original.
      * 
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecList withoutFirst() {
         int newSize = size() - 1;
@@ -268,7 +268,7 @@ public final class RegisterSpecList
      * except that its last element is removed. Mutability of the
      * result is inherited from the original.
      * 
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecList withoutLast() {
         int newSize = size() - 1;
@@ -296,7 +296,7 @@ public final class RegisterSpecList
      * of the result is inherited from the original.
      * 
      * @param delta the amount to offset the register numbers by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecList withOffset(int delta) {
         int sz = size();
@@ -329,7 +329,7 @@ public final class RegisterSpecList
      * 
      * @param base the base register number
      * @param duplicateFirst whether to duplicate the first number
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public RegisterSpecList withSequentialRegisters(int base,
                                                     boolean duplicateFirst) {

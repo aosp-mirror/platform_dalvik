@@ -35,8 +35,12 @@ import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
+import tests.util.PrefsTester;
+
 @TestTargetClass(AbstractPreferences.class)
 public class AbstractPreferencesTest extends TestCase {
+
+    private final PrefsTester prefsTester = new PrefsTester();
 
     AbstractPreferences pref;
 
@@ -51,13 +55,8 @@ public class AbstractPreferencesTest extends TestCase {
     
     protected void setUp() throws Exception {
         super.setUp();
+        prefsTester.setUp();
 
-        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
-        System.setProperty("java.home", System.getProperty("java.io.tmpdir"));
-        
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
-        
         root = (AbstractPreferences) Preferences.userRoot();
         parent = (AbstractPreferences) Preferences.userNodeForPackage(this.getClass());
 
@@ -65,11 +64,7 @@ public class AbstractPreferencesTest extends TestCase {
     }
 
     protected void tearDown() throws Exception {
-        parent.removeNode();
-        Preferences.systemRoot().clear();
-        Preferences.userRoot().clear();
-        System.setProperty("user.home", oldUserHome);
-        System.setProperty("java.home", oldJavaHome);
+        prefsTester.tearDown();
         super.tearDown();
     }
 
@@ -851,6 +846,31 @@ public class AbstractPreferencesTest extends TestCase {
             fail("IllegalStateException expected");
         } catch (IllegalStateException e) {
             //expected
+        }
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "nodeExists",
+            args = {String.class}
+    )
+    public void test_nodeExists() throws BackingStoreException {
+        AbstractPreferences test = (AbstractPreferences) Preferences.userRoot()
+                .node("test");
+        try {
+            test.nodeExists(null);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // Expected
+        }
+
+        test.removeNode();
+        try {
+            test.nodeExists(null);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // Expected
         }
     }
 

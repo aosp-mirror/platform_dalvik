@@ -23,47 +23,47 @@ package com.android.dx.rop.cst;
 public interface ConstantPool {
     /**
      * Get the "size" of the constant pool. This corresponds to the
-     * class file field <code>constant_pool_count</code>, and is in fact
+     * class file field {@code constant_pool_count}, and is in fact
      * always at least one more than the actual size of the constant pool,
-     * as element <code>0</code> is always invalid.
+     * as element {@code 0} is always invalid.
      *
-     * @return <code>&gt;= 1</code>; the size
+     * @return {@code >= 1;} the size
      */
     public int size();
 
     /**
-     * Get the <code>n</code>th entry in the constant pool, which must
+     * Get the {@code n}th entry in the constant pool, which must
      * be valid.
      *
-     * @param n <code>n &gt;= 0, n &lt; size()</code>; the constant pool index
-     * @return non-null; the corresponding entry
-     * @throws IllegalArgumentException thrown if <code>n</code> is
+     * @param n {@code n >= 0, n < size();} the constant pool index
+     * @return {@code non-null;} the corresponding entry
+     * @throws IllegalArgumentException thrown if {@code n} is
      * in-range but invalid
      */
     public Constant get(int n);
 
     /**
-     * Get the <code>n</code>th entry in the constant pool, which must
-     * be valid unless <code>n == 0</code>, in which case <code>null</code>
+     * Get the {@code n}th entry in the constant pool, which must
+     * be valid unless {@code n == 0}, in which case {@code null}
      * is returned.
      *
-     * @param n <code>n &gt;= 0, n &lt; size()</code>; the constant pool index
-     * @return null-ok; the corresponding entry, if <code>n != 0</code>
-     * @throws IllegalArgumentException thrown if <code>n</code> is
+     * @param n {@code n >= 0, n < size();} the constant pool index
+     * @return {@code null-ok;} the corresponding entry, if {@code n != 0}
+     * @throws IllegalArgumentException thrown if {@code n} is
      * in-range and non-zero but invalid
      */
     public Constant get0Ok(int n);
 
     /**
-     * Get the <code>n</code>th entry in the constant pool, or
-     * <code>null</code> if the index is in-range but invalid. In
-     * particular, <code>null</code> is returned for index <code>0</code>
+     * Get the {@code n}th entry in the constant pool, or
+     * {@code null} if the index is in-range but invalid. In
+     * particular, {@code null} is returned for index {@code 0}
      * as well as the index after any entry which is defined to take up
-     * two slots (that is, <code>Long</code> and <code>Double</code>
+     * two slots (that is, {@code Long} and {@code Double}
      * entries).
      *
-     * @param n <code>n &gt;= 0, n &lt; size()</code>; the constant pool index
-     * @return null-ok; the corresponding entry, or <code>null</code> if
+     * @param n {@code n >= 0, n < size();} the constant pool index
+     * @return {@code null-ok;} the corresponding entry, or {@code null} if
      * the index is in-range but invalid
      */
     public Constant getOrNull(int n);

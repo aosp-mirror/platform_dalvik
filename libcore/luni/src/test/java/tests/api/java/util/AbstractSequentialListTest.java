@@ -85,7 +85,7 @@ public class AbstractSequentialListTest extends TestCase {
         }
 
         public boolean hasNext() {
-            return false;
+            return true;
         }
 
         public boolean hasPrevious() {

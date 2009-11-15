@@ -30,20 +30,20 @@ import java.util.ArrayList;
  */
 public final class ParameterAnnotationStruct
         implements ToHuman, Comparable<ParameterAnnotationStruct> {
-    /** non-null; the method in question */
+    /** {@code non-null;} the method in question */
     private final CstMethodRef method;
 
-    /** non-null; the associated annotations list */
+    /** {@code non-null;} the associated annotations list */
     private final AnnotationsList annotationsList;
 
-    /** non-null; the associated annotations list, as an item */
+    /** {@code non-null;} the associated annotations list, as an item */
     private final UniformListItem<AnnotationSetRefItem> annotationsItem;
 
     /**
      * Constructs an instance.
      * 
-     * @param method non-null; the method in question
-     * @param annotationsList non-null; the associated annotations list
+     * @param method {@code non-null;} the method in question
+     * @param annotationsList {@code non-null;} the associated annotations list
      */
     public ParameterAnnotationStruct(CstMethodRef method,
             AnnotationsList annotationsList) {
@@ -144,7 +144,7 @@ public final class ParameterAnnotationStruct
     /**
      * Gets the method this item is for.
      * 
-     * @return non-null; the method
+     * @return {@code non-null;} the method
      */
     public CstMethodRef getMethod() {
         return method;
@@ -153,7 +153,7 @@ public final class ParameterAnnotationStruct
     /**
      * Gets the associated annotations list.
      * 
-     * @return non-null; the annotations list
+     * @return {@code non-null;} the annotations list
      */
     public AnnotationsList getAnnotationsList() {
         return annotationsList;

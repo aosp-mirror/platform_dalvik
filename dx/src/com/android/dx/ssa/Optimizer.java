@@ -48,7 +48,7 @@ public class Optimizer {
     }
 
     /**
-     * @return non-null; translation advice
+     * @return {@code non-null;} translation advice
      */
     public static TranslationAdvice getAdvice() {
         return advice;
@@ -64,7 +64,7 @@ public class Optimizer {
      * @param isStatic true if this method has no 'this' pointer argument.
      * @param inPreserveLocals true if local variable info should be preserved,
      * at the cost of some registers and insns
-     * @param inAdvice non-null; translation advice
+     * @param inAdvice {@code non-null;} translation advice
      * @return optimized method
      */
     public static RopMethod optimize(RopMethod rmeth, int paramWidth,
@@ -85,7 +85,7 @@ public class Optimizer {
      * @param isStatic true if this method has no 'this' pointer argument.
      * @param inPreserveLocals true if local variable info should be preserved,
      * at the cost of some registers and insns
-     * @param inAdvice non-null; translation advice
+     * @param inAdvice {@code non-null;} translation advice
      * @param steps set of optional optimization steps to run
      * @return optimized method
      */

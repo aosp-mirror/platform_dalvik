@@ -143,8 +143,8 @@ public class MoveParamCombiner {
      * Returns the parameter index associated with a move-param insn. Does
      * not verify that the insn is a move-param insn.
      *
-     * @param insn non-null; a move-param insn
-     * @return &gt;=0 parameter index
+     * @param insn {@code non-null;} a move-param insn
+     * @return {@code >=0;} parameter index
      */
     private int getParamIndex(NormalSsaInsn insn) {
         CstInsn cstInsn = (CstInsn)(insn.getOriginalRopInsn());

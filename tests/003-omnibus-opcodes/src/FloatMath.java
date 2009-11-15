@@ -262,6 +262,50 @@ public class FloatMath {
         assert(d > 9.9 && d < 10.1);
     }
 
+    /*
+     * Determine if two floating point numbers are approximately equal.
+     *
+     * (Assumes that floating point is generally working, so we can't use
+     * this for the first set of tests.)
+     */
+    static boolean approxEqual(float a, float b, float maxDelta) {
+        if (a > b)
+            return (a - b) < maxDelta;
+        else
+            return (b - a) < maxDelta;
+    }
+    static boolean approxEqual(double a, double b, double maxDelta) {
+        if (a > b)
+            return (a - b) < maxDelta;
+        else
+            return (b - a) < maxDelta;
+    }
+
+    /*
+     * Test some java.lang.Math functions.
+     *
+     * The method arguments are positive values.
+     */
+    static void jlmTests(float ff, double dd) {
+        System.out.println("FloatMath.jlmTests");
+
+        assert(approxEqual(Math.abs(ff), ff, 0.001f));
+        assert(approxEqual(Math.abs(-ff), ff, 0.001f));
+        assert(approxEqual(Math.min(ff, -5.0f), -5.0f, 0.001f));
+        assert(approxEqual(Math.max(ff, -5.0f), ff, 0.001f));
+
+        assert(approxEqual(Math.abs(dd), dd, 0.001));
+        assert(approxEqual(Math.abs(-dd), dd, 0.001));
+        assert(approxEqual(Math.min(dd, -5.0), -5.0, 0.001));
+        assert(approxEqual(Math.max(dd, -5.0), dd, 0.001));
+
+        double sq = Math.sqrt(dd);
+        assert(approxEqual(sq*sq, dd, 0.001));
+
+        assert(approxEqual(0.5403023058681398, Math.cos(1.0), 0.00000001));
+        assert(approxEqual(0.8414709848078965, Math.sin(1.0), 0.00000001));
+    }
+
     public static void run() {
         convTest();
 
@@ -287,6 +331,8 @@ public class FloatMath {
         unopTest(123.456f);
 
         checkConsts();
+
+        jlmTests(3.14159f, 123456.78987654321);
     }
 }
 

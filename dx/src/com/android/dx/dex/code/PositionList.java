@@ -24,7 +24,7 @@ import com.android.dx.util.FixedSizeList;
  * method to extract an instance out of a {@link DalvInsnList}.
  */
 public final class PositionList extends FixedSizeList {
-    /** non-null; empty instance */
+    /** {@code non-null;} empty instance */
     public static final PositionList EMPTY = new PositionList(0);
 
     /**
@@ -50,10 +50,10 @@ public final class PositionList extends FixedSizeList {
      * Extracts and returns the source position information out of an
      * instruction list.
      * 
-     * @param insns non-null; instructions to convert
+     * @param insns {@code non-null;} instructions to convert
      * @param howMuch how much information should be included; one of the
      * static constants defined by this class
-     * @return non-null; the positions list
+     * @return {@code non-null;} the positions list
      */
     public static PositionList make(DalvInsnList insns, int howMuch) {
         switch (howMuch) {
@@ -112,9 +112,9 @@ public final class PositionList extends FixedSizeList {
     }
 
     /**
-     * Constructs an instance. All indices initially contain <code>null</code>.
+     * Constructs an instance. All indices initially contain {@code null}.
      * 
-     * @param size &gt;= 0; the size of the list
+     * @param size {@code >= 0;} the size of the list
      */
     public PositionList(int size) {
         super(size);
@@ -123,10 +123,10 @@ public final class PositionList extends FixedSizeList {
     /**
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
-     * do that, this will throw <code>NullPointerException</code>.
+     * do that, this will throw {@code NullPointerException}.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @return non-null; element at that index
+     * @param n {@code >= 0, < size();} which index
+     * @return {@code non-null;} element at that index
      */
     public Entry get(int n) {
         return (Entry) get0(n);
@@ -135,8 +135,8 @@ public final class PositionList extends FixedSizeList {
     /**
      * Sets the entry at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which index
-     * @param entry non-null; the entry to set at <code>n</code>
+     * @param n {@code >= 0, < size();} which index
+     * @param entry {@code non-null;} the entry to set at {@code n}
      */
     public void set(int n, Entry entry) {
         set0(n, entry);
@@ -146,17 +146,17 @@ public final class PositionList extends FixedSizeList {
      * Entry in a position list.
      */
     public static class Entry {
-        /** &gt;= 0; address of this entry */
+        /** {@code >= 0;} address of this entry */
         private final int address;
 
-        /** non-null; corresponding source position information */
+        /** {@code non-null;} corresponding source position information */
         private final SourcePosition position;
 
         /**
          * Constructs an instance.
          * 
-         * @param address &gt;= 0; address of this entry
-         * @param position non-null; corresponding source position information
+         * @param address {@code >= 0;} address of this entry
+         * @param position {@code non-null;} corresponding source position information
          */
         public Entry (int address, SourcePosition position) {
             if (address < 0) {
@@ -174,7 +174,7 @@ public final class PositionList extends FixedSizeList {
         /**
          * Gets the address.
          * 
-         * @return &gt;= 0; the address
+         * @return {@code >= 0;} the address
          */
         public int getAddress() {
             return address;
@@ -183,7 +183,7 @@ public final class PositionList extends FixedSizeList {
         /**
          * Gets the source position information.
          * 
-         * @return non-null; the position information
+         * @return {@code non-null;} the position information
          */
         public SourcePosition getPosition() {
             return position;

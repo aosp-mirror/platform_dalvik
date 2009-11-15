@@ -10,20 +10,6 @@ void throwNewOutOfMemoryError (JNIEnv * env, const char *message)
     jniThrowException(env, "java/lang/OutOfMemoryError", message);
 }
 
-// Throw java.lang.IllegalStateException
-void throwNewIllegalStateException (JNIEnv * env, const char *message)
-{
-  jniThrowException(env, "java/lang/IllegalStateException", message);
-}
-
-// Throw java.lang.IllegalArgumentException
-void throwNewIllegalArgumentException (JNIEnv * env, const char *message)
-{
-  jniThrowException(env, "java/lang/IllegalArgumentException", message);
-}
-
-
-
 void * sieb_malloc (JNIEnv * env, size_t byteCnt) {
     void * adr = malloc(byteCnt);
     if (adr == 0) {

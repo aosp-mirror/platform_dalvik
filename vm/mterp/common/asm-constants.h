@@ -82,7 +82,7 @@
  */
 
 /* globals (sanity check for LDR vs LDRB) */
-MTERP_SIZEOF(sizeofGlobal_debuggerActive, gDvm.debuggerActive, MTERP_SMALL_ENUM)
+MTERP_SIZEOF(sizeofGlobal_debuggerActive, gDvm.debuggerActive, 1)
 #if defined(WITH_PROFILER)
 MTERP_SIZEOF(sizeofGlobal_activeProfilers, gDvm.activeProfilers, 4)
 #endif
@@ -101,14 +101,38 @@ MTERP_OFFSET(offGlue_pSelfSuspendCount, MterpGlue, pSelfSuspendCount, 36)
 MTERP_OFFSET(offGlue_pDebuggerActive,   MterpGlue, pDebuggerActive, 40)
 MTERP_OFFSET(offGlue_pActiveProfilers,  MterpGlue, pActiveProfilers, 44)
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 48)
+#if defined(WITH_JIT)
+MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 56)
+MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 60)
+MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 64)
+MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 68)
+#endif
 #elif defined(WITH_DEBUGGER)
 MTERP_OFFSET(offGlue_pDebuggerActive,   MterpGlue, pDebuggerActive, 40)
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 44)
+#if defined(WITH_JIT)
+MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 52)
+MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 56)
+MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 60)
+MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 64)
+#endif
 #elif defined(WITH_PROFILER)
 MTERP_OFFSET(offGlue_pActiveProfilers,  MterpGlue, pActiveProfilers, 40)
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 44)
+#if defined(WITH_JIT)
+MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 52)
+MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 56)
+MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 60)
+MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 64)
+#endif
 #else
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 40)
+#if defined(WITH_JIT)
+MTERP_OFFSET(offGlue_pJitProfTable,     MterpGlue, pJitProfTable, 48)
+MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 52)
+MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 56)
+MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 60)
+#endif
 #endif
 /* make sure all JValue union members are stored at the same offset */
 MTERP_OFFSET(offGlue_retval_z,          MterpGlue, retval.z, 8)
@@ -130,15 +154,19 @@ MTERP_OFFSET(offStackSaveArea_prevFrame, StackSaveArea, prevFrame, 4)
 MTERP_OFFSET(offStackSaveArea_savedPc,  StackSaveArea, savedPc, 8)
 MTERP_OFFSET(offStackSaveArea_method,   StackSaveArea, method, 12)
 MTERP_OFFSET(offStackSaveArea_currentPc, StackSaveArea, xtra.currentPc, 16)
-MTERP_OFFSET(offStackSaveArea_localRefTop, StackSaveArea, xtra.localRefTop, 16)
-MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 20)
+MTERP_OFFSET(offStackSaveArea_localRefCookie, \
+                                        StackSaveArea, xtra.localRefCookie, 16)
+MTERP_OFFSET(offStackSaveArea_returnAddr, StackSaveArea, returnAddr, 20)
+MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 24)
 #else
 MTERP_OFFSET(offStackSaveArea_prevFrame, StackSaveArea, prevFrame, 0)
 MTERP_OFFSET(offStackSaveArea_savedPc,  StackSaveArea, savedPc, 4)
 MTERP_OFFSET(offStackSaveArea_method,   StackSaveArea, method, 8)
 MTERP_OFFSET(offStackSaveArea_currentPc, StackSaveArea, xtra.currentPc, 12)
-MTERP_OFFSET(offStackSaveArea_localRefTop, StackSaveArea, xtra.localRefTop, 12)
-MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 16)
+MTERP_OFFSET(offStackSaveArea_localRefCookie, \
+                                        StackSaveArea, xtra.localRefCookie, 12)
+MTERP_OFFSET(offStackSaveArea_returnAddr, StackSaveArea, returnAddr, 16)
+MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 20)
 #endif
 
 /* InstField fields */
@@ -172,8 +200,13 @@ MTERP_OFFSET(offInlineOperation_func,   InlineOperation, func, 0)
 MTERP_OFFSET(offThread_stackOverflowed, Thread, stackOverflowed, 40)
 MTERP_OFFSET(offThread_curFrame,        Thread, curFrame, 44)
 MTERP_OFFSET(offThread_exception,       Thread, exception, 48)
-MTERP_OFFSET(offThread_jniLocal_nextEntry, \
-                                        Thread, jniLocalRefTable.nextEntry, 80)
+#ifdef USE_INDIRECT_REF
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.segmentState.all, 76)
+#else
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.nextEntry, 76)
+#endif
 
 /* Object fields */
 MTERP_OFFSET(offObject_clazz,           Object, clazz, 0)
@@ -200,6 +233,20 @@ MTERP_SIZEOF(sizeofClassStatus,         InterpEntry, MTERP_SMALL_ENUM)
 MTERP_CONSTANT(kInterpEntryInstr,   0)
 MTERP_CONSTANT(kInterpEntryReturn,  1)
 MTERP_CONSTANT(kInterpEntryThrow,   2)
+#if defined(WITH_JIT)
+MTERP_CONSTANT(kInterpEntryResume,  3)
+#endif
+
+#if defined(WITH_JIT)
+MTERP_CONSTANT(kJitOff,             0)
+MTERP_CONSTANT(kJitNormal,          1)
+MTERP_CONSTANT(kJitTSelectRequest,  2)
+MTERP_CONSTANT(kJitTSelect,         3)
+MTERP_CONSTANT(kJitTSelectAbort,    4)
+MTERP_CONSTANT(kJitTSelectEnd,      5)
+MTERP_CONSTANT(kJitSingleStep,      6)
+MTERP_CONSTANT(kJitSingleStepEnd,   7)
+#endif
 
 /* ClassStatus enumeration */
 MTERP_SIZEOF(sizeofClassStatus,         ClassStatus, MTERP_SMALL_ENUM)
@@ -224,4 +271,3 @@ MTERP_CONSTANT(ALLOC_DONT_TRACK,    0x02)
 
 /* opcode number */
 MTERP_CONSTANT(OP_MOVE_EXCEPTION,   0x0d)
-

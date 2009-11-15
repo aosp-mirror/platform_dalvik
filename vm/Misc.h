@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Miscellaneous utility functions.
  */
@@ -51,28 +52,6 @@ INLINE u4 dvmFloatToU4(float val) {
     conv.in = val;
     return conv.out;
 }
-#if 0
-INLINE float dvmU8ToFloat(u8 val) {
-    union { u8 in; float out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-INLINE u8 dvmFloatToU8(float val) {
-    union { float in; u8 out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-INLINE double dvmU8ToDouble(u8 val) {
-    union { u8 in; double out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-INLINE u8 dvmDoubleToU8(double val) {
-    union { double in; u8 out; } conv;
-    conv.in = val;
-    return conv.out;
-}
-#endif
 
 /*
  * Print a hex dump to the log file.
@@ -143,7 +122,11 @@ void dvmCreateFileOutputTarget(DebugOutputTarget* target, FILE* fp);
  * Print a debug message.
  */
 void dvmPrintDebugMessage(const DebugOutputTarget* target, const char* format,
-    ...);
+    ...)
+#if defined(__GNUC__)
+    __attribute__ ((format(printf, 2, 3)))
+#endif
+    ;
 
 
 /*
@@ -175,6 +158,7 @@ void dvmFreeBitVector(BitVector* pBits);
 int dvmAllocBit(BitVector* pBits);
 bool dvmSetBit(BitVector* pBits, int num);
 void dvmClearBit(BitVector* pBits, int num);
+void dvmClearAllBits(BitVector* pBits);
 bool dvmIsBitSet(const BitVector* pBits, int num);
 
 /* count the number of bits that have been set */
@@ -276,6 +260,17 @@ bool dvmIterativeSleep(int iteration, int maxTotalSleep, u8 relStartTime);
  * Set the "close on exec" flag on a file descriptor.
  */
 bool dvmSetCloseOnExec(int fd);
+
+/*
+ * Unconditionally abort the entire VM.  Try not to use this.
+ *
+ * NOTE: if this is marked ((noreturn)), gcc will merge multiple dvmAbort()
+ * calls in a single function together.  This is good, in that it reduces
+ * code size slightly, but also bad, because the native stack trace we
+ * get from the abort may point at the wrong call site.  Best to leave
+ * it undecorated.
+ */
+void dvmAbort(void);
 
 #if (!HAVE_STRLCPY)
 /* Implementation of strlcpy() for platforms that don't already have it. */

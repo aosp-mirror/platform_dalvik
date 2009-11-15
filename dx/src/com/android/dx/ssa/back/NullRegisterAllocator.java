@@ -29,11 +29,9 @@ import java.util.ArrayList;
  * about normal or wide categories. Used for debugging.
  */
 public class NullRegisterAllocator extends RegisterAllocator {
-
     /** {@inheritDoc} */
-    public NullRegisterAllocator(
-            final SsaMethod ssaMeth, final InterferenceGraph interference) {
-
+    public NullRegisterAllocator(SsaMethod ssaMeth,
+            InterferenceGraph interference) {
         super(ssaMeth, interference);
     }
 
@@ -49,8 +47,7 @@ public class NullRegisterAllocator extends RegisterAllocator {
     public RegisterMapper allocateRegisters() {
         int oldRegCount = ssaMeth.getRegCount();
 
-        BasicRegisterMapper mapper
-                = new BasicRegisterMapper(oldRegCount);
+        BasicRegisterMapper mapper = new BasicRegisterMapper(oldRegCount);
 
         for (int i = 0; i < oldRegCount; i++) {
             mapper.addMapping(i, i*2, 2);

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik instruction utility functions.
  */
@@ -42,6 +43,7 @@ enum InstructionFormat {
     kFmt11n,        // op vA, #+B
     kFmt11x,        // op vAA
     kFmt10t,        // op +AA
+    kFmt20bc,       // op AA, thing@BBBB
     kFmt20t,        // op +AAAA
     kFmt22x,        // op vAA, vBBBB
     kFmt21t,        // op vAA, +BBBB
@@ -97,6 +99,8 @@ enum InstructionFlags {
     kInstrCanSwitch     = 1 << 2,   // switch statement
     kInstrCanThrow      = 1 << 3,   // could cause an exception to be thrown
     kInstrCanReturn     = 1 << 4,   // returns, no additional statements
+    kInstrInvoke        = 1 << 5,   // a flavor of invoke
+    kInstrUnconditional = 1 << 6,   // unconditional branch
 };
 
 

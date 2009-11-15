@@ -29,26 +29,26 @@ import com.android.dx.util.TwoColumnOutput;
 public abstract class DalvInsn {
     /**
      * the actual output address of this instance, if known, or
-     * <code>-1</code> if not 
+     * {@code -1} if not 
      */
     private int address;
 
     /** the opcode; one of the constants from {@link Dops} */
     private final Dop opcode;
 
-    /** non-null; source position */
+    /** {@code non-null;} source position */
     private final SourcePosition position;
 
-    /** non-null; list of register arguments */
+    /** {@code non-null;} list of register arguments */
     private final RegisterSpecList registers;
 
     /**
      * Makes a move instruction, appropriate and ideal for the given arguments.
      * 
-     * @param position non-null; source position information
-     * @param dest non-null; destination register
-     * @param src non-null; source register
-     * @return non-null; an appropriately-constructed instance
+     * @param position {@code non-null;} source position information
+     * @param dest {@code non-null;} destination register
+     * @param src {@code non-null;} source register
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public static SimpleInsn makeMove(SourcePosition position,
             RegisterSpec dest, RegisterSpec src) {
@@ -75,17 +75,17 @@ public abstract class DalvInsn {
 
     /**
      * Constructs an instance. The output address of this instance is initially
-     * unknown (<code>-1</code>).
+     * unknown ({@code -1}).
      * 
      * <p><b>Note:</b> In the unlikely event that an instruction takes
-     * absolutely no registers (e.g., a <code>nop</code> or a
+     * absolutely no registers (e.g., a {@code nop} or a
      * no-argument no-result static method call), then the given
      * register list may be passed as {@link
      * RegisterSpecList#EMPTY}.</p>
      * 
      * @param opcode the opcode; one of the constants from {@link Dops}
-     * @param position non-null; source position
-     * @param registers non-null; register list, including a
+     * @param position {@code non-null;} source position
+     * @param registers {@code non-null;} register list, including a
      * result register if appropriate (that is, registers may be either
      * ins and outs)
      */
@@ -151,11 +151,11 @@ public abstract class DalvInsn {
 
     /**
      * Gets the output address of this instruction, if it is known. This throws
-     * a <code>RuntimeException</code> if it has not yet been set.
+     * a {@code RuntimeException} if it has not yet been set.
      * 
      * @see #setAddress
      * 
-     * @return &gt;= 0; the output address
+     * @return {@code >= 0;} the output address
      */
     public final int getAddress() {
         if (address < 0) {
@@ -168,7 +168,7 @@ public abstract class DalvInsn {
     /**
      * Gets the opcode.
      * 
-     * @return non-null; the opcode
+     * @return {@code non-null;} the opcode
      */
     public final Dop getOpcode() {
         return opcode;
@@ -177,7 +177,7 @@ public abstract class DalvInsn {
     /**
      * Gets the source position.
      * 
-     * @return non-null; the source position
+     * @return {@code non-null;} the source position
      */
     public final SourcePosition getPosition() {
         return position;
@@ -186,7 +186,7 @@ public abstract class DalvInsn {
     /**
      * Gets the register list for this instruction.
      * 
-     * @return non-null; the registers
+     * @return {@code non-null;} the registers
      */
     public final RegisterSpecList getRegisters() {
         return registers;
@@ -195,9 +195,9 @@ public abstract class DalvInsn {
     /**
      * Returns whether this instance's opcode uses a result register.
      * This method is a convenient shorthand for
-     * <code>getOpcode().hasResult()</code>.
+     * {@code getOpcode().hasResult()}.
      * 
-     * @return <code>true</code> iff this opcode uses a result register
+     * @return {@code true} iff this opcode uses a result register
      */
     public final boolean hasResult() {
         return opcode.hasResult();
@@ -210,7 +210,7 @@ public abstract class DalvInsn {
      * (to be explicit here) category-2 values take up two consecutive
      * registers.
      * 
-     * @return &gt;= 0; the minimum distinct register requirement
+     * @return {@code >= 0;} the minimum distinct register requirement
      */
     public final int getMinimumRegisterRequirement() {
         boolean hasResult = hasResult();
@@ -231,7 +231,7 @@ public abstract class DalvInsn {
      * 
      * @see #hrVersion
      * 
-     * @return null-ok; the prefix, if any
+     * @return {@code null-ok;} the prefix, if any
      */
     public DalvInsn hrPrefix() {
         RegisterSpecList regs = registers;
@@ -255,7 +255,7 @@ public abstract class DalvInsn {
      * 
      * @see #hrVersion
      * 
-     * @return null-ok; the suffix, if any
+     * @return {@code null-ok;} the suffix, if any
      */
     public DalvInsn hrSuffix() {
         if (hasResult()) {
@@ -268,8 +268,8 @@ public abstract class DalvInsn {
 
     /**
      * Gets the instruction that is equivalent to this one, except that
-     * uses sequential registers starting at <code>0</code> (storing
-     * the result, if any, in register <code>0</code> as well). The
+     * uses sequential registers starting at {@code 0} (storing
+     * the result, if any, in register {@code 0} as well). The
      * sequence of instructions from {@link #hrPrefix} and {@link
      * #hrSuffix} (if non-null) surrounding the result of a call to
      * this method are the high register transformation of this
@@ -277,7 +277,7 @@ public abstract class DalvInsn {
      * used will be the number returned by {@link
      * #getMinimumRegisterRequirement}.
      * 
-     * @return non-null; the replacement
+     * @return {@code non-null;} the replacement
      */
     public DalvInsn hrVersion() {
         RegisterSpecList regs = 
@@ -289,7 +289,7 @@ public abstract class DalvInsn {
      * Gets the short identifier for this instruction. This is its
      * address, if assigned, or its identity hashcode if not.
      * 
-     * @return non-null; the identifier
+     * @return {@code non-null;} the identifier
      */
     public final String identifierString() {
         if (address != -1) {
@@ -301,16 +301,16 @@ public abstract class DalvInsn {
 
     /**
      * Returns the string form of this instance suitable for inclusion in
-     * a human-oriented listing dump. This method will return <code>null</code>
+     * a human-oriented listing dump. This method will return {@code null}
      * if this instance should not appear in a listing.
      * 
-     * @param prefix non-null; prefix before the address; each follow-on
+     * @param prefix {@code non-null;} prefix before the address; each follow-on
      * line will be indented to match as well
-     * @param width &gt;= 0; the width of the output or <code>0</code> for
+     * @param width {@code >= 0;} the width of the output or {@code 0} for
      * unlimited width
      * @param noteIndices whether to include an explicit notation of
      * constant pool indices
-     * @return null-ok; the string form or <code>null</code> if this
+     * @return {@code null-ok;} the string form or {@code null} if this
      * instance should not appear in a listing
      */
     public final String listingString(String prefix, int width,
@@ -331,7 +331,7 @@ public abstract class DalvInsn {
     /**
      * Sets the output address.
      * 
-     * @param address &gt;= 0; the output address
+     * @param address {@code >= 0;} the output address
      */
     public final void setAddress(int address) {
         if (address < 0) {
@@ -347,7 +347,7 @@ public abstract class DalvInsn {
      * to the address plus the length of the instruction format of this
      * instance's opcode.
      * 
-     * @return &gt;= 0; the next address
+     * @return {@code >= 0;} the next address
      */
     public final int getNextAddress() {
         return getAddress() + codeSize();
@@ -356,7 +356,7 @@ public abstract class DalvInsn {
     /**
      * Gets the size of this instruction, in 16-bit code units.
      * 
-     * @return &gt;= 0; the code size of this instruction
+     * @return {@code >= 0;} the code size of this instruction
      */
     public abstract int codeSize();
 
@@ -364,7 +364,7 @@ public abstract class DalvInsn {
      * Writes this instance to the given output. This method should
      * never annotate the output.
      * 
-     * @param out non-null; where to write to
+     * @param out {@code non-null;} where to write to
      */
     public abstract void writeTo(AnnotatedOutput out);
 
@@ -372,8 +372,8 @@ public abstract class DalvInsn {
      * Returns an instance that is just like this one, except that its
      * opcode is replaced by the one given, and its address is reset.
      * 
-     * @param opcode non-null; the new opcode
-     * @return non-null; an appropriately-constructed instance
+     * @param opcode {@code non-null;} the new opcode
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public abstract DalvInsn withOpcode(Dop opcode);
 
@@ -383,7 +383,7 @@ public abstract class DalvInsn {
      * address is reset.
      * 
      * @param delta the amount to offset register references by
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public abstract DalvInsn withRegisterOffset(int delta);
 
@@ -392,8 +392,8 @@ public abstract class DalvInsn {
      * register list is replaced by the given one, and its address is
      * reset.
      * 
-     * @param registers non-null; new register list
-     * @return non-null; an appropriately-constructed instance
+     * @param registers {@code non-null;} new register list
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public abstract DalvInsn withRegisters(RegisterSpecList registers);
 
@@ -401,8 +401,8 @@ public abstract class DalvInsn {
      * Gets the string form for any arguments to this instance. Subclasses
      * must override this.
      * 
-     * @return null-ok; the string version of any arguments or
-     * <code>null</code> if there are none
+     * @return {@code null-ok;} the string version of any arguments or
+     * {@code null} if there are none
      */
     protected abstract String argString();
 
@@ -411,12 +411,12 @@ public abstract class DalvInsn {
      * form of this instance suitable for inclusion in a
      * human-oriented listing dump, not including the instruction
      * address and without respect for any output formatting. This
-     * method should return <code>null</code> if this instance should
+     * method should return {@code null} if this instance should
      * not appear in a listing.
      * 
      * @param noteIndices whether to include an explicit notation of
      * constant pool indices
-     * @return null-ok; the listing string
+     * @return {@code null-ok;} the listing string
      */
     protected abstract String listingString0(boolean noteIndices);
 }

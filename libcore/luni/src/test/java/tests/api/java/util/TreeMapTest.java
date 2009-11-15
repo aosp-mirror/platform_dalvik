@@ -83,6 +83,9 @@ public class TreeMapTest extends junit.framework.TestCase {
             if (null == o1) {
                 return -1;
             }
+            if (null == o2) {
+                return 1;
+            }
             return o1.compareTo(o2);
         }
     }
@@ -844,8 +847,6 @@ public class TreeMapTest extends junit.framework.TestCase {
         method = "equals",
         args = {java.lang.Object.class}
     )
-    @KnownFailure("equals(Onject o) method throws java.lang.ClassCastException " +
-            "for TreeMap objects with different key objects.")
     public void test_equals() throws Exception {
         // comparing TreeMaps with different object types
         Map m1 = new TreeMap();

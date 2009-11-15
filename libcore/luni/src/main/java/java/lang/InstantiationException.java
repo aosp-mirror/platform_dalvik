@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when a program attempts to access a constructor which is not
  * accessible from the location where the reference is made.
- * 
- * @since Android 1.0
  */
 public class InstantiationException extends Exception {
     private static final long serialVersionUID = -8441929162975509110L;
@@ -29,8 +27,6 @@ public class InstantiationException extends Exception {
     /**
      * Constructs a new {@code InstantiationException} that includes the current
      * stack trace.
-     * 
-     * @since Android 1.0
      */
     public InstantiationException() {
         super();
@@ -42,7 +38,6 @@ public class InstantiationException extends Exception {
      * 
      * @param detailMessage
      *            the detail message for this exception.
-     * @since Android 1.0
      */
     public InstantiationException(String detailMessage) {
         super(detailMessage);
@@ -54,7 +49,6 @@ public class InstantiationException extends Exception {
      * 
      * @param clazz
      *            the class that can not be instantiated.
-     * @since Android 1.0
      */
     InstantiationException(Class<?> clazz) {
         super(clazz.getName());

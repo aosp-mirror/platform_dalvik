@@ -131,6 +131,7 @@ public class CoreTestResult extends TestResult {
                         // Ignored
                     }
                     if (thread.isAlive()) {
+                        StackTraceElement[] trace = thread.getStackTrace();
                         runnable.stop();
                         thread.stop();
                         try {
@@ -138,8 +139,10 @@ public class CoreTestResult extends TestResult {
                         } catch (InterruptedException ex) {
                             // Ignored
                         }
-        
-                        addError(test, new CoreTestTimeout("Test timed out"));
+
+                        CoreTestTimeout timeout = new CoreTestTimeout("Test timed out");
+                        timeout.setStackTrace(trace);
+                        addError(test, timeout);
                     }
                 } else {
                     runnable.run();

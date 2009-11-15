@@ -36,10 +36,9 @@ import java.util.Stack;
 import java.util.Set;
 
 /**
- * A method in SSA form
+ * A method in SSA form.
  */
 public final class SsaMethod {
-    
     /** basic blocks, indexed by block index */
     private ArrayList<SsaBasicBlock> blocks;
 
@@ -48,12 +47,17 @@ public final class SsaMethod {
 
     /**
      * Index of exit block, which exists only in SSA form,
-     * or or -1 if there is none
+     * or or {@code -1} if there is none
      */
     private int exitBlockIndex;
 
+    /** total number of registers required */
     private int registerCount;
+
+    /** first register number to use for any temporary "spares" */
     private int spareRegisterBase;
+
+    /** current count of spare registers used */
     private int borrowedSpareRegisters;
 
     /** really one greater than the max label */
@@ -62,7 +66,7 @@ public final class SsaMethod {
     /** the total width, in register-units, of the method's parameters */
     private final int paramWidth;
 
-    /** true if this method has no 'this' pointer argument */
+    /** true if this method has no {@code this} pointer argument */
     private final boolean isStatic;
 
     /**
@@ -73,6 +77,7 @@ public final class SsaMethod {
 
     /** indexed by register: the list of all insns that use a register */
     private ArrayList<SsaInsn>[] useList;
+
     /** A version of useList with each List unmodifiable */
     private List<SsaInsn>[] unmodifiableUseList;
 
@@ -81,47 +86,58 @@ public final class SsaMethod {
      * are about to be mapped into a non-SSA namespace. When true,
      * use and def lists are unavailable.
      *
-     * TODO remove this mode, plase the functionality elsewhere
+     * TODO: Remove this mode, and place the functionality elsewhere
      */
-    private boolean backMode = false;
+    private boolean backMode;
 
     /**
-     * @param rmeth RopMethod to convert from
+     * @param ropMethod rop-form method to convert from
      * @param paramWidth the total width, in register-units, of the
      * method's parameters
-     * @param isStatic true if this method has no 'this' pointer argument
-     * @return SsaMethod representation
+     * @param isStatic {@code true} if this method has no {@code this}
+     * pointer argument
      */
-    static SsaMethod newFromRopMethod(RopMethod rmeth, int paramWidth,
-            boolean isStatic) {
-        SsaMethod result;
+    public static SsaMethod newFromRopMethod(RopMethod ropMethod,
+            int paramWidth, boolean isStatic) {
+        SsaMethod result = new SsaMethod(ropMethod, paramWidth, isStatic);
 
-        result = new SsaMethod(paramWidth, isStatic);
-
-        result.maxLabel = rmeth.getBlocks().getMaxLabel();
-        result.registerCount = rmeth.getBlocks().getRegCount();
-        result.spareRegisterBase = result.registerCount;
-
-        result.convertRopToSsaBlocks(rmeth);
+        result.convertRopToSsaBlocks(ropMethod);
 
         return result;
     }
 
     /**
+     * Constructs an instance.
+     *
+     * @param ropMethod {@code non-null;} the original rop-form method that
+     * this instance is based on
+     * @param paramWidth the total width, in register-units, of the
+     * method's parameters
+     * @param isStatic {@code true} if this method has no {@code this}
+     * pointer argument
+     */
+    private SsaMethod(RopMethod ropMethod, int paramWidth, boolean isStatic) {
+        this.paramWidth = paramWidth;
+        this.isStatic = isStatic;
+        this.backMode = false;
+        this.maxLabel = ropMethod.getBlocks().getMaxLabel();
+        this.registerCount = ropMethod.getBlocks().getRegCount();
+        this.spareRegisterBase = registerCount;
+    }
+
+    /**
      * Builds a BitSet of block indices from a basic block list and a list
-     * of labels taken from Rop form
+     * of labels taken from Rop form.
+     *
      * @param blocks Rop blocks
      * @param labelList list of rop block labels
      * @return BitSet of block indices
      */
     static BitSet bitSetFromLabelList(BasicBlockList blocks,
             IntList labelList) {
+        BitSet result = new BitSet(blocks.size());
 
-        BitSet result;
-
-        result = new BitSet(blocks.size());
-
-        for (int i = 0, sz = labelList.size() ; i < sz ; i++) {
+        for (int i = 0, sz = labelList.size(); i < sz; i++) {
             result.set(blocks.indexOfLabel(labelList.get(i)));
         }
 
@@ -130,7 +146,8 @@ public final class SsaMethod {
 
     /**
      * Builds an IntList of block indices from a basic block list and a list
-     * of labels taken from Rop form
+     * of labels taken from Rop form.
+     *
      * @param ropBlocks Rop blocks
      * @param labelList list of rop block labels
      * @return IntList of block indices
@@ -138,35 +155,27 @@ public final class SsaMethod {
     public static IntList indexListFromLabelList(BasicBlockList ropBlocks,
             IntList labelList) {
 
-        IntList result;
+        IntList result = new IntList(labelList.size());
 
-        result = new IntList(labelList.size());
-
-        for (int i = 0, sz = labelList.size() ; i < sz ; i++) {
+        for (int i = 0, sz = labelList.size(); i < sz; i++) {
             result.add(ropBlocks.indexOfLabel(labelList.get(i)));
         }
 
         return result;
     }
 
-    private void convertRopToSsaBlocks(
-            RopMethod rmeth) {
+    private void convertRopToSsaBlocks(RopMethod rmeth) {
+        BasicBlockList ropBlocks = rmeth.getBlocks();
+        int sz = ropBlocks.size();
 
-        BasicBlockList ropBlocks;
+        blocks = new ArrayList<SsaBasicBlock>(sz + 2);
 
-        ropBlocks = rmeth.getBlocks();
-
-        blocks = new ArrayList<SsaBasicBlock>(ropBlocks.size() + 2);
-
-        for (int i = 0, sz = ropBlocks.size() ; i < sz ; i++) {
-            SsaBasicBlock sbb;
-
-            sbb = SsaBasicBlock.newFromRop(rmeth, i, this);
-
+        for (int i = 0; i < sz; i++) {
+            SsaBasicBlock sbb = SsaBasicBlock.newFromRop(rmeth, i, this);
             blocks.add(sbb);
         }
 
-        // Add an no-op entry block
+        // Add an no-op entry block.
         int origEntryBlockIndex = rmeth.getBlocks()
                 .indexOfLabel(rmeth.getFirstLabel());
 
@@ -174,10 +183,8 @@ public final class SsaMethod {
                 = blocks.get(origEntryBlockIndex).insertNewPredecessor();
 
         entryBlockIndex = entryBlock.getIndex();
-        exitBlockIndex = -1; // this gets made later
-
+        exitBlockIndex = -1; // This gets made later.
     }
-
 
     /**
      * Creates an exit block and attaches it to the CFG if this method
@@ -185,7 +192,7 @@ public final class SsaMethod {
      * is called after edge-splitting and phi insertion, since the edges
      * going into the exit block should not be considered in those steps.
      */
-    void makeExitBlock() {
+    /*package*/ void makeExitBlock() {
         if (exitBlockIndex >= 0) {
             throw new RuntimeException("must be called at most once");
         }
@@ -196,7 +203,7 @@ public final class SsaMethod {
 
         blocks.add(exitBlock);
 
-        for (SsaBasicBlock block: blocks) {
+        for (SsaBasicBlock block : blocks) {
             block.exitBlockFixup(exitBlock);
         }
 
@@ -209,22 +216,10 @@ public final class SsaMethod {
     }
 
     /**
-     * Constructor
-     *
-     * @param paramWidth the total width, in register-units, of the
-     * method's parameters
-     * @param isStatic true if this method has no 'this' pointer argument
-     */
-    private SsaMethod(int paramWidth, boolean isStatic) {
-        this.paramWidth = paramWidth;
-        this.isStatic = isStatic;
-    }
-
-    /**
-     * Gets a new GOTO insn.
+     * Gets a new {@code GOTO} insn.
      *
      * @param block block to which this GOTO will be added
-     * (not it's destination!) 
+     * (not it's destination!)
      * @return an appropriately-constructed instance.
      */
     private static SsaInsn getGoto(SsaBasicBlock block) {
@@ -232,11 +227,11 @@ public final class SsaMethod {
                 new PlainInsn(Rops.GOTO, SourcePosition.NO_INFO,
                     null, RegisterSpecList.EMPTY), block);
     }
-    
+
     /**
-     * Makes a new basic block for this method,
-     * which is empty besides a single <code>GOTO</code>. Successors and
-     * predecessors are not yet set.
+     * Makes a new basic block for this method, which is empty besides
+     * a single {@code GOTO}. Successors and predecessors are not yet
+     * set.
      *
      * @return new block
      */
@@ -265,22 +260,23 @@ public final class SsaMethod {
     }
 
     /**
-     * @return block index of exit block or -1 if there is none
+     * @return block index of exit block or {@code -1} if there is none
      */
     public int getExitBlockIndex() {
         return exitBlockIndex;
     }
 
     /**
-     * @return null-ok; block of exit block or null if there is none
+     * @return {@code null-ok;} block of exit block or {@code null} if
+     * there is none
      */
     public SsaBasicBlock getExitBlock() {
         return exitBlockIndex < 0 ? null : blocks.get(exitBlockIndex);
     }
 
     /**
-     * @param bi block index or -1 for none
-     * @return rop label or -1 if bi was -1
+     * @param bi block index or {@code -1} for none
+     * @return rop label or {code -1} if {@code bi} was {@code -1}
      */
     public int blockIndexToRopLabel(int bi) {
         if (bi < 0) {
@@ -297,7 +293,7 @@ public final class SsaMethod {
     }
 
     /**
-     * @return the total width, in register units, of the method's 
+     * @return the total width, in register units, of the method's
      * parameters
      */
     public int getParamWidth() {
@@ -305,27 +301,25 @@ public final class SsaMethod {
     }
 
     /**
-     * Returns true if this is a static method.
+     * Returns {@code true} if this is a static method.
      *
-     * @return true if this is a static method
+     * @return {@code true} if this is a static method
      */
     public boolean isStatic() {
         return isStatic;
     }
 
     /**
-     * Borrow a register to use as a temp. Used in the phi removal process.
+     * Borrows a register to use as a temp. Used in the phi removal process.
      * Call returnSpareRegisters() when done.
+     *
      * @param category width (1 or 2) of the register
      * @return register number to use
      */
     public int borrowSpareRegister(int category) {
-        int result;
-
-        result = spareRegisterBase + borrowedSpareRegisters;
+        int result = spareRegisterBase + borrowedSpareRegisters;
 
         borrowedSpareRegisters += category;
-
         registerCount = Math.max(registerCount, result + category);
 
         return result;
@@ -339,7 +333,7 @@ public final class SsaMethod {
     }
 
     /**
-     * @return non-null; basic block list, do not modify.
+     * @return {@code non-null;} basic block list. Do not modify.
      */
     public ArrayList<SsaBasicBlock> getBlocks() {
         return blocks;
@@ -349,12 +343,12 @@ public final class SsaMethod {
      * Returns the count of reachable blocks in this method: blocks that have
      * predecessors (or are the start block)
      *
-     * @return &gt;= 0; number of reachable basic blocks
+     * @return {@code >= 0;} number of reachable basic blocks
      */
     public int getCountReachableBlocks() {
         int ret = 0;
 
-        for (SsaBasicBlock b: blocks) {
+        for (SsaBasicBlock b : blocks) {
             // Blocks that have been disconnected don't count.
             if (b.isReachable()) {
                 ret++;
@@ -366,16 +360,16 @@ public final class SsaMethod {
 
     /**
      * Remaps unversioned registers.
+     *
      * @param mapper maps old registers to new.
      */
     public void mapRegisters(RegisterMapper mapper) {
-
-        for (SsaBasicBlock block: getBlocks()) {
-            for (SsaInsn insn: block.getInsns()) {
+        for (SsaBasicBlock block : getBlocks()) {
+            for (SsaInsn insn : block.getInsns()) {
                 insn.mapRegisters(mapper);
             }
-        }        
-        
+        }
+
         registerCount = mapper.getNewRegisterCount();
         spareRegisterBase = registerCount;
     }
@@ -425,7 +419,7 @@ public final class SsaMethod {
 
         useList = new ArrayList[registerCount];
 
-        for (int i = 0 ; i < registerCount; i++) {
+        for (int i = 0; i < registerCount; i++) {
             useList[i] = new ArrayList();
         }
 
@@ -444,7 +438,7 @@ public final class SsaMethod {
             }
             /**
              * Adds specified insn to the uses list for all of its sources.
-             * @param insn non-null; insn to process
+             * @param insn {@code non-null;} insn to process
              */
             private void addToUses(SsaInsn insn) {
                 RegisterSpecList rl = insn.getSources();
@@ -458,7 +452,7 @@ public final class SsaMethod {
 
         unmodifiableUseList = new List[registerCount];
 
-        for (int i = 0 ; i < registerCount; i++) {
+        for (int i = 0; i < registerCount; i++) {
             unmodifiableUseList[i] = Collections.unmodifiableList(useList[i]);
         }
     }
@@ -466,15 +460,15 @@ public final class SsaMethod {
     /**
      * Updates the use list for a single change in source register.
      *
-     * @param insn non-null; insn being changed
-     * @param oldSource null-ok; The source that was used, if applicable
-     * @param newSource non-null; the new source being used
+     * @param insn {@code non-null;} insn being changed
+     * @param oldSource {@code null-ok;} The source that was used, if
+     * applicable
+     * @param newSource {@code non-null;} the new source being used
      */
-    void onSourceChanged(SsaInsn insn,
+    /*package*/ void onSourceChanged(SsaInsn insn,
             RegisterSpec oldSource, RegisterSpec newSource) {
-
         if (useList == null) return;
-        
+
         if (oldSource != null) {
             int reg = oldSource.getReg();
             useList[reg].remove(insn);
@@ -491,11 +485,13 @@ public final class SsaMethod {
     /**
      * Updates the use list for a source list change.
      *
-     * @param insn insn non-null; insn being changed. insn.getSources()
-     * must return the new source list.
-     * @param oldSources null-ok; list of sources that were previously used.
+     * @param insn {@code insn non-null;} insn being changed.
+     * {@code insn.getSources()} must return the new source list.
+     * @param oldSources {@code null-ok;} list of sources that were
+     * previously used
      */
-    void onSourcesChanged(SsaInsn insn, RegisterSpecList oldSources) {
+    /*package*/ void onSourcesChanged(SsaInsn insn,
+            RegisterSpecList oldSources) {
         if (useList == null) return;
 
         if (oldSources != null) {
@@ -505,27 +501,28 @@ public final class SsaMethod {
         RegisterSpecList sources = insn.getSources();
         int szNew = sources.size();
 
-        for(int i = 0; i < szNew; i++) {
+        for (int i = 0; i < szNew; i++) {
             int reg = sources.get(i).getReg();
             useList[reg].add(insn);
-        }        
+        }
     }
 
     /**
-     * Removes a given <code>insn</code> from the use lists for the given
-     * <code>oldSources</code> (rather than the sources currently
+     * Removes a given {@code insn} from the use lists for the given
+     * {@code oldSources} (rather than the sources currently
      * returned by insn.getSources()).
      *
-     * @param insn non-null; insn in question
-     * @param oldSources null-ok; registers whose use lists <code>insn</code>
-     * should be removed form.
+     * @param insn {@code non-null;} insn in question
+     * @param oldSources {@code null-ok;} registers whose use lists
+     * {@code insn} should be removed form
      */
     private void removeFromUseList(SsaInsn insn, RegisterSpecList oldSources) {
         if (oldSources == null) {
             return;
         }
+
         int szNew = oldSources.size();
-        for(int i = 0; i < szNew; i++) {
+        for (int i = 0; i < szNew; i++) {
             if (!useList[oldSources.get(i).getReg()].remove(insn)) {
                 throw new RuntimeException("use not found");
             }
@@ -536,35 +533,35 @@ public final class SsaMethod {
      * Adds an insn to both the use and def lists. For use when adding
      * a new insn to the method.
      *
-     * @param insn non-null; insn to add
+     * @param insn {@code non-null;} insn to add
      */
-    void onInsnAdded(SsaInsn insn) {
+    /*package*/ void onInsnAdded(SsaInsn insn) {
         onSourcesChanged(insn, null);
         updateOneDefinition(insn, null);
     }
 
     /**
-      * Removes an instruction from use and def lists. For use during
-      * instruction removal.
-      *
-      * @param insn non-null; insn to remove.
-      */
-     void onInsnRemoved(SsaInsn insn) {
-         if (useList != null) {
-             removeFromUseList(insn, insn.getSources());
-         }
+     * Removes an instruction from use and def lists. For use during
+     * instruction removal.
+     *
+     * @param insn {@code non-null;} insn to remove
+     */
+    /*package*/ void onInsnRemoved(SsaInsn insn) {
+        if (useList != null) {
+            removeFromUseList(insn, insn.getSources());
+        }
 
-         RegisterSpec resultReg = insn.getResult();
-         if (definitionList != null && resultReg != null) {
-             definitionList[resultReg.getReg()] = null;
-         }
-     }
+        RegisterSpec resultReg = insn.getResult();
+        if (definitionList != null && resultReg != null) {
+            definitionList[resultReg.getReg()] = null;
+        }
+    }
 
     /**
      * Indicates that the instruction list has changed or the SSA register
      * count has increased, so that internal datastructures that rely on
      * it should be rebuild. In general, the various other on* methods
-     * should be called in preference when changes occur if they are 
+     * should be called in preference when changes occur if they are
      * applicable.
      */
     public void onInsnsChanged() {
@@ -579,19 +576,22 @@ public final class SsaMethod {
     /**
      * Updates a single definition.
      *
-     * @param insn non-null; insn who's result should be recorded as
+     * @param insn {@code non-null;} insn who's result should be recorded as
      * a definition
-     * @param oldResult null-ok; a previous result that should be no longer
-     * considered a definition by this insn
+     * @param oldResult {@code null-ok;} a previous result that should
+     * be no longer considered a definition by this insn
      */
-    void updateOneDefinition(SsaInsn insn, RegisterSpec oldResult) {
+    /*package*/ void updateOneDefinition(SsaInsn insn,
+            RegisterSpec oldResult) {
         if (definitionList == null) return;
+
         if (oldResult != null) {
             int reg = oldResult.getReg();
             definitionList[reg] = null;
         }
 
         RegisterSpec resultReg = insn.getResult();
+
         if (resultReg != null) {
             int reg = resultReg.getReg();
 
@@ -604,7 +604,8 @@ public final class SsaMethod {
     }
 
     /**
-     * Returns the list of all source uses (not results) for a register
+     * Returns the list of all source uses (not results) for a register.
+     *
      * @param reg register in question
      * @return unmodifiable instruction list
      */
@@ -619,6 +620,7 @@ public final class SsaMethod {
 
     /**
      * Returns a modifiable copy of the register use list.
+     *
      * @return modifiable copy of the use-list, indexed by register
      */
     public ArrayList<SsaInsn>[] getUseListCopy() {
@@ -641,7 +643,7 @@ public final class SsaMethod {
      * local variable. Each SSA reg may be associated with at most one
      * local var.
      *
-     * @param spec non-null; ssa reg
+     * @param spec {@code non-null;} ssa reg
      * @return true if reg is ever associated with a local
      */
     public boolean isRegALocal(RegisterSpec spec) {
@@ -656,7 +658,7 @@ public final class SsaMethod {
         if (defn.getLocalAssignment() != null) return true;
 
         // If not, is there a mark-local insn?
-        for (SsaInsn use: getUseListForRegister(spec.getReg())) {
+        for (SsaInsn use : getUseListForRegister(spec.getReg())) {
             Insn insn = use.getOriginalRopInsn();
 
             if (insn != null
@@ -664,12 +666,13 @@ public final class SsaMethod {
                 return true;
             }
         }
-        
+
         return false;
     }
 
     /**
      * Sets the new register count after renaming.
+     *
      * @param newRegCount new register count
      */
     /*package*/ void setNewRegCount(int newRegCount) {
@@ -681,48 +684,52 @@ public final class SsaMethod {
     /**
      * Makes a new SSA register. For use after renaming has completed.
      *
-     * @return &gt;=0 new SSA register.
+     * @return {@code >=0;} new SSA register.
      */
     public int makeNewSsaReg() {
         int reg = registerCount++;
         spareRegisterBase = registerCount;
         onInsnsChanged();
-        return reg;        
+        return reg;
     }
 
     /**
-     * Visit all insns in this method
-     * @param visitor non-null; callback interface
+     * Visits all insns in this method.
+     *
+     * @param visitor {@code non-null;} callback interface
      */
     public void forEachInsn(SsaInsn.Visitor visitor) {
-        for (SsaBasicBlock block: blocks) {
+        for (SsaBasicBlock block : blocks) {
             block.forEachInsn(visitor);
         }
     }
 
     /**
      * Visits each phi insn in this method
-     * @param v non-null; callback
+     * @param v {@code non-null;} callback.
+     *
      */
     public void forEachPhiInsn(PhiInsn.Visitor v) {
-        for (SsaBasicBlock block: blocks) {
+        for (SsaBasicBlock block : blocks) {
             block.forEachPhiInsn(v);
         }
     }
 
 
     /**
-     * Walk the basic block tree in depth-first order, calling the visitor
+     * Walks the basic block tree in depth-first order, calling the visitor
      * method once for every block. This depth-first walk may be run forward
      * from the method entry point or backwards from the method exit points.
+     *
      * @param reverse true if this should walk backwards from the exit points
-     * @param v non-null; callback interface. <code>parent</code>is set
+     * @param v {@code non-null;} callback interface. {@code parent} is set
      * unless this is the root node
      */
     public void forEachBlockDepthFirst(boolean reverse,
             SsaBasicBlock.Visitor v) {
         BitSet visited = new BitSet(blocks.size());
-        // We push the parent first, then the child on the stack
+
+        // We push the parent first, then the child on the stack.
         Stack<SsaBasicBlock> stack = new Stack<SsaBasicBlock>();
 
         SsaBasicBlock rootBlock = reverse ? getExitBlock() : getEntryBlock();
@@ -732,7 +739,7 @@ public final class SsaMethod {
             return;
         }
 
-        stack.add(null);    // start with null parent
+        stack.add(null);    // Start with null parent.
         stack.add(rootBlock);
 
         while (stack.size() > 0) {
@@ -741,7 +748,7 @@ public final class SsaMethod {
 
             if (!visited.get(cur.getIndex())) {
                 BitSet children
-                        = reverse ? cur.getPredecessors() : cur.getSuccessors();
+                    = reverse ? cur.getPredecessors() : cur.getSuccessors();
                 for (int i = children.nextSetBit(0); i >= 0
                         ; i = children.nextSetBit(i + 1)) {
                     stack.add(cur);
@@ -755,10 +762,10 @@ public final class SsaMethod {
 
     /**
      * Visits blocks in dom-tree order, starting at the current node.
-     * The <code>parent</code> parameter of the Visitor.visitBlock callback
+     * The {@code parent} parameter of the Visitor.visitBlock callback
      * is currently always set to null.
      *
-     * @param v non-null; callback interface
+     * @param v {@code non-null;} callback interface
      */
     public void forEachBlockDepthFirstDom(SsaBasicBlock.Visitor v) {
         BitSet visited = new BitSet(getBlocks().size());
@@ -783,12 +790,12 @@ public final class SsaMethod {
     }
 
     /**
-     * Deletes all insns in the set from this method
+     * Deletes all insns in the set from this method.
      *
-     * @param deletedInsns non-null; insns to delete
+     * @param deletedInsns {@code non-null;} insns to delete
      */
     public void deleteInsns(Set<SsaInsn> deletedInsns) {
-        for (SsaBasicBlock block: getBlocks()) {
+        for (SsaBasicBlock block : getBlocks()) {
             ArrayList<SsaInsn> insns = block.getInsns();
 
             for (int i = insns.size() - 1; i >= 0; i--) {
@@ -819,7 +826,7 @@ public final class SsaMethod {
     }
 
     /**
-     * Set "back-convert mode". Set during back-conversion when registers
+     * Sets "back-convert mode". Set during back-conversion when registers
      * are about to be mapped into a non-SSA namespace. When true,
      * use and def lists are unavailable.
      */

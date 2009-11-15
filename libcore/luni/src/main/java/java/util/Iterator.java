@@ -17,17 +17,18 @@
 
 package java.util;
 
-
 /**
- * An Iterator is used to sequence over a collection of objects. Conceptual, an
- * iterator is always positioned between two elements of a collection. A fresh
- * iterator is always positioned in front of the first element.
+ * An {@code Iterator} is used to sequence over a collection of objects.
+ * Conceptually, an iterator is always positioned between two elements of a
+ * collection. A fresh iterator is always positioned in front of the first
+ * element.
  * 
  * If a collection has been changed since its creation, methods {@code next} and
  * {@code hasNext()} may throw a {@code ConcurrentModificationException}.
  * Iterators with this behavior are called fail-fast iterators.
  * 
- * @since Android 1.0
+ * @param <E>
+ *            the type of object returned by the iterator.
  */
 public interface Iterator<E> {
     /**
@@ -36,7 +37,6 @@ public interface Iterator<E> {
      * 
      * @return {@code true} if there are more elements, {@code false} otherwise.
      * @see #next
-     * @since Android 1.0
      */
     public boolean hasNext();
 
@@ -48,7 +48,6 @@ public interface Iterator<E> {
      * @throws NoSuchElementException
      *             if there are no more elements.
      * @see #hasNext
-     * @since Android 1.0
      */
     public E next();
 
@@ -62,7 +61,6 @@ public interface Iterator<E> {
      * @throws IllegalStateException
      *             if {@code next} has not been called, or {@code remove} has
      *             already been called after the last call to {@code next}.
-     * @since Android 1.0
      */
     public void remove();
 }

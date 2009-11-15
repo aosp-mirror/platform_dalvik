@@ -23,7 +23,6 @@ package java.lang;
  * loading and linking class files.
  * 
  * @see Error
- * @since Android 1.0
  */
 public class LinkageError extends Error {
 
@@ -32,8 +31,6 @@ public class LinkageError extends Error {
     /**
      * Constructs a new {@code LinkageError} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public LinkageError() {
         super();
@@ -45,7 +42,6 @@ public class LinkageError extends Error {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public LinkageError(String detailMessage) {
         super(detailMessage);

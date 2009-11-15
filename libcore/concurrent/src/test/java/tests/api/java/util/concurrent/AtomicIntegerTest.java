@@ -48,6 +48,7 @@ public class AtomicIntegerTest extends JSR166TestCase {
         assertEquals(-3,ai.get());
         
     }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */

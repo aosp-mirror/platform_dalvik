@@ -19,29 +19,21 @@ package java.sql;
 
 /**
  * Provides information about the columns returned in a {@code ResultSet}.
- * 
- * @since Android 1.0
  */
 public interface ResultSetMetaData {
 
     /**
      * Indicates that a column cannot contain {@code NULL} values.
-     * 
-     * @since Android 1.0
      */
     public static final int columnNoNulls = 0;
 
     /**
      * Indicates that a column can contain {@code NULL} values.
-     * 
-     * @since Android 1.0
      */
     public static final int columnNullable = 1;
 
     /**
      * Indicates that it is unknown whether a column can contain {@code NULL}s or not.
-     * 
-     * @since Android 1.0
      */
     public static final int columnNullableUnknown = 2;
 
@@ -53,7 +45,6 @@ public interface ResultSetMetaData {
      * @return the catalog title.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getCatalogName(int column) throws SQLException;
 
@@ -67,7 +58,6 @@ public interface ResultSetMetaData {
      * @throws SQLException
      *             if there is a database error.
      * @see ResultSet#getObject
-     * @since Android 1.0
      */
     public String getColumnClassName(int column) throws SQLException;
 
@@ -77,7 +67,6 @@ public interface ResultSetMetaData {
      * @return the column count.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int getColumnCount() throws SQLException;
 
@@ -90,7 +79,6 @@ public interface ResultSetMetaData {
      * @return the column's max width.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int getColumnDisplaySize(int column) throws SQLException;
 
@@ -103,7 +91,6 @@ public interface ResultSetMetaData {
      * @return the column's title.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getColumnLabel(int column) throws SQLException;
 
@@ -115,7 +102,6 @@ public interface ResultSetMetaData {
      * @return the column title.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getColumnName(int column) throws SQLException;
 
@@ -128,7 +114,6 @@ public interface ResultSetMetaData {
      * @throws SQLException
      *             if there is a database error.
      * @see Types
-     * @since Android 1.0
      */
     public int getColumnType(int column) throws SQLException;
 
@@ -140,7 +125,6 @@ public interface ResultSetMetaData {
      * @return the type name.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getColumnTypeName(int column) throws SQLException;
 
@@ -152,7 +136,6 @@ public interface ResultSetMetaData {
      * @return the precision.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int getPrecision(int column) throws SQLException;
 
@@ -165,7 +148,6 @@ public interface ResultSetMetaData {
      * @return number of decimal places.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int getScale(int column) throws SQLException;
 
@@ -177,7 +159,6 @@ public interface ResultSetMetaData {
      * @return the name of the columns schema.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getSchemaName(int column) throws SQLException;
 
@@ -189,7 +170,6 @@ public interface ResultSetMetaData {
      * @return the table title.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public String getTableName(int column) throws SQLException;
 
@@ -203,7 +183,6 @@ public interface ResultSetMetaData {
      *         otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isAutoIncrement(int column) throws SQLException;
 
@@ -216,7 +195,6 @@ public interface ResultSetMetaData {
      * @return {@code true} if case matters, {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isCaseSensitive(int column) throws SQLException;
 
@@ -228,7 +206,6 @@ public interface ResultSetMetaData {
      * @return {@code true} if it is a monetary value, {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isCurrency(int column) throws SQLException;
 
@@ -241,7 +218,6 @@ public interface ResultSetMetaData {
      * @return {@code true} if the write is guaranteed, {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isDefinitelyWritable(int column) throws SQLException;
 
@@ -253,7 +229,6 @@ public interface ResultSetMetaData {
      * @return {@code true} if it is nullable, {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public int isNullable(int column) throws SQLException;
 
@@ -266,7 +241,6 @@ public interface ResultSetMetaData {
      * @return {@code true} if the column is read-only, {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isReadOnly(int column) throws SQLException;
 
@@ -279,7 +253,6 @@ public interface ResultSetMetaData {
      *         otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isSearchable(int column) throws SQLException;
 
@@ -292,7 +265,6 @@ public interface ResultSetMetaData {
      * @return {@code true} if they are signed, {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isSigned(int column) throws SQLException;
 
@@ -305,7 +277,6 @@ public interface ResultSetMetaData {
      * @return {@code true} if it is possible to write, {@code false} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public boolean isWritable(int column) throws SQLException;
 }

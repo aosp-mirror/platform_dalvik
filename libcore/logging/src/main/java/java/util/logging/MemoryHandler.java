@@ -22,7 +22,6 @@ import java.security.PrivilegedExceptionAction;
 
 import org.apache.harmony.logging.internal.nls.Messages;
 
-
 /**
  * A {@code Handler} put the description of log events into a cycled memory
  * buffer.
@@ -30,68 +29,61 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * Mostly this {@code MemoryHandler} just puts the given {@code LogRecord} into
  * the internal buffer and doesn't perform any formatting or any other process.
  * When the buffer is full, the earliest buffered records will be discarded.
- * </p>
  * <p>
  * Every {@code MemoryHandler} has a target handler, and push action can be
  * triggered so that all buffered records will be output to the target handler
  * and normally the latter will publish the records. After the push action, the
  * buffer will be cleared.
- * </p>
  * <p>
- * The push action can be triggered in three ways:
- * <ul>
- * <li>The push method is called explicitly</li>
- * <li>When a new {@code LogRecord} is put into the internal buffer, and it has
- * a level which is not less than the specified push level.</li>
- * <li>A subclass extends this {@code MemoryHandler} and call push method
- * implicitly according to some criteria.</li>
- * </ul>
- * </p>
+ * The push method can be called directly, but will also be called automatically
+ * if a new <code>LogRecord</code> is added that has a level greater than or
+ * equal to than the value defined for the property
+ * java.util.logging.MemoryHandler.push.
  * <p>
  * {@code MemoryHandler} will read following {@code LogManager} properties for
  * initialization, if given properties are not defined or has invalid values,
  * default value will be used.
  * <ul>
- * <li>java.util.logging.MemoryHandler.level specifies the level for this
- * {@code Handler}, defaults to {@code Level.ALL}.</li>
  * <li>java.util.logging.MemoryHandler.filter specifies the {@code Filter}
  * class name, defaults to no {@code Filter}.</li>
- * <li>java.util.logging.MemoryHandler.size specifies the buffer size in number
- * of {@code LogRecord}, defaults to 1000.</li>
+ * <li>java.util.logging.MemoryHandler.level specifies the level for this
+ * {@code Handler}, defaults to {@code Level.ALL}.</li>
  * <li>java.util.logging.MemoryHandler.push specifies the push level, defaults
  * to level.SEVERE.</li>
+ * <li>java.util.logging.MemoryHandler.size specifies the buffer size in number
+ * of {@code LogRecord}, defaults to 1000.</li>
  * <li>java.util.logging.MemoryHandler.target specifies the class of the target
  * {@code Handler}, no default value, which means this property must be
  * specified either by property setting or by constructor.</li>
  * </ul>
- * </p>
  */
 public class MemoryHandler extends Handler {
 
-    //default maximum buffered number of LogRecord 
+    // default maximum buffered number of LogRecord
     private static final int DEFAULT_SIZE = 1000;
-    //target handler
+
+    // target handler
     private Handler target;
-    
-    //buffer size
+
+    // buffer size
     private int size = DEFAULT_SIZE;
-    
-    //push level
+
+    // push level
     private Level push = Level.SEVERE;
 
-    //LogManager instance for convenience
+    // LogManager instance for convenience
     private final LogManager manager = LogManager.getLogManager();
-    
-    //buffer
+
+    // buffer
     private LogRecord[] buffer;
-    
-    //current position in buffer
+
+    // current position in buffer
     private int cursor;
-    
+
     /**
      * Default constructor, construct and init a {@code MemoryHandler} using
      * {@code LogManager} properties or default values.
-     * 
+     *
      * @throws RuntimeException
      *             if property value are invalid and no default value could be
      *             used.
@@ -99,55 +91,57 @@ public class MemoryHandler extends Handler {
     public MemoryHandler() {
         super();
         String className = this.getClass().getName();
-        //init target
-        final String targetName = manager.getProperty(className+".target"); //$NON-NLS-1$
+        // init target
+        final String targetName = manager.getProperty(className + ".target"); //$NON-NLS-1$
         try {
-            Class<?> targetClass = AccessController.doPrivileged(new PrivilegedExceptionAction<Class<?>>(){
-                public Class<?> run() throws Exception{
-                    ClassLoader loader = Thread.currentThread().getContextClassLoader();
-                    if(loader == null){
-                        loader = ClassLoader.getSystemClassLoader();
-                    }
-                    return loader.loadClass(targetName);
-                }
-            });
+            Class<?> targetClass = AccessController
+                    .doPrivileged(new PrivilegedExceptionAction<Class<?>>() {
+                        public Class<?> run() throws Exception {
+                            ClassLoader loader = Thread.currentThread()
+                                    .getContextClassLoader();
+                            if (loader == null) {
+                                loader = ClassLoader.getSystemClassLoader();
+                            }
+                            return loader.loadClass(targetName);
+                        }
+                    });
             target = (Handler) targetClass.newInstance();
         } catch (Exception e) {
             // logging.10=Cannot load target handler:{0}
             throw new RuntimeException(Messages.getString("logging.10", //$NON-NLS-1$
                     targetName));
         }
-        //init size
-        String sizeString = manager.getProperty(className+".size"); //$NON-NLS-1$
+        // init size
+        String sizeString = manager.getProperty(className + ".size"); //$NON-NLS-1$
         if (null != sizeString) {
             try {
                 size = Integer.parseInt(sizeString);
-                if(size <= 0){
+                if (size <= 0) {
                     size = DEFAULT_SIZE;
                 }
             } catch (Exception e) {
-                printInvalidPropMessage(className+".size", sizeString, e); //$NON-NLS-1$
+                printInvalidPropMessage(className + ".size", sizeString, e); //$NON-NLS-1$
             }
         }
-        //init push level
-        String pushName = manager.getProperty(className+".push"); //$NON-NLS-1$
+        // init push level
+        String pushName = manager.getProperty(className + ".push"); //$NON-NLS-1$
         if (null != pushName) {
             try {
                 push = Level.parse(pushName);
             } catch (Exception e) {
-                printInvalidPropMessage(className+".push", pushName, e); //$NON-NLS-1$
+                printInvalidPropMessage(className + ".push", pushName, e); //$NON-NLS-1$
             }
         }
-        //init other properties which are common for all Handler
-        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null);  //$NON-NLS-1$//$NON-NLS-2$
+        // init other properties which are common for all Handler
+        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null); //$NON-NLS-1$//$NON-NLS-2$
         buffer = new LogRecord[size];
     }
-    
+
     /**
      * Construct and init a {@code MemoryHandler} using given target, size and
      * push level, other properties using {@code LogManager} properties or
      * default values.
-     * 
+     *
      * @param target
      *            the given {@code Handler} to output
      * @param size
@@ -156,7 +150,7 @@ public class MemoryHandler extends Handler {
      * @param pushLevel
      *            the push level
      * @throws IllegalArgumentException
-     *             if {@code size}<=0
+     *             if {@code size <= 0}
      * @throws RuntimeException
      *             if property value are invalid and no default value could be
      *             used.
@@ -171,13 +165,13 @@ public class MemoryHandler extends Handler {
         this.target = target;
         this.size = size;
         this.push = pushLevel;
-        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null);  //$NON-NLS-1$//$NON-NLS-2$
+        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null); //$NON-NLS-1$//$NON-NLS-2$
         buffer = new LogRecord[size];
     }
-    
+
     /**
      * Close this handler and target handler, free all associated resources.
-     * 
+     *
      * @throws SecurityException
      *             if security manager exists and it determines that caller does
      *             not have the required permissions to control this handler.
@@ -204,7 +198,7 @@ public class MemoryHandler extends Handler {
      * Furthermore if the record's level is not less than the push level, the
      * push action is triggered to output all the buffered records to the target
      * handler, and the target handler will publish them.
-     * 
+     *
      * @param record
      *            the log record
      */
@@ -225,7 +219,7 @@ public class MemoryHandler extends Handler {
 
     /**
      * Return the push level.
-     * 
+     *
      * @return the push level
      */
     public Level getPushLevel() {
@@ -233,18 +227,14 @@ public class MemoryHandler extends Handler {
     }
 
     /**
-     * <p>
      * Check if given {@code LogRecord} would be put into this
      * {@code MemoryHandler}'s internal buffer.
-     * </p>
      * <p>
      * The given {@code LogRecord} is loggable if and only if it has appropriate
      * level and it pass any associated filter's check.
-     * </p>
      * <p>
      * Note that the push level is not used for this check.
-     * </p>
-     * 
+     *
      * @param record
      *            the given {@code LogRecord}
      * @return the given {@code LogRecord} if it should be logged, {@code false}
@@ -261,13 +251,13 @@ public class MemoryHandler extends Handler {
      */
     public void push() {
         for (int i = cursor; i < size; i++) {
-            if(null != buffer[i]) {
+            if (null != buffer[i]) {
                 target.publish(buffer[i]);
             }
             buffer[i] = null;
         }
         for (int i = 0; i < cursor; i++) {
-            if(null != buffer[i]) {
+            if (null != buffer[i]) {
                 target.publish(buffer[i]);
             }
             buffer[i] = null;
@@ -276,15 +266,15 @@ public class MemoryHandler extends Handler {
     }
 
     /**
-     * Set the push level. The push level is used to check the push action 
+     * Set the push level. The push level is used to check the push action
      * triggering. When a new {@code LogRecord} is put into the internal
-     * buffer and its level is not less than the push level, the push action 
+     * buffer and its level is not less than the push level, the push action
      * will be triggered. Note that set new push level won't trigger push action.
-     * 
+     *
      * @param newLevel
      *                 the new level to set.
      * @throws SecurityException
-     *                 if security manager exists and it determines that caller 
+     *                 if security manager exists and it determines that caller
      *                 does not have the required permissions to control this handler.
      */
     public void setPushLevel(Level newLevel) {

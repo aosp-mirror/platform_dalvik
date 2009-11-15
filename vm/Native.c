@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Native method resolution.
  *
@@ -61,6 +62,10 @@ void dvmNativeShutdown(void)
  * Initializes method's class if necessary.
  *
  * An exception is thrown on resolution failure.
+ *
+ * (This should not be taking "const Method*", because it modifies the
+ * structure, but the declaration needs to match the DalvikBridgeFunc
+ * type definition.)
  */
 void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
@@ -107,11 +112,9 @@ void dvmResolveNativeMethod(const u4* args, JValue* pResult,
     /* now scan any DLLs we have loaded for JNI signatures */
     func = lookupSharedLibMethod(method);
     if (func != NULL) {
-        if (dvmIsSynchronizedMethod(method))
-            dvmSetNativeFunc(method, dvmCallSynchronizedJNIMethod, func);
-        else
-            dvmSetNativeFunc(method, dvmCallJNIMethod, func);
-        dvmCallJNIMethod(args, pResult, method, self);
+        /* found it, point it at the JNI bridge and then call it */
+        dvmUseJNIBridge((Method*) method, func);
+        (*method->nativeFunc)(args, pResult, method, self);
         return;
     }
 
@@ -467,16 +470,18 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
      * doesn't have to search through LD_LIBRARY_PATH.  (It may do so to
      * resolve this library's dependencies though.)
      *
-     * Failures here are expected when java.library.path has several entries.
+     * Failures here are expected when java.library.path has several entries
+     * and we have to hunt for the lib.
      *
      * The current android-arm dynamic linker implementation tends to
      * return "Cannot find library" from dlerror() regardless of the actual
-     * problem.  A more useful diagnostic may be sent to stdout/stderr,
-     * but often that's not visible.  Some things to try:
+     * problem.  A more useful diagnostic may be sent to stdout/stderr if
+     * linker diagnostics are enabled, but that's not usually visible in
+     * Android apps.  Some things to try:
      *   - make sure the library exists on the device
      *   - verify that the right path is being opened (the debug log message
      *     above can help with that)
-     *   - check to see if the library is valid
+     *   - check to see if the library is valid (e.g. not zero bytes long)
      *   - check config/prelink-linux-arm.map to ensure that the library
      *     is listed and is not being overrun by the previous entry (if
      *     loading suddenly stops working on a prelinked library, this is

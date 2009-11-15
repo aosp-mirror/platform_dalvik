@@ -25,12 +25,13 @@ import java.security.KeyStore;
 /**
  * The parameters for {@code KeyManager}s. The parameters are a list of
  * {@code KeyStore.Builder}s.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
+ * @see KeyStore.Builder
  */
 public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
 
-    private List ksbuilders;
+    private final List<KeyStore.Builder> ksbuilders;
 
     /**
      * Creates a new {@code KeyStoreBuilderParameters} with the specified key
@@ -38,13 +39,10 @@ public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
      * 
      * @param builder
      *            the key store builder.
-     * @since Android 1.0
      */
     public KeyStoreBuilderParameters(KeyStore.Builder builder) {
-        ksbuilders = new ArrayList();
-        if (builder != null) {
-            ksbuilders.add(builder);
-        }
+        super();
+        ksbuilders = Collections.singletonList(builder);
     }
 
     /**
@@ -55,16 +53,17 @@ public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
      *            the list of key store builders
      * @throws IllegalArgumentException
      *             if the specified list is empty.
-     * @since Android 1.0
      */
+    @SuppressWarnings("unchecked")
     public KeyStoreBuilderParameters(List parameters) {
+        super();
         if (parameters == null) {
             throw new NullPointerException("Builders list is null");
         }
         if (parameters.isEmpty()) {
             throw new IllegalArgumentException("Builders list is empty");
         }
-        ksbuilders = new ArrayList(parameters);
+        ksbuilders = Collections.unmodifiableList(new ArrayList<KeyStore.Builder>(parameters));
     }
 
     /**
@@ -72,9 +71,9 @@ public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
      * with this parameters instance.
      * 
      * @return the unmodifiable list of {@code KeyStore.Builder}s.
-     * @since Android 1.0
      */
+    @SuppressWarnings("unchecked")
     public List getParameters() {
-        return Collections.unmodifiableList(ksbuilders);
+        return ksbuilders;
     }
 }

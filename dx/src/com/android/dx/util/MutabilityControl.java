@@ -36,7 +36,7 @@ public class MutabilityControl {
     /**
      * Constructs an instance, explicitly indicating the mutability.
      *
-     * @param mutable <code>true</code> iff this instance is mutable
+     * @param mutable {@code true} iff this instance is mutable
      */
     public MutabilityControl(boolean mutable) {
         this.mutable = mutable;
@@ -51,9 +51,9 @@ public class MutabilityControl {
 
     /**
      * Checks to see whether or not this instance is immutable. This is the
-     * same as calling <code>!isMutable()</code>.
+     * same as calling {@code !isMutable()}.
      *
-     * @return <code>true</code> iff this instance is immutable
+     * @return {@code true} iff this instance is immutable
      */
     public final boolean isImmutable() {
         return !mutable;
@@ -62,7 +62,7 @@ public class MutabilityControl {
     /**
      * Checks to see whether or not this instance is mutable.
      *
-     * @return <code>true</code> iff this instance is mutable
+     * @return {@code true} iff this instance is mutable
      */
     public final boolean isMutable() {
         return mutable;

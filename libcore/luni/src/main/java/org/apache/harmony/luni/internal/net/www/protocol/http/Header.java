@@ -118,7 +118,7 @@ public class Header implements Cloneable {
     /**
      * Set a field with the specified value. If the field is not found, it is
      * added. If the field is found, the existing value(s) are overwritten.
-     * 
+     *
      * @param key
      * @param value
      */
@@ -148,8 +148,10 @@ public class Header implements Cloneable {
      * Provides an unmodifiable map with all String header names mapped to their
      * String values. The map keys are Strings and the values are unmodifiable
      * Lists of Strings.
-     * 
+     *
      * @return an unmodifiable map of the headers
+     *
+     * @since 1.4
      */
     public Map<String, List<String>> getFieldMap() {
         Map<String, List<String>> result = new HashMap<String, List<String>>(
@@ -164,7 +166,7 @@ public class Header implements Cloneable {
     /**
      * Returns the element at <code>pos</code>, null if no such element
      * exist.
-     * 
+     *
      * @return java.lang.String the value of the key
      * @param pos
      *            int the position to look for
@@ -179,8 +181,8 @@ public class Header implements Cloneable {
     /**
      * Returns the key of this header at <code>pos</code>, null if there are
      * fewer keys in the header
-     * 
-     * 
+     *
+     *
      * @return the key the desired position
      * @param pos
      *            the position to look for
@@ -193,11 +195,12 @@ public class Header implements Cloneable {
     }
 
     /**
-     * Returns the value corresponding to the specified key, null if no such key
-     * exists.
-     * 
+     * Returns the value corresponding to the specified key.
+     *
      * @param key
-     * @return
+     *            the key to look up.
+     * @return Answers the value for the given key, or <code>null</code> if no
+     *         such key exists.
      */
     public String get(String key) {
         LinkedList<String> result = keyTable.get(key.toLowerCase());
@@ -209,8 +212,8 @@ public class Header implements Cloneable {
 
     /**
      * Returns the number of keys stored in this header
-     * 
-     * @return
+     *
+     * @return the number of keys.
      */
     public int length() {
         return props.size() / 2;

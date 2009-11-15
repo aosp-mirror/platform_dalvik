@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package java.util.logging;
 
 import java.security.AccessController;
@@ -30,8 +29,6 @@ import java.util.ResourceBundle;
  * {@code XMLFormatter} uses the output handler's encoding if it is specified,
  * otherwise the default platform encoding is used instead. UTF-8 is the
  * recommended encoding.
- * 
- * @since Android 1.0
  */
 public class XMLFormatter extends Formatter {
 
@@ -42,8 +39,6 @@ public class XMLFormatter extends Formatter {
 
     /**
      * Constructs a new {@code XMLFormatter}.
-     * 
-     * @since Android 1.0
      */
     public XMLFormatter() {
         super();
@@ -51,61 +46,63 @@ public class XMLFormatter extends Formatter {
 
     /**
      * Converts a {@code LogRecord} into an XML string.
-     * 
+     *
      * @param r
      *            the log record to be formatted.
      * @return the log record formatted as an XML string.
-     * @since Android 1.0
      */
+    @SuppressWarnings("nls")
     @Override
     public String format(LogRecord r) {
-        //call a method of LogRecord to ensure not null
+        // call a method of LogRecord to ensure not null
         long time = r.getMillis();
-        //format to date
-        String date = MessageFormat.format("{0, date} {0, time}", //$NON-NLS-1$
+        // format to date
+        String date = MessageFormat.format("{0, date} {0, time}",
                 new Object[] { new Date(time) });
 
         StringBuilder sb = new StringBuilder();
-        sb.append(("<record>")).append(lineSeperator); //$NON-NLS-1$
-        sb.append(indent).append(("<date>")).append(date).append(("</date>")) //$NON-NLS-1$ //$NON-NLS-2$
+        sb.append(("<record>")).append(lineSeperator);
+        sb.append(indent).append(("<date>")).append(date).append(("</date>"))
                 .append(lineSeperator);
-        sb.append(indent).append(("<millis>")).append(time).append( //$NON-NLS-1$
-                ("</millis>")).append(lineSeperator); //$NON-NLS-1$
-        sb.append(indent).append(("<sequence>")).append(r.getSequenceNumber()) //$NON-NLS-1$
-                .append(("</sequence>")).append(lineSeperator); //$NON-NLS-1$
+        sb.append(indent).append(("<millis>")).append(time).append(
+                ("</millis>")).append(lineSeperator);
+        sb.append(indent).append(("<sequence>")).append(r.getSequenceNumber())
+                .append(("</sequence>")).append(lineSeperator);
         if (null != r.getLoggerName()) {
-            sb.append(indent).append(("<logger>")).append(r.getLoggerName()) //$NON-NLS-1$
-                    .append(("</logger>")).append(lineSeperator); //$NON-NLS-1$
+            sb.append(indent).append(("<logger>")).append(r.getLoggerName())
+                    .append(("</logger>")).append(lineSeperator);
         }
-        sb.append(indent).append(("<level>")).append(r.getLevel().getName()) //$NON-NLS-1$
-                .append(("</level>")).append(lineSeperator); //$NON-NLS-1$
+        sb.append(indent).append(("<level>")).append(r.getLevel().getName())
+                .append(("</level>")).append(lineSeperator);
         if (null != r.getSourceClassName()) {
-            sb.append(indent).append(("<class>")) //$NON-NLS-1$
-                    .append(r.getSourceClassName()).append(("</class>")) //$NON-NLS-1$
+            sb.append(indent).append(("<class>"))
+                    .append(r.getSourceClassName()).append(("</class>"))
                     .append(lineSeperator);
         }
         if (null != r.getSourceMethodName()) {
-            sb.append(indent).append(("<method>")).append( //$NON-NLS-1$
-                    r.getSourceMethodName()).append(("</method>")).append( //$NON-NLS-1$
+            sb.append(indent).append(("<method>")).append(
+                    r.getSourceMethodName()).append(("</method>")).append(
                     lineSeperator);
         }
-        sb.append(indent).append(("<thread>")).append(r.getThreadID()).append( //$NON-NLS-1$
-                ("</thread>")).append(lineSeperator); //$NON-NLS-1$
+        sb.append(indent).append(("<thread>")).append(r.getThreadID()).append(
+                ("</thread>")).append(lineSeperator);
         formatMessages(r, sb);
         Object[] params;
         if ((params = r.getParameters()) != null) {
             for (Object element : params) {
-                sb.append(indent).append(("<param>")).append(element).append( //$NON-NLS-1$
-                        ("</param>")).append(lineSeperator); //$NON-NLS-1$
+                sb.append(indent).append(("<param>")).append(element).append(
+                        ("</param>")).append(lineSeperator);
             }
         }
         formatThrowable(r, sb);
-        sb.append(("</record>")).append(lineSeperator); //$NON-NLS-1$
+        sb.append(("</record>")).append(lineSeperator);
         return sb.toString();
     }
 
+    @SuppressWarnings("nls")
     private void formatMessages(LogRecord r, StringBuilder sb) {
-        //get localized message if has, but don't call Formatter.formatMessage to parse pattern string
+        // get localized message if has, but don't call Formatter.formatMessage
+        // to parse pattern string
         ResourceBundle rb = r.getResourceBundle();
         String pattern = r.getMessage();
         if (null != rb && null != pattern) {
@@ -118,49 +115,50 @@ public class XMLFormatter extends Formatter {
 
             if (message == null) {
                 message = pattern;
-                sb.append(indent).append(("<message>")).append(message).append( //$NON-NLS-1$
-                        ("</message>")).append(lineSeperator); //$NON-NLS-1$
+                sb.append(indent).append(("<message>")).append(message).append(
+                        ("</message>")).append(lineSeperator);
             } else {
-                sb.append(indent).append(("<message>")).append(message).append( //$NON-NLS-1$
-                        ("</message>")).append(lineSeperator); //$NON-NLS-1$
-                sb.append(indent).append(("<key>")).append(pattern).append( //$NON-NLS-1$
-                        ("</key>")).append(lineSeperator); //$NON-NLS-1$
-                sb.append(indent).append(("<catalog>")).append( //$NON-NLS-1$
-                        r.getResourceBundleName()).append(("</catalog>")) //$NON-NLS-1$
+                sb.append(indent).append(("<message>")).append(message).append(
+                        ("</message>")).append(lineSeperator);
+                sb.append(indent).append(("<key>")).append(pattern).append(
+                        ("</key>")).append(lineSeperator);
+                sb.append(indent).append(("<catalog>")).append(
+                        r.getResourceBundleName()).append(("</catalog>"))
                         .append(lineSeperator);
             }
-        } else if(null != pattern){
-            sb.append(indent).append(("<message>")).append(pattern).append( //$NON-NLS-1$
-                    ("</message>")).append(lineSeperator); //$NON-NLS-1$
-        } else{
-            sb.append(indent).append(("<message/>")); //$NON-NLS-1$
+        } else if (null != pattern) {
+            sb.append(indent).append(("<message>")).append(pattern).append(
+                    ("</message>")).append(lineSeperator);
+        } else {
+            sb.append(indent).append(("<message/>"));
         }
     }
 
+    @SuppressWarnings("nls")
     private void formatThrowable(LogRecord r, StringBuilder sb) {
         Throwable t;
         if ((t = r.getThrown()) != null) {
-            sb.append(indent).append("<exception>").append(lineSeperator); //$NON-NLS-1$
-            sb.append(indent).append(indent).append("<message>").append( //$NON-NLS-1$
-                    t.toString()).append("</message>").append(lineSeperator); //$NON-NLS-1$
-            //format throwable's stack trace
+            sb.append(indent).append("<exception>").append(lineSeperator);
+            sb.append(indent).append(indent).append("<message>").append(
+                    t.toString()).append("</message>").append(lineSeperator);
+            // format throwable's stack trace
             StackTraceElement[] elements = t.getStackTrace();
             for (StackTraceElement e : elements) {
-                sb.append(indent).append(indent).append("<frame>").append( //$NON-NLS-1$
+                sb.append(indent).append(indent).append("<frame>").append(
                         lineSeperator);
                 sb.append(indent).append(indent).append(indent).append(
-                        "<class>").append(e.getClassName()).append("</class>")  //$NON-NLS-1$//$NON-NLS-2$
+                        "<class>").append(e.getClassName()).append("</class>")
                         .append(lineSeperator);
                 sb.append(indent).append(indent).append(indent).append(
-                        "<method>").append(e.getMethodName()).append( //$NON-NLS-1$
-                        "</method>").append(lineSeperator); //$NON-NLS-1$
+                        "<method>").append(e.getMethodName()).append(
+                        "</method>").append(lineSeperator);
                 sb.append(indent).append(indent).append(indent)
-                        .append("<line>").append(e.getLineNumber()).append( //$NON-NLS-1$
-                                "</line>").append(lineSeperator); //$NON-NLS-1$
-                sb.append(indent).append(indent).append("</frame>").append( //$NON-NLS-1$
+                        .append("<line>").append(e.getLineNumber()).append(
+                                "</line>").append(lineSeperator);
+                sb.append(indent).append(indent).append("</frame>").append(
                         lineSeperator);
             }
-            sb.append(indent).append("</exception>").append(lineSeperator); //$NON-NLS-1$
+            sb.append(indent).append("</exception>").append(lineSeperator);
         }
     }
 
@@ -168,54 +166,48 @@ public class XMLFormatter extends Formatter {
      * Returns the header string for a set of log records formatted as XML
      * strings, using the output handler's encoding if it is defined, otherwise
      * using the default platform encoding.
-     * 
+     *
      * @param h
      *            the output handler, may be {@code null}.
      * @return the header string for log records formatted as XML strings.
-     * @since Android 1.0
      */
+    @SuppressWarnings("nls")
     @Override
     public String getHead(Handler h) {
         String encoding = null;
-        if(null != h) {
+        if (null != h) {
             encoding = h.getEncoding();
         }
         if (null == encoding) {
-            encoding = getSystemProperty("file.encoding"); //$NON-NLS-1$
+            encoding = getSystemProperty("file.encoding");
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<?xml version=\"1.0\" encoding=\"").append(encoding).append( //$NON-NLS-1$
-                "\" standalone=\"no\"?>").append(lineSeperator); //$NON-NLS-1$
-        sb.append("<!DOCTYPE log SYSTEM \"logger.dtd\">").append(lineSeperator); //$NON-NLS-1$
-        sb.append(("<log>")); //$NON-NLS-1$
+        sb.append("<?xml version=\"1.0\" encoding=\"").append(encoding).append(
+                "\" standalone=\"no\"?>").append(lineSeperator);
+        sb.append("<!DOCTYPE log SYSTEM \"logger.dtd\">").append(lineSeperator);
+        sb.append(("<log>"));
         return sb.toString();
     }
 
     /**
      * Returns the tail string for a set of log records formatted as XML
      * strings.
-     * 
+     *
      * @param h
      *            the output handler, may be {@code null}.
      * @return the tail string for log records formatted as XML strings.
-     * @since Android 1.0
      */
     @Override
-    @SuppressWarnings("unused")
     public String getTail(Handler h) {
         return "</log>"; //$NON-NLS-1$
     }
 
-    //use privilege code to get system property
+    // use privilege code to get system property
     private static String getSystemProperty(final String key) {
-        return AccessController.doPrivileged(
-          new PrivilegedAction<String>() {
+        return AccessController.doPrivileged(new PrivilegedAction<String>() {
             public String run() {
                 return System.getProperty(key);
             }
         });
     }
-
 }
-
-

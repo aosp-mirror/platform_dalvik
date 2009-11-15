@@ -30,11 +30,11 @@ public final class PlainCstInsn
     /**
      * Constructs an instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param result null-ok; spec for the result, if any
-     * @param sources non-null; specs for all the sources
-     * @param cst non-null; the constant
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param result {@code null-ok;} spec for the result, if any
+     * @param sources {@code non-null;} specs for all the sources
+     * @param cst {@code non-null;} the constant
      */
     public PlainCstInsn(Rop opcode, SourcePosition position,
                         RegisterSpec result, RegisterSpecList sources,

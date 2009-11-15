@@ -42,11 +42,11 @@ public final class FillArrayDataInsn
     /**
      * Constructs an instance.
      * 
-     * @param opcode non-null; the opcode
-     * @param position non-null; source position
-     * @param sources non-null; specs for all the sources
-     * @param initValues non-null; list of initial values to fill the array
-     * @param cst non-null; type of the new array
+     * @param opcode {@code non-null;} the opcode
+     * @param position {@code non-null;} source position
+     * @param sources {@code non-null;} specs for all the sources
+     * @param initValues {@code non-null;} list of initial values to fill the array
+     * @param cst {@code non-null;} type of the new array
      */
     public FillArrayDataInsn(Rop opcode, SourcePosition position,
                              RegisterSpecList sources,
@@ -71,7 +71,7 @@ public final class FillArrayDataInsn
 
     /**
      * Return the list of init values
-     * @return non-null; list of init values
+     * @return {@code non-null;} list of init values
      */
     public ArrayList<Constant> getInitValues() {
         return initValues;
@@ -79,7 +79,7 @@ public final class FillArrayDataInsn
 
     /**
      * Return the type of the newly created array
-     * @return non-null; array type
+     * @return {@code non-null;} array type
      */
     public Constant getConstant() {
         return arrayType;

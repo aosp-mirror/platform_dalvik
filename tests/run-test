@@ -57,6 +57,9 @@ while true; do
     elif [ "x$1" = "x--reference" ]; then
         RUN="${progdir}/etc/reference-run-test-classes"
         shift
+    elif [ "x$1" = "x--jit" ]; then
+        run_args="${run_args} --jit"
+        shift
     elif [ "x$1" = "x--fast" ]; then
         run_args="${run_args} --fast"
         shift
@@ -78,6 +81,9 @@ while true; do
         shift
     elif [ "x$1" = "x--no-optimize" ]; then
         run_args="${run_args} --no-optimize"
+        shift
+    elif [ "x$1" = "x--no-precise" ]; then
+        run_args="${run_args} --no-precise"
         shift
     elif [ "x$1" = "x--valgrind" ]; then
         run_args="${run_args} --valgrind"
@@ -141,11 +147,13 @@ if [ "$usage" = "yes" ]; then
 	    "current directory."
         echo "  Runtime Options:"
         echo "    --fast         Use the fast interpreter (the default)."
+        echo "    --jit          Use the jit."
         echo "    --portable     Use the portable interpreter."
         echo "    --debug        Wait for a debugger to attach."
         #echo "    --gdb          Run under gdb; incompatible with some tests."
         echo "    --no-verify    Turn off verification (on by default)."
         echo "    --no-optimize  Turn off optimization (on by default)."
+        echo "    --no-precise   Turn off precise GC (on by default)."
         echo "    --zygote       Spawn the process from the Zygote." \
 	    "If used, then the"
 	echo "                   other runtime options are ignored."

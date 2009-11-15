@@ -36,7 +36,7 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
     /**
      * Constructs an instance, explicitly indicating the mutability.
      *
-     * @param mutable <code>true</code> if this instance is mutable
+     * @param mutable {@code true} if this instance is mutable
      */   
     protected LocalsArray(boolean mutable) {
         super(mutable);
@@ -45,7 +45,7 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
     /**
      * Makes and returns a mutable copy of this instance.
      * 
-     * @return non-null; the copy
+     * @return {@code non-null;} the copy
      */
     public abstract LocalsArray copy();
 
@@ -53,7 +53,7 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
      * Annotates (adds context to) the given exception with information
      * about this instance.
      * 
-     * @param ex non-null; the exception to annotate
+     * @param ex {@code non-null;} the exception to annotate
      */
     public abstract void annotate(ExceptionWithContext ex);
 
@@ -61,7 +61,7 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
      * Replaces all the occurrences of the given uninitialized type in
      * this array with its initialized equivalent.
      * 
-     * @param type non-null; type to replace
+     * @param type {@code non-null;} type to replace
      */
     public abstract void makeInitialized(Type type);
 
@@ -71,16 +71,17 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
      * @return the max locals
      */
     public abstract int getMaxLocals();
+
     /**
      * Sets the type stored at the given local index. If the given type
      * is category-2, then (a) the index must be at least two less than
-     * <code>getMaxLocals()</code> and (b) the next index gets invalidated
+     * {@link #getMaxLocals} and (b) the next index gets invalidated
      * by the operation. In case of either category, if the <i>previous</i>
      * local contains a category-2 value, then it too is invalidated by
      * this operation.
      * 
-     * @param idx &gt;= 0, &lt; getMaxLocals(); which local
-     * @param type non-null; new type for the local at <code>idx</code>
+     * @param idx {@code >= 0, < getMaxLocals();} which local
+     * @param type {@code non-null;} new type for the local at {@code idx}
      */
     public abstract void set(int idx, TypeBearer type);
 
@@ -88,25 +89,25 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
      * Sets the type for the local indicated by the given register spec
      * to that register spec (which includes type and optional name
      * information). This is identical to calling
-     * <code>set(spec.getReg(), spec)</code>.
+     * {@code set(spec.getReg(), spec)}.
      * 
-     * @param spec non-null; register spec to use as the basis for the update
+     * @param spec {@code non-null;} register spec to use as the basis for the update
      */
     public abstract void set(RegisterSpec spec);
 
     /**
      * Invalidates the local at the given index.
      * 
-     * @param idx &gt;= 0, &lt; getMaxLocals(); which local
+     * @param idx {@code >= 0, < getMaxLocals();} which local
      */
     public abstract void invalidate(int idx);
 
     /**
-     * Gets the type stored at the given local index, or <code>null</code>
+     * Gets the type stored at the given local index, or {@code null}
      * if the given local is uninitialized / invalid.
      * 
-     * @param idx &gt;= 0, &lt; getMaxLocals(); which local
-     * @return null-ok; the type of value stored in that local
+     * @param idx {@code >= 0, < getMaxLocals();} which local
+     * @return {@code null-ok;} the type of value stored in that local
      */
     public abstract TypeBearer getOrNull(int idx);
 
@@ -115,9 +116,9 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
      * the given local contains a valid type (though it is allowed to
      * be an uninitialized instance).
      * 
-     * @param idx &gt;= 0, &lt; getMaxLocals(); which local
-     * @return non-null; the type of value stored in that local
-     * @throws SimException thrown if <code>idx</code> is valid, but
+     * @param idx {@code >= 0, < getMaxLocals();} which local
+     * @return {@code non-null;} the type of value stored in that local
+     * @throws SimException thrown if {@code idx} is valid, but
      * the contents are invalid
      */
     public abstract TypeBearer get(int idx);
@@ -126,9 +127,9 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
      * Gets the type stored at the given local index, which is expected
      * to be an initialized category-1 value.
      * 
-     * @param idx &gt;= 0, &lt; getMaxLocals(); which local
-     * @return non-null; the type of value stored in that local
-     * @throws SimException thrown if <code>idx</code> is valid, but
+     * @param idx {@code >= 0, < getMaxLocals();} which local
+     * @return {@code non-null;} the type of value stored in that local
+     * @throws SimException thrown if {@code idx} is valid, but
      * one of the following holds: (a) the local is invalid; (b) the local
      * contains an uninitialized instance; (c) the local contains a
      * category-2 value
@@ -139,39 +140,39 @@ public abstract class LocalsArray extends MutabilityControl implements ToHuman {
      * Gets the type stored at the given local index, which is expected
      * to be a category-2 value.
      * 
-     * @param idx &gt;= 0, &lt; getMaxLocals(); which local
-     * @return non-null; the type of value stored in that local
-     * @throws SimException thrown if <code>idx</code> is valid, but
+     * @param idx {@code >= 0, < getMaxLocals();} which local
+     * @return {@code non-null;} the type of value stored in that local
+     * @throws SimException thrown if {@code idx} is valid, but
      * one of the following holds: (a) the local is invalid; (b) the local
      * contains a category-1 value
      */
     public abstract TypeBearer getCategory2(int idx);
 
     /**
-     * Merges this instance with <code>other</code>. If the merged result is
+     * Merges this instance with {@code other}. If the merged result is
      * the same as this instance, then this is returned (not a copy).
      *
-     * @param other non-null; another LocalsArray
-     * @return non-null; the merge result, a new instance or this
+     * @param other {@code non-null;} another LocalsArray
+     * @return {@code non-null;} the merge result, a new instance or this
      */
     public abstract LocalsArray merge(LocalsArray other);
 
     /**
-     * Merges this instance with a <code>LocalsSet</code> from a subroutine
+     * Merges this instance with a {@code LocalsSet} from a subroutine
      * caller. To be used when merging in the first block of a subroutine.
      *
-     * @param other other non-null; another LocalsArray. The final locals
+     * @param other {@code other non-null;} another LocalsArray. The final locals
      * state of a subroutine caller.
      * @param predLabel the label of the subroutine caller block.
-     * @return non-null; the merge result, a new instance or this
+     * @return {@code non-null;} the merge result, a new instance or this
      */
     public abstract LocalsArraySet mergeWithSubroutineCaller
             (LocalsArray other, int predLabel);
 
     /**
      * Gets the locals set appropriate for the current execution context.
-     * That is, if this is a <code>OneLocalsArray</code> instance, then return
-     * <code>this</code>, otherwise return <code>LocalsArraySet</code>'s
+     * That is, if this is a {@code OneLocalsArray} instance, then return
+     * {@code this}, otherwise return {@code LocalsArraySet}'s
      * primary.
      *
      * @return locals for this execution context.

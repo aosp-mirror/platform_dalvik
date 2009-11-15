@@ -17,20 +17,20 @@
 package com.android.dx.rop.cst;
 
 /**
- * Constants of type <code>CONSTANT_*ref_info</code>.
+ * Constants of type {@code CONSTANT_*ref_info}.
  */
 public abstract class CstMemberRef extends TypedConstant {
-    /** non-null; the type of the defining class */
+    /** {@code non-null;} the type of the defining class */
     private final CstType definingClass;
 
-    /** non-null; the name-and-type */
+    /** {@code non-null;} the name-and-type */
     private final CstNat nat;
 
     /**
      * Constructs an instance.
      * 
-     * @param definingClass non-null; the type of the defining class
-     * @param nat non-null; the name-and-type
+     * @param definingClass {@code non-null;} the type of the defining class
+     * @param nat {@code non-null;} the name-and-type
      */
     /*package*/ CstMemberRef(CstType definingClass, CstNat nat) {
         if (definingClass == null) {
@@ -68,7 +68,7 @@ public abstract class CstMemberRef extends TypedConstant {
      *
      * <p><b>Note:</b> This implementation just compares the defining
      * class and name, and it is up to subclasses to compare the rest
-     * after calling <code>super.compareTo0()</code>.</p>
+     * after calling {@code super.compareTo0()}.</p>
      */
     @Override
     protected int compareTo0(Constant other) {
@@ -105,7 +105,7 @@ public abstract class CstMemberRef extends TypedConstant {
     /**
      * Gets the type of the defining class.
      * 
-     * @return non-null; the type of defining class
+     * @return {@code non-null;} the type of defining class
      */
     public final CstType getDefiningClass() {
         return definingClass;
@@ -114,7 +114,7 @@ public abstract class CstMemberRef extends TypedConstant {
     /**
      * Gets the defining name-and-type.
      * 
-     * @return non-null; the name-and-type
+     * @return {@code non-null;} the name-and-type
      */
     public final CstNat getNat() {
         return nat;

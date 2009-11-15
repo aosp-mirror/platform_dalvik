@@ -28,19 +28,23 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import junit.framework.TestCase;
+import tests.util.PrefsTester;
 
 @TestTargetClass(java.util.prefs.Preferences.class)
 public class FilePreferencesImplTest extends TestCase {
 
-    public FilePreferencesImplTest() {
-        super();
-    }
-    
+    private final PrefsTester prefsTester = new PrefsTester();
+
     @Override
-    protected void setUp(){
+    protected void setUp() throws Exception {
+        super.setUp();
+        prefsTester.setUp();
     }
+
     @Override
-    protected void tearDown(){
+    protected void tearDown() throws Exception {
+        prefsTester.tearDown();
+        super.tearDown();
     }
 
     @TestTargets({
@@ -303,6 +307,7 @@ public class FilePreferencesImplTest extends TestCase {
             System.setSecurityManager(dflt);
         }
 
+        @Override
         public void checkPermission(Permission perm) {
             if (perm instanceof FilePermission) {
                 throw new SecurityException();
@@ -311,6 +316,7 @@ public class FilePreferencesImplTest extends TestCase {
             }
         }
 
+        @Override
         public void checkPermission(Permission perm, Object ctx) {
             if (perm instanceof FilePermission) {
                 System.out.println(perm.getActions());

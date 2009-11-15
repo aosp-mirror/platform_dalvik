@@ -36,9 +36,9 @@ import java.util.Collections;
  */
 public class ClassPathOpener {
 
-    /** non-null; pathname to start with */
+    /** {@code non-null;} pathname to start with */
     private final String pathname;
-    /** non-null; callback interface */
+    /** {@code non-null;} callback interface */
     private final Consumer consumer;
     /**
      * If true, sort such that classes appear before their inner
@@ -48,20 +48,20 @@ public class ClassPathOpener {
     private final boolean sort;
 
     /**
-     * Callback interface for <code>ClassOpener</code>.
+     * Callback interface for {@code ClassOpener}.
      */
     public interface Consumer {
 
         /**
          * Provides the file name and byte array for a class path element.
          *
-         * @param name non-null; filename of element. May not be a valid
+         * @param name {@code non-null;} filename of element. May not be a valid
          * filesystem path.
          *
-         * @param bytes non-null; file data
+         * @param bytes {@code non-null;} file data
          * @return true on success. Result is or'd with all other results
-         * from <code>processFileBytes</code> and returned to the caller
-         * of <code>process()</code>.
+         * from {@code processFileBytes} and returned to the caller
+         * of {@code process()}.
          */
         boolean processFileBytes(String name, byte[] bytes);
 
@@ -69,14 +69,14 @@ public class ClassPathOpener {
          * Informs consumer that an exception occurred while processing
          * this path element. Processing will continue if possible.
          *
-         * @param ex non-null; exception
+         * @param ex {@code non-null;} exception
          */
         void onException(Exception ex);
 
         /**
          * Informs consumer that processing of an archive file has begun.
          *
-         * @param file non-null; archive file being processed
+         * @param file {@code non-null;} archive file being processed
          */
         void onProcessArchiveStart(File file);
     }
@@ -84,11 +84,11 @@ public class ClassPathOpener {
     /**
      * Constructs an instance.
      *
-     * @param pathname non-null; path element to process
+     * @param pathname {@code non-null;} path element to process
      * @param sort if true, sort such that classes appear before their inner
      * classes and "package-info" occurs before all other classes in that
      * package.
-     * @param consumer non-null; callback interface
+     * @param consumer {@code non-null;} callback interface
      */
     public ClassPathOpener(String pathname, boolean sort, Consumer consumer) {
         this.pathname = pathname;
@@ -100,7 +100,7 @@ public class ClassPathOpener {
      * Processes a path element.
      *
      * @return the OR of all return values
-     * from <code>Consumer.processFileBytes()</code>.
+     * from {@code Consumer.processFileBytes()}.
      */
     public boolean process() {
         File file = new File(pathname);
@@ -111,7 +111,7 @@ public class ClassPathOpener {
     /**
      * Processes one file.
      *
-     * @param file non-null; the file to process
+     * @param file {@code non-null;} the file to process
      * @param topLevel whether this is a top-level file (that is,
      * specified directly on the commandline)
      * @return whether any processing actually happened
@@ -142,9 +142,9 @@ public class ClassPathOpener {
      * Sorts java class names such that outer classes preceed their inner
      * classes and "package-info" preceeds all other classes in its package.
      *
-     * @param a non-null; first class name
-     * @param b non-null; second class name
-     * @return <code>compareTo()</code>-style result
+     * @param a {@code non-null;} first class name
+     * @param b {@code non-null;} second class name
+     * @return {@code compareTo()}-style result
      */
     private static int compareClassNames(String a, String b) {
         // Ensure inner classes sort second
@@ -164,7 +164,7 @@ public class ClassPathOpener {
     /**
      * Processes a directory recursively.
      *
-     * @param dir non-null; file representing the directory
+     * @param dir {@code non-null;} file representing the directory
      * @param topLevel whether this is a top-level directory (that is,
      * specified directly on the commandline)
      * @return whether any processing actually happened
@@ -194,10 +194,10 @@ public class ClassPathOpener {
     }
 
     /**
-     * Processes the contents of an archive (<code>.zip</code>,
-     * <code>.jar</code>, or <code>.apk</code>).
+     * Processes the contents of an archive ({@code .zip},
+     * {@code .jar}, or {@code .apk}).
      *
-     * @param file non-null; archive file to process
+     * @param file {@code non-null;} archive file to process
      * @return whether any processing actually happened
      * @throws IOException on i/o problem
      */
@@ -220,8 +220,7 @@ public class ClassPathOpener {
 
         consumer.onProcessArchiveStart(file);
 
-        for (ZipEntry one: entriesList) {
-
+        for (ZipEntry one : entriesList) {
             if (one.isDirectory()) {
                 continue;
             }

@@ -103,20 +103,6 @@ static void fd_sync(JNIEnv* env, jobject obj) {
     }
 }
 
-/*
- * public native boolean valid()
- */
-static jboolean fd_valid(JNIEnv* env, jobject obj) {
-    int fd = getFd(env, obj);
-    struct stat sb;
-
-    if(fstat(fd, &sb) == 0) {
-        return JNI_TRUE;
-    } else {
-        return JNI_FALSE;
-    }
-}
-
 /* checks to see if class is inited and inits if needed, returning -1
  * on fail and 0 on success
  */
@@ -205,8 +191,7 @@ void jniSetFileDescriptorOfFD (JNIEnv* env, jobject fileDescriptor, int value) {
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
     { "oneTimeInitialization", "()V",              nativeClassInit },
-    { "syncImpl",           "()V",                 fd_sync },
-    { "valid",          "()Z",                     fd_valid }
+    { "syncImpl",           "()V",                 fd_sync }
 };
 int register_java_io_FileDescriptor(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "java/io/FileDescriptor",

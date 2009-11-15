@@ -20,8 +20,6 @@ package java.lang;
 /**
  * Thrown when the virtual machine notices that it has gotten into an undefined
  * state.
- * 
- * @since Android 1.0
  */
 public class InternalError extends VirtualMachineError {
 
@@ -30,8 +28,6 @@ public class InternalError extends VirtualMachineError {
     /**
      * Constructs a new {@code InternalError} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public InternalError() {
         super();
@@ -43,7 +39,6 @@ public class InternalError extends VirtualMachineError {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public InternalError(String detailMessage) {
         super(detailMessage);

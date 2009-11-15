@@ -35,9 +35,9 @@ public final class Merger {
      * Merges two locals arrays. If the merged result is the same as the first
      * argument, then return the first argument (not a copy).
      * 
-     * @param locals1 non-null; a locals array
-     * @param locals2 non-null; another locals array
-     * @return non-null; the result of merging the two locals arrays
+     * @param locals1 {@code non-null;} a locals array
+     * @param locals2 {@code non-null;} another locals array
+     * @return {@code non-null;} the result of merging the two locals arrays
      */
     public static OneLocalsArray mergeLocals(OneLocalsArray locals1,
                                           OneLocalsArray locals2) {
@@ -87,9 +87,9 @@ public final class Merger {
      * Merges two stacks. If the merged result is the same as the first
      * argument, then return the first argument (not a copy).
      * 
-     * @param stack1 non-null; a stack
-     * @param stack2 non-null; another stack
-     * @return non-null; the result of merging the two stacks
+     * @param stack1 {@code non-null;} a stack
+     * @param stack2 {@code non-null;} another stack
+     * @return {@code non-null;} the result of merging the two stacks
      */
     public static ExecutionStack mergeStack(ExecutionStack stack1,
                                             ExecutionStack stack2) {
@@ -144,9 +144,9 @@ public final class Merger {
     /**
      * Merges two frame types.
      * 
-     * @param ft1 non-null; a frame type
-     * @param ft2 non-null; another frame type
-     * @return non-null; the result of merging the two types
+     * @param ft1 {@code non-null;} a frame type
+     * @param ft2 {@code non-null;} another frame type
+     * @return {@code non-null;} the result of merging the two types
      */
     public static TypeBearer mergeType(TypeBearer ft1, TypeBearer ft2) {
         if ((ft1 == null) || ft1.equals(ft2)) {
@@ -209,12 +209,12 @@ public final class Merger {
      * the given subtype. This takes into account primitiveness,
      * int-likeness, known-nullness, and array dimensions, but does
      * not assume anything about class hierarchy other than that the
-     * type <code>Object</code> is the supertype of all reference
+     * type {@code Object} is the supertype of all reference
      * types and all arrays are assignable to
-     * <code>Serializable</code> and <code>Cloneable</code>.
+     * {@code Serializable} and {@code Cloneable}.
      * 
-     * @param supertypeBearer non-null; the supertype
-     * @param subtypeBearer non-null; the subtype
+     * @param supertypeBearer {@code non-null;} the supertype
+     * @param subtypeBearer {@code non-null;} the subtype
      */
     public static boolean isPossiblyAssignableFrom(TypeBearer supertypeBearer,
             TypeBearer subtypeBearer) {

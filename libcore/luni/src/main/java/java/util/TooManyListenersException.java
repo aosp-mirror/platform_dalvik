@@ -22,8 +22,6 @@ package java.util;
  * A {@code TooManyListenersException} is thrown when an attempt is made to add
  * more than one listener to an event source which only supports a single
  * listener. It is also thrown when the same listener is added more than once.
- * 
- * @since Android 1.0
  */
 public class TooManyListenersException extends Exception {
 

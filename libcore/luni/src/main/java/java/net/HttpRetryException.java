@@ -21,8 +21,6 @@ import java.io.IOException;
 /**
  * If a HTTP request has to be retried, this exception will be thrown if the
  * request cannot be retried automatically.
- * 
- * @since Android 1.0
  */
 public class HttpRetryException extends IOException {
 
@@ -40,7 +38,6 @@ public class HttpRetryException extends IOException {
      *            the detail message for this exception.
      * @param code
      *            the HTTP response code from target host.
-     * @since Android 1.0
      */
     public HttpRetryException(String detail, int code) {
         super(detail);
@@ -58,7 +55,6 @@ public class HttpRetryException extends IOException {
      *            the HTTP response code from target host.
      * @param location
      *            the destination URL of the redirection.
-     * @since Android 1.0
      */
     public HttpRetryException(String detail, int code, String location) {
         super(detail);
@@ -68,9 +64,8 @@ public class HttpRetryException extends IOException {
 
     /**
      * Gets the location value.
-     * 
+     *
      * @return the stored location from the HTTP header.
-     * @since Android 1.0
      */
     public String getLocation() {
         return location;
@@ -78,9 +73,8 @@ public class HttpRetryException extends IOException {
 
     /**
      * Gets the detail message.
-     * 
+     *
      * @return the detail message.
-     * @since Android 1.0
      */
     public String getReason() {
         return getMessage();
@@ -88,9 +82,8 @@ public class HttpRetryException extends IOException {
 
     /**
      * Gets the response code.
-     * 
+     *
      * @return the HTTP response code.
-     * @since Android 1.0
      */
     public int responseCode() {
         return responseCode;

@@ -34,14 +34,14 @@ import java.util.BitSet;
  * frequently are created when catch blocks are edge-split.
  */
 public class IdenticalBlockCombiner {
-
-    private RopMethod ropMethod;
-    private BasicBlockList blocks;
-    private BasicBlockList newBlocks;
+    private final RopMethod ropMethod;
+    private final BasicBlockList blocks;
+    private final BasicBlockList newBlocks;
 
     /**
-     * Constructs instance. Call <code>process()</code> to run.
-     * @param rm instance to process
+     * Constructs instance. Call {@code process()} to run.
+     * 
+     * @param rm {@code non-null;} instance to process
      */
     public IdenticalBlockCombiner(RopMethod rm) {
         ropMethod = rm;
@@ -50,10 +50,11 @@ public class IdenticalBlockCombiner {
     }
 
     /**
-     * Runs algorithm.  TODO: this is n^2, and could be made linear-ish with
-     * a hash.
+     * Runs algorithm. TODO: This is n^2, and could be made linear-ish with
+     * a hash. In particular, hash the contents of each block and only
+     * compare blocks with the same hash.
      *
-     * @return new method that has been processed
+     * @return {@code non-null;} new method that has been processed
      */
     public RopMethod process() {
         int szBlocks = blocks.size();
@@ -78,14 +79,15 @@ public class IdenticalBlockCombiner {
 
                 BasicBlock iBlock = blocks.labelToBlock(iLabel);
 
-                if (toDelete.get(iLabel) || iBlock.getSuccessors().size() > 1) {
+                if (toDelete.get(iLabel)
+                        || iBlock.getSuccessors().size() > 1) {
                     continue;
                 }
 
                 IntList toCombine = new IntList();
 
                 // ...and see if they can be combined with any other preds...
-                for (int j = i + 1; j <szPreds; j++) {
+                for (int j = i + 1; j < szPreds; j++) {
                     int jLabel = preds.get(j);
                     BasicBlock jBlock = blocks.labelToBlock(jLabel);
 
@@ -101,7 +103,7 @@ public class IdenticalBlockCombiner {
             }
         }
 
-        for (int i = szBlocks - 1; i > 0; i--) {
+        for (int i = szBlocks - 1; i >= 0; i--) {
             if (toDelete.get(newBlocks.get(i).getLabel())) {
                 newBlocks.set(i, null);
             }
@@ -113,7 +115,14 @@ public class IdenticalBlockCombiner {
         return new RopMethod(newBlocks, ropMethod.getFirstLabel());
     }
 
-    private boolean compareInsns(BasicBlock a, BasicBlock b) {
+    /**
+     * Helper method to compare the contents of two blocks.
+     * 
+     * @param a {@code non-null;} a block to compare
+     * @param b {@code non-null;} another block to compare
+     * @return {@code true} iff the two blocks' instructions are the same
+     */
+    private static boolean compareInsns(BasicBlock a, BasicBlock b) {
         return a.getInsns().contentEquals(b.getInsns());
     }
 
@@ -131,11 +140,7 @@ public class IdenticalBlockCombiner {
         for (int i = 0; i < szBetas; i++) {
             int betaLabel = betaLabels.get(i);
             BasicBlock bb = blocks.labelToBlock(betaLabel);
-
-            IntList preds;
-
-            preds = ropMethod.labelToPredecessors(bb.getLabel());
-
+            IntList preds = ropMethod.labelToPredecessors(bb.getLabel());
             int szPreds = preds.size();
 
             for (int j = 0; j < szPreds; j++) {
@@ -147,19 +152,19 @@ public class IdenticalBlockCombiner {
 
     /**
      * Replaces one of a block's successors with a different label. Constructs
-     * an updated BasicBlock instance and places it in <code>newBlocks</code>.
+     * an updated BasicBlock instance and places it in {@code newBlocks}.
      *
      * @param block block to replace
      * @param oldLabel label of successor to replace
      * @param newLabel label of new successor
      */
     private void replaceSucc(BasicBlock block, int oldLabel, int newLabel) {
-
         IntList newSuccessors = block.getSuccessors().mutableCopy();
         int newPrimarySuccessor;
 
         newSuccessors.set(newSuccessors.indexOf(oldLabel), newLabel);
         newPrimarySuccessor = block.getPrimarySuccessor();
+
         if (newPrimarySuccessor == oldLabel) {
             newPrimarySuccessor = newLabel;
         }

@@ -20,8 +20,6 @@ package java.io;
 /**
  * Defines an interface for classes that want to be serializable, but have their
  * own binary representation.
- * 
- * @since Android 1.0
  */
 public interface Externalizable extends Serializable {
     /**
@@ -33,7 +31,6 @@ public interface Externalizable extends Serializable {
      *             if an error occurs attempting to read from {@code input}.
      * @throws ClassNotFoundException
      *             if the class of the instance being loaded cannot be found.
-     * @since Android 1.0
      */
     public void readExternal(ObjectInput input) throws IOException,
             ClassNotFoundException;
@@ -45,7 +42,6 @@ public interface Externalizable extends Serializable {
      *            the ObjectOutput to write the object to.
      * @throws IOException
      *             if an error occurs attempting to write to {@code output}.
-     * @since Android 1.0
      */
     public void writeExternal(ObjectOutput output) throws IOException;
 }

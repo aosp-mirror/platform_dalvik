@@ -20,8 +20,8 @@ import org.apache.harmony.luni.util.Msg;
 
 /**
  * Thrown if an {@code enum} constant does not exist for a particular name.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public class EnumConstantNotPresentException extends RuntimeException {
 
@@ -36,12 +36,11 @@ public class EnumConstantNotPresentException extends RuntimeException {
      * Constructs a new {@code EnumConstantNotPresentException} with the current
      * stack trace and a detail message based on the specified enum type and
      * missing constant name.
-     * 
+     *
      * @param enumType
      *            the enum type.
      * @param constantName
      *            the missing constant name.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public EnumConstantNotPresentException(Class<? extends Enum> enumType,
@@ -54,9 +53,8 @@ public class EnumConstantNotPresentException extends RuntimeException {
 
     /**
      * Gets the enum type for which the constant name is missing.
-     * 
+     *
      * @return the enum type for which a constant name has not been found.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public Class<? extends Enum> enumType() {
@@ -68,7 +66,6 @@ public class EnumConstantNotPresentException extends RuntimeException {
      * 
      * @return the name of the constant that has not been found in the enum
      *         type.
-     * @since Android 1.0
      */
     public String constantName() {
         return constantName;

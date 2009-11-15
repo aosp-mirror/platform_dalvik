@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * System utilities.
  */
@@ -64,6 +65,25 @@ static void* sysCreateAnonShmem(size_t length)
 #endif
 }
 
+/*
+ * Create a private anonymous storage area.
+ */
+int sysCreatePrivateMap(size_t length, MemMapping* pMap)
+{
+    void* memPtr;
+
+    memPtr = sysCreateAnonShmem(length);
+    if (memPtr == NULL)
+        return -1;
+
+    pMap->addr = pMap->baseAddr = memPtr;
+    pMap->length = pMap->baseLength = length;
+    return 0;
+}
+
+/*
+ * Determine the current offset and remaining length of the open file.
+ */
 static int getFileStartAndLength(int fd, off_t *start_, size_t *length_)
 {
     off_t start, end;

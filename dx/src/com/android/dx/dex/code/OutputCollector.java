@@ -28,13 +28,13 @@ import java.util.ArrayList;
  */
 public final class OutputCollector {
     /**
-     * non-null; the associated finisher (which holds the instruction
+     * {@code non-null;} the associated finisher (which holds the instruction
      * list in-progress)
      */
     private final OutputFinisher finisher;
 
     /**
-     * null-ok; suffix for the output, or <code>null</code> if the suffix
+     * {@code null-ok;} suffix for the output, or {@code null} if the suffix
      * has been appended to the main output (by {@link #appendSuffixToOutput})
      */
     private ArrayList<DalvInsn> suffix;
@@ -42,10 +42,10 @@ public final class OutputCollector {
     /**
      * Constructs an instance.
      * 
-     * @param initialCapacity &gt;= 0; initial capacity of the output list
-     * @param suffixInitialCapacity &gt;= 0; initial capacity of the output
+     * @param initialCapacity {@code >= 0;} initial capacity of the output list
+     * @param suffixInitialCapacity {@code >= 0;} initial capacity of the output
      * suffix
-     * @param regCount &gt;= 0; register count for the method
+     * @param regCount {@code >= 0;} register count for the method
      */
     public OutputCollector(int initialCapacity, int suffixInitialCapacity,
             int regCount) {
@@ -56,7 +56,7 @@ public final class OutputCollector {
     /**
      * Adds an instruction to the output.
      * 
-     * @param insn non-null; the instruction to add 
+     * @param insn {@code non-null;} the instruction to add 
      */
     public void add(DalvInsn insn) {
         finisher.add(insn);
@@ -68,9 +68,9 @@ public final class OutputCollector {
      * indicated instruction really is a reversible branch.
      * 
      * @param which how many instructions back to find the branch;
-     * <code>0</code> is the most recently added instruction,
-     * <code>1</code> is the instruction before that, etc.
-     * @param newTarget non-null; the new target for the reversed branch
+     * {@code 0} is the most recently added instruction,
+     * {@code 1} is the instruction before that, etc.
+     * @param newTarget {@code non-null;} the new target for the reversed branch
      */
     public void reverseBranch(int which, CodeAddress newTarget) {
         finisher.reverseBranch(which, newTarget);
@@ -79,7 +79,7 @@ public final class OutputCollector {
     /**
      * Adds an instruction to the output suffix.
      * 
-     * @param insn non-null; the instruction to add 
+     * @param insn {@code non-null;} the instruction to add 
      */
     public void addSuffix(DalvInsn insn) {
         suffix.add(insn);
@@ -89,7 +89,7 @@ public final class OutputCollector {
      * Gets the results of all the calls on this instance, in the form of
      * an {@link OutputFinisher}.
      *
-     * @return non-null; the output finisher
+     * @return {@code non-null;} the output finisher
      * @throws UnsupportedOperationException if this method has
      * already been called
      */

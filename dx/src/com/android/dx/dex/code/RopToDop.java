@@ -35,7 +35,7 @@ import java.util.HashMap;
  * {@link Dop} instances.
  */
 public final class RopToDop {
-    /** non-null; map from all the common rops to dalvik opcodes */
+    /** {@code non-null;} map from all the common rops to dalvik opcodes */
     private static final HashMap<Rop, Dop> MAP;
 
     /**
@@ -278,7 +278,7 @@ public final class RopToDop {
      * Returns the dalvik opcode appropriate for the given register-based
      * instruction.
      * 
-     * @param insn non-null; the original instruction
+     * @param insn {@code non-null;} the original instruction
      * @return the corresponding dalvik opcode; one of the constants in
      * {@link Dops}
      */

@@ -17,18 +17,16 @@
 
 package java.util;
 
-
 /**
  * An Enumeration is used to sequence over a collection of objects.
  * <p>
- * Preferably an Iterator should be used. Iterator replaces the Enumeration
- * interface and adds a way to remove elements from a collection.
- * </p>
- * 
+ * Preferably an {@link Iterator} should be used. {@code Iterator} replaces the
+ * enumeration interface and adds a way to remove elements from a collection.
+ *
  * @see Hashtable
  * @see Properties
  * @see Vector
- * @since Android 1.0
+ * @version 1.0
  */
 public interface Enumeration<E> {
 
@@ -37,7 +35,6 @@ public interface Enumeration<E> {
      * 
      * @return {@code true} if there are more elements, {@code false} otherwise.
      * @see #nextElement
-     * @since Android 1.0
      */
     public boolean hasMoreElements();
 
@@ -48,7 +45,6 @@ public interface Enumeration<E> {
      * @throws NoSuchElementException
      *             if there are no more elements.
      * @see #hasMoreElements
-     * @since Android 1.0
      */
     public E nextElement();
 }

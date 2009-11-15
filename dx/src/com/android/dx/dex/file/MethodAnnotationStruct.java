@@ -27,17 +27,17 @@ import com.android.dx.util.ToHuman;
  */
 public final class MethodAnnotationStruct
         implements ToHuman, Comparable<MethodAnnotationStruct> {
-    /** non-null; the method in question */
+    /** {@code non-null;} the method in question */
     private final CstMethodRef method;
 
-    /** non-null; the associated annotations */
+    /** {@code non-null;} the associated annotations */
     private AnnotationSetItem annotations;
 
     /**
      * Constructs an instance.
      * 
-     * @param method non-null; the method in question
-     * @param annotations non-null; the associated annotations
+     * @param method {@code non-null;} the method in question
+     * @param annotations {@code non-null;} the associated annotations
      */
     public MethodAnnotationStruct(CstMethodRef method,
             AnnotationSetItem annotations) {
@@ -105,7 +105,7 @@ public final class MethodAnnotationStruct
     /**
      * Gets the method this item is for.
      * 
-     * @return non-null; the method
+     * @return {@code non-null;} the method
      */
     public CstMethodRef getMethod() {
         return method;
@@ -114,7 +114,7 @@ public final class MethodAnnotationStruct
     /**
      * Gets the associated annotations.
      * 
-     * @return non-null; the annotations
+     * @return {@code non-null;} the annotations
      */
     public Annotations getAnnotations() {
         return annotations.getAnnotations();

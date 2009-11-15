@@ -149,8 +149,19 @@ void dvmSetNativeFunc(const Method* method, DalvikBridgeFunc func,
  */
 void dvmSetRegisterMap(Method* method, const RegisterMap* pMap);
 
-/* during DEX optimizing, add an extra DEX to the bootstrap class path */
-INLINE void dvmSetBootPathExtraDex(DvmDex* pDvmDex);
+/*
+ * Make a method's DexCode (which includes the bytecode) read-write or
+ * read-only.  The conversion to read-write may involve making a new copy
+ * of the DexCode, and in normal operation the read-only state is not
+ * actually enforced.
+ */
+void dvmMakeCodeReadWrite(Method* meth);
+void dvmMakeCodeReadOnly(Method* meth);
+
+/*
+ * During DEX optimizing, add an extra DEX to the bootstrap class path.
+ */
+void dvmSetBootPathExtraDex(DvmDex* pDvmDex);
 
 /*
  * Debugging.

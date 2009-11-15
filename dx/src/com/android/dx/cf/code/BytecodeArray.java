@@ -32,23 +32,23 @@ import com.android.dx.util.Hex;
 import java.util.ArrayList;
 
 /**
- * Bytecode array, which is part of a standard <code>Code</code> attribute.
+ * Bytecode array, which is part of a standard {@code Code} attribute.
  */
 public final class BytecodeArray {
     /** convenient no-op implementation of {@link Visitor} */
     public static final Visitor EMPTY_VISITOR = new BaseVisitor();
 
-    /** non-null; underlying bytes */
+    /** {@code non-null;} underlying bytes */
     private final ByteArray bytes;
 
-    /** non-null; constant pool to use when resolving constant pool indices */
+    /** {@code non-null;} constant pool to use when resolving constant pool indices */
     private final ConstantPool pool;
 
     /**
      * Constructs an instance.
      * 
-     * @param bytes non-null; underlying bytes
-     * @param pool non-null; constant pool to use when resolving constant
+     * @param bytes {@code non-null;} underlying bytes
+     * @param pool {@code non-null;} constant pool to use when resolving constant
      * pool indices
      */
     public BytecodeArray(ByteArray bytes, ConstantPool pool) {
@@ -67,7 +67,7 @@ public final class BytecodeArray {
     /**
      * Gets the underlying byte array.
      * 
-     * @return non-null; the byte array
+     * @return {@code non-null;} the byte array
      */
     public ByteArray getBytes() {
         return bytes;
@@ -76,7 +76,7 @@ public final class BytecodeArray {
     /**
      * Gets the size of the bytecode array, per se.
      * 
-     * @return &gt;= 0; the length of the bytecode array
+     * @return {@code >= 0;} the length of the bytecode array
      */
     public int size() {
         return bytes.size();
@@ -84,10 +84,10 @@ public final class BytecodeArray {
 
     /**
      * Gets the total length of this structure in bytes, when included in
-     * a <code>Code</code> attribute. The returned value includes the
-     * array size plus four bytes for <code>code_length</code>.
+     * a {@code Code} attribute. The returned value includes the
+     * array size plus four bytes for {@code code_length}.
      * 
-     * @return &gt;= 4; the total length, in bytes
+     * @return {@code >= 4;} the total length, in bytes
      */
     public int byteLength() {
         return 4 + bytes.size();
@@ -96,7 +96,7 @@ public final class BytecodeArray {
     /**
      * Parses each instruction in the array, in order.
      * 
-     * @param visitor null-ok; visitor to call back to for each instruction
+     * @param visitor {@code null-ok;} visitor to call back to for each instruction
      */
     public void forEach(Visitor visitor) {
         int sz = bytes.size();
@@ -116,7 +116,7 @@ public final class BytecodeArray {
      * result is a bit set with the offset of each opcode-per-se flipped on.
      * 
      * @see Bits
-     * @return non-null; appropriately constructed bit set
+     * @return {@code non-null;} appropriately constructed bit set
      */
     public int[] getInstructionOffsets() {
         int sz = bytes.size();
@@ -139,8 +139,8 @@ public final class BytecodeArray {
      * work set is empty. It is expected that the visitor will regularly
      * set new bits in the work set during the process.
      * 
-     * @param workSet non-null; the work set to process
-     * @param visitor non-null; visitor to call back to for each instruction
+     * @param workSet {@code non-null;} the work set to process
+     * @param visitor {@code non-null;} visitor to call back to for each instruction
      */
     public void processWorkSet(int[] workSet, Visitor visitor) {
         if (visitor == null) {
@@ -170,42 +170,42 @@ public final class BytecodeArray {
      * 
      * <ul>
      * <li>The opcodes to push literal constants of primitive types all become
-     *   <code>ldc</code>.
-     *   E.g., <code>fconst_0</code>, <code>sipush</code>, and 
-     *   <code>lconst_0</code> qualify for this treatment.</li>
-     * <li><code>aconst_null</code> becomes <code>ldc</code> of a
+     *   {@code ldc}.
+     *   E.g., {@code fconst_0}, {@code sipush}, and 
+     *   {@code lconst_0} qualify for this treatment.</li>
+     * <li>{@code aconst_null} becomes {@code ldc} of a
      *   "known null."</li>
      * <li>Shorthand local variable accessors become the corresponding
-     *   longhand. E.g. <code>aload_2</code> becomes <code>aload</code>.</li>
-     * <li><code>goto_w</code> and <code>jsr_w</code> become <code>goto</code>
-     *   and <code>jsr</code> (respectively).</li>
-     * <li><code>ldc_w</code> becomes <code>ldc</code>.</li>
-     * <li><code>tableswitch</code> becomes <code>lookupswitch</code>.
+     *   longhand. E.g. {@code aload_2} becomes {@code aload}.</li>
+     * <li>{@code goto_w} and {@code jsr_w} become {@code goto}
+     *   and {@code jsr} (respectively).</li>
+     * <li>{@code ldc_w} becomes {@code ldc}.</li>
+     * <li>{@code tableswitch} becomes {@code lookupswitch}.
      * <li>Arithmetic, array, and value-returning ops are collapsed
-     *   to the <code>int</code> variant opcode, with the <code>type</code>
+     *   to the {@code int} variant opcode, with the {@code type}
      *   argument set to indicate the actual type. E.g.,
-     *   <code>fadd</code> becomes <code>iadd</code>, but
-     *   <code>type</code> is passed as <code>Type.FLOAT</code> in that
-     *   case. Similarly, <code>areturn</code> becomes
-     *   <code>ireturn</code>. (However, <code>return</code> remains
+     *   {@code fadd} becomes {@code iadd}, but
+     *   {@code type} is passed as {@code Type.FLOAT} in that
+     *   case. Similarly, {@code areturn} becomes
+     *   {@code ireturn}. (However, {@code return} remains
      *   unchanged.</li>
-     * <li>Local variable access ops are collapsed to the <code>int</code>
-     *   variant opcode, with the <code>type</code> argument set to indicate
-     *   the actual type. E.g., <code>aload</code> becomes <code>iload</code>,
-     *   but <code>type</code> is passed as <code>Type.OBJECT</code> in
+     * <li>Local variable access ops are collapsed to the {@code int}
+     *   variant opcode, with the {@code type} argument set to indicate
+     *   the actual type. E.g., {@code aload} becomes {@code iload},
+     *   but {@code type} is passed as {@code Type.OBJECT} in
      *   that case.</li>
-     * <li>Numeric conversion ops (<code>i2l</code>, etc.) are left alone
-     *   to avoid too much confustion, but their <code>type</code> is
-     *   the pushed type. E.g., <code>i2b</code> gets type
-     *   <code>Type.INT</code>, and <code>f2d</code> gets type
-     *   <code>Type.DOUBLE</code>. Other unaltered opcodes also get
-     *   their pushed type. E.g., <code>arraylength</code> gets type
-     *   <code>Type.INT</code>.</li>
+     * <li>Numeric conversion ops ({@code i2l}, etc.) are left alone
+     *   to avoid too much confustion, but their {@code type} is
+     *   the pushed type. E.g., {@code i2b} gets type
+     *   {@code Type.INT}, and {@code f2d} gets type
+     *   {@code Type.DOUBLE}. Other unaltered opcodes also get
+     *   their pushed type. E.g., {@code arraylength} gets type
+     *   {@code Type.INT}.</li>
      * </ul>
      * 
-     * @param offset &gt;= 0, &lt; bytes.size(); offset to the start of the
+     * @param offset {@code >= 0, < bytes.size();} offset to the start of the
      * instruction
-     * @param visitor null-ok; visitor to call back to
+     * @param visitor {@code null-ok;} visitor to call back to
      * @return the length of the instruction, in bytes
      */
     public int parseInstruction(int offset, Visitor visitor) {
@@ -797,10 +797,10 @@ public final class BytecodeArray {
     }
 
     /**
-     * Helper to deal with <code>tableswitch</code>.
+     * Helper to deal with {@code tableswitch}.
      * 
-     * @param offset the offset to the <code>tableswitch</code> opcode itself
-     * @param visitor non-null; visitor to use
+     * @param offset the offset to the {@code tableswitch} opcode itself
+     * @param visitor {@code non-null;} visitor to use
      * @return instruction length, in bytes
      */
     private int parseTableswitch(int offset, Visitor visitor) {
@@ -840,10 +840,10 @@ public final class BytecodeArray {
     }
 
     /**
-     * Helper to deal with <code>lookupswitch</code>.
+     * Helper to deal with {@code lookupswitch}.
      * 
-     * @param offset the offset to the <code>lookupswitch</code> opcode itself
-     * @param visitor non-null; visitor to use
+     * @param offset the offset to the {@code lookupswitch} opcode itself
+     * @param visitor {@code non-null;} visitor to use
      * @return instruction length, in bytes
      */
     private int parseLookupswitch(int offset, Visitor visitor) {
@@ -878,10 +878,10 @@ public final class BytecodeArray {
     }
 
     /**
-     * Helper to deal with <code>newarray</code>.
+     * Helper to deal with {@code newarray}.
      *
-     * @param offset the offset to the <code>newarray</code> opcode itself
-     * @param visitor non-null; visitor to use
+     * @param offset the offset to the {@code newarray} opcode itself
+     * @param visitor {@code non-null;} visitor to use
      * @return instruction length, in bytes
      */
     private int parseNewarray(int offset, Visitor visitor) {
@@ -1061,10 +1061,10 @@ public final class BytecodeArray {
 
     
     /**
-     * Helper to deal with <code>wide</code>.
+     * Helper to deal with {@code wide}.
      * 
-     * @param offset the offset to the <code>wide</code> opcode itself
-     * @param visitor non-null; visitor to use
+     * @param offset the offset to the {@code wide} opcode itself
+     * @param visitor {@code non-null;} visitor to use
      * @return instruction length, in bytes
      */
     private int parseWide(int offset, Visitor visitor) {
@@ -1159,7 +1159,7 @@ public final class BytecodeArray {
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
-         * @param type non-null; type the instruction operates on
+         * @param type {@code non-null;} type the instruction operates on
          */
         public void visitNoArgs(int opcode, int offset, int length,
                 Type type);
@@ -1171,9 +1171,9 @@ public final class BytecodeArray {
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
          * @param idx the local variable index
-         * @param type non-null; the type of the accessed value
+         * @param type {@code non-null;} the type of the accessed value
          * @param value additional literal integer argument, if salient (i.e.,
-         * for <code>iinc</code>)
+         * for {@code iinc})
          */
         public void visitLocal(int opcode, int offset, int length,
                 int idx, Type type, int value);
@@ -1182,23 +1182,23 @@ public final class BytecodeArray {
          * Visits an instruction which has a (possibly synthetic)
          * constant argument, and possibly also an
          * additional literal integer argument. In the case of
-         * <code>multianewarray</code>, the argument is the count of
-         * dimensions. In the case of <code>invokeinterface</code>,
+         * {@code multianewarray}, the argument is the count of
+         * dimensions. In the case of {@code invokeinterface},
          * the argument is the parameter count or'ed with the
          * should-be-zero value left-shifted by 8. In the case of entries
-         * of type <code>int</code>, the <code>value</code> field always
+         * of type {@code int}, the {@code value} field always
          * holds the raw value (for convenience of clients).
          * 
          * <p><b>Note:</b> In order to avoid giving it a barely-useful
-         * visitor all its own, <code>newarray</code> also uses this
-         * form, passing <code>value</code> as the array type code and
-         * <code>cst</code> as a {@link CstType} instance
+         * visitor all its own, {@code newarray} also uses this
+         * form, passing {@code value} as the array type code and
+         * {@code cst} as a {@link CstType} instance
          * corresponding to the array type.</p>
          * 
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
-         * @param cst non-null; the constant
+         * @param cst {@code non-null;} the constant
          * @param value additional literal integer argument, if salient
          * (ignore if not)
          */
@@ -1222,7 +1222,7 @@ public final class BytecodeArray {
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
-         * @param cases non-null; list of (value, target) pairs, plus the
+         * @param cases {@code non-null;} list of (value, target) pairs, plus the
          * default target
          * @param padding the bytes found in the padding area (if any),
          * packed
@@ -1235,8 +1235,8 @@ public final class BytecodeArray {
          *
          * @param offset   offset to the instruction
          * @param length   length of the instruction, in bytes
-         * @param type non-null; the type of the array
-         * @param initVals non-null; list of bytecode offsets for init values
+         * @param type {@code non-null;} the type of the array
+         * @param initVals {@code non-null;} list of bytecode offsets for init values
          */
         public void visitNewarray(int offset, int length, CstType type,
                 ArrayList<Constant> initVals);

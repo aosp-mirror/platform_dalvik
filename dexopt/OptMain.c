@@ -337,7 +337,7 @@ static int fromDex(int argc, char* const argv[])
      */
     GET_ARG(vmBuildVersion, strtol, "bad vm build");
     if (vmBuildVersion != DALVIK_VM_BUILD) {
-        LOGE("Inconsistent build rev: %d vs %d\n",
+        LOGE("DexOpt: build rev does not match VM: %d vs %d\n",
             vmBuildVersion, DALVIK_VM_BUILD);
         goto bail;
     }

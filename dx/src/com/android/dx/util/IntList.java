@@ -19,16 +19,16 @@ package com.android.dx.util;
 import java.util.Arrays;
 
 /**
- * Simple list of <code>int</code>s.
+ * Simple list of {@code int}s.
  */
 public final class IntList extends MutabilityControl {
-    /** non-null; immutable, no-element instance */
+    /** {@code non-null;} immutable, no-element instance */
     public static final IntList EMPTY = new IntList(0);
 
-    /** non-null; array of elements */
+    /** {@code non-null;} array of elements */
     private int[] values;
 
-    /** &gt;= 0; current size of the list */
+    /** {@code >= 0;} current size of the list */
     private int size;
 
     /** whether the values are currently sorted */
@@ -78,7 +78,7 @@ public final class IntList extends MutabilityControl {
     /**
      * Constructs an empty instance.
      * 
-     * @param initialCapacity &gt;= 0; initial capacity of the list
+     * @param initialCapacity {@code >= 0;} initial capacity of the list
      */
     public IntList(int initialCapacity) {
         super(true);
@@ -165,7 +165,7 @@ public final class IntList extends MutabilityControl {
     /**
      * Gets the indicated value.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
+     * @param n {@code >= 0, < size();} which element
      * @return the indicated element's value
      */
     public int get(int n) {
@@ -184,7 +184,7 @@ public final class IntList extends MutabilityControl {
     /**
      * Sets the value at the given index.
      * 
-     * @param n &gt;= 0, &lt; size(); which element
+     * @param n {@code >= 0, < size();} which element
      * @param value value to store
      */
     public void set(int n, int value) {
@@ -229,7 +229,7 @@ public final class IntList extends MutabilityControl {
      * current size (that is, insertion as a last element is legal but
      * no further).
      *
-     * @param n &gt=0 &lt=size(); index of where to insert
+     * @param n {@code >= 0, <=size();} index of where to insert
      * @param value value to insert
      */
     public void insert(int n, int value) {
@@ -252,7 +252,7 @@ public final class IntList extends MutabilityControl {
      * Removes an element at a given index, shifting elements at greater
      * indicies down one.
      *
-     * @param n  &gt=0 &lt size(); index of element to remove
+     * @param n  {@code >=0, < size();} index of element to remove
      */
     public void removeIndex(int n) {
         if (n >= size) {
@@ -307,7 +307,7 @@ public final class IntList extends MutabilityControl {
     /**
      * Pops N elements off the end of the list and decreasing the size by N.
      *
-     * @param n &gt;= 0; number of elements to remove from end.
+     * @param n {@code >= 0;} number of elements to remove from end.
      * @exception IndexOutOfBoundsException if stack is smaller than N
      */
     public void pop(int n) {
@@ -319,7 +319,7 @@ public final class IntList extends MutabilityControl {
     /**
      * Shrinks the size of the list.
      * 
-     * @param newSize &gt;= 0; the new size
+     * @param newSize {@code >= 0;} the new size
      */
     public void shrink(int newSize) {
         if (newSize < 0) {
@@ -338,7 +338,7 @@ public final class IntList extends MutabilityControl {
     /**
      * Makes and returns a mutable copy of the list.
      * 
-     * @return non-null; an appropriately-constructed instance
+     * @return {@code non-null;} an appropriately-constructed instance
      */
     public IntList mutableCopy() {
         int sz = size;
@@ -380,12 +380,12 @@ public final class IntList extends MutabilityControl {
     /**
      * Performs a binary search on a sorted list, returning the index of
      * the given value if it is present or
-     * <code>(-(insertion point) - 1)</code> if the value is not present.
+     * {@code (-(insertion point) - 1)} if the value is not present.
      * If the list is not sorted, then reverts to linear search and returns
-     * <code>-size()</code> if the element is not found.
+     * {@code -size()} if the element is not found.
      *
      * @param value value to find
-     * @return index of value or <code>(-(insertion point) - 1)</code> if the
+     * @return index of value or {@code (-(insertion point) - 1)} if the
      * value is not present
      */
     public int binarysearch(int value) {

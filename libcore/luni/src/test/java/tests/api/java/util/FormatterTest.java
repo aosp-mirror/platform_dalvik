@@ -4705,7 +4705,7 @@ public class FormatterTest extends TestCase {
         bw.close();
 
         readOnly = File.createTempFile("readonly", null);
-        readOnly.setReadOnly();
+        assertTrue(readOnly.setReadOnly());
 
         secret = File.createTempFile("secret", null);
         

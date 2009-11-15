@@ -31,7 +31,7 @@ public final class TypeIdItem extends IdItem {
     /**
      * Constructs an instance.
      * 
-     * @param type non-null; the constant for the type
+     * @param type {@code non-null;} the constant for the type
      */
     public TypeIdItem(CstType type) {
         super(type);

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Linear memory allocation, tied to class loaders.
  */
@@ -68,7 +69,7 @@ guard the pages on debug builds.  Handy when tracking down corruption.
 #define BLOCK_ALIGN         8
 
 /* default length of memory segment (worst case is probably "dexopt") */
-#define DEFAULT_MAX_LENGTH  (4*1024*1024)
+#define DEFAULT_MAX_LENGTH  (5*1024*1024)
 
 /* leave enough space for a length word */
 #define HEADER_EXTRA        4
@@ -137,7 +138,7 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
 
     fd = ashmem_create_region("dalvik-LinearAlloc", DEFAULT_MAX_LENGTH);
     if (fd < 0) {
-        LOGE("ashmem LinearAlloc failed %s", strerror(errno)); 
+        LOGE("ashmem LinearAlloc failed %s", strerror(errno));
         free(pHdr);
         return NULL;
     }
@@ -148,13 +149,13 @@ LinearAllocHdr* dvmLinearAllocCreate(Object* classLoader)
         LOGE("LinearAlloc mmap(%d) failed: %s\n", pHdr->mapLength,
             strerror(errno));
         free(pHdr);
-	close(fd);
+        close(fd);
         return NULL;
     }
 
     close(fd);
 #else /*USE_ASHMEM*/
-    // MAP_ANON is listed as "deprecated" on Linux, 
+    // MAP_ANON is listed as "deprecated" on Linux,
     // but MAP_ANONYMOUS is not defined under Mac OS X.
     pHdr->mapAddr = mmap(NULL, pHdr->mapLength, PROT_READ | PROT_WRITE,
         MAP_PRIVATE | MAP_ANON, -1, 0);
@@ -313,7 +314,8 @@ void* dvmLinearAlloc(Object* classLoader, size_t size)
          * works if the users of these functions actually free everything
          * they allocate.
          */
-        LOGE("LinearAlloc exceeded capacity, last=%d\n", (int) size);
+        LOGE("LinearAlloc exceeded capacity (%d), last=%d\n",
+            pHdr->mapLength, (int) size);
         dvmAbort();
     }
 
@@ -684,5 +686,23 @@ static void checkAllFree(Object* classLoader)
     }
 
     dvmUnlockMutex(&pHdr->lock);
+}
+
+/*
+ * Determine if [start, start+length) is contained in the in-use area of
+ * a single LinearAlloc.  The full set of linear allocators is scanned.
+ *
+ * [ Since we currently only have one region, this is pretty simple.  In
+ * the future we'll need to traverse a table of class loaders. ]
+ */
+bool dvmLinearAllocContains(const void* start, size_t length)
+{
+    LinearAllocHdr* pHdr = getHeader(NULL);
+
+    if (pHdr == NULL)
+        return false;
+
+    return (char*) start >= pHdr->mapAddr &&
+           ((char*)start + length) <= (pHdr->mapAddr + pHdr->curOffset);
 }
 

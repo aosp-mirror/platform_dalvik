@@ -20,18 +20,18 @@ import com.android.dx.cf.code.LocalVariableList;
 import com.android.dx.util.MutabilityException;
 
 /**
- * Base attribute class for standard <code>LocalVariableTable</code>
- * and <code>LocalVariableTypeTable</code> attributes.
+ * Base attribute class for standard {@code LocalVariableTable}
+ * and {@code LocalVariableTypeTable} attributes.
  */
 public abstract class BaseLocalVariables extends BaseAttribute {
-    /** non-null; list of local variable entries */
+    /** {@code non-null;} list of local variable entries */
     private final LocalVariableList localVariables;
 
     /**
      * Constructs an instance.
      * 
-     * @param name non-null; attribute name
-     * @param localVariables non-null; list of local variable entries
+     * @param name {@code non-null;} attribute name
+     * @param localVariables {@code non-null;} list of local variable entries
      */
     public BaseLocalVariables(String name,
             LocalVariableList localVariables) {
@@ -57,7 +57,7 @@ public abstract class BaseLocalVariables extends BaseAttribute {
     /**
      * Gets the list of "local variable" entries associated with this instance.
      * 
-     * @return non-null; the list
+     * @return {@code non-null;} the list
      */
     public final LocalVariableList getLocalVariables() {
         return localVariables;

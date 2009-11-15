@@ -586,13 +586,143 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
     RETURN_VOID();
 }
 
+/*
+ * static boolean cacheRegisterMap(String classAndMethodDescr)
+ *
+ * If the specified class is loaded, and the named method exists, ensure
+ * that the method's register map is ready for use.  If the class/method
+ * cannot be found, nothing happens.
+ *
+ * This can improve the zygote's sharing of compressed register maps.  Do
+ * this after class preloading.
+ *
+ * Returns true if the register map is cached and ready, either as a result
+ * of this call or earlier activity.  Returns false if the class isn't loaded,
+ * if the method couldn't be found, or if the method has no register map.
+ *
+ * (Uncomment logs in dvmGetExpandedRegisterMap0() to gather stats.)
+ */
+static void Dalvik_dalvik_system_VMDebug_cacheRegisterMap(const u4* args,
+    JValue* pResult)
+{
+    StringObject* classAndMethodDescStr = (StringObject*) args[0];
+    ClassObject* clazz;
+    bool result = false;
+
+    if (classAndMethodDescStr == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
+        RETURN_VOID();
+    }
+
+    char* classAndMethodDesc = NULL;
+
+    /*
+     * Pick the string apart.  We have a local copy, so just modify it
+     * in place.
+     */
+    classAndMethodDesc = dvmCreateCstrFromString(classAndMethodDescStr);
+
+    char* methodName = strchr(classAndMethodDesc, '.');
+    if (methodName == NULL) {
+        dvmThrowException("Ljava/lang/RuntimeException;",
+            "method name not found in string");
+        RETURN_VOID();
+    }
+    *methodName++ = '\0';
+
+    char* methodDescr = strchr(methodName, ':');
+    if (methodDescr == NULL) {
+        dvmThrowException("Ljava/lang/RuntimeException;",
+            "method descriptor not found in string");
+        RETURN_VOID();
+    }
+    *methodDescr++ = '\0';
+
+    //LOGD("GOT: %s %s %s\n", classAndMethodDesc, methodName, methodDescr);
+
+    /*
+     * Find the class, but only if it's already loaded.
+     */
+    clazz = dvmLookupClass(classAndMethodDesc, NULL, false);
+    if (clazz == NULL) {
+        LOGD("Class %s not found in bootstrap loader\n", classAndMethodDesc);
+        goto bail;
+    }
+
+    Method* method;
+
+    /*
+     * Find the method, which could be virtual or direct, defined directly
+     * or inherited.
+     */
+    if (methodName[0] == '<') {
+        /*
+         * Constructor or class initializer.  Only need to examine the
+         * "direct" list, and don't need to search up the class hierarchy.
+         */
+        method = dvmFindDirectMethodByDescriptor(clazz, methodName,
+                    methodDescr);
+    } else {
+        /*
+         * Try both lists, and scan up the tree.
+         */
+        method = dvmFindVirtualMethodHierByDescriptor(clazz, methodName,
+                    methodDescr);
+        if (method == NULL) {
+            method = dvmFindDirectMethodHierByDescriptor(clazz, methodName,
+                        methodDescr);
+        }
+    }
+
+    if (method != NULL) {
+        /*
+         * Got it.  See if there's a register map here.
+         */
+        const RegisterMap* pMap;
+        pMap = dvmGetExpandedRegisterMap(method);
+        if (pMap == NULL) {
+            LOGV("No map for %s.%s %s\n",
+                classAndMethodDesc, methodName, methodDescr);
+        } else {
+            LOGV("Found map %s.%s %s\n",
+                classAndMethodDesc, methodName, methodDescr);
+            result = true;
+        }
+    } else {
+        LOGV("Unable to find %s.%s %s\n",
+            classAndMethodDesc, methodName, methodDescr);
+    }
+
+bail:
+    free(classAndMethodDesc);
+    RETURN_BOOLEAN(result);
+}
+
+/*
+ * static void crash()
+ *
+ * Dump the current thread's interpreted stack and abort the VM.  Useful
+ * for seeing both interpreted and native stack traces.
+ *
+ * (Might want to restrict this to debuggable processes as a security
+ * measure, or check SecurityManager.checkExit().)
+ */
+static void Dalvik_dalvik_system_VMDebug_crash(const u4* args,
+    JValue* pResult)
+{
+    UNUSED_PARAMETER(args);
+    UNUSED_PARAMETER(pResult);
+
+    LOGW("Crashing VM on request\n");
+    dvmDumpThread(dvmThreadSelf(), false);
+    dvmAbort();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
     { "getAllocCount",              "(I)I",
         Dalvik_dalvik_system_VMDebug_getAllocCount },
     { "resetAllocCount",            "(I)V",
         Dalvik_dalvik_system_VMDebug_resetAllocCount },
-    //{ "print",              "(Ljava/lang/String;)V",
-    //    Dalvik_dalvik_system_VMDebug_print },
     { "startAllocCounting",         "()V",
         Dalvik_dalvik_system_VMDebug_startAllocCounting },
     { "stopAllocCounting",          "()V",
@@ -633,6 +763,10 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos },
     { "dumpHprofData",              "(Ljava/lang/String;)V",
         Dalvik_dalvik_system_VMDebug_dumpHprofData },
+    { "cacheRegisterMap",           "(Ljava/lang/String;)Z",
+        Dalvik_dalvik_system_VMDebug_cacheRegisterMap },
+    { "crash",                      "()V",
+        Dalvik_dalvik_system_VMDebug_crash },
     { NULL, NULL, NULL },
 };
 

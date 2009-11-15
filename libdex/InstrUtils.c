@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik instruction utility functions.
  */
@@ -37,6 +38,10 @@
  */
 InstructionWidth* dexCreateInstrWidthTable(void)
 {
+#ifdef __ARM_ARCH_7A__
+    /* hack to work around mysterious problem on emulator */
+    LOGD("creating instr width table\n");
+#endif
     InstructionWidth* instrWidth;
     int i;
 
@@ -49,7 +54,7 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         int width = 0;
 
         switch (opc) {
-        case OP_NOP:    /* switch-statement data is a special case of NOP */
+        case OP_NOP:    /* note data for e.g. switch-* encoded "inside" a NOP */
         case OP_MOVE:
         case OP_MOVE_WIDE:
         case OP_MOVE_OBJECT:
@@ -289,6 +294,7 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+        case OP_THROW_VERIFICATION_ERROR:
             width = -2;
             break;
         case OP_INVOKE_VIRTUAL_QUICK:
@@ -320,7 +326,6 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
         case OP_UNUSED_EC:
-        case OP_UNUSED_ED:
         case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
@@ -538,16 +543,6 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_SPUT_SHORT:
         case OP_SPUT_WIDE:
         case OP_SPUT_OBJECT:
-        case OP_INVOKE_VIRTUAL:
-        case OP_INVOKE_VIRTUAL_RANGE:
-        case OP_INVOKE_SUPER:
-        case OP_INVOKE_SUPER_RANGE:
-        case OP_INVOKE_DIRECT:
-        case OP_INVOKE_DIRECT_RANGE:
-        case OP_INVOKE_STATIC:
-        case OP_INVOKE_STATIC_RANGE:
-        case OP_INVOKE_INTERFACE:
-        case OP_INVOKE_INTERFACE_RANGE:
         case OP_DIV_INT:
         case OP_REM_INT:
         case OP_DIV_LONG:
@@ -561,6 +556,19 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_DIV_INT_LIT8:
         case OP_REM_INT_LIT8:
             flags = kInstrCanContinue | kInstrCanThrow;
+            break;
+
+        case OP_INVOKE_VIRTUAL:
+        case OP_INVOKE_VIRTUAL_RANGE:
+        case OP_INVOKE_SUPER:
+        case OP_INVOKE_SUPER_RANGE:
+        case OP_INVOKE_DIRECT:
+        case OP_INVOKE_DIRECT_RANGE:
+        case OP_INVOKE_STATIC:
+        case OP_INVOKE_STATIC_RANGE:
+        case OP_INVOKE_INTERFACE:
+        case OP_INVOKE_INTERFACE_RANGE:
+            flags = kInstrCanContinue | kInstrCanThrow | kInstrInvoke;
             break;
 
         case OP_RETURN_VOID:
@@ -578,7 +586,7 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_GOTO:
         case OP_GOTO_16:
         case OP_GOTO_32:
-            flags = kInstrCanBranch;
+            flags = kInstrCanBranch | kInstrUnconditional;
             break;
 
         /* conditional branches */
@@ -603,7 +611,10 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
             flags = kInstrCanSwitch | kInstrCanContinue;
             break;
 
-        /* optimizer-generated instructions */
+        /* verifier/optimizer-generated instructions */
+        case OP_THROW_VERIFICATION_ERROR:
+            flags = kInstrCanThrow;
+            break;
         case OP_EXECUTE_INLINE:
             flags = kInstrCanContinue;
             break;
@@ -613,12 +624,15 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+            flags = kInstrCanContinue | kInstrCanThrow;
+            break;
+
         case OP_INVOKE_VIRTUAL_QUICK:
         case OP_INVOKE_VIRTUAL_QUICK_RANGE:
         case OP_INVOKE_SUPER_QUICK:
         case OP_INVOKE_SUPER_QUICK_RANGE:
         case OP_INVOKE_DIRECT_EMPTY:
-            flags = kInstrCanContinue | kInstrCanThrow;
+            flags = kInstrCanContinue | kInstrCanThrow | kInstrInvoke;
             break;
 
         /* these should never appear */
@@ -641,7 +655,6 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
         case OP_UNUSED_EC:
-        case OP_UNUSED_ED:
         case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
@@ -950,6 +963,9 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         /*
          * Optimized instructions.
          */
+        case OP_THROW_VERIFICATION_ERROR:
+            fmt = kFmt20bc;
+            break;
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
         case OP_IGET_OBJECT_QUICK:
@@ -993,7 +1009,6 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
         case OP_UNUSED_EC:
-        case OP_UNUSED_ED:
         case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
@@ -1038,38 +1053,39 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
     pDec->opCode = (OpCode) INST_INST(inst);
 
     switch (dexGetInstrFormat(fmts, pDec->opCode)) {
-    case kFmt10x:        // op
+    case kFmt10x:       // op
         /* nothing to do; copy the AA bits out for the verifier */
         pDec->vA = INST_AA(inst);
         break;
-    case kFmt12x:        // op vA, vB
+    case kFmt12x:       // op vA, vB
         pDec->vA = INST_A(inst);
         pDec->vB = INST_B(inst);
         break;
-    case kFmt11n:        // op vA, #+B
+    case kFmt11n:       // op vA, #+B
         pDec->vA = INST_A(inst); 
         pDec->vB = (s4) (INST_B(inst) << 28) >> 28; // sign extend 4-bit value
         break;
-    case kFmt11x:        // op vAA
+    case kFmt11x:       // op vAA
         pDec->vA = INST_AA(inst);
         break;
-    case kFmt10t:        // op +AA
+    case kFmt10t:       // op +AA
         pDec->vA = (s1) INST_AA(inst);              // sign-extend 8-bit value
         break;
-    case kFmt20t:        // op +AAAA
+    case kFmt20t:       // op +AAAA
         pDec->vA = (s2) FETCH(1);                   // sign-extend 16-bit value
         break;
-    case kFmt21c:        // op vAA, thing@BBBB
-    case kFmt22x:        // op vAA, vBBBB
+    case kFmt20bc:      // op AA, thing@BBBB
+    case kFmt21c:       // op vAA, thing@BBBB
+    case kFmt22x:       // op vAA, vBBBB
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1);
         break;
-    case kFmt21s:        // op vAA, #+BBBB
-    case kFmt21t:        // op vAA, +BBBB
+    case kFmt21s:       // op vAA, #+BBBB
+    case kFmt21t:       // op vAA, +BBBB
         pDec->vA = INST_AA(inst);
         pDec->vB = (s2) FETCH(1);                   // sign-extend 16-bit value
         break;
-    case kFmt21h:        // op vAA, #+BBBB0000[00000000]
+    case kFmt21h:       // op vAA, #+BBBB0000[00000000]
         pDec->vA = INST_AA(inst);
         /*
          * The value should be treated as right-zero-extended, but we don't
@@ -1078,24 +1094,24 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
          */
         pDec->vB = FETCH(1);
         break;
-    case kFmt23x:        // op vAA, vBB, vCC
+    case kFmt23x:       // op vAA, vBB, vCC
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1) & 0xff;
         pDec->vC = FETCH(1) >> 8;
         break;
-    case kFmt22b:        // op vAA, vBB, #+CC
+    case kFmt22b:       // op vAA, vBB, #+CC
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1) & 0xff;
         pDec->vC = (s1) (FETCH(1) >> 8);            // sign-extend 8-bit value
         break;
-    case kFmt22s:        // op vA, vB, #+CCCC
-    case kFmt22t:        // op vA, vB, +CCCC
+    case kFmt22s:       // op vA, vB, #+CCCC
+    case kFmt22t:       // op vA, vB, +CCCC
         pDec->vA = INST_A(inst);
         pDec->vB = INST_B(inst);
         pDec->vC = (s2) FETCH(1);                   // sign-extend 16-bit value
         break;
-    case kFmt22c:        // op vA, vB, thing@CCCC
-    case kFmt22cs:       // [opt] op vA, vB, field offset CCCC
+    case kFmt22c:       // op vA, vB, thing@CCCC
+    case kFmt22cs:      // [opt] op vA, vB, field offset CCCC
         pDec->vA = INST_A(inst);
         pDec->vB = INST_B(inst);
         pDec->vC = FETCH(1);
@@ -1103,21 +1119,21 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
     case kFmt30t:        // op +AAAAAAAA
         pDec->vA = FETCH(1) | ((u4) FETCH(2) << 16); // signed 32-bit value
         break;
-    case kFmt31t:        // op vAA, +BBBBBBBB
-    case kFmt31c:        // op vAA, thing@BBBBBBBB
+    case kFmt31t:       // op vAA, +BBBBBBBB
+    case kFmt31c:       // op vAA, thing@BBBBBBBB
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1) | ((u4) FETCH(2) << 16); // 32-bit value
         break;
-    case kFmt32x:        // op vAAAA, vBBBB
+    case kFmt32x:       // op vAAAA, vBBBB
         pDec->vA = FETCH(1);
         pDec->vB = FETCH(2);
         break;
-    case kFmt31i:        // op vAA, #+BBBBBBBB
+    case kFmt31i:       // op vAA, #+BBBBBBBB
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1) | ((u4) FETCH(2) << 16);
         break;
-    case kFmt35c:        // op vB, {vD..vG,vA}, thing@CCCC
-    case kFmt35ms:       // [opt] invoke-virtual+super
+    case kFmt35c:       // op vB, {vD..vG,vA}, thing@CCCC
+    case kFmt35ms:      // [opt] invoke-virtual+super
         {
             /*
              * The lettering changes that came about when we went from 4 args
@@ -1158,7 +1174,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
                 pDec->vC = pDec->arg[0];
         }
         break;
-    case kFmt3inline:    // [opt] inline invoke
+    case kFmt3inline:   // [opt] inline invoke
         {
             u2 regList;
             int i;

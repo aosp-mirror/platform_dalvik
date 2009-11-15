@@ -182,7 +182,7 @@ class TimSort<T> {
 
         // If array is small, do a "mini-TimSort" with no merges
         if (nRemaining < MIN_MERGE) {
-            int initRunLen = countRunAndMakeAscending(a, lo, nRemaining, c);
+            int initRunLen = countRunAndMakeAscending(a, lo, hi, c);
             binarySort(a, lo, hi, lo + initRunLen, c);
             return;
         }

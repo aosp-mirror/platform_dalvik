@@ -21,27 +21,23 @@ import java.util.EventListener;
 
 /**
  * The interface to be implemented by any object that requires notification when
- * data objects are bound to (or unbound from) an {@code SSLSession}. 
- * 
- * @since Android 1.0
+ * data objects are bound to (or unbound from) an {@code SSLSession}.
  */
 public interface SSLSessionBindingListener extends EventListener {
 
     /**
      * Notifies this listener when a value is bound to an {@code SSLSession}.
-     * 
+     *
      * @param event
      *            the event data.
-     * @since Android 1.0
      */
     public void valueBound(SSLSessionBindingEvent event);
 
     /**
      * Notifies this listener when a value is unbound from an {@code SSLSession}.
-     * 
+     *
      * @param event
      *            the event data.
-     * @since Android 1.0
      */
     public void valueUnbound(SSLSessionBindingEvent event);
 

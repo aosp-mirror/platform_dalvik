@@ -26,14 +26,11 @@ import java.sql.SQLException;
  * <p>
  * {@code RowSetMetaData} extends {@link java.sql.ResultSetMetaData}, adding new
  * operations for carrying out value sets.
- * </p>
  * <p>
  * Application code would not normally call this interface directly. It would be
  * called internally when {@code RowSet.execute} is called.
- * </p>
- * 
+ *
  * @see RowSetInternal#setMetaData(RowSetMetaData)
- * @since Android 1.0
  */
 public interface RowSetMetaData extends ResultSetMetaData {
 
@@ -50,7 +47,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            turn it off (default).
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setAutoIncrement(int columnIndex, boolean autoIncrement)
             throws SQLException;
@@ -67,7 +63,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            to make it case insensitive (default).
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setCaseSensitive(int columnIndex, boolean caseSensitive)
             throws SQLException;
@@ -82,7 +77,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the new catalog's name.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setCatalogName(int columnIndex, String catalogName)
             throws SQLException;
@@ -94,7 +88,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the number of columns contained in the {@code RowSet}.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setColumnCount(int columnCount) throws SQLException;
 
@@ -109,7 +102,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the normal maximum column width in characters.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setColumnDisplaySize(int columnIndex, int displaySize)
             throws SQLException;
@@ -125,7 +117,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the alias name for the column.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setColumnLabel(int columnIndex, String theLabel)
             throws SQLException;
@@ -140,7 +131,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the column's label.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setColumnName(int columnIndex, String theColumnName)
             throws SQLException;
@@ -155,7 +145,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the SQL Type, as defined by {@code java.sql.Types}.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setColumnType(int columnIndex, int theSQLType)
             throws SQLException;
@@ -171,7 +160,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the SQL type name for the column.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setColumnTypeName(int columnIndex, String theTypeName)
             throws SQLException;
@@ -189,7 +177,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            value (default).
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setCurrency(int columnIndex, boolean isCurrency)
             throws SQLException;
@@ -210,10 +197,8 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            <p>
      *            The default value is {@code
      *            ResultSetMetaData.columnNullableUnknown}.
-     *            </p>
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setNullable(int columnIndex, int nullability)
             throws SQLException;
@@ -229,7 +214,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the number of decimal digits.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setPrecision(int columnIndex, int thePrecision)
             throws SQLException;
@@ -245,7 +229,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the number of digits after the decimal point.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setScale(int columnIndex, int theScale) throws SQLException;
 
@@ -259,7 +242,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            a {@code String} containing the schema name.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setSchemaName(int columnIndex, String theSchemaName)
             throws SQLException;
@@ -276,7 +258,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            clause search, {@code false} otherwise.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setSearchable(int columnIndex, boolean isSearchable)
             throws SQLException;
@@ -292,7 +273,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            false} otherwise.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setSigned(int columnIndex, boolean isSigned)
             throws SQLException;
@@ -307,7 +287,6 @@ public interface RowSetMetaData extends ResultSetMetaData {
      *            the table name for the column.
      * @throws SQLException
      *             if a problem occurs accessing the database.
-     * @since Android 1.0
      */
     public void setTableName(int columnIndex, String theTableName)
             throws SQLException;

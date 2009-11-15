@@ -23,8 +23,8 @@ import org.apache.harmony.annotation.internal.nls.Messages;
  * Indicates that an element of an annotation type was accessed that was added
  * after the type was compiled or serialized. This does not apply to new
  * elements that have default values.
- * 
- * @since Android 1.0
+ *
+ * @since 1.5
  */
 public class IncompleteAnnotationException extends RuntimeException {
 
@@ -37,13 +37,11 @@ public class IncompleteAnnotationException extends RuntimeException {
     /**
      * Constructs an instance with the incomplete annotation type and the name
      * of the element that's missing.
-     * 
+     *
      * @param annotationType
      *            the annotation type.
      * @param elementName
      *            the name of the incomplete element.
-     *            
-     * @since Android 1.0
      */
     public IncompleteAnnotationException(
             Class<? extends Annotation> annotationType, String elementName) {
@@ -54,10 +52,8 @@ public class IncompleteAnnotationException extends RuntimeException {
 
     /**
      * Returns the annotation type.
-     * 
+     *
      * @return a Class instance.
-     *            
-     * @since Android 1.0
      */
     public Class<? extends Annotation> annotationType() {
         return annotationType;
@@ -65,10 +61,8 @@ public class IncompleteAnnotationException extends RuntimeException {
 
     /**
      * Returns the incomplete element's name.
-     * 
+     *
      * @return the name of the element.
-     *            
-     * @since Android 1.0
      */
     public String elementName() {
         return elementName;

@@ -356,28 +356,33 @@ public final class Pattern implements Serializable {
     }
 
     /**
-     * Splits the given input sequence around occurrences of the {@code Pattern}.
-     * The function first determines all occurrences of the {@code Pattern}
-     * inside the input sequence. It then builds an array of the
-     * &quot;remaining&quot; strings before, in-between, and after these
-     * occurrences. An additional parameter determines the maximal number of
-     * entries in the resulting array and the handling of trailing empty
-     * strings.
+     * Splits the given input sequence at occurrences of this {@code Pattern}.
+     * 
+     * If this {@code Pattern} does not occur in the input, the result is an
+     * array containing the input (converted from a {@code CharSequence} to
+     * a {@code String}).
+     * 
+     * Otherwise, the {@code limit} parameter controls the contents of the
+     * returned array as described below.
      * 
      * @param inputSeq
      *            the input sequence.
      * @param limit
-     *            Determines the maximal number of entries in the resulting
-     *            array.
+     *            Determines the maximum number of entries in the resulting
+     *            array, and the treatment of trailing empty strings.
      *            <ul>
-     *            <li>For n &gt; 0, it is guaranteed that the resulting array
-     *            contains at most n entries.
+     *            <li>For n &gt; 0, the resulting array contains at most n
+     *            entries. If this is fewer than the number of matches, the
+     *            final entry will contain all remaining input.
      *            <li>For n &lt; 0, the length of the resulting array is
-     *            exactly the number of occurrences of the {@code Pattern} +1.
+     *            exactly the number of occurrences of the {@code Pattern}
+     *            plus one for the text after the final separator.
      *            All entries are included.
-     *            <li>For n == 0, the length of the resulting array is at most
-     *            the number of occurrences of the {@code Pattern} +1. Empty
-     *            strings at the end of the array are not included.
+     *            <li>For n == 0, the result is as for n &lt; 0, except
+     *            trailing empty strings will not be returned. (Note that
+     *            the case where the input is itself an empty string is
+     *            special, as described above, and the limit parameter does
+     *            not apply there.)
      *            </ul>
      * 
      * @return the resulting array.
@@ -385,6 +390,13 @@ public final class Pattern implements Serializable {
      * @since Android 1.0
      */
     public String[] split(CharSequence inputSeq, int limit) {
+        if (inputSeq.length() == 0) {
+            // Unlike Perl, which considers the result of splitting the empty
+            // string to be the empty array, Java returns an array containing
+            // the empty string.
+            return new String[] { "" };
+        }
+        
         int maxLength = limit <= 0 ? Integer.MAX_VALUE : limit;
 
         String input = inputSeq.toString();
@@ -393,14 +405,10 @@ public final class Pattern implements Serializable {
         Matcher matcher = new Matcher(this, inputSeq);
         int savedPos = 0;
         
-        // Add text preceding each occurrence, if enough space. Only do this for
-        // non-empty input sequences, because otherwise we'd add the "trailing
-        // empty string" twice.
-        if (inputSeq.length() != 0) {
-            while(matcher.find() && list.size() + 1 < maxLength) {
-                list.add(input.substring(savedPos, matcher.start()));
-                savedPos = matcher.end();
-            }
+        // Add text preceding each occurrence, if enough space.
+        while(matcher.find() && list.size() + 1 < maxLength) {
+            list.add(input.substring(savedPos, matcher.start()));
+            savedPos = matcher.end();
         }
         
         // Add trailing text if enough space.
@@ -412,11 +420,10 @@ public final class Pattern implements Serializable {
             }
         }
         
-        // Remove trailing spaces, if limit == 0 is requested.
+        // Remove trailing empty matches in the limit == 0 case.
         if (limit == 0) {
             int i = list.size() - 1;
-            // Don't remove 1st element, since array must not be empty.
-            while(i > 0 && "".equals(list.get(i))) {
+            while (i >= 0 && "".equals(list.get(i))) {
                 list.remove(i);
                 i--;
             }

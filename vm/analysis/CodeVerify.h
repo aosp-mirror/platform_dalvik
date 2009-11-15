@@ -198,10 +198,10 @@ INLINE bool dvmInsnIsGcPoint(const InsnFlags* insnFlags, int addr) {
     return (insnFlags[addr] & kInsnFlagGcPoint) != 0;
 }
 INLINE void dvmInsnSetGcPoint(InsnFlags* insnFlags, int addr,
-    bool isBranch)
+    bool isGcPoint)
 {
-    assert(isBranch);
-    //if (isBranch)
+    assert(isGcPoint);
+    //if (isGcPoint)
         insnFlags[addr] |= kInsnFlagGcPoint;
     //else
     //    insnFlags[addr] &= ~kInsnFlagGcPoint;
@@ -259,7 +259,7 @@ void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap);
  * Verify bytecode in "meth".  "insnFlags" should be populated with
  * instruction widths and "in try" flags.
  */
-bool dvmVerifyCodeFlow(const Method* meth, InsnFlags* insnFlags,
+bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
     UninitInstanceMap* uninitMap);
 
 #endif /*_DALVIK_CODEVERIFY*/

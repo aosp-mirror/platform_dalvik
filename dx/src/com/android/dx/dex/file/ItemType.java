@@ -48,17 +48,17 @@ public enum ItemType implements ToHuman {
     /** value when represented in a {@link MapItem} */
     private final int mapValue;
 
-    /** non-null; name of the type */
+    /** {@code non-null;} name of the type */
     private final String typeName;
 
-    /** non-null; the short human name */
+    /** {@code non-null;} the short human name */
     private final String humanName;
    
     /**
      * Constructs an instance.
      * 
      * @param mapValue value when represented in a {@link MapItem}
-     * @param typeName non-null; name of the type
+     * @param typeName {@code non-null;} name of the type
      */
     private ItemType(int mapValue, String typeName) {
         this.mapValue = mapValue;
@@ -84,7 +84,7 @@ public enum ItemType implements ToHuman {
     /**
      * Gets the type name.
      * 
-     * @return non-null; the type name
+     * @return {@code non-null;} the type name
      */
     public String getTypeName() {
         return typeName;

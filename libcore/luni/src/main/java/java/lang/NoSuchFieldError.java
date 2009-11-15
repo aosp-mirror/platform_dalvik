@@ -22,9 +22,6 @@ package java.lang;
  * on a class or object, a field that does not exist.
  * <p>
  * Note that this can only occur when inconsistent class files are being loaded.
- * </p>
- * 
- * @since Android 1.0
  */
 public class NoSuchFieldError extends IncompatibleClassChangeError {
 
@@ -33,8 +30,6 @@ public class NoSuchFieldError extends IncompatibleClassChangeError {
     /**
      * Constructs a new {@code NoSuchFieldError} that includes the current stack
      * trace.
-     * 
-     * @since Android 1.0
      */
     public NoSuchFieldError() {
         super();
@@ -46,7 +41,6 @@ public class NoSuchFieldError extends IncompatibleClassChangeError {
      * 
      * @param detailMessage
      *            the detail message for this error.
-     * @since Android 1.0
      */
     public NoSuchFieldError(String detailMessage) {
         super(detailMessage);

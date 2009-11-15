@@ -72,9 +72,9 @@ int gDvm__gcSimpleData = 0;
 static inline bool doVerboseLogging(const Method* meth) {
     return false;       /* COMMENT OUT to enable verbose debugging */
 
-    const char* cd = "Lop_lshr;";
-    const char* mn = "test";
-    const char* sg = "(II)J";
+    const char* cd = "Landroid/net/http/Request;";
+    const char* mn = "readResponse";
+    const char* sg = "(Landroid/net/http/AndroidHttpClientConnection;)V";
     return (strcmp(meth->clazz->descriptor, cd) == 0 &&
             dvmCompareNameDescriptorAndMethod(mn, sg, meth) == 0);
 }
@@ -116,12 +116,13 @@ typedef struct RegisterTable {
 static void checkMergeTab(void);
 static bool isInitMethod(const Method* meth);
 static RegType getInvocationThis(const RegType* insnRegs,\
-    const int insnRegCount, const DecodedInstruction* pDecInsn, bool* pOkay);
+    const int insnRegCount, const DecodedInstruction* pDecInsn,
+    VerifyError* pFailure);
 static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,\
-    u4 vsrc, RegType checkType, bool* pOkay);
-static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,\
+    u4 vsrc, RegType checkType, VerifyError* pFailure);
+static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, UninitInstanceMap* uninitMap);
-static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,\
+static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,\
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess);
 static ClassObject* findCommonSuperclass(ClassObject* c1, ClassObject* c2);
@@ -545,9 +546,11 @@ static bool isClassInitMethod(const Method* meth)
 
 /*
  * Look up a class reference given as a simple string descriptor.
+ *
+ * If we can't find it, return a generic substitute when possible.
  */
 static ClassObject* lookupClassByDescriptor(const Method* meth,
-    const char* pDescriptor, bool* pOkay)
+    const char* pDescriptor, VerifyError* pFailure)
 {
     /*
      * The javac compiler occasionally puts references to nonexistent
@@ -585,7 +588,7 @@ static ClassObject* lookupClassByDescriptor(const Method* meth,
             if (pDescriptor[1] != 'L' && pDescriptor[1] != '[') {
                 LOG_VFY("VFY: invalid char in signature in '%s'\n",
                     pDescriptor);
-                *pOkay = false;
+                *pFailure = VERIFY_ERROR_GENERIC;
             }
 
             /*
@@ -607,17 +610,17 @@ static ClassObject* lookupClassByDescriptor(const Method* meth,
         } else {
             /* We are looking at a primitive type. */
             LOG_VFY("VFY: invalid char in signature in '%s'\n", pDescriptor);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         }
 
         if (clazz == NULL) {
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         }
     }
 
     if (dvmIsPrimitiveClass(clazz)) {
         LOG_VFY("VFY: invalid use of primitive type '%s'\n", pDescriptor);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         clazz = NULL;
     }
 
@@ -634,7 +637,7 @@ static ClassObject* lookupClassByDescriptor(const Method* meth,
  * NOTE: this is also expected to verify the signature.
  */
 static ClassObject* lookupSignatureClass(const Method* meth, const char** pSig,
-    bool* pOkay)
+    VerifyError* pFailure)
 {
     const char* sig = *pSig;
     const char* endp = sig;
@@ -645,7 +648,7 @@ static ClassObject* lookupSignatureClass(const Method* meth, const char** pSig,
         ;
     if (*endp != ';') {
         LOG_VFY("VFY: bad signature component '%s' (missing ';')\n", sig);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         return NULL;
     }
 
@@ -657,7 +660,7 @@ static ClassObject* lookupSignatureClass(const Method* meth, const char** pSig,
 
     *pSig = endp - 1; /* - 1 so that *pSig points at, not past, the ';' */
 
-    return lookupClassByDescriptor(meth, typeStr, pOkay);
+    return lookupClassByDescriptor(meth, typeStr, pFailure);
 }
 
 /*
@@ -669,7 +672,7 @@ static ClassObject* lookupSignatureClass(const Method* meth, const char** pSig,
  * NOTE: this is also expected to verify the signature.
  */
 static ClassObject* lookupSignatureArrayClass(const Method* meth,
-    const char** pSig, bool* pOkay)
+    const char** pSig, VerifyError* pFailure)
 {
     const char* sig = *pSig;
     const char* endp = sig;
@@ -685,7 +688,7 @@ static ClassObject* lookupSignatureArrayClass(const Method* meth,
             ;
         if (*endp != ';') {
             LOG_VFY("VFY: bad signature component '%s' (missing ';')\n", sig);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             return NULL;
         }
     }
@@ -697,7 +700,7 @@ static ClassObject* lookupSignatureArrayClass(const Method* meth,
 
     *pSig = endp;
 
-    return lookupClassByDescriptor(meth, typeStr, pOkay);
+    return lookupClassByDescriptor(meth, typeStr, pFailure);
 }
 
 /*
@@ -713,7 +716,7 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
 {
     DexParameterIterator iterator;
     int actualArgs, expectedArgs, argStart;
-    bool okay = true;
+    VerifyError failure = VERIFY_ERROR_NONE;
 
     dexParameterIteratorInit(&iterator, &meth->prototype);
     argStart = meth->registersSize - meth->insSize;
@@ -768,8 +771,8 @@ static bool setTypesFromSignature(const Method* meth, RegType* regTypes,
              */
             {
                 ClassObject* clazz =
-                    lookupClassByDescriptor(meth, descriptor, &okay);
-                if (!okay)
+                    lookupClassByDescriptor(meth, descriptor, &failure);
+                if (!VERIFY_OK(failure))
                     goto bad_sig;
                 regTypes[argStart + actualArgs] = regTypeFromClass(clazz);
             }
@@ -926,10 +929,10 @@ static RegType getMethodReturnType(const Method* meth)
     case 'L':
     case '[':
         {
-            bool okay = true;
+            VerifyError failure = VERIFY_ERROR_NONE;
             ClassObject* clazz =
-                lookupClassByDescriptor(meth, descriptor, &okay);
-            assert(okay);
+                lookupClassByDescriptor(meth, descriptor, &failure);
+            assert(VERIFY_OK(failure));
             type = regTypeFromClass(clazz);
         }
         break;
@@ -1012,13 +1015,13 @@ static RegType primSigCharToRegType(char sigChar)
  * Widening conversions on integers and references are allowed, but
  * narrowing conversions are not.
  *
- * Returns the resolved method on success, NULL (and sets "*pOkay" to "false")
- * on failure.
+ * Returns the resolved method on success, NULL on failure (with *pFailure
+ * set appropriately).
  */
 static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
     const int insnRegCount, const DecodedInstruction* pDecInsn,
     UninitInstanceMap* uninitMap, MethodType methodType, bool isRange,
-    bool isSuper, bool* pOkay)
+    bool isSuper, VerifyError* pFailure)
 {
     Method* resMethod;
     char* sigOriginal = NULL;
@@ -1030,7 +1033,8 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
     if (methodType == METHOD_INTERFACE) {
         resMethod = dvmOptResolveInterfaceMethod(meth->clazz, pDecInsn->vB);
     } else {
-        resMethod = dvmOptResolveMethod(meth->clazz, pDecInsn->vB, methodType);
+        resMethod = dvmOptResolveMethod(meth->clazz, pDecInsn->vB, methodType,
+            pFailure);
     }
     if (resMethod == NULL) {
         /* failed; print a meaningful failure message */
@@ -1051,7 +1055,7 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
             //char* curMethodDesc =
             //    dexProtoCopyMethodDescriptor(&meth->prototype);
 
-            LOGE("Could not find method %s.%s, referenced from "
+            LOGI("Could not find method %s.%s, referenced from "
                  "method %s.%s\n",
                  dotMissingClass, methodName/*, methodDesc*/,
                  dotMethClass, meth->name/*, curMethodDesc*/);
@@ -1065,6 +1069,8 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
             dvmMethodTypeStr(methodType), pDecInsn->vB,
             classDescriptor, methodName, methodDesc);
         free(methodDesc);
+        if (VERIFY_OK(*pFailure))       /* not set for interface resolve */
+            *pFailure = VERIFY_ERROR_NO_METHOD;
         goto fail;
     }
 
@@ -1095,6 +1101,7 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
                     (super == NULL) ? "-" : super->descriptor,
                     resMethod->name, desc);
             free(desc);
+            *pFailure = VERIFY_ERROR_NO_METHOD;
             goto fail;
         }
     }
@@ -1135,8 +1142,8 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
         RegType actualArgType;
 
         actualArgType = getInvocationThis(insnRegs, insnRegCount, pDecInsn,
-                            pOkay);
-        if (!*pOkay)
+                            pFailure);
+        if (!VERIFY_OK(*pFailure))
             goto fail;
 
         if (regTypeIsUninitReference(actualArgType) && resMethod->name[0] != '<')
@@ -1176,12 +1183,12 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
         switch (*sig) {
         case 'L':
             {
-                ClassObject* clazz = lookupSignatureClass(meth, &sig, pOkay);
-                if (!*pOkay)
+                ClassObject* clazz = lookupSignatureClass(meth, &sig, pFailure);
+                if (!VERIFY_OK(*pFailure))
                     goto bad_sig;
                 verifyRegisterType(insnRegs, insnRegCount, getReg,
-                    regTypeFromClass(clazz), pOkay);
-                if (!*pOkay) {
+                    regTypeFromClass(clazz), pFailure);
+                if (!VERIFY_OK(*pFailure)) {
                     LOG_VFY("VFY: bad arg %d (into %s)\n",
                             actualArgs, clazz->descriptor);
                     goto bad_sig;
@@ -1192,12 +1199,12 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
         case '[':
             {
                 ClassObject* clazz =
-                    lookupSignatureArrayClass(meth, &sig, pOkay);
-                if (!*pOkay)
+                    lookupSignatureArrayClass(meth, &sig, pFailure);
+                if (!VERIFY_OK(*pFailure))
                     goto bad_sig;
                 verifyRegisterType(insnRegs, insnRegCount, getReg,
-                    regTypeFromClass(clazz), pOkay);
-                if (!*pOkay) {
+                    regTypeFromClass(clazz), pFailure);
+                if (!VERIFY_OK(*pFailure)) {
                     LOG_VFY("VFY: bad arg %d (into %s)\n",
                             actualArgs, clazz->descriptor);
                     goto bad_sig;
@@ -1207,42 +1214,42 @@ static Method* verifyInvocationArgs(const Method* meth, const RegType* insnRegs,
             break;
         case 'Z':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeBoolean, pOkay);
+                kRegTypeBoolean, pFailure);
             actualArgs++;
             break;
         case 'C':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeChar, pOkay);
+                kRegTypeChar, pFailure);
             actualArgs++;
             break;
         case 'B':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeByte, pOkay);
+                kRegTypeByte, pFailure);
             actualArgs++;
             break;
         case 'I':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeInteger, pOkay);
+                kRegTypeInteger, pFailure);
             actualArgs++;
             break;
         case 'S':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeShort, pOkay);
+                kRegTypeShort, pFailure);
             actualArgs++;
             break;
         case 'F':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeFloat, pOkay);
+                kRegTypeFloat, pFailure);
             actualArgs++;
             break;
         case 'D':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeDoubleLo, pOkay);
+                kRegTypeDoubleLo, pFailure);
             actualArgs += 2;
             break;
         case 'J':
             verifyRegisterType(insnRegs, insnRegCount, getReg,
-                kRegTypeLongLo, pOkay);
+                kRegTypeLongLo, pFailure);
             actualArgs += 2;
             break;
         default:
@@ -1272,13 +1279,14 @@ bad_sig:
     if (resMethod != NULL) {
         char* desc = dexProtoCopyMethodDescriptor(&resMethod->prototype);
         LOG_VFY("VFY:  rejecting call to %s.%s %s\n",
-                resMethod->clazz->descriptor, resMethod->name, desc);
+            resMethod->clazz->descriptor, resMethod->name, desc);
         free(desc);
     }
 
 fail:
     free(sigOriginal);
-    *pOkay = false;
+    if (*pFailure == VERIFY_ERROR_NONE)
+        *pFailure = VERIFY_ERROR_GENERIC;
     return NULL;
 }
 
@@ -1324,15 +1332,15 @@ static ClassObject* getFieldClass(const Method* meth, const Field* field)
 /*
  * Get the type of register N, verifying that the register is valid.
  *
- * Sets "*pOkay" to false if the register number is out of range.
+ * Sets "*pFailure" appropriately if the register number is out of range.
  */
 static inline RegType getRegisterType(const RegType* insnRegs,
-    const int insnRegCount, u4 vsrc, bool* pOkay)
+    const int insnRegCount, u4 vsrc, VerifyError* pFailure)
 {
     RegType type;
 
     if (vsrc >= (u4) insnRegCount) {
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         return kRegTypeUnknown;
     } else {
         return insnRegs[vsrc];
@@ -1341,21 +1349,21 @@ static inline RegType getRegisterType(const RegType* insnRegs,
 
 /*
  * Get the value from a register, and cast it to a ClassObject.  Sets
- * "pOkay" to false if something fails.
+ * "*pFailure" if something fails.
  *
  * This fails if the register holds an uninitialized class.
  *
  * If the register holds kRegTypeZero, this returns a NULL pointer.
  */
 static ClassObject* getClassFromRegister(const RegType* insnRegs,
-    const int insnRegCount, u4 vsrc, bool* pOkay)
+    const int insnRegCount, u4 vsrc, VerifyError* pFailure)
 {
     ClassObject* clazz = NULL;
     RegType type;
 
     /* get the element type of the array held in vsrc */
-    type = getRegisterType(insnRegs, insnRegCount, vsrc, pOkay);
-    if (!*pOkay)
+    type = getRegisterType(insnRegs, insnRegCount, vsrc, pFailure);
+    if (!VERIFY_OK(*pFailure))
         goto bail;
 
     /* if "always zero", we allow it to fail at runtime */
@@ -1365,12 +1373,12 @@ static ClassObject* getClassFromRegister(const RegType* insnRegs,
     if (!regTypeIsReference(type)) {
         LOG_VFY("VFY: tried to get class from non-ref register v%d (type=%d)\n",
             vsrc, type);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         goto bail;
     }
     if (regTypeIsUninitReference(type)) {
         LOG_VFY("VFY: register %u holds uninitialized reference\n", vsrc);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         goto bail;
     }
 
@@ -1391,27 +1399,28 @@ bail:
  * and then return vC.
  */
 static RegType getInvocationThis(const RegType* insnRegs,
-    const int insnRegCount, const DecodedInstruction* pDecInsn, bool* pOkay)
+    const int insnRegCount, const DecodedInstruction* pDecInsn,
+    VerifyError* pFailure)
 {
     RegType thisType = kRegTypeUnknown;
 
     if (pDecInsn->vA < 1) {
         LOG_VFY("VFY: invoke lacks 'this'\n");
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         goto bail;
     }
 
     /* get the element type of the array held in vsrc */
-    thisType = getRegisterType(insnRegs, insnRegCount, pDecInsn->vC, pOkay);
-    if (!*pOkay) {
-        LOG_VFY("VFY: failed to get this from register %u\n", pDecInsn->vC);
+    thisType = getRegisterType(insnRegs, insnRegCount, pDecInsn->vC, pFailure);
+    if (!VERIFY_OK(*pFailure)) {
+        LOG_VFY("VFY: failed to get 'this' from register %u\n", pDecInsn->vC);
         goto bail;
     }
 
     if (!regTypeIsReference(thisType)) {
         LOG_VFY("VFY: tried to get class from non-ref register v%d (type=%d)\n",
             pDecInsn->vC, thisType);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         goto bail;
     }
 
@@ -1424,10 +1433,10 @@ bail:
  * "newType" is the "Lo" part of a 64-bit value, register N+1 will be
  * set to "newType+1".
  *
- * Sets "*pOkay" to false if the register number is out of range.
+ * Sets "*pFailure" if the register number is out of range.
  */
 static void setRegisterType(RegType* insnRegs, const int insnRegCount,
-    u4 vdst, RegType newType, bool* pOkay)
+    u4 vdst, RegType newType, VerifyError* pFailure)
 {
     //LOGD("set-reg v%u = %d\n", vdst, newType);
     switch (newType) {
@@ -1443,7 +1452,7 @@ static void setRegisterType(RegType* insnRegs, const int insnRegCount,
     case kRegTypeFloat:
     case kRegTypeZero:
         if (vdst >= (u4) insnRegCount) {
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         } else {
             insnRegs[vdst] = newType;
         }
@@ -1451,7 +1460,7 @@ static void setRegisterType(RegType* insnRegs, const int insnRegCount,
     case kRegTypeLongLo:
     case kRegTypeDoubleLo:
         if (vdst+1 >= (u4) insnRegCount) {
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         } else {
             insnRegs[vdst] = newType;
             insnRegs[vdst+1] = newType+1;
@@ -1460,14 +1469,14 @@ static void setRegisterType(RegType* insnRegs, const int insnRegCount,
     case kRegTypeLongHi:
     case kRegTypeDoubleHi:
         /* should never set these explicitly */
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         break;
 
     case kRegTypeUninit:
     default:
         if (regTypeIsReference(newType)) {
             if (vdst >= (u4) insnRegCount) {
-                *pOkay = false;
+                *pFailure = VERIFY_ERROR_GENERIC;
                 break;
             }
             insnRegs[vdst] = newType;
@@ -1490,7 +1499,7 @@ static void setRegisterType(RegType* insnRegs, const int insnRegCount,
     case kRegTypeConflict:      // should only be set during a merge
         LOG_VFY("Unexpected set type %d\n", newType);
         assert(false);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         break;
     }
 }
@@ -1509,10 +1518,10 @@ static void setRegisterType(RegType* insnRegs, const int insnRegCount,
  * interface, verify that the register implements checkType.
  */
 static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,
-    u4 vsrc, RegType checkType, bool* pOkay)
+    u4 vsrc, RegType checkType, VerifyError* pFailure)
 {
     if (vsrc >= (u4) insnRegCount) {
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         return;
     }
 
@@ -1531,7 +1540,7 @@ static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,
         if (!canConvertTo1nr(srcType, checkType)) {
             LOG_VFY("VFY: register1 v%u type %d, wanted %d\n",
                 vsrc, srcType, checkType);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         }
         break;
     case kRegTypeLongLo:
@@ -1539,15 +1548,15 @@ static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,
         if (vsrc+1 >= (u4) insnRegCount) {
             LOG_VFY("VFY: register2 v%u out of range (%d)\n",
                 vsrc, insnRegCount);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         } else if (insnRegs[vsrc+1] != srcType+1) {
             LOG_VFY("VFY: register2 v%u-%u values %d,%d\n",
                 vsrc, vsrc+1, insnRegs[vsrc], insnRegs[vsrc+1]);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         } else if (!canConvertTo2(srcType, checkType)) {
             LOG_VFY("VFY: register2 v%u type %d, wanted %d\n",
                 vsrc, srcType, checkType);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         }
         break;
 
@@ -1559,7 +1568,7 @@ static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,
     case kRegTypeConflict:
         /* should never be checking for these explicitly */
         assert(false);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         return;
     case kRegTypeUninit:
     default:
@@ -1567,23 +1576,23 @@ static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,
         if (!regTypeIsReference(checkType)) {
             LOG_VFY("VFY: unexpected check type %d\n", checkType);
             assert(false);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             break;
         }
         if (regTypeIsUninitReference(checkType)) {
             LOG_VFY("VFY: uninitialized ref not expected as reg check\n");
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             break;
         }
         /* make sure srcType is initialized reference or always-NULL */
         if (!regTypeIsReference(srcType)) {
             LOG_VFY("VFY: register1 v%u type %d, wanted ref\n", vsrc, srcType);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             break;
         }
         if (regTypeIsUninitReference(srcType)) {
             LOG_VFY("VFY: register1 v%u holds uninitialized ref\n", vsrc);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             break;
         }
         /* if the register isn't Zero, make sure it's an instance of check */
@@ -1605,14 +1614,14 @@ static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,
                 {
                     LOG_VFY("VFY: %s does not implement %s\n",
                             srcClass->descriptor, checkClass->descriptor);
-                    *pOkay = false;
+                    *pFailure = VERIFY_ERROR_GENERIC;
                 }
                 */
             } else {
                 if (!dvmInstanceof(srcClass, checkClass)) {
                     LOG_VFY("VFY: %s is not instance of %s\n",
                             srcClass->descriptor, checkClass->descriptor);
-                    *pOkay = false;
+                    *pFailure = VERIFY_ERROR_GENERIC;
                 }
             }
         }
@@ -1625,10 +1634,10 @@ static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,
  * "insnRegCount" to encompass the result register.
  */
 static void setResultRegisterType(RegType* insnRegs, const int insnRegCount,
-    RegType newType, bool* pOkay)
+    RegType newType, VerifyError* pFailure)
 {
     setRegisterType(insnRegs, insnRegCount + kExtraRegs,
-        RESULT_REGISTER(insnRegCount), newType, pOkay);
+        RESULT_REGISTER(insnRegCount), newType, pFailure);
 }
 
 
@@ -1639,7 +1648,7 @@ static void setResultRegisterType(RegType* insnRegs, const int insnRegCount,
  * must be marked as initialized.
  */
 static void markRefsAsInitialized(RegType* insnRegs, int insnRegCount,
-    UninitInstanceMap* uninitMap, RegType uninitType, bool* pOkay)
+    UninitInstanceMap* uninitMap, RegType uninitType, VerifyError* pFailure)
 {
     ClassObject* clazz;
     RegType initType;
@@ -1649,7 +1658,7 @@ static void markRefsAsInitialized(RegType* insnRegs, int insnRegCount,
     if (clazz == NULL) {
         LOGE("VFY: unable to find type=0x%x (idx=%d)\n",
             uninitType, regTypeToUninitIndex(uninitType));
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         return;
     }
     initType = regTypeFromClass(clazz);
@@ -1748,9 +1757,10 @@ typedef enum TypeCategory {
  *
  * For category 2 values, "type" must be the "low" half of the value.
  *
- * Sets "*pOkay" to false if not.
+ * Sets "*pFailure" if something looks wrong.
  */
-static void checkTypeCategory(RegType type, TypeCategory cat, bool* pOkay)
+static void checkTypeCategory(RegType type, TypeCategory cat,
+    VerifyError* pFailure)
 {
     switch (cat) {
     case kTypeCategory1nr:
@@ -1767,7 +1777,7 @@ static void checkTypeCategory(RegType type, TypeCategory cat, bool* pOkay)
         case kRegTypeInteger:
             break;
         default:
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             break;
         }
         break;
@@ -1778,19 +1788,19 @@ static void checkTypeCategory(RegType type, TypeCategory cat, bool* pOkay)
         case kRegTypeDoubleLo:
             break;
         default:
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             break;
         }
         break;
 
     case kTypeCategoryRef:
         if (type != kRegTypeZero && !regTypeIsReference(type))
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         break;
 
     default:
         assert(false);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         break;
     }
 }
@@ -1802,10 +1812,10 @@ static void checkTypeCategory(RegType type, TypeCategory cat, bool* pOkay)
  * Does not verify that "typel" is in fact the low part of a 64-bit
  * register pair.
  */
-static void checkWidePair(RegType typel, RegType typeh, bool* pOkay)
+static void checkWidePair(RegType typel, RegType typeh, VerifyError* pFailure)
 {
     if ((typeh != typel+1))
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
 }
 
 /*
@@ -1816,15 +1826,15 @@ static void checkWidePair(RegType typel, RegType typeh, bool* pOkay)
  * "vsrc" values are checked against this.
  */
 static void copyRegister1(RegType* insnRegs, int insnRegCount, u4 vdst,
-    u4 vsrc, TypeCategory cat, bool* pOkay)
+    u4 vsrc, TypeCategory cat, VerifyError* pFailure)
 {
-    RegType type = getRegisterType(insnRegs, insnRegCount, vsrc, pOkay);
-    if (*pOkay)
-        checkTypeCategory(type, cat, pOkay);
-    if (*pOkay)
-        setRegisterType(insnRegs, insnRegCount, vdst, type, pOkay);
+    RegType type = getRegisterType(insnRegs, insnRegCount, vsrc, pFailure);
+    if (VERIFY_OK(*pFailure))
+        checkTypeCategory(type, cat, pFailure);
+    if (VERIFY_OK(*pFailure))
+        setRegisterType(insnRegs, insnRegCount, vdst, type, pFailure);
 
-    if (!*pOkay) {
+    if (!VERIFY_OK(*pFailure)) {
         LOG_VFY("VFY: copy1 v%u<-v%u type=%d cat=%d\n", vdst, vsrc, type, cat);
     }
 }
@@ -1834,18 +1844,18 @@ static void copyRegister1(RegType* insnRegs, int insnRegCount, u4 vdst,
  * "vsrc" to "vdst".  This copies both halves of the register.
  */
 static void copyRegister2(RegType* insnRegs, int insnRegCount, u4 vdst,
-    u4 vsrc, bool* pOkay)
+    u4 vsrc, VerifyError* pFailure)
 {
-    RegType typel = getRegisterType(insnRegs, insnRegCount, vsrc, pOkay);
-    RegType typeh = getRegisterType(insnRegs, insnRegCount, vsrc+1, pOkay);
-    if (*pOkay) {
-        checkTypeCategory(typel, kTypeCategory2, pOkay);
-        checkWidePair(typel, typeh, pOkay);
+    RegType typel = getRegisterType(insnRegs, insnRegCount, vsrc, pFailure);
+    RegType typeh = getRegisterType(insnRegs, insnRegCount, vsrc+1, pFailure);
+    if (VERIFY_OK(*pFailure)) {
+        checkTypeCategory(typel, kTypeCategory2, pFailure);
+        checkWidePair(typel, typeh, pFailure);
     }
-    if (*pOkay)
-        setRegisterType(insnRegs, insnRegCount, vdst, typel, pOkay);
+    if (VERIFY_OK(*pFailure))
+        setRegisterType(insnRegs, insnRegCount, vdst, typel, pFailure);
 
-    if (!*pOkay) {
+    if (!VERIFY_OK(*pFailure)) {
         LOG_VFY("VFY: copy2 v%u<-v%u type=%d/%d\n", vdst, vsrc, typel, typeh);
     }
 }
@@ -1858,21 +1868,21 @@ static void copyRegister2(RegType* insnRegs, int insnRegCount, u4 vdst,
  * because that would affect the test on "vdst" as well.
  */
 static void copyResultRegister1(RegType* insnRegs, const int insnRegCount,
-    u4 vdst, TypeCategory cat, bool* pOkay)
+    u4 vdst, TypeCategory cat, VerifyError* pFailure)
 {
     RegType type;
     u4 vsrc;
 
     vsrc = RESULT_REGISTER(insnRegCount);
-    type = getRegisterType(insnRegs, insnRegCount + kExtraRegs, vsrc, pOkay);
-    if (*pOkay)
-        checkTypeCategory(type, cat, pOkay);
-    if (*pOkay) {
-        setRegisterType(insnRegs, insnRegCount, vdst, type, pOkay);
+    type = getRegisterType(insnRegs, insnRegCount + kExtraRegs, vsrc, pFailure);
+    if (VERIFY_OK(*pFailure))
+        checkTypeCategory(type, cat, pFailure);
+    if (VERIFY_OK(*pFailure)) {
+        setRegisterType(insnRegs, insnRegCount, vdst, type, pFailure);
         insnRegs[vsrc] = kRegTypeUnknown;
     }
 
-    if (!*pOkay) {
+    if (!VERIFY_OK(*pFailure)) {
         LOG_VFY("VFY: copyRes1 v%u<-v%u cat=%d type=%d\n",
             vdst, vsrc, cat, type);
     }
@@ -1886,25 +1896,27 @@ static void copyResultRegister1(RegType* insnRegs, const int insnRegCount,
  * because that would affect the test on "vdst" as well.
  */
 static void copyResultRegister2(RegType* insnRegs, const int insnRegCount,
-    u4 vdst, bool* pOkay)
+    u4 vdst, VerifyError* pFailure)
 {
     RegType typel, typeh;
     u4 vsrc;
 
     vsrc = RESULT_REGISTER(insnRegCount);
-    typel = getRegisterType(insnRegs, insnRegCount + kExtraRegs, vsrc, pOkay);
-    typeh = getRegisterType(insnRegs, insnRegCount + kExtraRegs, vsrc+1, pOkay);
-    if (*pOkay) {
-        checkTypeCategory(typel, kTypeCategory2, pOkay);
-        checkWidePair(typel, typeh, pOkay);
+    typel = getRegisterType(insnRegs, insnRegCount + kExtraRegs, vsrc,
+                pFailure);
+    typeh = getRegisterType(insnRegs, insnRegCount + kExtraRegs, vsrc+1,
+                pFailure);
+    if (VERIFY_OK(*pFailure)) {
+        checkTypeCategory(typel, kTypeCategory2, pFailure);
+        checkWidePair(typel, typeh, pFailure);
     }
-    if (*pOkay) {
-        setRegisterType(insnRegs, insnRegCount, vdst, typel, pOkay);
+    if (VERIFY_OK(*pFailure)) {
+        setRegisterType(insnRegs, insnRegCount, vdst, typel, pFailure);
         insnRegs[vsrc] = kRegTypeUnknown;
         insnRegs[vsrc+1] = kRegTypeUnknown;
     }
 
-    if (!*pOkay) {
+    if (!VERIFY_OK(*pFailure)) {
         LOG_VFY("VFY: copyRes2 v%u<-v%u type=%d/%d\n",
             vdst, vsrc, typel, typeh);
     }
@@ -1916,10 +1928,10 @@ static void copyResultRegister2(RegType* insnRegs, const int insnRegCount,
  */
 static void checkUnop(RegType* insnRegs, const int insnRegCount,
     DecodedInstruction* pDecInsn, RegType dstType, RegType srcType,
-    bool* pOkay)
+    VerifyError* pFailure)
 {
-    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType, pOkay);
-    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pOkay);
+    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType, pFailure);
+    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pFailure);
 }
 
 /*
@@ -1928,6 +1940,13 @@ static void checkUnop(RegType* insnRegs, const int insnRegCount,
  * boolean-ness, but we can infer it from the types of the arguments.
  *
  * Assumes we've already validated reg1/reg2.
+ *
+ * TODO: consider generalizing this.  The key principle is that the
+ * result of a bitwise operation can only be as wide as the widest of
+ * the operands.  You can safely AND/OR/XOR two chars together and know
+ * you still have a char, so it's reasonable for the compiler or "dx"
+ * to skip the int-to-char instruction.  (We need to do this for boolean
+ * because there is no int-to-boolean operation.)
  *
  * Returns true if both args are Boolean, Zero, or One.
  */
@@ -1958,10 +1977,10 @@ static bool upcastBooleanOp(RegType* insnRegs, const int insnRegCount,
  */
 static void checkLitop(RegType* insnRegs, const int insnRegCount,
     DecodedInstruction* pDecInsn, RegType dstType, RegType srcType,
-    bool checkBooleanOp, bool* pOkay)
+    bool checkBooleanOp, VerifyError* pFailure)
 {
-    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType, pOkay);
-    if (*pOkay && checkBooleanOp) {
+    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType, pFailure);
+    if (VERIFY_OK(*pFailure) && checkBooleanOp) {
         assert(dstType == kRegTypeInteger);
         /* check vB with the call, then check the constant manually */
         if (upcastBooleanOp(insnRegs, insnRegCount, pDecInsn->vB, pDecInsn->vB)
@@ -1970,7 +1989,7 @@ static void checkLitop(RegType* insnRegs, const int insnRegCount,
             dstType = kRegTypeBoolean;
         }
     }
-    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pOkay);
+    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pFailure);
 }
 
 /*
@@ -1980,16 +1999,18 @@ static void checkLitop(RegType* insnRegs, const int insnRegCount,
  */
 static void checkBinop(RegType* insnRegs, const int insnRegCount,
     DecodedInstruction* pDecInsn, RegType dstType, RegType srcType1,
-    RegType srcType2, bool checkBooleanOp, bool* pOkay)
+    RegType srcType2, bool checkBooleanOp, VerifyError* pFailure)
 {
-    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType1, pOkay);
-    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vC, srcType2, pOkay);
-    if (*pOkay && checkBooleanOp) {
+    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType1,
+        pFailure);
+    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vC, srcType2,
+        pFailure);
+    if (VERIFY_OK(*pFailure) && checkBooleanOp) {
         assert(dstType == kRegTypeInteger);
         if (upcastBooleanOp(insnRegs, insnRegCount, pDecInsn->vB, pDecInsn->vC))
             dstType = kRegTypeBoolean;
     }
-    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pOkay);
+    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pFailure);
 }
 
 /*
@@ -1998,16 +2019,135 @@ static void checkBinop(RegType* insnRegs, const int insnRegCount,
  */
 static void checkBinop2addr(RegType* insnRegs, const int insnRegCount,
     DecodedInstruction* pDecInsn, RegType dstType, RegType srcType1,
-    RegType srcType2, bool checkBooleanOp, bool* pOkay)
+    RegType srcType2, bool checkBooleanOp, VerifyError* pFailure)
 {
-    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vA, srcType1, pOkay);
-    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType2, pOkay);
-    if (*pOkay && checkBooleanOp) {
+    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vA, srcType1,
+        pFailure);
+    verifyRegisterType(insnRegs, insnRegCount, pDecInsn->vB, srcType2,
+        pFailure);
+    if (VERIFY_OK(*pFailure) && checkBooleanOp) {
         assert(dstType == kRegTypeInteger);
         if (upcastBooleanOp(insnRegs, insnRegCount, pDecInsn->vA, pDecInsn->vB))
             dstType = kRegTypeBoolean;
     }
-    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pOkay);
+    setRegisterType(insnRegs, insnRegCount, pDecInsn->vA, dstType, pFailure);
+}
+
+/*
+ * Treat right-shifting as a narrowing conversion when possible.
+ *
+ * For example, right-shifting an int 24 times results in a value that can
+ * be treated as a byte.
+ *
+ * Things get interesting when contemplating sign extension.  Right-
+ * shifting an integer by 16 yields a value that can be represented in a
+ * "short" but not a "char", but an unsigned right shift by 16 yields a
+ * value that belongs in a char rather than a short.  (Consider what would
+ * happen if the result of the shift were cast to a char or short and then
+ * cast back to an int.  If sign extension, or the lack thereof, causes
+ * a change in the 32-bit representation, then the conversion was lossy.)
+ *
+ * A signed right shift by 17 on an integer results in a short.  An unsigned
+ * right shfit by 17 on an integer results in a posshort, which can be
+ * assigned to a short or a char.
+ *
+ * An unsigned right shift on a short can actually expand the result into
+ * a 32-bit integer.  For example, 0xfffff123 >>> 8 becomes 0x00fffff1,
+ * which can't be represented in anything smaller than an int.
+ *
+ * javac does not generate code that takes advantage of this, but some
+ * of the code optimizers do.  It's generally a peephole optimization
+ * that replaces a particular sequence, e.g. (bipush 24, ishr, i2b) is
+ * replaced by (bipush 24, ishr).  Knowing that shifting a short 8 times
+ * to the right yields a byte is really more than we need to handle the
+ * code that's out there, but support is not much more complex than just
+ * handling integer.
+ *
+ * Right-shifting never yields a boolean value.
+ *
+ * Returns the new register type.
+ */
+static RegType adjustForRightShift(RegType* workRegs, const int insnRegCount,
+    int reg, unsigned int shiftCount, bool isUnsignedShift,
+    VerifyError* pFailure)
+{
+    RegType srcType = getRegisterType(workRegs, insnRegCount, reg, pFailure);
+    RegType newType;
+
+    /* no-op */
+    if (shiftCount == 0)
+        return srcType;
+
+    /* safe defaults */
+    if (isUnsignedShift)
+        newType = kRegTypeInteger;
+    else
+        newType = srcType;
+
+    if (shiftCount >= 32) {
+        LOG_VFY("Got unexpectedly large shift count %u\n", shiftCount);
+        /* fail? */
+        return newType;
+    }
+
+    switch (srcType) {
+    case kRegTypeInteger:               /* 32-bit signed value */
+    case kRegTypeFloat:                 /* (allowed; treat same as int) */
+        if (isUnsignedShift) {
+            if (shiftCount > 24)
+                newType = kRegTypePosByte;
+            else if (shiftCount >= 16)
+                newType = kRegTypeChar;
+        } else {
+            if (shiftCount >= 24)
+                newType = kRegTypeByte;
+            else if (shiftCount >= 16)
+                newType = kRegTypeShort;
+        }
+        break;
+    case kRegTypeShort:                 /* 16-bit signed value */
+        if (isUnsignedShift) {
+            /* default (kRegTypeInteger) is correct */
+        } else {
+            if (shiftCount >= 8)
+                newType = kRegTypeByte;
+        }
+        break;
+    case kRegTypePosShort:              /* 15-bit unsigned value */
+        if (shiftCount >= 8)
+            newType = kRegTypePosByte;
+        break;
+    case kRegTypeChar:                  /* 16-bit unsigned value */
+        if (shiftCount > 8)
+            newType = kRegTypePosByte;
+        break;
+    case kRegTypeByte:                  /* 8-bit signed value */
+        /* defaults (u=kRegTypeInteger / s=srcType) are correct */
+        break;
+    case kRegTypePosByte:               /* 7-bit unsigned value */
+        /* always use newType=srcType */
+        newType = srcType;
+        break;
+    case kRegTypeZero:                  /* 1-bit unsigned value */
+    case kRegTypeOne:
+    case kRegTypeBoolean:
+        /* unnecessary? */
+        newType = kRegTypeZero;
+        break;
+    default:
+        /* long, double, references; shouldn't be here! */
+        assert(false);
+        break;
+    }
+
+    if (newType != srcType) {
+        LOGVV("narrowing: %d(%d) --> %d to %d\n",
+            shiftCount, isUnsignedShift, srcType, newType);
+    } else {
+        LOGVV("not narrowed: %d(%d) --> %d\n",
+            shiftCount, isUnsignedShift, srcType);
+    }
+    return newType;
 }
 
 
@@ -2329,28 +2469,28 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
  * allow it to be uninitialized if this is an "<init>" method and the field
  * is declared within the "objType" class.
  *
- * Returns an InstField on success, returns NULL and sets "*pOkay" to false
+ * Returns an InstField on success, returns NULL and sets "*pFailure"
  * on failure.
  */
 static InstField* getInstField(const Method* meth,
     const UninitInstanceMap* uninitMap, RegType objType, int fieldIdx,
-    bool* pOkay)
+    VerifyError* pFailure)
 {
     InstField* instField = NULL;
     ClassObject* objClass;
     bool mustBeLocal = false;
 
     if (!regTypeIsReference(objType)) {
-        LOG_VFY("VFY: attempt to access field of non-reference type %d\n",
+        LOG_VFY("VFY: attempt to access field in non-reference type %d\n",
             objType);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_GENERIC;
         goto bail;
     }
 
-    instField = dvmOptResolveInstField(meth->clazz, fieldIdx);
+    instField = dvmOptResolveInstField(meth->clazz, fieldIdx, pFailure);
     if (instField == NULL) {
         LOG_VFY("VFY: unable to resolve instance field %u\n", fieldIdx);
-        *pOkay = false;
+        assert(!VERIFY_OK(*pFailure));
         goto bail;
     }
 
@@ -2367,7 +2507,7 @@ static InstField* getInstField(const Method* meth,
     if (regTypeIsUninitReference(objType)) {
         if (!isInitMethod(meth) || meth->clazz != objClass) {
             LOG_VFY("VFY: attempt to access field via uninitialized ref\n");
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             goto bail;
         }
         mustBeLocal = true;
@@ -2377,7 +2517,7 @@ static InstField* getInstField(const Method* meth,
         LOG_VFY("VFY: invalid field access (field %s.%s, through %s ref)\n",
                 instField->field.clazz->descriptor, instField->field.name,
                 objClass->descriptor);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_NO_FIELD;
         goto bail;
     }
 
@@ -2388,7 +2528,7 @@ static InstField* getInstField(const Method* meth,
         {
             LOG_VFY("VFY: invalid constructor field access (field %s in %s)\n",
                     instField->field.name, objClass->descriptor);
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
             goto bail;
         }
     }
@@ -2400,15 +2540,15 @@ bail:
 /*
  * Look up a static field.
  *
- * Returns a StaticField on success, returns NULL and sets "*pOkay" to false
+ * Returns a StaticField on success, returns NULL and sets "*pFailure"
  * on failure.
  */
 static StaticField* getStaticField(const Method* meth, int fieldIdx,
-    bool* pOkay)
+    VerifyError* pFailure)
 {
     StaticField* staticField;
 
-    staticField = dvmOptResolveStaticField(meth->clazz, fieldIdx);
+    staticField = dvmOptResolveStaticField(meth->clazz, fieldIdx, pFailure);
     if (staticField == NULL) {
         DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
         const DexFieldId* pFieldId;
@@ -2418,8 +2558,7 @@ static StaticField* getStaticField(const Method* meth, int fieldIdx,
         LOG_VFY("VFY: unable to resolve static field %u (%s) in %s\n", fieldIdx,
             dexStringById(pDexFile, pFieldId->nameIdx),
             dexStringByTypeIdx(pDexFile, pFieldId->classIdx));
-
-        *pOkay = false;
+        assert(!VERIFY_OK(*pFailure));
         goto bail;
     }
 
@@ -2431,10 +2570,10 @@ bail:
  * If "field" is marked "final", make sure this is the either <clinit>
  * or <init> as appropriate.
  *
- * Sets "*pOkay" to false on failure.
+ * Sets "*pFailure" on failure.
  */
 static void checkFinalFieldAccess(const Method* meth, const Field* field,
-    bool* pOkay)
+    VerifyError* pFailure)
 {
     if (!dvmIsFinalField(field))
         return;
@@ -2443,21 +2582,15 @@ static void checkFinalFieldAccess(const Method* meth, const Field* field,
     if (meth->clazz != field->clazz) {
         LOG_VFY_METH(meth, "VFY: can't modify final field %s.%s\n",
             field->clazz->descriptor, field->name);
-        *pOkay = false;
+        *pFailure = VERIFY_ERROR_ACCESS_FIELD;
         return;
     }
 
     /*
-     * The EMMA code coverage tool generates a static method that
-     * modifies a private static final field.  The method is only
-     * called by <clinit>, so the code is reasonable if not quite
-     * kosher.  (Attempting to *compile* code that does something
-     * like that will earn you a quick thumbs-down from javac.)
-     *
-     * The verifier in another popular VM doesn't complain about this,
-     * so we're going to allow classes to modify their own static
-     * final fields outside of class initializers.  Further testing
-     * showed that modifications to instance fields are also allowed.
+     * The VM spec descriptions of putfield and putstatic say that
+     * IllegalAccessError is only thrown when the instructions appear
+     * outside the declaring class.  Our earlier attempts to restrict
+     * final field modification to constructors are, therefore, wrong.
      */
 #if 0
     /* make sure we're in the right kind of constructor */
@@ -2465,13 +2598,13 @@ static void checkFinalFieldAccess(const Method* meth, const Field* field,
         if (!isClassInitMethod(meth)) {
             LOG_VFY_METH(meth,
                 "VFY: can't modify final static field outside <clinit>\n");
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         }
     } else {
         if (!isInitMethod(meth)) {
             LOG_VFY_METH(meth,
                 "VFY: can't modify final field outside <init>\n");
-            *pOkay = false;
+            *pFailure = VERIFY_ERROR_GENERIC;
         }
     }
 #endif
@@ -2480,19 +2613,19 @@ static void checkFinalFieldAccess(const Method* meth, const Field* field,
 /*
  * Make sure that the register type is suitable for use as an array index.
  *
- * Sets "*pOkay" to false if not.
+ * Sets "*pFailure" if not.
  */
 static void checkArrayIndexType(const Method* meth, RegType regType,
-    bool* pOkay)
+    VerifyError* pFailure)
 {
-    if (*pOkay) {
+    if (VERIFY_OK(*pFailure)) {
         /*
          * The 1nr types are interchangeable at this level.  We could
          * do something special if we can definitively identify it as a
          * float, but there's no real value in doing so.
          */
-        checkTypeCategory(regType, kTypeCategory1nr, pOkay);
-        if (!*pOkay) {
+        checkTypeCategory(regType, kTypeCategory1nr, pFailure);
+        if (!VERIFY_OK(*pFailure)) {
             LOG_VFY_METH(meth, "Invalid reg type for array index (%d)\n",
                 regType);
         }
@@ -2560,11 +2693,14 @@ static bool checkMoveException(const Method* meth, int insnIdx,
  * Returns NULL if no matching exception handler can be found, or if the
  * exception is not a subclass of Throwable.
  */
-static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx)
+static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx,
+    VerifyError* pFailure)
 {
+    VerifyError localFailure;
     const DexCode* pCode;
     DexFile* pDexFile;
     ClassObject* commonSuper = NULL;
+    bool foundPossibleHandler = false;
     u4 handlersSize;
     u4 offset;
     u4 i;
@@ -2593,16 +2729,22 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx)
 
             if (handler->address == (u4) insnIdx) {
                 ClassObject* clazz;
+                foundPossibleHandler = true;
 
                 if (handler->typeIdx == kDexNoIndex)
                     clazz = gDvm.classJavaLangThrowable;
                 else
-                    clazz = dvmOptResolveClass(meth->clazz, handler->typeIdx);
+                    clazz = dvmOptResolveClass(meth->clazz, handler->typeIdx,
+                                &localFailure);
 
                 if (clazz == NULL) {
                     LOG_VFY("VFY: unable to resolve exception class %u (%s)\n",
                         handler->typeIdx,
                         dexStringByTypeIdx(pDexFile, handler->typeIdx));
+                    /* TODO: do we want to keep going?  If we don't fail
+                     * this we run the risk of having a non-Throwable
+                     * introduced at runtime.  However, that won't pass
+                     * an instanceof test, so is essentially harmless. */
                 } else {
                     if (commonSuper == NULL)
                         commonSuper = clazz;
@@ -2616,8 +2758,12 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx)
     }
 
     if (commonSuper == NULL) {
+        /* no catch blocks, or no catches with classes we can find */
         LOG_VFY_METH(meth,
             "VFY: unable to find exception handler at addr 0x%x\n", insnIdx);
+        *pFailure = VERIFY_ERROR_GENERIC;
+    } else {
+        // TODO: verify the class is an instance of Throwable?
     }
 
     return commonSuper;
@@ -2732,7 +2878,7 @@ static bool initRegisterTable(const Method* meth, const InsnFlags* insnFlags,
 static void verifyFilledNewArrayRegs(const Method* meth,
     const RegType* insnRegs, const int insnRegCount,
     const DecodedInstruction* pDecInsn, ClassObject* resClass, bool isRange,
-    bool* pOkay)
+    VerifyError* pFailure)
 {
     u4 argCount = pDecInsn->vA;
     RegType expectedType;
@@ -2761,12 +2907,135 @@ static void verifyFilledNewArrayRegs(const Method* meth,
         else
             getReg = pDecInsn->arg[ui];
 
-        verifyRegisterType(insnRegs, insnRegCount, getReg, expectedType, pOkay);
-        if (!*pOkay) {
+        verifyRegisterType(insnRegs, insnRegCount, getReg, expectedType,
+            pFailure);
+        if (!VERIFY_OK(*pFailure)) {
             LOG_VFY("VFY: filled-new-array arg %u(%u) not valid\n", ui, getReg);
             return;
         }
     }
+}
+
+
+/*
+ * Replace an instruction with "throw-verification-error".  This allows us to
+ * defer error reporting until the code path is first used.
+ *
+ * The throw-verification-error instruction requires two code units.  Some
+ * of the replaced instructions require three; the third code unit will
+ * receive a "nop".  The instruction's length will be left unchanged
+ * in "insnFlags".
+ *
+ * IMPORTANT: this may replace meth->insns with a pointer to a new copy of
+ * the instructions.
+ *
+ * Returns "true" on success.
+ */
+static bool replaceFailingInstruction(Method* meth, InsnFlags* insnFlags,
+    int insnIdx, VerifyError failure)
+{
+    VerifyErrorRefType refType;
+    const u2* oldInsns = meth->insns + insnIdx;
+    u2 oldInsn = *oldInsns;
+    bool result = false;
+
+    dvmMakeCodeReadWrite(meth);
+
+    //LOGD("  was 0x%04x\n", oldInsn);
+    u2* newInsns = (u2*) meth->insns + insnIdx;
+
+    /*
+     * Generate the new instruction out of the old.
+     *
+     * First, make sure this is an instruction we're expecting to stomp on.
+     */
+    switch (oldInsn & 0xff) {
+    case OP_CONST_CLASS:                // insn[1] == class ref, 2 bytes
+    case OP_CHECK_CAST:
+    case OP_INSTANCE_OF:
+    case OP_NEW_INSTANCE:
+    case OP_NEW_ARRAY:
+    case OP_FILLED_NEW_ARRAY:           // insn[1] == class ref, 3 bytes
+    case OP_FILLED_NEW_ARRAY_RANGE:
+        refType = VERIFY_ERROR_REF_CLASS;
+        break;
+
+    case OP_IGET:                       // insn[1] == field ref, 2 bytes
+    case OP_IGET_BOOLEAN:
+    case OP_IGET_BYTE:
+    case OP_IGET_CHAR:
+    case OP_IGET_SHORT:
+    case OP_IGET_WIDE:
+    case OP_IGET_OBJECT:
+    case OP_IPUT:
+    case OP_IPUT_BOOLEAN:
+    case OP_IPUT_BYTE:
+    case OP_IPUT_CHAR:
+    case OP_IPUT_SHORT:
+    case OP_IPUT_WIDE:
+    case OP_IPUT_OBJECT:
+    case OP_SGET:
+    case OP_SGET_BOOLEAN:
+    case OP_SGET_BYTE:
+    case OP_SGET_CHAR:
+    case OP_SGET_SHORT:
+    case OP_SGET_WIDE:
+    case OP_SGET_OBJECT:
+    case OP_SPUT:
+    case OP_SPUT_BOOLEAN:
+    case OP_SPUT_BYTE:
+    case OP_SPUT_CHAR:
+    case OP_SPUT_SHORT:
+    case OP_SPUT_WIDE:
+    case OP_SPUT_OBJECT:
+        refType = VERIFY_ERROR_REF_FIELD;
+        break;
+
+    case OP_INVOKE_VIRTUAL:             // insn[1] == method ref, 3 bytes
+    case OP_INVOKE_VIRTUAL_RANGE:
+    case OP_INVOKE_SUPER:
+    case OP_INVOKE_SUPER_RANGE:
+    case OP_INVOKE_DIRECT:
+    case OP_INVOKE_DIRECT_RANGE:
+    case OP_INVOKE_STATIC:
+    case OP_INVOKE_STATIC_RANGE:
+    case OP_INVOKE_INTERFACE:
+    case OP_INVOKE_INTERFACE_RANGE:
+        refType = VERIFY_ERROR_REF_METHOD;
+        break;
+
+    default:
+        /* could handle this in a generic way, but this is probably safer */
+        LOG_VFY("GLITCH: verifier asked to replace opcode 0x%02x\n",
+            oldInsn & 0xff);
+        goto bail;
+    }
+
+    /* write a NOP over the third code unit, if necessary */
+    int width = dvmInsnGetWidth(insnFlags, insnIdx);
+    switch (width) {
+    case 2:
+        /* nothing to do */
+        break;
+    case 3:
+        newInsns[2] = OP_NOP;
+        break;
+    default:
+        /* whoops */
+        LOGE("ERROR: stomped a %d-unit instruction with a verifier error\n",
+            width);
+        dvmAbort();
+    }
+
+    /* encode the opcode, with the failure code in the high byte */
+    newInsns[0] = OP_THROW_VERIFICATION_ERROR |
+        (failure << 8) | (refType << (8 + kVerifyErrorRefTypeShift));
+
+    result = true;
+
+bail:
+    dvmMakeCodeReadOnly(meth);
+    return result;
 }
 
 
@@ -2779,7 +3048,7 @@ static void verifyFilledNewArrayRegs(const Method* meth,
 /*
  * Entry point for the detailed code-flow analysis.
  */
-bool dvmVerifyCodeFlow(const Method* meth, InsnFlags* insnFlags,
+bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
     UninitInstanceMap* uninitMap)
 {
     bool result = false;
@@ -2806,9 +3075,13 @@ bool dvmVerifyCodeFlow(const Method* meth, InsnFlags* insnFlags,
     if (gDvm.classJavaLangString == NULL)
         gDvm.classJavaLangString =
             dvmFindSystemClassNoInit("Ljava/lang/String;");
-    if (gDvm.classJavaLangThrowable == NULL)
+    if (gDvm.classJavaLangThrowable == NULL) {
         gDvm.classJavaLangThrowable =
             dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
+        gDvm.offJavaLangThrowable_cause =
+            dvmFindFieldOffset(gDvm.classJavaLangThrowable,
+                "cause", "Ljava/lang/Throwable;");
+    }
     if (gDvm.classJavaLangObject == NULL)
         gDvm.classJavaLangObject =
             dvmFindSystemClassNoInit("Ljava/lang/Object;");
@@ -2929,7 +3202,7 @@ bail:
  * instruction if a register contains an uninitialized instance created
  * by that same instrutcion.
  */
-static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
+static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, UninitInstanceMap* uninitMap)
 {
     const int insnsSize = dvmGetMethodInsnsSize(meth);
@@ -3087,10 +3360,14 @@ static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
         dvmInsnSetChanged(insnFlags, insnIdx, false);
     }
 
-    if (DEAD_CODE_SCAN) {
+    if (DEAD_CODE_SCAN && !IS_METHOD_FLAG_SET(meth, METHOD_ISWRITABLE)) {
         /*
-         * Scan for dead code.  There's nothing "evil" about dead code, but it
-         * indicates a flaw somewhere down the line, possibly in the verifier.
+         * Scan for dead code.  There's nothing "evil" about dead code
+         * (besides the wasted space), but it indicates a flaw somewhere
+         * down the line, possibly in the verifier.
+         *
+         * If we've rewritten "always throw" instructions into the stream,
+         * we are almost certainly going to have some dead code.
          */
         int deadStart = -1;
         for (insnIdx = 0; insnIdx < insnsSize;
@@ -3156,8 +3433,11 @@ bail:
  * if execution at that point needs to be (re-)evaluated.  Register changes
  * are merged into "regTypes" at the target addresses.  Does not set or
  * clear any other flags in "insnFlags".
+ *
+ * This may alter meth->insns if we need to replace an instruction with
+ * throw-verification-error.
  */
-static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
+static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, RegType* workRegs, int insnIdx,
     UninitInstanceMap* uninitMap, int* pStartGuess)
 {
@@ -3194,14 +3474,14 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     RegType tmpType;
     DecodedInstruction decInsn;
     bool justSetResult = false;
-    bool okay = true;
+    VerifyError failure = VERIFY_ERROR_NONE;
 
 #ifndef NDEBUG
     memset(&decInsn, 0x81, sizeof(decInsn));
 #endif
     dexDecodeInstruction(gDvm.instrFormat, insns, &decInsn);
 
-    const int nextFlags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
+    int nextFlags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
 
     /*
      * Make a copy of the previous register state.  If the instruction
@@ -3229,7 +3509,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
          */
         if (decInsn.vA != 0) {
             LOG_VFY("VFY: encountered data table in instruction stream\n");
-            okay = false;
+            failure = VERIFY_ERROR_GENERIC;
         }
         break;
 
@@ -3237,18 +3517,18 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_MOVE_FROM16:
     case OP_MOVE_16:
         copyRegister1(workRegs, insnRegCount, decInsn.vA, decInsn.vB,
-            kTypeCategory1nr, &okay);
+            kTypeCategory1nr, &failure);
         break;
     case OP_MOVE_WIDE:
     case OP_MOVE_WIDE_FROM16:
     case OP_MOVE_WIDE_16:
-        copyRegister2(workRegs, insnRegCount, decInsn.vA, decInsn.vB, &okay);
+        copyRegister2(workRegs, insnRegCount, decInsn.vA, decInsn.vB, &failure);
         break;
     case OP_MOVE_OBJECT:
     case OP_MOVE_OBJECT_FROM16:
     case OP_MOVE_OBJECT_16:
         copyRegister1(workRegs, insnRegCount, decInsn.vA, decInsn.vB,
-            kTypeCategoryRef, &okay);
+            kTypeCategoryRef, &failure);
         break;
 
     /*
@@ -3264,14 +3544,14 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
      */
     case OP_MOVE_RESULT:
         copyResultRegister1(workRegs, insnRegCount, decInsn.vA,
-            kTypeCategory1nr, &okay);
+            kTypeCategory1nr, &failure);
         break;
     case OP_MOVE_RESULT_WIDE:
-        copyResultRegister2(workRegs, insnRegCount, decInsn.vA, &okay);
+        copyResultRegister2(workRegs, insnRegCount, decInsn.vA, &failure);
         break;
     case OP_MOVE_RESULT_OBJECT:
         copyResultRegister1(workRegs, insnRegCount, decInsn.vA,
-            kTypeCategoryRef, &okay);
+            kTypeCategoryRef, &failure);
         break;
 
     case OP_MOVE_EXCEPTION:
@@ -3284,71 +3564,75 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
          * "resClass" will hold the closest common superclass of all
          * exceptions that can be handled here.
          */
-        resClass = getCaughtExceptionType(meth, insnIdx);
+        resClass = getCaughtExceptionType(meth, insnIdx, &failure);
         if (resClass == NULL) {
-            okay = false;
+            assert(!VERIFY_OK(failure));
         } else {
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                regTypeFromClass(resClass), &okay);
+                regTypeFromClass(resClass), &failure);
         }
         break;
 
     case OP_RETURN_VOID:
-        okay = checkConstructorReturn(meth, workRegs, insnRegCount);
-        if (okay && getMethodReturnType(meth) != kRegTypeUnknown) {
+        if (!checkConstructorReturn(meth, workRegs, insnRegCount)) {
+            failure = VERIFY_ERROR_GENERIC;
+        } else if (getMethodReturnType(meth) != kRegTypeUnknown) {
             LOG_VFY("VFY: return-void not expected\n");
-            okay = false;
+            failure = VERIFY_ERROR_GENERIC;
         }
         break;
     case OP_RETURN:
-        okay = checkConstructorReturn(meth, workRegs, insnRegCount);
-        if (okay) {
+        if (!checkConstructorReturn(meth, workRegs, insnRegCount)) {
+            failure = VERIFY_ERROR_GENERIC;
+        } else {
             /* check the method signature */
             RegType returnType = getMethodReturnType(meth);
-            checkTypeCategory(returnType, kTypeCategory1nr, &okay);
-            if (!okay)
+            checkTypeCategory(returnType, kTypeCategory1nr, &failure);
+            if (!VERIFY_OK(failure))
                 LOG_VFY("VFY: return-32 not expected\n");
 
             /* check the register contents */
             returnType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                &okay);
-            checkTypeCategory(returnType, kTypeCategory1nr, &okay);
-            if (!okay)
+                &failure);
+            checkTypeCategory(returnType, kTypeCategory1nr, &failure);
+            if (!VERIFY_OK(failure))
                 LOG_VFY("VFY: return-32 on invalid register v%d\n", decInsn.vA);
         }
         break;
     case OP_RETURN_WIDE:
-        okay = checkConstructorReturn(meth, workRegs, insnRegCount);
-        if (okay) {
+        if (!checkConstructorReturn(meth, workRegs, insnRegCount)) {
+            failure = VERIFY_ERROR_GENERIC;
+        } else {
             RegType returnType, returnTypeHi;
 
             /* check the method signature */
             returnType = getMethodReturnType(meth);
-            checkTypeCategory(returnType, kTypeCategory2, &okay);
-            if (!okay)
+            checkTypeCategory(returnType, kTypeCategory2, &failure);
+            if (!VERIFY_OK(failure))
                 LOG_VFY("VFY: return-wide not expected\n");
 
             /* check the register contents */
             returnType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                &okay);
+                &failure);
             returnTypeHi = getRegisterType(workRegs, insnRegCount,
-                decInsn.vA +1, &okay);
-            if (okay) {
-                checkTypeCategory(returnType, kTypeCategory2, &okay);
-                checkWidePair(returnType, returnTypeHi, &okay);
+                decInsn.vA +1, &failure);
+            if (VERIFY_OK(failure)) {
+                checkTypeCategory(returnType, kTypeCategory2, &failure);
+                checkWidePair(returnType, returnTypeHi, &failure);
             }
-            if (!okay) {
+            if (!VERIFY_OK(failure)) {
                 LOG_VFY("VFY: return-wide on invalid register pair v%d\n",
                     decInsn.vA);
             }
         }
         break;
     case OP_RETURN_OBJECT:
-        okay = checkConstructorReturn(meth, workRegs, insnRegCount);
-        if (okay) {
+        if (!checkConstructorReturn(meth, workRegs, insnRegCount)) {
+            failure = VERIFY_ERROR_GENERIC;
+        } else {
             RegType returnType = getMethodReturnType(meth);
-            checkTypeCategory(returnType, kTypeCategoryRef, &okay);
-            if (!okay) {
+            checkTypeCategory(returnType, kTypeCategoryRef, &failure);
+            if (!VERIFY_OK(failure)) {
                 LOG_VFY("VFY: return-object not expected\n");
                 break;
             }
@@ -3371,16 +3655,17 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 
             declClass = regTypeInitializedReferenceToClass(returnType);
             resClass = getClassFromRegister(workRegs, insnRegCount,
-                            decInsn.vA, &okay);
-            if (!okay)
+                            decInsn.vA, &failure);
+            if (!VERIFY_OK(failure))
                 break;
             if (resClass != NULL) {
                 if (!dvmIsInterfaceClass(declClass) &&
                     !dvmInstanceof(resClass, declClass))
                 {
-                    LOG_VFY("VFY: returning %s, declared %s\n",
-                            resClass->descriptor, declClass->descriptor);
-                    okay = false;
+                    LOG_VFY("VFY: returning %s (cl=%p), declared %s (cl=%p)\n",
+                            resClass->descriptor, resClass->classLoader,
+                            declClass->descriptor, declClass->classLoader);
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
             }
@@ -3392,12 +3677,12 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_CONST:
         /* could be boolean, int, float, or a null reference */
         setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            dvmDetermineCat1Const((s4)decInsn.vB), &okay);
+            dvmDetermineCat1Const((s4)decInsn.vB), &failure);
         break;
     case OP_CONST_HIGH16:
         /* could be boolean, int, float, or a null reference */
         setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            dvmDetermineCat1Const((s4) decInsn.vB << 16), &okay);
+            dvmDetermineCat1Const((s4) decInsn.vB << 16), &failure);
         break;
     case OP_CONST_WIDE_16:
     case OP_CONST_WIDE_32:
@@ -3405,36 +3690,38 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_CONST_WIDE_HIGH16:
         /* could be long or double; default to long and allow conversion */
         setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            kRegTypeLongLo, &okay);
+            kRegTypeLongLo, &failure);
         break;
     case OP_CONST_STRING:
     case OP_CONST_STRING_JUMBO:
         assert(gDvm.classJavaLangString != NULL);
         setRegisterType(workRegs, insnRegCount, decInsn.vA,
-            regTypeFromClass(gDvm.classJavaLangString), &okay);
+            regTypeFromClass(gDvm.classJavaLangString), &failure);
         break;
     case OP_CONST_CLASS:
         assert(gDvm.classJavaLangClass != NULL);
         /* make sure we can resolve the class; access check is important */
-        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
             dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve const-class %d (%s) in %s\n",
                 decInsn.vB, badClassDesc, meth->clazz->descriptor);
-            okay = false;
+            assert(failure != VERIFY_ERROR_GENERIC);
         } else {
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                regTypeFromClass(gDvm.classJavaLangClass), &okay);
+                regTypeFromClass(gDvm.classJavaLangClass), &failure);
         }
         break;
 
     case OP_MONITOR_ENTER:
     case OP_MONITOR_EXIT:
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-        if (okay && !regTypeIsReference(tmpType)) {
-            LOG_VFY("VFY: monitor op on non-object\n");
-            okay = false;
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
+        if (VERIFY_OK(failure)) {
+            if (!regTypeIsReference(tmpType)) {
+                LOG_VFY("VFY: monitor op on non-object\n");
+                failure = VERIFY_ERROR_GENERIC;
+            }
         }
         break;
 
@@ -3447,85 +3734,87 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
          * If it fails, an exception is thrown, which we deal with later
          * by ignoring the update to decInsn.vA when branching to a handler.
          */
-        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
             dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve check-cast %d (%s) in %s\n",
                 decInsn.vB, badClassDesc, meth->clazz->descriptor);
-            okay = false;
+            assert(failure != VERIFY_ERROR_GENERIC);
         } else {
             RegType origType;
 
             origType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             if (!regTypeIsReference(origType)) {
                 LOG_VFY("VFY: check-cast on non-reference in v%u\n",decInsn.vA);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                regTypeFromClass(resClass), &okay);
+                regTypeFromClass(resClass), &failure);
         }
         break;
     case OP_INSTANCE_OF:
         /* make sure we're checking a reference type */
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vB, &okay);
-        if (!okay)
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vB, &failure);
+        if (!VERIFY_OK(failure))
             break;
         if (!regTypeIsReference(tmpType)) {
             LOG_VFY("VFY: vB not a reference (%d)\n", tmpType);
-            okay = false;
+            failure = VERIFY_ERROR_GENERIC;
             break;
         }
 
         /* make sure we can resolve the class; access check is important */
-        resClass = dvmOptResolveClass(meth->clazz, decInsn.vC);
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vC, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vC);
             dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve instanceof %d (%s) in %s\n",
                 decInsn.vC, badClassDesc, meth->clazz->descriptor);
-            okay = false;
+            assert(failure != VERIFY_ERROR_GENERIC);
         } else {
             /* result is boolean */
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                kRegTypeBoolean, &okay);
+                kRegTypeBoolean, &failure);
         }
         break;
 
     case OP_ARRAY_LENGTH:
         resClass = getClassFromRegister(workRegs, insnRegCount,
-                        decInsn.vB, &okay);
-        if (!okay)
+                        decInsn.vB, &failure);
+        if (!VERIFY_OK(failure))
             break;
         if (resClass != NULL && !dvmIsArrayClass(resClass)) {
             LOG_VFY("VFY: array-length on non-array\n");
-            okay = false;
+            failure = VERIFY_ERROR_GENERIC;
             break;
         }
         setRegisterType(workRegs, insnRegCount, decInsn.vA, kRegTypeInteger,
-            &okay);
+            &failure);
         break;
 
     case OP_NEW_INSTANCE:
-        /*
-         * We can check for interface and abstract classes here, but we
-         * can't reject them.  We can ask the optimizer to replace the
-         * instructions with a magic "always throw InstantiationError"
-         * instruction.  (Not enough bytes to sub in a method call.)
-         */
-        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
             dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve new-instance %d (%s) in %s\n",
                 decInsn.vB, badClassDesc, meth->clazz->descriptor);
-            okay = false;
+            assert(failure != VERIFY_ERROR_GENERIC);
         } else {
             RegType uninitType;
+
+            /* can't create an instance of an interface or abstract class */
+            if (dvmIsAbstractClass(resClass) || dvmIsInterfaceClass(resClass)) {
+                LOG_VFY("VFY: new-instance on interface or abstract class %s\n",
+                    resClass->descriptor);
+                failure = VERIFY_ERROR_INSTANTIATION;
+                break;
+            }
 
             /* add resolved class to uninit map if not already there */
             int uidx = dvmSetUninitInstance(uninitMap, insnIdx, resClass);
@@ -3541,50 +3830,50 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 
             /* add the new uninitialized reference to the register ste */
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                uninitType, &okay);
+                uninitType, &failure);
         }
         break;
     case OP_NEW_ARRAY:
-        resClass = dvmOptResolveClass(meth->clazz, decInsn.vC);
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vC, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vC);
             dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve new-array %d (%s) in %s\n",
                 decInsn.vC, badClassDesc, meth->clazz->descriptor);
-            okay = false;
+            assert(failure != VERIFY_ERROR_GENERIC);
         } else if (!dvmIsArrayClass(resClass)) {
             LOG_VFY("VFY: new-array on non-array class\n");
-            okay = false;
+            failure = VERIFY_ERROR_GENERIC;
         } else {
             /* make sure "size" register is valid type */
             verifyRegisterType(workRegs, insnRegCount, decInsn.vB,
-                kRegTypeInteger, &okay);
+                kRegTypeInteger, &failure);
             /* set register type to array class */
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                regTypeFromClass(resClass), &okay);
+                regTypeFromClass(resClass), &failure);
         }
         break;
     case OP_FILLED_NEW_ARRAY:
     case OP_FILLED_NEW_ARRAY_RANGE:
-        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
+        resClass = dvmOptResolveClass(meth->clazz, decInsn.vB, &failure);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
             dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve filled-array %d (%s) in %s\n",
                 decInsn.vB, badClassDesc, meth->clazz->descriptor);
-            okay = false;
+            assert(failure != VERIFY_ERROR_GENERIC);
         } else if (!dvmIsArrayClass(resClass)) {
             LOG_VFY("VFY: filled-new-array on non-array class\n");
-            okay = false;
+            failure = VERIFY_ERROR_GENERIC;
         } else {
             bool isRange = (decInsn.opCode == OP_FILLED_NEW_ARRAY_RANGE);
 
             /* check the arguments to the instruction */
             verifyFilledNewArrayRegs(meth, workRegs, insnRegCount, &decInsn,
-                resClass, isRange, &okay);
+                resClass, isRange, &failure);
             /* filled-array result goes into "result" register */
             setResultRegisterType(workRegs, insnRegCount,
-                regTypeFromClass(resClass), &okay);
+                regTypeFromClass(resClass), &failure);
             justSetResult = true;
         }
         break;
@@ -3592,38 +3881,38 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_CMPL_FLOAT:
     case OP_CMPG_FLOAT:
         verifyRegisterType(workRegs, insnRegCount, decInsn.vB, kRegTypeFloat,
-            &okay);
+            &failure);
         verifyRegisterType(workRegs, insnRegCount, decInsn.vC, kRegTypeFloat,
-            &okay);
+            &failure);
         setRegisterType(workRegs, insnRegCount, decInsn.vA, kRegTypeBoolean,
-            &okay);
+            &failure);
         break;
     case OP_CMPL_DOUBLE:
     case OP_CMPG_DOUBLE:
         verifyRegisterType(workRegs, insnRegCount, decInsn.vB, kRegTypeDoubleLo,
-            &okay);
+            &failure);
         verifyRegisterType(workRegs, insnRegCount, decInsn.vC, kRegTypeDoubleLo,
-            &okay);
+            &failure);
         setRegisterType(workRegs, insnRegCount, decInsn.vA, kRegTypeBoolean,
-            &okay);
+            &failure);
         break;
     case OP_CMP_LONG:
         verifyRegisterType(workRegs, insnRegCount, decInsn.vB, kRegTypeLongLo,
-            &okay);
+            &failure);
         verifyRegisterType(workRegs, insnRegCount, decInsn.vC, kRegTypeLongLo,
-            &okay);
+            &failure);
         setRegisterType(workRegs, insnRegCount, decInsn.vA, kRegTypeBoolean,
-            &okay);
+            &failure);
         break;
 
     case OP_THROW:
         resClass = getClassFromRegister(workRegs, insnRegCount,
-                        decInsn.vA, &okay);
-        if (okay && resClass != NULL) {
+                        decInsn.vA, &failure);
+        if (VERIFY_OK(failure) && resClass != NULL) {
             if (!dvmInstanceof(resClass, gDvm.classJavaLangThrowable)) {
                 LOG_VFY("VFY: thrown class %s not instanceof Throwable\n",
                         resClass->descriptor);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
             }
         }
         break;
@@ -3638,7 +3927,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_SPARSE_SWITCH:
         /* verify that vAA is an integer, or can be converted to one */
         verifyRegisterType(workRegs, insnRegCount, decInsn.vA,
-            kRegTypeInteger, &okay);
+            kRegTypeInteger, &failure);
         break;
 
     case OP_FILL_ARRAY_DATA:
@@ -3649,8 +3938,8 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
 
             /* Similar to the verification done for APUT */
             resClass = getClassFromRegister(workRegs, insnRegCount,
-                            decInsn.vA, &okay);
-            if (!okay)
+                            decInsn.vA, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* resClass can be null if the reg type is Zero */
@@ -3663,7 +3952,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             {
                 LOG_VFY("VFY: invalid fill-array-data on %s\n",
                         resClass->descriptor);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
@@ -3678,7 +3967,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             arrayData = insns + (insns[1] | (((s4)insns[2]) << 16));
             if (arrayData[0] != kArrayDataSignature) {
                 LOG_VFY("VFY: invalid magic for array-data\n");
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
@@ -3712,7 +4001,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             if (arrayData[1] != elemWidth) {
                 LOG_VFY("VFY: array-data size mismatch (%d vs %d)\n",
                         arrayData[1], elemWidth);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
             }
         }
         break;
@@ -3723,9 +4012,11 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
             RegType type1, type2;
             bool tmpResult;
 
-            type1 = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-            type2 = getRegisterType(workRegs, insnRegCount, decInsn.vB, &okay);
-            if (!okay)
+            type1 = getRegisterType(workRegs, insnRegCount, decInsn.vA,
+                        &failure);
+            type2 = getRegisterType(workRegs, insnRegCount, decInsn.vB,
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* both references? */
@@ -3733,9 +4024,9 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
                 break;
 
             /* both category-1nr? */
-            checkTypeCategory(type1, kTypeCategory1nr, &okay);
-            checkTypeCategory(type2, kTypeCategory1nr, &okay);
-            if (!okay) {
+            checkTypeCategory(type1, kTypeCategory1nr, &failure);
+            checkTypeCategory(type2, kTypeCategory1nr, &failure);
+            if (!VERIFY_OK(failure)) {
                 LOG_VFY("VFY: args to if-eq/if-ne must both be refs or cat1\n");
                 break;
             }
@@ -3745,43 +4036,43 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
     case OP_IF_GE:
     case OP_IF_GT:
     case OP_IF_LE:
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-        if (!okay)
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
+        if (!VERIFY_OK(failure))
             break;
-        checkTypeCategory(tmpType, kTypeCategory1nr, &okay);
-        if (!okay) {
+        checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (!VERIFY_OK(failure)) {
             LOG_VFY("VFY: args to 'if' must be cat-1nr\n");
             break;
         }
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vB,&okay);
-        if (!okay)
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vB, &failure);
+        if (!VERIFY_OK(failure))
             break;
-        checkTypeCategory(tmpType, kTypeCategory1nr, &okay);
-        if (!okay) {
+        checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (!VERIFY_OK(failure)) {
             LOG_VFY("VFY: args to 'if' must be cat-1nr\n");
             break;
         }
         break;
     case OP_IF_EQZ:
     case OP_IF_NEZ:
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-        if (!okay)
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
+        if (!VERIFY_OK(failure))
             break;
         if (regTypeIsReference(tmpType))
             break;
-        checkTypeCategory(tmpType, kTypeCategory1nr, &okay);
-        if (!okay)
+        checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (!VERIFY_OK(failure))
             LOG_VFY("VFY: expected cat-1 arg to if\n");
         break;
     case OP_IF_LTZ:
     case OP_IF_GEZ:
     case OP_IF_GTZ:
     case OP_IF_LEZ:
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-        if (!okay)
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
+        if (!VERIFY_OK(failure))
             break;
-        checkTypeCategory(tmpType, kTypeCategory1nr, &okay);
-        if (!okay)
+        checkTypeCategory(tmpType, kTypeCategory1nr, &failure);
+        if (!VERIFY_OK(failure))
             LOG_VFY("VFY: expected cat-1 arg to if\n");
         break;
 
@@ -3805,14 +4096,14 @@ aget_1nr_common:
             RegType srcType, indexType;
 
             indexType = getRegisterType(workRegs, insnRegCount, decInsn.vC,
-                            &okay);
-            checkArrayIndexType(meth, indexType, &okay);
-            if (!okay)
+                            &failure);
+            checkArrayIndexType(meth, indexType, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             resClass = getClassFromRegister(workRegs, insnRegCount,
-                            decInsn.vB, &okay);
-            if (!okay)
+                            decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
             if (resClass != NULL) {
                 /* verify the class */
@@ -3821,7 +4112,7 @@ aget_1nr_common:
                 {
                     LOG_VFY("VFY: invalid aget-1nr target %s\n",
                         resClass->descriptor);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
@@ -3833,13 +4124,13 @@ aget_1nr_common:
                     LOG_VFY("VFY: invalid aget-1nr, array type=%d with"
                             " inst type=%d (on %s)\n",
                         srcType, tmpType, resClass->descriptor);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
             }
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                tmpType, &okay);
+                tmpType, &failure);
         }
         break;
 
@@ -3848,14 +4139,14 @@ aget_1nr_common:
             RegType dstType, indexType;
 
             indexType = getRegisterType(workRegs, insnRegCount, decInsn.vC,
-                            &okay);
-            checkArrayIndexType(meth, indexType, &okay);
-            if (!okay)
+                            &failure);
+            checkArrayIndexType(meth, indexType, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             resClass = getClassFromRegister(workRegs, insnRegCount,
-                            decInsn.vB, &okay);
-            if (!okay)
+                            decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
             if (resClass != NULL) {
                 /* verify the class */
@@ -3864,7 +4155,7 @@ aget_1nr_common:
                 {
                     LOG_VFY("VFY: invalid aget-wide target %s\n",
                         resClass->descriptor);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
@@ -3880,7 +4171,7 @@ aget_1nr_common:
                     LOG_VFY("VFY: invalid aget-wide on %s\n",
                         resClass->descriptor);
                     dstType = kRegTypeUnknown;
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
             } else {
@@ -3893,7 +4184,7 @@ aget_1nr_common:
                 dstType = kRegTypeLongLo;
             }
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                dstType, &okay);
+                dstType, &failure);
         }
         break;
 
@@ -3902,15 +4193,15 @@ aget_1nr_common:
             RegType dstType, indexType;
 
             indexType = getRegisterType(workRegs, insnRegCount, decInsn.vC,
-                            &okay);
-            checkArrayIndexType(meth, indexType, &okay);
-            if (!okay)
+                            &failure);
+            checkArrayIndexType(meth, indexType, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* get the class of the array we're pulling an object from */
             resClass = getClassFromRegister(workRegs, insnRegCount,
-                            decInsn.vB, &okay);
-            if (!okay)
+                            decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
             if (resClass != NULL) {
                 ClassObject* elementClass;
@@ -3918,7 +4209,7 @@ aget_1nr_common:
                 assert(resClass != NULL);
                 if (!dvmIsArrayClass(resClass)) {
                     LOG_VFY("VFY: aget-object on non-array class\n");
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
                 assert(resClass->elementClass != NULL);
@@ -3938,7 +4229,7 @@ aget_1nr_common:
                 } else {
                     LOG_VFY("VFY: aget-object on non-ref array class (%s)\n",
                         resClass->descriptor);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
@@ -3954,7 +4245,7 @@ aget_1nr_common:
                 dstType = kRegTypeZero;
             }
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                dstType, &okay);
+                dstType, &failure);
         }
         break;
     case OP_APUT:
@@ -3977,24 +4268,24 @@ aput_1nr_common:
             RegType srcType, dstType, indexType;
 
             indexType = getRegisterType(workRegs, insnRegCount, decInsn.vC,
-                            &okay);
-            checkArrayIndexType(meth, indexType, &okay);
-            if (!okay)
+                            &failure);
+            checkArrayIndexType(meth, indexType, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* make sure the source register has the correct type */
             srcType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                            &okay);
+                            &failure);
             if (!canConvertTo1nr(srcType, tmpType)) {
                 LOG_VFY("VFY: invalid reg type %d on aput instr (need %d)\n",
                     srcType, tmpType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
             resClass = getClassFromRegister(workRegs, insnRegCount,
-                            decInsn.vB, &okay);
-            if (!okay)
+                            decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* resClass can be null if the reg type is Zero */
@@ -4005,7 +4296,7 @@ aput_1nr_common:
                 resClass->elementClass->primitiveType == PRIM_NOT)
             {
                 LOG_VFY("VFY: invalid aput-1nr on %s\n", resClass->descriptor);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
@@ -4017,31 +4308,31 @@ aput_1nr_common:
             if (!checkFieldArrayStore1nr(tmpType, dstType)) {
                 LOG_VFY("VFY: invalid aput-1nr on %s (inst=%d dst=%d)\n",
                         resClass->descriptor, tmpType, dstType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
         }
         break;
     case OP_APUT_WIDE:
         tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vC,
-                        &okay);
-        checkArrayIndexType(meth, tmpType, &okay);
-        if (!okay)
+                        &failure);
+        checkArrayIndexType(meth, tmpType, &failure);
+        if (!VERIFY_OK(failure))
             break;
 
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-        if (okay) {
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
+        if (VERIFY_OK(failure)) {
             RegType typeHi =
-                getRegisterType(workRegs, insnRegCount, decInsn.vA+1, &okay);
-            checkTypeCategory(tmpType, kTypeCategory2, &okay);
-            checkWidePair(tmpType, typeHi, &okay);
+                getRegisterType(workRegs, insnRegCount, decInsn.vA+1, &failure);
+            checkTypeCategory(tmpType, kTypeCategory2, &failure);
+            checkWidePair(tmpType, typeHi, &failure);
         }
-        if (!okay)
+        if (!VERIFY_OK(failure))
             break;
 
         resClass = getClassFromRegister(workRegs, insnRegCount,
-                        decInsn.vB, &okay);
-        if (!okay)
+                        decInsn.vB, &failure);
+        if (!VERIFY_OK(failure))
             break;
         if (resClass != NULL) {
             /* verify the class and try to refine "dstType" */
@@ -4050,7 +4341,7 @@ aput_1nr_common:
             {
                 LOG_VFY("VFY: invalid aput-wide on %s\n",
                         resClass->descriptor);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
@@ -4062,22 +4353,22 @@ aput_1nr_common:
             default:
                 LOG_VFY("VFY: invalid aput-wide on %s\n",
                         resClass->descriptor);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
         }
         break;
     case OP_APUT_OBJECT:
         tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vC,
-                        &okay);
-        checkArrayIndexType(meth, tmpType, &okay);
-        if (!okay)
+                        &failure);
+        checkArrayIndexType(meth, tmpType, &failure);
+        if (!VERIFY_OK(failure))
             break;
 
         /* get the ref we're storing; Zero is okay, Uninit is not */
         resClass = getClassFromRegister(workRegs, insnRegCount,
-                        decInsn.vA, &okay);
-        if (!okay)
+                        decInsn.vA, &failure);
+        if (!VERIFY_OK(failure))
             break;
         if (resClass != NULL) {
             ClassObject* arrayClass;
@@ -4089,14 +4380,14 @@ aput_1nr_common:
              * null pointer exception).
              */
             arrayClass = getClassFromRegister(workRegs, insnRegCount,
-                            decInsn.vB, &okay);
+                            decInsn.vB, &failure);
 
             if (arrayClass != NULL) {
                 /* see if the array holds a compatible type */
                 if (!dvmIsArrayClass(arrayClass)) {
                     LOG_VFY("VFY: invalid aput-object on %s\n",
                             arrayClass->descriptor);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
@@ -4121,7 +4412,7 @@ aput_1nr_common:
                 if (elementClass->primitiveType != PRIM_NOT) {
                     LOG_VFY("VFY: invalid aput-object of %s into %s\n",
                             resClass->descriptor, arrayClass->descriptor);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
             }
@@ -4150,12 +4441,12 @@ iget_1nr_common:
             RegType objType, fieldType;
 
             objType = getRegisterType(workRegs, insnRegCount, decInsn.vB,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
-                            &okay);
-            if (!okay)
+                            &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* make sure the field's type is compatible with expectation */
@@ -4166,11 +4457,12 @@ iget_1nr_common:
                 LOG_VFY("VFY: invalid iget-1nr of %s.%s (inst=%d field=%d)\n",
                         instField->field.clazz->descriptor,
                         instField->field.name, tmpType, fieldType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
-            setRegisterType(workRegs, insnRegCount, decInsn.vA, tmpType, &okay);
+            setRegisterType(workRegs, insnRegCount, decInsn.vA, tmpType,
+                &failure);
         }
         break;
     case OP_IGET_WIDE:
@@ -4181,12 +4473,12 @@ iget_1nr_common:
             RegType objType;
 
             objType = getRegisterType(workRegs, insnRegCount, decInsn.vB,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
-                            &okay);
-            if (!okay)
+                            &failure);
+            if (!VERIFY_OK(failure))
                 break;
             /* check the type, which should be prim */
             switch (instField->field.signature[0]) {
@@ -4201,12 +4493,12 @@ iget_1nr_common:
                         instField->field.clazz->descriptor,
                         instField->field.name);
                 dstType = kRegTypeUnknown;
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
-            if (okay) {
+            if (VERIFY_OK(failure)) {
                 setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                    dstType, &okay);
+                    dstType, &failure);
             }
         }
         break;
@@ -4217,25 +4509,25 @@ iget_1nr_common:
             RegType objType;
 
             objType = getRegisterType(workRegs, insnRegCount, decInsn.vB,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
-                            &okay);
-            if (!okay)
+                            &failure);
+            if (!VERIFY_OK(failure))
                 break;
             fieldClass = getFieldClass(meth, &instField->field);
             if (fieldClass == NULL) {
                 /* class not found or primitive type */
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
                     instField->field.signature);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
-            if (okay) {
+            if (VERIFY_OK(failure)) {
                 assert(!dvmIsPrimitiveClass(fieldClass));
                 setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                    regTypeFromClass(fieldClass), &okay);
+                    regTypeFromClass(fieldClass), &failure);
             }
         }
         break;
@@ -4260,26 +4552,34 @@ iput_1nr_common:
             ClassObject* fieldClass;
             InstField* instField;
 
-            /* make sure the source register has the correct type */
             srcType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                        &okay);
+                        &failure);
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                srcType = kRegTypeBoolean;
+
+            /* make sure the source register has the correct type */
             if (!canConvertTo1nr(srcType, tmpType)) {
                 LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)\n",
                     srcType, tmpType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
             objType = getRegisterType(workRegs, insnRegCount, decInsn.vB,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
-                            &okay);
-            if (!okay)
+                            &failure);
+            if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &instField->field, &okay);
-            if (!okay)
+            checkFinalFieldAccess(meth, &instField->field, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* get type of field we're storing into */
@@ -4290,34 +4590,34 @@ iput_1nr_common:
                 LOG_VFY("VFY: invalid iput-1nr of %s.%s (inst=%d field=%d)\n",
                         instField->field.clazz->descriptor,
                         instField->field.name, tmpType, fieldType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
         }
         break;
     case OP_IPUT_WIDE:
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-        if (okay) {
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
+        if (VERIFY_OK(failure)) {
             RegType typeHi =
-                getRegisterType(workRegs, insnRegCount, decInsn.vA+1, &okay);
-            checkTypeCategory(tmpType, kTypeCategory2, &okay);
-            checkWidePair(tmpType, typeHi, &okay);
+                getRegisterType(workRegs, insnRegCount, decInsn.vA+1, &failure);
+            checkTypeCategory(tmpType, kTypeCategory2, &failure);
+            checkWidePair(tmpType, typeHi, &failure);
         }
-        if (okay) {
+        if (VERIFY_OK(failure)) {
             ClassObject* fieldClass;
             InstField* instField;
             RegType objType;
 
             objType = getRegisterType(workRegs, insnRegCount, decInsn.vB,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
-                            &okay);
-            if (!okay)
+                            &failure);
+            if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &instField->field, &okay);
-            if (!okay)
+            checkFinalFieldAccess(meth, &instField->field, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* check the type, which should be prim */
@@ -4330,7 +4630,7 @@ iput_1nr_common:
                 LOG_VFY("VFY: invalid iput-wide of %s.%s\n",
                         instField->field.clazz->descriptor,
                         instField->field.name);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
         }
@@ -4343,34 +4643,34 @@ iput_1nr_common:
             RegType objType, valueType;
 
             objType = getRegisterType(workRegs, insnRegCount, decInsn.vB,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             instField = getInstField(meth, uninitMap, objType, decInsn.vC,
-                            &okay);
-            if (!okay)
+                            &failure);
+            if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &instField->field, &okay);
-            if (!okay)
+            checkFinalFieldAccess(meth, &instField->field, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             fieldClass = getFieldClass(meth, &instField->field);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
                     instField->field.signature);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
             valueType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             if (!regTypeIsReference(valueType)) {
                 LOG_VFY("VFY: storing non-ref v%d into ref field '%s' (%s)\n",
                         decInsn.vA, instField->field.name,
                         fieldClass->descriptor);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
             if (valueType != kRegTypeZero) {
@@ -4378,7 +4678,7 @@ iput_1nr_common:
                 if (valueClass == NULL) {
                     LOG_VFY("VFY: storing uninit ref v%d into ref field\n",
                         decInsn.vA);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
                 /* allow if field is any interface or field is base class */
@@ -4389,7 +4689,7 @@ iput_1nr_common:
                             valueClass->descriptor, fieldClass->descriptor,
                             instField->field.clazz->descriptor,
                             instField->field.name);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
             }
@@ -4416,8 +4716,8 @@ sget_1nr_common:
             StaticField* staticField;
             RegType fieldType;
 
-            staticField = getStaticField(meth, decInsn.vB, &okay);
-            if (!okay)
+            staticField = getStaticField(meth, decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /*
@@ -4433,11 +4733,12 @@ sget_1nr_common:
                 LOG_VFY("VFY: invalid sget-1nr of %s.%s (inst=%d actual=%d)\n",
                     staticField->field.clazz->descriptor,
                     staticField->field.name, tmpType, fieldType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
-            setRegisterType(workRegs, insnRegCount, decInsn.vA, tmpType, &okay);
+            setRegisterType(workRegs, insnRegCount, decInsn.vA, tmpType,
+                &failure);
         }
         break;
     case OP_SGET_WIDE:
@@ -4445,8 +4746,8 @@ sget_1nr_common:
             StaticField* staticField;
             RegType dstType;
 
-            staticField = getStaticField(meth, decInsn.vB, &okay);
-            if (!okay)
+            staticField = getStaticField(meth, decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
             /* check the type, which should be prim */
             switch (staticField->field.signature[0]) {
@@ -4461,12 +4762,12 @@ sget_1nr_common:
                         staticField->field.clazz->descriptor,
                         staticField->field.name);
                 dstType = kRegTypeUnknown;
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
-            if (okay) {
+            if (VERIFY_OK(failure)) {
                 setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                    dstType, &okay);
+                    dstType, &failure);
             }
         }
         break;
@@ -4475,23 +4776,23 @@ sget_1nr_common:
             StaticField* staticField;
             ClassObject* fieldClass;
 
-            staticField = getStaticField(meth, decInsn.vB, &okay);
-            if (!okay)
+            staticField = getStaticField(meth, decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
             fieldClass = getFieldClass(meth, &staticField->field);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
                     staticField->field.signature);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
             if (dvmIsPrimitiveClass(fieldClass)) {
                 LOG_VFY("VFY: attempt to get prim field with sget-object\n");
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
             setRegisterType(workRegs, insnRegCount, decInsn.vA,
-                regTypeFromClass(fieldClass), &okay);
+                regTypeFromClass(fieldClass), &failure);
         }
         break;
     case OP_SPUT:
@@ -4514,21 +4815,29 @@ sput_1nr_common:
             RegType srcType, fieldType;
             StaticField* staticField;
 
-            /* make sure the source register has the correct type */
             srcType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                        &okay);
+                        &failure);
+
+            /*
+             * javac generates synthetic functions that write byte values
+             * into boolean fields.
+             */
+            if (tmpType == kRegTypeBoolean && srcType == kRegTypeByte)
+                srcType = kRegTypeBoolean;
+
+            /* make sure the source register has the correct type */
             if (!canConvertTo1nr(srcType, tmpType)) {
-                LOG_VFY("VFY: invalid reg type %d on iput instr (need %d)\n",
+                LOG_VFY("VFY: invalid reg type %d on sput instr (need %d)\n",
                     srcType, tmpType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
-            staticField = getStaticField(meth, decInsn.vB, &okay);
-            if (!okay)
+            staticField = getStaticField(meth, decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &staticField->field, &okay);
-            if (!okay)
+            checkFinalFieldAccess(meth, &staticField->field, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /*
@@ -4543,27 +4852,27 @@ sput_1nr_common:
                 LOG_VFY("VFY: invalid sput-1nr of %s.%s (inst=%d actual=%d)\n",
                     staticField->field.clazz->descriptor,
                     staticField->field.name, tmpType, fieldType);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
         }
         break;
     case OP_SPUT_WIDE:
-        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &okay);
-        if (okay) {
+        tmpType = getRegisterType(workRegs, insnRegCount, decInsn.vA, &failure);
+        if (VERIFY_OK(failure)) {
             RegType typeHi =
-                getRegisterType(workRegs, insnRegCount, decInsn.vA+1, &okay);
-            checkTypeCategory(tmpType, kTypeCategory2, &okay);
-            checkWidePair(tmpType, typeHi, &okay);
+                getRegisterType(workRegs, insnRegCount, decInsn.vA+1, &failure);
+            checkTypeCategory(tmpType, kTypeCategory2, &failure);
+            checkWidePair(tmpType, typeHi, &failure);
         }
-        if (okay) {
+        if (VERIFY_OK(failure)) {
             StaticField* staticField;
 
-            staticField = getStaticField(meth, decInsn.vB, &okay);
-            if (!okay)
+            staticField = getStaticField(meth, decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &staticField->field, &okay);
-            if (!okay)
+            checkFinalFieldAccess(meth, &staticField->field, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /* check the type, which should be prim */
@@ -4576,7 +4885,7 @@ sput_1nr_common:
                 LOG_VFY("VFY: invalid sput-wide of %s.%s\n",
                         staticField->field.clazz->descriptor,
                         staticField->field.name);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
         }
@@ -4588,30 +4897,30 @@ sput_1nr_common:
             StaticField* staticField;
             RegType valueType;
 
-            staticField = getStaticField(meth, decInsn.vB, &okay);
-            if (!okay)
+            staticField = getStaticField(meth, decInsn.vB, &failure);
+            if (!VERIFY_OK(failure))
                 break;
-            checkFinalFieldAccess(meth, &staticField->field, &okay);
-            if (!okay)
+            checkFinalFieldAccess(meth, &staticField->field, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             fieldClass = getFieldClass(meth, &staticField->field);
             if (fieldClass == NULL) {
                 LOG_VFY("VFY: unable to recover field class from '%s'\n",
                     staticField->field.signature);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
 
             valueType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
-                        &okay);
-            if (!okay)
+                        &failure);
+            if (!VERIFY_OK(failure))
                 break;
             if (!regTypeIsReference(valueType)) {
                 LOG_VFY("VFY: storing non-ref v%d into ref field '%s' (%s)\n",
                         decInsn.vA, staticField->field.name,
                         fieldClass->descriptor);
-                okay = false;
+                failure = VERIFY_ERROR_GENERIC;
                 break;
             }
             if (valueType != kRegTypeZero) {
@@ -4619,7 +4928,7 @@ sput_1nr_common:
                 if (valueClass == NULL) {
                     LOG_VFY("VFY: storing uninit ref v%d into ref field\n",
                         decInsn.vA);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
                 /* allow if field is any interface or field is base class */
@@ -4630,7 +4939,7 @@ sput_1nr_common:
                             valueClass->descriptor, fieldClass->descriptor,
                             staticField->field.clazz->descriptor,
                             staticField->field.name);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
             }
@@ -4654,11 +4963,11 @@ sput_1nr_common:
 
             calledMethod = verifyInvocationArgs(meth, workRegs, insnRegCount,
                             &decInsn, uninitMap, METHOD_VIRTUAL, isRange,
-                            isSuper, &okay);
-            if (!okay)
+                            isSuper, &failure);
+            if (!VERIFY_OK(failure))
                 break;
             returnType = getMethodReturnType(calledMethod);
-            setResultRegisterType(workRegs, insnRegCount, returnType, &okay);
+            setResultRegisterType(workRegs, insnRegCount, returnType, &failure);
             justSetResult = true;
         }
         break;
@@ -4672,8 +4981,8 @@ sput_1nr_common:
             isRange =  (decInsn.opCode == OP_INVOKE_DIRECT_RANGE);
             calledMethod = verifyInvocationArgs(meth, workRegs, insnRegCount,
                             &decInsn, uninitMap, METHOD_DIRECT, isRange,
-                            false, &okay);
-            if (!okay)
+                            false, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             /*
@@ -4688,14 +4997,14 @@ sput_1nr_common:
             if (isInitMethod(calledMethod)) {
                 RegType thisType;
                 thisType = getInvocationThis(workRegs, insnRegCount,
-                            &decInsn, &okay);
-                if (!okay)
+                            &decInsn, &failure);
+                if (!VERIFY_OK(failure))
                     break;
 
                 /* no null refs allowed (?) */
                 if (thisType == kRegTypeZero) {
                     LOG_VFY("VFY: unable to initialize null ref\n");
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
@@ -4709,20 +5018,20 @@ sput_1nr_common:
                     if (thisClass != meth->clazz) {
                         LOG_VFY("VFY: invoke-direct <init> on super only "
                             "allowed for 'this' in <init>");
-                        okay = false;
+                        failure = VERIFY_ERROR_GENERIC;
                         break;
                     }
                 }  else if (calledMethod->clazz != thisClass) {
                     LOG_VFY("VFY: invoke-direct <init> must be on current "
                             "class or super\n");
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
                 /* arg must be an uninitialized reference */
                 if (!regTypeIsUninitReference(thisType)) {
                     LOG_VFY("VFY: can only initialize the uninitialized\n");
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
@@ -4734,13 +5043,13 @@ sput_1nr_common:
                  */
                 int uidx = regTypeToUninitIndex(thisType);
                 markRefsAsInitialized(workRegs, insnRegCount, uninitMap,
-                    thisType, &okay);
-                if (!okay)
+                    thisType, &failure);
+                if (!VERIFY_OK(failure))
                     break;
             }
             returnType = getMethodReturnType(calledMethod);
             setResultRegisterType(workRegs, insnRegCount,
-                returnType, &okay);
+                returnType, &failure);
             justSetResult = true;
         }
         break;
@@ -4754,12 +5063,12 @@ sput_1nr_common:
             isRange =  (decInsn.opCode == OP_INVOKE_STATIC_RANGE);
             calledMethod = verifyInvocationArgs(meth, workRegs, insnRegCount,
                             &decInsn, uninitMap, METHOD_STATIC, isRange,
-                            false, &okay);
-            if (!okay)
+                            false, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             returnType = getMethodReturnType(calledMethod);
-            setResultRegisterType(workRegs, insnRegCount, returnType, &okay);
+            setResultRegisterType(workRegs, insnRegCount, returnType, &failure);
             justSetResult = true;
         }
         break;
@@ -4773,8 +5082,8 @@ sput_1nr_common:
             isRange =  (decInsn.opCode == OP_INVOKE_INTERFACE_RANGE);
             absMethod = verifyInvocationArgs(meth, workRegs, insnRegCount,
                             &decInsn, uninitMap, METHOD_INTERFACE, isRange,
-                            false, &okay);
-            if (!okay)
+                            false, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
 #if 0       /* can't do this here, fails on dalvik test 052-verifier-fun */
@@ -4784,8 +5093,8 @@ sput_1nr_common:
              * interface classes, this might have reduced to Object.
              */
             thisType = getInvocationThis(workRegs, insnRegCount,
-                        &decInsn, &okay);
-            if (!okay)
+                        &decInsn, &failure);
+            if (!VERIFY_OK(failure))
                 break;
 
             if (thisType == kRegTypeZero) {
@@ -4796,7 +5105,7 @@ sput_1nr_common:
                 thisClass = regTypeInitializedReferenceToClass(thisType);
                 if (thisClass == NULL) {
                     LOG_VFY("VFY: interface call on uninitialized\n");
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
 
@@ -4812,7 +5121,7 @@ sput_1nr_common:
                 {
                     LOG_VFY("VFY: unable to match absMethod '%s' with %s interfaces\n",
                             absMethod->name, thisClass->descriptor);
-                    okay = false;
+                    failure = VERIFY_ERROR_GENERIC;
                     break;
                 }
             }
@@ -4824,7 +5133,7 @@ sput_1nr_common:
              * in the abstract method, so we're good.
              */
             returnType = getMethodReturnType(absMethod);
-            setResultRegisterType(workRegs, insnRegCount, returnType, &okay);
+            setResultRegisterType(workRegs, insnRegCount, returnType, &failure);
             justSetResult = true;
         }
         break;
@@ -4832,80 +5141,80 @@ sput_1nr_common:
     case OP_NEG_INT:
     case OP_NOT_INT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, &okay);
+            kRegTypeInteger, kRegTypeInteger, &failure);
         break;
     case OP_NEG_LONG:
     case OP_NOT_LONG:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeLongLo, &okay);
+            kRegTypeLongLo, kRegTypeLongLo, &failure);
         break;
     case OP_NEG_FLOAT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeFloat, kRegTypeFloat, &okay);
+            kRegTypeFloat, kRegTypeFloat, &failure);
         break;
     case OP_NEG_DOUBLE:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeDoubleLo, kRegTypeDoubleLo, &okay);
+            kRegTypeDoubleLo, kRegTypeDoubleLo, &failure);
         break;
     case OP_INT_TO_LONG:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeInteger, &okay);
+            kRegTypeLongLo, kRegTypeInteger, &failure);
         break;
     case OP_INT_TO_FLOAT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeFloat, kRegTypeInteger, &okay);
+            kRegTypeFloat, kRegTypeInteger, &failure);
         break;
     case OP_INT_TO_DOUBLE:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeDoubleLo, kRegTypeInteger, &okay);
+            kRegTypeDoubleLo, kRegTypeInteger, &failure);
         break;
     case OP_LONG_TO_INT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeLongLo, &okay);
+            kRegTypeInteger, kRegTypeLongLo, &failure);
         break;
     case OP_LONG_TO_FLOAT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeFloat, kRegTypeLongLo, &okay);
+            kRegTypeFloat, kRegTypeLongLo, &failure);
         break;
     case OP_LONG_TO_DOUBLE:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeDoubleLo, kRegTypeLongLo, &okay);
+            kRegTypeDoubleLo, kRegTypeLongLo, &failure);
         break;
     case OP_FLOAT_TO_INT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeFloat, &okay);
+            kRegTypeInteger, kRegTypeFloat, &failure);
         break;
     case OP_FLOAT_TO_LONG:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeFloat, &okay);
+            kRegTypeLongLo, kRegTypeFloat, &failure);
         break;
     case OP_FLOAT_TO_DOUBLE:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeDoubleLo, kRegTypeFloat, &okay);
+            kRegTypeDoubleLo, kRegTypeFloat, &failure);
         break;
     case OP_DOUBLE_TO_INT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeDoubleLo, &okay);
+            kRegTypeInteger, kRegTypeDoubleLo, &failure);
         break;
     case OP_DOUBLE_TO_LONG:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeDoubleLo, &okay);
+            kRegTypeLongLo, kRegTypeDoubleLo, &failure);
         break;
     case OP_DOUBLE_TO_FLOAT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeFloat, kRegTypeDoubleLo, &okay);
+            kRegTypeFloat, kRegTypeDoubleLo, &failure);
         break;
     case OP_INT_TO_BYTE:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeByte, kRegTypeInteger, &okay);
+            kRegTypeByte, kRegTypeInteger, &failure);
         break;
     case OP_INT_TO_CHAR:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeChar, kRegTypeInteger, &okay);
+            kRegTypeChar, kRegTypeInteger, &failure);
         break;
     case OP_INT_TO_SHORT:
         checkUnop(workRegs, insnRegCount, &decInsn,
-            kRegTypeShort, kRegTypeInteger, &okay);
+            kRegTypeShort, kRegTypeInteger, &failure);
         break;
 
     case OP_ADD_INT:
@@ -4917,13 +5226,13 @@ sput_1nr_common:
     case OP_SHR_INT:
     case OP_USHR_INT:
         checkBinop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, false, &okay);
+            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, false, &failure);
         break;
     case OP_AND_INT:
     case OP_OR_INT:
     case OP_XOR_INT:
         checkBinop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, true, &okay);
+            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, true, &failure);
         break;
     case OP_ADD_LONG:
     case OP_SUB_LONG:
@@ -4934,14 +5243,14 @@ sput_1nr_common:
     case OP_OR_LONG:
     case OP_XOR_LONG:
         checkBinop(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeLongLo, kRegTypeLongLo, false, &okay);
+            kRegTypeLongLo, kRegTypeLongLo, kRegTypeLongLo, false, &failure);
         break;
     case OP_SHL_LONG:
     case OP_SHR_LONG:
     case OP_USHR_LONG:
         /* shift distance is Int, making these different from other binops */
         checkBinop(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeLongLo, kRegTypeInteger, false, &okay);
+            kRegTypeLongLo, kRegTypeLongLo, kRegTypeInteger, false, &failure);
         break;
     case OP_ADD_FLOAT:
     case OP_SUB_FLOAT:
@@ -4949,7 +5258,7 @@ sput_1nr_common:
     case OP_DIV_FLOAT:
     case OP_REM_FLOAT:
         checkBinop(workRegs, insnRegCount, &decInsn,
-            kRegTypeFloat, kRegTypeFloat, kRegTypeFloat, false, &okay);
+            kRegTypeFloat, kRegTypeFloat, kRegTypeFloat, false, &failure);
         break;
     case OP_ADD_DOUBLE:
     case OP_SUB_DOUBLE:
@@ -4957,7 +5266,8 @@ sput_1nr_common:
     case OP_DIV_DOUBLE:
     case OP_REM_DOUBLE:
         checkBinop(workRegs, insnRegCount, &decInsn,
-            kRegTypeDoubleLo, kRegTypeDoubleLo, kRegTypeDoubleLo, false, &okay);
+            kRegTypeDoubleLo, kRegTypeDoubleLo, kRegTypeDoubleLo, false,
+            &failure);
         break;
     case OP_ADD_INT_2ADDR:
     case OP_SUB_INT_2ADDR:
@@ -4967,17 +5277,17 @@ sput_1nr_common:
     case OP_SHR_INT_2ADDR:
     case OP_USHR_INT_2ADDR:
         checkBinop2addr(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, false, &okay);
+            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, false, &failure);
         break;
     case OP_AND_INT_2ADDR:
     case OP_OR_INT_2ADDR:
     case OP_XOR_INT_2ADDR:
         checkBinop2addr(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, true, &okay);
+            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, true, &failure);
         break;
     case OP_DIV_INT_2ADDR:
         checkBinop2addr(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, false, &okay);
+            kRegTypeInteger, kRegTypeInteger, kRegTypeInteger, false, &failure);
         break;
     case OP_ADD_LONG_2ADDR:
     case OP_SUB_LONG_2ADDR:
@@ -4988,13 +5298,13 @@ sput_1nr_common:
     case OP_OR_LONG_2ADDR:
     case OP_XOR_LONG_2ADDR:
         checkBinop2addr(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeLongLo, kRegTypeLongLo, false, &okay);
+            kRegTypeLongLo, kRegTypeLongLo, kRegTypeLongLo, false, &failure);
         break;
     case OP_SHL_LONG_2ADDR:
     case OP_SHR_LONG_2ADDR:
     case OP_USHR_LONG_2ADDR:
         checkBinop2addr(workRegs, insnRegCount, &decInsn,
-            kRegTypeLongLo, kRegTypeLongLo, kRegTypeInteger, false, &okay);
+            kRegTypeLongLo, kRegTypeLongLo, kRegTypeInteger, false, &failure);
         break;
     case OP_ADD_FLOAT_2ADDR:
     case OP_SUB_FLOAT_2ADDR:
@@ -5002,7 +5312,7 @@ sput_1nr_common:
     case OP_DIV_FLOAT_2ADDR:
     case OP_REM_FLOAT_2ADDR:
         checkBinop2addr(workRegs, insnRegCount, &decInsn,
-            kRegTypeFloat, kRegTypeFloat, kRegTypeFloat, false, &okay);
+            kRegTypeFloat, kRegTypeFloat, kRegTypeFloat, false, &failure);
         break;
     case OP_ADD_DOUBLE_2ADDR:
     case OP_SUB_DOUBLE_2ADDR:
@@ -5010,7 +5320,8 @@ sput_1nr_common:
     case OP_DIV_DOUBLE_2ADDR:
     case OP_REM_DOUBLE_2ADDR:
         checkBinop2addr(workRegs, insnRegCount, &decInsn,
-            kRegTypeDoubleLo, kRegTypeDoubleLo, kRegTypeDoubleLo, false, &okay);
+            kRegTypeDoubleLo, kRegTypeDoubleLo, kRegTypeDoubleLo, false,
+            &failure);
         break;
     case OP_ADD_INT_LIT16:
     case OP_RSUB_INT:
@@ -5018,13 +5329,13 @@ sput_1nr_common:
     case OP_DIV_INT_LIT16:
     case OP_REM_INT_LIT16:
         checkLitop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, false, &okay);
+            kRegTypeInteger, kRegTypeInteger, false, &failure);
         break;
     case OP_AND_INT_LIT16:
     case OP_OR_INT_LIT16:
     case OP_XOR_INT_LIT16:
         checkLitop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, true, &okay);
+            kRegTypeInteger, kRegTypeInteger, true, &failure);
         break;
     case OP_ADD_INT_LIT8:
     case OP_RSUB_INT_LIT8:
@@ -5032,18 +5343,35 @@ sput_1nr_common:
     case OP_DIV_INT_LIT8:
     case OP_REM_INT_LIT8:
     case OP_SHL_INT_LIT8:
-    case OP_SHR_INT_LIT8:
-    case OP_USHR_INT_LIT8:
         checkLitop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, false, &okay);
+            kRegTypeInteger, kRegTypeInteger, false, &failure);
+        break;
+    case OP_SHR_INT_LIT8:
+        tmpType = adjustForRightShift(workRegs, insnRegCount,
+            decInsn.vB, decInsn.vC, false, &failure);
+        checkLitop(workRegs, insnRegCount, &decInsn,
+            tmpType, kRegTypeInteger, false, &failure);
+        break;
+    case OP_USHR_INT_LIT8:
+        tmpType = adjustForRightShift(workRegs, insnRegCount,
+            decInsn.vB, decInsn.vC, true, &failure);
+        checkLitop(workRegs, insnRegCount, &decInsn,
+            tmpType, kRegTypeInteger, false, &failure);
         break;
     case OP_AND_INT_LIT8:
     case OP_OR_INT_LIT8:
     case OP_XOR_INT_LIT8:
         checkLitop(workRegs, insnRegCount, &decInsn,
-            kRegTypeInteger, kRegTypeInteger, true, &okay);
+            kRegTypeInteger, kRegTypeInteger, true, &failure);
         break;
 
+    /*
+     * This falls into the general category of "optimized" instructions,
+     * which don't generally appear during verification.  Because it's
+     * inserted in the course of verification, we can expect to see it here.
+     */
+    case OP_THROW_VERIFICATION_ERROR:
+        break;
 
     /*
      * Verifying "quickened" instructions is tricky, because we have
@@ -5089,7 +5417,7 @@ sput_1nr_common:
     case OP_INVOKE_VIRTUAL_QUICK_RANGE:
     case OP_INVOKE_SUPER_QUICK:
     case OP_INVOKE_SUPER_QUICK_RANGE:
-        okay = false;
+        failure = VERIFY_ERROR_GENERIC;
         break;
 
     /* these should never appear */
@@ -5112,14 +5440,13 @@ sput_1nr_common:
     case OP_UNUSED_EA:
     case OP_UNUSED_EB:
     case OP_UNUSED_EC:
-    case OP_UNUSED_ED:
     case OP_UNUSED_EF:
     case OP_UNUSED_F1:
     case OP_UNUSED_FC:
     case OP_UNUSED_FD:
     case OP_UNUSED_FE:
     case OP_UNUSED_FF:
-        okay = false;
+        failure = VERIFY_ERROR_GENERIC;
         break;
 
     /*
@@ -5128,10 +5455,28 @@ sput_1nr_common:
      */
     }
 
-    if (!okay) {
-        LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
-            decInsn.opCode, insnIdx);
-        goto bail;
+    if (!VERIFY_OK(failure)) {
+        if (failure == VERIFY_ERROR_GENERIC || gDvm.optimizing) {
+            /* immediate failure, reject class */
+            LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
+                decInsn.opCode, insnIdx);
+            goto bail;
+        } else {
+            /* replace opcode and continue on */
+            LOGD("VFY: replacing opcode 0x%02x at 0x%04x\n",
+                decInsn.opCode, insnIdx);
+            if (!replaceFailingInstruction(meth, insnFlags, insnIdx, failure)) {
+                LOG_VFY_METH(meth, "VFY:  rejecting opcode 0x%02x at 0x%04x\n",
+                    decInsn.opCode, insnIdx);
+                goto bail;
+            }
+            /* IMPORTANT: meth->insns may have been changed */
+            insns = meth->insns + insnIdx;
+
+            /* continue on as if we just handled a throw-verification-error */
+            failure = VERIFY_ERROR_NONE;
+            nextFlags = kInstrCanThrow;
+        }
     }
 
     /*
@@ -5206,6 +5551,7 @@ sput_1nr_common:
         if (!checkMoveException(meth, insnIdx+branchTarget, "branch"))
             goto bail;
 
+        /* update branch target, set "changed" if appropriate */
         updateRegisters(meth, insnFlags, regTable, insnIdx+branchTarget,
             workRegs);
     }
@@ -5296,6 +5642,7 @@ sput_1nr_common:
 bail:
     return result;
 }
+
 
 /*
  * callback function used in dumpRegTypes to print local vars

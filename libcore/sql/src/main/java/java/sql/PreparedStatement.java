@@ -28,14 +28,10 @@ import java.math.BigDecimal;
  * <p>
  * An SQL Statement is put into a {@code PreparedStatement} and is precompiled
  * so that it can be executed efficiently multiple times.
- * </p>
  * <p>
  * Setter methods are supplied in the {@code PreparedStatement} interface for
  * the setting of {@code IN} parameters for the statement. The setter method
  * used for each {@code IN} parameter must match the parameter's type.
- * </p>
- *  
- * @since Android 1.0
  */
 public interface PreparedStatement extends Statement {
 
@@ -44,7 +40,6 @@ public interface PreparedStatement extends Statement {
      * 
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void addBatch() throws SQLException;
 
@@ -55,11 +50,9 @@ public interface PreparedStatement extends Statement {
      * {@code Statement}. Setting a parameter value replaces the previous value. This
      * method clears the values for all parameters, releasing all resources used
      * by those parameters.
-     * </p>
-     * 
+     *
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void clearParameters() throws SQLException;
 
@@ -72,14 +65,12 @@ public interface PreparedStatement extends Statement {
      * {@code getResultSet} or {@code getUpdateCount} are used to retrieve 
      * the first result, and the second and subsequent results are 
      * retrieved with {@code getMoreResults}.
-     * </p>
-     * 
+     *
      * @return {@code true} if the result of the execution is a {@code
      *         ResultSet}, {@code false} if there is no result or if the result
      *         is an update count.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public boolean execute() throws SQLException;
 
@@ -91,7 +82,6 @@ public interface PreparedStatement extends Statement {
      * @throws SQLException
      *             if a database error happens or if the SQL statement does not
      *             produce a {@code ResultSet}.
-     * @since Android 1.0
      */
     public ResultSet executeQuery() throws SQLException;
 
@@ -105,7 +95,6 @@ public interface PreparedStatement extends Statement {
      * @throws SQLException
      *             if a database error happens or if the SQL statement returns a
      *             {@code ResultSet}.
-     * @since Android 1.0
      */
     public int executeUpdate() throws SQLException;
 
@@ -117,14 +106,12 @@ public interface PreparedStatement extends Statement {
      * executing the {@code PreparedStatement}, because the {@code
      * PreparedStatement} is precompiled. As a result the metadata can be
      * queried ahead of time without actually executing the statement.
-     * </p>
-     * 
+     *
      * @return a {@code ResultSetMetaData} object with the information about the
      *         columns of the {@code ResultSet}, if the driver can return a
      *         {@code ResultSetMetaData}. {@code null} otherwise.
      * @throws SQLException
      *             if there is a database error.
-     * @since Android 1.0
      */
     public ResultSetMetaData getMetaData() throws SQLException;
 
@@ -136,7 +123,6 @@ public interface PreparedStatement extends Statement {
      *         PreparedStatement}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public ParameterMetaData getParameterMetaData() throws SQLException;
 
@@ -152,7 +138,6 @@ public interface PreparedStatement extends Statement {
      * @throws SQLException
      *             if a database error happens.
      * @see Array
-     * @since Android 1.0
      */
     public void setArray(int parameterIndex, Array theArray)
             throws SQLException;
@@ -161,12 +146,11 @@ public interface PreparedStatement extends Statement {
      * Sets the value of a specified parameter to the content of a supplied
      * {@code InputStream}, which has a specified number of bytes.
      * <p>
-     * This is a good method for setting an SQL {@code LONVARCHAR} parameter
+     * This is a good method for setting an SQL {@code LONGVARCHAR} parameter
      * where the length of the data is large. Data is read from the {@code
      * InputStream} until end-of-file is reached or the specified number of
      * bytes is copied.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
@@ -178,7 +162,6 @@ public interface PreparedStatement extends Statement {
      *            parameter.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setAsciiStream(int parameterIndex, InputStream theInputStream,
             int length) throws SQLException;
@@ -196,7 +179,6 @@ public interface PreparedStatement extends Statement {
      * @throws SQLException
      *             if a database error happens.
      * @see java.math.BigDecimal
-     * @since Android 1.0
      */
     public void setBigDecimal(int parameterIndex, BigDecimal theBigDecimal)
             throws SQLException;
@@ -207,8 +189,7 @@ public interface PreparedStatement extends Statement {
      * <p>
      * Use this method when a large amount of data needs to be set into a
      * {@code LONGVARBINARY} parameter.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
@@ -220,7 +201,6 @@ public interface PreparedStatement extends Statement {
      *            parameter.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setBinaryStream(int parameterIndex, InputStream theInputStream,
             int length) throws SQLException;
@@ -236,7 +216,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      * @see Blob
      */
     public void setBlob(int parameterIndex, Blob theBlob) throws SQLException;
@@ -253,7 +232,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setBoolean(int parameterIndex, boolean theBoolean)
             throws SQLException;
@@ -269,7 +247,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setByte(int parameterIndex, byte theByte) throws SQLException;
 
@@ -286,7 +263,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setBytes(int parameterIndex, byte[] theBytes)
             throws SQLException;
@@ -298,8 +274,7 @@ public interface PreparedStatement extends Statement {
      * Data is read from the {@code
      * Reader} until end-of-file is reached or the specified number of
      * characters are copied.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1
@@ -309,7 +284,6 @@ public interface PreparedStatement extends Statement {
      *            the number of characters to be read.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setCharacterStream(int parameterIndex, Reader reader, int length)
             throws SQLException;
@@ -325,7 +299,6 @@ public interface PreparedStatement extends Statement {
      *            parameter at {@code parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setClob(int parameterIndex, Clob theClob) throws SQLException;
 
@@ -341,7 +314,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setDate(int parameterIndex, Date theDate) throws SQLException;
 
@@ -366,7 +338,6 @@ public interface PreparedStatement extends Statement {
      *             if a database error happens.
      * @see Date
      * @see java.util.Calendar
-     * @since Android 1.0
      */
     public void setDate(int parameterIndex, Date theDate, Calendar cal)
             throws SQLException;
@@ -383,7 +354,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setDouble(int parameterIndex, double theDouble)
             throws SQLException;
@@ -399,7 +369,6 @@ public interface PreparedStatement extends Statement {
      *            the {@code float} value to update the parameter.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setFloat(int parameterIndex, float theFloat)
             throws SQLException;
@@ -415,7 +384,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setInt(int parameterIndex, int theInt) throws SQLException;
 
@@ -430,7 +398,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setLong(int parameterIndex, long theLong) throws SQLException;
 
@@ -447,7 +414,6 @@ public interface PreparedStatement extends Statement {
      *            java.sql.Types}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setNull(int parameterIndex, int sqlType) throws SQLException;
 
@@ -461,8 +427,7 @@ public interface PreparedStatement extends Statement {
      * SQL type name when supplying a {@code NULL} UDT or REF. For a UDT, the
      * type name is the type name of the parameter itself, but for a REF
      * parameter the type name is the type name of the referenced type.
-     * </p>
-     * 
+     *
      * @param paramIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
@@ -475,7 +440,6 @@ public interface PreparedStatement extends Statement {
      * @throws SQLException
      *             if a database error happens.
      * @see Types
-     * @since Android 1.0
      */
     public void setNull(int paramIndex, int sqlType, String typeName)
             throws SQLException;
@@ -493,8 +457,7 @@ public interface PreparedStatement extends Statement {
      * object's class implements {@code Ref}, {@code Blob}, {@code Clob},
      * {@code Struct}, or {@code Array}, the driver passes it to the database as
      * a value of the corresponding SQL type.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
@@ -503,7 +466,6 @@ public interface PreparedStatement extends Statement {
      *            {@code parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setObject(int parameterIndex, Object theObject)
             throws SQLException;
@@ -518,8 +480,7 @@ public interface PreparedStatement extends Statement {
      * object's class implements {@code Ref}, {@code Blob}, {@code Clob},
      * {@code Struct}, or {@code Array}, the driver will pass it to the database
      * in the form of the relevant SQL type.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter index, where the first parameter has index 1.
      * @param theObject
@@ -530,7 +491,6 @@ public interface PreparedStatement extends Statement {
      *            java.sql.Types}.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setObject(int parameterIndex, Object theObject,
             int targetSqlType) throws SQLException;
@@ -545,8 +505,7 @@ public interface PreparedStatement extends Statement {
      * object's class implements {@code Ref}, {@code Blob}, {@code Clob},
      * {@code Struct}, or {@code Array}, the driver will pass it to the database
      * in the form of the relevant SQL type.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter index, where the first parameter has index 1.
      * @param theObject
@@ -561,7 +520,6 @@ public interface PreparedStatement extends Statement {
      *            java.sql.Types.NUMERIC} - ignored for all other types.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setObject(int parameterIndex, Object theObject,
             int targetSqlType, int scale) throws SQLException;
@@ -579,7 +537,6 @@ public interface PreparedStatement extends Statement {
      * @throws SQLException
      *             if a database error happens.
      * @see Ref
-     * @since Android 1.0
      */
     public void setRef(int parameterIndex, Ref theRef) throws SQLException;
 
@@ -595,7 +552,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setShort(int parameterIndex, short theShort)
             throws SQLException;
@@ -611,7 +567,6 @@ public interface PreparedStatement extends Statement {
      *            set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setString(int parameterIndex, String theString)
             throws SQLException;
@@ -628,7 +583,6 @@ public interface PreparedStatement extends Statement {
      *            {@code parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setTime(int parameterIndex, Time theTime) throws SQLException;
 
@@ -639,8 +593,7 @@ public interface PreparedStatement extends Statement {
      * The driver uses the supplied {@code Calendar} to create the SQL {@code
      * TIME} value, which allows it to use a custom timezone - otherwise the
      * driver uses the default timezone of the Java virtual machine.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has 
      *            index 1.
@@ -654,7 +607,6 @@ public interface PreparedStatement extends Statement {
      *             if a database error happens.
      * @see Time
      * @see java.util.Calendar
-     * @since Android 1.0
      */
     public void setTime(int parameterIndex, Time theTime, Calendar cal)
             throws SQLException;
@@ -671,7 +623,6 @@ public interface PreparedStatement extends Statement {
      *            parameterIndex} is set.
      * @throws SQLException
      *             if a database error happens.
-     * @since Android 1.0
      */
     public void setTimestamp(int parameterIndex, Timestamp theTimestamp)
             throws SQLException;
@@ -683,8 +634,7 @@ public interface PreparedStatement extends Statement {
      * The driver uses the supplied {@code Calendar} to create the SQL {@code
      * TIMESTAMP} value, which allows it to use a custom timezone - otherwise
      * the driver uses the default timezone of the Java virtual machine.
-     * </p>
-     * 
+     *
      * @param parameterIndex
      *            the parameter number index, where the first parameter has
      *            index 1.
@@ -698,7 +648,6 @@ public interface PreparedStatement extends Statement {
      *             if a database error happens.
      * @see Timestamp
      * @see java.util.Calendar
-     * @since Android 1.0
      */
     public void setTimestamp(int parameterIndex, Timestamp theTimestamp,
             Calendar cal) throws SQLException;
@@ -736,7 +685,6 @@ public interface PreparedStatement extends Statement {
      * @throws SQLException
      *             if a database error happens.
      * @see URL
-     * @since Android 1.0
      */
     public void setURL(int parameterIndex, URL theURL) throws SQLException;
 }

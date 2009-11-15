@@ -20,6 +20,7 @@ package java.util.prefs;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.EventListener;
 import java.util.EventObject;
 import java.util.HashMap;
@@ -27,7 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import org.apache.harmony.luni.util.Base64;
@@ -38,8 +38,9 @@ import org.apache.harmony.prefs.internal.nls.Messages;
  * Preferences, which can be used to simplify {@code Preferences} provider's
  * implementation. This class defines nine abstract SPI methods, which must be
  * implemented by a preference provider.
- * 
- * @since Android 1.0
+ *
+ * @since 1.4
+ * @see Preferences
  */
 public abstract class AbstractPreferences extends Preferences {
     /*
@@ -47,14 +48,9 @@ public abstract class AbstractPreferences extends Preferences {
      * Class fields
      * -----------------------------------------------------------
      */
-    /**
-     * The unhandled events collection.
-     */
+    /** the unhandled events collection */
     private static final List<EventObject> events = new LinkedList<EventObject>();
-
-    /**
-     * The event dispatcher thread.
-     */
+    /** the event dispatcher thread */
     private static final EventDispatcher dispatcher = new EventDispatcher("Preference Event Dispatcher"); //$NON-NLS-1$
 
     /*
@@ -72,11 +68,13 @@ public abstract class AbstractPreferences extends Preferences {
                 Preferences sroot = Preferences.systemRoot();
                 try {
                     uroot.flush();
-                } catch (BackingStoreException e) {//ignore
+                } catch (BackingStoreException e) {
+                    // ignore
                 }
                 try {
                     sroot.flush();
-                } catch (BackingStoreException e) {//ignore
+                } catch (BackingStoreException e) {
+                    // ignore
                 }
             }
         });
@@ -87,9 +85,7 @@ public abstract class AbstractPreferences extends Preferences {
      * Instance fields (package-private)
      * -----------------------------------------------------------
      */
-    /**
-     * True, if this node is in user preference hierarchy.
-     */
+    /** true if this node is in user preference hierarchy */
     boolean userNode;
 
     /*
@@ -97,16 +93,11 @@ public abstract class AbstractPreferences extends Preferences {
      * Instance fields (private)
      * -----------------------------------------------------------
      */
-    /**
-     * Marker class for 'lock' field.
-     */
-    private static class Lock {
-    }
+    /** Marker class for 'lock' field. */
+    private static class Lock {}
 
     /**
      * The object used to lock this node.
-     * 
-     * @since Android 1.0
      */
     protected final Object lock;
     
@@ -115,14 +106,10 @@ public abstract class AbstractPreferences extends Preferences {
      * backing store. This field's default value is false, and it is checked
      * when the node creation is completed, and if it is true, the node change
      * event will be fired for this node's parent.
-     * 
-     * @since Android 1.0
      */
     protected boolean newNode;
 
-    /**
-     * Cached child nodes
-     */
+    /** cached child nodes */
     private Map<String, AbstractPreferences> cachedNode;
 
     //the collections of listeners
@@ -147,9 +134,9 @@ public abstract class AbstractPreferences extends Preferences {
      * -----------------------------------------------------------
      */
     /**
-     * Constructs a new {@code AbstractPreferences} instance using the given parent node
-     * and node name.
-     * 
+     * Constructs a new {@code AbstractPreferences} instance using the given
+     * parent node and node name.
+     *
      * @param parent
      *            the parent node of the new node or {@code null} to indicate
      *            that the new node is a root node.
@@ -159,7 +146,6 @@ public abstract class AbstractPreferences extends Preferences {
      * @throws IllegalArgumentException
      *             if the name contains a slash character or is empty if {@code
      *             parent} is not {@code null}.
-     * @since Android 1.0
      */
     protected AbstractPreferences(AbstractPreferences parent, String name) {
         if ((null == parent ^ name.length() == 0) || name.indexOf("/") >= 0) { //$NON-NLS-1$
@@ -185,7 +171,6 @@ public abstract class AbstractPreferences extends Preferences {
      * Returns an array of all cached child nodes.
      * 
      * @return the array of cached child nodes.
-     * @since Android 1.0
      */
     protected final AbstractPreferences[] cachedChildren() {
         return cachedNode.values().toArray(new AbstractPreferences[cachedNode.size()]);
@@ -193,9 +178,10 @@ public abstract class AbstractPreferences extends Preferences {
 
     /**
      * Returns the child node with the specified name or {@code null} if it
-     * doesn't exist. Implementers can assume that the name supplied to this method 
-     * will be a valid node name string (conforming to the node naming format) and 
-     * will not correspond to a node that has been cached or removed.
+     * doesn't exist. Implementers can assume that the name supplied to this
+     * method will be a valid node name string (conforming to the node naming
+     * format) and will not correspond to a node that has been cached or
+     * removed.
      * 
      * @param name
      *            the name of the desired child node.
@@ -204,7 +190,6 @@ public abstract class AbstractPreferences extends Preferences {
      * @throws BackingStoreException
      *             if the backing store is unavailable or causes an operation
      *             failure.
-     * @since Android 1.0
      */
     protected AbstractPreferences getChild(String name)
             throws BackingStoreException {
@@ -226,10 +211,9 @@ public abstract class AbstractPreferences extends Preferences {
     /**
      * Returns whether this node has been removed by invoking the method {@code
      * removeNode()}.
-     * 
+     *
      * @return {@code true}, if this node has been removed, {@code false}
      *         otherwise.
-     * @since Android 1.0
      */
     protected boolean isRemoved() {
         synchronized (lock) {
@@ -240,33 +224,31 @@ public abstract class AbstractPreferences extends Preferences {
     /**
      * Flushes changes of this node to the backing store. This method should
      * only flush this node and should not include the descendant nodes. Any
-     * implementation that wants to provide functionality to flush all nodes 
+     * implementation that wants to provide functionality to flush all nodes
      * at once should override the method {@link #flush() flush()}.
-     * 
+     *
      * @throws BackingStoreException
      *             if the backing store is unavailable or causes an operation
      *             failure.
-     * @since Android 1.0
      */
     protected abstract void flushSpi() throws BackingStoreException;
     
     /**
-     * Returns the names of all of the child nodes of this node or an empty array if
-     * this node has no children. The names of cached children are not required to be
-     * returned.
-     * 
+     * Returns the names of all of the child nodes of this node or an empty
+     * array if this node has no children. The names of cached children are not
+     * required to be returned.
+     *
      * @return the names of this node's children.
      * @throws BackingStoreException
      *             if the backing store is unavailable or causes an operation
      *             failure.
-     * @since Android 1.0
      */
     protected abstract String[] childrenNamesSpi() throws BackingStoreException;
 
     /**
      * Returns the child preference node with the given name, creating it
      * if it does not exist. The caller of this method should ensure that the
-     * given name is valid and that this node has not been removed or cached. 
+     * given name is valid and that this node has not been removed or cached.
      * If the named node has just been removed, the implementation
      * of this method must create a new one instead of reactivating the removed
      * one.
@@ -278,7 +260,6 @@ public abstract class AbstractPreferences extends Preferences {
      * @param name
      *            the name of the child preference to be returned.
      * @return the child preference node.
-     * @since Android 1.0
      */
     protected abstract AbstractPreferences childSpi(String name);
 
@@ -287,39 +268,37 @@ public abstract class AbstractPreferences extends Preferences {
      * Puts the given key-value pair into this node. Caller of this method
      * should ensure that both of the given values are valid and that this
      * node has not been removed.
-     * 
+     *
      * @param name
      *            the given preference key.
      * @param value
      *            the given preference value.
-     * @since Android 1.0
      */
     protected abstract void putSpi(String name, String value);
 
     /**
-     * Gets the preference value mapped to the given key. The caller of this method
-     * should ensure that the given key is valid and that this node has not been
-     * removed. This method should not throw any exceptions but if it does, the
-     * caller will ignore the exception, regarding it as a {@code null} return value.
-     * 
+     * Gets the preference value mapped to the given key. The caller of this
+     * method should ensure that the given key is valid and that this node has
+     * not been removed. This method should not throw any exceptions but if it
+     * does, the caller will ignore the exception, regarding it as a {@code
+     * null} return value.
+     *
      * @param key
      *            the given key to be searched for.
      * @return the preference value mapped to the given key.
-     * @since Android 1.0
      */
     protected abstract String getSpi(String key);
 
 
     /**
      * Returns an array of all preference keys of this node or an empty array if
-     * no preferences have been found. The caller of this method should ensure that
-     * this node has not been removed.
-     * 
+     * no preferences have been found. The caller of this method should ensure
+     * that this node has not been removed.
+     *
      * @return the array of all preference keys.
      * @throws BackingStoreException
      *             if the backing store is unavailable or causes an operation
      *             failure.
-     * @since Android 1.0
      */
     protected abstract String[] keysSpi() throws BackingStoreException;
 
@@ -329,11 +308,10 @@ public abstract class AbstractPreferences extends Preferences {
      * method {@link Preferences#removeNode() Preferences.removeNode()} should
      * invoke this method multiple-times in bottom-up pattern. The removal is
      * not required to be persisted until after it is flushed.
-     * 
+     *
      * @throws BackingStoreException
      *             if the backing store is unavailable or causes an operation
      *             failure.
-     * @since Android 1.0
      */
     protected abstract void removeNodeSpi() throws BackingStoreException;
 
@@ -344,20 +322,18 @@ public abstract class AbstractPreferences extends Preferences {
      * 
      * @param key
      *            the key of the preference that is to be removed.
-     * @since Android 1.0
      */
     protected abstract void removeSpi(String key);
 
     /**
      * Synchronizes this node with the backing store. This method should only
      * synchronize this node and should not include the descendant nodes. An
-     * implementation that wants to provide functionality to synchronize all nodes at once should
-     * override the method {@link #sync() sync()}.
+     * implementation that wants to provide functionality to synchronize all
+     * nodes at once should override the method {@link #sync() sync()}.
      * 
      * @throws BackingStoreException
      *             if the backing store is unavailable or causes an operation
      *             failure.
-     * @since Android 1.0
      */
     protected abstract void syncSpi() throws BackingStoreException;
 
@@ -385,7 +361,7 @@ public abstract class AbstractPreferences extends Preferences {
             for (int i = 0; i < names.length; i++) {
                 result.add(names[i]);
             }
-            return result.toArray(new String[0]);
+            return result.toArray(new String[result.size()]);
         }
     }
 
@@ -439,13 +415,13 @@ public abstract class AbstractPreferences extends Preferences {
         if (key == null) {
             throw new NullPointerException();
         }
-        String result;
+        String result = null;
         synchronized (lock) {
             checkState();
             try {
                 result = getSpi(key);
             } catch (Exception e) {
-                result = null;
+                // ignored
             }
         }
         return (result == null ? deflt : result);
@@ -456,9 +432,10 @@ public abstract class AbstractPreferences extends Preferences {
         String result = get(key, null);
         if (result == null) {
             return deflt;
-        } else if (result.equalsIgnoreCase("true")) { //$NON-NLS-1$
+        }
+        if ("true".equalsIgnoreCase(result)) { //$NON-NLS-1$
             return true;
-        } else if (result.equalsIgnoreCase("false")) { //$NON-NLS-1$
+        } else if ("false".equalsIgnoreCase(result)) { //$NON-NLS-1$
             return false;
         } else {
             return deflt;
@@ -474,17 +451,15 @@ public abstract class AbstractPreferences extends Preferences {
         if (svalue.length() == 0) { 
             return new byte[0];
         }
-        byte[] dres;
         try {
             byte[] bavalue = svalue.getBytes("US-ASCII"); //$NON-NLS-1$
             if (bavalue.length % 4 != 0) {
                 return deflt;
             }
-            dres = Base64.decode(bavalue);
+            return Base64.decode(bavalue);
         } catch (Exception e) {
-            dres = deflt;
+            return deflt;
         }
-        return dres;
     }
 
     @Override
@@ -493,13 +468,11 @@ public abstract class AbstractPreferences extends Preferences {
         if (result == null) {
             return deflt;
         }
-        double dres;
         try {
-            dres = Double.parseDouble(result);
+            return Double.parseDouble(result);
         } catch (NumberFormatException e) {
-            dres = deflt;
+            return deflt;
         }
-        return dres;
     }
 
     @Override
@@ -508,13 +481,11 @@ public abstract class AbstractPreferences extends Preferences {
         if (result == null) {
             return deflt;
         }
-        float fres;
         try {
-            fres = Float.parseFloat(result);
+            return Float.parseFloat(result);
         } catch (NumberFormatException e) {
-            fres = deflt;
+            return deflt;
         }
-        return fres;
     }
 
     @Override
@@ -523,13 +494,11 @@ public abstract class AbstractPreferences extends Preferences {
         if (result == null) {
             return deflt;
         }
-        int ires;
         try {
-            ires = Integer.parseInt(result);
+            return Integer.parseInt(result);
         } catch (NumberFormatException e) {
-            ires = deflt;
+            return deflt;
         }
-        return ires;
     }
 
     @Override
@@ -538,13 +507,11 @@ public abstract class AbstractPreferences extends Preferences {
         if (result == null) {
             return deflt;
         }
-        long lres;
         try {
-            lres = Long.parseLong(result);
+            return Long.parseLong(result);
         } catch (NumberFormatException e) {
-            lres = deflt;
+            return deflt;
         }
-        return lres;
     }
 
     @Override
@@ -583,42 +550,44 @@ public abstract class AbstractPreferences extends Preferences {
                 startNode = this;
             }
         }
-        Preferences result = null;
         try {
-            result = startNode.nodeImpl(name, true);
+            return startNode.nodeImpl(name, true);
         } catch (BackingStoreException e) {
-            //should not happen
+            // should not happen
+            return null;
         }
-        return result;
     }
 
     private void validateName(String name) {
         if (name.endsWith("/") && name.length() > 1) { //$NON-NLS-1$
             // prefs.6=Name cannot end with '/'\!
-            throw new IllegalArgumentException(Messages.getString("prefs.6"));  //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages.getString("prefs.6")); //$NON-NLS-1$
         }
         if (name.indexOf("//") >= 0) { //$NON-NLS-1$
             // prefs.7=Name cannot contains consecutive '/'\!
-            throw new IllegalArgumentException(
-                    Messages.getString("prefs.7"));  //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages.getString("prefs.7")); //$NON-NLS-1$
         }
     }
 
     private AbstractPreferences nodeImpl(String path, boolean createNew)
             throws BackingStoreException {
-        StringTokenizer st = new StringTokenizer(path, "/"); //$NON-NLS-1$
+        String[] names = path.split("/");//$NON-NLS-1$
         AbstractPreferences currentNode = this;
         AbstractPreferences temp = null;
-        while (st.hasMoreTokens() && null != currentNode) {
-            String name = st.nextToken();
-            synchronized (currentNode.lock) {
-                temp = currentNode.cachedNode.get(name);
-                if (temp == null) {
-                    temp = getNodeFromBackend(createNew, currentNode, name);
+        if (null != currentNode) {
+            for (int i = 0; i < names.length; i++) {
+                String name = names[i];
+                synchronized (currentNode.lock) {
+                    temp = currentNode.cachedNode.get(name);
+                    if (temp == null) {
+                        temp = getNodeFromBackend(createNew, currentNode, name);
+                    }
+                }
+                currentNode = temp;
+                if (null == currentNode) {
+                    break;
                 }
             }
-
-            currentNode = temp;
         }
         return currentNode;
     }
@@ -626,12 +595,12 @@ public abstract class AbstractPreferences extends Preferences {
     private AbstractPreferences getNodeFromBackend(boolean createNew,
             AbstractPreferences currentNode, String name)
             throws BackingStoreException {
-        AbstractPreferences temp;
         if (name.length() > MAX_NAME_LENGTH) {
             // prefs.8=Name length is too long: {0}
-            throw new IllegalArgumentException(Messages.getString("prefs.8",  //$NON-NLS-1$
+            throw new IllegalArgumentException(Messages.getString("prefs.8", //$NON-NLS-1$
                     name));
         }
+        AbstractPreferences temp;
         if (createNew) {
             temp = currentNode.childSpi(name);
             currentNode.cachedNode.put(name, temp);
@@ -646,6 +615,9 @@ public abstract class AbstractPreferences extends Preferences {
 
     @Override
     public boolean nodeExists(String name) throws BackingStoreException {
+        if (null == name) {
+            throw new NullPointerException();
+        }
         AbstractPreferences startNode = null;
         synchronized (lock) {
             if (isRemoved()) {
@@ -771,10 +743,11 @@ public abstract class AbstractPreferences extends Preferences {
                     cachedNode.put(childrenNames[i], child);
                 }
             }
-            AbstractPreferences[] children = cachedNode
-                    .values().toArray(new AbstractPreferences[0]);
-            for (int i = 0; i < children.length; i++) {
-                children[i].removeNodeImpl();
+            
+            final Collection<AbstractPreferences> values = cachedNode.values();
+            final AbstractPreferences[] children = values.toArray(new AbstractPreferences[values.size()]);
+            for (AbstractPreferences child : children) {
+                child.removeNodeImpl();
             }
             removeNodeSpi();
             isRemoved = true;

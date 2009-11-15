@@ -33,16 +33,14 @@ import java.util.logging.Logger;
  * some extra space is required to hold the buffer and that copying takes place
  * when filling that buffer, but this is usually outweighed by the performance
  * benefits.
- * 
+ *
  * <p/>A typical application pattern for the class looks like this:<p/>
- * 
+ *
  * <pre>
  * BufferedWriter buf = new BufferedWriter(new FileWriter(&quot;file.java&quot;));
  * </pre>
- * 
+ *
  * @see BufferedReader
- * 
- * @since Android 1.0
  */
 public class BufferedWriter extends Writer {
 
@@ -59,10 +57,9 @@ public class BufferedWriter extends Writer {
      * Constructs a new {@code BufferedWriter} with {@code out} as the writer
      * for which to buffer write operations. The buffer size is set to the
      * default value of 8 KB.
-     * 
+     *
      * @param out
      *            the writer for which character writing is buffered.
-     * @since Android 1.0
      */
     public BufferedWriter(Writer out) {
         super(out);
@@ -88,14 +85,13 @@ public class BufferedWriter extends Writer {
      * Constructs a new {@code BufferedWriter} with {@code out} as the writer
      * for which to buffer write operations. The buffer size is set to {@code
      * size}.
-     * 
+     *
      * @param out
      *            the writer for which character writing is buffered.
      * @param size
      *            the size of the buffer in bytes.
      * @throws IllegalArgumentException
      *             if {@code size <= 0}.
-     * @since Android 1.0
      */
     public BufferedWriter(Writer out, int size) {
         super(out);
@@ -110,16 +106,15 @@ public class BufferedWriter extends Writer {
      * Closes this writer. The contents of the buffer are flushed, the target
      * writer is closed, and the buffer is released. Only the first invocation
      * of close has any effect.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while closing this writer.
-     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
         synchronized (lock) {
             if (!isClosed()) {
-                flush();
+                flushInternal();
                 out.close();
                 buf = null;
                 out = null;
@@ -130,10 +125,9 @@ public class BufferedWriter extends Writer {
     /**
      * Flushes this writer. The contents of the buffer are committed to the
      * target writer and it is then flushed.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while flushing this writer.
-     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -141,17 +135,24 @@ public class BufferedWriter extends Writer {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005d")); //$NON-NLS-1$
             }
-            if (pos > 0) {
-                out.write(buf, 0, pos);
-            }
-            pos = 0;
+            flushInternal();
             out.flush();
         }
     }
 
     /**
+     * Flushes the internal buffer.
+     */
+    private void flushInternal() throws IOException {
+        if (pos > 0) {
+            out.write(buf, 0, pos);
+        }
+        pos = 0;
+    }
+
+    /**
      * Indicates whether this writer is closed.
-     * 
+     *
      * @return {@code true} if this writer is closed, {@code false} otherwise.
      */
     private boolean isClosed() {
@@ -162,10 +163,9 @@ public class BufferedWriter extends Writer {
      * Writes a newline to this writer. A newline is determined by the System
      * property "line.separator". The target writer may or may not be flushed
      * when a newline is written.
-     * 
+     *
      * @throws IOException
      *             if an error occurs attempting to write to this writer.
-     * @since Android 1.0
      */
     public void newLine() throws IOException {
         write(lineSeparator, 0, lineSeparator.length());
@@ -176,7 +176,7 @@ public class BufferedWriter extends Writer {
      * {@code cbuf} to this writer. If {@code count} is greater than this
      * writer's buffer, then the buffer is flushed and the characters are
      * written directly to the target writer.
-     * 
+     *
      * @param cbuf
      *            the array containing characters to write.
      * @param offset
@@ -189,7 +189,6 @@ public class BufferedWriter extends Writer {
      *             {@code cbuf}.
      * @throws IOException
      *             if this writer is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public void write(char[] cbuf, int offset, int count) throws IOException {
@@ -243,12 +242,11 @@ public class BufferedWriter extends Writer {
      * Writes the character {@code oneChar} to this writer. If the buffer
      * gets full by writing this character, this writer is flushed. Only the
      * lower two bytes of the integer {@code oneChar} are written.
-     * 
+     *
      * @param oneChar
      *            the character to write.
      * @throws IOException
      *             if this writer is closed or another I/O error occurs.
-     * @since Android 1.0
      */
     @Override
     public void write(int oneChar) throws IOException {
@@ -270,7 +268,7 @@ public class BufferedWriter extends Writer {
      * then this writer is flushed and the remaining characters are written
      * directly to the target writer. If count is negative no characters are
      * written to the buffer. This differs from the behavior of the superclass.
-     * 
+     *
      * @param str
      *            the non-null String containing characters to write.
      * @param offset
@@ -283,7 +281,6 @@ public class BufferedWriter extends Writer {
      * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code offset + count} is greater
      *             than the length of {@code str}.
-     * @since Android 1.0
      */
     @Override
     public void write(String str, int offset, int count) throws IOException {

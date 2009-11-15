@@ -8,20 +8,19 @@ package java.util.concurrent.atomic;
 import sun.misc.Unsafe;
 
 /**
- * An <tt>int</tt> value that may be updated atomically. See the
+ * An {@code int} value that may be updated atomically.  See the
  * {@link java.util.concurrent.atomic} package specification for
  * description of the properties of atomic variables. An
- * <tt>AtomicInteger</tt> is used in applications such as atomically
+ * {@code AtomicInteger} is used in applications such as atomically
  * incremented counters, and cannot be used as a replacement for an
  * {@link java.lang.Integer}. However, this class does extend
- * <tt>Number</tt> to allow uniform access by tools and utilities that
+ * {@code Number} to allow uniform access by tools and utilities that
  * deal with numerically-based classes.
- * 
  *
  * @since 1.5
  * @author Doug Lea
 */
-public class AtomicInteger extends Number implements java.io.Serializable { 
+public class AtomicInteger extends Number implements java.io.Serializable {
     private static final long serialVersionUID = 6214790243416807050L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
@@ -34,13 +33,13 @@ public class AtomicInteger extends Number implements java.io.Serializable {
       try {
         valueOffset = unsafe.objectFieldOffset
             (AtomicInteger.class.getDeclaredField("value"));
-      } catch(Exception ex) { throw new Error(ex); }
+      } catch (Exception ex) { throw new Error(ex); }
     }
 
     private volatile int value;
 
     /**
-     * Create a new AtomicInteger with the given initial value.
+     * Creates a new AtomicInteger with the given initial value.
      *
      * @param initialValue the initial value
      */
@@ -49,22 +48,22 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Create a new AtomicInteger with initial value <tt>0</tt>.
+     * Creates a new AtomicInteger with initial value {@code 0}.
      */
     public AtomicInteger() {
     }
 
     /**
-     * Get the current value.
+     * Gets the current value.
      *
      * @return the current value
      */
     public final int get() {
         return value;
     }
-  
+
     /**
-     * Set to the given value.
+     * Sets to the given value.
      *
      * @param newValue the new value
      */
@@ -73,7 +72,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Set to the give value and return the old value.
+     * Atomically sets to the given value and returns the old value.
      *
      * @param newValue the new value
      * @return the previous value
@@ -85,35 +84,39 @@ public class AtomicInteger extends Number implements java.io.Serializable {
                 return current;
         }
     }
-  
-  
+
     /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
+     * Atomically sets the value to the given updated value
+     * if the current value {@code ==} the expected value.
+     *
      * @param expect the expected value
      * @param update the new value
      * @return true if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
     public final boolean compareAndSet(int expect, int update) {
-      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
     /**
-     * Atomically set the value to the given updated value
-     * if the current value <tt>==</tt> the expected value.
-     * May fail spuriously.
+     * Atomically sets the value to the given updated value
+     * if the current value {@code ==} the expected value.
+     *
+     * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+     * and does not provide ordering guarantees, so is only rarely an
+     * appropriate alternative to {@code compareAndSet}.
+     *
      * @param expect the expected value
      * @param update the new value
      * @return true if successful.
      */
     public final boolean weakCompareAndSet(int expect, int update) {
-      return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
 
-
     /**
-     * Atomically increment by one the current value.
+     * Atomically increments by one the current value.
+     *
      * @return the previous value
      */
     public final int getAndIncrement() {
@@ -124,10 +127,10 @@ public class AtomicInteger extends Number implements java.io.Serializable {
                 return current;
         }
     }
-  
-  
+
     /**
-     * Atomically decrement by one the current value.
+     * Atomically decrements by one the current value.
+     *
      * @return the previous value
      */
     public final int getAndDecrement() {
@@ -138,10 +141,10 @@ public class AtomicInteger extends Number implements java.io.Serializable {
                 return current;
         }
     }
-  
-  
+
     /**
-     * Atomically add the given value to current value.
+     * Atomically adds the given value to the current value.
+     *
      * @param delta the value to add
      * @return the previous value
      */
@@ -155,7 +158,8 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     }
 
     /**
-     * Atomically increment by one the current value.
+     * Atomically increments by one the current value.
+     *
      * @return the updated value
      */
     public final int incrementAndGet() {
@@ -166,9 +170,10 @@ public class AtomicInteger extends Number implements java.io.Serializable {
                 return next;
         }
     }
-    
+
     /**
-     * Atomically decrement by one the current value.
+     * Atomically decrements by one the current value.
+     *
      * @return the updated value
      */
     public final int decrementAndGet() {
@@ -179,10 +184,10 @@ public class AtomicInteger extends Number implements java.io.Serializable {
                 return next;
         }
     }
-  
-  
+
     /**
-     * Atomically add the given value to current value.
+     * Atomically adds the given value to the current value.
+     *
      * @param delta the value to add
      * @return the updated value
      */
