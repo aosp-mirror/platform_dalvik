@@ -26,9 +26,12 @@ import junit.framework.Assert;
 
 public class Main {
     public static void main(String args[]) {
+        int i;
         stringLengthTest();
         stringCharAtTest();
         stringIndexOfTest();
+        for (i = 0; i < 1000; i++)
+            stringCompareToTest();
     }
 
     public static void stringLengthTest() {
@@ -127,68 +130,69 @@ public class Main {
 
     }
 
-    public static void stringCompareTo() {
+    public static void stringCompareToTest() {
         String test = "0123456789";
         String test1 = new String("0123456789");    // different object
         String test2 = new String("0123456780");    // different value
         String offset = new String("xxx0123456789yyy");
         String sub = offset.substring(3, 13);
+        String str32 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+        String str33 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy";
         Object blah = new Object();
-        int i;
 
-        for (i = 0; i < 1000; i++) {
+        Assert.assertEquals(str32.compareTo(str33), -1);
+        Assert.assertEquals(str33.compareTo(str32), 1);
 
-            Assert.assertTrue(test.equals(test));
-            Assert.assertTrue(test.equals(test1));
-            Assert.assertFalse(test.equals(test2));
+        Assert.assertTrue(test.equals(test));
+        Assert.assertTrue(test.equals(test1));
+        Assert.assertFalse(test.equals(test2));
 
-            Assert.assertEquals(test.compareTo(test1), 0);
-            Assert.assertTrue(test1.compareTo(test2) > 0);
-            Assert.assertTrue(test2.compareTo(test1) < 0);
+        Assert.assertEquals(test.compareTo(test1), 0);
+        Assert.assertTrue(test1.compareTo(test2) > 0);
+        Assert.assertTrue(test2.compareTo(test1) < 0);
 
-            /* compare string with a nonzero offset, in left/right side */
-            Assert.assertEquals(test.compareTo(sub), 0);
-            Assert.assertEquals(sub.compareTo(test), 0);
-            Assert.assertTrue(test.equals(sub));
-            Assert.assertTrue(sub.equals(test));
-            /* same base, one is a substring */
-            Assert.assertFalse(offset.equals(sub));
-            Assert.assertFalse(sub.equals(offset));
-            /* wrong class */
-            Assert.assertFalse(test.equals(blah));
+        /* compare string with a nonzero offset, in left/right side */
+        Assert.assertEquals(test.compareTo(sub), 0);
+        Assert.assertEquals(sub.compareTo(test), 0);
+        Assert.assertTrue(test.equals(sub));
+        Assert.assertTrue(sub.equals(test));
+        /* same base, one is a substring */
+        Assert.assertFalse(offset.equals(sub));
+        Assert.assertFalse(sub.equals(offset));
+        /* wrong class */
+        Assert.assertFalse(test.equals(blah));
 
-            /* null ptr - throw */
-            try {
-                test.compareTo(null);
-                Assert.fail("didn't get expected npe");
-            } catch (NullPointerException npe) {
-                System.out.println("Got expected npe");
-            }
-            /* null ptr - ok */
-            Assert.assertFalse(test.equals(null));
-
-            test = test.substring(1);
-            Assert.assertTrue(test.equals("123456789"));
-            Assert.assertFalse(test.equals(test1));
-
-            test = test.substring(1);
-            Assert.assertTrue(test.equals("23456789"));
-
-            test = test.substring(1);
-            Assert.assertTrue(test.equals("3456789"));
-
-            test = test.substring(1);
-            Assert.assertTrue(test.equals("456789"));
-
-            test = test.substring(3,5);
-            Assert.assertTrue(test.equals("78"));
-
-            test = "this/is/a/path";
-            String[] strings = test.split("/");
-            Assert.assertEquals(4, strings.length);
-
-            Assert.assertEquals("this is a path", test.replaceAll("/", " "));
-            Assert.assertEquals("this is a path", test.replace("/", " "));
+        /* null ptr - throw */
+        try {
+            test.compareTo(null);
+            Assert.fail("didn't get expected npe");
+        } catch (NullPointerException npe) {
         }
+        /* null ptr - ok */
+        Assert.assertFalse(test.equals(null));
+
+        test = test.substring(1);
+        Assert.assertTrue(test.equals("123456789"));
+        Assert.assertFalse(test.equals(test1));
+
+        test = test.substring(1);
+        Assert.assertTrue(test.equals("23456789"));
+
+        test = test.substring(1);
+        Assert.assertTrue(test.equals("3456789"));
+
+        test = test.substring(1);
+        Assert.assertTrue(test.equals("456789"));
+
+        test = test.substring(3,5);
+        Assert.assertTrue(test.equals("78"));
+
+        test = "this/is/a/path";
+        String[] strings = test.split("/");
+        Assert.assertEquals(4, strings.length);
+
+        Assert.assertEquals("this is a path", test.replaceAll("/", " "));
+        Assert.assertEquals("this is a path", test.replace("/", " "));
     }
+
 }

@@ -59,7 +59,7 @@
       *   r3, r4, r7, r8, r9, r12 available for loading string data
       */
 
-    cmp   r10, #3
+    sub   r10, #3
     blt   do_remainder
 loopback_triple:
     ldrh  r3, [r2, #2]!
@@ -73,10 +73,10 @@ loopback_triple:
     subeqs  r0, r9, r12
     bxne  lr
     subs  r10, #3
-    bgt   loopback_triple
+    bge   loopback_triple
 
 do_remainder:
-    cmp   r10, #0
+    adds  r10, #3
     beq   returnDiff
 
 loopback_single:
