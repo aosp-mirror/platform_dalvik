@@ -872,8 +872,26 @@ dvmCompiler_TEMPLATE_STRING_COMPARETO:
       *   r3, r4, r7, r8, r9, r12 available for loading string data
       */
 
-    sub   r10, #3
+    subs  r10, #2
+    blt   do_remainder2
+
+      /*
+       * Unroll the first two checks so we can quickly catch early mismatch
+       * on long strings (but preserve incoming alignment)
+       */
+
+    ldrh  r3, [r2, #2]!
+    ldrh  r4, [r1, #2]!
+    ldrh  r7, [r2, #2]!
+    ldrh  r8, [r1, #2]!
+    subs  r0, r3, r4
+    subeqs  r0, r7, r8
+    bxne  lr
+    cmp   r10, #28
+    bgt   do_memcmp16
+    subs  r10, #3
     blt   do_remainder
+
 loopback_triple:
     ldrh  r3, [r2, #2]!
     ldrh  r4, [r1, #2]!
@@ -903,6 +921,29 @@ loopback_single:
 returnDiff:
     mov   r0, r11
     bx    lr
+
+do_remainder2:
+    adds  r10, #2
+    bne   loopback_single
+    mov   r0, r11
+    bx    lr
+
+    /* Long string case */
+do_memcmp16:
+    mov   r4, lr
+    ldr   lr, .Lmemcmp16
+    mov   r7, r11
+    add   r0, r2, #2
+    add   r1, r1, #2
+    mov   r2, r10
+    blx   lr
+    cmp   r0, #0
+    bxne  r4
+    mov   r0, r7
+    bx    r4
+
+.Lmemcmp16:
+    .word __memcmp16
 
 
 /* ------------------------------ */
