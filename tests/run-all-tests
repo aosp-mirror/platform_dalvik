@@ -43,6 +43,9 @@ while true; do
     elif [ "x$1" = "x--reference" ]; then
         run_args="${run_args} --reference"
         shift
+    elif [ "x$1" = "x--jit" ]; then
+        run_args="${run_args} --jit"
+        shift
     elif [ "x$1" = "x--fast" ]; then
         run_args="${run_args} --fast"
         shift
