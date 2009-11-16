@@ -98,7 +98,7 @@ public final class JtregRunner {
         int unsupportedTests = 0;
 
         List<TestRun> runs = new ArrayList<TestRun>(tests.size());
-        while (!builders.isTerminated() || !readyToRun.isEmpty()) {
+        for (int i = 0; i < tests.size(); i++) {
             TestRun testRun = readyToRun.take();
             runs.add(testRun);
 
