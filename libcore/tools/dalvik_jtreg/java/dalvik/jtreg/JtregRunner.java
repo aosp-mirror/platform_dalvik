@@ -49,6 +49,7 @@ public final class JtregRunner {
 
     private final File localTemp = new File("/tmp/" + UUID.randomUUID());
     private final File deviceTemp = new File("/data/jtreg" + UUID.randomUUID());
+    private final File testTemp = new File(deviceTemp, "/tests.tmp");
 
     private final Adb adb = new Adb();
     private final File directoryToScan;
@@ -132,6 +133,7 @@ public final class JtregRunner {
      */
     private void prepareDevice() {
         adb.mkdir(deviceTemp);
+        adb.mkdir(testTemp);
         File testRunnerJar = testToDex.writeTestRunnerJar();
         adb.push(testRunnerJar, deviceTemp);
         deviceTestRunner = new File(deviceTemp, testRunnerJar.getName());
@@ -187,6 +189,11 @@ public final class JtregRunner {
         builder.args("adb", "shell", "dalvikvm");
         builder.args("-classpath", Command.path(testRun.getDeviceDex(), deviceTestRunner));
         builder.args("-Duser.dir=" + testRun.getBase());
+        builder.args("-Duser.name=root");
+        builder.args("-Duser.language=en");
+        builder.args("-Duser.region=US");
+        builder.args("-Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks");
+        builder.args("-Djava.io.tmpdir=" + testTemp);
         if (debugPort != null) {
             builder.args("-Xrunjdwp:transport=dt_socket,address="
                     + debugPort + ",server=y,suspend=y");
