@@ -16,9 +16,10 @@
 
 #define LOG_TAG "ExpatParser"
 
+#include "JNIHelp.h"
+#include "LocalArray.h"
 #include "jni.h"
 #include "utils/Log.h"
-#include "JNIHelp.h"
 
 #include <string.h>
 #include <utils/misc.h>
@@ -1242,30 +1243,24 @@ static jint getAttributeIndexForQName(JNIEnv* env, jobject clazz,
 static jint getAttributeIndex(JNIEnv* env, jobject clazz,
         jint attributePointer, jstring uri, jstring localName) {
     const char** attributes = (const char**) attributePointer;
-    int uriLength = env->GetStringUTFLength(uri);
-
-    if (uriLength == 0) {
+    int uriByteCount = env->GetStringUTFLength(uri);
+    if (uriByteCount == 0) {
         // If there's no URI, then a local name works just like a qName.
         return getAttributeIndexForQName(
                 env, clazz, attributePointer, localName);
     }
-    int localNameLength = env->GetStringUTFLength(localName);
 
-    // Create string in the same format used by Expat: "uri|localName"
-    // TODO: do we have a guarantee that uriLength and localNameLength are small?
-    char concatenated[uriLength + localNameLength + 2];
+    // Create string in the same format used by Expat: "uri|localName\0".
+    // Note that we need byte counts to size the array but Unicode char counts
+    // for GetStringUTFRegion indexes and counts.
+    int localNameByteCount = env->GetStringUTFLength(localName);
+    LocalArray<1024> concatenated(uriByteCount + 1 + localNameByteCount + 1);
+    env->GetStringUTFRegion(uri, 0, env->GetStringLength(uri), &concatenated[0]);
+    concatenated[uriByteCount] = '|';
+    env->GetStringUTFRegion(localName, 0, env->GetStringLength(localName),
+            &concatenated[uriByteCount + 1]);
 
-    // Append uri.
-    env->GetStringUTFRegion(uri, 0, uriLength, concatenated);
-
-    // Separator.
-    concatenated[uriLength] = '|';
-
-    // Append local name.
-    env->GetStringUTFRegion(localName, 0, localNameLength,
-                            concatenated + uriLength + 1);
-
-    return findAttributeByName(attributes, concatenated);
+    return findAttributeByName(attributes, &concatenated[0]);
 }
 
 /**

@@ -16,9 +16,10 @@
 
 #define LOG_TAG "OpenSSLSocketImpl"
 
-#include <cutils/log.h>
-#include <jni.h>
-#include <JNIHelp.h>
+#include "JNIHelp.h"
+#include "LocalArray.h"
+#include "cutils/log.h"
+#include "jni.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -53,14 +54,12 @@ static jfieldID field_timeout;
  * stored in a freshly-allocated BIO memory buffer.
  */
 static BIO *stringToMemBuf(JNIEnv* env, jstring string) {
-    BIO *result = BIO_new(BIO_s_mem());
-    jsize length = env->GetStringUTFLength(string);
-    char buf[length + 1];
-    
-    env->GetStringUTFRegion(string, 0, env->GetStringLength(string), buf);
-    buf[length] = '\0';
+    jsize byteCount = env->GetStringUTFLength(string);
+    LocalArray<1024> buf(byteCount + 1);
+    env->GetStringUTFRegion(string, 0, env->GetStringLength(string), &buf[0]);
 
-    BIO_puts(result, buf);
+    BIO* result = BIO_new(BIO_s_mem());
+    BIO_puts(result, &buf[0]);
     return result;
 }
 
