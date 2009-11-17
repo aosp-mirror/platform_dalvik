@@ -495,7 +495,7 @@ dvmHeapSourceStartupBeforeFork()
         /* Create a new heap for post-fork zygote allocations.  We only
          * try once, even if it fails.
          */
-        LOGI("Splitting out new zygote heap\n");
+        LOGV("Splitting out new zygote heap\n");
         gDvm.newZygoteHeapAllocated = true;
         return addNewHeap(hs, NULL, 0);
     }

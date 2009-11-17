@@ -444,8 +444,13 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
 {
     SharedLib* pEntry;
     void* handle;
+    bool verbose;
 
-    LOGD("Trying to load lib %s %p\n", pathName, classLoader);
+    /* reduce noise by not chattering about system libraries */
+    verbose = strncmp(pathName, "/system", sizeof("/system")-1) != 0;
+
+    if (verbose)
+        LOGD("Trying to load lib %s %p\n", pathName, classLoader);
 
     /*
      * See if we've already loaded it.  If we have, and the class loader
@@ -458,8 +463,10 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
                 pathName, pEntry->classLoader, classLoader);
             return false;
         }
-        LOGD("Shared lib '%s' already loaded in same CL %p\n",
-            pathName, classLoader);
+        if (verbose) {
+            LOGD("Shared lib '%s' already loaded in same CL %p\n",
+                pathName, classLoader);
+        }
         if (!checkOnLoadResult(pEntry))
             return false;
         return true;
@@ -473,11 +480,9 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
      * Failures here are expected when java.library.path has several entries
      * and we have to hunt for the lib.
      *
-     * The current android-arm dynamic linker implementation tends to
-     * return "Cannot find library" from dlerror() regardless of the actual
-     * problem.  A more useful diagnostic may be sent to stdout/stderr if
-     * linker diagnostics are enabled, but that's not usually visible in
-     * Android apps.  Some things to try:
+     * The current version of the dynamic linker prints detailed information
+     * about dlopen() failures.  Some things to check if the message is
+     * cryptic:
      *   - make sure the library exists on the device
      *   - verify that the right path is being opened (the debug log message
      *     above can help with that)
@@ -523,7 +528,8 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
         freeSharedLibEntry(pNewEntry);
         return checkOnLoadResult(pActualEntry);
     } else {
-        LOGD("Added shared lib %s %p\n", pathName, classLoader);
+        if (verbose)
+            LOGD("Added shared lib %s %p\n", pathName, classLoader);
 
         bool result = true;
         void* vonLoad;
@@ -531,7 +537,8 @@ bool dvmLoadNativeCode(const char* pathName, Object* classLoader)
 
         vonLoad = dlsym(handle, "JNI_OnLoad");
         if (vonLoad == NULL) {
-            LOGD("No JNI_OnLoad found in %s %p\n", pathName, classLoader);
+            LOGD("No JNI_OnLoad found in %s %p, skipping init\n",
+                pathName, classLoader);
         } else {
             /*
              * Call JNI_OnLoad.  We have to override the current class
