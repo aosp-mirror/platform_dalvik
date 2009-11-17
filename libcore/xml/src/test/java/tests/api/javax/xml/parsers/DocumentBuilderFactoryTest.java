@@ -462,7 +462,6 @@ public class DocumentBuilderFactoryTest extends TestCase {
         method = "setCoalescing",
         args = {boolean.class}
     )
-    @KnownFailure("Should support coalescing")
     public void test_setCoalescingZ() {
         dbf.setCoalescing(true);
         assertTrue(dbf.isCoalescing());
