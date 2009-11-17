@@ -310,7 +310,7 @@ int dexZipPrepArchive(int fd, const char* debugFileName, ZipArchive* pArchive)
 
     pArchive->mFd = fd;
 
-    if (sysMapFileInShmem(pArchive->mFd, &map) != 0) {
+    if (sysMapFileInShmemReadOnly(pArchive->mFd, &map) != 0) {
         err = -1;
         LOGW("Map of '%s' failed\n", debugFileName);
         goto bail;

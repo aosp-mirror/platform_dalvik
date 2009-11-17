@@ -130,7 +130,7 @@ int dvmDexFileOpenFromFd(int fd, DvmDex** ppDvmDex)
         goto bail;
     }
 
-    if (sysMapFileInShmem(fd, &memMap) != 0) {
+    if (sysMapFileInShmemWritableReadOnly(fd, &memMap) != 0) {
         LOGE("Unable to map file\n");
         goto bail;
     }
@@ -245,16 +245,16 @@ bool dvmDexChangeDex1(DvmDex* pDvmDex, u1* addr, u1 newVal)
     }
 
     LOGV("+++ change byte at %p from 0x%02x to 0x%02x\n", addr, *addr, newVal);
-    if (sysChangeMapAccess(addr, 1, true, &pDvmDex->memMap) < 0) {
-        LOGE("access change failed\n");
-        return false;
+    if (sysChangeMapAccess(addr, 1, true, &pDvmDex->memMap) != 0) {
+        LOGD("NOTE: DEX page access change (->RW) failed\n");
+        /* expected on files mounted from FAT; keep going (may crash) */
     }
 
     *addr = newVal;
 
-    if (sysChangeMapAccess(addr, 1, false, &pDvmDex->memMap) < 0) {
-        LOGW("WARNING: unable to restore read-only access on mapping\n");
-        /* not fatal, keep going */
+    if (sysChangeMapAccess(addr, 1, false, &pDvmDex->memMap) != 0) {
+        LOGD("NOTE: DEX page access change (->RO) failed\n");
+        /* expected on files mounted from FAT; keep going */
     }
 
     return true;
@@ -274,16 +274,16 @@ bool dvmDexChangeDex2(DvmDex* pDvmDex, u2* addr, u2 newVal)
     }
 
     LOGV("+++ change 2byte at %p from 0x%04x to 0x%04x\n", addr, *addr, newVal);
-    if (sysChangeMapAccess(addr, 2, true, &pDvmDex->memMap) < 0) {
-        LOGE("access change failed\n");
-        return false;
+    if (sysChangeMapAccess(addr, 2, true, &pDvmDex->memMap) != 0) {
+        LOGD("NOTE: DEX page access change (->RW) failed\n");
+        /* expected on files mounted from FAT; keep going (may crash) */
     }
 
     *addr = newVal;
 
-    if (sysChangeMapAccess(addr, 2, false, &pDvmDex->memMap) < 0) {
-        LOGW("WARNING: unable to restore read-only access on mapping\n");
-        /* not fatal, keep going */
+    if (sysChangeMapAccess(addr, 2, false, &pDvmDex->memMap) != 0) {
+        LOGD("NOTE: DEX page access change (->RO) failed\n");
+        /* expected on files mounted from FAT; keep going */
     }
 
     return true;
