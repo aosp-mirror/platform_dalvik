@@ -319,7 +319,9 @@ public class KXmlParser implements XmlPullParser {
                     return;
 
                 case TEXT :
-                    pushText('<', !token);
+                    // BEGIN android-changed: distinguish attribute values from normal text.
+                    pushText('<', !token, false);
+                    // END android-changed
                     if (depth == 0) {
                         if (isWhitespace)
                             type = IGNORABLE_WHITESPACE;
@@ -680,7 +682,9 @@ public class KXmlParser implements XmlPullParser {
 					read();
 				
                 int p = txtPos;
-                pushText(delimiter, true);
+                // BEGIN android-changed: distinguish attribute values from normal text.
+                pushText(delimiter, true, true);
+                // END android-changed
 
                 attributes[i] = get(p);
                 txtPos = p;
@@ -800,7 +804,7 @@ public class KXmlParser implements XmlPullParser {
     ' ': parse to whitespace or '>'
     */
 
-    private final void pushText(int delimiter, boolean resolveEntities)
+    private final void pushText(int delimiter, boolean resolveEntities, boolean inAttributeValue)
         throws IOException, XmlPullParserException {
 
         int next = peek(0);
@@ -812,11 +816,15 @@ public class KXmlParser implements XmlPullParser {
                 if (next <= ' ' || next == '>')
                     break;
 
+            // BEGIN android-changed: "<" is not allowed in attribute values.
             if (next == '&') {
                 if (!resolveEntities)
                     break;
 
                 pushEntity();
+            }
+            else if (next == '<' && inAttributeValue) {
+                error("Illegal: \"<\" inside attribute value");
             }
             else if (next == '\n' && type == START_TAG) {
                 read();
@@ -824,9 +832,15 @@ public class KXmlParser implements XmlPullParser {
             }
             else
                 push(read());
+            // END android-changed
 
-            if (next == '>' && cbrCount >= 2 && delimiter != ']')
-                error("Illegal: ]]>");
+            // BEGIN android-changed: "]]>" *is* allowed in attribute values, but
+            // is not allowed in regular text between markup.
+            final boolean allowCloseCdata = inAttributeValue;
+            if (!allowCloseCdata && (next == '>' && cbrCount >= 2 && delimiter != ']')) {
+                error("Illegal: \"]]>\" outside CDATA section");
+            }
+            // END android-changed
 
             if (next == ']')
                 cbrCount++;

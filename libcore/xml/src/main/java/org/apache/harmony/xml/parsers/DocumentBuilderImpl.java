@@ -49,6 +49,8 @@ class DocumentBuilderImpl extends DocumentBuilder {
 
     private static DOMImplementation dom = DOMImplementationImpl.getInstance();
 
+    private boolean coalescing;
+
     private EntityResolver entityResolver;
 
     private ErrorHandler errorHandler;
@@ -261,20 +263,15 @@ class DocumentBuilderImpl extends DocumentBuilder {
                  * whitespace at all.
                  */
                 if (!ignoreElementContentWhitespace) {
-                    appendText(document, node, parser.getText());
+                    appendText(document, node, true, parser.getText());
                 }
-            } else if (token == XmlPullParser.TEXT) {
+            } else if (token == XmlPullParser.TEXT || token == XmlPullParser.CDSECT) {
                 /*
-                 * Found a piece of text. That's the easiest case. We simply
-                 * take it and create a corresponding node.
+                 * Found a piece of text (possibly encoded as a CDATA section).
+                 * That's the easiest case. We simply take it and create a new text node,
+                 * or merge with an adjacent text node.
                  */
-                appendText(document, node, parser.getText());
-            } else if (token == XmlPullParser.CDSECT) {
-                /*
-                 * Found a CDATA section. That's also trivial. We simply
-                 * take it and create a corresponding node.
-                 */
-                node.appendChild(document.createCDATASection(parser.getText()));
+                appendText(document, node, token == XmlPullParser.TEXT, parser.getText());
             } else if (token == XmlPullParser.ENTITY_REF) {
                 /*
                  * Found an entity reference. If an entity resolver is
@@ -289,7 +286,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
 
                 String replacement = resolveStandardEntity(entity);
                 if (replacement != null) {
-                    appendText(document, node, replacement);
+                    appendText(document, node, true, replacement);
                 } else {
                     node.appendChild(document.createEntityReference(entity));
                 }
@@ -374,20 +371,30 @@ class DocumentBuilderImpl extends DocumentBuilder {
         }
     }
 
-    private void appendText(Document document, Node node, String text) {
+    /**
+     * @param isText true for a normal TextNode, false for a CDATA section.
+     * (If we're not coalescing, it matters which kind of node we put into the DOM.)
+     */ 
+    private void appendText(Document document, Node node, boolean isText, String text) {
         // Ignore empty runs.
         if (text.length() == 0) {
             return;
         }
         // Merge with any previous text node if possible.
-        Node lastChild = node.getLastChild();
-        if (lastChild != null && lastChild.getNodeType() == Node.TEXT_NODE) {
-            Text textNode = (Text) lastChild;
-            textNode.setData(textNode.getNodeValue() + text);
-            return;
+        if (coalescing) {
+            Node lastChild = node.getLastChild();
+            if (lastChild != null && lastChild.getNodeType() == Node.TEXT_NODE) {
+                Text textNode = (Text) lastChild;
+                textNode.setData(textNode.getNodeValue() + text);
+                return;
+            }
         }
         // Okay, we really do need a new text node
-        node.appendChild(document.createTextNode(text));
+        if (isText) {
+            node.appendChild(document.createTextNode(text));
+        } else {
+            node.appendChild(document.createCDATASection(text));
+        }
     }
 
     @Override
@@ -407,6 +414,10 @@ class DocumentBuilderImpl extends DocumentBuilder {
      */
     public void setIgnoreComments(boolean value) {
         ignoreComments = value;
+    }
+
+    public void setCoalescing(boolean value) {
+        coalescing = value;
     }
 
     /**

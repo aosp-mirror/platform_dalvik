@@ -18,6 +18,7 @@ package javax.xml.parsers;
 
 import java.io.ByteArrayInputStream;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -25,7 +26,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class DocumentBuilderTest extends junit.framework.TestCase {
-    private static String parse(String xml) throws Exception {
+    private static Document domOf(String xml) throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setCoalescing(true);
         dbf.setExpandEntityReferences(true);
@@ -33,26 +34,61 @@ public class DocumentBuilderTest extends junit.framework.TestCase {
         ByteArrayInputStream stream = new ByteArrayInputStream(xml.getBytes());
         DocumentBuilder builder = dbf.newDocumentBuilder();
         
-        Document doc = builder.parse(stream);
-        
-        Node titleNode = doc.getFirstChild();
-        NodeList children = titleNode.getChildNodes();
+        return builder.parse(stream);
+    }
+    
+    private static String firstChildTextOf(Document doc) throws Exception {
+        NodeList children = doc.getFirstChild().getChildNodes();
         assertEquals(1, children.getLength());
         return children.item(0).getNodeValue();
     }
     
     // http://code.google.com/p/android/issues/detail?id=2607
     public void test_characterReferences() throws Exception {
-        assertEquals("aAb", parse("<p>a&#65;b</p>"));
-        assertEquals("aAb", parse("<p>a&#x41;b</p>"));
+        assertEquals("aAb", firstChildTextOf(domOf("<p>a&#65;b</p>")));
+        assertEquals("aAb", firstChildTextOf(domOf("<p>a&#x41;b</p>")));
     }
 
     // http://code.google.com/p/android/issues/detail?id=2607
     public void test_predefinedEntities() throws Exception {
-        assertEquals("a<b", parse("<p>a&lt;b</p>"));
-        assertEquals("a>b", parse("<p>a&gt;b</p>"));
-        assertEquals("a&b", parse("<p>a&amp;b</p>"));
-        assertEquals("a'b", parse("<p>a&apos;b</p>"));
-        assertEquals("a\"b", parse("<p>a&quot;b</p>"));
+        assertEquals("a<b", firstChildTextOf(domOf("<p>a&lt;b</p>")));
+        assertEquals("a>b", firstChildTextOf(domOf("<p>a&gt;b</p>")));
+        assertEquals("a&b", firstChildTextOf(domOf("<p>a&amp;b</p>")));
+        assertEquals("a'b", firstChildTextOf(domOf("<p>a&apos;b</p>")));
+        assertEquals("a\"b", firstChildTextOf(domOf("<p>a&quot;b</p>")));
+    }
+    
+    private static Element firstElementOf(Document doc) throws Exception {
+        return (Element) doc.getFirstChild();
+    }
+    
+    private static String attrOf(Element e) throws Exception {
+        return e.getAttribute("attr");
+    }
+    
+    // http://code.google.com/p/android/issues/detail?id=2487
+    public void test_cdata_attributes() throws Exception {
+        assertEquals("hello & world", attrOf(firstElementOf(domOf("<?xml version=\"1.0\"?><root attr=\"hello &amp; world\" />"))));
+        try {
+            domOf("<?xml version=\"1.0\"?><root attr=\"hello <![CDATA[ some-cdata ]]> world\" />");
+            fail("SAXParseException not thrown");
+        } catch (org.xml.sax.SAXParseException ex) {
+            // Expected.
+        }
+        assertEquals("hello <![CDATA[ some-cdata ]]> world", attrOf(firstElementOf(domOf("<?xml version=\"1.0\"?><root attr=\"hello &lt;![CDATA[ some-cdata ]]&gt; world\" />"))));
+        assertEquals("hello <![CDATA[ some-cdata ]]> world", attrOf(firstElementOf(domOf("<?xml version=\"1.0\"?><root attr=\"hello &lt;![CDATA[ some-cdata ]]> world\" />"))));
+    }
+    
+    // http://code.google.com/p/android/issues/detail?id=2487
+    public void test_cdata_body() throws Exception {
+        assertEquals("hello & world", firstChildTextOf(domOf("<?xml version=\"1.0\"?><root>hello &amp; world</root>")));
+        assertEquals("hello  some-cdata  world", firstChildTextOf(domOf("<?xml version=\"1.0\"?><root>hello <![CDATA[ some-cdata ]]> world</root>")));
+        assertEquals("hello <![CDATA[ some-cdata ]]> world", firstChildTextOf(domOf("<?xml version=\"1.0\"?><root>hello &lt;![CDATA[ some-cdata ]]&gt; world</root>")));
+        try {
+            domOf("<?xml version=\"1.0\"?><root>hello &lt;![CDATA[ some-cdata ]]> world</root>");
+            fail("SAXParseException not thrown");
+        } catch (org.xml.sax.SAXParseException ex) {
+            // Expected.
+        }
     }
 }

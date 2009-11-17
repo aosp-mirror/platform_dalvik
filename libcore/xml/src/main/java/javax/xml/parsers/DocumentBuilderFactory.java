@@ -29,7 +29,7 @@ import org.apache.harmony.xml.parsers.DocumentBuilderFactoryImpl;
  */
 public abstract class DocumentBuilderFactory extends Object {
 
-    private boolean coalesce;
+    private boolean coalesce = true;
 
     private boolean expandEntityReferences;
 

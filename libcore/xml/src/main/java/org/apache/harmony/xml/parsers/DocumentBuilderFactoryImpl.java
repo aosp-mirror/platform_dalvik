@@ -70,10 +70,9 @@ public class DocumentBuilderFactoryImpl extends DocumentBuilderFactory {
          * or by throwing the full SPI monty at it.  
          */
         DocumentBuilderImpl builder = new DocumentBuilderImpl();
-        
+        builder.setCoalescing(isCoalescing());
         builder.setIgnoreComments(isIgnoringComments());
-        builder.setIgnoreElementContentWhitespace(
-                isIgnoringElementContentWhitespace());
+        builder.setIgnoreElementContentWhitespace(isIgnoringElementContentWhitespace());
         builder.setNamespaceAware(isNamespaceAware());
 
         // TODO What about expandEntityReferences?
