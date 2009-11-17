@@ -162,7 +162,7 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
         goto bail;
     }
 
-    if (sysMapFileInShmem(fd, pMap) != 0) {
+    if (sysMapFileInShmemReadOnly(fd, pMap) != 0) {
         fprintf(stderr, "ERROR: Unable to map %s\n", fileName);
         close(fd);
         goto bail;

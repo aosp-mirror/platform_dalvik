@@ -1,4 +1,3 @@
-My path is: test-ex.jar
 Constructing another
 Got expected ULE
 done

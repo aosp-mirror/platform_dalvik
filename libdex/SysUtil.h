@@ -66,10 +66,19 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap);
  *
  * On success, "pMap" is filled in, and zero is returned.
  */
-int sysMapFileInShmem(int fd, MemMapping* pMap);
+int sysMapFileInShmemReadOnly(int fd, MemMapping* pMap);
 
 /*
- * Like sysMapFileInShmem, but on only part of a file.
+ * Map a file (from fd's current offset) into a shared, read-only memory
+ * segment that can be made writable.  (In some cases, such as when
+ * mapping a file on a FAT filesystem, the result may be fully writable.)
+ *
+ * On success, "pMap" is filled in, and zero is returned.
+ */
+int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap);
+
+/*
+ * Like sysMapFileInShmemReadOnly, but on only part of a file.
  */
 int sysMapFileSegmentInShmem(int fd, off_t start, long length,
     MemMapping* pMap);

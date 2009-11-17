@@ -160,7 +160,7 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap)
  * On success, returns 0 and fills out "pMap".  On failure, returns a nonzero
  * value and does not disturb "pMap".
  */
-int sysMapFileInShmem(int fd, MemMapping* pMap)
+int sysMapFileInShmemReadOnly(int fd, MemMapping* pMap)
 {
 #ifdef HAVE_POSIX_FILEMAP
     off_t start;
@@ -172,24 +172,10 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
     if (getFileStartAndLength(fd, &start, &length) < 0)
         return -1;
 
-    /*
-     * This was originally (PROT_READ, MAP_SHARED), but we want to be able
-     * to make local edits for verification errors and debugger breakpoints.
-     * So we map it read-write and private, but use mprotect to mark the
-     * pages read-only.  This should yield identical results so long as the
-     * pages are left read-only.
-     */
-    memPtr = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE,
-            fd, start);
+    memPtr = mmap(NULL, length, PROT_READ, MAP_FILE | MAP_SHARED, fd, start);
     if (memPtr == MAP_FAILED) {
-        LOGW("mmap(%d, R/W, FILE|PRIVATE, %d, %d) failed: %s\n", (int) length,
+        LOGW("mmap(%d, RO, FILE|SHARED, %d, %d) failed: %s\n", (int) length,
             fd, (int) start, strerror(errno));
-        return -1;
-    }
-    if (mprotect(memPtr, length, PROT_READ) < 0) {
-        LOGW("mprotect(%p, %d, PROT_READ) failed: %s\n",
-            memPtr, length, strerror(errno));
-        (void) munmap(memPtr, length);
         return -1;
     }
 
@@ -198,6 +184,60 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
 
     return 0;
 #else
+    sysFakeMapFile(fd, pMap);
+#endif
+}
+
+/*
+ * Map a file (from fd's current offset) into a private, read-write memory
+ * segment that will be marked read-only (a/k/a "writable read-only").  The
+ * file offset must be a multiple of the system page size.
+ *
+ * In some cases the mapping will be fully writable (e.g. for files on
+ * FAT filesystems).
+ *
+ * On success, returns 0 and fills out "pMap".  On failure, returns a nonzero
+ * value and does not disturb "pMap".
+ */
+int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap)
+{
+#ifdef HAVE_POSIX_FILEMAP
+    off_t start;
+    size_t length;
+    void* memPtr;
+
+    assert(pMap != NULL);
+
+    if (getFileStartAndLength(fd, &start, &length) < 0)
+        return -1;
+
+    memPtr = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE,
+            fd, start);
+    if (memPtr == MAP_FAILED) {
+        LOGW("mmap(%d, R/W, FILE|PRIVATE, %d, %d) failed: %s\n", (int) length,
+            fd, (int) start, strerror(errno));
+        return -1;
+    }
+    if (mprotect(memPtr, length, PROT_READ) < 0) {
+        /* this fails with EACCESS on FAT filesystems, e.g. /sdcard */
+        int err = errno;
+        LOGV("mprotect(%p, %d, PROT_READ) failed: %s\n",
+            memPtr, length, strerror(err));
+        LOGD("mprotect(RO) failed (%d), file will remain read-write\n", err);
+    }
+
+    pMap->baseAddr = pMap->addr = memPtr;
+    pMap->baseLength = pMap->length = length;
+
+    return 0;
+#else
+    sysFakeMapFile(fd, pMap);
+#endif
+}
+
+#ifndef HAVE_POSIX_FILEMAP
+int sysFakeMapFile(int fd, MemMapping* pMap)
+{
     /* No MMAP, just fake it by copying the bits.
        For Win32 we could use MapViewOfFile if really necessary
        (see libs/utils/FileMap.cpp).
@@ -222,8 +262,8 @@ int sysMapFileInShmem(int fd, MemMapping* pMap)
     pMap->baseLength = pMap->length = length;
 
     return 0;
-#endif
 }
+#endif
 
 /*
  * Map part of a file (from fd's current offset) into a shared, read-only
@@ -314,7 +354,7 @@ int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
     int prot = wantReadWrite ? (PROT_READ|PROT_WRITE) : (PROT_READ);
     if (mprotect(alignAddr, alignLength, prot) != 0) {
         int err = errno;
-        LOGW("mprotect (%p,%zd,%d) failed: %s\n",
+        LOGV("mprotect (%p,%zd,%d) failed: %s\n",
             alignAddr, alignLength, prot, strerror(errno));
         return (errno != 0) ? errno : -1;
     }
