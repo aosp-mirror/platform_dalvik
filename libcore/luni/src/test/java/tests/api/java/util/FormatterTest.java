@@ -800,6 +800,36 @@ public class FormatterTest extends TestCase {
         }
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Tests that supplying a Formattable works. See http://code.google.com/p/android/issues/detail?id=1767.",
+        method = "format",
+        args = {}
+    )
+    public void test_Formattable() {
+        Formattable ones = new Formattable() {
+            public void formatTo(Formatter formatter, int flags, int width, int precision) throws IllegalFormatException {
+                try {
+                    formatter.out().append("111");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        Formattable twos = new Formattable() {
+            public void formatTo(Formatter formatter, int flags, int width, int precision) throws IllegalFormatException {
+                try {
+                    formatter.out().append("222");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
+        assertEquals("aaa 111?", new Formatter().format("aaa %s?", ones).toString());
+        assertEquals("aaa 111 bbb 222?", new Formatter().format("aaa %s bbb %s?", ones, twos).toString());
+    }
+
     /**
      * @tests java.util.Formatter#out()
      */
