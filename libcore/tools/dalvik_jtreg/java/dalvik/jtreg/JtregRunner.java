@@ -81,14 +81,23 @@ public final class JtregRunner {
         // threads helps for packages that contain many unsupported tests
         ExecutorService builders = Executors.newFixedThreadPool(8);
         for (final TestDescription testDescription : tests) {
-            builders.submit(new Callable<Void>() {
-                public Void call() throws Exception {
+            builders.submit(new Runnable() {
+                public void run() {
                     String qualifiedName = TestDescriptions.qualifiedName(testDescription);
-                    ExpectedResult expectedResult = ExpectedResult.forRun(expectationDirs, qualifiedName);
-                    TestRun testRun = new TestRun(qualifiedName, testDescription, expectedResult);
-                    buildAndInstall(testRun);
-                    readyToRun.put(testRun);
-                    return null;
+                    TestRun testRun;
+                    try {
+                        ExpectedResult expectedResult = ExpectedResult.forRun(expectationDirs, qualifiedName);
+                        testRun = new TestRun(qualifiedName, testDescription, expectedResult);
+                        buildAndInstall(testRun);
+                    } catch (Throwable throwable) {
+                        testRun = new TestRun(qualifiedName, testDescription, ExpectedResult.SUCCESS);
+                        testRun.setResult(Result.ERROR, throwable);
+                    }
+                    try {
+                        readyToRun.put(testRun);
+                    } catch (InterruptedException e) {
+                        logger.log(Level.SEVERE, "Unexpected interruption", e);
+                    }
                 }
             });
         }
