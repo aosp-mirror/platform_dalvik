@@ -38,6 +38,10 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 
+// BEGIN android-added
+import org.apache.harmony.luni.util.LocaleCache;
+// END android-added
+
 /**
  * <p>The {@code Formatter} class is a String-formatting utility that is designed
  * to work like the {@code printf} function of the C programming language.
@@ -1173,14 +1177,18 @@ public final class Formatter implements Closeable, Flushable {
 
         private NumberFormat getNumberFormat() {
             if (null == numberFormat) {
-                numberFormat = NumberFormat.getInstance(locale);
+                // BEGIN android-changed
+                numberFormat = LocaleCache.getNumberFormat(locale);
+                // END android-changed
             }
             return numberFormat;
         }
 
         private DecimalFormatSymbols getDecimalFormatSymbols() {
             if (null == decimalFormatSymbols) {
-                decimalFormatSymbols = new DecimalFormatSymbols(locale);
+                // BEGIN android-changed
+                decimalFormatSymbols = LocaleCache.getDecimalFormatSymbols(locale);
+                // END android-changed
             }
             return decimalFormatSymbols;
         }
