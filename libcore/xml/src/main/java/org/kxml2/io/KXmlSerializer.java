@@ -124,17 +124,32 @@ public class KXmlSerializer implements XmlSerializer {
                         break;
                     }
                 default :
-                    //if(c < ' ')
-                    //    throw new IllegalArgumentException("Illegal control code:"+((int) c));
-
-                    if (c >= ' ' && c !='@' && (c < 127 || unicode))
+                    // BEGIN android-changed: refuse to output invalid characters
+                    // See http://www.w3.org/TR/REC-xml/#charsets for definition.
+                    // No other Java XML writer we know of does this, but no Java
+                    // XML reader we know of is able to parse the bad output we'd
+                    // otherwise generate.
+                    // Note: tab, newline, and carriage return have already been
+                    // handled above.
+                    boolean valid = (c >= 0x20 && c <= 0xd7ff) || (c >= 0xe000 && c <= 0xfffd);
+                    if (!valid) {
+                        reportInvalidCharacter(c);
+                    }
+                    if (unicode || c < 127) {
                         writer.write(c);
-                    else
+                    } else {
                         writer.write("&#" + ((int) c) + ";");
-
+                    }
+                    // END android-changed
             }
         }
     }
+
+    // BEGIN android-added
+    private static void reportInvalidCharacter(char ch) {
+        throw new IllegalArgumentException("Illegal character (" + Integer.toHexString((int) ch) + ")");
+    }
+    // END android-added
 
     /*
         private final void writeIndent() throws IOException {
@@ -540,9 +555,23 @@ public class KXmlSerializer implements XmlSerializer {
 
     public void cdsect(String data) throws IOException {
         check(false);
+        // BEGIN android-changed: ]]> is not allowed within a CDATA,
+        // so break and start a new one when necessary.
+        data = data.replace("]]>", "]]]]><![CDATA[>");
+        char[] chars = data.toCharArray();
+        // We also aren't allowed any invalid characters.
+        for (char ch : chars) {
+            boolean valid = (ch >= 0x20 && ch <= 0xd7ff) ||
+                    (ch == '\t' || ch == '\n' || ch == '\r') ||
+                    (ch >= 0xe000 && ch <= 0xfffd);
+            if (!valid) {
+                reportInvalidCharacter(ch);
+            }
+        }
         writer.write("<![CDATA[");
-        writer.write(data);
+        writer.write(chars, 0, chars.length);
         writer.write("]]>");
+        // END android-changed
     }
 
     public void comment(String comment) throws IOException {

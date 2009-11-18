@@ -16,33 +16,12 @@
 
 package javax.xml.parsers;
 
-import java.io.ByteArrayInputStream;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import static tests.support.Support_Xml.*;
+
 public class DocumentBuilderTest extends junit.framework.TestCase {
-    private static Document domOf(String xml) throws Exception {
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setCoalescing(true);
-        dbf.setExpandEntityReferences(true);
-        
-        ByteArrayInputStream stream = new ByteArrayInputStream(xml.getBytes());
-        DocumentBuilder builder = dbf.newDocumentBuilder();
-        
-        return builder.parse(stream);
-    }
-    
-    private static String firstChildTextOf(Document doc) throws Exception {
-        NodeList children = doc.getFirstChild().getChildNodes();
-        assertEquals(1, children.getLength());
-        return children.item(0).getNodeValue();
-    }
-    
     // http://code.google.com/p/android/issues/detail?id=2607
     public void test_characterReferences() throws Exception {
         assertEquals("aAb", firstChildTextOf(domOf("<p>a&#65;b</p>")));
@@ -56,14 +35,6 @@ public class DocumentBuilderTest extends junit.framework.TestCase {
         assertEquals("a&b", firstChildTextOf(domOf("<p>a&amp;b</p>")));
         assertEquals("a'b", firstChildTextOf(domOf("<p>a&apos;b</p>")));
         assertEquals("a\"b", firstChildTextOf(domOf("<p>a&quot;b</p>")));
-    }
-    
-    private static Element firstElementOf(Document doc) throws Exception {
-        return (Element) doc.getFirstChild();
-    }
-    
-    private static String attrOf(Element e) throws Exception {
-        return e.getAttribute("attr");
     }
     
     // http://code.google.com/p/android/issues/detail?id=2487
