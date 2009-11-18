@@ -5,8 +5,8 @@ import java.io.OutputStream;
 import java.io.Writer;
 
 /**
- * Define an interface to serialziation of XML Infoset.
- * This interface abstracts away if serialized XML is XML 1.0 comaptible text or
+ * Define an interface to serialization of XML Infoset.
+ * This interface abstracts away if serialized XML is XML 1.0 compatible text or
  * other formats of XML 1.0 serializations (such as binary XML for example with WBXML).
  *
  * <p><b>PLEASE NOTE:</b> This interface will be part of XmlPull 1.2 API.
@@ -27,7 +27,7 @@ import java.io.Writer;
  * <p><b>NOTE:</b> writing  CDSECT, ENTITY_REF, IGNORABLE_WHITESPACE,
  *  PROCESSING_INSTRUCTION, COMMENT, and DOCDECL in some implementations
  * may not be supported (for example when serializing to WBXML).
- * In such case IllegalStateException will be thrown and it is recommened
+ * In such case IllegalStateException will be thrown and it is recommended
  * to use an optional feature to signal that implementation is not
  * supporting this kind of output.
  */
@@ -40,7 +40,7 @@ public interface XmlSerializer {
      * <a href="http://www.xmlpull.org/v1/doc/features.html">
      * http://www.xmlpull.org/v1/doc/features.html</a>.
      *
-     * If feature is not recocgnized or can not be set
+     * If feature is not recognized or can not be set
      * then IllegalStateException MUST be thrown.
      *
      * @exception IllegalStateException If the feature is not supported or can not be set
@@ -63,12 +63,12 @@ public interface XmlSerializer {
     
     /**
      * Set the value of a property.
-     * (the property name is recommened to be URI for uniqueness).
+     * (the property name is recommended to be URI for uniqueness).
      * Some well known optional properties are defined in
      * <a href="http://www.xmlpull.org/v1/doc/properties.html">
      * http://www.xmlpull.org/v1/doc/properties.html</a>.
      *
-     * If property is not recocgnized or can not be set
+     * If property is not recognized or can not be set
      * then IllegalStateException MUST be thrown.
      *
      * @exception IllegalStateException if the property is not supported or can not be set
@@ -144,7 +144,7 @@ public interface XmlSerializer {
      * If there is no prefix bound to this namespace return null
      * but if generatePrefix is false then return generated prefix.
      *
-     * <p><b>NOTE:</b> if the prefix is empty string "" and defualt namespace is bound
+     * <p><b>NOTE:</b> if the prefix is empty string "" and default namespace is bound
      * to this prefix then empty string ("") is returned.
      *
      * <p><b>NOTE:</b> prefixes "xml" and "xmlns" are already bound
@@ -176,7 +176,7 @@ public interface XmlSerializer {
     /**
      * Returns the namespace URI of the current element as set by startTag().
      *
-     * <p><b>NOTE:</b> that measn in particaulr that: <ul>
+     * <p><b>NOTE:</b> that means in particular that: <ul>
      * <li>if there was startTag("", ...) then getNamespace() returns ""
      * <li>if there was startTag(null, ...) then getNamespace() returns null
      * </ul>
@@ -201,7 +201,7 @@ public interface XmlSerializer {
      * The explicit prefixes for namespaces can be established by calling setPrefix()
      * immediately before this method.
      * If namespace is null no namespace prefix is printed but just name.
-     * If namespace is empty string then serialzier will make sure that
+     * If namespace is empty string then serializer will make sure that
      * default empty namespace is declared (in XML 1.0 xmlns='')
      * or throw IllegalStateException if default namespace is already bound
      * to non-empty string.
@@ -224,7 +224,7 @@ public interface XmlSerializer {
      * <p><b>Background:</b> in kXML endTag had no arguments, and non matching tags were
      *  very difficult to find...
      * If namespace is null no namespace prefix is printed but just name.
-     * If namespace is empty string then serialzier will make sure that
+     * If namespace is empty string then serializer will make sure that
      * default empty namespace is declared (in XML 1.0 xmlns='').
      */
     XmlSerializer endTag (String namespace, String name)
@@ -315,7 +315,7 @@ public interface XmlSerializer {
      * before flush() is called on underlying output stream.
      *
      * <p><b>NOTE:</b> if there is need to close start tag
-     * (so no more attribute() calls are allowed) but without flushinging output
+     * (so no more attribute() calls are allowed) but without flushing output
      * call method text() with empty string (text("")).
      *
      */
@@ -323,4 +323,3 @@ public interface XmlSerializer {
         throws IOException;
     
 }
-
