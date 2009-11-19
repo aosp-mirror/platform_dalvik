@@ -299,7 +299,7 @@ static const char* gOpNames[256] = {
     "^breakpoint",                  // does not appear in DEX files
     "^throw-verification-error",    // does not appear in DEX files
     "+execute-inline",
-    "UNUSED",
+    "+execute-inline/range",
 
     /* 0xf0 */
     "+invoke-direct-empty",

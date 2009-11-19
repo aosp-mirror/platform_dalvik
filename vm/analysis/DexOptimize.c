@@ -64,8 +64,10 @@ static void optimizeClass(ClassObject* clazz, const InlineSub* inlineSubs);
 static bool optimizeMethod(Method* method, const InlineSub* inlineSubs);
 static void rewriteInstField(Method* method, u2* insns, OpCode newOpc);
 static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc);
-static bool rewriteDirectInvoke(Method* method, u2* insns);
+static bool rewriteEmptyDirectInvoke(Method* method, u2* insns);
 static bool rewriteExecuteInline(Method* method, u2* insns,
+    MethodType methodType, const InlineSub* inlineSubs);
+static bool rewriteExecuteInlineRange(Method* method, u2* insns,
     MethodType methodType, const InlineSub* inlineSubs);
 
 
@@ -1565,8 +1567,15 @@ static bool optimizeMethod(Method* method, const InlineSub* inlineSubs)
             }
             break;
         case OP_INVOKE_VIRTUAL_RANGE:
-            if (!rewriteVirtualInvoke(method, insns, OP_INVOKE_VIRTUAL_QUICK_RANGE))
-                return false;
+            if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL,
+                    inlineSubs))
+            {
+                if (!rewriteVirtualInvoke(method, insns,
+                        OP_INVOKE_VIRTUAL_QUICK_RANGE))
+                {
+                    return false;
+                }
+            }
             break;
         case OP_INVOKE_SUPER:
             if (!rewriteVirtualInvoke(method, insns, OP_INVOKE_SUPER_QUICK))
@@ -1580,12 +1589,19 @@ static bool optimizeMethod(Method* method, const InlineSub* inlineSubs)
         case OP_INVOKE_DIRECT:
             if (!rewriteExecuteInline(method, insns, METHOD_DIRECT, inlineSubs))
             {
-                if (!rewriteDirectInvoke(method, insns))
+                if (!rewriteEmptyDirectInvoke(method, insns))
                     return false;
             }
             break;
+        case OP_INVOKE_DIRECT_RANGE:
+            rewriteExecuteInlineRange(method, insns, METHOD_DIRECT, inlineSubs);
+            break;
+
         case OP_INVOKE_STATIC:
             rewriteExecuteInline(method, insns, METHOD_STATIC, inlineSubs);
+            break;
+        case OP_INVOKE_STATIC_RANGE:
+            rewriteExecuteInlineRange(method, insns, METHOD_STATIC, inlineSubs);
             break;
 
         default:
@@ -2107,7 +2123,7 @@ static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc)
  * This must only be used when the invoked method does nothing and has
  * no return value (the latter being very important for verification).
  */
-static bool rewriteDirectInvoke(Method* method, u2* insns)
+static bool rewriteEmptyDirectInvoke(Method* method, u2* insns)
 {
     ClassObject* clazz = method->clazz;
     Method* calledMethod;
@@ -2226,6 +2242,7 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
 
     return resMethod;
 }
+
 /*
  * See if the method being called can be rewritten as an inline operation.
  * Works for invoke-virtual, invoke-direct, and invoke-static.
@@ -2265,6 +2282,45 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
             insns[1] = (u2) inlineSubs->inlineIdx;
 
             //LOGI("DexOpt: execute-inline %s.%s --> %s.%s\n",
+            //    method->clazz->descriptor, method->name,
+            //    calledMethod->clazz->descriptor, calledMethod->name);
+            return true;
+        }
+
+        inlineSubs++;
+    }
+
+    return false;
+}
+
+/*
+ * See if the method being called can be rewritten as an inline operation.
+ * Works for invoke-virtual/range, invoke-direct/range, and invoke-static/range.
+ *
+ * Returns "true" if we replace it.
+ */
+static bool rewriteExecuteInlineRange(Method* method, u2* insns,
+    MethodType methodType, const InlineSub* inlineSubs)
+{
+    ClassObject* clazz = method->clazz;
+    Method* calledMethod;
+    u2 methodIdx = insns[1];
+
+    calledMethod = dvmOptResolveMethod(clazz, methodIdx, methodType, NULL);
+    if (calledMethod == NULL) {
+        LOGV("+++ DexOpt inline/range: can't find %d\n", methodIdx);
+        return false;
+    }
+
+    while (inlineSubs->method != NULL) {
+        if (inlineSubs->method == calledMethod) {
+            assert((insns[0] & 0xff) == OP_INVOKE_DIRECT_RANGE ||
+                   (insns[0] & 0xff) == OP_INVOKE_STATIC_RANGE ||
+                   (insns[0] & 0xff) == OP_INVOKE_VIRTUAL_RANGE);
+            insns[0] = (insns[0] & 0xff00) | (u2) OP_EXECUTE_INLINE_RANGE;
+            insns[1] = (u2) inlineSubs->inlineIdx;
+
+            //LOGI("DexOpt: execute-inline/range %s.%s --> %s.%s\n",
             //    method->clazz->descriptor, method->name,
             //    calledMethod->clazz->descriptor, calledMethod->name);
             return true;

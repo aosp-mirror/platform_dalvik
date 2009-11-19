@@ -7650,17 +7650,18 @@ d2i_doconv:
     /*
      * Execute a "native inline" instruction.
      *
-     * We need to call:
-     *  dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref)
+     * We need to call an InlineOp4Func:
+     *  bool (func)(u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult)
      *
-     * The first four args are in r0-r3, but the last two must be pushed
-     * onto the stack.
+     * The first four args are in r0-r3, pointer to return value storage
+     * is on the stack.  The function's return value is a flag that tells
+     * us if an exception was thrown.
      */
     /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
     FETCH(r10, 1)                       @ r10<- BBBB
     add     r1, rGLUE, #offGlue_retval  @ r1<- &glue->retval
     EXPORT_PC()                         @ can throw
-    sub     sp, sp, #8                  @ make room for arg(s)
+    sub     sp, sp, #8                  @ make room for arg, +64 bit align
     mov     r0, rINST, lsr #12          @ r0<- B
     str     r1, [sp]                    @ push &glue->retval
     bl      .LOP_EXECUTE_INLINE_continue        @ make call; will return after
@@ -7673,12 +7674,33 @@ d2i_doconv:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EF: /* 0xef */
-/* File: armv5te/OP_UNUSED_EF.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
-
+.L_OP_EXECUTE_INLINE_RANGE: /* 0xef */
+/* File: armv5te/OP_EXECUTE_INLINE_RANGE.S */
+    /*
+     * Execute a "native inline" instruction, using "/range" semantics.
+     * Same idea as execute-inline, but we get the args differently.
+     *
+     * We need to call an InlineOp4Func:
+     *  bool (func)(u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult)
+     *
+     * The first four args are in r0-r3, pointer to return value storage
+     * is on the stack.  The function's return value is a flag that tells
+     * us if an exception was thrown.
+     */
+    /* [opt] execute-inline/range {vCCCC..v(CCCC+AA-1)}, inline@BBBB */
+    FETCH(r10, 1)                       @ r10<- BBBB
+    add     r1, rGLUE, #offGlue_retval  @ r1<- &glue->retval
+    EXPORT_PC()                         @ can throw
+    sub     sp, sp, #8                  @ make room for arg, +64 bit align
+    mov     r0, rINST, lsr #8           @ r0<- AA
+    str     r1, [sp]                    @ push &glue->retval
+    bl      .LOP_EXECUTE_INLINE_RANGE_continue        @ make call; will return after
+    add     sp, sp, #8                  @ pop stack
+    cmp     r0, #0                      @ test boolean result of inline
+    beq     common_exceptionThrown      @ returned false, handle exception
+    FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 /* ------------------------------ */
     .balign 64
@@ -9463,6 +9485,36 @@ d2l_doconv:
     @ (not reached)
 
 .LOP_EXECUTE_INLINE_table:
+    .word   gDvmInlineOpsTable
+
+
+/* continuation for OP_EXECUTE_INLINE_RANGE */
+
+    /*
+     * Extract args, call function.
+     *  r0 = #of args (0-4)
+     *  r10 = call index
+     *  lr = return addr, above  [DO NOT bl out of here w/o preserving LR]
+     */
+.LOP_EXECUTE_INLINE_RANGE_continue:
+    rsb     r0, r0, #4                  @ r0<- 4-r0
+    FETCH(r9, 2)                        @ r9<- CCCC
+    add     pc, pc, r0, lsl #3          @ computed goto, 2 instrs each
+    bl      common_abort                @ (skipped due to ARM prefetch)
+4:  add     ip, r9, #3                  @ base+3
+    GET_VREG(r3, ip)                    @ r3<- vBase[3]
+3:  add     ip, r9, #2                  @ base+2
+    GET_VREG(r2, ip)                    @ r2<- vBase[2]
+2:  add     ip, r9, #1                  @ base+1
+    GET_VREG(r1, ip)                    @ r1<- vBase[1]
+1:  add     ip, r9, #0                  @ (nop)
+    GET_VREG(r0, ip)                    @ r0<- vBase[0]
+0:
+    ldr     r9, .LOP_EXECUTE_INLINE_RANGE_table       @ table of InlineOperation
+    LDR_PC  "[r9, r10, lsl #4]"         @ sizeof=16, "func" is first entry
+    @ (not reached)
+
+.LOP_EXECUTE_INLINE_RANGE_table:
     .word   gDvmInlineOpsTable
 
 

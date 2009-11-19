@@ -68,6 +68,7 @@ enum InstructionFormat {
     kFmt3rms,       // [opt] invoke-virtual+super/range
     kFmt3rfs,       // [opt] invoke-interface/range
     kFmt3inline,    // [opt] inline invoke
+    kFmt3rinline,   // [opt] inline invoke/range
     kFmt51l,        // op vAA, #+BBBBBBBBBBBBBBBB
 };
 

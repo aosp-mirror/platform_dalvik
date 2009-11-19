@@ -5857,12 +5857,18 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EF: /* 0xef */
-/* File: x86/OP_UNUSED_EF.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_EXECUTE_INLINE_RANGE: /* 0xef */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_EXECUTE_INLINE_RANGE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_DIRECT_EMPTY: /* 0xf0 */

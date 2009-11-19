@@ -1,7 +1,8 @@
 %verify "executed"
 %verify "exception handled"
     /*
-     * Execute a "native inline" instruction.
+     * Execute a "native inline" instruction, using "/range" semantics.
+     * Same idea as execute-inline, but we get the args differently.
      *
      * We need to call an InlineOp4Func:
      *  bool (func)(u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult)
@@ -10,12 +11,12 @@
      * is on the stack.  The function's return value is a flag that tells
      * us if an exception was thrown.
      */
-    /* [opt] execute-inline vAA, {vC, vD, vE, vF}, inline@BBBB */
+    /* [opt] execute-inline/range {vCCCC..v(CCCC+AA-1)}, inline@BBBB */
     FETCH(r10, 1)                       @ r10<- BBBB
     add     r1, rGLUE, #offGlue_retval  @ r1<- &glue->retval
     EXPORT_PC()                         @ can throw
     sub     sp, sp, #8                  @ make room for arg, +64 bit align
-    mov     r0, rINST, lsr #12          @ r0<- B
+    mov     r0, rINST, lsr #8           @ r0<- AA
     str     r1, [sp]                    @ push &glue->retval
     bl      .L${opcode}_continue        @ make call; will return after
     add     sp, sp, #8                  @ pop stack
@@ -31,26 +32,20 @@
      *  r0 = #of args (0-4)
      *  r10 = call index
      *  lr = return addr, above  [DO NOT bl out of here w/o preserving LR]
-     *
-     * Other ideas:
-     * - Use a jump table from the main piece to jump directly into the
-     *   AND/LDR pairs.  Costs a data load, saves a branch.
-     * - Have five separate pieces that do the loading, so we can work the
-     *   interleave a little better.  Increases code size.
      */
 .L${opcode}_continue:
     rsb     r0, r0, #4                  @ r0<- 4-r0
-    FETCH(r9, 2)                        @ r9<- FEDC
+    FETCH(r9, 2)                        @ r9<- CCCC
     add     pc, pc, r0, lsl #3          @ computed goto, 2 instrs each
     bl      common_abort                @ (skipped due to ARM prefetch)
-4:  and     ip, r9, #0xf000             @ isolate F
-    ldr     r3, [rFP, ip, lsr #10]      @ r3<- vF (shift right 12, left 2)
-3:  and     ip, r9, #0x0f00             @ isolate E
-    ldr     r2, [rFP, ip, lsr #6]       @ r2<- vE
-2:  and     ip, r9, #0x00f0             @ isolate D
-    ldr     r1, [rFP, ip, lsr #2]       @ r1<- vD
-1:  and     ip, r9, #0x000f             @ isolate C
-    ldr     r0, [rFP, ip, lsl #2]       @ r0<- vC
+4:  add     ip, r9, #3                  @ base+3
+    GET_VREG(r3, ip)                    @ r3<- vBase[3]
+3:  add     ip, r9, #2                  @ base+2
+    GET_VREG(r2, ip)                    @ r2<- vBase[2]
+2:  add     ip, r9, #1                  @ base+1
+    GET_VREG(r1, ip)                    @ r1<- vBase[1]
+1:  add     ip, r9, #0                  @ (nop)
+    GET_VREG(r0, ip)                    @ r0<- vBase[0]
 0:
     ldr     r9, .L${opcode}_table       @ table of InlineOperation
     LDR_PC  "[r9, r10, lsl #4]"         @ sizeof=16, "func" is first entry

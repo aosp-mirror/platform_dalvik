@@ -5412,6 +5412,7 @@ sput_1nr_common:
      * type, which is acceptable for any operation.
      */
     case OP_EXECUTE_INLINE:
+    case OP_EXECUTE_INLINE_RANGE:
     case OP_INVOKE_DIRECT_EMPTY:
     case OP_IGET_QUICK:
     case OP_IGET_WIDE_QUICK:
@@ -5446,7 +5447,6 @@ sput_1nr_common:
     case OP_UNUSED_EA:
     case OP_UNUSED_EB:
     case OP_BREAKPOINT:
-    case OP_UNUSED_EF:
     case OP_UNUSED_F1:
     case OP_UNUSED_FC:
     case OP_UNUSED_FD:

@@ -33,6 +33,8 @@ import c/opcommon.c
 
 # opcode list; argument to op-start is default directory
 op-start x86
+    # stub -- need native impl
+    op OP_EXECUTE_INLINE_RANGE c
 op-end
 
 # arch-specific entry point to interpreter

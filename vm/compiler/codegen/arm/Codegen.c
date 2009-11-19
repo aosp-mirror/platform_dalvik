@@ -4005,6 +4005,13 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
     return false;
 }
 
+static bool handleFmt3rinline(CompilationUnit *cUnit, MIR *mir)
+{
+    /* For OP_EXECUTE_INLINE_RANGE */
+    genInterpSingleStep(cUnit, mir);
+    return false;
+}
+
 static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
 {
     //TUNING: We're using core regs here - not optimal when target is a double
@@ -4580,6 +4587,9 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                         break;
                     case kFmt3inline:
                         notHandled = handleFmt3inline(cUnit, mir);
+                        break;
+                    case kFmt3rinline:
+                        notHandled = handleFmt3rinline(cUnit, mir);
                         break;
                     case kFmt51l:
                         notHandled = handleFmt51l(cUnit, mir);

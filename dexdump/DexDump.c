@@ -857,6 +857,18 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
             printf("}, [%04x] // vtable #%04x", pDecInsn->vB, pDecInsn->vB);
         }
         break;
+    case kFmt3rinline:   // [opt] execute-inline/range
+        {
+            fputs(" {", stdout);
+            for (i = 0; i < (int) pDecInsn->vA; i++) {
+                if (i == 0)
+                    printf("v%d", pDecInsn->vC + i);
+                else
+                    printf(", v%d", pDecInsn->vC + i);
+            }
+            printf("}, [%04x] // inline #%04x", pDecInsn->vB, pDecInsn->vB);
+        }
+        break;
     case kFmt3inline:    // [opt] inline invoke
         {
 #if 0

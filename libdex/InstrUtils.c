@@ -302,6 +302,7 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_INVOKE_SUPER_QUICK:
         case OP_INVOKE_SUPER_QUICK_RANGE:
         case OP_EXECUTE_INLINE:
+        case OP_EXECUTE_INLINE_RANGE:
         case OP_INVOKE_DIRECT_EMPTY:
             width = -3;
             break;
@@ -326,7 +327,6 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
         case OP_BREAKPOINT:
-        case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
         case OP_UNUSED_FD:
@@ -616,7 +616,8 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
             flags = kInstrCanThrow;
             break;
         case OP_EXECUTE_INLINE:
-            flags = kInstrCanContinue;
+        case OP_EXECUTE_INLINE_RANGE:
+            flags = kInstrCanContinue | kInstrCanThrow;
             break;
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
@@ -655,7 +656,6 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
         case OP_BREAKPOINT:
-        case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
         case OP_UNUSED_FD:
@@ -985,6 +985,9 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_EXECUTE_INLINE:
             fmt = kFmt3inline;
             break;
+        case OP_EXECUTE_INLINE_RANGE:
+            fmt = kFmt3rinline;
+            break;
         case OP_INVOKE_DIRECT_EMPTY:
             fmt = kFmt35c;
             break;
@@ -1009,7 +1012,6 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_UNUSED_EA:
         case OP_UNUSED_EB:
         case OP_BREAKPOINT:
-        case OP_UNUSED_EF:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
         case OP_UNUSED_FD:
@@ -1201,6 +1203,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         break;
     case kFmt3rc:       // op {vCCCC .. v(CCCC+AA-1)}, meth@BBBB
     case kFmt3rms:      // [opt] invoke-virtual+super/range
+    case kFmt3rinline:  // [opt] execute-inline/range
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1);
         pDec->vC = FETCH(2);
