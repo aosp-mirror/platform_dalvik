@@ -57,7 +57,7 @@
       *   r3, r4, r9, r10, r11, r12 available for loading string data
       */
 
-    sub   r8, #4
+    subs  r8, #4
     blt   indexof_remainder
 
 indexof_loop4:
