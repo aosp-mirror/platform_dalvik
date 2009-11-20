@@ -19,6 +19,9 @@ package java.net;
 
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.harmony.luni.util.Msg;
@@ -50,18 +53,34 @@ public final class NetworkInterface extends Object {
 
     private int hashCode;
 
-    /**
-     * This {@code native} method returns the list of network interfaces
-     * supported by the system. An array is returned which is easier to generate
-     * and which can easily be converted into the required enumeration on the
-     * java side.
-     * 
-     * @return an array of zero or more {@code NetworkInterface} objects
-     * @throws SocketException
-     *             if an error occurs when getting network interface information
-     */
-    private static native NetworkInterface[] getNetworkInterfacesImpl()
-            throws SocketException;
+    // BEGIN android-changed: we pay this extra complexity on the Java side
+    // in return for vastly simpler native code.
+    private static native InterfaceAddress[] getInterfaceAddresses() throws SocketException;
+
+    private static NetworkInterface[] getNetworkInterfacesImpl() throws SocketException {
+        Map<String, NetworkInterface> networkInterfaces = new LinkedHashMap<String, NetworkInterface>();
+        for (InterfaceAddress ia : getInterfaceAddresses()) {
+            if (ia != null) { // The array may contain harmless null elements.
+                String name = ia.name;
+                NetworkInterface ni = networkInterfaces.get(name);
+                if (ni == null) {
+                    ni = new NetworkInterface(name, name, new InetAddress[] { ia.address }, ia.index);
+                    networkInterfaces.put(name, ni);
+                } else {
+                    ni.addInterfaceAddress(ia.address);
+                }
+            }
+        }
+        return networkInterfaces.values().toArray(new NetworkInterface[networkInterfaces.size()]);
+    }
+
+    private void addInterfaceAddress(InetAddress address) {
+        InetAddress[] newAddresses = new InetAddress[addresses.length + 1];
+        System.arraycopy(addresses, 0, newAddresses, 0, addresses.length);
+        newAddresses[addresses.length] = address;
+        addresses = newAddresses;
+    }
+    // END android-changed
 
     /**
      * This constructor is used by the native method in order to construct the
@@ -424,6 +443,10 @@ public final class NetworkInterface extends Object {
         string.append(name);
         string.append("]["); //$NON-NLS-1$
         string.append(displayName);
+        // BEGIN android-added: the RI shows this, and it's useful for IPv6 users.
+        string.append("]["); //$NON-NLS-1$
+        string.append(interfaceIndex);
+        // END android-added
         string.append("]"); //$NON-NLS-1$
 
         /*

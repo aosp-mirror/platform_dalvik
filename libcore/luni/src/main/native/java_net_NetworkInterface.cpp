@@ -30,62 +30,32 @@
 
 #include <net/if.h> // Note: Can't appear before <sys/socket.h> on OS X.
 
-// There are several ways that an interface index might be referenced
-// out of an ifreq struct, depending on the platform.
-#if defined(ifr_ifindex)
-// Linux: No need to do anything.
-#elif defined(ifr_index)
-#define ifr_ifindex ifr_index // BSD
-#elif defined(ifr_intval)
-#define ifr_ifindex ifr_intval // OS X
+#ifdef ANDROID
+#include "ifaddrs-android.h"
 #else
-#error "Unknown how to refer to an interface index on this platform."
+#include <ifaddrs.h>
 #endif
 
-// A smart pointer that closes the given fd on going out of scope.
-// TODO: make this generally available.
-class scoped_fd {
+// Ensures we always call freeifaddrs(3) to clean up after getifaddrs(3).
+class ScopedInterfaceAddresses {
 public:
-    explicit scoped_fd(int fd) : fd(fd) {
+    ScopedInterfaceAddresses() : list(NULL) {
     }
-
-    ~scoped_fd() {
-        close(fd);
+    
+    bool init() {
+        int rc = getifaddrs(&list);
+        return (rc != -1);
     }
-
-    int get() const {
-        return fd;
+    
+    ~ScopedInterfaceAddresses() {
+        freeifaddrs(list);
     }
-
-private:
-    int fd;
+    
+    ifaddrs* list;
 };
 
 // TODO: add a header file for shared utilities like this.
 extern jobject socketAddressToInetAddress(JNIEnv* env, sockaddr_storage* sockAddress);
-
-class NetworkInterfaceGetter {
-public:
-    NetworkInterfaceGetter() : interfaces(NULL) {
-        // Initialize this so we can be responsible for deleting it.
-        ifc.ifc_buf = NULL;
-    }
-
-    ~NetworkInterfaceGetter() {
-        delete[] ifc.ifc_buf;
-    }
-
-    jobjectArray getNetworkInterfaces(JNIEnv* env);
-
-private:
-    jobjectArray interfaces;
-    ifconf ifc;
-};
-
-// TODO: move to JNIHelp?
-static void jniThrowOutOfMemoryError(JNIEnv* env) {
-    jniThrowException(env, "java/lang/OutOfMemoryError", "native heap");
-}
 
 // TODO(enh): move to JNIHelp.h
 static void jniThrowSocketException(JNIEnv* env) {
@@ -94,173 +64,87 @@ static void jniThrowSocketException(JNIEnv* env) {
             jniStrError(errno, buf, sizeof(buf)));
 }
 
-// Creates an InetAddress[] of size 'addressCount' from the ifc_req structs
-// starting at index 'startIndex' in 'ifc.ifc_req'.
-static jobjectArray MakeInetAddressArray(JNIEnv* env,
-        const ifconf& ifc, size_t startIndex, size_t addressCount) {
-    jclass inetAddressClass = env->FindClass("java/net/InetAddress");
-    if (inetAddressClass == NULL) {
+static jobject makeInterfaceAddress(JNIEnv* env, jint interfaceIndex, const char* name, sockaddr_storage* ss) {
+    jclass clazz = env->FindClass("java/net/InterfaceAddress");
+    if (clazz == NULL) {
         return NULL;
     }
-    jobjectArray addresses = env->NewObjectArray(addressCount, inetAddressClass, NULL);
-    if (addresses == NULL) {
+    jmethodID constructor = env->GetMethodID(clazz, "<init>", "(ILjava/lang/String;Ljava/net/InetAddress;)V");
+    if (constructor == NULL) {
         return NULL;
     }
-    for (size_t i = startIndex; i < startIndex + addressCount; ++i) {
-        sockaddr_storage* sockAddress =
-                reinterpret_cast<sockaddr_storage*>(&ifc.ifc_req[i].ifr_addr);
-        jobject element = socketAddressToInetAddress(env, sockAddress);
-        if (element == NULL) {
-            return NULL;
-        }
-        env->SetObjectArrayElement(addresses, i - startIndex, element);
-        if (env->ExceptionCheck()) {
-            return NULL;
-        }
+    jobject javaName = env->NewStringUTF(name);
+    if (javaName == NULL) {
+        return NULL;
     }
-    return addresses;
+    jobject javaAddress = socketAddressToInetAddress(env, ss);
+    if (javaAddress == NULL) {
+        return NULL;
+    }
+    return env->NewObject(clazz, constructor, interfaceIndex, javaName, javaAddress);
 }
 
-// Creates a NetworkInterface with the given 'name', array of 'addresses',
-// and 'id'.
-static jobject MakeNetworkInterface(JNIEnv* env,
-        jstring name, jobjectArray addresses, jint id) {
-    jclass networkInterfaceClass = env->FindClass("java/net/NetworkInterface");
-    if (networkInterfaceClass == NULL) {
-        return NULL;
-    }
-    jmethodID networkInterfaceConstructor =
-            env->GetMethodID(networkInterfaceClass, "<init>",
-                    "(Ljava/lang/String;Ljava/lang/String;[Ljava/net/InetAddress;I)V");
-    if (networkInterfaceConstructor == NULL) {
-        return NULL;
-    }
-    return env->NewObject(networkInterfaceClass, networkInterfaceConstructor,
-                          name, name, addresses, id);
-}
-
-jobjectArray NetworkInterfaceGetter::getNetworkInterfaces(JNIEnv* env) {
-    scoped_fd fd(socket(PF_INET, SOCK_DGRAM, 0));
-    if (fd.get() < 0) {
+static jobjectArray getInterfaceAddresses(JNIEnv* env, jclass) {
+    // Get the list of interface addresses.
+    ScopedInterfaceAddresses addresses;
+    if (!addresses.init()) {
         jniThrowSocketException(env);
         return NULL;
     }
-
-    // Get the list of interfaces.
-    // Keep trying larger buffers until the result fits.
-    int len = 32 * sizeof(ifreq);
-    for (;;) {
-        // TODO: std::vector or boost::scoped_array would make this less awful.
-        if (ifc.ifc_buf != NULL) {
-            delete[] ifc.ifc_buf;
-            ifc.ifc_buf = NULL;
-        }
-        char* data = new char[len];
-        if (data == NULL) {
-            jniThrowOutOfMemoryError(env);
-            return NULL;
-        }
-        ifc.ifc_len = len;
-        ifc.ifc_buf = data;
-        if (ioctl(fd.get(), SIOCGIFCONF, &ifc) != 0) {
-            jniThrowSocketException(env);
-            return NULL;
-        }
-        if (ifc.ifc_len < len) {
-            break;
-        }
-        // The returned data was likely truncated.
-        // Expand the buffer and try again.
-        len += 32 * sizeof(ifreq);
+    
+    // Count how many there are.
+    int interfaceAddressCount = 0;
+    for (ifaddrs* ifa = addresses.list; ifa != NULL; ifa = ifa->ifa_next) {
+        ++interfaceAddressCount;
     }
-
-    // Count the number of distinct interfaces.
-    // Multiple addresses for a given interface have the same interface name.
-    // This whole function assumes that all an interface's addresses will be
-    // listed adjacent to one another.
-    size_t totalAddressCount = ifc.ifc_len / sizeof(ifreq);
-    size_t interfaceCount = 0;
-    const char* lastName = NULL;
-    for (size_t i = 0; i < totalAddressCount; ++i) {
-        const char* name = ifc.ifc_req[i].ifr_name;
-        if (lastName == NULL || strncmp(lastName, name, IFNAMSIZ) != 0) {
-            ++interfaceCount;
-        }
-        lastName = name;
-    }
-
-    // Build the NetworkInterface[]...
-    jclass networkInterfaceClass = env->FindClass("java/net/NetworkInterface");
-    if (networkInterfaceClass == NULL) {
+    
+    // Build the InterfaceAddress[]...
+    jclass interfaceAddressClass = env->FindClass("java/net/InterfaceAddress");
+    if (interfaceAddressClass == NULL) {
         return NULL;
     }
-    interfaces = env->NewObjectArray(interfaceCount, networkInterfaceClass, NULL);
-    if (interfaces == NULL) {
+    jobjectArray result = env->NewObjectArray(interfaceAddressCount, interfaceAddressClass, NULL);
+    if (result == NULL) {
         return NULL;
     }
-
-    // Fill in the NetworkInterface[].
-    size_t arrayIndex = 0;
-    for (size_t i = 0; i < totalAddressCount; ++i) {
-        // Get the index for this interface.
-        // (This is an id the kernel uses, unrelated to our array indexes.)
-        int id = ifc.ifc_req[i].ifr_ifindex;
-
-        // Get the name for this interface. There only seems to be one name so
-        // we use it for both name and the display name (as does the RI).
-        jstring name = env->NewStringUTF(ifc.ifc_req[i].ifr_name);
-        if (name == NULL) {
+    
+    // And fill it in...
+    int arrayIndex = 0;
+    for (ifaddrs* ifa = addresses.list; ifa != NULL; ifa = ifa->ifa_next) {
+        // We're only interested in IP addresses.
+        int family = ifa->ifa_addr->sa_family;
+        if (family != AF_INET && family != AF_INET6) {
+            continue;
+        }
+        // Until we implement Java 6's NetworkInterface.isUp,
+        // we only want interfaces that are up.
+        if ((ifa->ifa_flags & IFF_UP) == 0) {
+            continue;
+        }
+        // Find the interface's index, and skip this address if
+        // the interface has gone away.
+        int interfaceIndex = if_nametoindex(ifa->ifa_name);
+        if (interfaceIndex == 0) {
+            continue;
+        }
+        // Make a new InterfaceAddress, and insert it into the array.
+        sockaddr_storage* ss = reinterpret_cast<sockaddr_storage*>(ifa->ifa_addr);
+        jobject element = makeInterfaceAddress(env, interfaceIndex, ifa->ifa_name, ss);
+        if (element == NULL) {
             return NULL;
         }
-
-        // Check how many addresses this interface has.
-        size_t addressCount = 0;
-        for (size_t j = i; j < totalAddressCount; ++j) {
-            if (strncmp(ifc.ifc_req[i].ifr_name, ifc.ifc_req[j].ifr_name, IFNAMSIZ) == 0) {
-                if (ifc.ifc_req[j].ifr_addr.sa_family == AF_INET) {
-                    ++addressCount;
-                }
-            } else {
-                break;
-            }
-        }
-
-        // Get this interface's addresses as an InetAddress[].
-        jobjectArray addresses = MakeInetAddressArray(env, ifc, i, addressCount);
-        if (addresses == NULL) {
-            return NULL;
-        }
-        // Create the NetworkInterface object and add it to the NetworkInterface[].
-        jobject interface = MakeNetworkInterface(env, name, addresses, id);
-        if (interface == NULL) {
-            return NULL;
-        }
-        env->SetObjectArrayElement(interfaces, arrayIndex++, interface);
+        env->SetObjectArrayElement(result, arrayIndex, element);
         if (env->ExceptionCheck()) {
             return NULL;
         }
-
-        // Skip over this interface's addresses to the next *interface*.
-        i += addressCount - 1;
+        ++arrayIndex;
     }
-    return interfaces;
+    return result;
 }
 
-/**
- * Returns an array of zero or more NetworkInterface objects, one for each
- * network interface.
- */
-static jobjectArray getNetworkInterfacesImpl(JNIEnv* env, jclass) {
-    NetworkInterfaceGetter getter;
-    return getter.getNetworkInterfaces(env);
-}
-
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "getNetworkInterfacesImpl", "()[Ljava/net/NetworkInterface;", (void*) getNetworkInterfacesImpl },
+    { "getInterfaceAddresses", "()[Ljava/net/InterfaceAddress;", (void*) getInterfaceAddresses },
 };
 int register_java_net_NetworkInterface(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "java/net/NetworkInterface",
