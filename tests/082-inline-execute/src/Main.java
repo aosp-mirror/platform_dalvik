@@ -138,7 +138,14 @@ public class Main {
         String sub = offset.substring(3, 13);
         String str32 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
         String str33 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxy";
+        String lc = "abcdefg";
+        String uc = "ABCDEFG";
         Object blah = new Object();
+
+        for (int i = 0; i < 100; i++) {
+            String y = lc.toUpperCase();
+            Assert.assertTrue(y.equals(uc));
+        }
 
         Assert.assertEquals(str32.compareTo(str33), -1);
         Assert.assertEquals(str33.compareTo(str32), 1);

@@ -3289,15 +3289,14 @@ static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
 
 
 /*
- * NOTE: We assume here that the special native inline routines
- * are side-effect free.  By making this assumption, we can safely
- * re-execute the routine from the interpreter if it decides it
- * wants to throw an exception. We still need to EXPORT_PC(), though.
+ * NOTE: Handles both range and non-range versions (arguments
+ * have already been normalized by this point).
  */
-static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
+static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     switch( mir->dalvikInsn.opCode) {
+        case OP_EXECUTE_INLINE_RANGE:
         case OP_EXECUTE_INLINE: {
             unsigned int i;
             const InlineOperation* inLineTable = dvmGetInlineOpsTable();
@@ -3370,19 +3369,19 @@ static bool handleFmt3inline(CompilationUnit *cUnit, MIR *mir)
             }
             opReg(cUnit, kOpBlx, r4PC);
             opRegImm(cUnit, kOpAdd, r13, 8);
-            genZeroCheck(cUnit, r0, mir->offset, NULL);
+            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
+            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            loadConstant(cUnit, r0,
+                         (int) (cUnit->method->insns + mir->offset));
+            genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+            ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+            target->defMask = ENCODE_ALL;
+            branchOver->generic.target = (LIR *) target;
             break;
         }
         default:
             return true;
     }
-    return false;
-}
-
-static bool handleFmt3rinline(CompilationUnit *cUnit, MIR *mir)
-{
-    /* For OP_EXECUTE_INLINE_RANGE */
-    genInterpSingleStep(cUnit, mir);
     return false;
 }
 
@@ -3955,10 +3954,8 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                                                         labelList);
                         break;
                     case kFmt3inline:
-                        notHandled = handleFmt3inline(cUnit, mir);
-                        break;
                     case kFmt3rinline:
-                        notHandled = handleFmt3rinline(cUnit, mir);
+                        notHandled = handleExecuteInline(cUnit, mir);
                         break;
                     case kFmt51l:
                         notHandled = handleFmt51l(cUnit, mir);

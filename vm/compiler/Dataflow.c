@@ -747,7 +747,7 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     DF_FORMAT_35C,
 
     // EF OP_EXECUTE_INLINE_RANGE
-    DF_NOP,
+    DF_FORMAT_3RC,
 
     // F0 OP_INVOKE_DIRECT_EMPTY
     DF_NOP,
