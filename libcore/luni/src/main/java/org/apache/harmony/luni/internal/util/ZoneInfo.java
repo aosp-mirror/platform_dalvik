@@ -258,4 +258,10 @@ public class ZoneInfo extends TimeZone {
         result = prime * result + (mUseDst ? 1231 : 1237);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return getClass().getName() +
+                "[\"" + mStandardName + "\",mRawOffset=" + mRawOffset + ",mUseDst=" + mUseDst + "]";
+    }
 }
