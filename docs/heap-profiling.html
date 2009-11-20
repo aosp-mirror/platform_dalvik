@@ -141,19 +141,22 @@ removable storage or the app's private data area, you can do this on a
 device without root access.
 
 
-
 <h3>Android 1.6 ("Donut")</h3>
 <p>
-In 1.6, features were added that allow DDMS to request a heap dump on
+No real change to the way profiling works.
+However, 1.6 introduced the <code>WRITE_EXTERNAL_STORAGE</code>
+permission, which is required to write data to the SD card.  If you're
+accustomed to writing profile data to <code>/sdcard</code>, you will
+need to enable the permission in your application's manifest.
+
+
+<h3>Android 2.0 ("Eclair")</h3>
+<p>
+In 2.0, features were added that allow DDMS to request a heap dump on
 demand, and automatically pull the result across.  Select your application
-and click the "dump HPROF file" button.
-</p><p>
-However, 1.6 also introduced the <code>WRITE_EXTERNAL_STORAGE</code>
-permission, which is required to write data to the SD card.  To use
-the DDMS feature, which always writes files to the SD card,
+and click the "dump HPROF file" button in the top left.  This always
+writes files to the SD card, so
 you must have a card inserted and the permission enabled in your application.
-</p><p>
-Otherwise, things are the same as they were in 1.5.
 
 
 <h2>Examining the data</h2>
