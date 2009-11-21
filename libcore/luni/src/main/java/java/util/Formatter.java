@@ -1164,9 +1164,11 @@ public final class Formatter implements Closeable, Flushable {
 
         private static String lineSeparator;
 
-        private NumberFormat numberFormat;
-
-        private DecimalFormatSymbols decimalFormatSymbols;
+        // BEGIN android-changed
+        // These objects are mutated during use, so can't be cached safely.
+        // private NumberFormat numberFormat;
+        // private DecimalFormatSymbols decimalFormatSymbols;
+        // END android-changed
 
         private DateTimeUtil dateTimeUtil;
 
@@ -1176,21 +1178,15 @@ public final class Formatter implements Closeable, Flushable {
         }
 
         private NumberFormat getNumberFormat() {
-            if (null == numberFormat) {
-                // BEGIN android-changed
-                numberFormat = LocaleCache.getNumberFormat(locale);
-                // END android-changed
-            }
-            return numberFormat;
+            // BEGIN android-changed
+            return LocaleCache.getNumberFormat(locale);
+            // END android-changed
         }
 
         private DecimalFormatSymbols getDecimalFormatSymbols() {
-            if (null == decimalFormatSymbols) {
-                // BEGIN android-changed
-                decimalFormatSymbols = LocaleCache.getDecimalFormatSymbols(locale);
-                // END android-changed
-            }
-            return decimalFormatSymbols;
+            // BEGIN android-changed
+            return LocaleCache.getDecimalFormatSymbols(locale);
+            // END android-changed
         }
 
         /*
