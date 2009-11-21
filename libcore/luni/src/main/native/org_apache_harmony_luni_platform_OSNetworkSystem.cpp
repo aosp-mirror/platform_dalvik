@@ -1289,6 +1289,7 @@ static void mcastAddDropMembership(JNIEnv *env, int handle, jobject optVal,
             interfaceIdxID = env->GetFieldID(cls, "interfaceIdx", "I");
             interfaceIndex = env->GetIntField(optVal, interfaceIdxID);
         }
+        LOGI("mcastAddDropMembership interfaceIndex=%i", interfaceIndex);
 
         if (!inetAddressToSocketAddress(env, multiaddr, 0, &sockaddrP)) {
             return;
