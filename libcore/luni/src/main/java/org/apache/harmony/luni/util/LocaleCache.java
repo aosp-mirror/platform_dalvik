@@ -55,27 +55,29 @@ public class LocaleCache {
     }
 
     /**
-     * Returns a NumberFormat object initialized with the specified
-     * Locale, re-using a previously returned object if possible.
+     * Returns a NumberFormat object for the specified Locale.
      */
     public static NumberFormat getNumberFormat(Locale locale) {
         LocaleCache lc = getLocaleCache(locale);
         if (lc.numberFormat == null) {
             lc.numberFormat = NumberFormat.getInstance(locale);
         }
-        return lc.numberFormat;
+
+        // NumberFormat is mutable, so return a new clone each time.
+        return (NumberFormat) lc.numberFormat.clone();
     }
 
     /**
-     * Returns a DecimalFormatSymbols object initialized with the specified
-     * Locale, re-using a previously returned object if possible.
+     * Returns a DecimalFormatSymbols object for the specified Locale.
      */
     public static DecimalFormatSymbols getDecimalFormatSymbols(Locale locale) {
         LocaleCache lc = getLocaleCache(locale);
         if (lc.decimalFormatSymbols == null) {
             lc.decimalFormatSymbols = new DecimalFormatSymbols(locale);
         }
-        return lc.decimalFormatSymbols;
+
+        // DecimalFormatSymbols is mutable, so return a new clone each time.
+        return (DecimalFormatSymbols) lc.decimalFormatSymbols.clone();
     }
 
 }
