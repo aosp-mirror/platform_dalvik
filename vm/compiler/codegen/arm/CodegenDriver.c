@@ -208,13 +208,6 @@ static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir)
 }
 
 #if defined(WITH_SELF_VERIFICATION)
-/* Prevent certain opcodes from being jitted */
-static inline bool selfVerificationPuntOps(OpCode op)
-{
-  return (op == OP_MONITOR_ENTER || op == OP_MONITOR_EXIT ||
-          op == OP_NEW_INSTANCE  || op == OP_NEW_ARRAY);
-}
-
 /*
  * The following are used to keep compiled loads and stores from modifying
  * memory during self verification mode.
@@ -2048,10 +2041,13 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
             int offset = offsetof(InterpState, self);
             int exOffset = offsetof(Thread, exception);
             int selfReg = allocTemp(cUnit);
+            int resetReg = allocTemp(cUnit);
             RegLocation rlDest = getDestLoc(cUnit, mir, 0);
             rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
             loadWordDisp(cUnit, rGLUE, offset, selfReg);
+            loadConstant(cUnit, resetReg, 0);
             loadWordDisp(cUnit, selfReg, exOffset, rlResult.lowReg);
+            storeWordDisp(cUnit, selfReg, exOffset, resetReg);
             storeValue(cUnit, rlDest, rlResult);
            break;
         }
@@ -3882,11 +3878,6 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 ((gDvmJit.opList[dalvikOpCode >> 3] &
                   (1 << (dalvikOpCode & 0x7))) !=
                  0);
-#if defined(WITH_SELF_VERIFICATION)
-            /* Punt on opcodes we can't replay */
-            if (selfVerificationPuntOps(dalvikOpCode))
-                singleStepMe = true;
-#endif
             if (singleStepMe || cUnit->allSingleStep) {
                 notHandled = false;
                 genInterpSingleStep(cUnit, mir);

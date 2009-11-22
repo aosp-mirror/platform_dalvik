@@ -350,11 +350,7 @@ int dvmJitStartup(void)
 
 #if defined(WITH_SELF_VERIFICATION)
     // Force JIT into blocking, translate everything mode
-    /*
-     * FIXME
-     * Cannot boot to home with threshold 1
-     * gDvmJit.threshold = 1;
-     */
+    gDvmJit.threshold = 1;
     gDvmJit.blockingMode = true;
 #endif
 
@@ -550,6 +546,18 @@ void dvmJitAbortTraceSelect(InterpState* interpState)
         interpState->jitState = kJitTSelectAbort;
 }
 
+#if defined(WITH_SELF_VERIFICATION)
+static bool selfVerificationPuntOps(DecodedInstruction *decInsn)
+{
+    OpCode op = decInsn->opCode;
+    int flags =  dexGetInstrFlags(gDvm.instrFlags, op);
+    return (op == OP_MONITOR_ENTER || op == OP_MONITOR_EXIT ||
+            op == OP_NEW_INSTANCE || op == OP_NEW_ARRAY ||
+            op == OP_CHECK_CAST || op == OP_MOVE_EXCEPTION ||
+            (flags & kInstrInvoke));
+}
+#endif
+
 /*
  * Adds to the current trace request one instruction at a time, just
  * before that instruction is interpreted.  This is the primary trace
@@ -580,6 +588,21 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
     const u2 *lastPC = interpState->lastPC;
     interpState->lastPC = pc;
 
+#if defined(WITH_SELF_VERIFICATION)
+    /*
+     * We can't allow some instructions to be executed twice, and so they
+     * must not appear in any translations.  End the trace before they
+     * are inlcluded.
+     */
+    if (lastPC && interpState->jitState == kJitTSelect) {
+        DecodedInstruction decInsn;
+        dexDecodeInstruction(gDvm.instrFormat, lastPC, &decInsn);
+        if (selfVerificationPuntOps(&decInsn)) {
+            interpState->jitState = kJitTSelectEnd;
+        }
+    }
+#endif
+
     switch (interpState->jitState) {
         char* nopStr;
         int target;
@@ -602,6 +625,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                 interpState->jitState = kJitTSelectEnd;
                 break;
             }
+
 
 #if defined(SHOW_TRACE)
             LOGD("TraceGen: adding %s",getOpcodeName(decInsn.opCode));
@@ -931,8 +955,8 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             res = true;
         }
 
-        /* If stress mode (threshold==1), always translate */
-        res &= (gDvmJit.threshold != 1);
+        /* If stress mode (threshold <= 6), always translate */
+        res &= (gDvmJit.threshold > 6);
 
         /*
          * If the compiler is backlogged, or if a debugger or profiler is
