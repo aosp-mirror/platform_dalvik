@@ -757,6 +757,4 @@ typedef struct PredictedChainingCell {
 
 #define CHAIN_CELL_OFFSET_TAG   0xcdab
 
-ArmLIR* dvmCompilerRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
-
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H */

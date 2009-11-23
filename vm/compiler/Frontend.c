@@ -665,7 +665,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     }
 
     /* Set the instruction set to use (NOTE: later components may change it) */
-    cUnit.instructionSet = dvmCompilerInstructionSet(&cUnit);
+    cUnit.instructionSet = dvmCompilerInstructionSet();
 
     /* Allocate Registers */
     dvmCompilerRegAlloc(&cUnit);
@@ -873,7 +873,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
     }
 
     /* Set the instruction set to use (NOTE: later components may change it) */
-    cUnit.instructionSet = dvmCompilerInstructionSet(&cUnit);
+    cUnit.instructionSet = dvmCompilerInstructionSet();
 
     dvmCompilerMIR2LIR(&cUnit);
 

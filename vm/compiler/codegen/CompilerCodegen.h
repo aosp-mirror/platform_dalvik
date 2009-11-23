@@ -46,6 +46,12 @@ void dvmCompilerRegAlloc(CompilationUnit *cUnit);
 void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit);
 
 /* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
-JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit);
+JitInstructionSetType dvmCompilerInstructionSet(void);
+
+/*
+ * Implemented in codegen/<target>/<target_variant>/ArchVariant.c
+ * Architecture-specific initializations and checks
+ */
+bool dvmCompilerArchVariantInit(void);
 
 #endif /* _DALVIK_VM_COMPILERCODEGEN_H_ */

@@ -17,6 +17,7 @@
 #include "Dalvik.h"
 #include "vm/compiler/CompilerInternals.h"
 #include "ArmLIR.h"
+#include "Codegen.h"
 
 #define DEBUG_OPT(X)
 
@@ -95,9 +96,8 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                     /* Insert a move to replace the load */
                     if (checkLIR->operands[0] != nativeRegId) {
                         ArmLIR *moveLIR;
-                        moveLIR = dvmCompilerRegCopy(cUnit,
-                                                    checkLIR->operands[0],
-                                                    nativeRegId);
+                        moveLIR = dvmCompilerRegCopyNoInsert(
+                                    cUnit, checkLIR->operands[0], nativeRegId);
                         /*
                          * Insertion is guaranteed to succeed since checkLIR
                          * is never the first LIR on the list
@@ -250,9 +250,8 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                     /* Insert a move to replace the load */
                     if (checkLIR->operands[0] != nativeRegId) {
                         ArmLIR *moveLIR;
-                        moveLIR = dvmCompilerRegCopy(cUnit,
-                                                    nativeRegId,
-                                                    checkLIR->operands[0]);
+                        moveLIR = dvmCompilerRegCopyNoInsert(
+                                    cUnit, nativeRegId, checkLIR->operands[0]);
                         /*
                          * Convert *thisLIR* load into a move
                          */

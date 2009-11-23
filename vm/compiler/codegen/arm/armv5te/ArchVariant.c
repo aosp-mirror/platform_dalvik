@@ -23,36 +23,13 @@
  * Determine the initial instruction set to be used for this trace.
  * Later components may decide to change this.
  */
-JitInstructionSetType dvmCompilerInstructionSet(CompilationUnit *cUnit)
+JitInstructionSetType dvmCompilerInstructionSet(void)
 {
     return DALVIK_JIT_THUMB;
 }
 
-/*
- * Jump to the out-of-line handler in ARM mode to finish executing the
- * remaining of more complex instructions.
- */
-static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
-{
-    /*
-     * NOTE - In practice BLX only needs one operand, but since the assembler
-     * may abort itself and retry due to other out-of-range conditions we
-     * cannot really use operand[0] to store the absolute target address since
-     * it may get clobbered by the final relative offset. Therefore,
-     * we fake BLX_1 is a two operand instruction and the absolute target
-     * address is stored in operand[1].
-     */
-    clobberHandlerRegs(cUnit);
-    newLIR2(cUnit, kThumbBlx1,
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-    newLIR2(cUnit, kThumbBlx2,
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
-            (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
-}
-
 /* Architecture-specific initializations and checks go here */
-static bool compilerArchVariantInit(void)
+bool dvmCompilerArchVariantInit(void)
 {
     /* First, declare dvmCompiler_TEMPLATE_XXX for each template */
 #define JIT_TEMPLATE(X) extern void dvmCompiler_TEMPLATE_##X();
@@ -88,73 +65,4 @@ static bool compilerArchVariantInit(void)
      */
     assert(offsetof(InterpState, jitToInterpEntries) < 108);
     return true;
-}
-
-void *dvmCompilerGetInterpretTemplate()
-{
-    return (void*) ((int)gDvmJit.codeCache +
-                    templateEntryOffsets[TEMPLATE_INTERPRET]);
-}
-
-static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
-{
-    return false;   /* punt to C handler */
-}
-
-static bool handleConversion(CompilationUnit *cUnit, MIR *mir)
-{
-    return handleConversionPortable(cUnit, mir);
-}
-
-static bool handleArithOpFloat(CompilationUnit *cUnit, MIR *mir,
-                               RegLocation rlDest, RegLocation rlSrc1,
-                               RegLocation rlSrc2)
-{
-    return handleArithOpFloatPortable(cUnit, mir, rlDest, rlSrc1, rlSrc2);
-}
-
-static bool handleArithOpDouble(CompilationUnit *cUnit, MIR *mir,
-                                RegLocation rlDest, RegLocation rlSrc1,
-                                RegLocation rlSrc2)
-{
-    return handleArithOpDoublePortable(cUnit, mir, rlDest, rlSrc1, rlSrc2);
-}
-
-static bool handleCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
-                        RegLocation rlSrc1, RegLocation rlSrc2)
-{
-    RegLocation rlResult = LOC_C_RETURN;
-    /*
-     * Don't attempt to optimize register usage since these opcodes call out to
-     * the handlers.
-     */
-    switch (mir->dalvikInsn.opCode) {
-        case OP_CMPL_FLOAT:
-            loadValueDirectFixed(cUnit, rlSrc1, r0);
-            loadValueDirectFixed(cUnit, rlSrc2, r1);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPL_FLOAT);
-            storeValue(cUnit, rlDest, rlResult);
-            break;
-        case OP_CMPG_FLOAT:
-            loadValueDirectFixed(cUnit, rlSrc1, r0);
-            loadValueDirectFixed(cUnit, rlSrc2, r1);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPG_FLOAT);
-            storeValue(cUnit, rlDest, rlResult);
-            break;
-        case OP_CMPL_DOUBLE:
-            loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
-            loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPL_DOUBLE);
-            storeValue(cUnit, rlDest, rlResult);
-            break;
-        case OP_CMPG_DOUBLE:
-            loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
-            loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
-            genDispatchToHandler(cUnit, TEMPLATE_CMPG_DOUBLE);
-            storeValue(cUnit, rlDest, rlResult);
-            break;
-        default:
-            return true;
-    }
-    return false;
 }

@@ -17,6 +17,8 @@
 #ifndef _DALVIK_VM_COMPILER_UTILITY
 #define _DALVIK_VM_COMPILER_UTILITY
 
+#include "Dalvik.h"
+
 /* Each arena page has some overhead, so take a few bytes off 8k */
 #define ARENA_DEFAULT_SIZE 8100
 

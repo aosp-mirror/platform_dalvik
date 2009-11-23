@@ -22,8 +22,17 @@
  *
  */
 
+#include "compiler/CompilerUtility.h"
+#include "compiler/CompilerIR.h"
+#include "compiler/Dataflow.h"
+#include "ArmLIR.h"
 #include "Codegen.h"
-#include "../../Dataflow.h"
+#include "Ralloc.h"
+
+/*
+ * FIXME - dvmCompiler prefixes are not added yet to routines exposed to the
+ * code generator.
+ */
 
 /*
  * Register usage for 16-bit Thumb systems:
@@ -48,19 +57,6 @@
  *
  */
 
-static ArmLIR *storeBaseDisp(CompilationUnit *cUnit, int rBase,
-                             int displacement, int rSrc, OpSize size);
-static ArmLIR *storeBaseDispWide(CompilationUnit *cUnit, int rBase,
-                                 int displacement, int rSrcLo, int rSrcHi);
-static int allocTypedTempPair(CompilationUnit *cUnit, bool fpHint,
-                              int regClass);
-static int allocTypedTemp(CompilationUnit *cUnit, bool fpHint, int regClass);
-void genRegCopyWide(CompilationUnit *cUnit, int destLo, int destHi,
-                    int srcLo, int srcHi);
-static ArmLIR *genRegCopy(CompilationUnit *cUnit, int rDest, int rSrc);
-static void clobberReg(CompilationUnit *cUnit, int reg);
-static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg);
-
 #define SREG(c, s) ((c)->regLocation[(s)].sRegLow)
 /*
  * Get the "real" sreg number associated with an sReg slot.  In general,
@@ -72,28 +68,12 @@ static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg);
  * identified by the dataflow pass what it's new name is.
  */
 
-static inline int hiSReg(int lowSreg) {
-    return (lowSreg == INVALID_SREG) ? INVALID_SREG : lowSreg + 1;
-}
-
-static int sReg2vReg(CompilationUnit *cUnit, int sReg)
-{
-    assert(sReg != INVALID_SREG);
-    return DECODE_REG(dvmConvertSSARegToDalvik(cUnit, sReg));
-}
-
-static bool liveOut(CompilationUnit *cUnit, int sReg)
-{
-    //TODO: fully implement
-    return true;
-}
-
 /*
  * Free all allocated temps in the temp pools.  Note that this does
  * not affect the "liveness" of a temp register, which will stay
  * live until it is either explicitly killed or reallocated.
  */
-static void resetRegPool(CompilationUnit *cUnit)
+extern void resetRegPool(CompilationUnit *cUnit)
 {
     int i;
     for (i=0; i < cUnit->regPool->numCoreTemps; i++) {
@@ -105,7 +85,7 @@ static void resetRegPool(CompilationUnit *cUnit)
 }
 
  /* Set up temp & preserved register pools specialized by target */
-static void initPool(RegisterInfo *regs, int *regNums, int num)
+extern void initPool(RegisterInfo *regs, int *regNums, int num)
 {
     int i;
     for (i=0; i < num; i++) {
@@ -128,6 +108,116 @@ static void dumpRegPool(RegisterInfo *p, int numRegs)
            p[i].dirty, p[i].sReg,(int)p[i].defStart, (int)p[i].defEnd);
     }
     LOGE("================================================");
+}
+
+static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg)
+{
+    int numTemps = cUnit->regPool->numCoreTemps;
+    RegisterInfo *p = cUnit->regPool->coreTemps;
+    int i;
+    for (i=0; i< numTemps; i++) {
+        if (p[i].reg == reg) {
+            return &p[i];
+        }
+    }
+    p = cUnit->regPool->FPTemps;
+    numTemps = cUnit->regPool->numFPTemps;
+    for (i=0; i< numTemps; i++) {
+        if (p[i].reg == reg) {
+            return &p[i];
+        }
+    }
+    LOGE("Tried to get info on a non-existant temp: r%d",reg);
+    dvmAbort();
+    return NULL;
+}
+
+static void flushRegWide(CompilationUnit *cUnit, int reg1, int reg2)
+{
+    RegisterInfo *info1 = getRegInfo(cUnit, reg1);
+    RegisterInfo *info2 = getRegInfo(cUnit, reg2);
+    assert(info1 && info2 && info1->pair && info2->pair &&
+           (info1->partner == info2->reg) &&
+           (info2->partner == info1->reg));
+    if ((info1->live && info1->dirty) || (info2->live && info2->dirty)) {
+        info1->dirty = false;
+        info2->dirty = false;
+        if (sReg2vReg(cUnit, info2->sReg) < sReg2vReg(cUnit, info1->sReg))
+            info1 = info2;
+        dvmCompilerFlushRegWideImpl(cUnit, rFP,
+                                    sReg2vReg(cUnit, info1->sReg) << 2,
+                                    info1->reg, info1->partner);
+    }
+}
+
+static void flushReg(CompilationUnit *cUnit, int reg)
+{
+    RegisterInfo *info = getRegInfo(cUnit, reg);
+    if (info->live && info->dirty) {
+        info->dirty = false;
+        dvmCompilerFlushRegImpl(cUnit, rFP, sReg2vReg(cUnit, info->sReg) << 2,
+                                reg, kWord);
+    }
+}
+
+/* return true if found reg to clobber */
+static bool clobberRegBody(CompilationUnit *cUnit, RegisterInfo *p,
+                           int numTemps, int reg)
+{
+    int i;
+    for (i=0; i< numTemps; i++) {
+        if (p[i].reg == reg) {
+            if (p[i].live && p[i].dirty) {
+                if (p[i].pair) {
+                    flushRegWide(cUnit, p[i].reg, p[i].partner);
+                } else {
+                    flushReg(cUnit, p[i].reg);
+                }
+            }
+            p[i].live = false;
+            p[i].sReg = INVALID_SREG;
+            p[i].defStart = NULL;
+            p[i].defEnd = NULL;
+            if (p[i].pair) {
+                p[i].pair = false;
+                /* partners should be in same pool */
+                clobberRegBody(cUnit, p, numTemps, p[i].partner);
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Mark a temp register as dead.  Does not affect allocation state. */
+void clobberReg(CompilationUnit *cUnit, int reg)
+{
+    if (!clobberRegBody(cUnit, cUnit->regPool->coreTemps,
+                        cUnit->regPool->numCoreTemps, reg)) {
+        clobberRegBody(cUnit, cUnit->regPool->FPTemps,
+                       cUnit->regPool->numFPTemps, reg);
+    }
+}
+
+static void clobberSRegBody(RegisterInfo *p, int numTemps, int sReg)
+{
+    int i;
+    for (i=0; i< numTemps; i++) {
+        if (p[i].sReg == sReg) {
+            p[i].live = false;
+            p[i].defStart = NULL;
+            p[i].defEnd = NULL;
+        }
+    }
+}
+
+/* Clobber any temp associated with an sReg.  Could be in either class */
+extern void clobberSReg(CompilationUnit *cUnit, int sReg)
+{
+    clobberSRegBody(cUnit->regPool->coreTemps, cUnit->regPool->numCoreTemps,
+                    sReg);
+    clobberSRegBody(cUnit->regPool->FPTemps, cUnit->regPool->numFPTemps,
+                    sReg);
 }
 
 static int allocTempBody(CompilationUnit *cUnit, RegisterInfo *p, int numTemps,
@@ -159,7 +249,7 @@ static int allocTempBody(CompilationUnit *cUnit, RegisterInfo *p, int numTemps,
 }
 
 //REDO: too many assumptions.
-static int allocTempDouble(CompilationUnit *cUnit)
+extern int allocTempDouble(CompilationUnit *cUnit)
 {
     RegisterInfo *p = cUnit->regPool->FPTemps;
     int numTemps = cUnit->regPool->numFPTemps;
@@ -195,19 +285,19 @@ static int allocTempDouble(CompilationUnit *cUnit)
 }
 
 /* Return a temp if one is available, -1 otherwise */
-static int allocFreeTemp(CompilationUnit *cUnit)
+extern int allocFreeTemp(CompilationUnit *cUnit)
 {
     return allocTempBody(cUnit, cUnit->regPool->coreTemps,
                          cUnit->regPool->numCoreTemps, true);
 }
 
-static int allocTemp(CompilationUnit *cUnit)
+extern int allocTemp(CompilationUnit *cUnit)
 {
     return allocTempBody(cUnit, cUnit->regPool->coreTemps,
                          cUnit->regPool->numCoreTemps, true);
 }
 
-static int allocTempFloat(CompilationUnit *cUnit)
+extern int allocTempFloat(CompilationUnit *cUnit)
 {
     return allocTempBody(cUnit, cUnit->regPool->FPTemps,
                          cUnit->regPool->numFPTemps, true);
@@ -254,7 +344,7 @@ static RegisterInfo *allocLive(CompilationUnit *cUnit, int sReg,
     return res;
 }
 
-static void freeTemp(CompilationUnit *cUnit, int reg)
+extern void freeTemp(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = cUnit->regPool->coreTemps;
     int numTemps = cUnit->regPool->numCoreTemps;
@@ -280,7 +370,7 @@ static void freeTemp(CompilationUnit *cUnit, int reg)
 }
 
 //FIXME - this needs to also check the preserved pool.
-static RegisterInfo *isLive(CompilationUnit *cUnit, int reg)
+extern RegisterInfo *isLive(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = cUnit->regPool->coreTemps;
     int numTemps = cUnit->regPool->numCoreTemps;
@@ -300,7 +390,7 @@ static RegisterInfo *isLive(CompilationUnit *cUnit, int reg)
     return NULL;
 }
 
-static RegisterInfo *isTemp(CompilationUnit *cUnit, int reg)
+extern RegisterInfo *isTemp(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = cUnit->regPool->coreTemps;
     int numTemps = cUnit->regPool->numCoreTemps;
@@ -317,114 +407,6 @@ static RegisterInfo *isTemp(CompilationUnit *cUnit, int reg)
             return &p[i];
         }
     }
-    return NULL;
-}
-
-static void flushRegWide(CompilationUnit *cUnit, int reg1, int reg2)
-{
-    RegisterInfo *info1 = getRegInfo(cUnit, reg1);
-    RegisterInfo *info2 = getRegInfo(cUnit, reg2);
-    assert(info1 && info2 && info1->pair && info2->pair &&
-           (info1->partner == info2->reg) &&
-           (info2->partner == info1->reg));
-    if ((info1->live && info1->dirty) || (info2->live && info2->dirty)) {
-        info1->dirty = false;
-        info2->dirty = false;
-        if (sReg2vReg(cUnit, info2->sReg) < sReg2vReg(cUnit, info1->sReg))
-            info1 = info2;
-        storeBaseDispWide(cUnit, rFP, sReg2vReg(cUnit, info1->sReg) << 2,
-                          info1->reg, info1->partner);
-    }
-}
-
-static void flushReg(CompilationUnit *cUnit, int reg)
-{
-    RegisterInfo *info = getRegInfo(cUnit, reg);
-    if (info->live && info->dirty) {
-        info->dirty = false;
-        storeBaseDisp(cUnit, rFP, sReg2vReg(cUnit, info->sReg) << 2, reg,
-                      kWord);
-    }
-}
-
-/* return true if found reg to clobber */
-static bool clobberRegBody(CompilationUnit *cUnit, RegisterInfo *p,
-                           int numTemps, int reg)
-{
-    int i;
-    for (i=0; i< numTemps; i++) {
-        if (p[i].reg == reg) {
-            if (p[i].live && p[i].dirty) {
-                if (p[i].pair) {
-                    flushRegWide(cUnit, p[i].reg, p[i].partner);
-                } else {
-                    flushReg(cUnit, p[i].reg);
-                }
-            }
-            p[i].live = false;
-            p[i].sReg = INVALID_SREG;
-            p[i].defStart = NULL;
-            p[i].defEnd = NULL;
-            if (p[i].pair) {
-                p[i].pair = false;
-                clobberReg(cUnit, p[i].partner);
-            }
-            return true;
-        }
-    }
-    return false;
-}
-
-/* Mark a temp register as dead.  Does not affect allocation state. */
-static void clobberReg(CompilationUnit *cUnit, int reg)
-{
-    if (!clobberRegBody(cUnit, cUnit->regPool->coreTemps,
-                        cUnit->regPool->numCoreTemps, reg)) {
-        clobberRegBody(cUnit, cUnit->regPool->FPTemps,
-                       cUnit->regPool->numFPTemps, reg);
-    }
-}
-
-static void clobberSRegBody(RegisterInfo *p, int numTemps, int sReg)
-{
-    int i;
-    for (i=0; i< numTemps; i++) {
-        if (p[i].sReg == sReg) {
-            p[i].live = false;
-            p[i].defStart = NULL;
-            p[i].defEnd = NULL;
-        }
-    }
-}
-
-/* Clobber any temp associated with an sReg.  Could be in either class */
-static void clobberSReg(CompilationUnit *cUnit, int sReg)
-{
-    clobberSRegBody(cUnit->regPool->coreTemps, cUnit->regPool->numCoreTemps,
-                    sReg);
-    clobberSRegBody(cUnit->regPool->FPTemps, cUnit->regPool->numFPTemps,
-                    sReg);
-}
-
-static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg)
-{
-    int numTemps = cUnit->regPool->numCoreTemps;
-    RegisterInfo *p = cUnit->regPool->coreTemps;
-    int i;
-    for (i=0; i< numTemps; i++) {
-        if (p[i].reg == reg) {
-            return &p[i];
-        }
-    }
-    p = cUnit->regPool->FPTemps;
-    numTemps = cUnit->regPool->numFPTemps;
-    for (i=0; i< numTemps; i++) {
-        if (p[i].reg == reg) {
-            return &p[i];
-        }
-    }
-    LOGE("Tried to get info on a non-existant temp: r%d",reg);
-    dvmAbort();
     return NULL;
 }
 
@@ -433,7 +415,7 @@ static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg)
  * register.  No check is made to see if the register was previously
  * allocated.  Use with caution.
  */
-static void lockTemp(CompilationUnit *cUnit, int reg)
+extern void lockTemp(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = cUnit->regPool->coreTemps;
     int numTemps = cUnit->regPool->numCoreTemps;
@@ -467,7 +449,7 @@ static void lockArgRegs(CompilationUnit *cUnit)
 }
 
 /* Clobber all regs that might be used by an external C call */
-static void clobberCallRegs(CompilationUnit *cUnit)
+extern void clobberCallRegs(CompilationUnit *cUnit)
 {
     clobberReg(cUnit, r0);
     clobberReg(cUnit, r1);
@@ -480,7 +462,7 @@ static void clobberCallRegs(CompilationUnit *cUnit)
 }
 
 /* Clobber all of the temps that might be used by a handler. */
-static void clobberHandlerRegs(CompilationUnit *cUnit)
+extern void clobberHandlerRegs(CompilationUnit *cUnit)
 {
     //TUNING: reduce the set of regs used by handlers.  Only a few need lots.
     clobberCallRegs(cUnit);
@@ -488,7 +470,7 @@ static void clobberHandlerRegs(CompilationUnit *cUnit)
     clobberReg(cUnit, r10);
 }
 
-static void resetDef(CompilationUnit *cUnit, int reg)
+extern void resetDef(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = getRegInfo(cUnit, reg);
     p->defStart = NULL;
@@ -514,7 +496,7 @@ static void nullifyRange(CompilationUnit *cUnit, LIR *start, LIR *finish,
  * on entry start points to the LIR prior to the beginning of the
  * sequence.
  */
-static void markDef(CompilationUnit *cUnit, RegLocation rl,
+extern void markDef(CompilationUnit *cUnit, RegLocation rl,
                     LIR *start, LIR *finish)
 {
     assert(!rl.wide);
@@ -530,7 +512,7 @@ static void markDef(CompilationUnit *cUnit, RegLocation rl,
  * on entry start points to the LIR prior to the beginning of the
  * sequence.
  */
-static void markDefWide(CompilationUnit *cUnit, RegLocation rl,
+extern void markDefWide(CompilationUnit *cUnit, RegLocation rl,
                         LIR *start, LIR *finish)
 {
     assert(rl.wide);
@@ -542,18 +524,20 @@ static void markDefWide(CompilationUnit *cUnit, RegLocation rl,
     p->defEnd = finish;
 }
 
-static RegLocation wideToNarrowLoc(CompilationUnit *cUnit, RegLocation rl)
+extern RegLocation wideToNarrowLoc(CompilationUnit *cUnit, RegLocation rl)
 {
     assert(rl.wide);
     if (rl.location == kLocPhysReg) {
         RegisterInfo *infoLo = getRegInfo(cUnit, rl.lowReg);
         RegisterInfo *infoHi = getRegInfo(cUnit, rl.highReg);
         if (!infoLo->pair) {
-            dumpRegPool(cUnit->regPool->coreTemps, cUnit->regPool->numCoreTemps);
+            dumpRegPool(cUnit->regPool->coreTemps,
+                        cUnit->regPool->numCoreTemps);
             assert(infoLo->pair);
         }
         if (!infoHi->pair) {
-            dumpRegPool(cUnit->regPool->coreTemps, cUnit->regPool->numCoreTemps);
+            dumpRegPool(cUnit->regPool->coreTemps,
+                        cUnit->regPool->numCoreTemps);
             assert(infoHi->pair);
         }
         assert(infoLo->pair);
@@ -571,7 +555,7 @@ static RegLocation wideToNarrowLoc(CompilationUnit *cUnit, RegLocation rl)
     return rl;
 }
 
-static void resetDefLoc(CompilationUnit *cUnit, RegLocation rl)
+extern void resetDefLoc(CompilationUnit *cUnit, RegLocation rl)
 {
     assert(!rl.wide);
     if (!(gDvmJit.disableOpt & (1 << kSuppressLoads))) {
@@ -583,7 +567,7 @@ static void resetDefLoc(CompilationUnit *cUnit, RegLocation rl)
     resetDef(cUnit, rl.lowReg);
 }
 
-static void resetDefLocWide(CompilationUnit *cUnit, RegLocation rl)
+extern void resetDefLocWide(CompilationUnit *cUnit, RegLocation rl)
 {
     assert(rl.wide);
     if (!(gDvmJit.disableOpt & (1 << kSuppressLoads))) {
@@ -596,7 +580,7 @@ static void resetDefLocWide(CompilationUnit *cUnit, RegLocation rl)
     resetDef(cUnit, rl.highReg);
 }
 
-static void resetDefTracking(CompilationUnit *cUnit)
+extern void resetDefTracking(CompilationUnit *cUnit)
 {
     int i;
     for (i=0; i< cUnit->regPool->numCoreTemps; i++) {
@@ -607,7 +591,7 @@ static void resetDefTracking(CompilationUnit *cUnit)
     }
 }
 
-static void clobberAllRegs(CompilationUnit *cUnit)
+extern void clobberAllRegs(CompilationUnit *cUnit)
 {
     int i;
     for (i=0; i< cUnit->regPool->numCoreTemps; i++) {
@@ -619,7 +603,7 @@ static void clobberAllRegs(CompilationUnit *cUnit)
 }
 
 /* To be used when explicitly managing register use */
-static void lockAllTemps(CompilationUnit *cUnit)
+extern void lockAllTemps(CompilationUnit *cUnit)
 {
     int i;
     for (i=0; i< cUnit->regPool->numCoreTemps; i++) {
@@ -643,7 +627,7 @@ static void flushAllRegsBody(CompilationUnit *cUnit, RegisterInfo *info,
     }
 }
 
-static void flushAllRegs(CompilationUnit *cUnit)
+extern void flushAllRegs(CompilationUnit *cUnit)
 {
     flushAllRegsBody(cUnit, cUnit->regPool->coreTemps,
                      cUnit->regPool->numCoreTemps);
@@ -665,7 +649,7 @@ static bool regClassMatches(int regClass, int reg)
     }
 }
 
-static void markRegLive(CompilationUnit *cUnit, int reg, int sReg)
+extern void markRegLive(CompilationUnit *cUnit, int reg, int sReg)
 {
     RegisterInfo *info = getRegInfo(cUnit, reg);
     if ((info->reg == reg) && (info->sReg == sReg) && info->live) {
@@ -680,7 +664,7 @@ static void markRegLive(CompilationUnit *cUnit, int reg, int sReg)
     info->sReg = sReg;
 }
 
-static void markRegPair(CompilationUnit *cUnit, int lowReg, int highReg)
+extern void markRegPair(CompilationUnit *cUnit, int lowReg, int highReg)
 {
     RegisterInfo *infoLo = getRegInfo(cUnit, lowReg);
     RegisterInfo *infoHi = getRegInfo(cUnit, highReg);
@@ -695,22 +679,22 @@ static void markRegSingle(CompilationUnit *cUnit, int reg)
     info->pair = false;
 }
 
-static void markRegClean(CompilationUnit *cUnit, int reg)
+extern void markRegClean(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *info = getRegInfo(cUnit, reg);
     info->dirty = false;
 }
 
-static void markRegDirty(CompilationUnit *cUnit, int reg)
+extern void markRegDirty(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *info = getRegInfo(cUnit, reg);
     info->dirty = true;
 }
 
-static void markRegInUse(CompilationUnit *cUnit, int reg)
+extern void markRegInUse(CompilationUnit *cUnit, int reg)
 {
-    RegisterInfo *info = getRegInfo(cUnit, reg);
-    info->inUse = true;
+      RegisterInfo *info = getRegInfo(cUnit, reg);
+          info->inUse = true;
 }
 
 /* Return true if live & dirty */
@@ -737,7 +721,7 @@ void copyRegInfo(CompilationUnit *cUnit, int newReg, int oldReg)
  * is a bit complex when dealing with FP regs.  Examine code to see
  * if it's worthwhile trying to be more clever here.
  */
-static RegLocation updateLoc(CompilationUnit *cUnit, RegLocation loc)
+extern RegLocation updateLoc(CompilationUnit *cUnit, RegLocation loc)
 {
     assert(!loc.wide);
     if (loc.location == kLocDalvikFrame) {
@@ -757,7 +741,7 @@ static RegLocation updateLoc(CompilationUnit *cUnit, RegLocation loc)
 }
 
 /* see comments for updateLoc */
-static RegLocation updateLocWide(CompilationUnit *cUnit, RegLocation loc)
+extern RegLocation updateLocWide(CompilationUnit *cUnit, RegLocation loc)
 {
     assert(loc.wide);
     if (loc.location == kLocDalvikFrame) {
@@ -811,11 +795,11 @@ static RegLocation evalLocWide(CompilationUnit *cUnit, RegLocation loc,
         assert(!FPREG(loc.lowReg) || ((loc.lowReg & 0x1) == 0));
         if (!regClassMatches(regClass, loc.lowReg)) {
             /* Wrong register class.  Reallocate and copy */
-            newRegs = allocTypedTempPair(cUnit, loc.fp, regClass);
+            newRegs = dvmCompilerAllocTypedTempPair(cUnit, loc.fp, regClass);
             lowReg = newRegs & 0xff;
             highReg = (newRegs >> 8) & 0xff;
-            genRegCopyWide(cUnit, lowReg, highReg, loc.lowReg,
-                           loc.highReg);
+            dvmCompilerRegCopyWide(cUnit, lowReg, highReg, loc.lowReg,
+                                   loc.highReg);
             copyRegInfo(cUnit, lowReg, loc.lowReg);
             copyRegInfo(cUnit, highReg, loc.highReg);
             clobberReg(cUnit, loc.lowReg);
@@ -829,9 +813,10 @@ static RegLocation evalLocWide(CompilationUnit *cUnit, RegLocation loc,
     }
 
     assert((loc.location != kLocRetval) || (loc.sRegLow == INVALID_SREG));
-    assert((loc.location != kLocRetval) || (hiSReg(loc.sRegLow) == INVALID_SREG));
+    assert((loc.location != kLocRetval) ||
+           (hiSReg(loc.sRegLow) == INVALID_SREG));
 
-    newRegs = allocTypedTempPair(cUnit, loc.fp, regClass);
+    newRegs = dvmCompilerAllocTypedTempPair(cUnit, loc.fp, regClass);
     loc.lowReg = newRegs & 0xff;
     loc.highReg = (newRegs >> 8) & 0xff;
 
@@ -845,7 +830,7 @@ static RegLocation evalLocWide(CompilationUnit *cUnit, RegLocation loc,
     return loc;
 }
 
-static RegLocation evalLoc(CompilationUnit *cUnit, RegLocation loc,
+extern RegLocation evalLoc(CompilationUnit *cUnit, RegLocation loc,
                                int regClass, bool update)
 {
     RegisterInfo *infoLo = NULL;
@@ -857,8 +842,8 @@ static RegLocation evalLoc(CompilationUnit *cUnit, RegLocation loc,
     if (loc.location == kLocPhysReg) {
         if (!regClassMatches(regClass, loc.lowReg)) {
             /* Wrong register class.  Realloc, copy and transfer ownership */
-            newReg = allocTypedTemp(cUnit, loc.fp, regClass);
-            genRegCopy(cUnit, newReg, loc.lowReg);
+            newReg = dvmCompilerAllocTypedTemp(cUnit, loc.fp, regClass);
+            dvmCompilerRegCopy(cUnit, newReg, loc.lowReg);
             copyRegInfo(cUnit, newReg, loc.lowReg);
             clobberReg(cUnit, loc.lowReg);
             loc.lowReg = newReg;
@@ -868,7 +853,7 @@ static RegLocation evalLoc(CompilationUnit *cUnit, RegLocation loc,
 
     assert((loc.location != kLocRetval) || (loc.sRegLow == INVALID_SREG));
 
-    newReg = allocTypedTemp(cUnit, loc.fp, regClass);
+    newReg = dvmCompilerAllocTypedTemp(cUnit, loc.fp, regClass);
     loc.lowReg = newReg;
 
     if (update) {
@@ -878,12 +863,6 @@ static RegLocation evalLoc(CompilationUnit *cUnit, RegLocation loc,
     return loc;
 }
 
-static inline int getSrcSSAName(MIR *mir, int num)
-{
-    assert(mir->ssaRep->numUses > num);
-    return mir->ssaRep->uses[num];
-}
-
 static inline int getDestSSAName(MIR *mir, int num)
 {
     assert(mir->ssaRep->numDefs > num);
@@ -891,7 +870,7 @@ static inline int getDestSSAName(MIR *mir, int num)
 }
 
 // Get the LocRecord associated with an SSA name use.
-static inline RegLocation getSrcLoc(CompilationUnit *cUnit, MIR *mir, int num)
+extern RegLocation getSrcLoc(CompilationUnit *cUnit, MIR *mir, int num)
 {
     RegLocation loc = cUnit->regLocation[SREG(cUnit, getSrcSSAName(mir, num))];
     loc.fp = cUnit->regLocation[getSrcSSAName(mir, num)].fp;
@@ -900,7 +879,7 @@ static inline RegLocation getSrcLoc(CompilationUnit *cUnit, MIR *mir, int num)
 }
 
 // Get the LocRecord associated with an SSA name def.
-static inline RegLocation getDestLoc(CompilationUnit *cUnit, MIR *mir, int num)
+extern RegLocation getDestLoc(CompilationUnit *cUnit, MIR *mir, int num)
 {
     RegLocation loc = cUnit->regLocation[SREG(cUnit, getDestSSAName(mir, num))];
     loc.fp = cUnit->regLocation[getDestSSAName(mir, num)].fp;
@@ -931,25 +910,20 @@ static RegLocation getLocWide(CompilationUnit *cUnit, MIR *mir,
     lowLoc.highReg = highLoc.lowReg;
     return lowLoc;
 }
-static RegLocation getDestLocWide(CompilationUnit *cUnit, MIR *mir,
+
+extern RegLocation getDestLocWide(CompilationUnit *cUnit, MIR *mir,
                                          int low, int high)
 {
     return getLocWide(cUnit, mir, low, high, false);
 }
 
-static RegLocation getSrcLocWide(CompilationUnit *cUnit, MIR *mir,
+extern RegLocation getSrcLocWide(CompilationUnit *cUnit, MIR *mir,
                                          int low, int high)
 {
     return getLocWide(cUnit, mir, low, high, true);
 }
 
-/* Reset the tracker to unknown state */
-static inline void resetNullCheckTracker(CompilationUnit *cUnit)
-{
-    dvmClearAllBits(cUnit->regPool->nullCheckedRegs);
-}
-
-static RegLocation getReturnLocWide(CompilationUnit *cUnit)
+extern RegLocation getReturnLocWide(CompilationUnit *cUnit)
 {
     RegLocation res = LOC_C_RETURN_WIDE;
     clobberReg(cUnit, r0);
@@ -960,7 +934,7 @@ static RegLocation getReturnLocWide(CompilationUnit *cUnit)
     return res;
 }
 
-static RegLocation getReturnLocWideAlt(CompilationUnit *cUnit)
+extern RegLocation getReturnLocWideAlt(CompilationUnit *cUnit)
 {
     RegLocation res = LOC_C_RETURN_WIDE;
     res.lowReg = r2;
@@ -973,7 +947,7 @@ static RegLocation getReturnLocWideAlt(CompilationUnit *cUnit)
     return res;
 }
 
-static RegLocation getReturnLoc(CompilationUnit *cUnit)
+extern RegLocation getReturnLoc(CompilationUnit *cUnit)
 {
     RegLocation res = LOC_C_RETURN;
     clobberReg(cUnit, r0);
@@ -981,7 +955,7 @@ static RegLocation getReturnLoc(CompilationUnit *cUnit)
     return res;
 }
 
-static RegLocation getReturnLocAlt(CompilationUnit *cUnit)
+extern RegLocation getReturnLocAlt(CompilationUnit *cUnit)
 {
     RegLocation res = LOC_C_RETURN;
     res.lowReg = r1;
@@ -991,7 +965,7 @@ static RegLocation getReturnLocAlt(CompilationUnit *cUnit)
 }
 
 /* Kill the corresponding bit in the null-checked register list */
-static inline void killNullCheckedLocation(CompilationUnit *cUnit,
+extern void killNullCheckedLocation(CompilationUnit *cUnit,
                                            RegLocation loc)
 {
     if (loc.location != kLocRetval) {
@@ -1002,4 +976,15 @@ static inline void killNullCheckedLocation(CompilationUnit *cUnit,
             dvmClearBit(cUnit->regPool->nullCheckedRegs, hiSReg(loc.sRegLow));
         }
     }
+}
+
+extern void dvmCompilerFlushRegWideForV5TEVFP(CompilationUnit *cUnit,
+                                              int reg1, int reg2)
+{
+    flushRegWide(cUnit, reg1, reg2);
+}
+
+extern void dvmCompilerFlushRegForV5TEVFP(CompilationUnit *cUnit, int reg)
+{
+    flushReg(cUnit, reg);
 }

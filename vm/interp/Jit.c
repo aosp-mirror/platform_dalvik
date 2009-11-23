@@ -350,7 +350,11 @@ int dvmJitStartup(void)
 
 #if defined(WITH_SELF_VERIFICATION)
     // Force JIT into blocking, translate everything mode
-    gDvmJit.threshold = 1;
+    /*
+     * FIXME
+     * Cannot boot to home with threshold 1
+     * gDvmJit.threshold = 1;
+     */
     gDvmJit.blockingMode = true;
 #endif
 
