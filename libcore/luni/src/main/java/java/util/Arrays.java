@@ -28,6 +28,9 @@ import org.apache.harmony.luni.util.Msg;
  * @since 1.2
  */
 public class Arrays {
+    // BEGIN android-changed
+    // Replaced Bentely-McIlroy-based sort w/ DualPivotQuicksort
+    // BEGIN android-changed
 
     // BEGIN android-removed
     /* Specifies when to switch to insertion sort */
@@ -1602,7 +1605,7 @@ public class Arrays {
      *            the {@code byte} array to be sorted.
      */
     public static void sort(byte[] array) {
-        sort(0, array.length, array);
+        DualPivotQuicksort.sort(array);
     }
 
     /**
@@ -1620,11 +1623,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void sort(byte[] array, int start, int end) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        checkBounds(array.length, start, end);
-        sort(start, end, array);
+        DualPivotQuicksort.sort(array, start, end);
     }
 
     private static void checkBounds(int arrLength, int start, int end) {
@@ -1643,84 +1642,6 @@ public class Arrays {
         }
     }
 
-    private static void sort(int start, int end, byte[] array) {
-        byte temp;
-        int length = end - start;
-        if (length < 7) {
-            for (int i = start + 1; i < end; i++) {
-                for (int j = i; j > start && array[j - 1] > array[j]; j--) {
-                    temp = array[j];
-                    array[j] = array[j - 1];
-                    array[j - 1] = temp;
-                }
-            }
-            return;
-        }
-        int middle = (start + end) / 2;
-        if (length > 7) {
-            int bottom = start;
-            int top = end - 1;
-            if (length > 40) {
-                length /= 8;
-                bottom = med3(array, bottom, bottom + length, bottom
-                        + (2 * length));
-                middle = med3(array, middle - length, middle, middle + length);
-                top = med3(array, top - (2 * length), top - length, top);
-            }
-            middle = med3(array, bottom, middle, top);
-        }
-        byte partionValue = array[middle];
-        int a, b, c, d;
-        a = b = start;
-        c = d = end - 1;
-        while (true) {
-            while (b <= c && array[b] <= partionValue) {
-                if (array[b] == partionValue) {
-                    temp = array[a];
-                    array[a++] = array[b];
-                    array[b] = temp;
-                }
-                b++;
-            }
-            while (c >= b && array[c] >= partionValue) {
-                if (array[c] == partionValue) {
-                    temp = array[c];
-                    array[c] = array[d];
-                    array[d--] = temp;
-                }
-                c--;
-            }
-            if (b > c) {
-                break;
-            }
-            temp = array[b];
-            array[b++] = array[c];
-            array[c--] = temp;
-        }
-        length = a - start < b - a ? a - start : b - a;
-        int l = start;
-        int h = b - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        length = d - c < end - 1 - d ? d - c : end - 1 - d;
-        l = b;
-        h = end - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        if ((length = b - a) > 0) {
-            sort(start, start + length, array);
-        }
-        if ((length = d - c) > 0) {
-            sort(end - length, end, array);
-        }
-    }
-
     /**
      * Sorts the specified array in ascending numerical order.
      *
@@ -1728,7 +1649,7 @@ public class Arrays {
      *            the {@code char} array to be sorted.
      */
     public static void sort(char[] array) {
-        sort(0, array.length, array);
+        DualPivotQuicksort.sort(array);
     }
 
     /**
@@ -1746,89 +1667,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void sort(char[] array, int start, int end) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        checkBounds(array.length, start, end);
-        sort(start, end, array);
-    }
-
-    private static void sort(int start, int end, char[] array) {
-        char temp;
-        int length = end - start;
-        if (length < 7) {
-            for (int i = start + 1; i < end; i++) {
-                for (int j = i; j > start && array[j - 1] > array[j]; j--) {
-                    temp = array[j];
-                    array[j] = array[j - 1];
-                    array[j - 1] = temp;
-                }
-            }
-            return;
-        }
-        int middle = (start + end) / 2;
-        if (length > 7) {
-            int bottom = start;
-            int top = end - 1;
-            if (length > 40) {
-                length /= 8;
-                bottom = med3(array, bottom, bottom + length, bottom
-                        + (2 * length));
-                middle = med3(array, middle - length, middle, middle + length);
-                top = med3(array, top - (2 * length), top - length, top);
-            }
-            middle = med3(array, bottom, middle, top);
-        }
-        char partionValue = array[middle];
-        int a, b, c, d;
-        a = b = start;
-        c = d = end - 1;
-        while (true) {
-            while (b <= c && array[b] <= partionValue) {
-                if (array[b] == partionValue) {
-                    temp = array[a];
-                    array[a++] = array[b];
-                    array[b] = temp;
-                }
-                b++;
-            }
-            while (c >= b && array[c] >= partionValue) {
-                if (array[c] == partionValue) {
-                    temp = array[c];
-                    array[c] = array[d];
-                    array[d--] = temp;
-                }
-                c--;
-            }
-            if (b > c) {
-                break;
-            }
-            temp = array[b];
-            array[b++] = array[c];
-            array[c--] = temp;
-        }
-        length = a - start < b - a ? a - start : b - a;
-        int l = start;
-        int h = b - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        length = d - c < end - 1 - d ? d - c : end - 1 - d;
-        l = b;
-        h = end - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        if ((length = b - a) > 0) {
-            sort(start, start + length, array);
-        }
-        if ((length = d - c) > 0) {
-            sort(end - length, end, array);
-        }
+        DualPivotQuicksort.sort(array, start, end);
     }
 
     /**
@@ -1839,7 +1678,7 @@ public class Arrays {
      * @see #sort(double[], int, int)
      */
     public static void sort(double[] array) {
-        sort(0, array.length, array);
+        DualPivotQuicksort.sort(array);
     }
 
     /**
@@ -1859,89 +1698,7 @@ public class Arrays {
      * @see Double#compareTo(Double)
      */
     public static void sort(double[] array, int start, int end) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        checkBounds(array.length, start, end);
-        sort(start, end, array);
-    }
-
-    private static void sort(int start, int end, double[] array) {
-        double temp;
-        int length = end - start;
-        if (length < 7) {
-            for (int i = start + 1; i < end; i++) {
-                for (int j = i; j > start && lessThan(array[j], array[j - 1]); j--) {
-                    temp = array[j];
-                    array[j] = array[j - 1];
-                    array[j - 1] = temp;
-                }
-            }
-            return;
-        }
-        int middle = (start + end) / 2;
-        if (length > 7) {
-            int bottom = start;
-            int top = end - 1;
-            if (length > 40) {
-                length /= 8;
-                bottom = med3(array, bottom, bottom + length, bottom
-                        + (2 * length));
-                middle = med3(array, middle - length, middle, middle + length);
-                top = med3(array, top - (2 * length), top - length, top);
-            }
-            middle = med3(array, bottom, middle, top);
-        }
-        double partionValue = array[middle];
-        int a, b, c, d;
-        a = b = start;
-        c = d = end - 1;
-        while (true) {
-            while (b <= c && !lessThan(partionValue, array[b])) {
-                if (array[b] == partionValue) {
-                    temp = array[a];
-                    array[a++] = array[b];
-                    array[b] = temp;
-                }
-                b++;
-            }
-            while (c >= b && !lessThan(array[c], partionValue)) {
-                if (array[c] == partionValue) {
-                    temp = array[c];
-                    array[c] = array[d];
-                    array[d--] = temp;
-                }
-                c--;
-            }
-            if (b > c) {
-                break;
-            }
-            temp = array[b];
-            array[b++] = array[c];
-            array[c--] = temp;
-        }
-        length = a - start < b - a ? a - start : b - a;
-        int l = start;
-        int h = b - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        length = d - c < end - 1 - d ? d - c : end - 1 - d;
-        l = b;
-        h = end - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        if ((length = b - a) > 0) {
-            sort(start, start + length, array);
-        }
-        if ((length = d - c) > 0) {
-            sort(end - length, end, array);
-        }
+        DualPivotQuicksort.sort(array, start, end);
     }
 
     /**
@@ -1952,7 +1709,7 @@ public class Arrays {
      * @see #sort(float[], int, int)
      */
     public static void sort(float[] array) {
-        sort(0, array.length, array);
+        DualPivotQuicksort.sort(array);
     }
 
     /**
@@ -1972,89 +1729,7 @@ public class Arrays {
      * @see Float#compareTo(Float)
      */
     public static void sort(float[] array, int start, int end) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        checkBounds(array.length, start, end);
-        sort(start, end, array);
-    }
-
-    private static void sort(int start, int end, float[] array) {
-        float temp;
-        int length = end - start;
-        if (length < 7) {
-            for (int i = start + 1; i < end; i++) {
-                for (int j = i; j > start && lessThan(array[j], array[j - 1]); j--) {
-                    temp = array[j];
-                    array[j] = array[j - 1];
-                    array[j - 1] = temp;
-                }
-            }
-            return;
-        }
-        int middle = (start + end) / 2;
-        if (length > 7) {
-            int bottom = start;
-            int top = end - 1;
-            if (length > 40) {
-                length /= 8;
-                bottom = med3(array, bottom, bottom + length, bottom
-                        + (2 * length));
-                middle = med3(array, middle - length, middle, middle + length);
-                top = med3(array, top - (2 * length), top - length, top);
-            }
-            middle = med3(array, bottom, middle, top);
-        }
-        float partionValue = array[middle];
-        int a, b, c, d;
-        a = b = start;
-        c = d = end - 1;
-        while (true) {
-            while (b <= c && !lessThan(partionValue, array[b])) {
-                if (array[b] == partionValue) {
-                    temp = array[a];
-                    array[a++] = array[b];
-                    array[b] = temp;
-                }
-                b++;
-            }
-            while (c >= b && !lessThan(array[c], partionValue)) {
-                if (array[c] == partionValue) {
-                    temp = array[c];
-                    array[c] = array[d];
-                    array[d--] = temp;
-                }
-                c--;
-            }
-            if (b > c) {
-                break;
-            }
-            temp = array[b];
-            array[b++] = array[c];
-            array[c--] = temp;
-        }
-        length = a - start < b - a ? a - start : b - a;
-        int l = start;
-        int h = b - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        length = d - c < end - 1 - d ? d - c : end - 1 - d;
-        l = b;
-        h = end - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        if ((length = b - a) > 0) {
-            sort(start, start + length, array);
-        }
-        if ((length = d - c) > 0) {
-            sort(end - length, end, array);
-        }
+        DualPivotQuicksort.sort(array, start, end);
     }
 
     /**
@@ -2064,7 +1739,7 @@ public class Arrays {
      *            the {@code int} array to be sorted.
      */
     public static void sort(int[] array) {
-        sort(0, array.length, array);
+        DualPivotQuicksort.sort(array);
     }
 
     /**
@@ -2082,89 +1757,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void sort(int[] array, int start, int end) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        checkBounds(array.length, start, end);
-        sort(start, end, array);
-    }
-
-    private static void sort(int start, int end, int[] array) {
-        int temp;
-        int length = end - start;
-        if (length < 7) {
-            for (int i = start + 1; i < end; i++) {
-                for (int j = i; j > start && array[j - 1] > array[j]; j--) {
-                    temp = array[j];
-                    array[j] = array[j - 1];
-                    array[j - 1] = temp;
-                }
-            }
-            return;
-        }
-        int middle = (start + end) / 2;
-        if (length > 7) {
-            int bottom = start;
-            int top = end - 1;
-            if (length > 40) {
-                length /= 8;
-                bottom = med3(array, bottom, bottom + length, bottom
-                        + (2 * length));
-                middle = med3(array, middle - length, middle, middle + length);
-                top = med3(array, top - (2 * length), top - length, top);
-            }
-            middle = med3(array, bottom, middle, top);
-        }
-        int partionValue = array[middle];
-        int a, b, c, d;
-        a = b = start;
-        c = d = end - 1;
-        while (true) {
-            while (b <= c && array[b] <= partionValue) {
-                if (array[b] == partionValue) {
-                    temp = array[a];
-                    array[a++] = array[b];
-                    array[b] = temp;
-                }
-                b++;
-            }
-            while (c >= b && array[c] >= partionValue) {
-                if (array[c] == partionValue) {
-                    temp = array[c];
-                    array[c] = array[d];
-                    array[d--] = temp;
-                }
-                c--;
-            }
-            if (b > c) {
-                break;
-            }
-            temp = array[b];
-            array[b++] = array[c];
-            array[c--] = temp;
-        }
-        length = a - start < b - a ? a - start : b - a;
-        int l = start;
-        int h = b - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        length = d - c < end - 1 - d ? d - c : end - 1 - d;
-        l = b;
-        h = end - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        if ((length = b - a) > 0) {
-            sort(start, start + length, array);
-        }
-        if ((length = d - c) > 0) {
-            sort(end - length, end, array);
-        }
+        DualPivotQuicksort.sort(array, start, end);
     }
 
     /**
@@ -2174,7 +1767,7 @@ public class Arrays {
      *            the {@code long} array to be sorted.
      */
     public static void sort(long[] array) {
-        sort(0, array.length, array);
+        DualPivotQuicksort.sort(array);
     }
 
     /**
@@ -2192,89 +1785,35 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void sort(long[] array, int start, int end) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        checkBounds(array.length, start, end);
-        sort(start, end, array);
+        DualPivotQuicksort.sort(array, start, end);
     }
 
-    private static void sort(int start, int end, long[] array) {
-        long temp;
-        int length = end - start;
-        if (length < 7) {
-            for (int i = start + 1; i < end; i++) {
-                for (int j = i; j > start && array[j - 1] > array[j]; j--) {
-                    temp = array[j];
-                    array[j] = array[j - 1];
-                    array[j - 1] = temp;
-                }
-            }
-            return;
-        }
-        int middle = (start + end) / 2;
-        if (length > 7) {
-            int bottom = start;
-            int top = end - 1;
-            if (length > 40) {
-                length /= 8;
-                bottom = med3(array, bottom, bottom + length, bottom
-                        + (2 * length));
-                middle = med3(array, middle - length, middle, middle + length);
-                top = med3(array, top - (2 * length), top - length, top);
-            }
-            middle = med3(array, bottom, middle, top);
-        }
-        long partionValue = array[middle];
-        int a, b, c, d;
-        a = b = start;
-        c = d = end - 1;
-        while (true) {
-            while (b <= c && array[b] <= partionValue) {
-                if (array[b] == partionValue) {
-                    temp = array[a];
-                    array[a++] = array[b];
-                    array[b] = temp;
-                }
-                b++;
-            }
-            while (c >= b && array[c] >= partionValue) {
-                if (array[c] == partionValue) {
-                    temp = array[c];
-                    array[c] = array[d];
-                    array[d--] = temp;
-                }
-                c--;
-            }
-            if (b > c) {
-                break;
-            }
-            temp = array[b];
-            array[b++] = array[c];
-            array[c--] = temp;
-        }
-        length = a - start < b - a ? a - start : b - a;
-        int l = start;
-        int h = b - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        length = d - c < end - 1 - d ? d - c : end - 1 - d;
-        l = b;
-        h = end - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        if ((length = b - a) > 0) {
-            sort(start, start + length, array);
-        }
-        if ((length = d - c) > 0) {
-            sort(end - length, end, array);
-        }
+    /**
+     * Sorts the specified array in ascending numerical order.
+     *
+     * @param array
+     *            the {@code short} array to be sorted.
+     */
+    public static void sort(short[] array) {
+        DualPivotQuicksort.sort(array);
+    }
+
+    /**
+     * Sorts the specified range in the array in ascending numerical order.
+     *
+     * @param array
+     *            the {@code short} array to be sorted.
+     * @param start
+     *            the start index to sort.
+     * @param end
+     *            the last + 1 index to sort.
+     * @throws IllegalArgumentException
+     *                if {@code start > end}.
+     * @throws ArrayIndexOutOfBoundsException
+     *                if {@code start < 0} or {@code end > array.length}.
+     */
+    public static void sort(short[] array, int start, int end) {
+        DualPivotQuicksort.sort(array, start, end);
     }
 
 // BEGIN android-note
@@ -2444,116 +1983,6 @@ public class Arrays {
         // BEGIN android-changed
         TimSort.sort(array, comparator);
         // END android-changed
-    }
-
-    /**
-     * Sorts the specified array in ascending numerical order.
-     *
-     * @param array
-     *            the {@code short} array to be sorted.
-     */
-    public static void sort(short[] array) {
-        sort(0, array.length, array);
-    }
-
-    /**
-     * Sorts the specified range in the array in ascending numerical order.
-     *
-     * @param array
-     *            the {@code short} array to be sorted.
-     * @param start
-     *            the start index to sort.
-     * @param end
-     *            the last + 1 index to sort.
-     * @throws IllegalArgumentException
-     *                if {@code start > end}.
-     * @throws ArrayIndexOutOfBoundsException
-     *                if {@code start < 0} or {@code end > array.length}.
-     */
-    public static void sort(short[] array, int start, int end) {
-        if (array == null) {
-            throw new NullPointerException();
-        }
-        checkBounds(array.length, start, end);
-        sort(start, end, array);
-    }
-
-    private static void sort(int start, int end, short[] array) {
-        short temp;
-        int length = end - start;
-        if (length < 7) {
-            for (int i = start + 1; i < end; i++) {
-                for (int j = i; j > start && array[j - 1] > array[j]; j--) {
-                    temp = array[j];
-                    array[j] = array[j - 1];
-                    array[j - 1] = temp;
-                }
-            }
-            return;
-        }
-        int middle = (start + end) / 2;
-        if (length > 7) {
-            int bottom = start;
-            int top = end - 1;
-            if (length > 40) {
-                length /= 8;
-                bottom = med3(array, bottom, bottom + length, bottom
-                        + (2 * length));
-                middle = med3(array, middle - length, middle, middle + length);
-                top = med3(array, top - (2 * length), top - length, top);
-            }
-            middle = med3(array, bottom, middle, top);
-        }
-        short partionValue = array[middle];
-        int a, b, c, d;
-        a = b = start;
-        c = d = end - 1;
-        while (true) {
-            while (b <= c && array[b] <= partionValue) {
-                if (array[b] == partionValue) {
-                    temp = array[a];
-                    array[a++] = array[b];
-                    array[b] = temp;
-                }
-                b++;
-            }
-            while (c >= b && array[c] >= partionValue) {
-                if (array[c] == partionValue) {
-                    temp = array[c];
-                    array[c] = array[d];
-                    array[d--] = temp;
-                }
-                c--;
-            }
-            if (b > c) {
-                break;
-            }
-            temp = array[b];
-            array[b++] = array[c];
-            array[c--] = temp;
-        }
-        length = a - start < b - a ? a - start : b - a;
-        int l = start;
-        int h = b - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        length = d - c < end - 1 - d ? d - c : end - 1 - d;
-        l = b;
-        h = end - length;
-        while (length-- > 0) {
-            temp = array[l];
-            array[l++] = array[h];
-            array[h++] = temp;
-        }
-        if ((length = b - a) > 0) {
-            sort(start, start + length, array);
-        }
-        if ((length = d - c) > 0) {
-            sort(end - length, end, array);
-        }
     }
 
     /**
