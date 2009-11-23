@@ -21,7 +21,7 @@
 #include <new>
 #include <sys/types.h>
 #include <sys/socket.h>
-
+#include <stdio.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 
@@ -160,11 +160,14 @@ inline int getifaddrs(ifaddrs** result) {
                     size_t ifaPayloadLength = IFA_PAYLOAD(hdr);
                     while (RTA_OK(rta, ifaPayloadLength)) {
                         if (rta->rta_type == IFA_ADDRESS) {
-                            *result = new ifaddrs(*result);
-                            if (!(*result)->setNameAndFlagsByIndex(address->ifa_index)) {
-                                return -1;
+                            int family = address->ifa_family;
+                            if (family == AF_INET || family == AF_INET6) {
+                                *result = new ifaddrs(*result);
+                                if (!(*result)->setNameAndFlagsByIndex(address->ifa_index)) {
+                                    return -1;
+                                }
+                                (*result)->setAddress(family, RTA_DATA(rta), RTA_PAYLOAD(rta));
                             }
-                            (*result)->setAddress(address->ifa_family, RTA_DATA(rta), RTA_PAYLOAD(rta));
                         }
                         rta = RTA_NEXT(rta, ifaPayloadLength);
                     }
