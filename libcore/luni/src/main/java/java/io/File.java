@@ -25,7 +25,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.harmony.luni.internal.io.FileCanonPathCache;
+// import org.apache.harmony.luni.internal.io.FileCanonPathCache;
 import org.apache.harmony.luni.util.DeleteOnExit;
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
@@ -497,11 +497,15 @@ public class File implements Serializable, Comparable<File> {
     public String getCanonicalPath() throws IOException {
         byte[] result = properPath(false);
         String absPath = Util.toUTF8String(result);
-        String canonPath = FileCanonPathCache.get(absPath);
 
-        if (canonPath != null) {
-            return canonPath;
-        }
+        // BEGIN android-removed
+        //     caching the canonical path is completely bogus
+        // String canonPath = FileCanonPathCache.get(absPath);
+        // if (canonPath != null) {
+        //     return canonPath;
+        // }
+        // END android-removed
+
         if(separatorChar == '/') {
             // resolve the full path first
             result = resolveLink(result, result.length, false);
@@ -573,9 +577,13 @@ public class File implements Serializable, Comparable<File> {
         newResult[newLength] = 0;
         newResult = getCanonImpl(newResult);
         newLength = newResult.length;
-        canonPath = Util.toUTF8String(newResult, 0, newLength);
-        FileCanonPathCache.put(absPath, canonPath);
-        return canonPath;
+
+        // BEGIN android-changed
+        //     caching the canonical path is completely bogus
+        return Util.toUTF8String(newResult, 0, newLength);
+        // FileCanonPathCache.put(absPath, canonPath);
+        // return canonPath;
+        // END android-changed
     }
 
     /*

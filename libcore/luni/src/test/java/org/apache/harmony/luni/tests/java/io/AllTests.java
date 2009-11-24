@@ -34,7 +34,6 @@ public class AllTests
         TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.io");
 
         suite.addTestSuite(BufferedReaderTest.class);
-        suite.addTestSuite(FileCanonPathCacheTest.class);
         suite.addTestSuite(FilePermissionTest.class);
         suite.addTestSuite(FileTest.class);
         suite.addTestSuite(InputStreamReaderTest.class);
