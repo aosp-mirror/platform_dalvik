@@ -498,7 +498,11 @@ public class File implements Serializable, Comparable<File> {
         String absPath = Util.toUTF8String(result);
 
         // BEGIN android-removed
-        //     caching the canonical path is completely bogus
+        //     Caching the canonical path is bogus. Users facing specific
+        //     performance problems can perform their own caching, with
+        //     eviction strategies that are appropriate for their application.
+        //     A VM-wide cache with no mechanism to evict stale elements is a
+        //     disservice to applications that need up-to-date data.
         // String canonPath = FileCanonPathCache.get(absPath);
         // if (canonPath != null) {
         //     return canonPath;
