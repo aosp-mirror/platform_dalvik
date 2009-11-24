@@ -153,6 +153,36 @@ int sysLoadFileInShmem(int fd, MemMapping* pMap)
 #endif
 }
 
+#ifndef HAVE_POSIX_FILEMAP
+int sysFakeMapFile(int fd, MemMapping* pMap)
+{
+    /* No MMAP, just fake it by copying the bits.
+       For Win32 we could use MapViewOfFile if really necessary
+       (see libs/utils/FileMap.cpp).
+    */
+    off_t start;
+    size_t length;
+    void* memPtr;
+
+    assert(pMap != NULL);
+
+    if (getFileStartAndLength(fd, &start, &length) < 0)
+        return -1;
+
+    memPtr = malloc(length);
+    if (read(fd, memPtr, length) < 0) {
+        LOGW("read(fd=%d, start=%d, length=%d) failed: %s\n", (int) length,
+            fd, (int) start, strerror(errno));
+        return -1;
+    }
+
+    pMap->baseAddr = pMap->addr = memPtr;
+    pMap->baseLength = pMap->length = length;
+
+    return 0;
+}
+#endif
+
 /*
  * Map a file (from fd's current offset) into a shared, read-only memory
  * segment.  The file offset must be a multiple of the system page size.
@@ -184,7 +214,7 @@ int sysMapFileInShmemReadOnly(int fd, MemMapping* pMap)
 
     return 0;
 #else
-    sysFakeMapFile(fd, pMap);
+    return sysFakeMapFile(fd, pMap);
 #endif
 }
 
@@ -231,39 +261,9 @@ int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap)
 
     return 0;
 #else
-    sysFakeMapFile(fd, pMap);
+    return sysFakeMapFile(fd, pMap);
 #endif
 }
-
-#ifndef HAVE_POSIX_FILEMAP
-int sysFakeMapFile(int fd, MemMapping* pMap)
-{
-    /* No MMAP, just fake it by copying the bits.
-       For Win32 we could use MapViewOfFile if really necessary
-       (see libs/utils/FileMap.cpp).
-    */
-    off_t start;
-    size_t length;
-    void* memPtr;
-
-    assert(pMap != NULL);
-
-    if (getFileStartAndLength(fd, &start, &length) < 0)
-        return -1;
-
-    memPtr = malloc(length);
-    if (read(fd, memPtr, length) < 0) {
-        LOGW("read(fd=%d, start=%d, length=%d) failed: %s\n", (int) length,
-            fd, (int) start, strerror(errno));
-        return -1;
-    }
-
-    pMap->baseAddr = pMap->addr = memPtr;
-    pMap->baseLength = pMap->length = length;
-
-    return 0;
-}
-#endif
 
 /*
  * Map part of a file (from fd's current offset) into a shared, read-only
@@ -331,6 +331,7 @@ int sysMapFileSegmentInShmem(int fd, off_t start, long length,
 int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
     MemMapping* pMap)
 {
+#ifdef HAVE_POSIX_FILEMAP
     /*
      * Verify that "addr" is part of this mapping file.
      */
@@ -358,7 +359,9 @@ int sysChangeMapAccess(void* addr, size_t length, int wantReadWrite,
             alignAddr, alignLength, prot, strerror(errno));
         return (errno != 0) ? errno : -1;
     }
+#endif
 
+    /* for "fake" mapping, no need to do anything */
     return 0;
 }
 
