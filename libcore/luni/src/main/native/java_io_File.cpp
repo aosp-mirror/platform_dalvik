@@ -15,10 +15,10 @@
  *  limitations under the License.
  */
 
-#define MaxPath 1024
-
 #include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
+#include "LocalArray.h"
+#include "ScopedFd.h"
 
 #include <string.h>
 #include <fcntl.h>
@@ -30,8 +30,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
-#include <assert.h>
-
 
 /* these were copied from java.io.File */
 enum {
@@ -40,615 +38,373 @@ enum {
     STAT_TYPE_FILE = 0x0004
 };
 
-static void convertToPlatform(char *path) {
-    char *pathIndex;
-
-    pathIndex = path;
-    while(*pathIndex != '\0') {
-        if(*pathIndex == '\\') {
-            *pathIndex = '/';
-        }
-        pathIndex++;
-    }
-}
-
 /*
  * private static native byte[][] rootsImpl()
  *
  * Returns the linux root in an array of byte arrays
  */
+// TODO: why don't we just do this in Java?
 static jobject java_io_File_rootsImpl(JNIEnv* env, jclass clazz) {
-    char rootStrings[3];
+    // TODO: why two NUL bytes?
+    jbyte rootStrings[3];
     rootStrings[0] = '/';
     rootStrings[1] = '\0';
     rootStrings[2] = '\0';
 
+    jbyteArray rootName = env->NewByteArray(3);
+    env->SetByteArrayRegion(rootName, 0, sizeof(rootStrings), rootStrings);
+
     jclass arrayClass = env->FindClass("[B");
-    if (arrayClass == NULL)
+    if (arrayClass == NULL) {
         return NULL;
-
-    jobjectArray answer = env->NewObjectArray(1, arrayClass, NULL);
-    if (!answer)
-        return NULL;
-
-    jbyteArray rootname;
-
-    rootname = env->NewByteArray(3);
-    env->SetByteArrayRegion(rootname, 0, 3, (jbyte *) rootStrings);
-    env->SetObjectArrayElement(answer, 0, rootname);
-
-    return answer;
-}
-
-static jbyteArray java_io_File_getCanonImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path) {
-    /* This needs work.  Currently it does no more or less than VAJ-20 ST 
-     * implementationbut really should figure out '..', '.', and really 
-     * resolve references.
-     */
-    jbyteArray answer;
-    size_t answerlen;
-    char *pathIndex;
-    char pathCopy[MaxPath];
-    jsize length = (jsize) env->GetArrayLength(path);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-
-    convertToPlatform(pathCopy);
-
-    answerlen = strlen(pathCopy);
-    answer = env->NewByteArray(answerlen);
-    env->SetByteArrayRegion(answer, 0, answerlen, (jbyte *) pathCopy);
-
-    return answer;
-}
-
-/*
- * native private boolean deleteFileImpl()
- *
- * Returns "true" if the file exists and was successfully deleted.
- */
-static jboolean java_io_File_deleteFileImpl(JNIEnv* env, jobject obj, 
-        jbyteArray path) {
-
-    int cc;
-
-    if(path == NULL) {
-        return JNI_FALSE;       /* exception thrown */
     }
 
-    char pathCopy[MaxPath];
-    jsize length = (jsize) env->GetArrayLength(path);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-    
-    cc = unlink(pathCopy);
-    if(cc < 0) {
-        int err = errno;
+    jobjectArray result = env->NewObjectArray(1, arrayClass, NULL);
+    if (result == NULL) {
+        return NULL;
+    }
+    env->SetObjectArrayElement(result, 0, rootName);
+    return result;
+}
 
-        /*
-         * According to the man pages, Linux uses EISDIR and Mac OS X
-         * uses EPERM to indicate a non-super-user attempt to unlink
-         * a directory.  Mac OS does have EISDIR in the header file.
-         *
-         * We should get EACCES if the problem is directory permissions.
-         */
-        if(err == EISDIR || err == EPERM) {
-            cc = rmdir(pathCopy);
-            if(cc < 0) {
-                /* probably ENOTEMPTY */
-                LOGD("unable to rmdir '%s': %s (errno=%d)\n",
-                    pathCopy, strerror(err), err);
+
+class Path {
+public:
+    Path(JNIEnv* env, jbyteArray pathBytes)
+    : mByteCount(env->GetArrayLength(pathBytes)), mBytes(mByteCount + 1)
+    {
+        // The Java byte[] doesn't contain a trailing NUL.
+        jbyte* dst = reinterpret_cast<jbyte*>(&mBytes[0]);
+        env->GetByteArrayRegion(pathBytes, 0, mByteCount, dst);
+        mBytes[mByteCount] = '\0';
+        // This is an awful mistake, because '\' is a perfectly acceptable
+        // character on Linux/Android. But we've shipped so many versions
+        // that behaved like this, I'm too scared to change it.
+        for (char* p = &mBytes[0]; *p; ++p) {
+            if (*p == '\\') {
+                *p = '/';
             }
-        } else {
-            LOGD("unable to unlink '%s': %s (errno=%d)\n", 
-                    pathCopy, strerror(err), err);
         }
     }
 
-    return (cc == 0);
-}
-
-/*
- * harmony implements this method practically identical to the deleteFileImpl, 
- * except that it uses a diffrent helper method from hyport. Dalvik seems to 
- * just need this one method to delete both
- */
-static jboolean java_io_File_deleteDirImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path) {
-    return java_io_File_deleteFileImpl(env, recv, path);
-}
-
-/*
- * native public long lengthImpl()
- *
- * Returns the file length, or 0 if the file does not exist.  The result for
- * a directory is not defined.
- */
-static jlong java_io_File_lengthImpl(JNIEnv* env, jobject obj, 
-        jbyteArray path) {
-    struct stat sb;
-    jlong result = 0;
-    int cc;
-
-    char pathCopy[MaxPath];
-    jsize length = (jsize) env->GetArrayLength(path);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-    cc = stat(pathCopy, &sb);
-    if(cc == 0) {
-        // BEGIN android-added
-        /*
-         * This explicitly treats non-regular files (e.g., sockets and
-         * block-special devices) as having size zero. Some synthetic
-         * "regular" files may report an arbitrary non-zero size, but
-         * in these cases they generally report a block count of zero.
-         * So, use a zero block count to trump any other concept of
-         * size.
-         */
-        if (S_ISREG(sb.st_mode) && (sb.st_blocks != 0)) {
-            result = sb.st_size;
-        } else {
-            result = 0;
-        }
-        // END android-added
-        // BEGIN android-deleted
-        //result = sb.st_size;
-        // END android-deleted
+    jbyte* bytes() {
+        return reinterpret_cast<jbyte*>(&mBytes[0]);
     }
 
+    // Capacity.
+    size_t size() const {
+        return mByteCount;
+    }
+
+    // Element access.
+    char& operator[](size_t n) { return mBytes[n]; }
+    const char& operator[](size_t n) const { return mBytes[n]; }
+
+private:
+    size_t mByteCount;
+    LocalArray<512> mBytes;
+};
+
+
+static jbyteArray java_io_File_getCanonImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    // The only thing this native code currently does is truncate the byte[] at
+    // the first NUL, and rewrite '\' as '/'.
+    // TODO: this is completely pointless. we should do this in Java, or do all of getCanonicalPath in native code. (realpath(2)?)
+    size_t length = strlen(&path[0]);
+    jbyteArray result = env->NewByteArray(length);
+    env->SetByteArrayRegion(result, 0, length, path.bytes());
     return result;
 }
 
-/*
- * native public long lastModified()
- *
- * Get the last modified date of the file. Measured in milliseconds 
- * from epoch (00:00:00 GMT, January 1, 1970). Returns 0 if the file does
- * not exist
- */
-static jlong java_io_File_lastModifiedImpl(JNIEnv* env, jobject obj, 
-        jbyteArray path) {
-    struct stat sb;
-    jlong result = 0;
-    int cc;
-
-    char pathCopy[MaxPath];
-    jsize length = (jsize) env->GetArrayLength(path);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-    cc = stat(pathCopy, &sb);
-    if(cc == 0) {
-        // sb.st_mtime is a time_t which is in seconds since epoch.
-        result = sb.st_mtime;
-        result *= 1000L;
-    }
-
-    return result;
+// TODO: rewrite File.delete so we just have one native method (and don't need to make two native method invocations per file).
+static jboolean java_io_File_deleteFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    int rc = unlink(&path[0]);
+    return (rc == 0) ? JNI_TRUE : JNI_FALSE;
 }
 
-/*
- * private static native int stattype(String path)
- */
-static jint java_io_File_stattype(JNIEnv* env, jobject recv, 
-        jbyteArray pathStr) {
+// TODO: rewrite File.delete so we just have one native method (and don't need to make two native method invocations per file).
+static jboolean java_io_File_deleteDirImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    int rc = rmdir(&path[0]);
+    return (rc == 0) ? JNI_TRUE : JNI_FALSE;
+}
 
-    char pathCopy[MaxPath];
-    jsize length = (jsize) env->GetArrayLength(pathStr);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(pathStr, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
+static jlong java_io_File_lengthImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
     struct stat sb;
-    int cc, type;
-
-    type = 0;
-    cc = stat(pathCopy, &sb);
-
-    if(cc == 0) {
-        type |= STAT_TYPE_EXISTS;
-        if(S_ISDIR(sb.st_mode)) {
-            type |= STAT_TYPE_DIR;
-        } else if(S_ISREG(sb.st_mode)) {
-            type |= STAT_TYPE_FILE;
-        }
+    int rc = stat(&path[0], &sb);
+    if (rc == -1) {
+        // We must return 0 for files that don't exist.
+        // TODO: shouldn't we throw an IOException for ELOOP or EACCES?
+        return 0;
     }
+    
+    /*
+     * This android-changed code explicitly treats non-regular files (e.g.,
+     * sockets and block-special devices) as having size zero. Some synthetic
+     * "regular" files may report an arbitrary non-zero size, but
+     * in these cases they generally report a block count of zero.
+     * So, use a zero block count to trump any other concept of
+     * size.
+     * 
+     * TODO: why do we do this?
+     */
+    if (!S_ISREG(sb.st_mode) || sb.st_blocks == 0) {
+        return 0;
+    }
+    return sb.st_size;
+}
 
+static jlong java_io_File_lastModifiedImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    struct stat sb;
+    int rc = stat(&path[0], &sb);
+    if (rc == -1) {
+        return 0;
+    }
+    return static_cast<jlong>(sb.st_mtime) * 1000L;
+}
+
+// Returns a bitmask that tells whether the path exists,
+// and whether it points to a regular file or a directory.
+static jint doStat(JNIEnv* env, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    struct stat sb;
+    int rc = stat(&path[0], &sb);
+    if (rc == -1) {
+        return 0;
+    }
+    jint type = STAT_TYPE_EXISTS;
+    if (S_ISDIR(sb.st_mode)) {
+        type |= STAT_TYPE_DIR;
+    } else if (S_ISREG(sb.st_mode)) {
+        type |= STAT_TYPE_FILE;
+    }
     return type;
 }
 
-static jboolean java_io_File_isDirectoryImpl(JNIEnv* env, jobject recv, 
-        jbyteArray pathStr) {
-    return ((java_io_File_stattype(env, recv, pathStr) & STAT_TYPE_DIR) 
-            == STAT_TYPE_DIR);
+static jboolean java_io_File_isDirectoryImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    return ((doStat(env, pathBytes) & STAT_TYPE_DIR) != 0);
 }
 
-static jboolean java_io_File_existsImpl(JNIEnv* env, jobject recv, 
-        jbyteArray pathStr) {
-    return ((java_io_File_stattype(env, recv, pathStr) & STAT_TYPE_EXISTS) 
-            == STAT_TYPE_EXISTS);
+static jboolean java_io_File_existsImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    return ((doStat(env, pathBytes) & STAT_TYPE_EXISTS) != 0);
 }
 
-static jboolean java_io_File_isFileImpl(JNIEnv* env, jobject recv, 
-        jbyteArray pathStr) {
-    return ((java_io_File_stattype(env, recv, pathStr) & STAT_TYPE_FILE) 
-            == STAT_TYPE_FILE);
+static jboolean java_io_File_isFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    return ((doStat(env, pathBytes) & STAT_TYPE_FILE) != 0);
 }
 
-static jboolean java_io_File_isHiddenImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path) {
+// TODO: why isn't this done in Java instead?
+static jboolean java_io_File_isHiddenImpl(JNIEnv* env, jobject obj, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
 
-    char pathCopy[MaxPath];
-    jsize index;
-    jsize length = env->GetArrayLength(path);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-
-    if(length == 0) {
-        return 0;
+    if (!java_io_File_existsImpl(env, obj, pathBytes)) {
+        return JNI_FALSE;
     }
 
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-    if(!java_io_File_existsImpl(env, recv, path)) {
-        return 0;
-    }
-
-    for(index = length; index >= 0; index--) {
-        if(pathCopy[index] == '.' 
-                && (index > 0 && pathCopy[index - 1] == '/')) {
-            return -1;
+    for (int i = path.size() - 1; i >= 0; --i) {
+        if(path[i] == '.' && i > 0 && path[i - 1] == '/') {
+            return JNI_TRUE;
         }
     }
 
-    return 0;
+    return JNI_FALSE;
 }
 
-static jboolean java_io_File_readable(JNIEnv* env, jobject recv, 
-        jbyteArray pathStr) {
-    char path[MaxPath];
-    struct stat sb;
-    int cc, type;
+static jboolean java_io_File_isReadableImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    return (access(&path[0], R_OK) == 0);
+}
 
-    if(pathStr == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
-        return -1;
+static jboolean java_io_File_isWritableImpl(JNIEnv* env, jobject recv, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    return (access(&path[0], W_OK) == 0);
+}
+
+static jbyteArray java_io_File_getLinkImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+
+    // We can't know how big a buffer readlink(2) will need, so we need to
+    // loop until it says "that fit".
+    size_t bufSize = 512;
+    while (true) {
+        LocalArray<512> buf(bufSize);
+        ssize_t len = readlink(&path[0], &buf[0], buf.size() - 1);
+        if (len == -1) {
+            // An error occurred.
+            return pathBytes;
+        }
+        if (len < buf.size() - 1) {
+            // The buffer was big enough.
+            // TODO: why do we bother with the NUL termination? (if you change this, remove the "- 1"s above.)
+            buf[len] = '\0'; // readlink(2) doesn't NUL-terminate.
+            jbyteArray result = env->NewByteArray(len);
+            const jbyte* src = reinterpret_cast<const jbyte*>(&buf[0]);
+            env->SetByteArrayRegion(result, 0, len, src);
+            return result;
+        }
+        // Try again with a bigger buffer.
+        bufSize *= 2;
+    }
+}
+
+static jboolean java_io_File_setLastModifiedImpl(JNIEnv* env, jobject, jbyteArray pathBytes, jlong ms) {
+    Path path(env, pathBytes);
+    
+    // We want to preserve the access time.
+    struct stat sb;
+    if (stat(&path[0], &sb) == -1) {
+        return JNI_FALSE;
     }
     
-    jsize length = (jsize) env->GetArrayLength(pathStr);
-
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(pathStr, 0, length, (jbyte *)path);
-    path[length] = '\0';
-    convertToPlatform(path);
-
-    cc = access(path, R_OK);
-
-    return cc == 0;
+    // TODO: we could get microsecond resolution with utimes(3), "legacy" though it is.
+    utimbuf times;
+    times.actime = sb.st_atime;
+    times.modtime = static_cast<time_t>(ms / 1000);
+    return (utime(&path[0], &times) == 0);
 }
 
-static jboolean java_io_File_writable(JNIEnv* env, jobject recv, 
-        jbyteArray pathStr) {
-    char path[MaxPath];
+static jboolean java_io_File_setReadOnlyImpl(JNIEnv* env, jobject recv, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+
     struct stat sb;
-    int cc, type;
-
-    if(pathStr == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
-        return -1;
+    if (stat(&path[0], &sb) == -1) {
+        return JNI_FALSE;
     }
-    
-    jsize length = (jsize) env->GetArrayLength(pathStr);
 
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(pathStr, 0, length, (jbyte *)path);
-    path[length] = '\0';
-    convertToPlatform(path);
-    
-    cc = access(path, W_OK);
-
-    return cc == 0;
+    // Strictly, this is set-not-writable (i.e. we leave the execute
+    // bits untouched), but that's deliberate.
+    return (chmod(&path[0], sb.st_mode & ~0222) == 0);
 }
 
-static jbyteArray java_io_File_getLinkImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path) {
-    jbyteArray answer;
-    jsize answerlen;
-    char pathCopy[MaxPath];
-
-    jsize length = (jsize) env->GetArrayLength(path);
-
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-    jboolean test = -1;
-
-    char *link = pathCopy;
-
-    int size = readlink(link, link, MaxPath);
-    if(size <= 0) {
-        test = 0;
-    } else {
-        if(size >= MaxPath) {
-            link[MaxPath - 1] = 0;
-        } else {
-            link[size] = 0;
+struct ScopedReaddir {
+    ScopedReaddir(DIR* dirp) : dirp(dirp) {
+    }
+    ~ScopedReaddir() {
+        if (dirp != NULL) {
+            closedir(dirp);
         }
     }
+    dirent* next() {
+        return readdir(dirp);
+    }
+    DIR* dirp;
+};
 
-    if(test) {
-        answerlen = strlen(pathCopy);
-        answer = env->NewByteArray(answerlen);
-        env->SetByteArrayRegion(answer, 0, answerlen,
-                                  (jbyte *) pathCopy);
-    } else {
-        answer = path;
+// TODO: this is a literal translation of the old code. we should remove the fixed-size buffers here.
+#define MaxPath 1024
+
+// TODO: Java doesn't guarantee any specific ordering, and with some file systems you will get results in non-alphabetical order, so I've just done the most convenient thing for the native code, but I wonder if we shouldn't pass down an ArrayList<String> and fill it?
+struct LinkedDirEntry {
+    static void addFirst(LinkedDirEntry** list, LinkedDirEntry* newEntry) {
+        newEntry->next = *list;
+        *list = newEntry;
     }
 
-    return answer;
-}
+    LinkedDirEntry() : next(NULL) {
+    }
 
-static jboolean java_io_File_setLastModifiedImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path, jlong time) {
-    jboolean result;
+    ~LinkedDirEntry() {
+        delete next;
+    }
+
+    char pathEntry[MaxPath];
+    LinkedDirEntry* next;
+};
+
+static jobject java_io_File_listImpl(JNIEnv* env, jclass clazz, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
     
-    jsize length = env->GetArrayLength(path);
-    char pathCopy[MaxPath];
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-    struct stat statbuf;
-    struct utimbuf timebuf;
-    if(stat(pathCopy, &statbuf)) {
-        result = 0;
-    } else {
-        timebuf.actime = statbuf.st_atime;
-        timebuf.modtime = (time_t) (time / 1000);
-        result = utime(pathCopy, &timebuf) == 0;
+    ScopedReaddir dir(opendir(&path[0]));
+    if (dir.dirp == NULL) {
+        // TODO: shouldn't we throw an IOException?
+        return NULL;
     }
-
-    return result;
-}
-
-static jboolean java_io_File_setReadOnlyImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path) {
-    jsize length = env->GetArrayLength(path);
-    char pathCopy[MaxPath];
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-    struct stat buffer;
-    mode_t mode;
-    if(stat(pathCopy, &buffer)) {
-        return 0;
-    }
-    mode = buffer.st_mode;
-    mode = mode & 07555;
-
-    return chmod(pathCopy, mode) == 0;
-}
-
-static jobject java_io_File_listImpl(JNIEnv* env, jclass clazz, 
-        jbyteArray path) {
     
-    struct dirEntry {
-        char pathEntry[MaxPath];
-        struct dirEntry *next;
-    } *dirList, *currentEntry;
-
-    jsize length = env->GetArrayLength(path);
-    char pathCopy[MaxPath];
+    // TODO: merge this into the loop below.
+    dirent* entry = dir.next();
+    if (entry == NULL) {
+        return NULL;
+    }
     char filename[MaxPath];
-    jint result = 0, index;
-    jint numEntries = 0;
-    jobjectArray answer = NULL;
-    jclass javaClass = NULL;
-
-    dirList = NULL;
-    currentEntry = NULL;
-
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    if(length >= 1 && pathCopy[length - 1] != '\\' 
-            && pathCopy[length - 1] != '/') {
-        pathCopy[length] = '/';
-        length++;
-    }
-    pathCopy[length] = '\0';
-    
-    convertToPlatform(pathCopy);
-
-    DIR *dirp = NULL;
-    struct dirent *entry;
-
-    dirp = opendir(pathCopy);
-
-    if(dirp == NULL) {
-        return NULL;
-    }
-
-    entry = readdir(dirp);
-
-    if(entry == NULL) {
-        closedir(dirp);
-        return NULL;
-    }
     strcpy(filename, entry->d_name);
 
-    while(result > -1) {
-        if(strcmp(".", filename) != 0 && (strcmp("..", filename) != 0)) {
-            if(numEntries > 0) {
-                currentEntry->next = 
-                        (struct dirEntry *) malloc(sizeof(struct dirEntry));
-                currentEntry = currentEntry->next;
-            } else {
-                dirList = (struct dirEntry *) malloc(sizeof(struct dirEntry));
-                currentEntry = dirList;
-            }
-            if(currentEntry == NULL) {
-                closedir(dirp);
+    size_t fileCount = 0;
+    LinkedDirEntry* files = NULL;
+    while (entry != NULL) {
+        if (strcmp(".", filename) != 0 && strcmp("..", filename) != 0) {
+            LinkedDirEntry* newEntry = new LinkedDirEntry;
+            if (newEntry == NULL) {
                 jniThrowException(env, "java/lang/OutOfMemoryError", NULL);
-                goto cleanup;
+                return NULL;
             }
-            strcpy(currentEntry->pathEntry, filename);
-            numEntries++;
+            strcpy(newEntry->pathEntry, filename);
+            
+            LinkedDirEntry::addFirst(&files, newEntry);
+            ++fileCount;
         }
 
-        entry = readdir(dirp);
-
-        if(entry == NULL) {
-            result = -1;
-        } else {
+        entry = dir.next();
+        if (entry != NULL) {
             strcpy(filename, entry->d_name);
         }
     }
-    closedir(dirp);
-
-    if(numEntries == 0) {
+    
+    // TODO: we should kill the ScopedReaddir about here, since we no longer need it.
+    
+    // TODO: we're supposed to use null to signal errors. we should return "new String[0]" here (or an empty byte[][]).
+    if (fileCount == 0) {
         return NULL;
     }
-
-    javaClass = env->FindClass("[B");
-    if(javaClass == NULL) {
+    
+    // Create a byte[][].
+    // TODO: since the callers all want a String[], why do we return a byte[][]?
+    jclass byteArrayClass = env->FindClass("[B");
+    if (byteArrayClass == NULL) {
         return NULL;
     }
-    answer = env->NewObjectArray(numEntries, javaClass, NULL);
-
-cleanup:
-    for(index = 0; index < numEntries; index++)
-    {
-        jbyteArray entrypath;
-        jsize entrylen = strlen(dirList->pathEntry);
-        currentEntry = dirList;
-        if(answer)
-        {
-            entrypath = env->NewByteArray(entrylen);
-            env->SetByteArrayRegion(entrypath, 0, entrylen,
-                                      (jbyte *) dirList->pathEntry);
-            env->SetObjectArrayElement(answer, index, entrypath);
-            env->DeleteLocalRef(entrypath);
-        }
-        dirList = dirList->next;
-        free((void *)currentEntry);
+    jobjectArray answer = env->NewObjectArray(fileCount, byteArrayClass, NULL);
+    int arrayIndex = 0;
+    for (LinkedDirEntry* file = files; file != NULL; file = file->next) {
+        jsize entrylen = strlen(file->pathEntry);
+        jbyteArray entrypath = env->NewByteArray(entrylen);
+        env->SetByteArrayRegion(entrypath, 0, entrylen, (jbyte *) file->pathEntry);
+        env->SetObjectArrayElement(answer, arrayIndex, entrypath);
+        env->DeleteLocalRef(entrypath);
+        ++arrayIndex;
     }
-
     return answer;
 }
 
-static jboolean java_io_File_mkdirImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path) {
-    jint result;
-    char pathCopy[MaxPath];
-    jsize length = env->GetArrayLength(path);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-// BEGIN android-changed
-// don't want default permissions to allow global access.
-    result = mkdir(pathCopy, S_IRWXU);
-// END android-changed
-
-    if(-1 != result)
-    {
-      result = 0;
-    }
-
-    return result == 0;
+static jboolean java_io_File_mkdirImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    // On Android, we don't want default permissions to allow global access.
+    return (mkdir(&path[0], S_IRWXU) == 0);
 }
 
-static jint java_io_File_newFileImpl(JNIEnv* env, jobject recv, 
-        jbyteArray path) {
-    
-    if(path == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
-        return -1;
+static jint java_io_File_newFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    // On Android, we don't want default permissions to allow global access.
+    ScopedFd fd(open(&path[0], O_CREAT | O_EXCL, 0600));
+    if (fd.get() != -1) {
+        // We return 0 if we created a new file...
+        return 0;
     }
-    
-    jint result;
-    jsize length = env->GetArrayLength(path);
-    char pathCopy[MaxPath];
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform(pathCopy);
-
-    /* First check to see if file already exists */
-    if(java_io_File_existsImpl(env, recv, path))
-    {
-        return 1;
-    }
-
-    /* Now create the file and close it */
-// BEGIN android-changed
-// don't want default permissions to allow global access.
-    int fd = open(pathCopy, O_EXCL | O_CREAT, 0600);
-// END android-changed
-    if(fd == -1)
-    {
-        if(errno == EEXIST) {
-            return 1;
-        }
-        return -1;
-    }
-    close(fd);
-
-    return 0;
+    // ... 1 if the file already existed, and -1 if we failed.
+    // TODO: we should return true or false, like our caller,
+    // and throw IOException on failure.
+    return (errno == EEXIST) ? 1 : -1;
 }
 
-static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject recv, 
-        jbyteArray pathExist, jbyteArray pathNew) {
-    jint result;
-    jsize length;
-    char pathExistCopy[MaxPath], pathNewCopy[MaxPath];
-
-    length = env->GetArrayLength(pathExist);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(pathExist, 0, length, 
-            (jbyte *)pathExistCopy);
-    pathExistCopy[length] = '\0';
-
-    length = env->GetArrayLength(pathNew);
-    length = length < MaxPath - 1 ? length : MaxPath - 1;
-    env->GetByteArrayRegion(pathNew, 0, length, (jbyte *)pathNewCopy);
-    pathNewCopy[length] = '\0';
-
-    convertToPlatform(pathExistCopy);
-    convertToPlatform(pathNewCopy);
-
-    result = rename(pathExistCopy, pathNewCopy);
-
-    return result == 0;
+static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject, jbyteArray oldPathBytes, jbyteArray newPathBytes) {
+    Path oldPath(env, oldPathBytes);
+    Path newPath(env, newPathBytes);
+    return (rename(&oldPath[0], &newPath[0]) == 0);
 }
 
-static void java_io_File_oneTimeInitialization(JNIEnv * env, jclass clazz)
-{
-  // dummy to stay compatible to harmony
-}
-
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
     { "rootsImpl",          "()[[B",  (void*) java_io_File_rootsImpl },
@@ -660,8 +416,8 @@ static JNINativeMethod gMethods[] = {
     { "isFileImpl",         "([B)Z",  (void*) java_io_File_isFileImpl },
     { "isHiddenImpl",       "([B)Z",  (void*) java_io_File_isHiddenImpl },
     // BEGIN android-changed
-    { "isReadableImpl",     "([B)Z",  (void*) java_io_File_readable },
-    { "isWriteableImpl",    "([B)Z",  (void*) java_io_File_writable },
+    { "isReadableImpl",     "([B)Z",  (void*) java_io_File_isReadableImpl },
+    { "isWritableImpl",    "([B)Z",   (void*) java_io_File_isWritableImpl },
     // END android-changed
     { "getLinkImpl",        "([B)[B", (void*) java_io_File_getLinkImpl },
     { "lastModifiedImpl",   "([B)J",  (void*) java_io_File_lastModifiedImpl },
@@ -671,13 +427,9 @@ static JNINativeMethod gMethods[] = {
     { "mkdirImpl",          "([B)Z",  (void*) java_io_File_mkdirImpl },
     { "newFileImpl",        "([B)I",  (void*) java_io_File_newFileImpl },
     { "renameToImpl",       "([B[B)Z",(void*) java_io_File_renameToImpl },
-    { "setLastModifiedImpl","([BJ)Z",
-        (void*) java_io_File_setLastModifiedImpl },
-    { "oneTimeInitialization","()V", 
-        (void*) java_io_File_oneTimeInitialization }
+    { "setLastModifiedImpl","([BJ)Z", (void*) java_io_File_setLastModifiedImpl },
 };
-int register_java_io_File(JNIEnv* env)
-{
+int register_java_io_File(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "java/io/File",
-                gMethods, NELEM(gMethods));
+            gMethods, NELEM(gMethods));
 }

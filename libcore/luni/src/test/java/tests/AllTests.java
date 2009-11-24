@@ -57,6 +57,7 @@ public class AllTests
         
         // Android-written test suites.
         suite.addTest(com.ibm.icu4jni.util.AllTests.suite());
+        suite.addTest(java.io.AllTests.suite());
         suite.addTest(java.lang.AllTests.suite());
         suite.addTest(java.lang.reflect.AllTests.suite());
         suite.addTest(java.net.AllTests.suite());

@@ -82,11 +82,11 @@ public class File implements Serializable, Comparable<File> {
 
     private static boolean caseSensitive;
 
-    private static native void oneTimeInitialization();
+    // BEGIN android-removed
+    // private static native void oneTimeInitialization();
+    // END android-removed
 
     static {
-        oneTimeInitialization();
-
         // The default protection domain grants access to these properties
         // BEGIN android-changed
         // We're on linux so the filesystem is case sensitive and the separator is /.
@@ -348,7 +348,7 @@ public class File implements Serializable, Comparable<File> {
             exists = existsImpl(properPath(true));
         }
         // BEGIN android-changed
-        return exists && isWriteableImpl(properPath(true));
+        return exists && isWritableImpl(properPath(true));
         // END android-changed
     }
 
@@ -854,7 +854,7 @@ public class File implements Serializable, Comparable<File> {
     // BEGIN android-changed
     private native boolean isReadableImpl(byte[] filePath);
 
-    private native boolean isWriteableImpl(byte[] filePath);
+    private native boolean isWritableImpl(byte[] filePath);
     // END android-changed
 
     private native byte[] getLinkImpl(byte[] filePath);
@@ -862,6 +862,7 @@ public class File implements Serializable, Comparable<File> {
     /**
      * Returns the time when this file was last modified, measured in
      * milliseconds since January 1st, 1970, midnight.
+     * Returns 0 if the file does not exist.
      *
      * @return the time when this file was last modified.
      * @throws SecurityException
@@ -932,6 +933,8 @@ public class File implements Serializable, Comparable<File> {
 
     /**
      * Returns the length of this file in bytes.
+     * Returns 0 if the file does not exist.
+     * The result for a directory is not defined.
      *
      * @return the number of bytes in this file.
      * @throws SecurityException
