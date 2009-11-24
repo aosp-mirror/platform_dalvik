@@ -936,6 +936,7 @@ const u1* dvmRegisterMapGetLine(const RegisterMap* pMap, int addr)
 
             data += lineWidth;
         }
+        assert(data == pMap->data + lineWidth * numEntries);
     } else {
         int hi, lo, mid;
 
@@ -960,7 +961,6 @@ const u1* dvmRegisterMapGetLine(const RegisterMap* pMap, int addr)
         }
     }
 
-    assert(data == pMap->data + lineWidth * numEntries);
     return NULL;
 }
 
