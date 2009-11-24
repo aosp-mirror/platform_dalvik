@@ -1,12 +1,12 @@
 package org.bouncycastle.asn1.x509;
 
+import java.util.ArrayList;
+import java.util.BitSet;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 
 // BEGIN android-note
 // This class was extracted from X509Name as a way to keep the element
-// list in a more controlled fashion. Also, unlike the original code,
-// this class imposes a 32 element limit. We have never observed an
-// instance created with more than 10, so the limit seems reasonable.
+// list in a more controlled fashion.
 // END android-note
 
 /**
@@ -42,10 +42,10 @@ public class X509NameElementList {
      * null-ok; array of additional keys and values, alternating
      * key then value, etc. 
      */
-    private Object[] rest;
+    private ArrayList<Object> rest;
 
-    /** bit vector (in int form) for all the "added" bits */
-    private int added;
+    /** bit vector for all the "added" bits */
+    private BitSet added = new BitSet();
 
     /** &gt;= 0; number of elements in the list */
     private int size;
@@ -70,11 +70,6 @@ public class X509NameElementList {
      * @param added the added bit
      */
     public void add(DERObjectIdentifier key, String value, boolean added) {
-        if (size >= 32) {
-            throw new UnsupportedOperationException(
-                    "no more than 32 elements");
-        }
-
         if (key == null) {
             throw new NullPointerException("key == null");
         }
@@ -108,28 +103,18 @@ public class X509NameElementList {
             }
             case 4: {
                 // Do initial allocation of rest.
-                rest = new Object[10];
-                rest[0] = key;
-                rest[1] = value;
-                break;
-            }
-            case 9: {
-                // Grow to accommodate 28 pairs in the array.
-                Object[] newRest = new Object[56];
-                System.arraycopy(rest, 0, newRest, 0, 10);
-                rest = newRest;
-                // Fall through.
+                rest = new ArrayList<Object>();
+                // Fall through...
             }
             default: {
-                int index = (sz - 4) * 2;
-                rest[index] = key;
-                rest[index + 1] = value;
+                rest.add(key);
+                rest.add(value);
                 break;
             }
         }
 
         if (added) {
-            this.added |= (1 << sz);
+            this.added.set(sz);
         }
         
         size = sz + 1;
@@ -139,7 +124,7 @@ public class X509NameElementList {
      * Sets the "added" flag on the most recently added element.
      */
     public void setLastAddedFlag() {
-        added |= 1 << (size - 1);
+        added.set(size - 1);
     }
 
     /**
@@ -165,7 +150,7 @@ public class X509NameElementList {
             case 1: return key1;
             case 2: return key2;
             case 3: return key3;
-            default: return (DERObjectIdentifier) rest[(n - 4) * 2];
+            default: return (DERObjectIdentifier) rest.get((n - 4) * 2);
         }
     }
 
@@ -185,7 +170,7 @@ public class X509NameElementList {
             case 1: return value1;
             case 2: return value2;
             case 3: return value3;
-            default: return (String) rest[((n - 4) * 2) + 1];
+            default: return (String) rest.get(((n - 4) * 2) + 1);
         }
     }
 
@@ -200,7 +185,7 @@ public class X509NameElementList {
             throw new IndexOutOfBoundsException(Integer.toString(n));
         }
 
-        return (added & (1 << n)) != 0;
+        return added.get(n);
     }
 
     /**

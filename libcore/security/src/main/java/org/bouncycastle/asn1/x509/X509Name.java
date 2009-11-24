@@ -9,11 +9,6 @@ import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.util.encoders.Hex;
 import org.bouncycastle.util.Strings;
 
-// BEGIN android-note
-// Changes to this class now limit X509Names to 32 components. We have
-// never observed an instance created with more than 10.
-// END android-note
-
 /**
  * <pre>
  *     RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
