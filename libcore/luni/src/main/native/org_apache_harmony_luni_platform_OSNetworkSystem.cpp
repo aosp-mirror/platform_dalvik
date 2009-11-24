@@ -358,6 +358,10 @@ static const sockaddr* convertIpv4ToMapped(int fd,
     memset(sin6, 0, sizeof(*sin6));
     sin6->sin6_family = AF_INET6;
     sin6->sin6_port = sin->sin_port;
+    // TODO: mapUnspecified was introduced because kernels < 2.6.31 don't allow
+    // you to bind to ::ffff:0.0.0.0. When we move to something >= 2.6.31, we
+    // should make the code behave as if mapUnspecified were always true, and
+    // remove the parameter.
     if (sin->sin_addr.s_addr != 0 || mapUnspecified) {
         memset(&(sin6->sin6_addr.s6_addr[10]), 0xff, 2);
     }
