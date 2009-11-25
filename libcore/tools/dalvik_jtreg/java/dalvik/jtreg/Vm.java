@@ -1,0 +1,290 @@
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package dalvik.jtreg;
+
+import com.sun.javatest.TestDescription;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
+/**
+ * A Java-like virtual machine for compiling and running tests.
+ */
+public abstract class Vm {
+
+    static final String DALVIK_JTREG_HOME = "dalvik/libcore/tools/dalvik_jtreg";
+    static final File TEST_RUNNER_JAVA = new File(
+            DALVIK_JTREG_HOME + "/java/dalvik/jtreg/TestRunner.java");
+    private final Pattern JAVA_TEST_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
+    private static final File JTREG_JAR
+            = new File(DALVIK_JTREG_HOME + "/lib/jtreg.jar");
+
+    private static final Logger logger = Logger.getLogger(Vm.class.getName());
+
+    protected final ExecutorService outputReaders = Executors.newFixedThreadPool(1);
+
+    protected final Integer debugPort;
+    protected final long timeoutSeconds;
+    protected final File sdkJar;
+    protected final File localTemp;
+
+    /** The path to the test runner's compiled classes (directory or jar). */
+    private File testRunnerClasses;
+
+    Vm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp) {
+        this.debugPort = debugPort;
+        this.timeoutSeconds = timeoutSeconds;
+        this.sdkJar = sdkJar;
+        this.localTemp = localTemp;
+    }
+
+    /**
+     * Initializes the temporary directories and test harness necessary to run
+     * tests.
+     */
+    public void prepare() {
+        testRunnerClasses = compileTestRunner();
+    }
+
+    private File compileTestRunner() {
+        logger.fine("build testrunner");
+
+        File base = new File(localTemp, "testrunner");
+        base.mkdirs();
+        new Javac()
+                .destination(base)
+                .compile(TEST_RUNNER_JAVA);
+        return postCompile(base, "testrunner");
+    }
+
+    /**
+     * Cleans up after all test runs have completed.
+     */
+    public void shutdown() {
+        outputReaders.shutdown();
+    }
+
+    /**
+     * Compiles classes for the given test and makes them ready for execution.
+     * If the test could not be compiled successfully, it will be updated with
+     * the appropriate test result.
+     */
+    public void buildAndInstall(TestRun testRun) {
+        TestDescription testDescription = testRun.getTestDescription();
+        logger.fine("build " + testRun.getQualifiedName());
+
+        File testClasses;
+        try {
+            testClasses = compileTest(testDescription);
+            if (testClasses == null) {
+                testRun.setResult(Result.UNSUPPORTED, Collections.<String>emptyList());
+                return;
+            }
+        } catch (CommandFailedException e) {
+            testRun.setResult(Result.COMPILE_FAILED, e.getOutputLines());
+            return;
+        } catch (IOException e) {
+            testRun.setResult(Result.ERROR, e);
+            return;
+        }
+        testRun.setTestClasses(testClasses);
+        testRun.setUserDir(testDescription.getDir());
+    }
+
+    /**
+     * Compiles the classes for the described test.
+     *
+     * @return the path to the compiled classes (directory or jar), or {@code
+     *      null} if the test could not be compiled.
+     * @throws CommandFailedException if javac fails
+     */
+    private File compileTest(TestDescription testDescription) throws IOException {
+        String qualifiedName = TestDescriptions.qualifiedName(testDescription);
+
+        if (!JAVA_TEST_PATTERN.matcher(testDescription.getFile().toString()).find()) {
+            return null;
+        }
+
+        File base = new File(localTemp, qualifiedName);
+        base.mkdirs();
+
+        // write a test descriptor
+        Properties properties = TestDescriptions.toProperties(testDescription);
+        FileOutputStream propertiesOut = new FileOutputStream(
+                new File(base, TestRunner.TEST_PROPERTIES_FILE));
+        properties.store(propertiesOut, "generated by " + getClass().getName());
+        propertiesOut.close();
+
+        new Javac()
+                .bootClasspath(sdkJar)
+                .classpath(testDescription.getDir(), JTREG_JAR)
+                .sourcepath(testDescription.getDir())
+                .destination(base)
+                .compile(testDescription.getFile());
+        return postCompile(base, qualifiedName);
+    }
+
+    /**
+     * Runs the test, and updates its test result.
+     */
+    public void runTest(TestRun testRun) {
+        if (!testRun.isRunnable()) {
+            throw new IllegalArgumentException();
+        }
+
+        final Command command = newVmCommandBuilder()
+                .classpath(testRun.getTestClasses(), testRunnerClasses)
+                .userDir(testRun.getUserDir())
+                .debugPort(debugPort)
+                .mainClass("dalvik.jtreg.TestRunner")
+                .build();
+
+        logger.fine("executing " + command.getArgs());
+
+        try {
+            command.start();
+
+            // run on a different thread to allow a timeout
+            List<String> output = outputReaders.submit(new Callable<List<String>>() {
+                public List<String> call() throws Exception {
+                    return command.gatherOutput();
+                }
+            }).get(timeoutSeconds, TimeUnit.SECONDS);
+
+            if (output.isEmpty()) {
+                testRun.setResult(Result.ERROR,
+                        Collections.singletonList("No output returned!"));
+                return;
+            }
+
+            Result result = "SUCCESS".equals(output.get(output.size() - 1))
+                    ? Result.SUCCESS
+                    : Result.EXEC_FAILED;
+            testRun.setResult(result, output.subList(0, output.size() - 1));
+        } catch (TimeoutException e) {
+            testRun.setResult(Result.EXEC_TIMEOUT,
+                    Collections.singletonList("Exceeded timeout! (" + timeoutSeconds + "s)"));
+        } catch (Exception e) {
+            testRun.setResult(Result.ERROR, e);
+        } finally {
+            if (command.isStarted()) {
+                command.getProcess().destroy(); // to release the output reader
+            }
+        }
+    }
+
+    /**
+     * Returns a VM for test execution.
+     */
+    protected VmCommandBuilder newVmCommandBuilder() {
+        return new VmCommandBuilder();
+    }
+
+    /**
+     * Hook method called after each compilation.
+     *
+     * @param classesDirectory the compiled classes
+     * @param name the name of this compilation unit. Usually a qualified test
+     *        name like java.lang.Math.PowTests.
+     * @return the new result file.
+     */
+    protected File postCompile(File classesDirectory, String name) {
+        return classesDirectory;
+    }
+
+    /**
+     * Builds a virtual machine command.
+     */
+    public static class VmCommandBuilder {
+        private File temp;
+        private List<File> classpath = new ArrayList<File>();
+        private File userDir;
+        private Integer debugPort;
+        private String mainClass;
+        private List<String> vmCommand = Collections.singletonList("java");
+        private List<String> vmArgs = Collections.emptyList();
+
+        public VmCommandBuilder vmCommand(String... vmCommand) {
+            this.vmCommand = Arrays.asList(vmCommand.clone());
+            return this;
+        }
+
+        public VmCommandBuilder temp(File temp) {
+            this.temp = temp;
+            return this;
+        }
+
+        public VmCommandBuilder classpath(File... elements) {
+            this.classpath.addAll(Arrays.asList(elements));
+            return this;
+        }
+
+        public VmCommandBuilder userDir(File userDir) {
+            this.userDir = userDir;
+            return this;
+        }
+
+        public VmCommandBuilder debugPort(Integer debugPort) {
+            this.debugPort = debugPort;
+            return this;
+        }
+
+        public VmCommandBuilder mainClass(String mainClass) {
+            this.mainClass = mainClass;
+            return this;
+        }
+
+        public VmCommandBuilder vmArgs(String... vmArgs) {
+            this.vmArgs = Arrays.asList(vmArgs.clone());
+            return this;
+        }
+
+        public Command build() {
+            Command.Builder builder = new Command.Builder();
+            builder.args(vmCommand);
+            builder.args("-classpath", Command.path(classpath));
+            builder.args("-Duser.dir=" + userDir);
+
+            if (temp != null) {
+                builder.args("-Djava.io.tmpdir=" + temp);
+            }
+
+            if (debugPort != null) {
+                builder.args("-Xrunjdwp:transport=dt_socket,address="
+                        + debugPort + ",server=y,suspend=y");
+            }
+
+            builder.args(vmArgs);
+            builder.args(mainClass);
+
+            return builder.build();
+        }
+    }
+}
