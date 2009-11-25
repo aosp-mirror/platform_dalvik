@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
 import java.util.Properties;
 
 /**
- * Runs a jtreg test that was prepared with {@link TestToDex}.
+ * Runs a jtreg test.
  */
 public final class TestRunner {
 

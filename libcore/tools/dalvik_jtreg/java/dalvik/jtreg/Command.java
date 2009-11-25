@@ -22,8 +22,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * An out of process executable.
@@ -48,7 +48,15 @@ final class Command {
         this.permitNonZeroExitStatus = builder.permitNonZeroExitStatus;
     }
 
+    public List<String> getArgs() {
+        return Collections.unmodifiableList(args);
+    }
+
     static String path(Object... objects) {
+        return Strings.join(objects, ":");
+    }
+
+    static String path(Iterable<?> objects) {
         return Strings.join(objects, ":");
     }
 

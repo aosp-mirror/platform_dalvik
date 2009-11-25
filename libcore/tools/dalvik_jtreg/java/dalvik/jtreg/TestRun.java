@@ -25,7 +25,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A test run and its outcome.
+ * A test run and its outcome. This class tracks the complete lifecycle of a
+ * single test run:
+ * <ol>
+ *   <li>the test identity (qualified name)
+ *   <li>the test source code (test description)
+ *   <li>the code to execute (user dir, test classes)
+ *   <li>the result of execution (result, output lines)
+ * </ol>
  */
 public final class TestRun {
 
@@ -33,8 +40,8 @@ public final class TestRun {
     private final String qualifiedName;
     private final ExpectedResult expectedResult;
 
-    private File base;
-    private File deviceDex;
+    private File userDir;
+    private File testClasses;
 
     private Result result;
     private List<String> outputLines;
@@ -56,38 +63,33 @@ public final class TestRun {
     }
 
     /**
-     * Initializes the on-device base directory from which the test program
-     * shall be executed, and the dex file containing that program.
+     * Initializes the directory from which local files can be read by the test.
      */
-    public void setInstalledFiles(File base, File deviceDex) {
-        if (this.base != null) {
-            throw new IllegalStateException();
-        }
+    public void setUserDir(File base) {
+        this.userDir = base;
+    }
 
-        this.base = base;
-        this.deviceDex = deviceDex;
+    public File getUserDir() {
+        return userDir;
     }
 
     /**
-     * Returns true if this test is ready for execution on a device.
+     * Initializes the path to the jar file or directory containing test
+     * classes.
+     */
+    public void setTestClasses(File classes) {
+        this.testClasses = classes;
+    }
+
+    public File getTestClasses() {
+        return testClasses;
+    }
+
+    /**
+     * Returns true if this test is ready for execution.
      */
     public boolean isRunnable() {
-        return base != null && deviceDex != null;
-    }
-
-    /**
-     * Returns the test's base directory, from which local files can be read by
-     * the test.
-     */
-    public File getBase() {
-        return base;
-    }
-
-    /**
-     * Returns the jar file containing the test code.
-     */
-    public File getDeviceDex() {
-        return deviceDex;
+        return userDir != null && testClasses != null;
     }
 
     public void setResult(Result result, Throwable e) {
@@ -121,5 +123,4 @@ public final class TestRun {
     public ExpectedResult getExpectedResult() {
         return expectedResult;
     }
-
 }
