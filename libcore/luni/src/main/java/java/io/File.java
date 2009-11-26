@@ -232,9 +232,10 @@ public class File implements Serializable, Comparable<File> {
         }
     }
 
-    private static native byte[][] rootsImpl();
-
-    private static native boolean isCaseSensitiveImpl();
+    // BEGIN android-removed
+    // private static native byte[][] rootsImpl();
+    // private static native boolean isCaseSensitiveImpl();
+    // END android-removed
 
     /**
      * Lists the file system roots. The Java platform may support zero or more
@@ -245,15 +246,7 @@ public class File implements Serializable, Comparable<File> {
      * @return the array of file system roots.
      */
     public static File[] listRoots() {
-        byte[][] rootsList = rootsImpl();
-        if (rootsList == null) {
-            return new File[0];
-        }
-        File result[] = new File[rootsList.length];
-        for (int i = 0; i < rootsList.length; i++) {
-            result[i] = new File(Util.toString(rootsList[i]));
-        }
-        return result;
+        return new File[] { new File("/") };
     }
 
     /**
@@ -850,10 +843,12 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        return isHiddenImpl(properPath(true));
+        return getName().startsWith(".");
     }
 
-    private native boolean isHiddenImpl(byte[] filePath);
+    // BEGIN android-removed
+    // private native boolean isHiddenImpl(byte[] filePath);
+    // END android-removed
 
     // BEGIN android-changed
     private native boolean isReadableImpl(byte[] filePath);

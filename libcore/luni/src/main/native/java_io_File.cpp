@@ -38,36 +38,6 @@ enum {
     STAT_TYPE_FILE = 0x0004
 };
 
-/*
- * private static native byte[][] rootsImpl()
- *
- * Returns the linux root in an array of byte arrays
- */
-// TODO: why don't we just do this in Java?
-static jobject java_io_File_rootsImpl(JNIEnv* env, jclass clazz) {
-    // TODO: why two NUL bytes?
-    jbyte rootStrings[3];
-    rootStrings[0] = '/';
-    rootStrings[1] = '\0';
-    rootStrings[2] = '\0';
-
-    jbyteArray rootName = env->NewByteArray(3);
-    env->SetByteArrayRegion(rootName, 0, sizeof(rootStrings), rootStrings);
-
-    jclass arrayClass = env->FindClass("[B");
-    if (arrayClass == NULL) {
-        return NULL;
-    }
-
-    jobjectArray result = env->NewObjectArray(1, arrayClass, NULL);
-    if (result == NULL) {
-        return NULL;
-    }
-    env->SetObjectArrayElement(result, 0, rootName);
-    return result;
-}
-
-
 class Path {
 public:
     Path(JNIEnv* env, jbyteArray pathBytes)
@@ -195,23 +165,6 @@ static jboolean java_io_File_existsImpl(JNIEnv* env, jobject, jbyteArray pathByt
 
 static jboolean java_io_File_isFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
     return ((doStat(env, pathBytes) & STAT_TYPE_FILE) != 0);
-}
-
-// TODO: why isn't this done in Java instead?
-static jboolean java_io_File_isHiddenImpl(JNIEnv* env, jobject obj, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
-
-    if (!java_io_File_existsImpl(env, obj, pathBytes)) {
-        return JNI_FALSE;
-    }
-
-    for (int i = path.size() - 1; i >= 0; --i) {
-        if(path[i] == '.' && i > 0 && path[i - 1] == '/') {
-            return JNI_TRUE;
-        }
-    }
-
-    return JNI_FALSE;
 }
 
 static jboolean java_io_File_isReadableImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
@@ -407,14 +360,12 @@ static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject, jbyteArray oldPa
 
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "rootsImpl",          "()[[B",  (void*) java_io_File_rootsImpl },
     { "deleteDirImpl",      "([B)Z",  (void*) java_io_File_deleteDirImpl },
     { "deleteFileImpl",     "([B)Z",  (void*) java_io_File_deleteFileImpl },
     { "existsImpl",         "([B)Z",  (void*) java_io_File_existsImpl },
     { "getCanonImpl",       "([B)[B", (void*) java_io_File_getCanonImpl },
     { "isDirectoryImpl",    "([B)Z",  (void*) java_io_File_isDirectoryImpl },
     { "isFileImpl",         "([B)Z",  (void*) java_io_File_isFileImpl },
-    { "isHiddenImpl",       "([B)Z",  (void*) java_io_File_isHiddenImpl },
     // BEGIN android-changed
     { "isReadableImpl",     "([B)Z",  (void*) java_io_File_isReadableImpl },
     { "isWritableImpl",    "([B)Z",   (void*) java_io_File_isWritableImpl },
