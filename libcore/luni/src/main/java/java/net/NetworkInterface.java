@@ -19,6 +19,9 @@ package java.net;
 
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.harmony.luni.util.Msg;
@@ -50,18 +53,34 @@ public final class NetworkInterface extends Object {
 
     private int hashCode;
 
-    /**
-     * This {@code native} method returns the list of network interfaces
-     * supported by the system. An array is returned which is easier to generate
-     * and which can easily be converted into the required enumeration on the
-     * java side.
-     * 
-     * @return an array of zero or more {@code NetworkInterface} objects
-     * @throws SocketException
-     *             if an error occurs when getting network interface information
-     */
-    private static native NetworkInterface[] getNetworkInterfacesImpl()
-            throws SocketException;
+    // BEGIN android-changed: we pay this extra complexity on the Java side
+    // in return for vastly simpler native code.
+    private static native InterfaceAddress[] getInterfaceAddresses() throws SocketException;
+
+    private static NetworkInterface[] getNetworkInterfacesImpl() throws SocketException {
+        Map<String, NetworkInterface> networkInterfaces = new LinkedHashMap<String, NetworkInterface>();
+        for (InterfaceAddress ia : getInterfaceAddresses()) {
+            if (ia != null) { // The array may contain harmless null elements.
+                String name = ia.name;
+                NetworkInterface ni = networkInterfaces.get(name);
+                if (ni == null) {
+                    ni = new NetworkInterface(name, name, new InetAddress[] { ia.address }, ia.index);
+                    networkInterfaces.put(name, ni);
+                } else {
+                    ni.addInterfaceAddress(ia.address);
+                }
+            }
+        }
+        return networkInterfaces.values().toArray(new NetworkInterface[networkInterfaces.size()]);
+    }
+
+    private void addInterfaceAddress(InetAddress address) {
+        InetAddress[] newAddresses = new InetAddress[addresses.length + 1];
+        System.arraycopy(addresses, 0, newAddresses, 0, addresses.length);
+        newAddresses[addresses.length] = address;
+        addresses = newAddresses;
+    }
+    // END android-changed
 
     /**
      * This constructor is used by the native method in order to construct the
@@ -334,67 +353,66 @@ public final class NetworkInterface extends Object {
      *            the object to compare with this instance.
      * @return {@code true} if the specified object is equal to this {@code
      *         NetworkInterface}, {@code false} otherwise.
-     * @see #hashCode
+     * @see #hashCode()
      */
     @Override
     public boolean equals(Object obj) {
-        // just return true if it is the exact same object
+        // Return true if it is the exact same object.
         if (obj == this) {
             return true;
         }
 
-        if (obj instanceof NetworkInterface) {
-            /*
-             * make sure that some simple checks pass. If the name is not the
-             * same then we are sure it is not the same one. We don't check the
-             * hashcode as it is generated from the name which we check
-             */
-            NetworkInterface netif = (NetworkInterface) obj;
-
-            if (netif.getIndex() != interfaceIndex) {
-                return false;
-            }
-
-            if (!(name.equals("")) && (!netif.getName().equals(name))) { //$NON-NLS-1$
-                return false;
-            }
-
-            if ((name.equals("")) && (!netif.getName().equals(displayName))) { //$NON-NLS-1$
-                return false;
-            }
-
-            // now check that the internet addresses are the same
-            Enumeration<InetAddress> netifAddresses = netif.getInetAddresses();
-            Enumeration<InetAddress> localifAddresses = getInetAddresses();
-            if ((netifAddresses == null) && (localifAddresses != null)) {
-                return false;
-            }
-
-            if ((netifAddresses == null) && (localifAddresses == null)) {
-                // neither have any addresses so they are the same
-                return true;
-            }
-
-            if (netifAddresses != null) {
-                while (netifAddresses.hasMoreElements()
-                        && localifAddresses.hasMoreElements()) {
-                    if (!(localifAddresses.nextElement()).equals(netifAddresses
-                            .nextElement())) {
-                        return false;
-                    }
-                }
-                /*
-                 * now make sure that they had the same number of internet
-                 * addresses, if not they are not the same interface
-                 */
-                if (netifAddresses.hasMoreElements()
-                        || localifAddresses.hasMoreElements()) {
-                    return false;
-                }
-            }
-            return true;
+        // Ensure it is the right type.
+        if (!(obj instanceof NetworkInterface)) {
+            return false;
         }
-        return false;
+
+        /*
+         * Make sure that some simple checks pass. If the name is not the same
+         * then we are sure it is not the same one. We don't check the hashcode
+         * as it is generated from the name which we check
+         */
+        NetworkInterface netif = (NetworkInterface) obj;
+
+        if (netif.getIndex() != interfaceIndex) {
+            return false;
+        }
+
+        if (!(name.equals("")) && (!netif.getName().equals(name))) { //$NON-NLS-1$
+            return false;
+        }
+
+        if ((name.equals("")) && (!netif.getName().equals(displayName))) { //$NON-NLS-1$
+            return false;
+        }
+
+        // Now check that the collection of internet addresses are equal.
+        Enumeration<InetAddress> netifAddresses = netif.getInetAddresses();
+        Enumeration<InetAddress> localifAddresses = getInetAddresses();
+
+        // Check for both null (same), or one null (not same).
+        if (netifAddresses == null) {
+            return localifAddresses == null;
+        }
+        if (localifAddresses == null) {
+            return false;
+        }
+
+        // Both are not null, check InetAddress elements.
+        while (netifAddresses.hasMoreElements()
+                && localifAddresses.hasMoreElements()) {
+            if (!(localifAddresses.nextElement()).equals(
+                    netifAddresses.nextElement())) {
+                return false;
+            }
+        }
+
+        /*
+         * Now make sure that they had the same number of addresses, if not they
+         * are not the same interface.
+         */
+        return !netifAddresses.hasMoreElements()
+                && !localifAddresses.hasMoreElements();
     }
 
     /**
@@ -425,6 +443,10 @@ public final class NetworkInterface extends Object {
         string.append(name);
         string.append("]["); //$NON-NLS-1$
         string.append(displayName);
+        // BEGIN android-added: the RI shows this, and it's useful for IPv6 users.
+        string.append("]["); //$NON-NLS-1$
+        string.append(interfaceIndex);
+        // END android-added
         string.append("]"); //$NON-NLS-1$
 
         /*
