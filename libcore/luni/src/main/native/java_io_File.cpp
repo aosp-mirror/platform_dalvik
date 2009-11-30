@@ -31,12 +31,10 @@
 #include <dirent.h>
 #include <errno.h>
 
-/* these were copied from java.io.File */
-enum {
-    STAT_TYPE_EXISTS = 0x0001,
-    STAT_TYPE_DIR = 0x0002,
-    STAT_TYPE_FILE = 0x0004
-};
+// BEGIN android-note: this file has been extensively rewritten to
+// remove fixed-length buffers, buffer overruns, duplication, and
+// poor choices of where to divide the work between Java and native
+// code.
 
 class Path {
 public:
@@ -44,12 +42,14 @@ public:
     : mByteCount(env->GetArrayLength(pathBytes)), mBytes(mByteCount + 1)
     {
         // The Java byte[] doesn't contain a trailing NUL.
+        // TODO: the Java byte[] should contain a trailing NUL.
         jbyte* dst = reinterpret_cast<jbyte*>(&mBytes[0]);
         env->GetByteArrayRegion(pathBytes, 0, mByteCount, dst);
         mBytes[mByteCount] = '\0';
         // This is an awful mistake, because '\' is a perfectly acceptable
         // character on Linux/Android. But we've shipped so many versions
         // that behaved like this, I'm too scared to change it.
+        // TODO: if we're going to do this, we should do it once, in Java.
         for (char* p = &mBytes[0]; *p; ++p) {
             if (*p == '\\') {
                 *p = '/';
@@ -67,7 +67,6 @@ public:
     }
 
     // Element access.
-    char& operator[](size_t n) { return mBytes[n]; }
     const char& operator[](size_t n) const { return mBytes[n]; }
 
 private:
@@ -87,25 +86,19 @@ static jbyteArray java_io_File_getCanonImpl(JNIEnv* env, jobject, jbyteArray pat
     return result;
 }
 
-// TODO: rewrite File.delete so we just have one native method (and don't need to make two native method invocations per file).
-static jboolean java_io_File_deleteFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+static jboolean java_io_File_deleteImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
     Path path(env, pathBytes);
-    int rc = unlink(&path[0]);
-    return (rc == 0) ? JNI_TRUE : JNI_FALSE;
+    return (remove(&path[0]) == 0);
 }
 
-// TODO: rewrite File.delete so we just have one native method (and don't need to make two native method invocations per file).
-static jboolean java_io_File_deleteDirImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+static bool doStat(JNIEnv* env, jbyteArray pathBytes, struct stat& sb) {
     Path path(env, pathBytes);
-    int rc = rmdir(&path[0]);
-    return (rc == 0) ? JNI_TRUE : JNI_FALSE;
+    return (stat(&path[0], &sb) == 0);
 }
 
 static jlong java_io_File_lengthImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
     struct stat sb;
-    int rc = stat(&path[0], &sb);
-    if (rc == -1) {
+    if (!doStat(env, pathBytes, sb)) {
         // We must return 0 for files that don't exist.
         // TODO: shouldn't we throw an IOException for ELOOP or EACCES?
         return 0;
@@ -128,43 +121,26 @@ static jlong java_io_File_lengthImpl(JNIEnv* env, jobject, jbyteArray pathBytes)
 }
 
 static jlong java_io_File_lastModifiedImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
     struct stat sb;
-    int rc = stat(&path[0], &sb);
-    if (rc == -1) {
+    if (!doStat(env, pathBytes, sb)) {
         return 0;
     }
     return static_cast<jlong>(sb.st_mtime) * 1000L;
 }
 
-// Returns a bitmask that tells whether the path exists,
-// and whether it points to a regular file or a directory.
-static jint doStat(JNIEnv* env, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
-    struct stat sb;
-    int rc = stat(&path[0], &sb);
-    if (rc == -1) {
-        return 0;
-    }
-    jint type = STAT_TYPE_EXISTS;
-    if (S_ISDIR(sb.st_mode)) {
-        type |= STAT_TYPE_DIR;
-    } else if (S_ISREG(sb.st_mode)) {
-        type |= STAT_TYPE_FILE;
-    }
-    return type;
-}
-
 static jboolean java_io_File_isDirectoryImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    return ((doStat(env, pathBytes) & STAT_TYPE_DIR) != 0);
-}
-
-static jboolean java_io_File_existsImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    return ((doStat(env, pathBytes) & STAT_TYPE_EXISTS) != 0);
+    struct stat sb;
+    return (doStat(env, pathBytes, sb) && S_ISDIR(sb.st_mode));
 }
 
 static jboolean java_io_File_isFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    return ((doStat(env, pathBytes) & STAT_TYPE_FILE) != 0);
+    struct stat sb;
+    return (doStat(env, pathBytes, sb) && S_ISREG(sb.st_mode));
+}
+
+static jboolean java_io_File_existsImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    Path path(env, pathBytes);
+    return (access(&path[0], F_OK) == 0);
 }
 
 static jboolean java_io_File_isReadableImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
@@ -360,16 +336,13 @@ static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject, jbyteArray oldPa
 
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "deleteDirImpl",      "([B)Z",  (void*) java_io_File_deleteDirImpl },
-    { "deleteFileImpl",     "([B)Z",  (void*) java_io_File_deleteFileImpl },
+    { "deleteImpl",         "([B)Z",  (void*) java_io_File_deleteImpl },
     { "existsImpl",         "([B)Z",  (void*) java_io_File_existsImpl },
     { "getCanonImpl",       "([B)[B", (void*) java_io_File_getCanonImpl },
     { "isDirectoryImpl",    "([B)Z",  (void*) java_io_File_isDirectoryImpl },
     { "isFileImpl",         "([B)Z",  (void*) java_io_File_isFileImpl },
-    // BEGIN android-changed
     { "isReadableImpl",     "([B)Z",  (void*) java_io_File_isReadableImpl },
-    { "isWritableImpl",    "([B)Z",   (void*) java_io_File_isWritableImpl },
-    // END android-changed
+    { "isWritableImpl",     "([B)Z",  (void*) java_io_File_isWritableImpl },
     { "getLinkImpl",        "([B)[B", (void*) java_io_File_getLinkImpl },
     { "lastModifiedImpl",   "([B)J",  (void*) java_io_File_lastModifiedImpl },
     { "setReadOnlyImpl",    "([B)Z",  (void*) java_io_File_setReadOnlyImpl },

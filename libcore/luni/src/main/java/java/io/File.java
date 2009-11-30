@@ -246,7 +246,9 @@ public class File implements Serializable, Comparable<File> {
      * @return the array of file system roots.
      */
     public static File[] listRoots() {
+        // BEGIN android-only
         return new File[] { new File("/") };
+        // END android-only
     }
 
     /**
@@ -314,9 +316,8 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        byte[] pp = properPath(true);
         // BEGIN android-changed
-        return exists() && isReadableImpl(pp);
+        return isReadableImpl(properPath(true));
         // END android-changed
     }
 
@@ -330,18 +331,15 @@ public class File implements Serializable, Comparable<File> {
      *             write request.
      */
     public boolean canWrite() {
+        if (path.length() == 0) {
+            return false;
+        }
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkWrite(path);
         }
-
-        // Cannot use exists() since that does an unwanted read-check.
-        boolean exists = false;
-        if (path.length() > 0) {
-            exists = existsImpl(properPath(true));
-        }
         // BEGIN android-changed
-        return exists && isWritableImpl(properPath(true));
+        return isWritableImpl(properPath(true));
         // END android-changed
     }
 
@@ -372,20 +370,19 @@ public class File implements Serializable, Comparable<File> {
      * @see java.lang.SecurityManager#checkDelete
      */
     public boolean delete() {
+        if (path.length() == 0) {
+            return false;
+        }
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkDelete(path);
         }
-        byte[] propPath = properPath(true);
-        if ((path.length() != 0) && isDirectoryImpl(propPath)) {
-            return deleteDirImpl(propPath);
-        }
-        return deleteFileImpl(propPath);
+        return deleteImpl(properPath(true));
     }
 
-    private native boolean deleteDirImpl(byte[] filePath);
-
-    private native boolean deleteFileImpl(byte[] filePath);
+    // BEGIN android-changed
+    private native boolean deleteImpl(byte[] filePath);
+    // END android-changed
 
     /**
      * Schedules this file to be automatically deleted once the virtual machine
@@ -843,7 +840,9 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
+        // BEGIN android-only
         return getName().startsWith(".");
+        // END android-only
     }
 
     // BEGIN android-removed
@@ -869,16 +868,14 @@ public class File implements Serializable, Comparable<File> {
      *             access to this file.
      */
     public long lastModified() {
+        if (path.length() == 0) {
+            return 0;
+        }
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkRead(path);
         }
-        long result = lastModifiedImpl(properPath(true));
-        /* Temporary code to handle both return cases until natives fixed */
-        if (result == -1 || result == 0) {
-            return 0;
-        }
-        return result;
+        return lastModifiedImpl(properPath(true));
     }
 
     private native long lastModifiedImpl(byte[] filePath);
@@ -898,6 +895,9 @@ public class File implements Serializable, Comparable<File> {
      *             access to this file.
      */
     public boolean setLastModified(long time) {
+        if (path.length() == 0) {
+            return false;
+        }
         if (time < 0) {
             throw new IllegalArgumentException(Msg.getString("K006a")); //$NON-NLS-1$
         }
@@ -905,7 +905,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        return (setLastModifiedImpl(properPath(true), time));
+        return setLastModifiedImpl(properPath(true), time);
     }
 
     private native boolean setLastModifiedImpl(byte[] path, long time);
@@ -921,11 +921,14 @@ public class File implements Serializable, Comparable<File> {
      *             access to this file.
      */
     public boolean setReadOnly() {
+        if (path.length() == 0) {
+            return false;
+        }
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkWrite(path);
         }
-        return (setReadOnlyImpl(properPath(true)));
+        return setReadOnlyImpl(properPath(true));
     }
 
     private native boolean setReadOnlyImpl(byte[] path);
@@ -1398,6 +1401,9 @@ public class File implements Serializable, Comparable<File> {
      *             access for this file or the {@code dest} file.
      */
     public boolean renameTo(java.io.File dest) {
+        if (path.length() == 0 || dest.path.length() == 0) {
+            return false;
+        }
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkWrite(path);

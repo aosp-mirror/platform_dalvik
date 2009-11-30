@@ -16,20 +16,17 @@
 
 package java.io;
 
+import java.util.UUID;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class FileTest extends junit.framework.TestCase {
     private static File createTemporaryDirectory() throws Exception {
         String base = System.getProperty("java.io.tmpdir");
-        int id = 0;
-        while (true) {
-            File directory = new File(base, Integer.toString(id));
-            if (directory.mkdirs()) {
-                return directory;
-            }
-            ++id;
-        }
+        File directory = new File(base, UUID.randomUUID().toString());
+        assertTrue(directory.mkdirs());
+        return directory;
     }
     
     private static String longString(int n) {
@@ -76,4 +73,46 @@ public class FileTest extends junit.framework.TestCase {
     
     // TODO: File.list is a special case too, but I haven't fixed it yet, and the new code,
     // like the old code, will die of a native buffer overrun if we exercise it.
+
+    public void test_emptyFilename() throws Exception {
+        // The behavior of the empty filename is an odd mixture.
+        File f = new File("");
+        // Mostly it behaves like an invalid path...
+        assertFalse(f.canRead());
+        assertFalse(f.canWrite());
+        try {
+            f.createNewFile();
+            fail("expected IOException");
+        } catch (IOException expected) {
+        }
+        assertFalse(f.delete());
+        f.deleteOnExit();
+        assertFalse(f.exists());
+        assertEquals("", f.getName());
+        assertEquals(null, f.getParent());
+        assertEquals(null, f.getParentFile());
+        assertEquals("", f.getPath());
+        assertFalse(f.isAbsolute());
+        assertFalse(f.isDirectory());
+        assertFalse(f.isFile());
+        assertFalse(f.isHidden());
+        assertEquals(0, f.lastModified());
+        assertEquals(0, f.length());
+        assertEquals(null, f.list());
+        assertEquals(null, f.list(null));
+        assertEquals(null, f.listFiles());
+        assertEquals(null, f.listFiles((FileFilter) null));
+        assertEquals(null, f.listFiles((FilenameFilter) null));
+        assertFalse(f.mkdir());
+        assertFalse(f.mkdirs());
+        assertFalse(f.renameTo(f));
+        assertFalse(f.setLastModified(123));
+        assertFalse(f.setReadOnly());
+        // ...but sometimes it behaves like "user.dir".
+        String cwd = System.getProperty("user.dir");
+        assertEquals(new File(cwd), f.getAbsoluteFile());
+        assertEquals(cwd, f.getAbsolutePath());
+        assertEquals(new File(cwd), f.getCanonicalFile());
+        assertEquals(cwd, f.getCanonicalPath());
+    }
 }
