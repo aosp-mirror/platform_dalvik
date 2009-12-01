@@ -17,10 +17,13 @@
 
 package org.apache.harmony.luni.net;
 
+import java.lang.reflect.Field;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Enumeration;
 
 /**
@@ -38,8 +41,24 @@ final class GenericIPMreq {
     @SuppressWarnings("unused")
     private boolean isIPV6Address;
 
-    @SuppressWarnings("unused")
+    // BEGIN android-changed: we need interfaceIdx.
     private int interfaceIdx;
+
+    private static final Field networkInterfaceIndexField = getNetworkInterfaceField();
+    private static Field getNetworkInterfaceField() {
+        return AccessController.doPrivileged(new PrivilegedAction<Field>() {
+            public Field run() {
+                try {
+                    Field field = NetworkInterface.class.getDeclaredField("interfaceIndex");
+                    field.setAccessible(true);
+                    return field;
+                } catch (NoSuchFieldException e) {
+                    throw new AssertionError(e);
+                }
+            }
+        });
+    }
+    // END android-changed
 
     /**
      * This constructor is used to create an instance of the object
@@ -64,8 +83,13 @@ final class GenericIPMreq {
     GenericIPMreq(InetAddress addr, NetworkInterface netInterface) {
         multiaddr = addr;
         if (null != netInterface) {
-            // TODO  check if necessary
-            //interfaceIdx = netInterface.getIndex();
+            // BEGIN android-changed: we need interfaceIdx.
+            try {
+                interfaceIdx = networkInterfaceIndexField.getInt(netInterface);
+            } catch (IllegalAccessException ex) {
+                throw new AssertionError(ex);
+            }
+            // END android-changed
 
             /*
              * here we need to get the first IPV4 address as we only use it if

@@ -142,7 +142,7 @@ ifeq ($(core_native_dirs),)
 endif
 
 # Set up the default state.
-LOCAL_C_INCLUDES += $(JNI_H_INCLUDE)
+LOCAL_C_INCLUDES += dalvik/libcore/include $(JNI_H_INCLUDE)
 LOCAL_MODULE := $(core_magic_local_target)
 core_src_files :=
 

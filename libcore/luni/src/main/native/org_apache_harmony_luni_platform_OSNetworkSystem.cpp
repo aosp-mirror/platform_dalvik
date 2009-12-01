@@ -308,25 +308,17 @@ static bool isJavaMappedAddress(jbyte *addressBytes) {
     return !memcmp(mappedBytes, addressBytes, sizeof(mappedBytes));
 }
 
-/**
- * Converts a native address structure to an InetAddress object.
- * Throws a NullPointerException or an IOException in case of
- * error. This is signaled by a return value of -1. The normal
- * return value is 0.
- *
- * @param sockaddress the sockaddr_storage structure to convert
- *
- * @return a jobject representing an InetAddress
- */
-static jobject socketAddressToInetAddress(JNIEnv *env,
-        struct sockaddr_storage *sockaddress) {
+jobject byteArrayToInetAddress(JNIEnv* env, jbyteArray byteArray) {
+    return env->CallStaticObjectMethod(gCachedFields.iaddr_class,
+            gCachedFields.iaddr_getbyaddress, byteArray);
+}
+
+jobject socketAddressToInetAddress(JNIEnv *env, sockaddr_storage* sockaddress) {
 
     jbyteArray byteArray = socketAddressToByteArray(env, sockaddress);
     if (byteArray == NULL)  // Exception has already been thrown.
         return NULL;
-
-    return env->CallStaticObjectMethod(gCachedFields.iaddr_class,
-            gCachedFields.iaddr_getbyaddress, byteArray);
+    return byteArrayToInetAddress(env, byteArray);
 }
 
 /**
@@ -3102,8 +3094,11 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
                 throwSocketException(env, convertError(errno));
                 return NULL;
             }
-            // This option is IPv4-only.
-            sockVal.ss_family = AF_INET;
+            if (sockVal.ss_family != AF_INET) {
+                // Java expects an AF_INET INADDR_ANY, but Linux just returns AF_UNSPEC.
+                jbyteArray inAddrAny = env->NewByteArray(4); // { 0, 0, 0, 0 }
+                return byteArrayToInetAddress(env, inAddrAny);
+            }
             return socketAddressToInetAddress(env, &sockVal);
         }
         case JAVASOCKOPT_IP_MULTICAST_IF2: {
