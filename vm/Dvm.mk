@@ -15,8 +15,9 @@
 #
 # Common definitions for host or target builds of libdvm.
 #
-# If you enable or disable optional features here,
-# rebuild the VM with "make clean-libdvm && make -j4 libdvm".
+# If you enable or disable optional features here, make sure you do
+# a "clean" build -- not everything depends on Dalvik.h.  (See Android.mk
+# for the exact command.)
 #
 
 

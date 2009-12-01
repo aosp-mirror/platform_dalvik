@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 #
 # Android.mk for Dalvik VM.
 #
@@ -20,8 +19,11 @@
 # swath of common definitions are factored out into a separate file to
 # minimize duplication.
 #
-# Also, if you enable or disable optional features here (or Dvm.mk),
-# rebuild the VM with "make clean-libdvm && make -j4 libdvm".
+# If you enable or disable optional features here (or in Dvm.mk),
+# rebuild the VM with:
+#
+#  make clean-libdvm clean-libdvm_assert clean-libdvm_sv clean-libdvm_interp
+#  make -j4 libdvm
 #
 
 LOCAL_PATH:= $(call my-dir)
