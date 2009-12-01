@@ -1091,6 +1091,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
     int retReg = r0;
     void *callTgt;
     RegLocation rlResult;
+    bool shiftOp = false;
 
     /* TODO - find proper .h file to declare these */
     int __aeabi_idivmod(int op1, int op2);
@@ -1146,14 +1147,17 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
             break;
         case OP_SHL_INT:
         case OP_SHL_INT_2ADDR:
+            shiftOp = true;
             op = kOpLsl;
             break;
         case OP_SHR_INT:
         case OP_SHR_INT_2ADDR:
+            shiftOp = true;
             op = kOpAsr;
             break;
         case OP_USHR_INT:
         case OP_USHR_INT_2ADDR:
+            shiftOp = true;
             op = kOpLsr;
             break;
         default:
@@ -1169,9 +1173,18 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
                      rlSrc1.lowReg);
         } else {
             rlSrc2 = loadValue(cUnit, rlSrc2, kCoreReg);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
-            opRegRegReg(cUnit, op, rlResult.lowReg,
-                        rlSrc1.lowReg, rlSrc2.lowReg);
+            if (shiftOp) {
+                int tReg = allocTemp(cUnit);
+                opRegRegImm(cUnit, kOpAnd, tReg, rlSrc2.lowReg, 31);
+                rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+                opRegRegReg(cUnit, op, rlResult.lowReg,
+                            rlSrc1.lowReg, tReg);
+                freeTemp(cUnit, tReg);
+            } else {
+                rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+                opRegRegReg(cUnit, op, rlResult.lowReg,
+                            rlSrc1.lowReg, rlSrc2.lowReg);
+            }
         }
         storeValue(cUnit, rlDest, rlResult);
     } else {
@@ -2315,14 +2328,17 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             op = kOpXor;
             break;
         case OP_SHL_INT_LIT8:
+            lit &= 31;
             shiftOp = true;
             op = kOpLsl;
             break;
         case OP_SHR_INT_LIT8:
+            lit &= 31;
             shiftOp = true;
             op = kOpAsr;
             break;
         case OP_USHR_INT_LIT8:
+            lit &= 31;
             shiftOp = true;
             op = kOpLsr;
             break;
