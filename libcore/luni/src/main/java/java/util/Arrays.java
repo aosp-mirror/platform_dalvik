@@ -185,22 +185,21 @@ public class Arrays {
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(byte[] array, byte value) {
-        int low = 0, mid = -1, high = array.length - 1;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if (value > array[mid]) {
-                low = mid + 1;
-            } else if (value == array[mid]) {
-                return mid;
-            } else {
-                high = mid - 1;
-            }
-        }
-        if (mid < 0) {
-            return -1;
-        }
+         int lo = 0;
+         int hi = array.length - 1;
 
-        return -mid - (value < array[mid] ? 1 : 2);
+         while (lo <= hi) {
+             int mid = (lo + hi) >>> 1;
+             byte midVal = array[mid];
+
+             if (midVal < value)
+                 lo = mid + 1;
+             else if (midVal > value)
+                 hi = mid - 1;
+             else
+                 return mid;  // value found
+         }
+         return ~lo;  // value not present
     }
 
     /**
@@ -217,21 +216,21 @@ public class Arrays {
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(char[] array, char value) {
-        int low = 0, mid = -1, high = array.length - 1;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if (value > array[mid]) {
-                low = mid + 1;
-            } else if (value == array[mid]) {
-                return mid;
-            } else {
-                high = mid - 1;
-            }
-        }
-        if (mid < 0) {
-            return -1;
-        }
-        return -mid - (value < array[mid] ? 1 : 2);
+         int lo = 0;
+         int hi = array.length - 1;
+
+         while (lo <= hi) {
+             int mid = (lo + hi) >>> 1;
+             char midVal = array[mid];
+
+             if (midVal < value)
+                 lo = mid + 1;
+             else if (midVal > value)
+                 hi = mid - 1;
+             else
+                 return mid;  // value found
+         }
+         return ~lo;  // value not present
     }
 
     /**
@@ -248,22 +247,32 @@ public class Arrays {
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(double[] array, double value) {
-        long longBits = Double.doubleToLongBits(value);
-        int low = 0, mid = -1, high = array.length - 1;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if (lessThan(array[mid], value)) {
-                low = mid + 1;
-            } else if (longBits == Double.doubleToLongBits(array[mid])) {
-                return mid;
-            } else {
-                high = mid - 1;
+        int lo = 0;
+        int hi = array.length - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            double midVal = array[mid];
+
+            if (midVal < value) {
+                lo = mid + 1;
+            } else if (midVal > value) {
+                hi = mid - 1;
+            } else if (midVal != 0 && midVal == value) {
+                return mid;  // value found
+            } else { // Either midVal and value are == 0 or at least one is NaN
+                long midValBits = Double.doubleToLongBits(midVal);
+                long valueBits  = Double.doubleToLongBits(value);
+
+                if (midValBits < valueBits)
+                    lo = mid + 1; // (-0.0, 0.0) or (not NaN, NaN); midVal < val
+                else if (midValBits > valueBits)
+                    hi = mid - 1; // (0.0, -0.0) or (NaN, not NaN); midVal > val
+                else
+                    return mid; // bit patterns are equal; value found
             }
         }
-        if (mid < 0) {
-            return -1;
-        }
-        return -mid - (lessThan(value, array[mid]) ? 1 : 2);
+        return ~lo;  // value not present
     }
 
     /**
@@ -280,22 +289,32 @@ public class Arrays {
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(float[] array, float value) {
-        int intBits = Float.floatToIntBits(value);
-        int low = 0, mid = -1, high = array.length - 1;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if (lessThan(array[mid], value)) {
-                low = mid + 1;
-            } else if (intBits == Float.floatToIntBits(array[mid])) {
-                return mid;
-            } else {
-                high = mid - 1;
+        int lo = 0;
+        int hi = array.length - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            float midVal = array[mid];
+
+            if (midVal < value) {
+                lo = mid + 1;
+            } else if (midVal > value) {
+                hi = mid - 1;
+            } else if (midVal != 0 && midVal == value) {
+                return mid;  // value found
+            } else { // Either midVal and value are == 0 or at least one is NaN
+                int midValBits = Float.floatToIntBits(midVal);
+                int valueBits  = Float.floatToIntBits(value);
+
+                if (midValBits < valueBits)
+                    lo = mid + 1; // (-0.0, 0.0) or (not NaN, NaN); midVal < val
+                else if (midValBits > valueBits)
+                    hi = mid - 1; // (0.0, -0.0) or (NaN, not NaN); midVal > val
+                else
+                    return mid; // bit patterns are equal; value found
             }
         }
-        if (mid < 0) {
-            return -1;
-        }
-        return -mid - (lessThan(value, array[mid]) ? 1 : 2);
+        return ~lo;  // value not present
     }
 
     /**
@@ -311,23 +330,23 @@ public class Arrays {
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
      */
-    public static int binarySearch(int[] array, int value) {
-        int low = 0, mid = -1, high = array.length - 1;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if (value > array[mid]) {
-                low = mid + 1;
-            } else if (value == array[mid]) {
-                return mid;
-            } else {
-                high = mid - 1;
-            }
-        }
-        if (mid < 0) {
-            return -1;
-        }
-        return -mid - (value < array[mid] ? 1 : 2);
-    }
+ public static int binarySearch(int[] array, int value) {
+         int lo = 0;
+         int hi = array.length - 1;
+
+         while (lo <= hi) {
+             int mid = (lo + hi) >>> 1;
+             int midVal = array[mid];
+
+             if (midVal < value)
+                 lo = mid + 1;
+             else if (midVal > value)
+                 hi = mid - 1;
+             else
+                 return mid;  // value found
+         }
+         return ~lo;  // value not present
+     }
 
     /**
      * Performs a binary search for the specified element in the specified
@@ -343,21 +362,21 @@ public class Arrays {
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(long[] array, long value) {
-        int low = 0, mid = -1, high = array.length - 1;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if (value > array[mid]) {
-                low = mid + 1;
-            } else if (value == array[mid]) {
-                return mid;
-            } else {
-                high = mid - 1;
-            }
-        }
-        if (mid < 0) {
-            return -1;
-        }
-        return -mid - (value < array[mid] ? 1 : 2);
+         int lo = 0;
+         int hi = array.length - 1;
+
+         while (lo <= hi) {
+             int mid = (lo + hi) >>> 1;
+             long midVal = array[mid];
+
+             if (midVal < value)
+                 lo = mid + 1;
+             else if (midVal > value)
+                 hi = mid - 1;
+             else
+                 return mid;  // value found
+         }
+         return ~lo;  // value not present
     }
 
     /**
@@ -368,7 +387,7 @@ public class Arrays {
      *
      * @param array
      *            the sorted {@code Object} array to search.
-     * @param object
+     * @param value
      *            the {@code Object} element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
@@ -376,24 +395,23 @@ public class Arrays {
      *                if an element in the array or the search element does not
      *                implement {@code Comparable}, or cannot be compared to each other.
      */
-    @SuppressWarnings("unchecked")
-    public static int binarySearch(Object[] array, Object object) {
-        if (array.length == 0) {
-            return -1;
-        }
+    public static int binarySearch(Object[] array, Object value) {
+         int lo = 0;
+         int hi = array.length - 1;
 
-        int low = 0, mid = 0, high = array.length - 1, result = 0;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if ((result = ((Comparable<Object>)array[mid]).compareTo(object)) < 0){
-                low = mid + 1;
-            } else if (result == 0) {
-                return mid;
-            } else {
-                high = mid - 1;
-            }
-        }
-        return -mid - (result >= 0 ? 1 : 2);
+         while (lo <= hi) {
+             int mid = (lo + hi) >>> 1;
+             @SuppressWarnings("unchecked")
+             int midValCmp = ((Comparable) array[mid]).compareTo(value);
+
+             if (midValCmp < 0)
+                 lo = mid + 1;
+             else if (midValCmp > 0)
+                 hi = mid - 1;
+             else
+                 return mid;  // value found
+         }
+         return ~lo;  // value not present
     }
 
     /**
@@ -405,7 +423,7 @@ public class Arrays {
      *
      * @param array
      *            the sorted array to search
-     * @param object
+     * @param value
      *            the element to find
      * @param comparator
      *            the {@code Comparator} sued to compare the elements.
@@ -415,24 +433,26 @@ public class Arrays {
      *                if an element in the array cannot be compared to the search element
      *                using the {@code Comparator}.
      */
-    public static <T> int binarySearch(T[] array, T object,
+    public static <T> int binarySearch(T[] array, T value,
             Comparator<? super T> comparator) {
-        if (comparator == null) {
-            return binarySearch(array, object);
-        }
+        if (comparator == null)
+            return binarySearch(array, value);
 
-        int low = 0, mid = 0, high = array.length - 1, result = 0;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if ((result = comparator.compare(array[mid], object)) < 0) {
-                low = mid + 1;
-            } else if (result == 0) {
-                return mid;
-            } else {
-                high = mid - 1;
-            }
+        int lo = 0;
+        int hi = array.length - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            int midValCmp = comparator.compare(array[mid], value);
+
+            if (midValCmp < 0)
+                lo = mid + 1;
+            else if (midValCmp > 0)
+                hi = mid - 1;
+            else
+                return mid;  // value found
         }
-        return -mid - (result >= 0 ? 1 : 2);
+        return ~lo;  // value not present
     }
 
     /**
@@ -449,21 +469,21 @@ public class Arrays {
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(short[] array, short value) {
-        int low = 0, mid = -1, high = array.length - 1;
-        while (low <= high) {
-            mid = (low + high) >>> 1;
-            if (value > array[mid]) {
-                low = mid + 1;
-            } else if (value == array[mid]) {
-                return mid;
-            } else {
-                high = mid - 1;
-            }
-        }
-        if (mid < 0) {
-            return -1;
-        }
-        return -mid - (value < array[mid] ? 1 : 2);
+         int lo = 0;
+         int hi = array.length - 1;
+
+         while (lo <= hi) {
+             int mid = (lo + hi) >>> 1;
+             short midVal = array[mid];
+
+             if (midVal < value)
+                 lo = mid + 1;
+             else if (midVal > value)
+                 hi = mid - 1;
+             else
+                 return mid;  // value found
+         }
+         return ~lo;  // value not present
     }
 
     /**
@@ -1501,103 +1521,6 @@ public class Arrays {
         return equals((short[]) e1, (short[]) e2);
     }
 
-    private static boolean lessThan(double double1, double double2) {
-        // A slightly specialized version of
-        // Double.compare(double1, double2) < 0.
-
-        // Non-zero and non-NaN checking.
-        if (double1 < double2) {
-            return true;
-        }
-        if (double1 > double2) {
-            return false;
-        }
-        if (double1 == double2 && 0.0d != double1) {
-            return false;
-        }
-
-        // NaNs are equal to other NaNs and larger than any other double.
-        if (Double.isNaN(double1)) {
-            return false;
-        } else if (Double.isNaN(double2)) {
-            return true;
-        }
-
-        // Deal with +0.0 and -0.0.
-        long d1 = Double.doubleToRawLongBits(double1);
-        long d2 = Double.doubleToRawLongBits(double2);
-        return d1 < d2;
-    }
-
-    private static boolean lessThan(float float1, float float2) {
-        // A slightly specialized version of Float.compare(float1, float2) < 0.
-
-        // Non-zero and non-NaN checking.
-        if (float1 < float2) {
-            return true;
-        }
-        if (float1 > float2) {
-            return false;
-        }
-        if (float1 == float2 && 0.0f != float1) {
-            return false;
-        }
-
-        // NaNs are equal to other NaNs and larger than any other float
-        if (Float.isNaN(float1)) {
-            return false;
-        } else if (Float.isNaN(float2)) {
-            return true;
-        }
-
-        // Deal with +0.0 and -0.0
-        int f1 = Float.floatToRawIntBits(float1);
-        int f2 = Float.floatToRawIntBits(float2);
-        return f1 < f2;
-    }
-
-    private static int med3(byte[] array, int a, int b, int c) {
-        byte x = array[a], y = array[b], z = array[c];
-        return x < y ? (y < z ? b : (x < z ? c : a)) : (y > z ? b : (x > z ? c
-                : a));
-    }
-
-    private static int med3(char[] array, int a, int b, int c) {
-        char x = array[a], y = array[b], z = array[c];
-        return x < y ? (y < z ? b : (x < z ? c : a)) : (y > z ? b : (x > z ? c
-                : a));
-    }
-
-    private static int med3(double[] array, int a, int b, int c) {
-        double x = array[a], y = array[b], z = array[c];
-        return lessThan(x, y) ? (lessThan(y, z) ? b : (lessThan(x, z) ? c : a))
-                : (lessThan(z, y) ? b : (lessThan(z, x) ? c : a));
-    }
-
-    private static int med3(float[] array, int a, int b, int c) {
-        float x = array[a], y = array[b], z = array[c];
-        return lessThan(x, y) ? (lessThan(y, z) ? b : (lessThan(x, z) ? c : a))
-                : (lessThan(z, y) ? b : (lessThan(z, x) ? c : a));
-    }
-
-    private static int med3(int[] array, int a, int b, int c) {
-        int x = array[a], y = array[b], z = array[c];
-        return x < y ? (y < z ? b : (x < z ? c : a)) : (y > z ? b : (x > z ? c
-                : a));
-    }
-
-    private static int med3(long[] array, int a, int b, int c) {
-        long x = array[a], y = array[b], z = array[c];
-        return x < y ? (y < z ? b : (x < z ? c : a)) : (y > z ? b : (x > z ? c
-                : a));
-    }
-
-    private static int med3(short[] array, int a, int b, int c) {
-        short x = array[a], y = array[b], z = array[c];
-        return x < y ? (y < z ? b : (x < z ? c : a)) : (y > z ? b : (x > z ? c
-                : a));
-    }
-
     /**
      * Sorts the specified array in ascending numerical order.
      *
@@ -1630,7 +1553,7 @@ public class Arrays {
         if (start > end) {
             // K0033=Start index ({0}) is greater than end index ({1})
             throw new IllegalArgumentException(Msg.getString("K0033", //$NON-NLS-1$
-                    Integer.valueOf(start), Integer.valueOf(end)));
+                    start, end));
         }
         if (start < 0) {
             // K0052=Array index out of range\: {0}
