@@ -471,10 +471,16 @@ public class LocaleTest extends junit.framework.TestCase {
         // Assumes always at least 131 ISOlanguages...
         String[] isoLang = Locale.getISOLanguages();
         int length = isoLang.length;
-        assertTrue("Random element in wrong format.", (isoLang[length / 2]
-                .length() == 2)
-                && isoLang[length / 2].toLowerCase()
-                        .equals(isoLang[length / 2]));
+
+        // BEGIN android-changed
+        // Language codes are 2- and 3-letter, with preference given 
+        // to 2-letter codes where possible. 3-letter codes are used
+        // when lack a 2-letter equivalent.
+        assertTrue("Random element in wrong format.", 
+                   (isoLang[length / 2].length() == 2 || isoLang[length / 2].length() == 3)
+                   && isoLang[length / 2].toLowerCase().equals(isoLang[length / 2]));
+        // END android-changed
+
         assertTrue("Wrong number of ISOLanguages.", length > 130);
     }
 

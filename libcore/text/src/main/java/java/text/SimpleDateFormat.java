@@ -802,11 +802,17 @@ public class SimpleDateFormat extends DateFormat {
             case YEAR_FIELD:
                 dateFormatField = Field.YEAR;
                 int year = calendar.get(Calendar.YEAR);
-                if (count < 4) {
+                // BEGIN android-changed
+                // According to Unicode CLDR TR35(http://unicode.org/reports/tr35/) :
+                // If date pattern is "yy", display the last 2 digits of year.
+                // Otherwise, display the actual year with minimum digit count.
+                // Therefore, if the pattern is "y", the display value for year 1234  is '1234' not '34'.
+                if (count == 2) {
                     appendNumber(buffer, 2, year %= 100);
                 } else {
                     appendNumber(buffer, count, year);
                 }
+               // END android-changed
                 break;
             case MONTH_FIELD:
                 dateFormatField = Field.MONTH;
