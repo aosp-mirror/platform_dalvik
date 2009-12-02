@@ -707,11 +707,11 @@ public abstract class CharBuffer extends Buffer implements
      */
     @Override
     public String toString() {
-        StringBuffer strbuf = new StringBuffer();
+        StringBuilder result = new StringBuilder(limit - position);
         for (int i = position; i < limit; i++) {
-            strbuf.append(get(i));
+            result.append(get(i));
         }
-        return strbuf.toString();
+        return result.toString();
     }
 
     /**

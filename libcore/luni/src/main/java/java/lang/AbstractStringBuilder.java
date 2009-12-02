@@ -181,16 +181,17 @@ abstract class AbstractStringBuilder {
         }
 
         if (s instanceof String) {
-            // BEGIN android-changed
             ((String) s)._getChars(start, end, value, count);
-            // END android-changed
+        } else if (s instanceof AbstractStringBuilder) {
+            AbstractStringBuilder other = (AbstractStringBuilder) s;
+            System.arraycopy(other.value, start, value, count, adding);
         } else {
             int j = count; // Destination index.
             for (int i = start; i < end; i++) {
                 value[j++] = s.charAt(i);
             }
         }
-
+        
         this.count = newSize;
         // END android-changed
     }

@@ -2578,15 +2578,14 @@ public final class Character implements Serializable, Comparable<Character> {
      *         otherwise.
      */
     public static boolean isDigit(char c) {
+        // Optimized case for ASCII
+        if ('0' <= c && c <= '9') {
+            return true;
+        }
+        if (c < 1632) {
+            return false;
+        }
         // BEGIN android-changed
-        // // Optimized case for ASCII
-        // if ('0' <= c && c <= '9') {
-        //     return true;
-        // }
-        // if (c < 1632) {
-        //     return false;
-        // }
-        // return getType(c) == DECIMAL_DIGIT_NUMBER;
         return UCharacter.isDigit(c);
         // END android-changed
     }
@@ -3023,16 +3022,14 @@ public final class Character implements Serializable, Comparable<Character> {
      *         otherwise.
      */
     public static boolean isUpperCase(char c) {
+        // Optimized case for ASCII
+        if ('A' <= c && c <= 'Z') {
+            return true;
+        }
+        if (c < 128) {
+            return false;
+        }
         // BEGIN android-changed
-        // // Optimized case for ASCII
-        // if ('A' <= c && c <= 'Z') {
-        //     return true;
-        // }
-        // if (c < 128) {
-        //     return false;
-        // }
-        //
-        // return getType(c) == UPPERCASE_LETTER;
         return UCharacter.isUpperCase(c);
         // END android-changed
     }

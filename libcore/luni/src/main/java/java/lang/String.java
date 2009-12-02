@@ -58,54 +58,9 @@ public final class String implements Serializable, Comparable<String>,
     private static final char REPLACEMENT_CHAR = (char) 0xfffd;
     // END android-added
 
-    /**
-     * An PrintStream used for System.out which performs the correct character
-     * conversion for the console, since the console may use a different
-     * conversion than the default file.encoding.
-     */
-    static class ConsolePrintStream extends java.io.PrintStream {
-        private static String charset;
-
-        static {
-            charset = AccessController.doPrivileged(new PriviAction<String>(
-                    "console.encoding", "ISO8859_1")); //$NON-NLS-1$ //$NON-NLS-2$
-            if (!Charset.isSupported(charset)) {
-                charset = "ISO-8859-1"; //$NON-NLS-1$
-            }
-        }
-
-        /**
-         * Create a ConsolePrintStream on the specified OutputStream, usually
-         * System.out.
-         * 
-         * @param out
-         *            the console OutputStream
-         */
-        public ConsolePrintStream(java.io.OutputStream out) {
-            super(out, true);
-
-        }
-
-        /**
-         * Override the print(String) method from PrintStream to perform the
-         * character conversion using the console character converter.
-         *
-         * @param str
-         *            the string to convert
-         */
-        @Override
-        public void print(String str) {
-            if (str == null) {
-                str = "null"; //$NON-NLS-1$
-            }
-
-            try {
-                write(str.getBytes(charset));
-            } catch (java.io.IOException e) {
-                setError();
-            }
-        }
-    }
+    // BEGIN android-removed
+    // static class ConsolePrintStream extends java.io.PrintStream ...
+    // END android-removed
 
     /**
      * CaseInsensitiveComparator compares Strings ignoring the case of the
