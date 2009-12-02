@@ -60,7 +60,7 @@ static void abortMaybe(void);       // fwd
  *
  * At this point, pResult->l has already been converted to an object pointer.
  */
-static void checkCallCommon(const u4* args, JValue* pResult,
+static void checkCallResultCommon(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     assert(pResult->l != NULL);
@@ -116,7 +116,7 @@ static void checkCallCommon(const u4* args, JValue* pResult,
 /*
  * Determine if we need to check the return type coming out of the call.
  *
- * (We don't do this at the top of checkCallCommon() because this is on
+ * (We don't do this at the top of checkCallResultCommon() because this is on
  * the critical path for native method calls.)
  */
 static inline bool callNeedsCheck(const u4* args, JValue* pResult,
@@ -134,7 +134,7 @@ void dvmCheckCallJNIMethod_general(const u4* args, JValue* pResult,
 {
     dvmCallJNIMethod_general(args, pResult, method, self);
     if (callNeedsCheck(args, pResult, method, self))
-        checkCallCommon(args, pResult, method, self);
+        checkCallResultCommon(args, pResult, method, self);
 }
 
 /*
@@ -145,7 +145,7 @@ void dvmCheckCallJNIMethod_synchronized(const u4* args, JValue* pResult,
 {
     dvmCallJNIMethod_synchronized(args, pResult, method, self);
     if (callNeedsCheck(args, pResult, method, self))
-        checkCallCommon(args, pResult, method, self);
+        checkCallResultCommon(args, pResult, method, self);
 }
 
 /*
@@ -156,7 +156,7 @@ void dvmCheckCallJNIMethod_virtualNoRef(const u4* args, JValue* pResult,
 {
     dvmCallJNIMethod_virtualNoRef(args, pResult, method, self);
     if (callNeedsCheck(args, pResult, method, self))
-        checkCallCommon(args, pResult, method, self);
+        checkCallResultCommon(args, pResult, method, self);
 }
 
 /*
@@ -167,7 +167,7 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
 {
     dvmCallJNIMethod_staticNoRef(args, pResult, method, self);
     if (callNeedsCheck(args, pResult, method, self))
-        checkCallCommon(args, pResult, method, self);
+        checkCallResultCommon(args, pResult, method, self);
 }
 
 
@@ -248,9 +248,12 @@ void dvmCheckCallJNIMethod_staticNoRef(const u4* args, JValue* pResult,
     checkLengthPositive(_env, _length, __FUNCTION__)
 #define CHECK_NON_NULL(_env, _ptr)                                          \
     checkNonNull(_env, _ptr, __FUNCTION__)
-
 #define CHECK_SIG(_env, _methid, _sigbyte, _isstatic)                       \
     checkSig(_env, _methid, _sigbyte, _isstatic, __FUNCTION__)
+#define CHECK_METHOD_ARGS_A(_env, _methid, _args)                           \
+    checkMethodArgsA(_env, _methid, _args, __FUNCTION__)
+#define CHECK_METHOD_ARGS_V(_env, _methid, _args)                           \
+    checkMethodArgsV(_env, _methid, _args, __FUNCTION__)
 
 /*
  * Print trace message when both "checkJNI" and "verbose:jni" are enabled.
@@ -460,17 +463,15 @@ static void checkFieldType(JNIEnv* env, jobject jobj, jfieldID fieldID,
  * Verify that "jobj" is a valid object, and that it's an object that JNI
  * is allowed to know about.  We allow NULL references.
  *
- * Switches to "running" mode before performing checks.
+ * Must be in "running" mode before calling here.
  */
-static void checkObject(JNIEnv* env, jobject jobj, const char* func)
+static void checkObject0(JNIEnv* env, jobject jobj, const char* func)
 {
     UNUSED_PARAMETER(env);
     bool printWarn = false;
 
     if (jobj == NULL)
         return;
-
-    JNI_ENTER();
 
     if (dvmIsWeakGlobalRef(jobj)) {
         /*
@@ -497,7 +498,18 @@ static void checkObject(JNIEnv* env, jobject jobj, const char* func)
         showLocation(dvmGetCurrentJNIMethod(), func);
         abortMaybe();
     }
+}
 
+/*
+ * Verify that "jobj" is a valid object, and that it's an object that JNI
+ * is allowed to know about.  We allow NULL references.
+ *
+ * Switches to "running" mode before performing checks.
+ */
+static void checkObject(JNIEnv* env, jobject jobj, const char* func)
+{
+    JNI_ENTER();
+    checkObject0(env, jobj, func);
     JNI_EXIT();
 }
 
@@ -838,6 +850,87 @@ static void checkInstanceFieldID(JNIEnv* env, jobject jobj, jfieldID fieldID,
 
 bail:
     JNI_EXIT();
+}
+
+/*
+ * Verify that the reference arguments being passed in are appropriate for
+ * this method.
+ *
+ * At a minimum we want to make sure that the argument is a valid
+ * reference.  We can also do a class lookup on the method signature
+ * and verify that the object is an instance of the appropriate class,
+ * but that's more expensive.
+ *
+ * The basic tests are redundant when indirect references are enabled,
+ * since reference arguments must always be converted explicitly.  An
+ * instanceof test would not be redundant, but we're not doing that at
+ * this time.
+ */
+static void checkMethodArgsV(JNIEnv* env, jmethodID methodID, va_list args,
+    const char* func)
+{
+#ifndef USE_INDIRECT_REF
+    JNI_ENTER();
+
+    const Method* meth = (const Method*) methodID;
+    const char* desc = meth->shorty;
+    ClassObject* clazz;
+
+    LOGV("V-checking %s.%s:%s...\n", meth->clazz->descriptor, meth->name, desc);
+
+    while (*++desc != '\0') {       /* pre-incr to skip return type */
+        switch (*desc) {
+        case 'L':
+            {     /* 'shorty' descr uses L for all refs, incl array */
+                jobject argObj = va_arg(args, jobject);
+                checkObject0(env, argObj, func);
+            }
+            break;
+        case 'D':       /* 8-byte double */
+        case 'J':       /* 8-byte long */
+        case 'F':       /* floats normalized to doubles */
+            (void) va_arg(args, u8);
+            break;
+        default:        /* Z B C S I -- all passed as 32-bit integers */
+            (void) va_arg(args, u4);
+            break;
+        }
+    }
+
+bail:
+    JNI_EXIT();
+#endif
+}
+
+/*
+ * Same purpose as checkMethodArgsV, but with arguments in an array of
+ * jvalue structs.
+ */
+static void checkMethodArgsA(JNIEnv* env, jmethodID methodID, jvalue* args,
+    const char* func)
+{
+#ifndef USE_INDIRECT_REF
+    JNI_ENTER();
+
+    const Method* meth = (const Method*) methodID;
+    const char* desc = meth->shorty;
+    ClassObject* clazz;
+    int idx = 0;
+
+    LOGV("A-checking %s.%s:%s...\n", meth->clazz->descriptor, meth->name, desc);
+
+    while (*++desc != '\0') {       /* pre-incr to skip return type */
+        if (*desc == 'L') {
+            jobject argObj = args[idx].l;
+            checkObject0(env, argObj, func);
+        }
+
+        idx++;
+    }
+
+bail:
+    JNI_EXIT();
+#endif
 }
 
 
@@ -1392,9 +1485,14 @@ static jobject Check_NewObject(JNIEnv* env, jclass clazz, jmethodID methodID,
     CHECK_ENTER(env, kFlag_Default);
     CHECK_CLASS(env, clazz);
     jobject result;
-    va_list args;
+    va_list args, tmpArgs;
 
     va_start(args, methodID);
+
+    va_copy(tmpArgs, args);
+    CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);
+    va_end(tmpArgs);
+
     result = BASE_ENV(env)->NewObjectV(env, clazz, methodID, args);
     va_end(args);
 
@@ -1407,6 +1505,12 @@ static jobject Check_NewObjectV(JNIEnv* env, jclass clazz, jmethodID methodID,
     CHECK_ENTER(env, kFlag_Default);
     CHECK_CLASS(env, clazz);
     jobject result;
+
+    va_list tmpArgs;
+    va_copy(tmpArgs, args);
+    CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);
+    va_end(tmpArgs);
+
     result = BASE_ENV(env)->NewObjectV(env, clazz, methodID, args);
     CHECK_EXIT(env);
     return result;
@@ -1417,6 +1521,8 @@ static jobject Check_NewObjectA(JNIEnv* env, jclass clazz, jmethodID methodID,
     CHECK_ENTER(env, kFlag_Default);
     CHECK_CLASS(env, clazz);
     jobject result;
+
+    CHECK_METHOD_ARGS_A(env, methodID, args);
     result = BASE_ENV(env)->NewObjectA(env, clazz, methodID, args);
     CHECK_EXIT(env);
     return result;
@@ -1593,8 +1699,11 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_OBJECT(env, obj);                                             \
         CHECK_SIG(env, methodID, _retsig, false);                           \
         _retdecl;                                                           \
-        va_list args;                                                       \
+        va_list args, tmpArgs;                                              \
         va_start(args, methodID);                                           \
+        va_copy(tmpArgs, args);                                             \
+        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
+        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->Call##_jname##MethodV(env, obj, methodID,   \
             args);                                                          \
         va_end(args);                                                       \
@@ -1608,6 +1717,10 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_OBJECT(env, obj);                                             \
         CHECK_SIG(env, methodID, _retsig, false);                           \
         _retdecl;                                                           \
+        va_list tmpArgs;                                                    \
+        va_copy(tmpArgs, args);                                             \
+        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
+        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->Call##_jname##MethodV(env, obj, methodID,   \
             args);                                                          \
         CHECK_EXIT(env);                                                    \
@@ -1620,6 +1733,7 @@ SET_TYPE_FIELD(jdouble, Double, PRIM_DOUBLE);
         CHECK_OBJECT(env, obj);                                             \
         CHECK_SIG(env, methodID, _retsig, false);                           \
         _retdecl;                                                           \
+        CHECK_METHOD_ARGS_A(env, methodID, args);                           \
         _retasgn BASE_ENV(env)->Call##_jname##MethodA(env, obj, methodID,   \
             args);                                                          \
         CHECK_EXIT(env);                                                    \
@@ -1646,8 +1760,11 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_OBJECT(env, obj);                                             \
         CHECK_SIG(env, methodID, _retsig, false);                           \
         _retdecl;                                                           \
-        va_list args;                                                       \
+        va_list args, tmpArgs;                                              \
         va_start(args, methodID);                                           \
+        va_copy(tmpArgs, args);                                             \
+        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
+        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallNonvirtual##_jname##MethodV(env, obj,   \
             clazz, methodID, args);                                         \
         va_end(args);                                                       \
@@ -1662,6 +1779,10 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_OBJECT(env, obj);                                             \
         CHECK_SIG(env, methodID, _retsig, false);                           \
         _retdecl;                                                           \
+        va_list tmpArgs;                                                    \
+        va_copy(tmpArgs, args);                                             \
+        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
+        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallNonvirtual##_jname##MethodV(env, obj,   \
             clazz, methodID, args);                                         \
         CHECK_EXIT(env);                                                    \
@@ -1675,6 +1796,7 @@ CALL_VIRTUAL(void, Void, , , , 'V');
         CHECK_OBJECT(env, obj);                                             \
         CHECK_SIG(env, methodID, _retsig, false);                           \
         _retdecl;                                                           \
+        CHECK_METHOD_ARGS_A(env, methodID, args);                           \
         _retasgn BASE_ENV(env)->CallNonvirtual##_jname##MethodA(env, obj,   \
             clazz, methodID, args);                                         \
         CHECK_EXIT(env);                                                    \
@@ -1700,8 +1822,11 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_CLASS(env, clazz);                                            \
         CHECK_SIG(env, methodID, _retsig, true);                            \
         _retdecl;                                                           \
-        va_list args;                                                       \
+        va_list args, tmpArgs;                                              \
         va_start(args, methodID);                                           \
+        va_copy(tmpArgs, args);                                             \
+        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
+        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallStatic##_jname##MethodV(env, clazz,     \
             methodID, args);                                                \
         va_end(args);                                                       \
@@ -1715,6 +1840,10 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_CLASS(env, clazz);                                            \
         CHECK_SIG(env, methodID, _retsig, true);                            \
         _retdecl;                                                           \
+        va_list tmpArgs;                                                    \
+        va_copy(tmpArgs, args);                                             \
+        CHECK_METHOD_ARGS_V(env, methodID, tmpArgs);                        \
+        va_end(tmpArgs);                                                    \
         _retasgn BASE_ENV(env)->CallStatic##_jname##MethodV(env, clazz,     \
             methodID, args);                                                \
         CHECK_EXIT(env);                                                    \
@@ -1727,6 +1856,7 @@ CALL_NONVIRTUAL(void, Void, , , , 'V');
         CHECK_CLASS(env, clazz);                                            \
         CHECK_SIG(env, methodID, _retsig, true);                            \
         _retdecl;                                                           \
+        CHECK_METHOD_ARGS_A(env, methodID, args);                           \
         _retasgn BASE_ENV(env)->CallStatic##_jname##MethodA(env, clazz,     \
             methodID, args);                                                \
         CHECK_EXIT(env);                                                    \
