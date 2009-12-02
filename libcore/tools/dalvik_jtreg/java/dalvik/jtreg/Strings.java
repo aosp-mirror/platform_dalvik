@@ -18,6 +18,7 @@
 package dalvik.jtreg;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 
 /**
@@ -50,5 +51,9 @@ public class Strings {
             result[i++] = o.toString();
         }
         return result;
+    }
+
+    static String[] objectsToStrings(Collection<?> objects) {
+        return objectsToStrings(objects.toArray());
     }
 }

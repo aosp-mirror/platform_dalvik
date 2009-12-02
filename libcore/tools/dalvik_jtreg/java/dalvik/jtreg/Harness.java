@@ -17,7 +17,9 @@
 package dalvik.jtreg;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.ConsoleHandler;
@@ -38,7 +40,7 @@ public final class Harness {
     private Set<File> expectationDirs = new LinkedHashSet<File>();
     private File xmlReportsDirectory;
     private String javaHome;
-    private File directoryToScan;
+    private List<File> testFiles = new ArrayList<File>();
 
     private Harness() {
         localTemp = new File("/tmp/" + UUID.randomUUID());
@@ -61,12 +63,7 @@ public final class Harness {
     }
 
     private boolean parseArgs(String[] args) throws Exception {
-        if (args.length == 0) {
-            return false;
-        }
-
-        int i = 0;
-        for (; i < args.length - 1; i++) {
+        for (int i = 0; i < args.length; i++) {
             if ("--debug".equals(args[i])) {
                 debugPort = Integer.valueOf(args[++i]);
 
@@ -105,20 +102,17 @@ public final class Harness {
                     return false;
                 }
 
-            } else {
+            } else if (args[i].startsWith("-")) {
                 System.out.println("Unrecognized option: " + args[i]);
                 return false;
+
+            } else {
+                testFiles.add(new File(args[i]));
             }
         }
 
-        if (i > args.length - 1) {
-            System.out.println("Missing required test directory option");
-            return false;
-        }
-
-        directoryToScan = new File(args[i]);
-        if (!directoryToScan.isDirectory()) {
-            System.out.println("Invalid test directory: " + directoryToScan);
+        if (testFiles.isEmpty()) {
+            System.out.println("No tests provided.");
             return false;
         }
 
@@ -126,11 +120,10 @@ public final class Harness {
     }
 
     private void printUsage() {
-        System.out.println("Usage: JTRegRunner [options]... <tests directory>");
+        System.out.println("Usage: JTRegRunner [options]... <tests>...");
         System.out.println();
-        System.out.println("  <tests directory>: a directory to scan for test cases;");
-        System.out.println("      typically this is 'platform_v6/jdk/test' if 'platform_v6'");
-        System.out.println("      contains the sources of a platform implementation.");
+        System.out.println("  <tests>: a .java file containing a jtreg test, JUnit test,");
+        System.out.println("      or a directory of such tests.");
         System.out.println();
         System.out.println("OPTIONS");
         System.out.println();
@@ -169,9 +162,11 @@ public final class Harness {
         Vm vm = javaHome != null
                 ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp, javaHome)
                 : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar, localTemp);
-        JtregRunner jtregRunner = new JtregRunner(localTemp, directoryToScan,
-                vm, expectationDirs, xmlReportsDirectory);
-        jtregRunner.buildAndRunAllTests();
+        Jtreg jtreg = new Jtreg(localTemp);
+        JUnit jUnit = new JUnit();
+        Driver driver = new Driver(localTemp,
+                vm, expectationDirs, xmlReportsDirectory, jtreg, jUnit);
+        driver.buildAndRunAllTests(testFiles);
         vm.shutdown();
     }
 
@@ -182,7 +177,6 @@ public final class Harness {
             return;
         }
         harness.prepareLogging();
-        harness.parseArgs(args);
         harness.run();
     }
 }

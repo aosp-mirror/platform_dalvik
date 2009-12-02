@@ -17,6 +17,8 @@
 package dalvik.jtreg;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -31,17 +33,21 @@ final class Javac {
     }
 
     public Javac bootClasspath(File... path) {
-        builder.args("-bootclasspath", Command.path((Object[]) path));
+        builder.args("-bootclasspath", Classpath.of(path).toString());
         return this;
     }
 
     public Javac classpath(File... path) {
-        builder.args("-classpath", Command.path((Object[]) path));
+        return classpath(Classpath.of(path));
+    }
+
+    public Javac classpath(Classpath classpath) {
+        builder.args("-classpath", classpath.toString());
         return this;
     }
 
     public Javac sourcepath(File... path) {
-        builder.args("-sourcepath", Command.path((Object[]) path));
+        builder.args("-sourcepath", Classpath.of(path).toString());
         return this;
     }
 
@@ -50,8 +56,12 @@ final class Javac {
         return this;
     }
 
-    public List<String> compile(File... files) {
+    public List<String> compile(Collection<File> files) {
         return builder.args(Strings.objectsToStrings(files))
                 .execute();
+    }
+
+    public List<String> compile(File... files) {
+        return compile(Arrays.asList(files));
     }
 }

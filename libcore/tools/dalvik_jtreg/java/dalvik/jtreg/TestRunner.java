@@ -18,14 +18,12 @@ package dalvik.jtreg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Properties;
 
 /**
  * Runs a jtreg test.
  */
-public final class TestRunner {
+public abstract class TestRunner {
 
     /**
      * The name of the test properties file within the {@code .jar} file.
@@ -44,24 +42,10 @@ public final class TestRunner {
      */
     static final String QUALIFIED_NAME = "qualifiedName";
 
-    private String className;
-    private String qualifiedName;
+    protected String className;
+    protected String qualifiedName;
 
-    private Method main;
-
-    public void test(String[] args)
-            throws InvocationTargetException, IllegalAccessException {
-        System.out.println("Executing " + qualifiedName);
-        try {
-            main.invoke(null, new Object[] { args });
-            System.out.println("SUCCESS");
-        } catch (Throwable failure) {
-            failure.printStackTrace();
-            System.out.println("FAILURE");
-        }
-    }
-
-    private void loadProperties() {
+    protected Properties loadProperties() {
         Properties properties = new Properties();
         try {
             InputStream propertiesStream = TestRunner.class.getResourceAsStream(
@@ -77,27 +61,18 @@ public final class TestRunner {
 
         className = properties.getProperty(CLASS_NAME);
         qualifiedName = properties.getProperty(QUALIFIED_NAME);
-
-        if (className == null || qualifiedName == null) {
-            throw new RuntimeException(TEST_PROPERTIES_FILE + " missing required values!");
-        }
+        return properties;
     }
 
-    private void prepareTest() {
-        try {
-            Class<?> testClass = Class.forName(className);
-            main = testClass.getMethod("main", String[].class);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public abstract void prepareTest();
+    public abstract boolean test();
 
-    public static void main(String[] args) throws Exception {
-        // Usage: TestRunner [optional test args]...
+    public void run() {
+        loadProperties();
+        prepareTest();
 
-        TestRunner testRunner = new TestRunner();
-        testRunner.loadProperties();
-        testRunner.prepareTest();
-        testRunner.test(args);
+        System.out.println("Executing " + qualifiedName);
+        boolean success = test();
+        System.out.println(success ? "SUCCESS" : "FAILURE");
     }
 }
