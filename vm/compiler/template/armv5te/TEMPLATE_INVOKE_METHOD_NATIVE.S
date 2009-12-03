@@ -50,6 +50,7 @@
     str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
+    ldr     r0, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     bne     .LhandleException             @ no, handle exception
     bx      r2
 
