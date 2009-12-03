@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  */
 final class DeviceDalvikVm extends Vm {
 
-    private static final Logger logger = Logger.getLogger(JtregRunner.class.getName());
+    private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
     private final File deviceTemp = new File("/data/jtreg" + UUID.randomUUID());
 
     private final Adb adb = new Adb();
@@ -45,18 +45,18 @@ final class DeviceDalvikVm extends Vm {
         super.prepare();
     }
 
-    @Override protected File postCompile(File classesDirectory, String name) {
+    @Override protected Classpath postCompile(String name, Classpath targetClasses) {
         logger.fine("dex and push " + name);
 
         // make the local dex
         File localDex = new File(localTemp, name + ".jar");
-        new Dx().dex(localDex.toString(), classesDirectory);
+        new Dx().dex(localDex.toString(), targetClasses);
 
         // post the local dex to the device
         File deviceDex = new File(deviceTemp, localDex.getName());
         adb.push(localDex, deviceDex);
 
-        return deviceDex;
+        return Classpath.of(deviceDex);
     }
 
     @Override public void shutdown() {
@@ -69,7 +69,7 @@ final class DeviceDalvikVm extends Vm {
 
         File base = new File(deviceTemp, testRun.getQualifiedName());
         adb.mkdir(base);
-        adb.push(testRun.getTestDescription().getDir(), base);
+        adb.push(testRun.getTestDirectory(), base);
         testRun.setUserDir(base);
     }
 

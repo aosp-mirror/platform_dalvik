@@ -16,19 +16,17 @@
 
 package dalvik.jtreg;
 
-import java.io.File;
-
 /**
  * A dx command.
  */
 final class Dx {
 
-    public void dex(String output, File... inputs) {
+    public void dex(String output, Classpath classpath) {
         new Command.Builder()
                 .args("dx")
                 .args("--dex")
                 .args("--output=" + output)
-                .args(Strings.objectsToStrings(inputs))
+                .args(Strings.objectsToStrings(classpath.getElements()))
                 .execute();
     }
 }

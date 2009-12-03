@@ -120,7 +120,7 @@ public class XmlReportPrinter {
                 continue;
             }
 
-            String suiteName = suiteName(testRun);
+            String suiteName = testRun.getSuiteName();
             Suite suite = result.get(suiteName);
             if (suite == null) {
                 suite = new Suite(suiteName);
@@ -135,10 +135,6 @@ public class XmlReportPrinter {
             }
         }
         return result;
-    }
-
-    private static String suiteName(TestRun testRun) {
-        return TestDescriptions.className(testRun.getTestDescription());
     }
 
     static class Suite {
@@ -172,8 +168,8 @@ public class XmlReportPrinter {
 
         void print(KXmlSerializer serializer, TestRun testRun) throws IOException {
             serializer.startTag(ns, TESTCASE);
-            serializer.attribute(ns, ATTR_NAME, testRun.getTestDescription().getName());
-            serializer.attribute(ns, ATTR_CLASSNAME, suiteName(testRun));
+            serializer.attribute(ns, ATTR_NAME, testRun.getTestName());
+            serializer.attribute(ns, ATTR_CLASSNAME, testRun.getSuiteName());
             serializer.attribute(ns, ATTR_TIME, "0");
 
             String result = ERROR_RESULTS.contains(testRun.getResult()) ? ERROR
@@ -182,7 +178,7 @@ public class XmlReportPrinter {
 
             if (result != null) {
                 serializer.startTag(ns, result);
-                String title = testRun.getTestDescription().getTitle();
+                String title = testRun.getDescription();
                 if (title != null && title.length() > 0) {
                     serializer.attribute(ns, ATTR_MESSAGE, title);
                 }

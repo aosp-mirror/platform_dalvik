@@ -24,11 +24,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * An out of process executable.
  */
 final class Command {
+
+    private final Logger logger = Logger.getLogger(Command.class.getName());
 
     private final List<String> args;
     private final boolean permitNonZeroExitStatus;
@@ -52,18 +55,12 @@ final class Command {
         return Collections.unmodifiableList(args);
     }
 
-    static String path(Object... objects) {
-        return Strings.join(objects, ":");
-    }
-
-    static String path(Iterable<?> objects) {
-        return Strings.join(objects, ":");
-    }
-
     public synchronized void start() throws IOException {
         if (isStarted()) {
             throw new IllegalStateException("Already started!");
         }
+
+        logger.fine("executing " + Strings.join(args, " "));
 
         process = new ProcessBuilder()
                 .command(args)

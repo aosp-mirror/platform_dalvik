@@ -27,7 +27,7 @@ class CommandFailedException extends RuntimeException {
     private final List<String> outputLines;
 
     public CommandFailedException(List<String> args, List<String> outputLines) {
-        super("Command failed: " + args);
+        super(formatMessage(args, outputLines));
         this.args = args;
         this.outputLines = outputLines;
     }
@@ -38,5 +38,17 @@ class CommandFailedException extends RuntimeException {
 
     public List<String> getOutputLines() {
         return outputLines;
+    }
+
+    public static String formatMessage(List<String> args, List<String> outputLines) {
+        StringBuilder result = new StringBuilder();
+        result.append("Command failed:");
+        for (String arg : args) {
+            result.append(" ").append(arg);
+        }
+        for (String outputLine : outputLines) {
+            result.append("\n  ").append(outputLine);
+        }
+        return result.toString();
     }
 }

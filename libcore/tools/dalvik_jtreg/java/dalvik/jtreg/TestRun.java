@@ -28,38 +28,107 @@ import java.util.List;
  * A test run and its outcome. This class tracks the complete lifecycle of a
  * single test run:
  * <ol>
- *   <li>the test identity (qualified name)
- *   <li>the test source code (test description)
- *   <li>the code to execute (user dir, test classes)
- *   <li>the result of execution (result, output lines)
+ *   <li>the test source code (test directory, java file, test class)
+ *   <li>the test identity (suite name, test name, qualified name)
+ *   <li>the code to execute (test classes, user dir)
+ *   <li>the result of execution (expected result, result, output lines)
  * </ol>
  */
 public final class TestRun {
 
-    private final TestDescription testDescription;
+    private final File testDirectory;
+    private final File javaFile;
+    private final String testClass;
+    private final Class<? extends TestRunner> testRunner;
+
+    private final String suiteName;
+    private final String testName;
     private final String qualifiedName;
-    private final ExpectedResult expectedResult;
+    private final String description;
 
+    private Classpath testClasses;
     private File userDir;
-    private File testClasses;
 
+    private ExpectedResult expectedResult = ExpectedResult.SUCCESS;
     private Result result;
     private List<String> outputLines;
 
-
-    public TestRun(String qualifiedName, TestDescription testDescription,
-            ExpectedResult expectedResult) {
+    public TestRun(File testDirectory, File javaFile, String testClass,
+            String suiteName, String testName, String qualifiedName,
+            String description, Class<? extends TestRunner> testRunner) {
         this.qualifiedName = qualifiedName;
-        this.testDescription = testDescription;
+        this.suiteName = suiteName;
+        this.testName = testName;
+        this.testDirectory = testDirectory;
+        this.javaFile = javaFile;
+        this.description = description;
+        this.testClass = testClass;
+        this.testRunner = testRunner;
+    }
+
+    /**
+     * Returns the local directory containing this test's java file.
+     */
+    public File getTestDirectory() {
+        return testDirectory;
+    }
+
+    public File getJavaFile() {
+        return javaFile;
+    }
+
+    /**
+     * Returns the executable test's classname, such as java.lang.IntegerTest
+     * or BitTwiddle.
+     */
+    public String getTestClass() {
+        return testClass;
+    }
+
+    /**
+     * Returns the test suite name, such as java.lang.Integer or
+     * java.lang.IntegerTest.
+     */
+    public String getSuiteName() {
+        return suiteName;
+    }
+
+    /**
+     * Returns the specific test name, such as BitTwiddle or testBitTwiddle.
+     */
+    public String getTestName() {
+        return testName;
+    }
+
+    /**
+     * Returns a unique identifier for this test.
+     */
+    public String getQualifiedName() {
+        return qualifiedName;
+    }
+
+    /**
+     * Returns an English description of this test, or null if no such
+     * description is known.
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    public void setExpectedResult(ExpectedResult expectedResult) {
         this.expectedResult = expectedResult;
     }
 
-    public TestDescription getTestDescription() {
-        return testDescription;
+    /**
+     * Initializes the path to the jar file or directory containing test
+     * classes.
+     */
+    public void setTestClasses(Classpath classes) {
+        this.testClasses = classes;
     }
 
-    public String getQualifiedName() {
-        return qualifiedName;
+    public Classpath getTestClasses() {
+        return testClasses;
     }
 
     /**
@@ -71,18 +140,6 @@ public final class TestRun {
 
     public File getUserDir() {
         return userDir;
-    }
-
-    /**
-     * Initializes the path to the jar file or directory containing test
-     * classes.
-     */
-    public void setTestClasses(File classes) {
-        this.testClasses = classes;
-    }
-
-    public File getTestClasses() {
-        return testClasses;
     }
 
     /**
@@ -122,5 +179,9 @@ public final class TestRun {
 
     public ExpectedResult getExpectedResult() {
         return expectedResult;
+    }
+
+    public Class<? extends TestRunner> getTestRunner() {
+        return testRunner;
     }
 }

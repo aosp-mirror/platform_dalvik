@@ -73,10 +73,11 @@ class ExpectedResult {
         return pattern;
     }
 
-    public static ExpectedResult forRun(Set<File> searchDirectories,
-            String qualifiedName) throws IOException {
+    public static ExpectedResult forRun(
+            Set<File> searchDirectories, TestRun testRun) throws IOException {
         for (File expectationDir : searchDirectories) {
-            File expectationFile = new File(expectationDir, qualifiedName + ".expected");
+            File expectationFile = new File(
+                    expectationDir, testRun.getQualifiedName() + ".expected");
             if (expectationFile.exists()) {
                 return new ExpectedResult(expectationFile);
             }
