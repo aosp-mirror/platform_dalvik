@@ -50,9 +50,6 @@ public abstract class Vm {
             new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar"),
             new File("out/host/common/core-tests.jar"));
 
-    private static final File DEVICE_SUPPORT_JAR
-            = new File("/system/framework/core-tests.jar");
-
     private static final Logger logger = Logger.getLogger(Vm.class.getName());
 
     protected final ExecutorService outputReaders = Executors.newFixedThreadPool(1);
@@ -177,7 +174,7 @@ public abstract class Vm {
         final Command command = newVmCommandBuilder()
                 .classpath(testRun.getTestClasses())
                 .classpath(testRunnerClasses)
-                .classpath(Classpath.of(DEVICE_SUPPORT_JAR))
+                .classpath(getRuntimeSupportClasses())
                 .userDir(testRun.getUserDir())
                 .debugPort(debugPort)
                 .mainClass(testRun.getTestRunner().getName())
@@ -222,6 +219,14 @@ public abstract class Vm {
      */
     protected VmCommandBuilder newVmCommandBuilder() {
         return new VmCommandBuilder();
+    }
+
+    /**
+     * Returns the classpath containing JUnit and the dalvik annotations
+     * required for test execution.
+     */
+    protected Classpath getRuntimeSupportClasses() {
+        return COMPILATION_CLASSPATH;
     }
 
     /**

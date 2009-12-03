@@ -16,8 +16,6 @@
 
 package dalvik.jtreg;
 
-import com.sun.javatest.TestDescription;
-
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -47,7 +45,7 @@ public final class TestRun {
     private final String description;
 
     private Classpath testClasses;
-    private File userDir;
+    private File userDir = new File(System.getProperty("user.dir"));
 
     private ExpectedResult expectedResult = ExpectedResult.SUCCESS;
     private Result result;
@@ -146,7 +144,7 @@ public final class TestRun {
      * Returns true if this test is ready for execution.
      */
     public boolean isRunnable() {
-        return userDir != null && testClasses != null;
+        return testClasses != null;
     }
 
     public void setResult(Result result, Throwable e) {

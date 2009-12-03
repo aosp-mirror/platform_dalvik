@@ -25,6 +25,9 @@ import java.util.logging.Logger;
  */
 final class DeviceDalvikVm extends Vm {
 
+    private static final File DEVICE_SUPPORT_JAR
+            = new File("/system/framework/core-tests.jar");
+
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
     private final File deviceTemp = new File("/data/jtreg" + UUID.randomUUID());
 
@@ -81,5 +84,9 @@ final class DeviceDalvikVm extends Vm {
                 .vmArgs("-Duser.region=US")
                 .vmArgs("-Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks")
                 .temp(testTemp);
+    }
+
+    @Override protected Classpath getRuntimeSupportClasses() {
+        return Classpath.of(DEVICE_SUPPORT_JAR);
     }
 }

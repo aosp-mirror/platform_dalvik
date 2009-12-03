@@ -83,7 +83,8 @@ final class Driver {
 
         // build and install tests in a background thread. Using lots of
         // threads helps for packages that contain many unsupported tests
-        ExecutorService builders = Executors.newFixedThreadPool(8);
+        ExecutorService builders = Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors());
         for (final TestRun testRun : tests) {
             builders.submit(new Runnable() {
                 public void run() {
