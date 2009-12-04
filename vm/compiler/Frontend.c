@@ -566,8 +566,8 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
         /* Target block not included in the trace */
         if (curBB->taken == NULL &&
-            ((targetOffset != curOffset) || isUnconditionalBranch(lastInsn)) &&
-            (isInvoke || (targetOffset != UNKNOWN_TARGET))) {
+            (isInvoke || (targetOffset != UNKNOWN_TARGET &&
+                          targetOffset != curOffset))) {
             BasicBlock *newBB;
             if (isInvoke) {
                 /* Monomorphic callee */
