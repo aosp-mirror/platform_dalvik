@@ -204,59 +204,62 @@ public class Support_SimpleDateFormat extends Support_Format {
     private Vector<FieldContainer> getDateVector4() {
         Vector<FieldContainer> v = new Vector<FieldContainer>();
 
-        // "AD AD 99 99 1999 9 09 Sep September 13 13 013 17 17 017 17 17 017 5
+        // BEGIN android-changed
+        // Datetime pattern 'y' for year 1999 is 1999 not 99.  See http://unicode.org/reports/tr35/.
+        // "AD AD 1999 99 1999 9 09 Sep September 13 13 013 17 17 017 17 17 017 5
         // 05
         // 005 19 019 1 01 001 0 00 000 Mon Monday 256 256 256 2 02 38 038 3 003
         // PM
         // PM 5 005 GMT-05:00 GMT-05:00 -0500 -0500"
         v.add(new FieldContainer(0, 2, Field.ERA));
         v.add(new FieldContainer(3, 5, Field.ERA));
-        v.add(new FieldContainer(6, 8, Field.YEAR));
-        v.add(new FieldContainer(9, 11, Field.YEAR));
-        v.add(new FieldContainer(12, 16, Field.YEAR));
-        v.add(new FieldContainer(17, 18, Field.MONTH));
-        v.add(new FieldContainer(19, 21, Field.MONTH));
-        v.add(new FieldContainer(22, 25, Field.MONTH));
-        v.add(new FieldContainer(26, 35, Field.MONTH));
-        v.add(new FieldContainer(36, 38, Field.DAY_OF_MONTH));
-        v.add(new FieldContainer(39, 41, Field.DAY_OF_MONTH));
-        v.add(new FieldContainer(42, 45, Field.DAY_OF_MONTH));
-        v.add(new FieldContainer(46, 48, Field.HOUR_OF_DAY1));
-        v.add(new FieldContainer(49, 51, Field.HOUR_OF_DAY1));
-        v.add(new FieldContainer(52, 55, Field.HOUR_OF_DAY1));
-        v.add(new FieldContainer(56, 58, Field.HOUR_OF_DAY0));
-        v.add(new FieldContainer(59, 61, Field.HOUR_OF_DAY0));
-        v.add(new FieldContainer(62, 65, Field.HOUR_OF_DAY0));
-        v.add(new FieldContainer(66, 67, Field.HOUR1));
-        v.add(new FieldContainer(68, 70, Field.HOUR1));
-        v.add(new FieldContainer(71, 74, Field.HOUR1));
-        v.add(new FieldContainer(75, 77, Field.MINUTE));
-        v.add(new FieldContainer(78, 81, Field.MINUTE));
-        v.add(new FieldContainer(82, 83, Field.SECOND));
-        v.add(new FieldContainer(84, 86, Field.SECOND));
-        v.add(new FieldContainer(87, 90, Field.SECOND));
-        v.add(new FieldContainer(91, 92, Field.MILLISECOND));
-        v.add(new FieldContainer(93, 95, Field.MILLISECOND));
-        v.add(new FieldContainer(96, 99, Field.MILLISECOND));
-        v.add(new FieldContainer(100, 103, Field.DAY_OF_WEEK));
-        v.add(new FieldContainer(104, 110, Field.DAY_OF_WEEK));
-        v.add(new FieldContainer(111, 114, Field.DAY_OF_YEAR));
-        v.add(new FieldContainer(115, 118, Field.DAY_OF_YEAR));
-        v.add(new FieldContainer(119, 122, Field.DAY_OF_YEAR));
-        v.add(new FieldContainer(123, 124, Field.DAY_OF_WEEK_IN_MONTH));
-        v.add(new FieldContainer(125, 127, Field.DAY_OF_WEEK_IN_MONTH));
-        v.add(new FieldContainer(128, 130, Field.WEEK_OF_YEAR));
-        v.add(new FieldContainer(131, 134, Field.WEEK_OF_YEAR));
-        v.add(new FieldContainer(135, 136, Field.WEEK_OF_MONTH));
-        v.add(new FieldContainer(137, 140, Field.WEEK_OF_MONTH));
-        v.add(new FieldContainer(141, 143, Field.AM_PM));
-        v.add(new FieldContainer(145, 147, Field.AM_PM));
-        v.add(new FieldContainer(149, 150, Field.HOUR0));
-        v.add(new FieldContainer(151, 154, Field.HOUR0));
-        v.add(new FieldContainer(155, 164, Field.TIME_ZONE));
-        v.add(new FieldContainer(165, 174, Field.TIME_ZONE));
-        v.add(new FieldContainer(175, 180, Field.TIME_ZONE));
-        v.add(new FieldContainer(181, 186, Field.TIME_ZONE));
+        v.add(new FieldContainer(6, 10, Field.YEAR));
+        v.add(new FieldContainer(11, 13, Field.YEAR));
+        v.add(new FieldContainer(14, 18, Field.YEAR));
+        v.add(new FieldContainer(19, 20, Field.MONTH));
+        v.add(new FieldContainer(21, 23, Field.MONTH));
+        v.add(new FieldContainer(24, 27, Field.MONTH));
+        v.add(new FieldContainer(28, 37, Field.MONTH));
+        v.add(new FieldContainer(38, 40, Field.DAY_OF_MONTH));
+        v.add(new FieldContainer(41, 43, Field.DAY_OF_MONTH));
+        v.add(new FieldContainer(44, 47, Field.DAY_OF_MONTH));
+        v.add(new FieldContainer(48, 50, Field.HOUR_OF_DAY1));
+        v.add(new FieldContainer(51, 53, Field.HOUR_OF_DAY1));
+        v.add(new FieldContainer(54, 57, Field.HOUR_OF_DAY1));
+        v.add(new FieldContainer(58, 60, Field.HOUR_OF_DAY0));
+        v.add(new FieldContainer(61, 63, Field.HOUR_OF_DAY0));
+        v.add(new FieldContainer(64, 67, Field.HOUR_OF_DAY0));
+        v.add(new FieldContainer(68, 69, Field.HOUR1));
+        v.add(new FieldContainer(70, 72, Field.HOUR1));
+        v.add(new FieldContainer(73, 76, Field.HOUR1));
+        v.add(new FieldContainer(77, 79, Field.MINUTE));
+        v.add(new FieldContainer(80, 83, Field.MINUTE));
+        v.add(new FieldContainer(84, 85, Field.SECOND));
+        v.add(new FieldContainer(86, 88, Field.SECOND));
+        v.add(new FieldContainer(89, 92, Field.SECOND));
+        v.add(new FieldContainer(93, 94, Field.MILLISECOND));
+        v.add(new FieldContainer(95, 97, Field.MILLISECOND));
+        v.add(new FieldContainer(98, 101, Field.MILLISECOND));
+        v.add(new FieldContainer(102, 105, Field.DAY_OF_WEEK));
+        v.add(new FieldContainer(106, 112, Field.DAY_OF_WEEK));
+        v.add(new FieldContainer(113, 116, Field.DAY_OF_YEAR));
+        v.add(new FieldContainer(117, 120, Field.DAY_OF_YEAR));
+        v.add(new FieldContainer(121, 124, Field.DAY_OF_YEAR));
+        v.add(new FieldContainer(125, 126, Field.DAY_OF_WEEK_IN_MONTH));
+        v.add(new FieldContainer(127, 129, Field.DAY_OF_WEEK_IN_MONTH));
+        v.add(new FieldContainer(130, 132, Field.WEEK_OF_YEAR));
+        v.add(new FieldContainer(133, 136, Field.WEEK_OF_YEAR));
+        v.add(new FieldContainer(137, 138, Field.WEEK_OF_MONTH));
+        v.add(new FieldContainer(139, 142, Field.WEEK_OF_MONTH));
+        v.add(new FieldContainer(143, 145, Field.AM_PM));
+        v.add(new FieldContainer(147, 149, Field.AM_PM));
+        v.add(new FieldContainer(151, 152, Field.HOUR0));
+        v.add(new FieldContainer(153, 156, Field.HOUR0));
+        v.add(new FieldContainer(157, 166, Field.TIME_ZONE));
+        v.add(new FieldContainer(167, 176, Field.TIME_ZONE));
+        v.add(new FieldContainer(177, 182, Field.TIME_ZONE));
+        v.add(new FieldContainer(183, 188, Field.TIME_ZONE));
+        // END android-changed
         return v;
     }
 

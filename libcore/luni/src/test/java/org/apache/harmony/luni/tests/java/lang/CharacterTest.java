@@ -564,10 +564,19 @@ public class CharacterTest extends TestCase {
     public void test_getDirectionality() throws Exception {
 
         byte[] directionalities = {
-                Character.DIRECTIONALITY_UNDEFINED,
+                // BEGIN android-changed
+                // Unicode 5.1 defines U+0370 to be Greek capital letter Heta.
+                Character.DIRECTIONALITY_LEFT_TO_RIGHT,
+                // END android-changed.
+
                 Character.DIRECTIONALITY_LEFT_TO_RIGHT,
                 Character.DIRECTIONALITY_RIGHT_TO_LEFT,
-                Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC,
+
+                // BEGIN android-changed
+                // Unicode standard 5.1 changed category of unicode point 0x0600 from AL to AN
+                Character.DIRECTIONALITY_ARABIC_NUMBER,
+                // END android-changed.
+
                 Character.DIRECTIONALITY_EUROPEAN_NUMBER,
                 // Character.DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR,
                 Character.DIRECTIONALITY_EUROPEAN_NUMBER_TERMINATOR,
@@ -587,10 +596,15 @@ public class CharacterTest extends TestCase {
                 };
 
         char[] characters = {
-                '\u0370', // -1
+                // BEGIN android-changed
+                // Unicode 5.1 defines U+0370 to be Greek capital letter Heta.
+                '\u0370', // 1
+                // END android-changed
                 '\u00B5', // 0
                 '\u05BE', // 1
-                '\u0600', // 2
+                // BEGIN android-changed
+                '\u0600', // 6
+                // END android-changed
                 '\u00B2', // 3
                 // '', // No common char in this group on android and java.
                 '\u00B1', // 5
@@ -2252,9 +2266,12 @@ public class CharacterTest extends TestCase {
                 .getDirectionality(0xFB4F));
         assertEquals(Character.DIRECTIONALITY_RIGHT_TO_LEFT, Character
                 .getDirectionality(0x10838));
-        
-        assertEquals(Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC, Character
+
+        // BEGIN android-changed
+        // Unicode standard 5.1 changed category of unicode point 0x0600 from AL to AN
+        assertEquals(Character.DIRECTIONALITY_ARABIC_NUMBER, Character
                 .getDirectionality(0x0600));
+        // END android-changed
         assertEquals(Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC, Character
                 .getDirectionality(0xFEFC));
         

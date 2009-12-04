@@ -335,7 +335,6 @@ public class MessageFormatTest extends TestCase {
         method = "applyPattern",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Succeeds against RI.")
     public void test_applyPatternLjava_lang_String_AndroidFailure() {
         MessageFormat format = new MessageFormat("test");
         format.setLocale(Locale.FRENCH); // use French since English has the

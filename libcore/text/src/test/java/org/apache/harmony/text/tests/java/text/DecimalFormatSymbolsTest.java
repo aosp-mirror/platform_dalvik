@@ -170,8 +170,11 @@ public class DecimalFormatSymbolsTest extends TestCase {
         dfs1 = new DecimalFormatSymbols(new Locale("", "CZ"));
         assertTrue("Test2: Returned incorrect currency",
                 dfs1.getCurrency() == currC);
-        assertEquals("Test2: Returned incorrect currencySymbol", "CZK", dfs1
+        // BEGIN android-changed
+        // ICU4.2.1, the currency symbol for CZK is changed from CZK to K\u010d in en.txt.
+        assertEquals("Test2: Returned incorrect currencySymbol", "K\u010d", dfs1
                 .getCurrencySymbol());
+        // END android-changed
         assertEquals("Test2: Returned incorrect intlCurrencySymbol", "CZK",
                 dfs1.getInternationalCurrencySymbol());
 
