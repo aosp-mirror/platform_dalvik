@@ -52,7 +52,7 @@
 
 /* same, but for optimized DEX header */
 #define DEX_OPT_MAGIC   "dey\n"
-#define DEX_OPT_MAGIC_VERS  "035\0"
+#define DEX_OPT_MAGIC_VERS  "036\0"
 
 #define DEX_DEP_MAGIC   "deps"
 
@@ -484,8 +484,9 @@ typedef struct DexOptHeader {
     u4  auxLength;
 
     u4  flags;              /* some info flags */
+    u4  checksum;           /* adler32 checksum covering deps/aux */
 
-    u4  padding;            /* induce 64-bit alignment */
+    /* pad for 64-bit alignment if necessary */
 } DexOptHeader;
 
 #define DEX_FLAG_VERIFIED           (1)     /* tried to verify all classes */

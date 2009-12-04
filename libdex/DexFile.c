@@ -33,6 +33,10 @@
 #include <fcntl.h>
 #include <errno.h>
 
+// fwd
+static u4 dexComputeOptChecksum(const DexOptHeader* pOptHeader);
+
+
 /*
  * Verifying checksums is good, but it slows things down and causes us to
  * touch every page.  In the "optimized" world, it doesn't work at all,
@@ -753,8 +757,8 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
     }
 
     /*
-     * Verify the checksum.  This is reasonably quick, but does require
-     * touching every byte in the DEX file.  The checksum changes after
+     * Verify the checksum(s).  This is reasonably quick, but does require
+     * touching every byte in the DEX file.  The base checksum changes after
      * byte-swapping and DEX optimization.
      */
     if (flags & kDexParseVerifyChecksum) {
@@ -767,14 +771,26 @@ DexFile* dexFileParse(const u1* data, size_t length, int flags)
         } else {
             LOGV("+++ adler32 checksum (%08x) verified\n", adler);
         }
+
+        const DexOptHeader* pOptHeader = pDexFile->pOptHeader;
+        if (pOptHeader != NULL) {
+            adler = dexComputeOptChecksum(pOptHeader);
+            if (adler != pOptHeader->checksum) {
+                LOGE("ERROR: bad opt checksum (%08x vs %08x)\n",
+                    adler, pOptHeader->checksum);
+                if (!(flags & kDexParseContinueOnError))
+                    goto bail;
+            } else {
+                LOGV("+++ adler32 opt checksum (%08x) verified\n", adler);
+            }
+        }
     }
 
     /*
      * Verify the SHA-1 digest.  (Normally we don't want to do this --
-     * the digest is used to uniquely identify a DEX file, and can't be
-     * computed post-optimization.)
-     *
-     * The digest will be invalid after byte swapping and DEX optimization.
+     * the digest is used to uniquely identify the original DEX file, and
+     * can't be computed for verification after the DEX is byte-swapped
+     * and optimized.)
      */
     if (kVerifySignature) {
         unsigned char sha1Digest[kSHA1DigestLen];
@@ -885,6 +901,20 @@ u4 dexComputeChecksum(const DexHeader* pHeader)
     const int nonSum = sizeof(pHeader->magic) + sizeof(pHeader->checksum);
 
     return (u4) adler32(adler, start + nonSum, pHeader->fileSize - nonSum);
+}
+
+/*
+ * Compute the checksum on the data appended to the DEX file by dexopt.
+ */
+static u4 dexComputeOptChecksum(const DexOptHeader* pOptHeader)
+{
+    const u1* start = (const u1*) pOptHeader + pOptHeader->depsOffset;
+    const u1* end = (const u1*) pOptHeader +
+        pOptHeader->auxOffset + pOptHeader->auxLength;
+
+    uLong adler = adler32(0L, Z_NULL, 0);
+
+    return (u4) adler32(adler, start, end - start);
 }
 
 
