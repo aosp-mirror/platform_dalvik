@@ -154,8 +154,20 @@ static inline bool findBlockBoundary(const Method *caller, MIR *insn,
     return true;
 }
 
+static inline bool isGoto(MIR *insn)
+{
+    switch (insn->dalvikInsn.opCode) {
+        case OP_GOTO:
+        case OP_GOTO_16:
+        case OP_GOTO_32:
+            return true;
+        default:
+            return false;
+    }
+}
+
 /*
- * Identify conditional branch instructions
+ * Identify unconditional branch instructions
  */
 static inline bool isUnconditionalBranch(MIR *insn)
 {
@@ -164,12 +176,9 @@ static inline bool isUnconditionalBranch(MIR *insn)
         case OP_RETURN:
         case OP_RETURN_WIDE:
         case OP_RETURN_OBJECT:
-        case OP_GOTO:
-        case OP_GOTO_16:
-        case OP_GOTO_32:
             return true;
         default:
-            return false;
+            return isGoto(insn);
     }
 }
 
@@ -563,11 +572,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
             lastBB->startOffset = fallThroughOffset;
             curBB->fallThrough = lastBB;
         }
-
         /* Target block not included in the trace */
         if (curBB->taken == NULL &&
-            (isInvoke || (targetOffset != UNKNOWN_TARGET &&
-                          targetOffset != curOffset))) {
+            (isGoto(lastInsn) || isInvoke ||
+            (targetOffset != UNKNOWN_TARGET && targetOffset != curOffset))) {
             BasicBlock *newBB;
             if (isInvoke) {
                 /* Monomorphic callee */
