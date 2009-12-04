@@ -4,9 +4,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,6 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -125,7 +124,7 @@ import org.apache.harmony.luni.util.LocaleCache;
  * </tr>
  * <tr>
  * <td width="5%">{@code X}, {@code x}</td>
- * <td width="10%">int, formatted as hexidecimal</td>
+ * <td width="10%">int, formatted as hexadecimal</td>
  * <td width="30%">{@code format("%x, %X", 10, 10);}</td>
  * <td width="30%">{@code a, A}</td>
  * </tr>
@@ -150,7 +149,7 @@ import org.apache.harmony.luni.util.LocaleCache;
  * <tr>
  * <td width="5%">{@code #}</td>
  * <td width="10%">Print the leading characters that indicate
- * hexidecimal or octal (for use only with hex and octal types) </td>
+ * hexadecimal or octal (for use only with hex and octal types) </td>
  * <td width="30%">{@code format("%#o", 010);}</td>
  * <td width="30%">{@code 010}</td>
  * </tr>
@@ -203,7 +202,7 @@ import org.apache.harmony.luni.util.LocaleCache;
  * </tr>
  * <tr>
  * <td width="5%">{@code A}, {@code a}</td>
- * <td width="10%">float (or double) formatted as a hexidecimal in exponential
+ * <td width="10%">float (or double) formatted as a hexadecimal in exponential
  * notation, where the precision indicates the number of significant digits.</td>
  * <td width="30%">{@code format("%A %<.1a %<1.5A %<10A %<6.0A", 123.456f);}</td>
  * <td width="30%">{@code 0X1.EDD2F2P6 0x1.fp6 0X1.EDD2FP6 0X1.EDD2F2P6 0X1.FP6}</td>
@@ -805,14 +804,15 @@ public final class Formatter implements Closeable, Flushable {
      * {@code Formatter} has been closed will raise a {@code FormatterClosedException}.
      */
     public void close() {
-        closed = true;
-        try {
-            if (out instanceof Closeable) {
-                ((Closeable) out).close();
+        if (!closed) {
+            closed = true;
+            try {
+                if (out instanceof Closeable) {
+                    ((Closeable) out).close();
+                }
+            } catch (IOException e) {
+                lastIOException = e;
             }
-        } catch (IOException e) {
-
-            lastIOException = e;
         }
     }
 
@@ -863,8 +863,9 @@ public final class Formatter implements Closeable, Flushable {
      * @param l
      *            the {@code Locale} used in the method. If {@code locale} is
      *            {@code null}, then no localization will be applied. This
-     *            parameter does not influence the {@code Locale} specified during
-     *            construction.
+     *            parameter does not change this Formatter's default {@code Locale}
+     *            as specified during construction, and only applies for the
+     *            duration of this call.
      * @param format
      *            a format string.
      * @param args
@@ -880,59 +881,81 @@ public final class Formatter implements Closeable, Flushable {
      *             if the {@code Formatter} has been closed.
      */
     public Formatter format(Locale l, String format, Object... args) {
-        checkClosed();
-        CharBuffer formatBuffer = CharBuffer.wrap(format);
-        ParserStateMachine parser = new ParserStateMachine(formatBuffer);
-
         // BEGIN android-changed
-        // Reuse the previous transformer if the locale matches.
-        if (transformer == null || ! transformer.locale.equals(l)) {
-            transformer = new Transformer(this, l);
+        Locale originalLocale = locale;
+        try {
+            this.locale = l;
+            doFormat(format, args);
+        } finally {
+            this.locale = originalLocale;
         }
+        return this;
+        // END android-changed
+    }
+
+    // BEGIN android-changed
+    private void doFormat(String format, Object... args) {
+        checkClosed();
+
+        // Reuse the previous transformer if the locale matches.
+        if (transformer == null || ! transformer.locale.equals(locale)) {
+            transformer = new Transformer(this, locale);
+        }
+
+        FormatSpecifierParser fsp = new FormatSpecifierParser();
 
         int currentObjectIndex = 0;
         Object lastArgument = null;
         boolean hasLastArgumentSet = false;
-        while (formatBuffer.hasRemaining()) {
-            parser.reset();
-            FormatToken token = parser.getNextFormatToken();
-            String plainText = token.getPlainText();
-            if (token.getConversionType() == (char) FormatToken.UNSET) {
-                outputCharSequence(plainText);
-            } else {
-                plainText = plainText.substring(0, plainText.indexOf('%'));
-                outputCharSequence(plainText);
+
+        char[] chars = format.toCharArray();
+        int length = chars.length;
+        int i = 0;
+        while (i < length) {
+            // Find the maximal plain-text sequence...
+            int plainTextStart = i;
+            while (i < length && chars[i] != '%') {
+                ++i;
+            }
+            // ...and output it.
+            int plainTextEnd = i;
+            if (plainTextEnd > plainTextStart) {
+                outputCharSequence(format, plainTextStart, plainTextEnd);
+            }
+            // Do we have a format specifier?
+            if (i < length) {
+                FormatToken token = fsp.parseFormatToken(chars, i + 1);
 
                 Object argument = null;
                 if (token.requireArgument()) {
-                    int index = token.getArgIndex() == FormatToken.UNSET ? currentObjectIndex++
-                            : token.getArgIndex();
-                    argument = getArgument(args, index, token, lastArgument,
-                            hasLastArgumentSet);
+                    int index = token.getArgIndex() == FormatToken.UNSET ? currentObjectIndex++ : token.getArgIndex();
+                    argument = getArgument(args, index, fsp, lastArgument, hasLastArgumentSet);
                     lastArgument = argument;
                     hasLastArgumentSet = true;
                 }
-                outputCharSequence(transformer.transform(token, argument));
+
+                CharSequence substitution = transformer.transform(token, argument);
+                if (substitution != null) {
+                    outputCharSequence(substitution, 0, substitution.length());
+                }
+                i = fsp.i;
             }
         }
-        // END android-changed
-        return this;
     }
+    // END android-changed
 
     // BEGIN android-added
     // Fixes http://code.google.com/p/android/issues/detail?id=1767.
-    private void outputCharSequence(CharSequence cs) {
-        if (cs != null) {
-            try {
-                out.append(cs);
-            } catch (IOException e) {
-                lastIOException = e;
-            }
+    private void outputCharSequence(CharSequence cs, int start, int end) {
+        try {
+            out.append(cs, start, end);
+        } catch (IOException e) {
+            lastIOException = e;
         }
     }
     // END android-added
 
-    private Object getArgument(Object[] args, int index, FormatToken token,
+    private Object getArgument(Object[] args, int index, FormatSpecifierParser fsp,
             Object lastArgument, boolean hasLastArgumentSet) {
         if (index == FormatToken.LAST_ARGUMENT_INDEX && !hasLastArgumentSet) {
             throw new MissingFormatArgumentException("<"); //$NON-NLS-1$
@@ -943,7 +966,7 @@ public final class Formatter implements Closeable, Flushable {
         }
 
         if (index >= args.length) {
-            throw new MissingFormatArgumentException(token.getPlainText());
+            throw new MissingFormatArgumentException(fsp.getFormatSpecifierText());
         }
 
         if (index == FormatToken.LAST_ARGUMENT_INDEX) {
@@ -983,24 +1006,14 @@ public final class Formatter implements Closeable, Flushable {
         static final int DEFAULT_PRECISION = 6;
 
         static final int FLAG_MINUS = 1;
-
         static final int FLAG_SHARP = 1 << 1;
-
         static final int FLAG_ADD = 1 << 2;
-
         static final int FLAG_SPACE = 1 << 3;
-
         static final int FLAG_ZERO = 1 << 4;
-
         static final int FLAG_COMMA = 1 << 5;
-
         static final int FLAG_PARENTHESIS = 1 << 6;
 
         private static final int FLAGT_TYPE_COUNT = 6;
-
-        private int formatStringStartIndex;
-
-        private String plainText;
 
         private int argIndex = UNSET;
 
@@ -1010,7 +1023,7 @@ public final class Formatter implements Closeable, Flushable {
 
         private int precision = UNSET;
 
-        private StringBuilder strFlags = new StringBuilder(FLAGT_TYPE_COUNT);
+        private StringBuilder strFlags;
 
         private char dateSuffix;// will be used in new feature.
 
@@ -1036,14 +1049,6 @@ public final class Formatter implements Closeable, Flushable {
             argIndex = index;
         }
 
-        String getPlainText() {
-            return plainText;
-        }
-
-        void setPlainText(String plainText) {
-            this.plainText = plainText;
-        }
-
         int getWidth() {
             return width;
         }
@@ -1061,7 +1066,7 @@ public final class Formatter implements Closeable, Flushable {
         }
 
         String getStrFlags() {
-            return strFlags.toString();
+            return (strFlags != null) ? strFlags.toString() : "";
         }
 
         int getFlags() {
@@ -1076,7 +1081,7 @@ public final class Formatter implements Closeable, Flushable {
          * Sets qualified char as one of the flags. If the char is qualified,
          * sets it as a flag and returns true. Or else returns false.
          */
-        boolean setFlag(char c) {
+        boolean setFlag(int c) {
             int newFlag;
             switch (c) {
                 case '-': {
@@ -1110,21 +1115,16 @@ public final class Formatter implements Closeable, Flushable {
                 default:
                     return false;
             }
-            if (0 != (flags & newFlag)) {
+            if ((flags & newFlag) != 0) {
                 throw new DuplicateFormatFlagsException(String.valueOf(c));
             }
-            flags = (flags | newFlag);
+            flags |= newFlag;
+            if (strFlags == null) {
+                strFlags = new StringBuilder(FLAGT_TYPE_COUNT);
+            }
             strFlags.append(c);
             return true;
 
-        }
-
-        int getFormatStringStartIndex() {
-            return formatStringStartIndex;
-        }
-
-        void setFormatStringStartIndex(int index) {
-            formatStringStartIndex = index;
         }
 
         char getConversionType() {
@@ -1273,8 +1273,6 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms the Boolean argument to a formatted string.
          */
         private CharSequence transformFromBoolean() {
-            StringBuilder result = new StringBuilder();
-            int startIndex = 0;
             int flags = formatToken.getFlags();
 
             if (formatToken.isFlagSet(FormatToken.FLAG_MINUS)
@@ -1290,23 +1288,21 @@ public final class Formatter implements Closeable, Flushable {
                         .getStrFlags(), formatToken.getConversionType());
             }
 
-            if (null == arg) {
-                result.append("false"); //$NON-NLS-1$
-            } else if (arg instanceof Boolean) {
-                result.append(arg);
+            CharSequence result;
+            if (arg instanceof Boolean) {
+                result = arg.toString();
+            } else if (arg == null) {
+                result = "false"; //$NON-NLS-1$
             } else {
-                result.append("true"); //$NON-NLS-1$
+                result = "true"; //$NON-NLS-1$
             }
-            return padding(result, startIndex);
+            return padding(result, 0);
         }
 
         /*
          * Transforms the hashcode of the argument to a formatted string.
          */
         private CharSequence transformFromHashCode() {
-            StringBuilder result = new StringBuilder();
-
-            int startIndex = 0;
             int flags = formatToken.getFlags();
 
             if (formatToken.isFlagSet(FormatToken.FLAG_MINUS)
@@ -1322,20 +1318,19 @@ public final class Formatter implements Closeable, Flushable {
                         .getStrFlags(), formatToken.getConversionType());
             }
 
-            if (null == arg) {
-                result.append("null"); //$NON-NLS-1$
+            CharSequence result;
+            if (arg == null) {
+                result = "null"; //$NON-NLS-1$
             } else {
-                result.append(Integer.toHexString(arg.hashCode()));
+                result = Integer.toHexString(arg.hashCode());
             }
-            return padding(result, startIndex);
+            return padding(result, 0);
         }
 
         /*
          * Transforms the String to a formatted string.
          */
         private CharSequence transformFromString() {
-            StringBuilder result = new StringBuilder();
-            int startIndex = 0;
             int flags = formatToken.getFlags();
 
             if (formatToken.isFlagSet(FormatToken.FLAG_MINUS)
@@ -1376,17 +1371,14 @@ public final class Formatter implements Closeable, Flushable {
                         .getStrFlags(), formatToken.getConversionType());
             }
 
-            result.append(arg);
-            return padding(result, startIndex);
+            CharSequence result = arg != null ? arg.toString() : "null";
+            return padding(result, 0);
         }
 
         /*
          * Transforms the Character to a formatted string.
          */
         private CharSequence transformFromCharacter() {
-            StringBuilder result = new StringBuilder();
-
-            int startIndex = 0;
             int flags = formatToken.getFlags();
 
             if (formatToken.isFlagSet(FormatToken.FLAG_MINUS)
@@ -1407,36 +1399,37 @@ public final class Formatter implements Closeable, Flushable {
                         .getPrecision());
             }
 
-            if (null == arg) {
-                result.append("null"); //$NON-NLS-1$
+            CharSequence result;
+            if (arg == null) {
+                result = "null"; //$NON-NLS-1$
             } else {
                 if (arg instanceof Character) {
-                    result.append(arg);
+                    result = String.valueOf(arg);
                 } else if (arg instanceof Byte) {
                     byte b = ((Byte) arg).byteValue();
                     if (!Character.isValidCodePoint(b)) {
                         throw new IllegalFormatCodePointException(b);
                     }
-                    result.append((char) b);
+                    result = String.valueOf((char) b);
                 } else if (arg instanceof Short) {
                     short s = ((Short) arg).shortValue();
                     if (!Character.isValidCodePoint(s)) {
                         throw new IllegalFormatCodePointException(s);
                     }
-                    result.append((char) s);
+                    result = String.valueOf((char) s);
                 } else if (arg instanceof Integer) {
                     int codePoint = ((Integer) arg).intValue();
                     if (!Character.isValidCodePoint(codePoint)) {
                         throw new IllegalFormatCodePointException(codePoint);
                     }
-                    result.append(String.valueOf(Character.toChars(codePoint)));
+                    result = String.valueOf(Character.toChars(codePoint));
                 } else {
                     // argument of other class is not acceptable.
                     throw new IllegalFormatConversionException(formatToken
                             .getConversionType(), arg.getClass());
                 }
             }
-            return padding(result, startIndex);
+            return padding(result, 0);
         }
 
         /*
@@ -1444,9 +1437,6 @@ public final class Formatter implements Closeable, Flushable {
          * Precision is illegal.
          */
         private CharSequence transformFromPercent() {
-            StringBuilder result = new StringBuilder("%"); //$NON-NLS-1$
-
-            int startIndex = 0;
             int flags = formatToken.getFlags();
 
             if (formatToken.isFlagSet(FormatToken.FLAG_MINUS)
@@ -1464,7 +1454,7 @@ public final class Formatter implements Closeable, Flushable {
                 throw new IllegalFormatPrecisionException(formatToken
                         .getPrecision());
             }
-            return padding(result, startIndex);
+            return padding("%", 0);
         }
 
         /*
@@ -1501,29 +1491,21 @@ public final class Formatter implements Closeable, Flushable {
         /*
          * Pads characters to the formatted string.
          */
-        private CharSequence padding(StringBuilder source, int startIndex) {
+        private CharSequence padding(CharSequence source, int startIndex) {
+            boolean sourceIsStringBuilder = (source instanceof StringBuilder);
+
             int start = startIndex;
-            boolean paddingRight = formatToken
-                    .isFlagSet(FormatToken.FLAG_MINUS);
-            char paddingChar = '\u0020';// space as padding char.
-            if (formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
-                if ('d' == formatToken.getConversionType()) {
-                    paddingChar = getDecimalFormatSymbols().getZeroDigit();
-                } else {
-                    paddingChar = '0';
-                }
-            } else {
-                // if padding char is space, always padding from the head
-                // location.
-                start = 0;
-            }
             int width = formatToken.getWidth();
             int precision = formatToken.getPrecision();
 
             int length = source.length();
             if (precision >= 0) {
                 length = Math.min(length, precision);
-                source.delete(length, source.length());
+                if (sourceIsStringBuilder) {
+                    ((StringBuilder) source).setLength(length);
+                } else {
+                    source = source.subSequence(0, length);
+                }
             }
             if (width > 0) {
                 width = Math.max(source.length(), width);
@@ -1532,16 +1514,45 @@ public final class Formatter implements Closeable, Flushable {
                 return source;
             }
 
-            char[] paddings = new char[width - length];
-            Arrays.fill(paddings, paddingChar);
-            String insertString = new String(paddings);
-
-            if (paddingRight) {
-                source.append(insertString);
+            char paddingChar = '\u0020'; // space as padding char.
+            if (formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
+                if (formatToken.getConversionType() == 'd') {
+                    paddingChar = getDecimalFormatSymbols().getZeroDigit();
+                } else {
+                    paddingChar = '0';
+                }
             } else {
-                source.insert(start, insertString);
+                // if padding char is space, always pad from the start.
+                start = 0;
             }
-            return source;
+            char[] paddingChars = new char[width - length];
+            Arrays.fill(paddingChars, paddingChar);
+
+            boolean paddingRight = formatToken.isFlagSet(FormatToken.FLAG_MINUS);
+            StringBuilder result = toStringBuilder(source);
+            if (paddingRight) {
+                result.append(paddingChars);
+            } else {
+                result.insert(start, paddingChars);
+            }
+            return result;
+        }
+
+        private StringBuilder toStringBuilder(CharSequence cs) {
+            return cs instanceof StringBuilder ? (StringBuilder) cs : new StringBuilder(cs);
+        }
+
+        private StringBuilder wrapParentheses(StringBuilder result) {
+            result.setCharAt(0, '('); // Replace the '-'.
+            if (formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
+                formatToken.setWidth(formatToken.getWidth() - 1);
+                result = (StringBuilder) padding(result, 1);
+                result.append(')');
+            } else {
+                result.append(')');
+                result = (StringBuilder) padding(result, 0);
+            }
+            return result;
         }
 
         /*
@@ -1617,13 +1628,13 @@ public final class Formatter implements Closeable, Flushable {
             }
 
             if ('d' == currentConversionType) {
-                NumberFormat numberFormat = getNumberFormat();
                 if (formatToken.isFlagSet(FormatToken.FLAG_COMMA)) {
+                    NumberFormat numberFormat = getNumberFormat();
                     numberFormat.setGroupingUsed(true);
+                    result.append(numberFormat.format(arg));
                 } else {
-                    numberFormat.setGroupingUsed(false);
+                    result.append(value);
                 }
-                result.append(numberFormat.format(arg));
             } else {
                 long BYTE_MASK = 0x00000000000000FFL;
                 long SHORT_MASK = 0x000000000000FFFFL;
@@ -1659,9 +1670,7 @@ public final class Formatter implements Closeable, Flushable {
             /* pad paddingChar to the output */
             if (isNegative
                     && formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
-                result = wrapParentheses(result);
-                return result;
-
+                return wrapParentheses(result);
             }
             if (isNegative && formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
                 startIndex++;
@@ -1669,35 +1678,14 @@ public final class Formatter implements Closeable, Flushable {
             return padding(result, startIndex);
         }
 
-        /*
-         * add () to the output,if the value is negative and
-         * formatToken.FLAG_PARENTHESIS is set. 'result' is used as an in-out
-         * parameter.
-         */
-        private StringBuilder wrapParentheses(StringBuilder result) {
-            // delete the '-'
-            result.deleteCharAt(0);
-            result.insert(0, '(');
-            if (formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
-                formatToken.setWidth(formatToken.getWidth() - 1);
-                padding(result, 1);
-                result.append(')');
-            } else {
-                result.append(')');
-                padding(result, 0);
-            }
-            return result;
-        }
-
         private CharSequence transformFromSpecialNumber() {
-            String source = null;
-
             if (!(arg instanceof Number) || arg instanceof BigDecimal) {
                 return null;
             }
 
             Number number = (Number) arg;
             double d = number.doubleValue();
+            String source = null;
             if (Double.isNaN(d)) {
                 source = "NaN"; //$NON-NLS-1$
             } else if (Double.isInfinite(d)) {
@@ -1718,19 +1706,18 @@ public final class Formatter implements Closeable, Flushable {
                 }
             }
 
-            if (null != source) {
-                formatToken.setPrecision(FormatToken.UNSET);
-                formatToken.setFlags(formatToken.getFlags()
-                        & (~FormatToken.FLAG_ZERO));
-                return padding(new StringBuilder(source), 0);
+            if (source == null) {
+                return null;
             }
-            return source;
+
+            formatToken.setPrecision(FormatToken.UNSET);
+            formatToken.setFlags(formatToken.getFlags() & (~FormatToken.FLAG_ZERO));
+            return padding(source, 0);
         }
 
         private CharSequence transformFromNull() {
-            formatToken.setFlags(formatToken.getFlags()
-                    & (~FormatToken.FLAG_ZERO));
-            return padding(new StringBuilder("null"), 0); //$NON-NLS-1$
+            formatToken.setFlags(formatToken.getFlags() & (~FormatToken.FLAG_ZERO));
+            return padding("null", 0); //$NON-NLS-1$
         }
 
         /*
@@ -1825,9 +1812,7 @@ public final class Formatter implements Closeable, Flushable {
             /* pad paddingChar to the output */
             if (isNegative
                     && formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
-                result = wrapParentheses(result);
-                return result;
-
+                return wrapParentheses(result);
             }
             if (isNegative && formatToken.isFlagSet(FormatToken.FLAG_ZERO)) {
                 startIndex++;
@@ -1912,8 +1897,7 @@ public final class Formatter implements Closeable, Flushable {
 
             if (getDecimalFormatSymbols().getMinusSign() == result.charAt(0)) {
                 if (formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
-                    result = wrapParentheses(result);
-                    return result;
+                    return wrapParentheses(result);
                 }
             } else {
                 if (formatToken.isFlagSet(FormatToken.FLAG_SPACE)) {
@@ -1943,7 +1927,6 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms a Date to a formatted string.
          */
         private CharSequence transformFromDateTime() {
-            int startIndex = 0;
             char currentConversionType = formatToken.getConversionType();
 
             if (formatToken.isPrecisionSet()) {
@@ -1989,7 +1972,7 @@ public final class Formatter implements Closeable, Flushable {
             StringBuilder result = new StringBuilder();
             // output result
             dateTimeUtil.transform(formatToken, calendar, result);
-            return padding(result, startIndex);
+            return padding(result, 0);
         }
     }
 
@@ -2067,7 +2050,7 @@ public final class Formatter implements Closeable, Flushable {
             String formattedString = decimalFormat.format(argument);
             result.append(formattedString.replace('E', 'e'));
 
-            // if the flag is sharp and decimal seperator is always given
+            // if the flag is sharp and decimal separator is always given
             // out.
             if (formatToken.isFlagSet(FormatToken.FLAG_SHARP)
                     && 0 == formatToken.getPrecision()) {
@@ -2166,7 +2149,7 @@ public final class Formatter implements Closeable, Flushable {
             }
             decimalFormat.applyPattern(pattern.toString());
             result.append(decimalFormat.format(argument));
-            // if the flag is sharp and decimal seperator is always given
+            // if the flag is sharp and decimal separator is always given
             // out.
             if (formatToken.isFlagSet(FormatToken.FLAG_SHARP)
                     && 0 == formatToken.getPrecision()) {
@@ -2199,9 +2182,9 @@ public final class Formatter implements Closeable, Flushable {
 
             int precision = formatToken.getPrecision();
             precision = (0 == precision ? 1 : precision);
-            int indexOfFirstFracitoanlDigit = result.indexOf(".") + 1; //$NON-NLS-1$
+            int indexOfFirstFractionalDigit = result.indexOf(".") + 1; //$NON-NLS-1$
             int indexOfP = result.indexOf("p"); //$NON-NLS-1$
-            int fractionalLength = indexOfP - indexOfFirstFracitoanlDigit;
+            int fractionalLength = indexOfP - indexOfFirstFractionalDigit;
 
             if (fractionalLength == precision) {
                 return;
@@ -2213,7 +2196,7 @@ public final class Formatter implements Closeable, Flushable {
                 result.insert(indexOfP, zeros);
                 return;
             }
-            result.delete(indexOfFirstFracitoanlDigit + precision, indexOfP);
+            result.delete(indexOfFirstFractionalDigit + precision, indexOfP);
         }
     }
 
@@ -2566,6 +2549,7 @@ public final class Formatter implements Closeable, Flushable {
             transform_Y();
         }
 
+        // TODO: this doesn't need a temporary StringBuilder!
         private static String paddingZeros(long number, int length) {
             int len = length;
             StringBuilder result = new StringBuilder();
@@ -2592,256 +2576,138 @@ public final class Formatter implements Closeable, Flushable {
         }
     }
 
-    private static class ParserStateMachine {
+    private static class FormatSpecifierParser {
+        private char[] chars;
+        private int startIndex;
+        private int i;
 
-        private static final char EOS = (char) -1;
-
-        private static final int EXIT_STATE = 0;
-
-        private static final int ENTRY_STATE = 1;
-
-        private static final int START_CONVERSION_STATE = 2;
-
-        private static final int FLAGS_STATE = 3;
-
-        private static final int WIDTH_STATE = 4;
-
-        private static final int PRECISION_STATE = 5;
-
-        private static final int CONVERSION_TYPE_STATE = 6;
-
-        private static final int SUFFIX_STATE = 7;
-
-        private FormatToken token;
-
-        private int state = ENTRY_STATE;
-
-        private char currentChar = 0;
-
-        private CharBuffer format = null;
-
-        ParserStateMachine(CharBuffer format) {
-            this.format = format;
-        }
-
-        void reset() {
-            this.currentChar = (char) FormatToken.UNSET;
-            this.state = ENTRY_STATE;
-            this.token = null;
-        }
-
-        /*
-         * Gets the information about the current format token. Information is
-         * recorded in the FormatToken returned and the position of the stream
-         * for the format string will be advanced till the next format token.
+        /**
+         * Returns a FormatToken representing the format specifier starting at 'offset' in 'chars'.
+         * @param offset the first character after the '%'
          */
-        FormatToken getNextFormatToken() {
-            token = new FormatToken();
-            token.setFormatStringStartIndex(format.position());
-
-            // FINITE AUTOMATIC MACHINE
-            while (true) {
-
-                if (ParserStateMachine.EXIT_STATE != state) {
-                    // exit state does not need to get next char
-                    currentChar = getNextFormatChar();
-                    if (EOS == currentChar
-                            && ParserStateMachine.ENTRY_STATE != state) {
-                        throw new UnknownFormatConversionException(
-                                getFormatString());
-                    }
-                }
-
-                switch (state) {
-                    // exit state
-                    case ParserStateMachine.EXIT_STATE: {
-                        process_EXIT_STATE();
-                        return token;
-                    }
-                        // plain text state, not yet applied converter
-                    case ParserStateMachine.ENTRY_STATE: {
-                        process_ENTRY_STATE();
-                        break;
-                    }
-                        // begins converted string
-                    case ParserStateMachine.START_CONVERSION_STATE: {
-                        process_START_CONVERSION_STATE();
-                        break;
-                    }
-                    case ParserStateMachine.FLAGS_STATE: {
-                        process_FlAGS_STATE();
-                        break;
-                    }
-                    case ParserStateMachine.WIDTH_STATE: {
-                        process_WIDTH_STATE();
-                        break;
-                    }
-                    case ParserStateMachine.PRECISION_STATE: {
-                        process_PRECISION_STATE();
-                        break;
-                    }
-                    case ParserStateMachine.CONVERSION_TYPE_STATE: {
-                        process_CONVERSION_TYPE_STATE();
-                        break;
-                    }
-                    case ParserStateMachine.SUFFIX_STATE: {
-                        process_SUFFIX_STATE();
-                        break;
-                    }
-                }
-            }
+        FormatToken parseFormatToken(char[] chars, int offset) {
+            this.chars = chars;
+            this.startIndex = offset;
+            this.i = offset;
+            return parseArgumentIndexAndFlags(new FormatToken());
         }
 
-        /*
-         * Gets next char from the format string.
+        /**
+         * Returns a string corresponding to the last format specifier that was parsed.
+         * Used to construct error messages.
          */
-        private char getNextFormatChar() {
-            if (format.hasRemaining()) {
-                return format.get();
+        String getFormatSpecifierText() {
+            return new String(chars, startIndex, i - startIndex);
+        }
+
+        private int peek() {
+            return (i < chars.length) ? chars[i] : -1;
+        }
+
+        private char advance() {
+            if (i >= chars.length) {
+                throw new UnknownFormatConversionException(getFormatSpecifierText());
             }
-            return EOS;
+            return chars[i++];
         }
 
-        private String getFormatString() {
-            int end = format.position();
-            format.rewind();
-            String formatString = format.subSequence(
-                    token.getFormatStringStartIndex(), end).toString();
-            format.position(end);
-            return formatString;
-        }
-
-        private void process_ENTRY_STATE() {
-            if (EOS == currentChar) {
-                state = ParserStateMachine.EXIT_STATE;
-            } else if ('%' == currentChar) {
-                // change to conversion type state
-                state = START_CONVERSION_STATE;
-            }
-            // else remains in ENTRY_STATE
-        }
-
-        private void process_START_CONVERSION_STATE() {
-            if (Character.isDigit(currentChar)) {
-                int position = format.position() - 1;
-                int number = parseInt(format);
-                char nextChar = 0;
-                if (format.hasRemaining()) {
-                    nextChar = format.get();
-                }
-                if ('$' == nextChar) {
-                    // the digital sequence stands for the argument
-                    // index.
-                    int argIndex = number;
+        private FormatToken parseArgumentIndexAndFlags(FormatToken token) {
+            // Parse the argument index, if there is one.
+            int position = i;
+            int ch = peek();
+            if (Character.isDigit(ch)) {
+                int number = nextInt();
+                if (peek() == '$') {
+                    // The number was an argument index.
+                    advance(); // Swallow the '$'.
+                    if (number == FormatToken.UNSET) {
+                        throw new MissingFormatArgumentException(getFormatSpecifierText());
+                    }
                     // k$ stands for the argument whose index is k-1 except that
-                    // 0$ and 1$ both stands for the first element.
-                    if (argIndex > 0) {
-                        token.setArgIndex(argIndex - 1);
-                    } else if (argIndex == FormatToken.UNSET) {
-                        throw new MissingFormatArgumentException(
-                                getFormatString());
-                    }
-                    state = FLAGS_STATE;
+                    // 0$ and 1$ both stand for the first element.
+                    token.setArgIndex(Math.max(0, number - 1));
                 } else {
-                    // the digital zero stands for one format flag.
-                    if ('0' == currentChar) {
-                        state = FLAGS_STATE;
-                        format.position(position);
+                    if (ch == '0') {
+                        // The digit zero is a format flag, so reparse it as such.
+                        i = position;
                     } else {
-                        // the digital sequence stands for the width.
-                        state = WIDTH_STATE;
-                        // do not get the next char.
-                        format.position(format.position() - 1);
-                        token.setWidth(number);
+                        // The number was a width. This means there are no flags to parse.
+                        return parseWidth(token, number);
                     }
                 }
-                currentChar = nextChar;
-            } else if ('<' == currentChar) {
-                state = FLAGS_STATE;
+            } else if (ch == '<') {
                 token.setArgIndex(FormatToken.LAST_ARGUMENT_INDEX);
-            } else {
-                state = FLAGS_STATE;
-                // do not get the next char.
-                format.position(format.position() - 1);
+                advance();
             }
 
-        }
+            // Parse the flags.
+            while (token.setFlag(peek())) {
+                advance();
+            }
 
-        private void process_FlAGS_STATE() {
-            if (token.setFlag(currentChar)) {
-                // remains in FLAGS_STATE
-            } else if (Character.isDigit(currentChar)) {
-                token.setWidth(parseInt(format));
-                state = WIDTH_STATE;
-            } else if ('.' == currentChar) {
-                state = PRECISION_STATE;
+            // What comes next?
+            ch = peek();
+            if (Character.isDigit(ch)) {
+                return parseWidth(token, nextInt());
+            } else if (ch == '.') {
+                return parsePrecision(token);
             } else {
-                state = CONVERSION_TYPE_STATE;
-                // do not get the next char.
-                format.position(format.position() - 1);
+                return parseConversionType(token);
             }
         }
 
-        private void process_WIDTH_STATE() {
-            if ('.' == currentChar) {
-                state = PRECISION_STATE;
+        // We pass the width in because in some cases we've already parsed it.
+        // (Because of the ambiguity between argument indexes and widths.)
+        private FormatToken parseWidth(FormatToken token, int width) {
+            token.setWidth(width);
+            int ch = peek();
+            if (ch == '.') {
+                return parsePrecision(token);
             } else {
-                state = CONVERSION_TYPE_STATE;
-                // do not get the next char.
-                format.position(format.position() - 1);
+                return parseConversionType(token);
             }
         }
 
-        private void process_PRECISION_STATE() {
-            if (Character.isDigit(currentChar)) {
-                token.setPrecision(parseInt(format));
+        private FormatToken parsePrecision(FormatToken token) {
+            advance(); // Swallow the '.'.
+            int ch = peek();
+            if (Character.isDigit(ch)) {
+                token.setPrecision(nextInt());
+                return parseConversionType(token);
             } else {
-                // the precision is required but not given by the
-                // format string.
-                throw new UnknownFormatConversionException(getFormatString());
+                // The precision is required but not given by the format string.
+                throw new UnknownFormatConversionException(getFormatSpecifierText());
             }
-            state = CONVERSION_TYPE_STATE;
         }
 
-        private void process_CONVERSION_TYPE_STATE() {
-            token.setConversionType(currentChar);
-            if ('t' == currentChar || 'T' == currentChar) {
-                state = SUFFIX_STATE;
-            } else {
-                state = EXIT_STATE;
+        private FormatToken parseConversionType(FormatToken token) {
+            char ch = advance(); // This is mandatory, so no need to peek.
+            token.setConversionType(ch);
+            if (ch == 't' || ch == 'T') {
+                token.setDateSuffix(advance());
             }
-
+            return token;
         }
 
-        private void process_SUFFIX_STATE() {
-            token.setDateSuffix(currentChar);
-            state = EXIT_STATE;
-        }
-
-        private void process_EXIT_STATE() {
-            token.setPlainText(getFormatString());
-        }
-
-        /*
-         * Parses integer value from the given buffer
-         */
-        private int parseInt(CharBuffer buffer) {
-            int start = buffer.position() - 1;
-            int end = buffer.limit();
-            while (buffer.hasRemaining()) {
-                if (!Character.isDigit(buffer.get())) {
-                    end = buffer.position() - 1;
-                    break;
+        // Parses an integer (of arbitrary length, but typically just one digit).
+        private int nextInt() {
+            int length = chars.length;
+            long value = 0;
+            while (i < length && Character.isDigit(chars[i])) {
+                value = 10 * value + (chars[i++] - '0');
+                if (value > Integer.MAX_VALUE) {
+                    return failNextInt();
                 }
             }
-            buffer.position(0);
-            String intStr = buffer.subSequence(start, end).toString();
-            buffer.position(end);
-            try {
-                return Integer.parseInt(intStr);
-            } catch (NumberFormatException e) {
-                return FormatToken.UNSET;
+            return (int) value;
+        }
+
+        // Swallow remaining digits to resync our attempted parse, but return failure.
+        private int failNextInt() {
+            while (Character.isDigit(peek())) {
+                advance();
             }
+            return FormatToken.UNSET;
         }
     }
 }
