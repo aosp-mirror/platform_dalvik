@@ -846,7 +846,10 @@ public final class Formatter implements Closeable, Flushable {
      *             if the {@code Formatter} has been closed.
      */
     public Formatter format(String format, Object... args) {
-        return format(locale, format, args);
+        // BEGIN android-changed
+        doFormat(format, args);
+        return this;
+        // END android-changed
     }
 
     // BEGIN android-added
@@ -898,7 +901,7 @@ public final class Formatter implements Closeable, Flushable {
         checkClosed();
 
         // Reuse the previous transformer if the locale matches.
-        if (transformer == null || ! transformer.locale.equals(locale)) {
+        if (transformer == null || !transformer.locale.equals(locale)) {
             transformer = new Transformer(this, locale);
         }
 
@@ -935,6 +938,7 @@ public final class Formatter implements Closeable, Flushable {
                 }
 
                 CharSequence substitution = transformer.transform(token, argument);
+                // The substitution is null if we called Formattable.formatTo.
                 if (substitution != null) {
                     outputCharSequence(substitution, 0, substitution.length());
                 }
@@ -1039,6 +1043,10 @@ public final class Formatter implements Closeable, Flushable {
 
         boolean isFlagSet(int flag) {
             return 0 != (flags & flag);
+        }
+
+        boolean hasArg() {
+            return argIndex != UNSET;
         }
 
         int getArgIndex() {
@@ -1343,8 +1351,7 @@ public final class Formatter implements Closeable, Flushable {
                 int flag = 0;
                 // only minus and sharp flag is valid
                 if (FormatToken.FLAGS_UNSET != (flags & ~FormatToken.FLAG_MINUS & ~FormatToken.FLAG_SHARP)) {
-                    throw new IllegalFormatFlagsException(formatToken
-                            .getStrFlags());
+                    throw new IllegalFormatFlagsException(formatToken.getStrFlags());
                 }
                 if (formatToken.isFlagSet(FormatToken.FLAG_MINUS)) {
                     flag |= FormattableFlags.LEFT_JUSTIFY;
@@ -1434,7 +1441,7 @@ public final class Formatter implements Closeable, Flushable {
 
         /*
          * Transforms percent to a formatted string. Only '-' is legal flag.
-         * Precision is illegal.
+         * Precision and arguments are illegal.
          */
         private CharSequence transformFromPercent() {
             int flags = formatToken.getFlags();
@@ -1445,8 +1452,7 @@ public final class Formatter implements Closeable, Flushable {
                         + formatToken.getConversionType());
             }
 
-            if (FormatToken.FLAGS_UNSET != flags
-                    && FormatToken.FLAG_MINUS != flags) {
+            if (flags != FormatToken.FLAGS_UNSET && flags != FormatToken.FLAG_MINUS) {
                 throw new FormatFlagsConversionMismatchException(formatToken
                         .getStrFlags(), formatToken.getConversionType());
             }
@@ -1454,12 +1460,15 @@ public final class Formatter implements Closeable, Flushable {
                 throw new IllegalFormatPrecisionException(formatToken
                         .getPrecision());
             }
+            if (formatToken.hasArg()) {
+                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
+            }
             return padding("%", 0);
         }
 
         /*
-         * Transforms line separator to a formatted string. Any flag, the width
-         * or the precision is illegal.
+         * Transforms line separator to a formatted string. Any flag, width,
+         * precision or argument is illegal.
          */
         private CharSequence transformFromLineSeparator() {
             if (formatToken.isPrecisionSet()) {
@@ -1471,19 +1480,16 @@ public final class Formatter implements Closeable, Flushable {
                 throw new IllegalFormatWidthException(formatToken.getWidth());
             }
 
-            int flags = formatToken.getFlags();
-            if (FormatToken.FLAGS_UNSET != flags) {
+            if (formatToken.getFlags() != FormatToken.FLAGS_UNSET || formatToken.hasArg()) {
                 throw new IllegalFormatFlagsException(formatToken.getStrFlags());
             }
 
-            if (null == lineSeparator) {
-                lineSeparator = AccessController
-                        .doPrivileged(new PrivilegedAction<String>() {
-
-                            public String run() {
-                                return System.getProperty("line.separator"); //$NON-NLS-1$
-                            }
-                        });
+            if (lineSeparator == null) {
+                lineSeparator = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                    public String run() {
+                        return System.getProperty("line.separator"); //$NON-NLS-1$
+                    }
+                });
             }
             return lineSeparator;
         }
@@ -1688,25 +1694,21 @@ public final class Formatter implements Closeable, Flushable {
             String source = null;
             if (Double.isNaN(d)) {
                 source = "NaN"; //$NON-NLS-1$
-            } else if (Double.isInfinite(d)) {
-                if (d >= 0) {
-                    if (formatToken.isFlagSet(FormatToken.FLAG_ADD)) {
-                        source = "+Infinity"; //$NON-NLS-1$
-                    } else if (formatToken.isFlagSet(FormatToken.FLAG_SPACE)) {
-                        source = " Infinity"; //$NON-NLS-1$
-                    } else {
-                        source = "Infinity"; //$NON-NLS-1$
-                    }
+            } else if (d == Double.POSITIVE_INFINITY) {
+                if (formatToken.isFlagSet(FormatToken.FLAG_ADD)) {
+                    source = "+Infinity"; //$NON-NLS-1$
+                } else if (formatToken.isFlagSet(FormatToken.FLAG_SPACE)) {
+                    source = " Infinity"; //$NON-NLS-1$
                 } else {
-                    if (formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
-                        source = "(Infinity)"; //$NON-NLS-1$
-                    } else {
-                        source = "-Infinity"; //$NON-NLS-1$
-                    }
+                    source = "Infinity"; //$NON-NLS-1$
                 }
-            }
-
-            if (source == null) {
+            } else if (d == Double.NEGATIVE_INFINITY) {
+                if (formatToken.isFlagSet(FormatToken.FLAG_PARENTHESIS)) {
+                    source = "(Infinity)"; //$NON-NLS-1$
+                } else {
+                    source = "-Infinity"; //$NON-NLS-1$
+                }
+            } else {
                 return null;
             }
 
