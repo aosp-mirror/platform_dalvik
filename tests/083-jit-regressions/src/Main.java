@@ -20,6 +20,7 @@
 public class Main {
     public static void main(String args[]) throws Exception {
         b2296099Test();
+        b2302318Test();
     }
 
     static void b2296099Test() throws Exception {
@@ -43,7 +44,45 @@ public class Main {
        System.out.println("b2296099 Passes");
    }
 
-   static int rotateLeft(int i, int distance) {
-       return ((i << distance) | (i >>> (-distance)));
-   }
+    static int rotateLeft(int i, int distance) {
+        return ((i << distance) | (i >>> (-distance)));
+    }
+
+    static void b2302318Test() {
+        System.gc();
+
+        SpinThread slow = new SpinThread(Thread.MIN_PRIORITY);
+        SpinThread fast1 = new SpinThread(Thread.NORM_PRIORITY);
+        SpinThread fast2 = new SpinThread(Thread.MAX_PRIORITY);
+
+        slow.setDaemon(true);
+        fast1.setDaemon(true);
+        fast2.setDaemon(true);
+
+        fast2.start();
+        slow.start();
+        fast1.start();
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ie) {/*ignore */}
+        System.gc();
+
+        System.out.println("done");
+    }
+}
+
+class SpinThread extends Thread {
+    int mPriority;
+
+    SpinThread(int prio) {
+        super("Spin prio=" + prio);
+        mPriority = prio;
+    }
+
+    public void run() {
+        setPriority(mPriority);
+        System.out.println("Spinning away at priority " + mPriority);
+
+        while (true) {}
+    }
 }

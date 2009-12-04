@@ -668,7 +668,8 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                  getOpcodeName(decInsn.opCode));
 #endif
             }
-            if (decInsn.opCode == OP_THROW) {
+            /* Break on throw or self-loop */
+            if ((decInsn.opCode == OP_THROW) || (lastPC == pc)){
                 interpState->jitState = kJitTSelectEnd;
             }
             if (interpState->totalTraceLen >= JIT_MAX_TRACE_LEN) {
