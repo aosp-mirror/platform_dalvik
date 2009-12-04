@@ -79,8 +79,7 @@ public class FileInputStream extends InputStream implements Closeable {
         }
         fd = new FileDescriptor();
         fd.readOnly = true;
-        fd.descriptor = fileSystem.open(file.properPath(true),
-                IFileSystem.O_RDONLY);
+        fd.descriptor = fileSystem.open(file.pathBytes, IFileSystem.O_RDONLY);
         innerFD = true;
         // BEGIN android-removed
         // channel = FileChannelFactory.getFileChannel(this, fd.descriptor,

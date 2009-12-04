@@ -94,7 +94,7 @@ public class FileOutputStream extends OutputStream implements Closeable {
             security.checkWrite(file.getPath());
         }
         fd = new FileDescriptor();
-        fd.descriptor = fileSystem.open(file.properPath(true),
+        fd.descriptor = fileSystem.open(file.pathBytes,
                 append ? IFileSystem.O_APPEND : IFileSystem.O_WRONLY);
         innerFD = true;
         channel = FileChannelFactory.getFileChannel(this, fd.descriptor,

@@ -38,47 +38,40 @@
 
 class Path {
 public:
-    Path(JNIEnv* env, jbyteArray pathBytes)
-    : mByteCount(env->GetArrayLength(pathBytes)), mBytes(mByteCount + 1)
+    // The Java byte[] already contains a trailing NUL.
+    Path(JNIEnv* env, jbyteArray byteArray)
+    : mEnv(env), mByteArray(byteArray), mBytes(NULL)
     {
-        // The Java byte[] doesn't contain a trailing NUL.
-        // TODO: the Java byte[] should contain a trailing NUL.
-        jbyte* dst = reinterpret_cast<jbyte*>(&mBytes[0]);
-        env->GetByteArrayRegion(pathBytes, 0, mByteCount, dst);
-        mBytes[mByteCount] = '\0';
-        // This is an awful mistake, because '\' is a perfectly acceptable
-        // character on Linux/Android. But we've shipped so many versions
-        // that behaved like this, I'm too scared to change it.
-        // TODO: if we're going to do this, we should do it once, in Java.
-        for (char* p = &mBytes[0]; *p; ++p) {
-            if (*p == '\\') {
-                *p = '/';
-            }
+        mBytes = env->GetByteArrayElements(mByteArray, NULL);
+    }
+
+    ~Path() {
+        if (mBytes) {
+            mEnv->ReleaseByteArrayElements(mByteArray, mBytes, JNI_ABORT);
         }
     }
 
-    jbyte* bytes() {
-        return reinterpret_cast<jbyte*>(&mBytes[0]);
-    }
-
-    // Capacity.
-    size_t size() const {
-        return mByteCount;
+    const jbyte* bytes() const {
+        return mBytes;
     }
 
     // Element access.
-    const char& operator[](size_t n) const { return mBytes[n]; }
+    const char& operator[](size_t n) const {
+        const char* array = reinterpret_cast<const char*>(mBytes);
+        return array[n];
+    }
 
 private:
-    size_t mByteCount;
-    LocalArray<512> mBytes;
+    JNIEnv* mEnv;
+    jbyteArray mByteArray;
+    jbyte* mBytes;
 };
 
 
 static jbyteArray java_io_File_getCanonImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
     Path path(env, pathBytes);
     // The only thing this native code currently does is truncate the byte[] at
-    // the first NUL, and rewrite '\' as '/'.
+    // the first NUL.
     // TODO: this is completely pointless. we should do this in Java, or do all of getCanonicalPath in native code. (realpath(2)?)
     size_t length = strlen(&path[0]);
     jbyteArray result = env->NewByteArray(length);
@@ -314,18 +307,20 @@ static jboolean java_io_File_mkdirImpl(JNIEnv* env, jobject, jbyteArray pathByte
     return (mkdir(&path[0], S_IRWXU) == 0);
 }
 
-static jint java_io_File_newFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+static jboolean java_io_File_createNewFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
     Path path(env, pathBytes);
     // On Android, we don't want default permissions to allow global access.
     ScopedFd fd(open(&path[0], O_CREAT | O_EXCL, 0600));
     if (fd.get() != -1) {
-        // We return 0 if we created a new file...
-        return 0;
+        // We created a new file. Success!
+        return JNI_TRUE;
     }
-    // ... 1 if the file already existed, and -1 if we failed.
-    // TODO: we should return true or false, like our caller,
-    // and throw IOException on failure.
-    return (errno == EEXIST) ? 1 : -1;
+    if (errno == EEXIST) {
+        // The file already exists.
+        return JNI_FALSE;
+    }
+    jniThrowIOException(env, errno);
+    return JNI_FALSE; // Ignored by Java; keeps the C++ compiler happy.
 }
 
 static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject, jbyteArray oldPathBytes, jbyteArray newPathBytes) {
@@ -336,22 +331,22 @@ static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject, jbyteArray oldPa
 
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
+    { "createNewFileImpl",  "([B)Z",  (void*) java_io_File_createNewFileImpl },
     { "deleteImpl",         "([B)Z",  (void*) java_io_File_deleteImpl },
     { "existsImpl",         "([B)Z",  (void*) java_io_File_existsImpl },
     { "getCanonImpl",       "([B)[B", (void*) java_io_File_getCanonImpl },
+    { "getLinkImpl",        "([B)[B", (void*) java_io_File_getLinkImpl },
     { "isDirectoryImpl",    "([B)Z",  (void*) java_io_File_isDirectoryImpl },
     { "isFileImpl",         "([B)Z",  (void*) java_io_File_isFileImpl },
     { "isReadableImpl",     "([B)Z",  (void*) java_io_File_isReadableImpl },
     { "isWritableImpl",     "([B)Z",  (void*) java_io_File_isWritableImpl },
-    { "getLinkImpl",        "([B)[B", (void*) java_io_File_getLinkImpl },
     { "lastModifiedImpl",   "([B)J",  (void*) java_io_File_lastModifiedImpl },
-    { "setReadOnlyImpl",    "([B)Z",  (void*) java_io_File_setReadOnlyImpl },
     { "lengthImpl",         "([B)J",  (void*) java_io_File_lengthImpl },
     { "listImpl",           "([B)[[B",(void*) java_io_File_listImpl },
     { "mkdirImpl",          "([B)Z",  (void*) java_io_File_mkdirImpl },
-    { "newFileImpl",        "([B)I",  (void*) java_io_File_newFileImpl },
     { "renameToImpl",       "([B[B)Z",(void*) java_io_File_renameToImpl },
     { "setLastModifiedImpl","([BJ)Z", (void*) java_io_File_setLastModifiedImpl },
+    { "setReadOnlyImpl",    "([B)Z",  (void*) java_io_File_setReadOnlyImpl },
 };
 int register_java_io_File(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "java/io/File",

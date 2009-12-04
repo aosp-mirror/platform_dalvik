@@ -20,6 +20,8 @@ package java.io;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.security.AccessController;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -53,7 +55,12 @@ public class File implements Serializable, Comparable<File> {
 
     private String path;
 
-    transient byte[] properPath;
+    /**
+     * The cached UTF-8 byte sequence corresponding to 'path'.
+     * This is suitable for direct use by our JNI, and includes a trailing NUL.
+     * For non-absolute paths, the "user.dir" property is prepended.
+     */
+    transient byte[] pathBytes;
 
     /**
      * The system dependent file separator character.
@@ -109,14 +116,7 @@ public class File implements Serializable, Comparable<File> {
      *             if {@code name} is {@code null}.
      */
     public File(File dir, String name) {
-        if (name == null) {
-            throw new NullPointerException();
-        }
-        if (dir == null) {
-            this.path = fixSlashes(name);
-        } else {
-            this.path = calculatePath(dir.getPath(), name);
-        }
+        this(dir == null ? null : dir.getPath(), name);
     }
 
     /**
@@ -127,7 +127,7 @@ public class File implements Serializable, Comparable<File> {
      */
     public File(String path) {
         // path == null check & NullPointerException thrown by fixSlashes
-        this.path = fixSlashes(path);
+        init(fixSlashes(path));
     }
 
     /**
@@ -146,9 +146,9 @@ public class File implements Serializable, Comparable<File> {
             throw new NullPointerException();
         }
         if (dirPath == null) {
-            this.path = fixSlashes(name);
+            init(fixSlashes(name));
         } else {
-            this.path = calculatePath(dirPath, name);
+            init(calculatePath(dirPath, name));
         }
     }
 
@@ -169,7 +169,49 @@ public class File implements Serializable, Comparable<File> {
     public File(URI uri) {
         // check pre-conditions
         checkURI(uri);
-        this.path = fixSlashes(uri.getPath());
+        init(fixSlashes(uri.getPath()));
+    }
+
+    private void init(String cleanPath) {
+        // Keep a copy of the string path.
+        this.path = cleanPath;
+        // Cache the UTF-8 bytes we need for the JNI.
+        if (isAbsolute()) {
+            this.pathBytes = newCString(path);
+            return;
+        }
+        String userDir = AccessController.doPrivileged(
+            new PriviAction<String>("user.dir")); //$NON-NLS-1$
+        if (path.length() == 0) {
+            this.pathBytes = newCString(userDir);
+            return;
+        }
+        int length = userDir.length();
+        if (length > 0 && userDir.charAt(length - 1) == separatorChar) {
+            this.pathBytes = newCString(userDir + path);
+        } else {
+            this.pathBytes = newCString(userDir + separator + path);
+        }
+    }
+
+    // Cache the UTF-8 Charset for newCString.
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+
+    private byte[] newCString(String s) {
+        ByteBuffer buffer = UTF8.encode(s);
+        // Add a trailing NUL, because this byte[] is going to be used as a char*.
+        int byteCount = buffer.limit() + 1;
+        byte[] bytes = new byte[byteCount];
+        buffer.get(bytes, 0, byteCount - 1);
+        // This is an awful mistake, because '\' is a perfectly acceptable
+        // character on Linux/Android. But we've shipped so many versions
+        // that behaved like this, I'm too scared to change it.
+        for (int i = 0; i < bytes.length; ++i) {
+            if (bytes[i] == '\\') {
+                bytes[i] = '/';
+            }
+        }
+        return bytes;
     }
 
     private String calculatePath(String dirPath, String name) {
@@ -251,54 +293,34 @@ public class File implements Serializable, Comparable<File> {
         // END android-only
     }
 
-    /**
-     * The purpose of this method is to take a path and fix the slashes up. This
-     * includes changing them all to the current platforms fileSeparator and
-     * removing duplicates.
-     */
+    // Removes duplicate adjacent slashes and any trailing slash.
+    // BEGIN android-only: removed support for Windows UNC paths, avoid unnecessary allocation.
     private String fixSlashes(String origPath) {
-        int uncIndex = 1;
-        int length = origPath.length(), newLength = 0;
-        if (separatorChar == '/') {
-            uncIndex = 0;
-        } else if (length > 2 && origPath.charAt(1) == ':') {
-            uncIndex = 2;
-        }
-
-        boolean foundSlash = false;
-        char newPath[] = origPath.toCharArray();
-        for (int i = 0; i < length; i++) {
-            char pathChar = newPath[i];
-            if ((separatorChar == '\\' && pathChar == '\\')
-                || pathChar == '/') {
-                /* UNC Name requires 2 leading slashes */
-                if ((foundSlash && i == uncIndex) || !foundSlash) {
+        // Remove duplicate adjacent slashes.
+        boolean lastWasSlash = false;
+        char[] newPath = origPath.toCharArray();
+        int length = newPath.length;
+        int newLength = 0;
+        for (int i = 0; i < length; ++i) {
+            char ch = newPath[i];
+            if (ch == '/') {
+                if (!lastWasSlash) {
                     newPath[newLength++] = separatorChar;
-                    foundSlash = true;
+                    lastWasSlash = true;
                 }
             } else {
-                // check for leading slashes before a drive
-                if (pathChar == ':'
-                        && uncIndex > 0
-                        && (newLength == 2 || (newLength == 3 && newPath[1] == separatorChar))
-                        && newPath[0] == separatorChar) {
-                    newPath[0] = newPath[newLength - 1];
-                    newLength = 1;
-                    // allow trailing slash after drive letter
-                    uncIndex = 2;
-                }
-                newPath[newLength++] = pathChar;
-                foundSlash = false;
+                newPath[newLength++] = ch;
+                lastWasSlash = false;
             }
         }
-        // remove trailing slash
-        if (foundSlash
-                && (newLength > (uncIndex + 1) || (newLength == 2 && newPath[0] != separatorChar))) {
+        // Remove any trailing slash (unless this is the root of the file system).
+        if (lastWasSlash && newLength > 1) {
             newLength--;
         }
-
-        return new String(newPath, 0, newLength);
+        // Reuse the original string if possible.
+        return (newLength != length) ? new String(newPath, 0, newLength) : origPath;
     }
+    // END android-only
 
     /**
      * Indicates whether the current context is allowed to read from this file.
@@ -317,7 +339,7 @@ public class File implements Serializable, Comparable<File> {
             security.checkRead(path);
         }
         // BEGIN android-changed
-        return isReadableImpl(properPath(true));
+        return isReadableImpl(pathBytes);
         // END android-changed
     }
 
@@ -339,7 +361,7 @@ public class File implements Serializable, Comparable<File> {
             security.checkWrite(path);
         }
         // BEGIN android-changed
-        return isWritableImpl(properPath(true));
+        return isWritableImpl(pathBytes);
         // END android-changed
     }
 
@@ -377,7 +399,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkDelete(path);
         }
-        return deleteImpl(properPath(true));
+        return deleteImpl(pathBytes);
     }
 
     // BEGIN android-changed
@@ -442,7 +464,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        return existsImpl(properPath(true));
+        return existsImpl(pathBytes);
     }
 
     private native boolean existsImpl(byte[] filePath);
@@ -451,11 +473,9 @@ public class File implements Serializable, Comparable<File> {
      * Returns the absolute path of this file.
      *
      * @return the absolute file path.
-     * @see java.lang.SecurityManager#checkPropertyAccess
      */
     public String getAbsolutePath() {
-        byte[] absolute = properPath(false);
-        return Util.toUTF8String(absolute);
+        return Util.toUTF8String(pathBytes, 0, pathBytes.length - 1);
     }
 
     /**
@@ -481,12 +501,8 @@ public class File implements Serializable, Comparable<File> {
      * @return the canonical path of this file.
      * @throws IOException
      *             if an I/O error occurs.
-     * @see java.lang.SecurityManager#checkPropertyAccess
      */
     public String getCanonicalPath() throws IOException {
-        byte[] result = properPath(false);
-        String absPath = Util.toUTF8String(result);
-
         // BEGIN android-removed
         //     Caching the canonical path is bogus. Users facing specific
         //     performance problems can perform their own caching, with
@@ -499,6 +515,7 @@ public class File implements Serializable, Comparable<File> {
         // }
         // END android-removed
 
+        byte[] result = pathBytes;
         if(separatorChar == '/') {
             // resolve the full path first
             result = resolveLink(result, result.length, false);
@@ -793,7 +810,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        return isDirectoryImpl(properPath(true));
+        return isDirectoryImpl(pathBytes);
     }
 
     private native boolean isDirectoryImpl(byte[] filePath);
@@ -815,7 +832,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        return isFileImpl(properPath(true));
+        return isFileImpl(pathBytes);
     }
 
     private native boolean isFileImpl(byte[] filePath);
@@ -875,7 +892,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        return lastModifiedImpl(properPath(true));
+        return lastModifiedImpl(pathBytes);
     }
 
     private native long lastModifiedImpl(byte[] filePath);
@@ -905,7 +922,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        return setLastModifiedImpl(properPath(true), time);
+        return setLastModifiedImpl(pathBytes, time);
     }
 
     private native boolean setLastModifiedImpl(byte[] path, long time);
@@ -928,7 +945,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        return setReadOnlyImpl(properPath(true));
+        return setReadOnlyImpl(pathBytes);
     }
 
     private native boolean setReadOnlyImpl(byte[] path);
@@ -948,7 +965,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        return lengthImpl(properPath(true));
+        return lengthImpl(pathBytes);
     }
 
     private native long lengthImpl(byte[] filePath);
@@ -978,7 +995,7 @@ public class File implements Serializable, Comparable<File> {
             return null;
         }
 
-        byte[] bs = properPath(true);
+        byte[] bs = pathBytes;
         if (!isDirectoryImpl(bs) || !existsImpl(bs) || !isReadableImpl(bs)) {
             return null;
         }
@@ -1084,7 +1101,7 @@ public class File implements Serializable, Comparable<File> {
             return null;
         }
 
-        byte[] bs = properPath(true);
+        byte[] bs = pathBytes;
         if (!isDirectoryImpl(bs) || !existsImpl(bs) || !isReadableImpl(bs)) {
             return null;
         }
@@ -1134,7 +1151,7 @@ public class File implements Serializable, Comparable<File> {
             return null;
         }
 
-        byte[] bs = properPath(true);
+        byte[] bs = pathBytes;
         if (!isDirectoryImpl(bs) || !existsImpl(bs) || !isReadableImpl(bs)) {
             return null;
         }
@@ -1173,7 +1190,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        return mkdirImpl(properPath(true));
+        return mkdirImpl(pathBytes);
     }
 
     private native boolean mkdirImpl(byte[] filePath);
@@ -1217,9 +1234,7 @@ public class File implements Serializable, Comparable<File> {
      *
      * @return {@code true} if the file has been created, {@code false} if it
      *         already exists.
-     * @throws IOException
-     *             if an I/O error occurs or the directory does not exist where
-     *             the file should have been created.
+     * @throws IOException if it's not possible to create the file.
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies write
      *             access for this file.
@@ -1229,51 +1244,15 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        if (0 == path.length()) {
+        if (path.length() == 0) {
             throw new IOException(Msg.getString("KA012")); //$NON-NLS-1$
         }
-        int result = newFileImpl(properPath(true));
-        switch (result) {
-            case 0:
-                return true;
-            case 1:
-                return false;
-            // BEGIN android-changed
-            default: {
-                // Try to provide a reasonable explanation.
-                String msg = null;
-                try {
-                    File parent = getAbsoluteFile().getParentFile();
-                    if (parent == null) {
-                        /*
-                         * This shouldn't happen, unless the caller
-                         * tried to create "/". We just use the
-                         * generic message for this case.
-                         */
-                    } else if (! parent.exists()) {
-                        msg = "Parent directory of file does not exist";
-                    } else if (! parent.isDirectory()) {
-                        msg = "Parent of file is not a directory";
-                    } else if (! parent.canWrite()) {
-                        msg = "Parent directory of file is not writable";
-                    }
-                } catch (RuntimeException ex) {
-                    /*
-                     * Ignore the exception, and just fall through to
-                     * use a generic message.
-                     */
-                }
-
-                if (msg == null) {
-                    msg = "Cannot create";
-                }
-                throw new IOException(msg + ": " + path); //$NON-NLS-1$
-            }
-            // END android-changed
-        }
+        // BEGIN android-changed
+        return createNewFileImpl(pathBytes);
+        // END android-changed
     }
 
-    private native int newFileImpl(byte[] filePath);
+    private native boolean createNewFileImpl(byte[] filePath);
 
     /**
      * Creates an empty temporary file using the given prefix and suffix as part
@@ -1350,45 +1329,6 @@ public class File implements Serializable, Comparable<File> {
         return new File(directory, newName.toString());
     }
 
-    // BEGIN android-changed
-    // Removing platform independent code because we're always on linux.
-    /**
-     * Returns a string representing the proper path for this file. If this file
-     * path is absolute, the user.dir property is not prepended, otherwise it
-     * is.
-     *
-     * @param internal
-     *            is user.dir internal.
-     * @return the proper path.
-     */
-    byte[] properPath(boolean internal) {
-        if (properPath != null) {
-            return properPath;
-        }
-
-        if (isAbsolute()) {
-            byte[] pathBytes = Util.getUTF8Bytes(path);
-            return properPath = pathBytes;
-        }
-        // Check security by getting user.dir when the path is not absolute
-        String userdir;
-        if (internal) {
-            userdir = AccessController.doPrivileged(new PriviAction<String>(
-                    "user.dir")); //$NON-NLS-1$
-        } else {
-            userdir = System.getProperty("user.dir"); //$NON-NLS-1$
-        }
-        if (path.length() == 0) {
-            return properPath = Util.getUTF8Bytes(userdir);
-        }
-        int length = userdir.length();
-        if (length > 0 && userdir.charAt(length - 1) == separatorChar) {
-            return properPath = Util.getBytes(userdir + path);
-        }
-        return properPath = Util.getBytes(userdir + separator + path);
-    }
-    // END android-changed
-
     /**
      * Renames this file to the name represented by the {@code dest} file. This
      * works for both normal files and directories.
@@ -1409,7 +1349,7 @@ public class File implements Serializable, Comparable<File> {
             security.checkWrite(path);
             security.checkWrite(dest.path);
         }
-        return renameToImpl(properPath(true), dest.properPath(true));
+        return renameToImpl(pathBytes, dest.pathBytes);
     }
 
     private native boolean renameToImpl(byte[] pathExist, byte[] pathNew);
@@ -1499,6 +1439,6 @@ public class File implements Serializable, Comparable<File> {
             ClassNotFoundException {
         stream.defaultReadObject();
         char inSeparator = stream.readChar();
-        path = path.replace(inSeparator, separatorChar);
+        init(path.replace(inSeparator, separatorChar));
     }
 }
