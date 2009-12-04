@@ -54,6 +54,7 @@ static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,\
     const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder);
 static void logFailedWrite(size_t expected, ssize_t actual, const char* msg,
     int err);
+static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum);
 
 static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,\
     u4* pHeaderFlags, DexClassLookup** ppClassLookup);
@@ -645,6 +646,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     /* get start offset, and adjust deps start for 64-bit alignment */
     off_t depsOffset, auxOffset, endOffset, adjOffset;
     int depsLength, auxLength;
+    u4 optChecksum;
 
     depsOffset = lseek(fd, 0, SEEK_END);
     if (depsOffset < 0) {
@@ -690,6 +692,13 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     endOffset = lseek(fd, 0, SEEK_END);
     auxLength = endOffset - auxOffset;
 
+    /* compute checksum from start of deps to end of aux area */
+    if (!computeFileChecksum(fd, depsOffset,
+            (auxOffset+auxLength) - depsOffset, &optChecksum))
+    {
+        goto bail;
+    }
+
     /*
      * Output the "opt" header with all values filled in and a correct
      * magic number.
@@ -706,6 +715,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     optHdr.auxLength = (u4) auxLength;
 
     optHdr.flags = headerFlags;
+    optHdr.checksum = optChecksum;
 
     ssize_t actual;
     lseek(fd, 0, SEEK_SET);
@@ -1158,6 +1168,45 @@ static void logFailedWrite(size_t expected, ssize_t actual, const char* msg,
 {
     LOGE("Write failed: %s (%d of %d): %s\n",
         msg, (int)actual, (int)expected, strerror(err));
+}
+
+/*
+ * Compute a checksum on a piece of an open file.
+ *
+ * File will be positioned at end of checksummed area.
+ *
+ * Returns "true" on success.
+ */
+static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum)
+{
+    unsigned char readBuf[8192];
+    ssize_t actual;
+    uLong adler;
+
+    if (lseek(fd, start, SEEK_SET) != start) {
+        LOGE("Unable to seek to start of checksum area (%ld): %s\n",
+            (long) start, strerror(errno));
+        return false;
+    }
+
+    adler = adler32(0L, Z_NULL, 0);
+
+    while (length != 0) {
+        size_t wanted = (length < sizeof(readBuf)) ? length : sizeof(readBuf);
+        actual = read(fd, readBuf, wanted);
+        if (actual <= 0) {
+            LOGE("Read failed (%d) while computing checksum (len=%zu): %s\n",
+                (int) actual, length, strerror(errno));
+            return false;
+        }
+
+        adler = adler32(adler, readBuf, actual);
+
+        length -= actual;
+    }
+
+    *pSum = adler;
+    return true;
 }
 
 
