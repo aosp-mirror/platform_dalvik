@@ -331,6 +331,10 @@ public abstract class TimeZone implements Serializable, Cloneable {
      * Subclasses may override to return daylight savings values other than 1
      * hour.
      * <p>
+     * Note that this method doesn't tell you whether or not to apply the offset: you
+     * need to call {@code inDaylightTime} for the specific time you're interested in.
+     * If this method returns a non-zero offset, that only tells you that this
+     * {@code TimeZone} sometimes observes daylight savings.
      *
      * @return the daylight savings offset in milliseconds if this {@code TimeZone}
      *         observes daylight savings, zero otherwise.
@@ -624,7 +628,18 @@ public abstract class TimeZone implements Serializable, Cloneable {
 
     /**
      * Returns whether this {@code TimeZone} has a daylight savings time period.
+     * 
+     * <p>If this method returns true, that only tells you that this
+     * {@code TimeZone} sometimes observes daylight savings. You need to call
+     * {@code inDaylightTime} to find out whether daylight savings is in effect.
      *
+     * <p>More specifically, this method returns true to indicate that there's
+     * at least one known future transition to or from daylight savings. This
+     * means that, say, Taiwan will return false because its historical use of
+     * daylight savings doesn't count. A hypothetical country that has never
+     * observed daylight savings before but plans to start next year would return
+     * true.
+     * 
      * @return {@code true} if this {@code TimeZone} has a daylight savings time period, {@code false}
      *         otherwise.
      */
