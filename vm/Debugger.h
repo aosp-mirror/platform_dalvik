@@ -291,6 +291,9 @@ void dvmDbgExecuteMethod(DebugInvokeReq* pReq);
 /* Make an AddressSet for a line, for single stepping */
 const AddressSet *dvmAddressSetForLine(const struct Method* method, int line);
 
+/* perform "late registration" of an object ID */
+void dvmDbgRegisterObjectId(ObjectId id);
+
 /*
  * DDM support.
  */

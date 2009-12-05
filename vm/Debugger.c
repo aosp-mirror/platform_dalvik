@@ -321,6 +321,20 @@ static Object* objectIdToObject(ObjectId id)
 }
 
 /*
+ * Register an object ID that might not have been registered previously.
+ *
+ * Normally this wouldn't happen -- the conversion to an ObjectId would
+ * have added the object to the registry -- but in some cases (e.g.
+ * throwing exceptions) we really want to do the registration late.
+ */
+void dvmDbgRegisterObjectId(ObjectId id)
+{
+    Object* obj = (Object*)(u4) id;
+    LOGV("+++ registering %p (%s)\n", obj, obj->clazz->descriptor);
+    registerObject(obj, kObjectId, true);
+}
+
+/*
  * Convert to/from a MethodId.
  *
  * These IDs are only guaranteed unique within a class, so they could be
@@ -2496,7 +2510,7 @@ void dvmDbgPostLocationEvent(const Method* method, int pcOffset,
 
     /*
      * Note we use "NoReg" so we don't keep track of references that are
-     * never actually sent to the debugger.  The "thisPtr" is used to
+     * never actually sent to the debugger.  The "thisPtr" is only used to
      * compare against registered events.
      */
 
@@ -2543,7 +2557,17 @@ void dvmDbgPostException(void* throwFp, int throwRelPc, void* catchFp,
     /* need this for InstanceOnly filters */
     Object* thisObj = getThisObject(throwFp);
 
-    dvmJdwpPostException(gDvm.jdwpState, &throwLoc, objectToObjectId(exception),
+    /*
+     * Hand the event to the JDWP exception handler.  Note we're using the
+     * "NoReg" objectID on the exception, which is not strictly correct --
+     * the exception object WILL be passed up to the debugger if the
+     * debugger is interested in the event.  We do this because the current
+     * implementation of the debugger object registry never throws anything
+     * away, and some people were experiencing a fatal build up of exception
+     * objects when dealing with certain libraries.
+     */
+    dvmJdwpPostException(gDvm.jdwpState, &throwLoc,
+        objectToObjectIdNoReg(exception),
         classObjectToRefTypeId(exception->clazz), &catchLoc,
         objectToObjectId(thisObj));
 }

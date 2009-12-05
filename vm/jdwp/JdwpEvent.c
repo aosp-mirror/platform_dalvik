@@ -1026,6 +1026,10 @@ bool dvmJdwpPostVMDeath(JdwpState* state)
  * Valid mods:
  *  Count, ThreadOnly, ClassOnly, ClassMatch, ClassExclude, LocationOnly,
  *    ExceptionOnly, InstanceOnly
+ *
+ * The "exceptionId" has not been added to the GC-visible object registry,
+ * because there's a pretty good chance that we're not going to send it
+ * up the debugger.
  */
 bool dvmJdwpPostException(JdwpState* state, const JdwpLocation* pThrowLoc,
     ObjectId exceptionId, RefTypeId exceptionClassId,
@@ -1100,6 +1104,9 @@ bool dvmJdwpPostException(JdwpState* state, const JdwpLocation* pThrowLoc,
             expandBufAdd8BE(pReq, exceptionId);
             dvmJdwpAddLocation(pReq, pCatchLoc);
         }
+
+        /* don't let the GC discard it */
+        dvmDbgRegisterObjectId(exceptionId);
     }
 
     cleanupMatchList(state, matchList, matchCount);

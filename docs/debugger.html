@@ -197,12 +197,6 @@ debugger is connected.  For example, if the debugger sees a running
 thread, the associated Thread object will not be collected, even after
 the thread terminates.
 </p><p>
-The situation is exacerbated by a flaw in the exception processing code,
-which results in nearly all exceptions being added to the "do not discard"
-list, even if the debugger never sees them.  Having a debugger attached
-to a program that throws lots of exceptions can result in out-of-memory
-errors.  This will be fixed in a future release.
-</p><p>
 The only way to "unlock" the references is to detach and reattach the
 debugger.
 </p><p>
