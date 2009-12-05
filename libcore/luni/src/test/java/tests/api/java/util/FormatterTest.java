@@ -1088,7 +1088,9 @@ public class FormatterTest extends TestCase {
         assertEquals("       1", f.toString());
 
         f = new Formatter(Locale.US);
-        f.format("%1$-1%", "string");
+        // BEGIN android-changed: we consider argument indexes to %% an error.
+        f.format("%-1%", "string");
+        // END android-changed
         assertEquals("%", f.toString());
 
         f = new Formatter(Locale.ITALY);
@@ -1180,13 +1182,15 @@ public class FormatterTest extends TestCase {
         String oldSeparator = System.getProperty("line.separator");
         System.setProperty("line.separator", "!\n");
 
-        f = new Formatter(Locale.US);
-        f.format("%1$n", 1);
-        assertEquals("!\n", f.toString());
+        // BEGIN android-changed: we consider argument indexes to %n an error.
+        // f = new Formatter(Locale.US);
+        // f.format("%1$n", 1);
+        // assertEquals("!\n", f.toString());
 
-        f = new Formatter(Locale.KOREAN);
-        f.format("head%1$n%2$n", 1, new Date());
-        assertEquals("head!\n!\n", f.toString());
+        // f = new Formatter(Locale.KOREAN);
+        // f.format("head%1$n%2$n", 1, new Date());
+        // assertEquals("head!\n!\n", f.toString());
+        // END android-changed
 
         f = new Formatter(Locale.US);
         f.format("%n%s", "hello");
@@ -1284,13 +1288,15 @@ public class FormatterTest extends TestCase {
     public void test_formatLjava_lang_String$Ljava_lang_Object_Percent() {
         Formatter f = null;
 
-        f = new Formatter(Locale.ENGLISH);
-        f.format("%1$%", 100);
-        assertEquals("%", f.toString());
+        // BEGIN android-changed: we consider argument indexes to %% an error.
+        // f = new Formatter(Locale.ENGLISH);
+        // f.format("%1$%", 100);
+        // assertEquals("%", f.toString());
 
-        f = new Formatter(Locale.CHINA);
-        f.format("%1$%%%", "hello", new Object());
-        assertEquals("%%", f.toString());
+        // f = new Formatter(Locale.CHINA);
+        // f.format("%1$%%%", "hello", new Object());
+        // assertEquals("%%", f.toString());
+        // END android-changed: we consider argument indexes to %% an error.
 
         f = new Formatter(Locale.CHINA);
         f.format("%%%s", "hello");
