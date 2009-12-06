@@ -15,6 +15,16 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// We've dropped Windows support, except where it's exposed: we still support
+// non-Unix separators in serialized File objects, for example, but we don't
+// have any code for UNC paths or case-insensitivity.
+// We've also changed the JNI interface to better match what the Java actually wants.
+// (The JNI implementation is also much simpler.)
+// Some methods have been rewritten to reduce unnecessary allocation.
+// Some duplication has been factored out.
+// END android-note
+
 package java.io;
 
 import java.net.URI;
@@ -53,56 +63,62 @@ public class File implements Serializable, Comparable<File> {
 
     private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
-    private String path;
-
-    /**
-     * The cached UTF-8 byte sequence corresponding to 'path'.
-     * This is suitable for direct use by our JNI, and includes a trailing NUL.
-     * For non-absolute paths, the "user.dir" property is prepended.
-     */
-    transient byte[] pathBytes;
+    // Caches the UTF-8 Charset for newCString.
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     /**
      * The system dependent file separator character.
+     * This field is initialized from the system property "file.separator".
+     * Later changes to that property will have no effect on this field or this class.
      */
     public static final char separatorChar;
 
     /**
-     * The system dependent file separator string. The initial value of this
-     * field is the system property "file.separator".
+     * The system dependent file separator string.
+     * This field is a single-character string equal to String.valueOf(separatorChar).
      */
     public static final String separator;
 
     /**
      * The system dependent path separator character.
+     * This field is initialized from the system property "path.separator".
+     * Later changes to that property will have no effect on this field or this class.
      */
     public static final char pathSeparatorChar;
 
     /**
-     * The system dependent path separator string. The initial value of this
-     * field is the system property "path.separator".
+     * The system dependent path separator string.
+     * This field is a single-character string equal to String.valueOf(pathSeparatorChar).
      */
     public static final String pathSeparator;
 
     /* Temp file counter */
     private static int counter;
 
-    private static boolean caseSensitive;
+    /**
+     * The path we return from getPath. This is almost the path we were
+     * given, but without duplicate adjacent slashes and without trailing
+     * slashes (except for the special case of the root directory). This
+     * path may be the empty string.
+     */
+    private String path;
 
-    // BEGIN android-removed
-    // private static native void oneTimeInitialization();
-    // END android-removed
+    /**
+     * The cached UTF-8 byte sequence corresponding to 'path'.
+     * This is suitable for direct use by our JNI, and includes a trailing NUL.
+     * For non-absolute paths, the "user.dir" property is prepended: that is,
+     * this byte sequence usually represents an absolute path (the exception
+     * being if the user overwrites the "user.dir" property with a non-absolute
+     * path).
+     */
+    transient byte[] pathBytes;
 
     static {
-        // The default protection domain grants access to these properties
-        // BEGIN android-changed
-        // We're on linux so the filesystem is case sensitive and the separator is /.
+        // The default protection domain grants access to these properties.
         separatorChar = System.getProperty("file.separator", "/").charAt(0); //$NON-NLS-1$ //$NON-NLS-2$
-        pathSeparatorChar = System.getProperty("path.separator", ";").charAt(0); //$NON-NLS-1$//$NON-NLS-2$
-        separator = new String(new char[] { separatorChar }, 0, 1);
-        pathSeparator = new String(new char[] { pathSeparatorChar }, 0, 1);
-        caseSensitive = true;
-        // END android-changed
+        pathSeparatorChar = System.getProperty("path.separator", ":").charAt(0); //$NON-NLS-1$//$NON-NLS-2$
+        separator = String.valueOf(separatorChar);
+        pathSeparator = String.valueOf(pathSeparatorChar);
     }
 
     /**
@@ -126,8 +142,7 @@ public class File implements Serializable, Comparable<File> {
      *            the path to be used for the file.
      */
     public File(String path) {
-        // path == null check & NullPointerException thrown by fixSlashes
-        init(fixSlashes(path));
+        init(path);
     }
 
     /**
@@ -145,10 +160,12 @@ public class File implements Serializable, Comparable<File> {
         if (name == null) {
             throw new NullPointerException();
         }
-        if (dirPath == null) {
-            init(fixSlashes(name));
+        if (dirPath == null || dirPath.length() == 0) {
+            init(name);
+        } else if (name.length() == 0) {
+            init(dirPath);
         } else {
-            init(calculatePath(dirPath, name));
+            init(join(dirPath, name));
         }
     }
 
@@ -169,12 +186,12 @@ public class File implements Serializable, Comparable<File> {
     public File(URI uri) {
         // check pre-conditions
         checkURI(uri);
-        init(fixSlashes(uri.getPath()));
+        init(uri.getPath());
     }
 
-    private void init(String cleanPath) {
-        // Keep a copy of the string path.
-        this.path = cleanPath;
+    private void init(String dirtyPath) {
+        // Keep a copy of the cleaned-up string path.
+        this.path = fixSlashes(dirtyPath);
         // Cache the UTF-8 bytes we need for the JNI.
         if (isAbsolute()) {
             this.pathBytes = newCString(path);
@@ -182,20 +199,8 @@ public class File implements Serializable, Comparable<File> {
         }
         String userDir = AccessController.doPrivileged(
             new PriviAction<String>("user.dir")); //$NON-NLS-1$
-        if (path.length() == 0) {
-            this.pathBytes = newCString(userDir);
-            return;
-        }
-        int length = userDir.length();
-        if (length > 0 && userDir.charAt(length - 1) == separatorChar) {
-            this.pathBytes = newCString(userDir + path);
-        } else {
-            this.pathBytes = newCString(userDir + separator + path);
-        }
+        this.pathBytes = newCString(path.length() == 0 ? userDir : join(userDir, path));
     }
-
-    // Cache the UTF-8 Charset for newCString.
-    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private byte[] newCString(String s) {
         ByteBuffer buffer = UTF8.encode(s);
@@ -214,30 +219,41 @@ public class File implements Serializable, Comparable<File> {
         return bytes;
     }
 
-    private String calculatePath(String dirPath, String name) {
-        dirPath = fixSlashes(dirPath);
-        if (!name.equals(EMPTY_STRING) || dirPath.equals(EMPTY_STRING)) {
-            // Remove all the proceeding separator chars from name
-            name = fixSlashes(name);
-
-            int separatorIndex = 0;
-            while ((separatorIndex < name.length())
-                    && (name.charAt(separatorIndex) == separatorChar)) {
-                separatorIndex++;
+    // Removes duplicate adjacent slashes and any trailing slash.
+    private String fixSlashes(String origPath) {
+        // Remove duplicate adjacent slashes.
+        boolean lastWasSlash = false;
+        char[] newPath = origPath.toCharArray();
+        int length = newPath.length;
+        int newLength = 0;
+        for (int i = 0; i < length; ++i) {
+            char ch = newPath[i];
+            if (ch == '/') {
+                if (!lastWasSlash) {
+                    newPath[newLength++] = separatorChar;
+                    lastWasSlash = true;
+                }
+            } else {
+                newPath[newLength++] = ch;
+                lastWasSlash = false;
             }
-            if (separatorIndex > 0) {
-                name = name.substring(separatorIndex, name.length());
-            }
-
-            // Ensure there is a separator char between dirPath and name
-            if (dirPath.length() > 0
-                    && (dirPath.charAt(dirPath.length() - 1) == separatorChar)) {
-                return dirPath + name;
-            }
-            return dirPath + separatorChar + name;
         }
+        // Remove any trailing slash (unless this is the root of the file system).
+        if (lastWasSlash && newLength > 1) {
+            newLength--;
+        }
+        // Reuse the original string if possible.
+        return (newLength != length) ? new String(newPath, 0, newLength) : origPath;
+    }
 
-        return dirPath;
+    // Joins two path components, adding a separator only if necessary.
+    private String join(String prefix, String suffix) {
+        int prefixLength = prefix.length();
+        boolean haveSlash = (prefixLength > 0 && prefix.charAt(prefixLength - 1) == separatorChar);
+        if (!haveSlash) {
+            haveSlash = (suffix.length() > 0 && suffix.charAt(0) == separatorChar);
+        }
+        return haveSlash ? (prefix + suffix) : (prefix + separatorChar + suffix);
     }
 
     @SuppressWarnings("nls")
@@ -274,11 +290,6 @@ public class File implements Serializable, Comparable<File> {
         }
     }
 
-    // BEGIN android-removed
-    // private static native byte[][] rootsImpl();
-    // private static native boolean isCaseSensitiveImpl();
-    // END android-removed
-
     /**
      * Lists the file system roots. The Java platform may support zero or more
      * file systems, each with its own platform-dependent root. Further, the
@@ -288,39 +299,8 @@ public class File implements Serializable, Comparable<File> {
      * @return the array of file system roots.
      */
     public static File[] listRoots() {
-        // BEGIN android-only
         return new File[] { new File("/") };
-        // END android-only
     }
-
-    // Removes duplicate adjacent slashes and any trailing slash.
-    // BEGIN android-only: removed support for Windows UNC paths, avoid unnecessary allocation.
-    private String fixSlashes(String origPath) {
-        // Remove duplicate adjacent slashes.
-        boolean lastWasSlash = false;
-        char[] newPath = origPath.toCharArray();
-        int length = newPath.length;
-        int newLength = 0;
-        for (int i = 0; i < length; ++i) {
-            char ch = newPath[i];
-            if (ch == '/') {
-                if (!lastWasSlash) {
-                    newPath[newLength++] = separatorChar;
-                    lastWasSlash = true;
-                }
-            } else {
-                newPath[newLength++] = ch;
-                lastWasSlash = false;
-            }
-        }
-        // Remove any trailing slash (unless this is the root of the file system).
-        if (lastWasSlash && newLength > 1) {
-            newLength--;
-        }
-        // Reuse the original string if possible.
-        return (newLength != length) ? new String(newPath, 0, newLength) : origPath;
-    }
-    // END android-only
 
     /**
      * Indicates whether the current context is allowed to read from this file.
@@ -338,9 +318,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        // BEGIN android-changed
         return isReadableImpl(pathBytes);
-        // END android-changed
     }
 
     /**
@@ -360,9 +338,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        // BEGIN android-changed
         return isWritableImpl(pathBytes);
-        // END android-changed
     }
 
     /**
@@ -376,10 +352,7 @@ public class File implements Serializable, Comparable<File> {
      * @see Comparable
      */
     public int compareTo(File another) {
-        if (caseSensitive) {
-            return this.getPath().compareTo(another.getPath());
-        }
-        return this.getPath().compareToIgnoreCase(another.getPath());
+        return this.getPath().compareTo(another.getPath());
     }
 
     /**
@@ -402,9 +375,7 @@ public class File implements Serializable, Comparable<File> {
         return deleteImpl(pathBytes);
     }
 
-    // BEGIN android-changed
     private native boolean deleteImpl(byte[] filePath);
-    // END android-changed
 
     /**
      * Schedules this file to be automatically deleted once the virtual machine
@@ -420,9 +391,7 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkDelete(path);
         }
-        // BEGIN android-changed
         DeleteOnExit.getInstance().addFile(getAbsoluteName());
-        // END android-changed
     }
 
     /**
@@ -438,9 +407,6 @@ public class File implements Serializable, Comparable<File> {
     public boolean equals(Object obj) {
         if (!(obj instanceof File)) {
             return false;
-        }
-        if (!caseSensitive) {
-            return path.equalsIgnoreCase(((File) obj).getPath());
         }
         return path.equals(((File) obj).getPath());
     }
@@ -769,10 +735,7 @@ public class File implements Serializable, Comparable<File> {
      */
     @Override
     public int hashCode() {
-        if (caseSensitive) {
-            return path.hashCode() ^ 1234321;
-        }
-        return path.toLowerCase().hashCode() ^ 1234321;
+        return getPath().hashCode() ^ 1234321;
     }
 
     /**
@@ -786,10 +749,7 @@ public class File implements Serializable, Comparable<File> {
      * @see #getPath
      */
     public boolean isAbsolute() {
-        // BEGIN android-changed
-        // Removing platform independent code because we're always on linux.
         return path.length() > 0 && path.charAt(0) == separatorChar;
-        // END android-changed
     }
 
     /**
@@ -857,20 +817,12 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        // BEGIN android-only
         return getName().startsWith(".");
-        // END android-only
     }
 
-    // BEGIN android-removed
-    // private native boolean isHiddenImpl(byte[] filePath);
-    // END android-removed
-
-    // BEGIN android-changed
     private native boolean isReadableImpl(byte[] filePath);
 
     private native boolean isWritableImpl(byte[] filePath);
-    // END android-changed
 
     private native byte[] getLinkImpl(byte[] filePath);
 
@@ -1247,9 +1199,7 @@ public class File implements Serializable, Comparable<File> {
         if (path.length() == 0) {
             throw new IOException(Msg.getString("KA012")); //$NON-NLS-1$
         }
-        // BEGIN android-changed
         return createNewFileImpl(pathBytes);
-        // END android-changed
     }
 
     private native boolean createNewFileImpl(byte[] filePath);
@@ -1319,6 +1269,7 @@ public class File implements Serializable, Comparable<File> {
 
     private static File genTempFile(String prefix, String suffix, File directory) {
         if (counter == 0) {
+            // TODO: this doesn't make a lot of sense. SecureRandom for the seed, but then always just add one?
             int newInt = new SecureRandom().nextInt();
             counter = ((newInt / 65535) & 0xFFFF) + 0x2710;
         }
@@ -1432,7 +1383,6 @@ public class File implements Serializable, Comparable<File> {
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
         stream.writeChar(separatorChar);
-
     }
 
     private void readObject(ObjectInputStream stream) throws IOException,
