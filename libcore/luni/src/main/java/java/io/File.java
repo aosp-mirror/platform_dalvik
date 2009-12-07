@@ -48,11 +48,18 @@ import org.apache.harmony.luni.util.Util;
  * of the file system) or relative to the current directory in which the program
  * is running.
  * <p>
- * This class provides methods for querying/changing information about the file
- * as well as directory listing capabilities if the file represents a directory.
+ * The actual file referenced by a {@code File} may or may not exist. It may
+ * also, despite the name {@code File}, be a directory or other non-regular
+ * file.
  * <p>
- * When manipulating file paths, the static fields of this class may be used to
- * determine the platform specific separators.
+ * This class provides limited functionality for getting/setting file
+ * permissions, file type, and last modified time.
+ * <p>
+ * Although Java doesn't specify a character encoding for filenames, on Android
+ * Java strings are converted to UTF-8 byte sequences when sending filenames to
+ * the operating system, and byte sequences returned by the operating system
+ * (from the various {@code list} methods) are converted to Java strings by
+ * decoding them as UTF-8 byte sequences.
  *
  * @see java.io.Serializable
  * @see java.lang.Comparable
@@ -321,6 +328,8 @@ public class File implements Serializable, Comparable<File> {
         return isReadableImpl(pathBytes);
     }
 
+    private native boolean isReadableImpl(byte[] filePath);
+
     /**
      * Indicates whether the current context is allowed to write to this file.
      *
@@ -340,6 +349,8 @@ public class File implements Serializable, Comparable<File> {
         }
         return isWritableImpl(pathBytes);
     }
+
+    private native boolean isWritableImpl(byte[] filePath);
 
     /**
      * Returns the relative sort ordering of the paths for this file and the
@@ -649,6 +660,8 @@ public class File implements Serializable, Comparable<File> {
         return pathBytes;
     }
 
+    private native byte[] getLinkImpl(byte[] filePath);
+
     /**
      * Returns a new file created using the canonical path of this file.
      * Equivalent to {@code new File(this.getCanonicalPath())}.
@@ -740,9 +753,8 @@ public class File implements Serializable, Comparable<File> {
 
     /**
      * Indicates if this file's pathname is absolute. Whether a pathname is
-     * absolute is platform specific. On UNIX, absolute paths must start with
-     * the character '/'; on Windows it is absolute if either it starts with
-     * '\\' (to represent a file server), or a letter followed by a colon.
+     * absolute is platform specific. On Android, absolute paths start with
+     * the character '/'.
      * 
      * @return {@code true} if this file's pathname is absolute, {@code false}
      *         otherwise.
@@ -819,12 +831,6 @@ public class File implements Serializable, Comparable<File> {
         }
         return getName().startsWith(".");
     }
-
-    private native boolean isReadableImpl(byte[] filePath);
-
-    private native boolean isWritableImpl(byte[] filePath);
-
-    private native byte[] getLinkImpl(byte[] filePath);
 
     /**
      * Returns the time when this file was last modified, measured in
@@ -937,7 +943,7 @@ public class File implements Serializable, Comparable<File> {
      * @see #isDirectory
      * @see java.lang.SecurityManager#checkRead(FileDescriptor)
      */
-    public java.lang.String[] list() {
+    public String[] list() {
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkRead(path);
@@ -947,21 +953,56 @@ public class File implements Serializable, Comparable<File> {
             return null;
         }
 
-        byte[] bs = pathBytes;
-        if (!isDirectoryImpl(bs) || !existsImpl(bs) || !isReadableImpl(bs)) {
+        // TODO: rewrite the JNI so the rest of this method is just "return listImpl(pathBytes);"
+        if (!isDirectoryImpl(pathBytes) || !existsImpl(pathBytes) || !isReadableImpl(pathBytes)) {
             return null;
         }
-
-        byte[][] implList = listImpl(bs);
+        byte[][] implList = listImpl(pathBytes);
         if (implList == null) {
             // empty list
             return new String[0];
         }
-        String result[] = new String[implList.length];
+        String[] result = new String[implList.length];
         for (int index = 0; index < implList.length; index++) {
             result[index] = Util.toUTF8String(implList[index]);
         }
         return result;
+    }
+
+    private synchronized static native byte[][] listImpl(byte[] path);
+
+    /**
+     * Gets a list of the files in the directory represented by this file. This
+     * list is then filtered through a FilenameFilter and the names of files
+     * with matching names are returned as an array of strings. Returns
+     * {@code null} if this file is not a directory. If {@code filter} is
+     * {@code null} then all filenames match.
+     * <p>
+     * The entries {@code .} and {@code ..} representing the current and parent
+     * directories are not returned as part of the list.
+     *
+     * @param filter
+     *            the filter to match names against, may be {@code null}.
+     * @return an array of files or {@code null}.
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @see #getPath
+     * @see #isDirectory
+     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     */
+    public String[] list(FilenameFilter filter) {
+        String[] filenames = list();
+        if (filter == null || filenames == null) {
+            return filenames;
+        }
+        List<String> result = new ArrayList<String>(filenames.length);
+        for (String filename : filenames) {
+            if (filter.accept(this, filename)) {
+                result.add(filename);
+            }
+        }
+        return result.toArray(new String[result.size()]);
     }
 
     /**
@@ -978,16 +1019,7 @@ public class File implements Serializable, Comparable<File> {
      * @see #isDirectory
      */
     public File[] listFiles() {
-        String[] tempNames = list();
-        if (tempNames == null) {
-            return null;
-        }
-        int resultLength = tempNames.length;
-        File results[] = new File[resultLength];
-        for (int i = 0; i < resultLength; i++) {
-            results[i] = new File(this, tempNames[i]);
-        }
-        return results;
+        return filenamesToFiles(list());
     }
 
     /**
@@ -1012,16 +1044,7 @@ public class File implements Serializable, Comparable<File> {
      * @see java.lang.SecurityManager#checkRead(FileDescriptor)
      */
     public File[] listFiles(FilenameFilter filter) {
-        String[] tempNames = list(filter);
-        if (tempNames == null) {
-            return null;
-        }
-        int resultLength = tempNames.length;
-        File results[] = new File[resultLength];
-        for (int i = 0; i < resultLength; i++) {
-            results[i] = new File(this, tempNames[i]);
-        }
-        return results;
+        return filenamesToFiles(list(filter));
     }
 
     /**
@@ -1044,87 +1067,36 @@ public class File implements Serializable, Comparable<File> {
      * @see java.lang.SecurityManager#checkRead(FileDescriptor)
      */
     public File[] listFiles(FileFilter filter) {
-        SecurityManager security = System.getSecurityManager();
-        if (security != null) {
-            security.checkRead(path);
+        File[] files = listFiles();
+        if (filter == null || files == null) {
+            return files;
         }
-
-        if (path.length() == 0) {
-            return null;
-        }
-
-        byte[] bs = pathBytes;
-        if (!isDirectoryImpl(bs) || !existsImpl(bs) || !isReadableImpl(bs)) {
-            return null;
-        }
-
-        byte[][] implList = listImpl(bs);
-        if (implList == null) {
-            return new File[0];
-        }
-        List<File> tempResult = new ArrayList<File>();
-        for (int index = 0; index < implList.length; index++) {
-            String aName = Util.toString(implList[index]);
-            File aFile = new File(this, aName);
-            if (filter == null || filter.accept(aFile)) {
-                tempResult.add(aFile);
+        List<File> result = new ArrayList<File>(files.length);
+        for (File file : files) {
+            if (filter.accept(file)) {
+                result.add(file);
             }
         }
-        return tempResult.toArray(new File[tempResult.size()]);
+        return result.toArray(new File[result.size()]);
     }
 
     /**
-     * Gets a list of the files in the directory represented by this file. This
-     * list is then filtered through a FilenameFilter and the names of files
-     * with matching names are returned as an array of strings. Returns
-     * {@code null} if this file is not a directory. If {@code filter} is
-     * {@code null} then all filenames match.
-     * <p>
-     * The entries {@code .} and {@code ..} representing the current and parent
-     * directories are not returned as part of the list.
-     *
-     * @param filter
-     *            the filter to match names against, may be {@code null}.
-     * @return an array of files or {@code null}.
-     * @throws SecurityException
-     *             if a {@code SecurityManager} is installed and it denies read
-     *             access to this file.
-     * @see #getPath
-     * @see #isDirectory
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * Converts a String[] containing filenames to a File[].
+     * Note that the filenames must not contain slashes.
+     * This method is to remove duplication in the implementation
+     * of File.list's overloads.
      */
-    public java.lang.String[] list(FilenameFilter filter) {
-        SecurityManager security = System.getSecurityManager();
-        if (security != null) {
-            security.checkRead(path);
-        }
-
-        if (path.length() == 0) {
+    private File[] filenamesToFiles(String[] filenames) {
+        if (filenames == null) {
             return null;
         }
-
-        byte[] bs = pathBytes;
-        if (!isDirectoryImpl(bs) || !existsImpl(bs) || !isReadableImpl(bs)) {
-            return null;
+        int count = filenames.length;
+        File[] result = new File[count];
+        for (int i = 0; i < count; ++i) {
+            result[i] = new File(this, filenames[i]);
         }
-
-        byte[][] implList = listImpl(bs);
-        if (implList == null) {
-            // empty list
-            return new String[0];
-        }
-        List<String> tempResult = new ArrayList<String>();
-        for (int index = 0; index < implList.length; index++) {
-            String aName = Util.toString(implList[index]);
-            if (filter == null || filter.accept(this, aName)) {
-                tempResult.add(aName);
-            }
-        }
-
-        return tempResult.toArray(new String[tempResult.size()]);
+        return result;
     }
-
-    private synchronized static native byte[][] listImpl(byte[] path);
 
     /**
      * Creates the directory named by the trailing filename of this file. Does
