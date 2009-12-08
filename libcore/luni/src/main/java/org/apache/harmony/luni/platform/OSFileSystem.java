@@ -145,22 +145,11 @@ class OSFileSystem implements IFileSystem {
     public native void truncate(int fileDescriptor, long size) throws IOException;
     // END android-changed
 
-    public int open(byte[] fileName, int mode) throws FileNotFoundException {
-        if (fileName == null) {
+    public int open(byte[] utfPathBytes, int mode) throws FileNotFoundException {
+        if (utfPathBytes == null) {
             throw new NullPointerException();
         }
-        int handler = openImpl(fileName, mode);
-        if (handler < 0) {
-            try {
-                throw new FileNotFoundException(new String(fileName, "UTF-8"));
-            } catch (java.io.UnsupportedEncodingException e) {
-                // UTF-8 should always be supported, so throw an assertion
-                FileNotFoundException fnfe = new FileNotFoundException(new String(fileName));
-                e.initCause(fnfe);
-                throw new AssertionError(e);
-            }
-        }
-        return handler;
+        return openImpl(utfPathBytes, mode);
     }
 
     private native int openImpl(byte[] fileName, int mode);
