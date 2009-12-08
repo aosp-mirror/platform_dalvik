@@ -3793,8 +3793,19 @@ static void gcScanThread(Thread *thread)
      * RUNNING without a suspend-pending check, so this shouldn't cause
      * a false-positive.)
      */
-    assert(thread->status != THREAD_RUNNING || thread->isSuspended ||
-            thread == dvmThreadSelf());
+    if (thread->status == THREAD_RUNNING && !thread->isSuspended &&
+        thread != dvmThreadSelf())
+    {
+        Thread* self = dvmThreadSelf();
+        LOGW("threadid=%d: BUG: GC scanning a running thread (%d)\n",
+            self->threadId, thread->threadId);
+        dvmDumpThread(thread, true);
+        LOGW("Found by:\n");
+        dvmDumpThread(self, false);
+
+        /* continue anyway? */
+        dvmAbort();
+    }
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_THREAD_OBJECT, thread->threadId);
 
