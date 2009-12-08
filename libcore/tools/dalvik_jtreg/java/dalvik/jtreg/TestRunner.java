@@ -64,7 +64,8 @@ public abstract class TestRunner {
         return properties;
     }
 
-    public abstract void prepareTest();
+    public void prepareTest() {}
+
     public abstract boolean test();
 
     public void run() {

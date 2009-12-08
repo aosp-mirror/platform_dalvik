@@ -25,8 +25,11 @@ import java.util.logging.Logger;
  */
 final class DeviceDalvikVm extends Vm {
 
-    private static final File DEVICE_SUPPORT_JAR
-            = new File("/system/framework/core-tests.jar");
+    private static final Classpath RUNTIME_SUPPORT_CLASSPATH = Classpath.of(
+            new File("/system/framework/core-tests.jar"),
+            new File("/system/framework/caliper.jar"),
+            new File("/system/framework/guava.jar"),
+            new File("/system/framework/jsr305.jar"));
 
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
     private final File deviceTemp = new File("/data/jtreg" + UUID.randomUUID());
@@ -86,7 +89,7 @@ final class DeviceDalvikVm extends Vm {
                 .temp(testTemp);
     }
 
-    @Override protected Classpath getRuntimeSupportClasses() {
-        return Classpath.of(DEVICE_SUPPORT_JAR);
+    @Override protected Classpath getRuntimeSupportClasspath() {
+        return RUNTIME_SUPPORT_CLASSPATH;
     }
 }

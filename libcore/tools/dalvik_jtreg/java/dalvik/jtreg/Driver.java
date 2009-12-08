@@ -40,19 +40,22 @@ final class Driver {
 
     private final File localTemp;
     private final Set<File> expectationDirs;
-    private final Jtreg jtreg;
-    private final JUnit junit;
+    private final JtregFinder jtregFinder;
+    private final JUnitFinder junitFinder;
+    private final CaliperFinder caliperFinder;
     private final Vm vm;
     private final File xmlReportsDirectory;
 
     public Driver(File localTemp, Vm vm, Set<File> expectationDirs,
-            File xmlReportsDirectory, Jtreg jtreg, JUnit junit) {
+            File xmlReportsDirectory, JtregFinder jtregFinder,
+            JUnitFinder junit, CaliperFinder caliperFinder) {
         this.localTemp = localTemp;
         this.expectationDirs = expectationDirs;
         this.vm = vm;
         this.xmlReportsDirectory = xmlReportsDirectory;
-        this.jtreg = jtreg;
-        this.junit = junit;
+        this.jtregFinder = jtregFinder;
+        this.junitFinder = junit;
+        this.caliperFinder = caliperFinder;
     }
 
     /**
@@ -67,14 +70,17 @@ final class Driver {
         for (File testFile : testFiles) {
             Set<TestRun> testsForFile = Collections.emptySet();
 
-            // Look for Jtreg tests. If we don't find any, look for JUnit tests.
             if (testFile.isDirectory()) {
-                testsForFile = jtreg.findTests(testFile);
+                testsForFile = jtregFinder.findTests(testFile);
                 logger.fine("found " + testsForFile.size() + " jtreg tests for " + testFile);
             }
             if (testsForFile.isEmpty()) {
-                testsForFile = junit.findTests(testFile);
+                testsForFile = junitFinder.findTests(testFile);
                 logger.fine("found " + testsForFile.size() + " JUnit tests for " + testFile);
+            }
+            if (testsForFile.isEmpty()) {
+                testsForFile = caliperFinder.findTests(testFile);
+                logger.fine("found " + testsForFile.size() + " Caliper benchmarks for " + testFile);
             }
             tests.addAll(testsForFile);
         }

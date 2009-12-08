@@ -19,14 +19,11 @@ package dalvik.jtreg;
 import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with JUnit tests in them.
+ * A pluggable strategy for converting files into test runs.
  */
-class JUnit {
-
-    private static final Logger logger = Logger.getLogger(JUnit.class.getName());
+abstract class TestFinder {
 
     public Set<TestRun> findTests(File testDirectory) {
         Set<TestRun> result = new LinkedHashSet<TestRun>();
@@ -34,21 +31,35 @@ class JUnit {
         return result;
     }
 
+    /**
+     * Returns true if {@code file} contains a test class of this type.
+     */
+    protected boolean matches(File file) {
+        return file.getName().endsWith(".java");
+    }
+
+    protected abstract String testName(File file);
+
+    protected abstract Class<? extends TestRunner> runnerClass();
+
     private void findTestsRecursive(Set<TestRun> sink, File file) {
         if (file.isDirectory()) {
             for (File child : file.listFiles()) {
                 findTestsRecursive(sink, child);
             }
-        } else if (file.getName().endsWith(".java")) {
-            String className = fileToClass(file);
-            File testDirectory = file.getParentFile();
-            String testName = "junit"; // TODO: try to get names for each method?
-            String testDescription = null;
-            sink.add(new TestRun(testDirectory, file, className, className,
-                    testName, className, testDescription, JUnitRunner.class));
-        } else {
-            logger.fine("skipping " + file);
+            return;
         }
+
+        if (!matches(file)) {
+            return;
+        }
+
+        String className = fileToClass(file);
+        File testDirectory = file.getParentFile();
+        String testName = testName(file);
+        String testDescription = null;
+        sink.add(new TestRun(testDirectory, file, className, className,
+                testName, className, testDescription, runnerClass()));
     }
 
     /**

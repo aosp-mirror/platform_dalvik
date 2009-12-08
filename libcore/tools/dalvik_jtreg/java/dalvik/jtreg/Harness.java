@@ -162,10 +162,12 @@ public final class Harness {
         Vm vm = javaHome != null
                 ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp, javaHome)
                 : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar, localTemp);
-        Jtreg jtreg = new Jtreg(localTemp);
-        JUnit jUnit = new JUnit();
+        JtregFinder jtregFinder = new JtregFinder(localTemp);
+        JUnitFinder jUnitFinder = new JUnitFinder();
+        CaliperFinder caliperFinder = new CaliperFinder();
         Driver driver = new Driver(localTemp,
-                vm, expectationDirs, xmlReportsDirectory, jtreg, jUnit);
+                vm, expectationDirs, xmlReportsDirectory, jtregFinder,
+                jUnitFinder, caliperFinder);
         driver.buildAndRunAllTests(testFiles);
         vm.shutdown();
     }
