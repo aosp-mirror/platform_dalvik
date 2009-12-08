@@ -1618,7 +1618,7 @@ public class FormatterTest extends TestCase {
                 new MockFormattable(),         
                 (Object) null,                 
                };
-        f = new Formatter(Locale.GERMAN);
+        Formatter f = new Formatter(Locale.GERMAN);
         for (int i = 0; i < input.length; i++) {
             if (!(input[i] instanceof Formattable)) {
                 try {
