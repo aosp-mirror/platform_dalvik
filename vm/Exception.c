@@ -338,6 +338,45 @@ void dvmThrowExceptionByClassWithClassMessage(ClassObject* exceptionClass,
 }
 
 /*
+ * Find and return an exception constructor method that can take the
+ * indicated parameters, or return NULL if no such constructor exists.
+ */
+static Method* findExceptionInitMethod(ClassObject* excepClass,
+    bool hasMessage, bool hasCause)
+{
+    if (hasMessage) {
+        Method* result;
+
+        if (hasCause) {
+            result = dvmFindDirectMethodByDescriptor(
+                    excepClass, "<init>",
+                    "(Ljava/lang/String;Ljava/lang/Throwable;)V");
+        } else {
+            result = dvmFindDirectMethodByDescriptor(
+                    excepClass, "<init>", "(Ljava/lang/String;)V");
+        }
+
+        if (result != NULL) {
+            return result;
+        }
+
+        if (hasCause) {
+            return dvmFindDirectMethodByDescriptor(
+                    excepClass, "<init>",
+                    "(Ljava/lang/Object;Ljava/lang/Throwable;)V");
+        } else {
+            return dvmFindDirectMethodByDescriptor(
+                    excepClass, "<init>", "(Ljava/lang/Object;)V");
+        }
+    } else if (hasCause) {
+        return dvmFindDirectMethodByDescriptor(
+                excepClass, "<init>", "(Ljava/lang/Throwable;)V");
+    } else {
+        return dvmFindDirectMethodByDescriptor(excepClass, "<init>", "()V");
+    }
+}
+
+/*
  * Initialize an exception with an appropriate constructor.
  *
  * "exception" is the exception object to initialize.
@@ -418,43 +457,45 @@ static bool initException(Object* exception, const char* msg, Object* cause,
      * not #2.  (Some might argue that the constructor is actually not #3,
      * because it doesn't take the message string as an argument, but it
      * has the same effect and we can work with it here.)
+     *
+     * java.lang.AssertionError is also a strange case -- it has a
+     * constructor that takes an Object, but not one that takes a String.
+     * There may be other cases like this, as well, so we generally look
+     * for an Object-taking constructor if we can't find one that takes
+     * a String.
      */
     if (cause == NULL) {
         if (msgStr == NULL) {
-            initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>", "()V");
+            initMethod = findExceptionInitMethod(excepClass, false, false);
             initKind = kInitNoarg;
         } else {
-            initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>",
-                            "(Ljava/lang/String;)V");
+            initMethod = findExceptionInitMethod(excepClass, true, false);
             if (initMethod != NULL) {
                 initKind = kInitMsg;
             } else {
                 /* no #2, try #3 */
-                initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>",
-                                "(Ljava/lang/String;Ljava/lang/Throwable;)V");
-                if (initMethod != NULL)
+                initMethod = findExceptionInitMethod(excepClass, true, true);
+                if (initMethod != NULL) {
                     initKind = kInitMsgThrow;
+                }
             }
         }
     } else {
         if (msgStr == NULL) {
-            initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>",
-                            "(Ljava/lang/Throwable;)V");
+            initMethod = findExceptionInitMethod(excepClass, false, true);
             if (initMethod != NULL) {
                 initKind = kInitThrow;
             } else {
-                initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>", "()V");
+                initMethod = findExceptionInitMethod(excepClass, false, false);
                 initKind = kInitNoarg;
                 needInitCause = true;
             }
         } else {
-            initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>",
-                            "(Ljava/lang/String;Ljava/lang/Throwable;)V");
+            initMethod = findExceptionInitMethod(excepClass, true, true);
             if (initMethod != NULL) {
                 initKind = kInitMsgThrow;
             } else {
-                initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>",
-                                "(Ljava/lang/String;)V");
+                initMethod = findExceptionInitMethod(excepClass, true, false);
                 initKind = kInitMsg;
                 needInitCause = true;
             }
