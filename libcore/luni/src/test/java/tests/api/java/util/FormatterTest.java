@@ -1593,15 +1593,17 @@ public class FormatterTest extends TestCase {
     )
     @AndroidOnly("fails on RI. See comments below")
     public void test_formatLjava_lang_String$Ljava_lang_Object_GeneralConversionOther() {
+        // BEGIN android-changed: we've fixed this bug (http://b/2301938).
         /*
          * In Turkish locale, the upper case of '\u0069' is '\u0130'. The
          * following test indicate that '\u0069' is coverted to upper case
          * without using the turkish locale.
          */
-        Formatter f = new Formatter(new Locale("tr"));
-        f.format("%S", "\u0069");
-        assertEquals("\u0049", f.toString());
-
+        // Formatter f = new Formatter(new Locale("tr"));
+        // f.format("%S", "\u0069");
+        // assertEquals("\u0049", f.toString());
+        // END android-changed
+        
         final Object[] input = { 
                 Boolean.FALSE,                 
                 Boolean.TRUE,                  
