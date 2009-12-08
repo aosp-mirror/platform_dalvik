@@ -133,7 +133,15 @@ int jniThrowException(JNIEnv* env, const char* className, const char* msg)
 }
 
 /*
- * Throw a java.IO.IOException, generating the message from errno.
+ * Throw a java.lang.RuntimeException, with an optional message.
+ */
+int jniThrowRuntimeException(JNIEnv* env, const char* msg)
+{
+    return jniThrowException(env, "java/lang/RuntimeException", msg);
+}
+
+/*
+ * Throw a java.io.IOException, generating the message from errno.
  */
 int jniThrowIOException(JNIEnv* env, int errnum)
 {
