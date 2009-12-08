@@ -93,6 +93,14 @@ struct JitToInterpEntries {
 #endif
 };
 
+/*
+ * Size of save area for callee-save FP regs, which are not automatically
+ * saved by interpreter main because it doesn't use them (but Jit'd code
+ * may). Save/restore routine is defined by target, and size should
+ * be >= max needed by any target.
+ */
+#define JIT_CALLEE_SAVE_DOUBLE_COUNT 8
+
 #define JIT_TRACE_THRESH_FILTER_SIZE  16
 #endif
 
@@ -175,6 +183,7 @@ typedef struct InterpState {
 #endif
     const u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
     JitTraceRun trace[MAX_JIT_RUN_LEN];
+    double calleeSave[JIT_CALLEE_SAVE_DOUBLE_COUNT];
 #endif
 
 } InterpState;

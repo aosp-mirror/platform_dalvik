@@ -25,10 +25,12 @@
     .global dvmJitCalleeSave
     .type dvmJitCalleeSave, %function
 dvmJitCalleeSave:
+    vstmia r0, {d8-d15}
     bx     lr
 
     .global dvmJitCalleeRestore
     .type dvmJitCalleeRestore, %function
 dvmJitCalleeRestore:
+    vldmia r0, {d8-d15}
     bx     lr
 

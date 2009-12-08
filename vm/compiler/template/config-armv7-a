@@ -25,7 +25,7 @@ import armv5te/header.S
 #import cstubs/stubdefs.c
 
 # highly-platform-specific defs
-import armv5te/platform.S
+import armv5te-vfp/platform.S
 
 # common defs for the C helpers; include this before the instruction handlers
 #import c/opcommon.c

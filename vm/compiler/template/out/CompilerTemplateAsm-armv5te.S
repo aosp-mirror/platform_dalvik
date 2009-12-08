@@ -105,7 +105,7 @@ unspecified registers or condition codes.
 /* File: armv5te/platform.S */
 /*
  * ===========================================================================
- *  CPU-version-specific defines
+ *  CPU-version-specific defines and utility
  * ===========================================================================
  */
 
@@ -119,6 +119,24 @@ unspecified registers or condition codes.
     mov     lr, pc
     ldr     pc, \source
 .endm
+
+/*
+ * Save & restore for callee-save FP registers.
+ * On entry:
+ *    r0 : pointer to save area of JIT_CALLEE_SAVE_WORD_SIZE
+ */
+    .text
+    .align 2
+    .global dvmJitCalleeSave
+    .type dvmJitCalleeSave, %function
+dvmJitCalleeSave:
+    bx     lr
+
+    .global dvmJitCalleeRestore
+    .type dvmJitCalleeRestore, %function
+dvmJitCalleeRestore:
+    bx     lr
+
 
 
     .global dvmCompilerTemplateStart
