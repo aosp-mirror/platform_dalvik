@@ -1271,7 +1271,7 @@ public final class Formatter implements Closeable, Flushable {
 
             if (Character.isUpperCase(token.getConversionType())) {
                 if (null != result) {
-                    result = result.toString().toUpperCase(Locale.US);
+                    result = result.toString().toUpperCase(locale);
                 }
             }
             return result;
