@@ -16,6 +16,7 @@ public class Main {
         System.out.println("spawning child");
         ProcessBuilder pb = new ProcessBuilder("/system/bin/sleep", "5");
         Process proc = pb.start();
+        Thread.sleep(1000);
         checkManager();
         proc.waitFor();
         System.out.println("child died");
