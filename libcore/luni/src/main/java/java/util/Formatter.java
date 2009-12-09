@@ -1777,9 +1777,7 @@ public final class Formatter implements Closeable, Flushable {
 
             if ('d' == currentConversionType) {
                 NumberFormat numberFormat = getNumberFormat();
-                boolean readableName = formatToken
-                        .isFlagSet(FormatToken.FLAG_COMMA);
-                numberFormat.setGroupingUsed(readableName);
+                numberFormat.setGroupingUsed(formatToken.isFlagSet(FormatToken.FLAG_COMMA));
                 result.append(numberFormat.format(bigInt));
             } else if ('o' == currentConversionType) {
                 // convert BigInteger to a string presentation using radix 8
@@ -1884,16 +1882,15 @@ public final class Formatter implements Closeable, Flushable {
                 return specialNumberResult;
             }
 
-            if ('a' != Character.toLowerCase(currentConversionType)) {
-                formatToken
-                        .setPrecision(formatToken.isPrecisionSet() ? formatToken
-                                .getPrecision()
-                                : FormatToken.DEFAULT_PRECISION);
+            if (Character.toLowerCase(currentConversionType) != 'a' &&
+                    !formatToken.isPrecisionSet()) {
+                formatToken.setPrecision(FormatToken.DEFAULT_PRECISION);
             }
+
             // output result
             FloatUtil floatUtil = new FloatUtil(result, formatToken,
                     (DecimalFormat) getNumberFormat(), arg);
-            floatUtil.transform(formatToken, result);
+            floatUtil.transform();
 
             formatToken.setPrecision(FormatToken.UNSET);
 
@@ -1979,15 +1976,15 @@ public final class Formatter implements Closeable, Flushable {
     }
 
     private static class FloatUtil {
-        private StringBuilder result;
+        private final StringBuilder result;
 
-        private DecimalFormat decimalFormat;
+        private final DecimalFormat decimalFormat;
 
-        private FormatToken formatToken;
+        private final FormatToken formatToken;
 
-        private Object argument;
+        private final Object argument;
 
-        private char minusSign;
+        private final char minusSign;
 
         FloatUtil(StringBuilder result, FormatToken formatToken,
                 DecimalFormat decimalFormat, Object argument) {
@@ -1995,13 +1992,10 @@ public final class Formatter implements Closeable, Flushable {
             this.formatToken = formatToken;
             this.decimalFormat = decimalFormat;
             this.argument = argument;
-            this.minusSign = decimalFormat.getDecimalFormatSymbols()
-                    .getMinusSign();
+            this.minusSign = decimalFormat.getDecimalFormatSymbols().getMinusSign();
         }
 
-        void transform(FormatToken aFormatToken, StringBuilder aResult) {
-            this.result = aResult;
-            this.formatToken = aFormatToken;
+        void transform() {
             switch (formatToken.getConversionType()) {
                 case 'e':
                 case 'E': {

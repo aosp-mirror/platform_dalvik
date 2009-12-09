@@ -301,13 +301,12 @@ public abstract class NumberFormat extends Format {
     @Override
     public StringBuffer format(Object object, StringBuffer buffer,
             FieldPosition field) {
-        if (object instanceof Number) {
+        if (object instanceof Double || object instanceof Float) {
             double dv = ((Number) object).doubleValue();
-            long lv = ((Number) object).longValue();
-            if (dv == lv) {
-                return format(lv, buffer, field);
-            }
             return format(dv, buffer, field);
+        } else if (object instanceof Number) {
+            long lv = ((Number) object).longValue();
+            return format(lv, buffer, field);
         }
         throw new IllegalArgumentException();
     }

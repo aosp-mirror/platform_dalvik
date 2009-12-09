@@ -135,24 +135,20 @@ public class DecimalFormat extends NumberFormat {
 
     @Override
     public StringBuffer format(Object value, StringBuffer buffer, FieldPosition field) {
-
-        if(!(value instanceof Number)) {
+        if (!(value instanceof Number)) {
             throw new IllegalArgumentException();
         }
-        if(buffer == null || field == null) {
+        if (buffer == null || field == null) {
             throw new NullPointerException();
         }
-
         String fieldType = getFieldType(field.getFieldAttribute());
-
         Number number = (Number) value;
-
-        if(number instanceof BigInteger) {
+        if (number instanceof BigInteger) {
             BigInteger valBigInteger = (BigInteger) number;
-            String result = NativeDecimalFormat.format(this.addr,
-                    valBigInteger.toString(10), field, fieldType, null, 0);
+            String result = NativeDecimalFormat.format(this.addr, valBigInteger.toString(10),
+                    field, fieldType, null, 0);
             return buffer.append(result);
-        } else if(number instanceof BigDecimal) {
+        } else if (number instanceof BigDecimal) {
             BigDecimal valBigDecimal = (BigDecimal) number;
             if (getMultiplier() != 1) {
                 valBigDecimal = applyMultiplier(valBigDecimal);
@@ -161,54 +157,39 @@ public class DecimalFormat extends NumberFormat {
             val.append(valBigDecimal.unscaledValue().toString(10));
             int scale = valBigDecimal.scale();
             scale = makeScalePositive(scale, val);
-            String result = NativeDecimalFormat.format(this.addr,
-                    val.toString(), field, fieldType, null, scale);
+            String result = NativeDecimalFormat.format(this.addr, val.toString(),
+                    field, fieldType, null, scale);
+            return buffer.append(result);
+        } else if (number instanceof Double || number instanceof Float) {
+            double dv = number.doubleValue();
+            String result = NativeDecimalFormat.format(this.addr, dv, field, fieldType, null);
             return buffer.append(result);
         } else {
-            double dv = number.doubleValue();
             long lv = number.longValue();
-            if (dv == lv) {
-                String result = NativeDecimalFormat.format(this.addr, lv, field,
-                        fieldType, null);
-                return buffer.append(result);
-            }
-            String result = NativeDecimalFormat.format(this.addr, dv, field,
-                    fieldType, null);
+            String result = NativeDecimalFormat.format(this.addr, lv, field, fieldType, null);
             return buffer.append(result);
         }
     }
 
     @Override
     public StringBuffer format(long value, StringBuffer buffer, FieldPosition field) {
-
-        if(buffer == null || field == null) {
+        if (buffer == null || field == null) {
             throw new NullPointerException();
         }
-
         String fieldType = getFieldType(field.getFieldAttribute());
-
-        String result = NativeDecimalFormat.format(this.addr, value, field,
-                fieldType, null);
-
+        String result = NativeDecimalFormat.format(this.addr, value, field, fieldType, null);
         buffer.append(result.toCharArray(), 0, result.length());
-
         return buffer;
     }
 
     @Override
     public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
-
-        if(buffer == null || field == null) {
+        if (buffer == null || field == null) {
             throw new NullPointerException();
         }
-
         String fieldType = getFieldType(field.getFieldAttribute());
-
-        String result = NativeDecimalFormat.format(this.addr, value, field,
-                fieldType, null);
-
+        String result = NativeDecimalFormat.format(this.addr, value, field, fieldType, null);
         buffer.append(result.toCharArray(), 0, result.length());
-
         return buffer;
     }
 
