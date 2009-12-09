@@ -2537,15 +2537,17 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
 #endif
 
         /*
-         * Sleep briefly.  This returns false if we've exceeded the total
-         * time limit for this round of sleeping.
+         * Sleep briefly.  The iterative sleep call returns false if we've
+         * exceeded the total time limit for this round of sleeping.
          */
         if (!dvmIterativeSleep(sleepIter++, spinSleepTime, startWhen)) {
-            LOGW("threadid=%d: spin on suspend #%d threadid=%d (h=%d)\n",
-                self->threadId, retryCount,
-                thread->threadId, (int)thread->handle);
-            dumpWedgedThread(thread);
-            complained = true;
+            if (spinSleepTime != FIRST_SLEEP) {
+                LOGW("threadid=%d: spin on suspend #%d threadid=%d (h=%d)\n",
+                    self->threadId, retryCount,
+                    thread->threadId, (int)thread->handle);
+                dumpWedgedThread(thread);
+                complained = true;
+            }
 
             // keep going; could be slow due to valgrind
             sleepIter = 0;
