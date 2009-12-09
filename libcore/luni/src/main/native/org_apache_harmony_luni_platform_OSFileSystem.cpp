@@ -25,15 +25,12 @@
  * Common natives supporting the file system interface.
  */
 
-#define HyMaxPath 1024
-
 /* Values for HyFileOpen */
 #define HyOpenRead    1
 #define HyOpenWrite   2
 #define HyOpenCreate  4
 #define HyOpenTruncate  8
 #define HyOpenAppend  16
-#define HyOpenText    32
 /* Use this flag with HyOpenCreate, if this flag is specified then
  * trying to create an existing file will fail
  */
@@ -41,8 +38,11 @@
 #define HyOpenSync      128
 #define SHARED_LOCK_TYPE 1L
 
-#include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
+#include "JNIHelp.h"
+#include "LocalArray.h"
+#include "ScopedByteArray.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -75,18 +75,6 @@ static inline ssize_t sendfile(int out_fd, int in_fd, off_t *offset,
     return len;
 }
 #endif
-
-static void convertToPlatform(char *path) {
-    char *pathIndex;
-
-    pathIndex = path;
-    while (*pathIndex != '\0') {
-        if (*pathIndex == '\\') {
-            *pathIndex = '/';
-        }
-        pathIndex++;
-    }
-}
 
 static int EsTranslateOpenFlags(int flags) {
     int realFlags = 0;
@@ -409,7 +397,7 @@ static jint harmony_io_truncate(JNIEnv* env, jobject, jint fd, jlong length) {
     return rc;
 }
 
-static jint harmony_io_openImpl(JNIEnv* env, jobject, jbyteArray path,
+static jint harmony_io_openImpl(JNIEnv* env, jobject, jbyteArray pathByteArray,
         jint jflags) {
     int flags = 0;
     int mode = 0;
@@ -442,21 +430,24 @@ static jint harmony_io_openImpl(JNIEnv* env, jobject, jbyteArray path,
 
     flags = EsTranslateOpenFlags(flags);
 
-    // TODO: clean this up when we clean up the java.io.File equivalent.
-    jsize length = env->GetArrayLength (path);
-    length = length < HyMaxPath - 1 ? length : HyMaxPath - 1;
-    char pathCopy[HyMaxPath];
-    env->GetByteArrayRegion (path, 0, length, (jbyte *)pathCopy);
-    pathCopy[length] = '\0';
-    convertToPlatform (pathCopy);
+    ScopedByteArray path(env, pathByteArray);
+    jint rc = TEMP_FAILURE_RETRY(open(&path[0], flags, mode));
+    if (rc == -1) {
+        // Get the human-readable form of errno.
+        char buffer[80];
+        const char* reason = jniStrError(errno, &buffer[0], sizeof(buffer));
 
-    jint cc = TEMP_FAILURE_RETRY(open(pathCopy, flags, mode));
-    // TODO: chase up the callers of this and check they wouldn't rather
-    // have us throw a meaningful IOException right here.
-    if (cc < 0 && errno > 0) {
-        cc = -errno;
+        // Construct a message that includes the path and the reason.
+        // (pathByteCount already includes space for our trailing NUL.)
+        size_t pathByteCount = env->GetArrayLength(pathByteArray);
+        LocalArray<128> message(pathByteCount + 2 + strlen(reason) + 1);
+        snprintf(&message[0], message.size(), "%s (%s)", &path[0], reason);
+
+        // We always throw FileNotFoundException, regardless of the specific
+        // failure. (This appears to be true of the RI too.)
+        jniThrowException(env, "java/io/FileNotFoundException", &message[0]);
     }
-    return cc;
+    return rc;
 }
 
 static jint harmony_io_ioctlAvailable(JNIEnv*env, jobject, jint fd) {

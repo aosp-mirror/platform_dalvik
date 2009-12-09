@@ -18,6 +18,7 @@
 #include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 #include "LocalArray.h"
+#include "ScopedByteArray.h"
 #include "ScopedFd.h"
 
 #include <string.h>
@@ -36,40 +37,8 @@
 // poor choices of where to divide the work between Java and native
 // code.
 
-class Path {
-public:
-    // The Java byte[] already contains a trailing NUL.
-    Path(JNIEnv* env, jbyteArray byteArray)
-    : mEnv(env), mByteArray(byteArray), mBytes(NULL)
-    {
-        mBytes = env->GetByteArrayElements(mByteArray, NULL);
-    }
-
-    ~Path() {
-        if (mBytes) {
-            mEnv->ReleaseByteArrayElements(mByteArray, mBytes, JNI_ABORT);
-        }
-    }
-
-    const jbyte* bytes() const {
-        return mBytes;
-    }
-
-    // Element access.
-    const char& operator[](size_t n) const {
-        const char* array = reinterpret_cast<const char*>(mBytes);
-        return array[n];
-    }
-
-private:
-    JNIEnv* mEnv;
-    jbyteArray mByteArray;
-    jbyte* mBytes;
-};
-
-
 static jbyteArray java_io_File_getCanonImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     // The only thing this native code currently does is truncate the byte[] at
     // the first NUL.
     // TODO: this is completely pointless. we should do this in Java, or do all of getCanonicalPath in native code. (realpath(2)?)
@@ -80,12 +49,12 @@ static jbyteArray java_io_File_getCanonImpl(JNIEnv* env, jobject, jbyteArray pat
 }
 
 static jboolean java_io_File_deleteImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     return (remove(&path[0]) == 0);
 }
 
 static bool doStat(JNIEnv* env, jbyteArray pathBytes, struct stat& sb) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     return (stat(&path[0], &sb) == 0);
 }
 
@@ -132,22 +101,22 @@ static jboolean java_io_File_isFileImpl(JNIEnv* env, jobject, jbyteArray pathByt
 }
 
 static jboolean java_io_File_existsImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     return (access(&path[0], F_OK) == 0);
 }
 
 static jboolean java_io_File_isReadableImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     return (access(&path[0], R_OK) == 0);
 }
 
 static jboolean java_io_File_isWritableImpl(JNIEnv* env, jobject recv, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     return (access(&path[0], W_OK) == 0);
 }
 
 static jbyteArray java_io_File_getLinkImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
 
     // We can't know how big a buffer readlink(2) will need, so we need to
     // loop until it says "that fit".
@@ -174,7 +143,7 @@ static jbyteArray java_io_File_getLinkImpl(JNIEnv* env, jobject, jbyteArray path
 }
 
 static jboolean java_io_File_setLastModifiedImpl(JNIEnv* env, jobject, jbyteArray pathBytes, jlong ms) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     
     // We want to preserve the access time.
     struct stat sb;
@@ -190,7 +159,7 @@ static jboolean java_io_File_setLastModifiedImpl(JNIEnv* env, jobject, jbyteArra
 }
 
 static jboolean java_io_File_setReadOnlyImpl(JNIEnv* env, jobject recv, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
 
     struct stat sb;
     if (stat(&path[0], &sb) == -1) {
@@ -238,7 +207,7 @@ struct LinkedDirEntry {
 };
 
 static jobject java_io_File_listImpl(JNIEnv* env, jclass clazz, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     
     ScopedReaddir dir(opendir(&path[0]));
     if (dir.dirp == NULL) {
@@ -302,13 +271,13 @@ static jobject java_io_File_listImpl(JNIEnv* env, jclass clazz, jbyteArray pathB
 }
 
 static jboolean java_io_File_mkdirImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     // On Android, we don't want default permissions to allow global access.
     return (mkdir(&path[0], S_IRWXU) == 0);
 }
 
 static jboolean java_io_File_createNewFileImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
-    Path path(env, pathBytes);
+    ScopedByteArray path(env, pathBytes);
     // On Android, we don't want default permissions to allow global access.
     ScopedFd fd(open(&path[0], O_CREAT | O_EXCL, 0600));
     if (fd.get() != -1) {
@@ -324,8 +293,8 @@ static jboolean java_io_File_createNewFileImpl(JNIEnv* env, jobject, jbyteArray 
 }
 
 static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject, jbyteArray oldPathBytes, jbyteArray newPathBytes) {
-    Path oldPath(env, oldPathBytes);
-    Path newPath(env, newPathBytes);
+    ScopedByteArray oldPath(env, oldPathBytes);
+    ScopedByteArray newPath(env, newPathBytes);
     return (rename(&oldPath[0], &newPath[0]) == 0);
 }
 
