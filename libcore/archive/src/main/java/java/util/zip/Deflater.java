@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -121,7 +121,7 @@ public class Deflater {
      * level. The strategy can be specified with {@code setStrategy}, only. A
      * header is added to the output by default; use
      * {@code Deflater(level, boolean)} if you need to omit the header.
-     * 
+     *
      * @param level
      *            the compression level in the range between 0 and 9.
      */
@@ -134,7 +134,7 @@ public class Deflater {
      * level. If noHeader is passed as true no ZLib header is added to the
      * output. In a ZIP archive every entry (compressed file) comes with such a
      * header. The strategy can be specified with the setStrategy method, only.
-     * 
+     *
      * @param level
      *            the compression level in the range between 0 and 9.
      * @param noHeader
@@ -152,7 +152,7 @@ public class Deflater {
     /**
      * Deflates the data (previously passed to {@code setInput}) into the
      * supplied buffer.
-     * 
+     *
      * @param buf
      *            buffer to write compressed data to.
      * @return number of bytes of compressed data written to {@code buf}.
@@ -165,7 +165,7 @@ public class Deflater {
     /**
      * Deflates data (previously passed to {@code setInput}) into a specific
      * region within the supplied buffer.
-     * 
+     *
      * @param buf
      *            the buffer to write compressed data to.
      * @param off
@@ -225,7 +225,7 @@ public class Deflater {
     /**
      * Indicates to the {@code Deflater} that all uncompressed input has been provided
      * to it.
-     * 
+     *
      * @see #finished
      */
     public synchronized void finish() {
@@ -235,7 +235,7 @@ public class Deflater {
     /**
      * Returns whether or not all provided data has been successfully
      * compressed.
-     * 
+     *
      * @return true if all data has been compressed, false otherwise.
      */
     public synchronized boolean finished() {
@@ -246,7 +246,7 @@ public class Deflater {
      * Returns the Adler32 checksum of uncompressed data currently read. If a
      * preset dictionary is used getAdler() will return the Adler32 checksum of
      * the dictionary used.
-     * 
+     *
      * @return the Adler32 checksum of uncompressed data or preset dictionary if
      *         used.
      * @see #setDictionary(byte[])
@@ -264,7 +264,7 @@ public class Deflater {
 
     /**
      * Returns the total number of bytes of input consumed by the {@code Deflater}.
-     * 
+     *
      * @return number of bytes of input read.
      */
     public synchronized int getTotalIn() {
@@ -279,7 +279,7 @@ public class Deflater {
 
     /**
      * Returns the total number of compressed bytes output by this {@code Deflater}.
-     * 
+     *
      * @return number of compressed bytes output.
      */
     public synchronized int getTotalOut() {
@@ -298,7 +298,7 @@ public class Deflater {
      * returns true setInput() must be called before deflation can continue. If
      * all bytes of uncompressed data have been provided to the {@code Deflater}
      * finish() must be called to ensure the compressed data is output.
-     * 
+     *
      * @return {@code true} if input is required for deflation to continue,
      *         {@code false} otherwise.
      * @see #finished()
@@ -317,7 +317,7 @@ public class Deflater {
      * previously made settings for the compression strategy or level. This
      * operation <i>must</i> be called after {@code finished()} returns
      * {@code true} if the {@code Deflater} is to be reused.
-     * 
+     *
      * @see #finished
      */
     public synchronized void reset() {
@@ -338,7 +338,7 @@ public class Deflater {
      * setDictionary() can only be called if this {@code Deflater} supports the writing
      * of ZLIB headers. This is the default behaviour but can be overridden
      * using {@code Deflater(int, boolean)}.
-     * 
+     *
      * @param buf
      *            the buffer containing the dictionary data bytes.
      * @see Deflater#Deflater(int, boolean)
@@ -380,7 +380,7 @@ public class Deflater {
     /**
      * Sets the input buffer the {@code Deflater} will use to extract uncompressed bytes
      * for later compression.
-     * 
+     *
      * @param buf
      *            the buffer.
      */
@@ -392,7 +392,7 @@ public class Deflater {
      * Sets the input buffer the {@code Deflater} will use to extract uncompressed bytes
      * for later compression. Input will be taken from the buffer region
      * starting at off and ending at nbytes - 1.
-     * 
+     *
      * @param buf
      *            the buffer containing the input data bytes.
      * @param off
@@ -429,7 +429,7 @@ public class Deflater {
      * Sets the compression level to be used when compressing data. The
      * compression level must be a value between 0 and 9. This value must be set
      * prior to calling setInput().
-     * 
+     *
      * @param level
      *            compression level to use
      * @exception IllegalArgumentException
@@ -449,7 +449,7 @@ public class Deflater {
      * Sets the compression strategy to be used. The strategy must be one of
      * FILTERED, HUFFMAN_ONLY or DEFAULT_STRATEGY.This value must be set prior
      * to calling setInput().
-     * 
+     *
      * @param strategy
      *            compression strategy to use
      * @exception IllegalArgumentException
@@ -470,7 +470,7 @@ public class Deflater {
      * Returns a long int of total number of bytes read by the {@code Deflater}. This
      * method performs the same as {@code getTotalIn} except it returns a long value
      * instead of an integer
-     * 
+     *
      * @see #getTotalIn()
      * @return total number of bytes read by {@code Deflater}.
      */
@@ -486,7 +486,7 @@ public class Deflater {
      * Returns a long int of total number of bytes of read by the {@code Deflater}. This
      * method performs the same as {@code getTotalOut} except it returns a long
      * value instead of an integer
-     * 
+     *
      * @see #getTotalOut()
      * @return bytes exactly write by {@code Deflater}
      */

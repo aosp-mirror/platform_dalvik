@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
     /**
      * This constructor lets you pass the {@code Deflater} specifying the
      * compression algorithm.
-     * 
+     *
      * @param os
      *            is the {@code OutputStream} where to write the compressed data
      *            to.
@@ -66,7 +66,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * default settings for the {@code Deflater} and internal buffer are used.
      * In particular the {@code Deflater} produces a ZLIB header in the output
      * stream.
-     * 
+     *
      * @param os
      *            is the OutputStream where to write the compressed data to.
      */
@@ -77,7 +77,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
     /**
      * This constructor lets you specify both the compression algorithm as well
      * as the internal buffer size to be used.
-     * 
+     *
      * @param os
      *            is the {@code OutputStream} where to write the compressed data
      *            to.
@@ -102,7 +102,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
     /**
      * Compress the data in the input buffer and write it to the underlying
      * stream.
-     * 
+     *
      * @throws IOException
      *             If an error occurs during deflation.
      */
@@ -118,7 +118,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * Writes any unwritten compressed data to the underlying stream, the closes
      * all underlying streams. This stream can no longer be used after close()
      * has been called.
-     * 
+     *
      * @throws IOException
      *             If an error occurs while closing the data compression
      *             process.
@@ -135,7 +135,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
     /**
      * Writes any unwritten data to the underlying stream. Does not close the
      * stream.
-     * 
+     *
      * @throws IOException
      *             If an error occurs.
      */
@@ -165,7 +165,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
     /**
      * Compresses {@code nbytes} of data from {@code buf} starting at
      * {@code off} and writes it to the underlying stream.
-     * 
+     *
      * @param buffer
      *            the buffer of data to compress.
      * @param off

@@ -43,44 +43,27 @@ public class UtilTest extends TestCase {
         }
     }
 
-    public void testASCIIIgnoreCaseRegionMatches() {
+    public void testasciiEndsWithIgnoreCase() {
         final String s1 = ASCII_ALPHABET_LC;
         final String s2 = ASCII_ALPHABET_UC;
-        for (int i = 0; i < s1.length(); i++) {
-            assertTrue(Util.ASCIIIgnoreCaseRegionMatches(s1, i, s2, i, s1
-                    .length()
-                    - i));
-        }
+        assertTrue(Util.asciiEndsWithIgnoreCase(s1, s2));
+        assertTrue(Util.asciiEndsWithIgnoreCase(s2, s1));
+        assertTrue(Util.asciiEndsWithIgnoreCase(s1, "wxyz"));
     }
 
-    public void testToASCIIUpperCaseByte() {
-        for (int i = 0; i < ASCII_ALPHABET_LC_BYTES.length; i++) {
-            assertEquals(ASCII_ALPHABET_UC_BYTES[i], Util
-                    .toASCIIUpperCase(ASCII_ALPHABET_LC_BYTES[i]));
-        }
-        for (int i = 0; i < ASCII_ALPHABET_UC_BYTES.length; i++) {
-            assertEquals(ASCII_ALPHABET_UC_BYTES[i], Util
-                    .toASCIIUpperCase(ASCII_ALPHABET_UC_BYTES[i]));
-        }
-    }
-
-    public void testToASCIIUpperCaseChar() {
-        for (int i = 0; i < ASCII_ALPHABET_LC.length(); i++) {
-            assertEquals(ASCII_ALPHABET_UC.charAt(i), Util
-                    .toASCIIUpperCase(ASCII_ALPHABET_LC.charAt(i)));
-        }
-        for (int i = 0; i < ASCII_ALPHABET_UC.length(); i++) {
-            assertEquals(ASCII_ALPHABET_UC.charAt(i), Util
-                    .toASCIIUpperCase(ASCII_ALPHABET_UC.charAt(i)));
-        }
+    public void testasciiEqualsIgnoreCase() {
+        final String s1 = ASCII_ALPHABET_LC;
+        final String s2 = ASCII_ALPHABET_UC;
+        assertTrue(Util.asciiEqualsIgnoreCase(s1, s2));
+        assertTrue(Util.asciiEqualsIgnoreCase(s2, s1));
     }
 
     public void testEqualsIgnoreCaseByteArrayByteArray() {
-        assertTrue(Util.equalsIgnoreCase(ASCII_ALPHABET_LC_BYTES,
+        assertTrue(Util.asciiEqualsIgnoreCase(ASCII_ALPHABET_LC_BYTES,
                 ASCII_ALPHABET_LC_BYTES));
-        assertTrue(Util.equalsIgnoreCase(ASCII_ALPHABET_LC_BYTES,
+        assertTrue(Util.asciiEqualsIgnoreCase(ASCII_ALPHABET_LC_BYTES,
                 ASCII_ALPHABET_UC_BYTES));
-        assertTrue(Util.equalsIgnoreCase(ASCII_ALPHABET_UC_BYTES,
+        assertTrue(Util.asciiEqualsIgnoreCase(ASCII_ALPHABET_UC_BYTES,
                 ASCII_ALPHABET_UC_BYTES));
     }
 

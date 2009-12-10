@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,7 +79,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
     /**
      * Constructs a new {@code ZipOutputStream} with the specified output
      * stream.
-     * 
+     *
      * @param p1
      *            the {@code OutputStream} to write the data to.
      */
@@ -90,7 +90,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
     /**
      * Closes the current {@code ZipEntry}, if any, and the underlying output
      * stream. If the stream is already closed this method does nothing.
-     * 
+     *
      * @throws IOException
      *             If an error occurs closing the stream.
      */
@@ -106,7 +106,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
     /**
      * Closes the current {@code ZipEntry}. Any entry terminal data is written
      * to the underlying stream.
-     * 
+     *
      * @throws IOException
      *             If an error occurs closing the entry.
      */
@@ -191,7 +191,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
     /**
      * Indicates that all entries have been written to the stream. Any terminal
      * information is written to the underlying stream.
-     * 
+     *
      * @throws IOException
      *             if an error occurs while terminating the stream.
      */
@@ -235,7 +235,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * the entry can then be written using {@code write()}. After data is
      * written {@code closeEntry()} must be called to complete the writing of
      * the entry to the underlying stream.
-     * 
+     *
      * @param ze
      *            the {@code ZipEntry} to store.
      * @throws IOException
@@ -323,7 +323,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
 
     /**
      * Sets the {@code ZipFile} comment associated with the file being written.
-     * 
+     *
      * @param comment
      *            the comment associated with the file.
      */
@@ -338,7 +338,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * Sets the compression level to be used for writing entry data. This level
      * may be set on a per entry basis. The level must have a value between -1
      * and 8 according to the {@code Deflater} compression level bounds.
-     * 
+     *
      * @param level
      *            the compression level (ranging from -1 to 8).
      * @see Deflater
@@ -355,7 +355,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      * Sets the compression method to be used when compressing entry data.
      * method must be one of {@code STORED} (for no compression) or {@code
      * DEFLATED}.
-     * 
+     *
      * @param method
      *            the compression method to use.
      */
@@ -385,7 +385,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
 
     /**
      * Writes data for the current entry to the underlying stream.
-     * 
+     *
      * @exception IOException
      *                If an error occurs writing to the stream
      */

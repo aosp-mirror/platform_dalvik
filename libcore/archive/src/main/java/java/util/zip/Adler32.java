@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ public class Adler32 implements java.util.zip.Checksum {
 
     /**
      * Returns the {@code Adler32} checksum for all input received.
-     * 
+     *
      * @return The checksum for this instance.
      */
     public long getValue() {
@@ -47,7 +47,7 @@ public class Adler32 implements java.util.zip.Checksum {
     /**
      * Update this {@code Adler32} checksum with the single byte provided as
      * argument.
-     * 
+     *
      * @param i
      *            the byte to update checksum with.
      */
@@ -57,7 +57,7 @@ public class Adler32 implements java.util.zip.Checksum {
 
     /**
      * Update this {@code Adler32} checksum using the contents of {@code buf}.
-     * 
+     *
      * @param buf
      *            bytes to update checksum with.
      */
@@ -68,7 +68,7 @@ public class Adler32 implements java.util.zip.Checksum {
     /**
      * Update this {@code Adler32} checksum with the contents of {@code buf},
      * starting from the offset provided and reading n bytes of data.
-     * 
+     *
      * @param buf
      *            buffer to obtain data from.
      * @param off

@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ public class CheckedInputStream extends java.io.FilterInputStream {
      * Constructs a new {@code CheckedInputStream} on {@code InputStream}
      * {@code is}. The checksum will be calculated using the algorithm
      * implemented by {@code csum}.
-     * 
+     *
      * @param is
      *            the input stream to calculate checksum from.
      * @param csum
@@ -48,7 +48,7 @@ public class CheckedInputStream extends java.io.FilterInputStream {
     /**
      * Reads one byte of data from the underlying input stream and updates the
      * checksum with the byte data.
-     * 
+     *
      * @return {@code -1} at the end of the stream, a single byte value
      *         otherwise.
      * @throws IOException
@@ -67,7 +67,7 @@ public class CheckedInputStream extends java.io.FilterInputStream {
      * Reads up to n bytes of data from the underlying input stream, storing it
      * into {@code buf}, starting at offset {@code off}. The checksum is
      * updated with the bytes read.
-     * 
+     *
      * @param buf
      *            the byte array in which to store the bytes read.
      * @param off
@@ -91,7 +91,7 @@ public class CheckedInputStream extends java.io.FilterInputStream {
 
     /**
      * Returns the checksum calculated on the stream read so far.
-     * 
+     *
      * @return the updated checksum.
      */
     public Checksum getChecksum() {
@@ -101,7 +101,7 @@ public class CheckedInputStream extends java.io.FilterInputStream {
     /**
      * Skip up to n bytes of data on the underlying input stream. Any skipped
      * bytes are added to the running checksum value.
-     * 
+     *
      * @param nbytes
      *            the number of bytes to skip.
      * @throws IOException
@@ -114,7 +114,7 @@ public class CheckedInputStream extends java.io.FilterInputStream {
             return 0;
         }
         long skipped = 0;
-        byte[] b = new byte[2048];
+        byte[] b = new byte[(int)Math.min(nbytes, 2048L)];
         int x, v;
         while (skipped != nbytes) {
             x = in.read(b, 0,

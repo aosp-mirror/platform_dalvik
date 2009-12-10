@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,7 @@ package java.util.zip;
 
 import org.apache.harmony.archive.internal.nls.Messages;
 
-// BEGIN android-added
-import java.io.FileDescriptor;
-// END android-added
+import java.io.FileDescriptor; // android-only
 
 /**
  * This class uncompresses data that was compressed using the <i>DEFLATE</i>
@@ -40,8 +38,6 @@ import java.io.FileDescriptor;
  */
 public class Inflater {
 
-    private static final byte MAGIC_NUMBER = 120;
-
     static {
         oneTimeInitialization();
     }
@@ -51,19 +47,11 @@ public class Inflater {
 
     private boolean finished; // Set by the inflateImpl native
 
-    // BEGIN android-removed
-    // private boolean gotFirstHeaderByte;
-    // END android-removed
-
     int inLength;
 
     int inRead;
 
     private boolean needsDictionary; // Set by the inflateImpl native
-
-    // BEGIN android-removed
-    // private boolean pass_magic_number_check = true;
-    // END android-removed
 
     private long streamHandle = -1;
 
@@ -86,9 +74,6 @@ public class Inflater {
      */
     public Inflater(boolean noHeader) {
         streamHandle = createStream(noHeader);
-        // BEGIN android-removed
-        // gotFirstHeaderByte = noHeader;
-        // END android-removed
     }
 
     private native long createStream(boolean noHeader1);
@@ -248,34 +233,32 @@ public class Inflater {
     public synchronized int inflate(byte[] buf, int off, int nbytes)
             throws DataFormatException {
         // avoid int overflow, check null buf
-        if (off <= buf.length && nbytes >= 0 && off >= 0
-                && buf.length - off >= nbytes) {
-            if (nbytes == 0)
-                return 0;
-
-            if (streamHandle == -1) {
-                throw new IllegalStateException();
-            }
-
-            // BEGIN android-removed
-            // if (!pass_magic_number_check) {
-            //     throw new DataFormatException();
-            // }
-            // END android-removed
-
-            if (needsInput()) {
-                return 0;
-            }
-
-            boolean neededDict = needsDictionary;
-            needsDictionary = false;
-            int result = inflateImpl(buf, off, nbytes, streamHandle);
-            if (needsDictionary && neededDict) {
-                throw new DataFormatException(Messages.getString("archive.27")); //$NON-NLS-1$
-            }
-            return result;
+        if (off > buf.length || nbytes < 0 || off < 0
+                || buf.length - off < nbytes) {
+            throw new ArrayIndexOutOfBoundsException();
         }
-        throw new ArrayIndexOutOfBoundsException();
+
+        if (nbytes == 0) {
+            return 0;
+        }
+
+        if (streamHandle == -1) {
+            throw new IllegalStateException();
+        }
+
+        if (needsInput()) {
+            return 0;
+        }
+
+        boolean neededDict = needsDictionary;
+        needsDictionary = false;
+        int result = inflateImpl(buf, off, nbytes, streamHandle);
+        if (needsDictionary && neededDict) {
+            throw new DataFormatException(
+                    Messages.getString("archive.27")); //$NON-NLS-1$
+        }
+
+        return result;
     }
 
     private native synchronized int inflateImpl(byte[] buf, int off,
@@ -407,21 +390,14 @@ public class Inflater {
         } else {
             throw new ArrayIndexOutOfBoundsException();
         }
-
-        // BEGIN android-removed
-        // if (!gotFirstHeaderByte && nbytes > 0) {
-        //     pass_magic_number_check = (buf[off] == MAGIC_NUMBER);
-        //     gotFirstHeaderByte = true;
-        //}
-        // END android-removed
     }
 
-    // BEGIN android-added
+    // BEGIN android-only
     /**
      * Sets the current input to the region within a file starting at {@code
      * off} and ending at {@code nbytes - 1}. This method should only be called
      * if {@code needsInput()} returns {@code true}.
-     * 
+     *
      * @param fd
      *            the input file.
      * @param off
@@ -438,13 +414,13 @@ public class Inflater {
         inLength = setFileInputImpl(fd, off, nbytes, streamHandle);
         return inLength;
     }
-    // END android-added
+    // END android-only
 
     private native synchronized void setInputImpl(byte[] buf, int off,
             int nbytes, long handle);
 
-    // BEGIN android-added
+    // BEGIN android-only
     private native synchronized int setFileInputImpl(FileDescriptor fd, long off,
             int nbytes, long handle);
-    // END android-added
+    // END android-only
 }

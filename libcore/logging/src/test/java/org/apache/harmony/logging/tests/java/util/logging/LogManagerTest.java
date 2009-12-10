@@ -995,6 +995,39 @@ public class LogManagerTest extends TestCase {
         manager.reset();
     }
 
+    public void testReadConfigurationUpdatesRootLoggersHandlers()
+            throws IOException {
+        Properties properties = new Properties();
+        LogManager.getLogManager().readConfiguration(
+                EnvironmentHelper.PropertiesToInputStream(properties));
+
+        Logger root = Logger.getLogger("");
+        assertEquals(0, root.getHandlers().length);
+
+        properties.put("handlers", "java.util.logging.ConsoleHandler");
+        LogManager.getLogManager().readConfiguration(
+                EnvironmentHelper.PropertiesToInputStream(properties));
+
+        assertEquals(1, root.getHandlers().length);
+    }
+
+    public void testReadConfigurationDoesNotUpdateOtherLoggers()
+            throws IOException {
+        Properties properties = new Properties();
+        LogManager.getLogManager().readConfiguration(
+                EnvironmentHelper.PropertiesToInputStream(properties));
+
+        Logger logger = Logger.getLogger("testReadConfigurationDoesNotUpdateOtherLoggers");
+        assertEquals(0, logger.getHandlers().length);
+
+        properties.put("testReadConfigurationDoesNotUpdateOtherLoggers.handlers",
+                "java.util.logging.ConsoleHandler");
+        LogManager.getLogManager().readConfiguration(
+                EnvironmentHelper.PropertiesToInputStream(properties));
+
+        assertEquals(0, logger.getHandlers().length);
+    }
+
     @TestTargets({
         @TestTargetNew(
             level = TestLevel.PARTIAL_COMPLETE,

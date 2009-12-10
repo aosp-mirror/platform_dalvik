@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.harmony.archive.internal.nls.Messages;
-import org.apache.harmony.luni.util.InputStreamExposer;
+import org.apache.harmony.luni.util.InputStreamHelper;
 import org.apache.harmony.luni.util.ThreadLocalCache;
 
 /**
@@ -209,7 +209,7 @@ public class Manifest implements Cloneable {
         byte[] buf;
         // Try to read get a reference to the bytes directly
         try {
-            buf = InputStreamExposer.expose(is);
+            buf = InputStreamHelper.expose(is);
         } catch (UnsupportedOperationException uoe) {
             buf = readFully(is);
         }
@@ -242,20 +242,34 @@ public class Manifest implements Cloneable {
      * have a line feed within a reasonable number of characters.
      */
     private byte[] readFully(InputStream is) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
+        // Initial read
+        byte[] buffer = new byte[4096];
+        int count = is.read(buffer);
+        int nextByte = is.read();
 
+        // Did we get it all in one read?
+        if (nextByte == -1) {
+            byte[] dest = new byte[count];
+            System.arraycopy(buffer, 0, dest, 0, count);
+            return dest;
+        }
+
+        // Does it look like a manifest?
+        if (!containsLine(buffer, count)) {
+            // archive.2E=Manifest is too long
+            throw new IOException(Messages.getString("archive.2E")); //$NON-NLS-1$
+        }
+
+        // Requires additional reads
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(count * 2);
+        baos.write(buffer, 0, count);
+        baos.write(nextByte);
         while (true) {
-            int count = is.read(buffer);
+            count = is.read(buffer);
             if (count == -1) {
-                // TODO: Do we need to copy this, or can we live with junk at the end?
                 return baos.toByteArray();
             }
             baos.write(buffer, 0, count);
-
-            if (!containsLine(buffer, count)) {
-                throw new IOException(Messages.getString("archive.2E")); //$NON-NLS-1$
-            }
         }
     }
 
