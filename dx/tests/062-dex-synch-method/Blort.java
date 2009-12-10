@@ -40,6 +40,10 @@ public class Blort
         }
     }
 
+    public synchronized void testInstance5() {
+        testInstance5();
+    }
+
     public static synchronized void testStatic1() {
         // This space intentionally left blank.
     }
@@ -62,5 +66,9 @@ public class Blort
         } else {
             return 2;
         }
+    }
+
+    public static synchronized void testStatic5() {
+        testStatic5();
     }
 }
