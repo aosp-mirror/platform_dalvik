@@ -171,103 +171,143 @@ static jboolean java_io_File_setReadOnlyImpl(JNIEnv* env, jobject recv, jbyteArr
     return (chmod(&path[0], sb.st_mode & ~0222) == 0);
 }
 
-struct ScopedReaddir {
-    ScopedReaddir(DIR* dirp) : dirp(dirp) {
+// Iterates over the filenames in the given directory.
+class ScopedReaddir {
+public:
+    ScopedReaddir(const char* path) {
+        mDirStream = opendir(path);
+        mIsBad = (mDirStream == NULL);
     }
+
     ~ScopedReaddir() {
-        if (dirp != NULL) {
-            closedir(dirp);
+        if (mDirStream != NULL) {
+            closedir(mDirStream);
         }
     }
-    dirent* next() {
-        return readdir(dirp);
+
+    // Returns the next filename, or NULL.
+    const char* next() {
+        dirent* result = NULL;
+        int rc = readdir_r(mDirStream, &mEntry, &result);
+        if (rc != 0) {
+            mIsBad = true;
+            return NULL;
+        }
+        return (result != NULL) ? result->d_name : NULL;
     }
-    DIR* dirp;
+
+    // Has an error occurred on this stream?
+    bool isBad() const {
+        return mIsBad;
+    }
+
+private:
+    DIR* mDirStream;
+    dirent mEntry;
+    bool mIsBad;
 };
 
-// TODO: this is a literal translation of the old code. we should remove the fixed-size buffers here.
-#define MaxPath 1024
-
-// TODO: Java doesn't guarantee any specific ordering, and with some file systems you will get results in non-alphabetical order, so I've just done the most convenient thing for the native code, but I wonder if we shouldn't pass down an ArrayList<String> and fill it?
-struct LinkedDirEntry {
-    static void addFirst(LinkedDirEntry** list, LinkedDirEntry* newEntry) {
-        newEntry->next = *list;
-        *list = newEntry;
+// DirEntry and DirEntries is a minimal equivalent of std::forward_list
+// for the filenames.
+struct DirEntry {
+    DirEntry(const char* filename) : name(strlen(filename)) {
+        strcpy(&name[0], filename);
+        next = NULL;
     }
-
-    LinkedDirEntry() : next(NULL) {
-    }
-
-    ~LinkedDirEntry() {
-        delete next;
-    }
-
-    char pathEntry[MaxPath];
-    LinkedDirEntry* next;
+    // On Linux, the ext family all limit the length of a directory entry to
+    // less than 256 characters.
+    LocalArray<256> name;
+    DirEntry* next;
 };
 
-static jobject java_io_File_listImpl(JNIEnv* env, jclass clazz, jbyteArray pathBytes) {
+class DirEntries {
+public:
+    DirEntries() : mSize(0), mHead(NULL) {
+    }
+
+    ~DirEntries() {
+        while (mHead) {
+            pop_front();
+        }
+    }
+
+    bool push_front(const char* name) {
+        DirEntry* oldHead = mHead;
+        mHead = new DirEntry(name);
+        if (mHead == NULL) {
+            return false;
+        }
+        mHead->next = oldHead;
+        ++mSize;
+        return true;
+    }
+
+    const char* front() const {
+        return &mHead->name[0];
+    }
+
+    void pop_front() {
+        DirEntry* popped = mHead;
+        if (popped != NULL) {
+            mHead = popped->next;
+            --mSize;
+            delete popped;
+        }
+    }
+
+    size_t size() const {
+        return mSize;
+    }
+
+private:
+    size_t mSize;
+    DirEntry* mHead;
+};
+
+// Reads the directory referred to by 'pathBytes', adding each directory entry
+// to 'entries'.
+static bool readDirectory(JNIEnv* env, jbyteArray pathBytes, DirEntries& entries) {
     ScopedByteArray path(env, pathBytes);
-    
-    ScopedReaddir dir(opendir(&path[0]));
-    if (dir.dirp == NULL) {
-        // TODO: shouldn't we throw an IOException?
-        return NULL;
+    ScopedReaddir dir(&path[0]);
+    if (dir.isBad()) {
+        return false;
     }
-    
-    // TODO: merge this into the loop below.
-    dirent* entry = dir.next();
-    if (entry == NULL) {
-        return NULL;
-    }
-    char filename[MaxPath];
-    strcpy(filename, entry->d_name);
-
-    size_t fileCount = 0;
-    LinkedDirEntry* files = NULL;
-    while (entry != NULL) {
-        if (strcmp(".", filename) != 0 && strcmp("..", filename) != 0) {
-            LinkedDirEntry* newEntry = new LinkedDirEntry;
-            if (newEntry == NULL) {
+    const char* filename;
+    while ((filename = dir.next()) != NULL) {
+        if (strcmp(filename, ".") != 0 && strcmp(filename, "..") != 0) {
+            if (!entries.push_front(filename)) {
                 jniThrowException(env, "java/lang/OutOfMemoryError", NULL);
-                return NULL;
+                return false;
             }
-            strcpy(newEntry->pathEntry, filename);
-            
-            LinkedDirEntry::addFirst(&files, newEntry);
-            ++fileCount;
         }
+    }
+    return true;
+}
 
-        entry = dir.next();
-        if (entry != NULL) {
-            strcpy(filename, entry->d_name);
+static jobjectArray java_io_File_listImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
+    // Read the directory entries into an intermediate form.
+    DirEntries files;
+    if (!readDirectory(env, pathBytes, files)) {
+        return NULL;
+    }
+    // Translate the intermediate form into a Java String[].
+    jclass stringClass = env->FindClass("java/lang/String");
+    if (stringClass == NULL) {
+        return NULL;
+    }
+    jobjectArray result = env->NewObjectArray(files.size(), stringClass, NULL);
+    for (int i = 0; files.size() != 0; files.pop_front(), ++i) {
+        jstring javaFilename = env->NewStringUTF(files.front());
+        if (env->ExceptionCheck()) {
+            return NULL;
         }
+        env->SetObjectArrayElement(result, i, javaFilename);
+        if (env->ExceptionCheck()) {
+            return NULL;
+        }
+        env->DeleteLocalRef(javaFilename);
     }
-    
-    // TODO: we should kill the ScopedReaddir about here, since we no longer need it.
-    
-    // TODO: we're supposed to use null to signal errors. we should return "new String[0]" here (or an empty byte[][]).
-    if (fileCount == 0) {
-        return NULL;
-    }
-    
-    // Create a byte[][].
-    // TODO: since the callers all want a String[], why do we return a byte[][]?
-    jclass byteArrayClass = env->FindClass("[B");
-    if (byteArrayClass == NULL) {
-        return NULL;
-    }
-    jobjectArray answer = env->NewObjectArray(fileCount, byteArrayClass, NULL);
-    int arrayIndex = 0;
-    for (LinkedDirEntry* file = files; file != NULL; file = file->next) {
-        jsize entrylen = strlen(file->pathEntry);
-        jbyteArray entrypath = env->NewByteArray(entrylen);
-        env->SetByteArrayRegion(entrypath, 0, entrylen, (jbyte *) file->pathEntry);
-        env->SetObjectArrayElement(answer, arrayIndex, entrypath);
-        env->DeleteLocalRef(entrypath);
-        ++arrayIndex;
-    }
-    return answer;
+    return result;
 }
 
 static jboolean java_io_File_mkdirImpl(JNIEnv* env, jobject, jbyteArray pathBytes) {
@@ -311,7 +351,7 @@ static JNINativeMethod gMethods[] = {
     { "isWritableImpl",     "([B)Z",  (void*) java_io_File_isWritableImpl },
     { "lastModifiedImpl",   "([B)J",  (void*) java_io_File_lastModifiedImpl },
     { "lengthImpl",         "([B)J",  (void*) java_io_File_lengthImpl },
-    { "listImpl",           "([B)[[B",(void*) java_io_File_listImpl },
+    { "listImpl",           "([B)[Ljava/lang/String;", (void*) java_io_File_listImpl },
     { "mkdirImpl",          "([B)Z",  (void*) java_io_File_mkdirImpl },
     { "renameToImpl",       "([B[B)Z",(void*) java_io_File_renameToImpl },
     { "setLastModifiedImpl","([BJ)Z", (void*) java_io_File_setLastModifiedImpl },
