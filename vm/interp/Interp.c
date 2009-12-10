@@ -1219,6 +1219,9 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     InterpState interpState;
     bool change;
 #if defined(WITH_JIT)
+    /* Target-specific save/restore */
+    extern void dvmJitCalleeSave(double *saveArea);
+    extern void dvmJitCalleeRestore(double *saveArea);
     /* Interpreter entry points from compiled code */
     extern void dvmJitToInterpNormal();
     extern void dvmJitToInterpNoChain();
@@ -1256,6 +1259,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     interpState.debugIsMethodEntry = true;
 #endif
 #if defined(WITH_JIT)
+    dvmJitCalleeSave(interpState.calleeSave);
     interpState.jitState = gDvmJit.pJitEntryTable ? kJitNormal : kJitOff;
 
     /* Setup the Jit-to-interpreter entry points */
@@ -1333,4 +1337,7 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     }
 
     *pResult = interpState.retval;
+#if defined(WITH_JIT)
+    dvmJitCalleeRestore(interpState.calleeSave);
+#endif
 }
