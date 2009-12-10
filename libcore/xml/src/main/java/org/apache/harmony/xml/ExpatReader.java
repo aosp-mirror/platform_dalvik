@@ -37,15 +37,12 @@ import java.util.logging.Logger;
  * Does not support {@link DTDHandler}.
  */
 public class ExpatReader implements XMLReader {
-
-    private static final Logger logger
-            = Logger.getLogger(ExpatReader.class.getName());
-
     /*
      * ExpatParser accesses these fields directly during parsing. The user
      * should be able to safely change them during parsing.
      */
     /*package*/ ContentHandler contentHandler;
+    /*package*/ DTDHandler dtdHandler;
     /*package*/ EntityResolver entityResolver;
     /*package*/ ErrorHandler errorHandler;
     /*package*/ LexicalHandler lexicalHandler;
@@ -170,18 +167,12 @@ public class ExpatReader implements XMLReader {
         return entityResolver;
     }
 
-    /**
-     * Not implemented.
-     */
-    public void setDTDHandler(DTDHandler ignored) {
-        logger.warning("DTD handlers aren't supported.");
+    public void setDTDHandler(DTDHandler dtdHandler) {
+        this.dtdHandler = dtdHandler;
     }
 
-    /**
-     * Always returns null.
-     */
     public DTDHandler getDTDHandler() {
-        return null;
+        return dtdHandler;
     }
 
     public void setContentHandler(ContentHandler handler) {

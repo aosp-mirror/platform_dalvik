@@ -501,20 +501,53 @@ public class ExpatParserTest extends TestCase {
         }
     }
 
-    public void testDtd() throws Exception {
-        Reader in = new StringReader(
-            "<?xml version=\"1.0\"?><!DOCTYPE foo PUBLIC 'bar' 'tee'><a></a>");
+    private TestDtdHandler runDtdTest(String s) throws Exception {
+        Reader in = new StringReader(s);
         ExpatReader reader = new ExpatReader();
         TestDtdHandler handler = new TestDtdHandler();
         reader.setContentHandler(handler);
+        reader.setDTDHandler(handler);
         reader.setLexicalHandler(handler);
         reader.parse(new InputSource(in));
+        return handler;
+    }
 
+    public void testDtdDoctype() throws Exception {
+        TestDtdHandler handler = runDtdTest("<?xml version=\"1.0\"?><!DOCTYPE foo PUBLIC 'bar' 'tee'><a></a>");
         assertEquals("foo", handler.name);
         assertEquals("bar", handler.publicId);
         assertEquals("tee", handler.systemId);
-
         assertTrue(handler.ended);
+    }
+
+    public void testDtdUnparsedEntity_system() throws Exception {
+        TestDtdHandler handler = runDtdTest("<?xml version=\"1.0\"?><!DOCTYPE foo PUBLIC 'bar' 'tee' [ <!ENTITY ent SYSTEM 'blah' NDATA poop> ]><a></a>");
+        assertEquals("ent", handler.ueName);
+        assertEquals(null, handler.uePublicId);
+        assertEquals("blah", handler.ueSystemId);
+        assertEquals("poop", handler.ueNotationName);
+    }
+
+    public void testDtdUnparsedEntity_public() throws Exception {
+        TestDtdHandler handler = runDtdTest("<?xml version=\"1.0\"?><!DOCTYPE foo PUBLIC 'bar' 'tee' [ <!ENTITY ent PUBLIC 'a' 'b' NDATA poop> ]><a></a>");
+        assertEquals("ent", handler.ueName);
+        assertEquals("a", handler.uePublicId);
+        assertEquals("b", handler.ueSystemId);
+        assertEquals("poop", handler.ueNotationName);
+    }
+
+    public void testDtdNotation_system() throws Exception {
+        TestDtdHandler handler = runDtdTest("<?xml version=\"1.0\"?><!DOCTYPE foo PUBLIC 'bar' 'tee' [ <!NOTATION sn SYSTEM 'nf2'> ]><a></a>");
+        assertEquals("sn", handler.ndName);
+        assertEquals(null, handler.ndPublicId);
+        assertEquals("nf2", handler.ndSystemId);
+    }
+
+    public void testDtdNotation_public() throws Exception {
+        TestDtdHandler handler = runDtdTest("<?xml version=\"1.0\"?><!DOCTYPE foo PUBLIC 'bar' 'tee' [ <!NOTATION pn PUBLIC 'nf1'> ]><a></a>");
+        assertEquals("pn", handler.ndName);
+        assertEquals("nf1", handler.ndPublicId);
+        assertEquals(null, handler.ndSystemId);
     }
 
     static class TestDtdHandler extends DefaultHandler2 {
@@ -522,6 +555,13 @@ public class ExpatParserTest extends TestCase {
         String name;
         String publicId;
         String systemId;
+        String ndName;
+        String ndPublicId;
+        String ndSystemId;
+        String ueName;
+        String uePublicId;
+        String ueSystemId;
+        String ueNotationName;
 
         boolean ended;
 
@@ -542,6 +582,21 @@ public class ExpatParserTest extends TestCase {
         @Override
         public void setDocumentLocator(Locator locator) {
             this.locator = locator;
+        }
+
+        @Override
+        public void notationDecl(String name, String publicId, String systemId) {
+            this.ndName = name;
+            this.ndPublicId = publicId;
+            this.ndSystemId = systemId;
+        }
+
+        @Override
+        public void unparsedEntityDecl(String entityName, String publicId, String systemId, String notationName) {
+            this.ueName = entityName;
+            this.uePublicId = publicId;
+            this.ueSystemId = systemId;
+            this.ueNotationName = notationName;
         }
     }
 

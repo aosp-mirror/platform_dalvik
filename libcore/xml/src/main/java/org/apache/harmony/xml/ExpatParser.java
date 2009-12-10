@@ -18,6 +18,7 @@ package org.apache.harmony.xml;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
@@ -224,6 +225,20 @@ class ExpatParser {
         if (contentHandler != null) {
             contentHandler.processingInstruction(target, data);
         }        
+    }
+
+    /*package*/ void notationDecl(String name, String publicId, String systemId) throws SAXException {
+        DTDHandler dtdHandler = xmlReader.dtdHandler;
+        if (dtdHandler != null) {
+            dtdHandler.notationDecl(name, publicId, systemId);
+        }
+    }
+
+    /*package*/ void unparsedEntityDecl(String name, String publicId, String systemId, String notationName) throws SAXException {
+        DTDHandler dtdHandler = xmlReader.dtdHandler;
+        if (dtdHandler != null) {
+            dtdHandler.unparsedEntityDecl(name, publicId, systemId, notationName);
+        }
     }
 
     /**
@@ -791,4 +806,3 @@ class ExpatParser {
         }
     }
 }
-

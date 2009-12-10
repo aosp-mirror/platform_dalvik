@@ -31,7 +31,7 @@
 /**
  * Wrapper around an interned string.
  */
-typedef struct {
+struct InternedString {
 
     /** The interned string itself. */
     jstring interned;
@@ -41,22 +41,22 @@ typedef struct {
 
     /** Hash code of the interned string. */
     int hash;    
-} InternedString;
+};
 
 /**
  * Keeps track of strings between start and end events.
  */
-typedef struct {
+struct StringStack {
 
     jstring* array;
     int capacity;
     int size;
-} StringStack;
+};
 
 /**
  * Data passed to parser handler method by the parser.
  */
-typedef struct {
+struct ParsingContext {
 
     /**
      * The JNI environment for the current thread. This should only be used
@@ -87,21 +87,23 @@ typedef struct {
 
     /** Cache of interned strings. */
     InternedString** internedStrings[BUCKET_COUNT];
-} ParsingContext;
+};
 
-static jmethodID startElementMethod;
-static jmethodID endElementMethod;
-static jmethodID textMethod;
 static jmethodID commentMethod;
-static jmethodID startCdataMethod;
 static jmethodID endCdataMethod;
-static jmethodID startDtdMethod;
 static jmethodID endDtdMethod;
-static jmethodID startNamespaceMethod;
+static jmethodID endElementMethod;
 static jmethodID endNamespaceMethod;
-static jmethodID processingInstructionMethod;
 static jmethodID handleExternalEntityMethod;
 static jmethodID internMethod;
+static jmethodID notationDeclMethod;
+static jmethodID processingInstructionMethod;
+static jmethodID startCdataMethod;
+static jmethodID startDtdMethod;
+static jmethodID startElementMethod;
+static jmethodID startNamespaceMethod;
+static jmethodID textMethod;
+static jmethodID unparsedEntityDeclMethod;
 static jclass stringClass;
 static jstring emptyString;
 
@@ -879,6 +881,53 @@ static int handleExternalEntity(XML_Parser parser, const char* context,
     return env->ExceptionCheck() ? XML_STATUS_ERROR : XML_STATUS_OK;
 }
 
+static void unparsedEntityDecl(void* data, const char* name, const char* base, const char* systemId, const char* publicId, const char* notationName) {
+    ParsingContext* parsingContext = reinterpret_cast<ParsingContext*>(data);
+    jobject javaParser = parsingContext->object;
+    JNIEnv* env = parsingContext->env;
+    
+    // Bail out if a previously called handler threw an exception.
+    if (env->ExceptionCheck()) return;
+    
+    jstring javaName = env->NewStringUTF(name);
+    if (env->ExceptionCheck()) return;
+    jstring javaPublicId = env->NewStringUTF(publicId);
+    if (env->ExceptionCheck()) return;
+    jstring javaSystemId = env->NewStringUTF(systemId);
+    if (env->ExceptionCheck()) return;
+    jstring javaNotationName = env->NewStringUTF(notationName);
+    if (env->ExceptionCheck()) return;
+    
+    env->CallVoidMethod(javaParser, unparsedEntityDeclMethod, javaName, javaPublicId, javaSystemId, javaNotationName);
+    
+    env->DeleteLocalRef(javaName);
+    env->DeleteLocalRef(javaPublicId);
+    env->DeleteLocalRef(javaSystemId);
+    env->DeleteLocalRef(javaNotationName);
+}
+
+static void notationDecl(void* data, const char* name, const char* base, const char* systemId, const char* publicId) {
+    ParsingContext* parsingContext = reinterpret_cast<ParsingContext*>(data);
+    jobject javaParser = parsingContext->object;
+    JNIEnv* env = parsingContext->env;
+    
+    // Bail out if a previously called handler threw an exception.
+    if (env->ExceptionCheck()) return;
+    
+    jstring javaName = env->NewStringUTF(name);
+    if (env->ExceptionCheck()) return;
+    jstring javaPublicId = env->NewStringUTF(publicId);
+    if (env->ExceptionCheck()) return;
+    jstring javaSystemId = env->NewStringUTF(systemId);
+    if (env->ExceptionCheck()) return;
+    
+    env->CallVoidMethod(javaParser, notationDeclMethod, javaName, javaPublicId, javaSystemId);
+    
+    env->DeleteLocalRef(javaName);
+    env->DeleteLocalRef(javaPublicId);
+    env->DeleteLocalRef(javaSystemId);
+}
+
 /**
  * Releases the parsing context.
  */
@@ -945,15 +994,15 @@ static jint initialize(JNIEnv* env, jobject object, jstring javaEncoding,
             XML_SetNamespaceDeclHandler(parser, startNamespace, endNamespace);
         }
 
-        XML_SetCommentHandler(parser, comment);
         XML_SetCdataSectionHandler(parser, startCdata, endCdata);
-
-        XML_SetElementHandler(parser, startElement, endElement);
         XML_SetCharacterDataHandler(parser, text);
+        XML_SetCommentHandler(parser, comment);
         XML_SetDoctypeDeclHandler(parser, startDtd, endDtd);
-        XML_SetProcessingInstructionHandler(parser, processingInstruction);
+        XML_SetElementHandler(parser, startElement, endElement);
         XML_SetExternalEntityRefHandler(parser, handleExternalEntity);
-
+        XML_SetNotationDeclHandler(parser, notationDecl);
+        XML_SetProcessingInstructionHandler(parser, processingInstruction);
+        XML_SetUnparsedEntityDeclHandler(parser, unparsedEntityDecl);
         XML_SetUserData(parser, context);
     } else {
         releaseParsingContext(env, context);
@@ -1358,50 +1407,59 @@ static void freeAttributes(JNIEnv* env, jobject clazz, jint pointer) {
  *
  * @param clazz Java ExpatParser class
  */
-static void staticInitialize(JNIEnv* env, jobject clazz, jstring empty) {
-    startElementMethod = env->GetMethodID((jclass) clazz, "startElement",
+static void staticInitialize(JNIEnv* env, jobject classObject, jstring empty) {
+    jclass clazz = reinterpret_cast<jclass>(classObject);
+    startElementMethod = env->GetMethodID(clazz, "startElement",
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;II)V");
     if (startElementMethod == NULL) return;
     
-    endElementMethod = env->GetMethodID((jclass) clazz, "endElement",
+    endElementMethod = env->GetMethodID(clazz, "endElement",
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     if (endElementMethod == NULL) return;
 
-    textMethod = env->GetMethodID((jclass) clazz, "text", "([CI)V");
+    textMethod = env->GetMethodID(clazz, "text", "([CI)V");
     if (textMethod == NULL) return;
 
-    commentMethod = env->GetMethodID((jclass) clazz, "comment", "([CI)V");
+    commentMethod = env->GetMethodID(clazz, "comment", "([CI)V");
     if (commentMethod == NULL) return;
 
-    startCdataMethod = env->GetMethodID((jclass) clazz, "startCdata", "()V");
+    startCdataMethod = env->GetMethodID(clazz, "startCdata", "()V");
     if (startCdataMethod == NULL) return;
 
-    endCdataMethod = env->GetMethodID((jclass) clazz, "endCdata", "()V");
+    endCdataMethod = env->GetMethodID(clazz, "endCdata", "()V");
     if (endCdataMethod == NULL) return;
 
-    startDtdMethod = env->GetMethodID((jclass) clazz, "startDtd",
+    startDtdMethod = env->GetMethodID(clazz, "startDtd",
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     if (startDtdMethod == NULL) return;
 
-    endDtdMethod = env->GetMethodID((jclass) clazz, "endDtd", "()V");
+    endDtdMethod = env->GetMethodID(clazz, "endDtd", "()V");
     if (endDtdMethod == NULL) return;
 
-    startNamespaceMethod = env->GetMethodID((jclass) clazz, "startNamespace",
+    startNamespaceMethod = env->GetMethodID(clazz, "startNamespace",
         "(Ljava/lang/String;Ljava/lang/String;)V");
     if (startNamespaceMethod == NULL) return;
 
-    endNamespaceMethod = env->GetMethodID((jclass) clazz, "endNamespace",
+    endNamespaceMethod = env->GetMethodID(clazz, "endNamespace",
         "(Ljava/lang/String;)V");
     if (endNamespaceMethod == NULL) return;
 
-    processingInstructionMethod = env->GetMethodID((jclass) clazz,
+    processingInstructionMethod = env->GetMethodID(clazz,
         "processingInstruction", "(Ljava/lang/String;Ljava/lang/String;)V");
     if (processingInstructionMethod == NULL) return;
 
-    handleExternalEntityMethod = env->GetMethodID((jclass) clazz,
+    handleExternalEntityMethod = env->GetMethodID(clazz,
         "handleExternalEntity",
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     if (handleExternalEntityMethod == NULL) return;
+
+    notationDeclMethod = env->GetMethodID(clazz, "notationDecl",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    if (notationDeclMethod == NULL) return;
+
+    unparsedEntityDeclMethod = env->GetMethodID(clazz, "unparsedEntityDecl",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    if (unparsedEntityDeclMethod == NULL) return;
 
     // Look up String class.
     stringClass = env->FindClass("java/lang/String");
