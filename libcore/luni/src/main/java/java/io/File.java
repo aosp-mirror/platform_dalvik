@@ -948,28 +948,13 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-
         if (path.length() == 0) {
             return null;
         }
-
-        // TODO: rewrite the JNI so the rest of this method is just "return listImpl(pathBytes);"
-        if (!isDirectoryImpl(pathBytes) || !existsImpl(pathBytes) || !isReadableImpl(pathBytes)) {
-            return null;
-        }
-        byte[][] implList = listImpl(pathBytes);
-        if (implList == null) {
-            // empty list
-            return new String[0];
-        }
-        String[] result = new String[implList.length];
-        for (int index = 0; index < implList.length; index++) {
-            result[index] = Util.toUTF8String(implList[index]);
-        }
-        return result;
+        return listImpl(pathBytes);
     }
 
-    private synchronized static native byte[][] listImpl(byte[] path);
+    private native String[] listImpl(byte[] path);
 
     /**
      * Gets a list of the files in the directory represented by this file. This
