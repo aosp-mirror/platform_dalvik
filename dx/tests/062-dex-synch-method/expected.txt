@@ -58,11 +58,27 @@ regs: 000b; ins: 0003; outs: 0000
   0010: const-wide/16 v3, #long 2 // #0002
   0012: move-wide v0, v3
   0013: goto 000e // -0005
+Blort.testInstance5:()V:
+regs: 0004; ins: 0001; outs: 0001
+  0000: move-object v0, v3
+  0001: move-object v2, v3
+  0002: monitor-enter v2
+  0003: move-object v1, v0
+  0004: invoke-virtual {v1}, Blort.testInstance5:()V
+  0007: monitor-exit v2
+  0008: return-void
+  0009: move-exception v0
+  000a: monitor-exit v2
+  000b: throw v0
+  catches
+    tries:
+      try 0004..0007
+      catch <any> -> 0009
 Blort.testStatic1:()V:
-regs: 0001; ins: 0000; outs: 0000
-  0000: const-class v0, Blort
-  0002: monitor-enter v0
-  0003: monitor-exit v0
+regs: 0002; ins: 0000; outs: 0000
+  0000: const-class v1, Blort
+  0002: monitor-enter v1
+  0003: monitor-exit v1
   0004: return-void
 Blort.testStatic2:(Ljava/lang/Object;)V:
 regs: 0004; ins: 0001; outs: 0001
@@ -114,3 +130,17 @@ regs: 0009; ins: 0002; outs: 0000
   0010: const-wide/16 v2, #long 2 // #0002
   0012: move-wide v0, v2
   0013: goto 000e // -0005
+Blort.testStatic5:()V:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const-class v1, Blort
+  0002: monitor-enter v1
+  0003: invoke-static {}, Blort.testStatic5:()V
+  0006: monitor-exit v1
+  0007: return-void
+  0008: move-exception v0
+  0009: monitor-exit v1
+  000a: throw v0
+  catches
+    tries:
+      try 0003..0006
+      catch <any> -> 0008

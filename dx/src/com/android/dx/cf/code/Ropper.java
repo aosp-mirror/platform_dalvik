@@ -424,11 +424,14 @@ public final class Ropper {
     private RegisterSpec getSynchReg() {
         /*
          * We use the register that is just past the deepest possible
-         * stack element. We don't need to do anything else special at
-         * this level, since later passes will merely notice the
-         * highest register used by explicit inspection.
+         * stack element, with a minimum of v1 since v0 is what's
+         * always used to hold the caught exception when unwinding. We
+         * don't need to do anything else special at this level, since
+         * later passes will merely notice the highest register used
+         * by explicit inspection.
          */
-        return RegisterSpec.make(getNormalRegCount(), Type.OBJECT);
+        int reg = getNormalRegCount();
+        return RegisterSpec.make((reg < 1) ? 1 : reg, Type.OBJECT);
     }
 
     /**
