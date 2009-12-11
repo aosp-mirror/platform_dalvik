@@ -682,10 +682,12 @@ static void checkClassName(JNIEnv* env, const char* className, const char* func)
     /* quick check for illegal chars */
     cp = className;
     while (*cp != '\0') {
-        if (*cp == '.')
+        if (*cp == '.')     /* catch "java.lang.String" */
             goto fail;
         cp++;
     }
+    if (*(cp-1) == ';' && *className == 'L')
+        goto fail;         /* catch "Ljava/lang/String;" */
 
     // TODO: need a more rigorous check here
 
@@ -693,6 +695,7 @@ static void checkClassName(JNIEnv* env, const char* className, const char* func)
 
 fail:
     LOGW("JNI WARNING: illegal class name '%s' (%s)\n", className, func);
+    LOGW("             (should be formed like 'java/lang/String')\n");
     abortMaybe();
 }
 

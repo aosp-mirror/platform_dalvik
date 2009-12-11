@@ -140,7 +140,8 @@ bool dvmCreateStockExceptions(void)
         "[pre-allocated]");
     dvmReleaseTrackedAlloc(gDvm.internalErrorObj, NULL);
     gDvm.noClassDefFoundErrorObj =
-        createStockException("Ljava/lang/NoClassDefFoundError;", NULL);
+        createStockException("Ljava/lang/NoClassDefFoundError;",
+            "[generic]");
     dvmReleaseTrackedAlloc(gDvm.noClassDefFoundErrorObj, NULL);
 
     if (gDvm.outOfMemoryObj == NULL || gDvm.internalErrorObj == NULL ||
