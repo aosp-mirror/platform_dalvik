@@ -67,7 +67,7 @@ public class Main {
         } catch (InterruptedException ie) {/*ignore */}
         System.gc();
 
-        System.out.println("done");
+        System.out.println("b2302318 passes");
     }
 }
 
@@ -81,8 +81,6 @@ class SpinThread extends Thread {
 
     public void run() {
         setPriority(mPriority);
-        System.out.println("Spinning away at priority " + mPriority);
-
         while (true) {}
     }
 }
