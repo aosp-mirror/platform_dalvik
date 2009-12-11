@@ -1124,7 +1124,7 @@ static void setThreadSelf(Thread* thread)
  * This is associated with the pthreadKeySelf key.  It's called by the
  * pthread library when a thread is exiting and the "self" pointer in TLS
  * is non-NULL, meaning the VM hasn't had a chance to clean up.  In normal
- * operation this should never be called.
+ * operation this will not be called.
  *
  * This is mainly of use to ensure that we don't leak resources if, for
  * example, a thread attaches itself to us with AttachCurrentThread and
@@ -1135,16 +1135,43 @@ static void setThreadSelf(Thread* thread)
  * will simply be unaware that the thread has exited, leading to resource
  * leaks (and, if this is a non-daemon thread, an infinite hang when the
  * VM tries to shut down).
+ *
+ * Because some implementations may want to use the pthread destructor
+ * to initiate the detach, and the ordering of destructors is not defined,
+ * we want to iterate a couple of times to give those a chance to run.
  */
 static void threadExitCheck(void* arg)
 {
-    Thread* thread = (Thread*) arg;
+    const int kMaxCount = 2;
 
-    LOGI("In threadExitCheck %p\n", arg);
-    assert(thread != NULL);
+    Thread* self = (Thread*) arg;
+    assert(self != NULL);
 
-    if (thread->status != THREAD_ZOMBIE) {
-        LOGE("Native thread exited without telling us\n");
+    LOGV("threadid=%d: threadExitCheck(%p) count=%d\n",
+        self->threadId, arg, self->threadExitCheckCount);
+
+    if (self->status == THREAD_ZOMBIE) {
+        LOGW("threadid=%d: Weird -- shouldn't be in threadExitCheck\n",
+            self->threadId);
+        return;
+    }
+
+    if (self->threadExitCheckCount < kMaxCount) {
+        /*
+         * Spin a couple of times to let other destructors fire.
+         */
+        LOGD("threadid=%d: thread exiting, not yet detached (count=%d)\n",
+            self->threadId, self->threadExitCheckCount);
+        self->threadExitCheckCount++;
+        int cc = pthread_setspecific(gDvm.pthreadKeySelf, self);
+        if (cc != 0) {
+            LOGE("threadid=%d: unable to re-add thread to TLS\n",
+                self->threadId);
+            dvmAbort();
+        }
+    } else {
+        LOGE("threadid=%d: native thread exited without detaching\n",
+            self->threadId);
         dvmAbort();
     }
 }

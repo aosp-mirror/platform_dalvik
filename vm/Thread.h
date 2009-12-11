@@ -189,6 +189,9 @@ typedef struct Thread {
     struct Thread* prev;
     struct Thread* next;
 
+    /* used by threadExitCheck when a thread exits without detaching */
+    int         threadExitCheckCount;
+
     /* JDWP invoke-during-breakpoint support */
     DebugInvokeReq  invokeReq;
 
