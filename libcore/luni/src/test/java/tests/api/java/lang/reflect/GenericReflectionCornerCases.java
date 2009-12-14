@@ -16,6 +16,7 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
@@ -169,6 +170,7 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
         )
     })
     @SuppressWarnings("unchecked")
+    @BrokenTest(value = "fails when run using CTS harness bug 2155700")
     public void testMultipleBoundedWildcardUnEquality() throws Exception {
         Class<? extends MultipleBoundedWildcardUnEquality> clazz = MultipleBoundedWildcardUnEquality.class;
 
@@ -238,6 +240,7 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
         )
     })
     @SuppressWarnings("unchecked")
+    @BrokenTest(value = "fails when run using CTS harness bug 2155700")
     public void testMultipleBoundedWildcard() throws Exception {
         Class<? extends MultipleBoundedWildcardEquality> clazz = MultipleBoundedWildcardEquality.class;
 
