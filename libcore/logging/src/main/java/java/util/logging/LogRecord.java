@@ -364,26 +364,25 @@ public class LogRecord implements Serializable {
      *  Init the sourceClass and sourceMethod fields.
      */
     private void initSource() {
-        if (!sourceInited) {
-            StackTraceElement[] elements = (new Throwable()).getStackTrace();
-            int i = 0;
-            String current = null;
-            FINDLOG: for (; i < elements.length; i++) {
-                current = elements[i].getClassName();
-                if (current.equals(Logger.class.getName())) {
-                    break FINDLOG;
-                }
-            }
-            while (++i < elements.length
-                    && elements[i].getClassName().equals(current)) {
-                // do nothing
-            }
-            if (i < elements.length) {
-                this.sourceClassName = elements[i].getClassName();
-                this.sourceMethodName = elements[i].getMethodName();
-            }
-            sourceInited = true;
+        // BEGIN android-changed
+        if (sourceInited) {
+            return;
         }
+
+        boolean sawLogger = false;
+        for (StackTraceElement element : new Throwable().getStackTrace()) {
+            String current = element.getClassName();
+            if (current.startsWith(Logger.class.getName())) {
+                sawLogger = true;
+            } else if (sawLogger) {
+                this.sourceClassName = element.getClassName();
+                this.sourceMethodName = element.getMethodName();
+                break;
+            }
+        }
+
+        sourceInited = true;
+        // END android-changed
     }
 
     /**
