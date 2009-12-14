@@ -81,7 +81,10 @@ Java_java_util_zip_Inflater_createStream (JNIEnv * env, jobject recv,
   jstream->inaddr = NULL;
   jstream->inCap = 0;
 
-  /*Unable to find official doc that this is the way to avoid zlib header use. However doc in zipsup.c claims it is so. */
+  /*
+   * In the range 8..15 for checked, or -8..-15 for unchecked inflate. Unchecked
+   * is appropriate for formats like zip that do their own validity checking.
+   */
   if (noHeader)
     wbits = wbits / -1;
   err = inflateInit2 (stream, wbits);   /*Window bits to use. 15 is fastest but consumes the most memory */

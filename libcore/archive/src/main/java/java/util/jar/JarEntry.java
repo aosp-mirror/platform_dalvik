@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ public class JarEntry extends ZipEntry {
 
     /**
      * Creates a new {@code JarEntry} named name.
-     * 
+     *
      * @param name
      *            The name of the new {@code JarEntry}.
      */
@@ -61,7 +61,7 @@ public class JarEntry extends ZipEntry {
 
     /**
      * Creates a new {@code JarEntry} using the values obtained from entry.
-     * 
+     *
      * @param entry
      *            The ZipEntry to obtain values from.
      */
@@ -72,7 +72,7 @@ public class JarEntry extends ZipEntry {
     /**
      * Returns the {@code Attributes} object associated with this entry or
      * {@code null} if none exists.
-     * 
+     *
      * @return the {@code Attributes} for this entry.
      * @exception IOException
      *                If an error occurs obtaining the {@code Attributes}.
@@ -94,7 +94,7 @@ public class JarEntry extends ZipEntry {
      * entry or {@code null} if none exists. Make sure that the everything is
      * read from the input stream before calling this method, or else the method
      * returns {@code null}.
-     * 
+     *
      * @return the certificate for this entry.
      * @see java.security.cert.Certificate
      */
@@ -116,7 +116,7 @@ public class JarEntry extends ZipEntry {
     /**
      * Create a new {@code JarEntry} using the values obtained from the
      * argument.
-     * 
+     *
      * @param je
      *            The {@code JarEntry} to obtain values from.
      */
@@ -132,7 +132,7 @@ public class JarEntry extends ZipEntry {
      * JAR file. If there is no such code signer, it returns {@code null}. Make
      * sure that the everything is read from the input stream before calling
      * this method, or else the method returns {@code null}.
-     * 
+     *
      * @return the code signers for the JAR entry.
      * @see CodeSigner
      */

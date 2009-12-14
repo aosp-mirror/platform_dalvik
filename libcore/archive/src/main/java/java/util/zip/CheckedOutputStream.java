@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
      * Constructs a new {@code CheckedOutputStream} on {@code OutputStream}
      * {@code os}. The checksum is calculated using the algorithm implemented
      * by {@code csum}.
-     * 
+     *
      * @param os
      *            the output stream to calculate checksum for.
      * @param cs
@@ -47,7 +47,7 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
 
     /**
      * Returns the checksum calculated on the stream read so far.
-     * 
+     *
      * @return the updated checksum.
      */
     public Checksum getChecksum() {
@@ -57,7 +57,7 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
     /**
      * Writes the specified byte to the underlying stream. The checksum is
      * updated with {@code val}.
-     * 
+     *
      * @param val
      *            the data value to written to the output stream.
      * @throws IOException
@@ -72,7 +72,7 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
     /**
      * Writes n bytes of data from {@code buf} starting at offset {@code off} to
      * the underlying stream. The checksum is updated with the bytes written.
-     * 
+     *
      * @param buf
      *            data written to the output stream.
      * @param off

@@ -380,13 +380,13 @@ scanForCentralEnd (HyPortLibrary * portLib, HyZipFile * zipFile,
                 {
                   /* Found it.  Read the data from the end-of-central-dir record. */
                   current = buffer + i + 4;
-                  ZIP_NEXT_U16 (endEntry->diskNumber, current);
-                  ZIP_NEXT_U16 (endEntry->dirStartDisk, current);
-                  ZIP_NEXT_U16 (endEntry->thisDiskEntries, current);
-                  ZIP_NEXT_U16 (endEntry->totalEntries, current);
-                  ZIP_NEXT_U32 (endEntry->dirSize, current);
-                  ZIP_NEXT_U32 (endEntry->dirOffset, current);
-                  ZIP_NEXT_U16 (endEntry->commentLength, current);
+                  (void) ZIP_NEXT_U16 (endEntry->diskNumber, current);
+                  (void) ZIP_NEXT_U16 (endEntry->dirStartDisk, current);
+                  (void) ZIP_NEXT_U16 (endEntry->thisDiskEntries, current);
+                  (void) ZIP_NEXT_U16 (endEntry->totalEntries, current);
+                  (void) ZIP_NEXT_U32 (endEntry->dirSize, current);
+                  (void) ZIP_NEXT_U32 (endEntry->dirOffset, current);
+                  (void) ZIP_NEXT_U16 (endEntry->commentLength, current);
 
                   /* Quick test to ensure that the header isn't invalid. 
                      Current dataSize is the number of bytes of data scanned, up to the ^H in the stream. */
@@ -528,9 +528,9 @@ scanForDataDescriptor (HyPortLibrary * portLib, HyZipFile * zipFile,
                     }
 
                   /* Read the data from the descriptor. */
-                  ZIP_NEXT_U32 (zipEntry->crc32, current);
-                  ZIP_NEXT_U32 (zipEntry->compressedSize, current);
-                  ZIP_NEXT_U32 (zipEntry->uncompressedSize, current);
+                  (void) ZIP_NEXT_U32 (zipEntry->crc32, current);
+                  (void) ZIP_NEXT_U32 (zipEntry->compressedSize, current);
+                  (void) ZIP_NEXT_U32 (zipEntry->uncompressedSize, current);
 
                   /* Quick test to ensure that the header isn't invalid. 
                      Current dataSize is the number of bytes of data scanned, up to the ^H in the stream. */
@@ -680,7 +680,7 @@ zip_populateCache (HyPortLibrary * portLib, HyZipFile * zipFile)
             zipFile->pointer + (current - (buffer + bufferedSize));
 
           sig = 0;
-          ZIP_NEXT_U32 (sig, current);
+          (void) ZIP_NEXT_U32 (sig, current);
           if (sig == ZIP_CentralEnd)
             {
               /* We're done here. */
@@ -695,22 +695,22 @@ zip_populateCache (HyPortLibrary * portLib, HyZipFile * zipFile)
             }
 
           /* Read ZIP_CentralHeader entry */
-          ZIP_NEXT_U16 (entry.versionCreated, current);
-          ZIP_NEXT_U16 (entry.versionNeeded, current);
-          ZIP_NEXT_U16 (entry.flags, current);
-          ZIP_NEXT_U16 (entry.compressionMethod, current);
-          ZIP_NEXT_U16 (entry.lastModTime, current);
-          ZIP_NEXT_U16 (entry.lastModDate, current);
-          ZIP_NEXT_U32 (entry.crc32, current);
-          ZIP_NEXT_U32 (entry.compressedSize, current);
-          ZIP_NEXT_U32 (entry.uncompressedSize, current);
-          ZIP_NEXT_U16 (entry.filenameLength, current);
-          ZIP_NEXT_U16 (entry.extraFieldLength, current);
-          ZIP_NEXT_U16 (entry.fileCommentLength, current);
+          (void) ZIP_NEXT_U16 (entry.versionCreated, current);
+          (void) ZIP_NEXT_U16 (entry.versionNeeded, current);
+          (void) ZIP_NEXT_U16 (entry.flags, current);
+          (void) ZIP_NEXT_U16 (entry.compressionMethod, current);
+          (void) ZIP_NEXT_U16 (entry.lastModTime, current);
+          (void) ZIP_NEXT_U16 (entry.lastModDate, current);
+          (void) ZIP_NEXT_U32 (entry.crc32, current);
+          (void) ZIP_NEXT_U32 (entry.compressedSize, current);
+          (void) ZIP_NEXT_U32 (entry.uncompressedSize, current);
+          (void) ZIP_NEXT_U16 (entry.filenameLength, current);
+          (void) ZIP_NEXT_U16 (entry.extraFieldLength, current);
+          (void) ZIP_NEXT_U16 (entry.fileCommentLength, current);
           current += sizeof (U_16);     /* skip disk number field */
-          ZIP_NEXT_U16 (entry.internalAttributes, current);
+          (void) ZIP_NEXT_U16 (entry.internalAttributes, current);
           current += sizeof (U_32);     /* skip external attributes field */
-          ZIP_NEXT_U32 (localHeaderOffset, current);
+          (void) ZIP_NEXT_U32 (localHeaderOffset, current);
 
           /* Increase filename buffer size if necessary. */
           if (filenameSize < entry.filenameLength + 1)
@@ -909,7 +909,7 @@ retry:
     }
   zipFile->pointer += result;
   readLength = result;          /* If it's not enough, we'll catch that later */
-  ZIP_NEXT_U32 (sig, current);
+  (void) ZIP_NEXT_U32 (sig, current);
 
   if (enumerationPointer)
     {
@@ -968,23 +968,23 @@ retry:
     {
       current += 2;             /* skip versionCreated field */
     }
-  ZIP_NEXT_U16 (zipEntry->versionNeeded, current);
-  ZIP_NEXT_U16 (zipEntry->flags, current);
-  ZIP_NEXT_U16 (zipEntry->compressionMethod, current);
-  ZIP_NEXT_U16 (zipEntry->lastModTime, current);
-  ZIP_NEXT_U16 (zipEntry->lastModDate, current);
-  ZIP_NEXT_U32 (zipEntry->crc32, current);
-  ZIP_NEXT_U32 (zipEntry->compressedSize, current);
-  ZIP_NEXT_U32 (zipEntry->uncompressedSize, current);
-  ZIP_NEXT_U16 (zipEntry->filenameLength, current);
-  ZIP_NEXT_U16 (zipEntry->extraFieldLength, current);
+  (void) ZIP_NEXT_U16 (zipEntry->versionNeeded, current);
+  (void) ZIP_NEXT_U16 (zipEntry->flags, current);
+  (void) ZIP_NEXT_U16 (zipEntry->compressionMethod, current);
+  (void) ZIP_NEXT_U16 (zipEntry->lastModTime, current);
+  (void) ZIP_NEXT_U16 (zipEntry->lastModDate, current);
+  (void) ZIP_NEXT_U32 (zipEntry->crc32, current);
+  (void) ZIP_NEXT_U32 (zipEntry->compressedSize, current);
+  (void) ZIP_NEXT_U32 (zipEntry->uncompressedSize, current);
+  (void) ZIP_NEXT_U16 (zipEntry->filenameLength, current);
+  (void) ZIP_NEXT_U16 (zipEntry->extraFieldLength, current);
   zipEntry->fileCommentLength = 0;
 
   if (sig == ZIP_CentralHeader)
     {
-      ZIP_NEXT_U16 (zipEntry->fileCommentLength, current);
+      (void) ZIP_NEXT_U16 (zipEntry->fileCommentLength, current);
       current += 8;             /* skip disk number start + internal attrs + external attrs */
-      ZIP_NEXT_U32 (localEntryPointer, current);
+      (void) ZIP_NEXT_U32 (localEntryPointer, current);
     }
 
   if (filename)
@@ -1081,7 +1081,7 @@ retry:
         {
           if (hyfile_read (zipFile->fd, buf, 2) == 2)
             {
-              ZIP_NEXT_U16 (lost, buf2);
+              (void) ZIP_NEXT_U16 (lost, buf2);
               zipEntry->dataPointer = zipEntry->extraFieldPointer + lost;
               zipFile->pointer = localEntryPointer + 30;
             }

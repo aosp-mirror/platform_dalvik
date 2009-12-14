@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,9 +62,7 @@ public class InflaterInputStream extends FilterInputStream {
 
     static final int BUF_SIZE = 512;
 
-    // BEGIN android-added
-    int nativeEndBufSize = 0;
-    // END android-added
+    int nativeEndBufSize = 0; // android-only
 
     /**
      * This is the most basic constructor. You only need to pass the {@code
@@ -112,13 +110,13 @@ public class InflaterInputStream extends FilterInputStream {
             throw new IllegalArgumentException();
         }
         this.inf = inf;
-        // BEGIN android-changed
+        // BEGIN android-only
         if (is instanceof ZipFile.RAFStream) {
             nativeEndBufSize = bsize;
         } else {
             buf = new byte[bsize];
         }
-        // END android-changed
+        // END android-only
     }
 
     /**
@@ -170,7 +168,6 @@ public class InflaterInputStream extends FilterInputStream {
             return 0;
         }
 
-        // BEGIN android-changed
         if (eof) {
             return -1;
         }
@@ -210,7 +207,6 @@ public class InflaterInputStream extends FilterInputStream {
                 throw (IOException) (new IOException().initCause(e));
             }
         } while (true);
-        // END android-changed
     }
 
     /**
@@ -223,7 +219,7 @@ public class InflaterInputStream extends FilterInputStream {
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
-        // BEGIN android-changed
+        // BEGIN android-only
         if (nativeEndBufSize > 0) {
             ZipFile.RAFStream is = (ZipFile.RAFStream)in;
             synchronized (is.mSharedRaf) {
@@ -237,7 +233,7 @@ public class InflaterInputStream extends FilterInputStream {
                 inf.setInput(buf, 0, len);
             }
         }
-        // END android-changed
+        // END android-only
     }
 
     /**
@@ -252,20 +248,15 @@ public class InflaterInputStream extends FilterInputStream {
     @Override
     public long skip(long nbytes) throws IOException {
         if (nbytes >= 0) {
-            // BEGIN android-changed
             if (buf == null) {
-                buf = new byte[BUF_SIZE];
+                buf = new byte[(int)Math.min(nbytes, BUF_SIZE)];
             }
-            // END android-changed
             long count = 0, rem = 0;
             while (count < nbytes) {
                 int x = read(buf, 0,
                         (rem = nbytes - count) > buf.length ? buf.length
                                 : (int) rem);
                 if (x == -1) {
-                    // BEGIN android-removed
-                    // eof = true;
-                    // END android-removed
                     return count;
                 }
                 count += x;

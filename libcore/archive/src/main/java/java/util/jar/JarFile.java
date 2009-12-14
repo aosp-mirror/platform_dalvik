@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,23 +17,19 @@
 
 package java.util.jar;
 
-// BEGIN android-removed
-// import java.io.ByteArrayInputStream;
-// END android-removed
-// BEGIN android-added
-import java.io.ByteArrayOutputStream;
-import java.util.List;
-import java.util.ArrayList;
-// END android-added
 import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.harmony.archive.internal.nls.Messages;
 import org.apache.harmony.archive.util.Util;
+import org.apache.harmony.luni.util.InputStreamHelper;
 
 /**
  * {@code JarFile} is used to read jar entries and their associated data from
@@ -49,17 +45,18 @@ public class JarFile extends ZipFile {
      */
     public static final String MANIFEST_NAME = "META-INF/MANIFEST.MF"; //$NON-NLS-1$
 
+    // The directory containing the manifest.
     static final String META_DIR = "META-INF/"; //$NON-NLS-1$
 
+    // The manifest after it has been read from the JAR.
     private Manifest manifest;
 
+    // The entry for the MANIFEST.MF file before it is read.
     private ZipEntry manifestEntry;
 
     JarVerifier verifier;
 
-    // BEGIN android-added
     private boolean closed = false;
-    // END android-added
 
     static final class JarFileInputStream extends FilterInputStream {
         private long count;
@@ -68,9 +65,7 @@ public class JarFile extends ZipFile {
 
         private JarVerifier.VerifierEntry entry;
 
-        // BEGIN android-added
         private boolean done = false;
-        // END android-added
 
         JarFileInputStream(InputStream is, ZipEntry ze,
                 JarVerifier.VerifierEntry e) {
@@ -82,7 +77,6 @@ public class JarFile extends ZipFile {
 
         @Override
         public int read() throws IOException {
-            // BEGIN android-changed
             if (done) {
                 return -1;
             }
@@ -104,12 +98,10 @@ public class JarFile extends ZipFile {
                 entry.verify();
                 return -1;
             }
-            // END android-changed
         }
 
         @Override
         public int read(byte[] buf, int off, int nbytes) throws IOException {
-            // BEGIN android-changed
             if (done) {
                 return -1;
             }
@@ -135,10 +127,8 @@ public class JarFile extends ZipFile {
                 entry.verify();
                 return -1;
             }
-            // END android-changed
         }
 
-        // BEGIN android-added
         @Override
         public int available() throws IOException {
             if (done) {
@@ -146,12 +136,11 @@ public class JarFile extends ZipFile {
             }
             return super.available();
         }
-        // END android-added
 
         @Override
         public long skip(long nbytes) throws IOException {
             long cnt = 0, rem = 0;
-            byte[] buf = new byte[4096];
+            byte[] buf = new byte[(int)Math.min(nbytes, 2048L)];
             while (cnt < nbytes) {
                 int x = read(buf, 0,
                         (rem = nbytes - cnt) > buf.length ? buf.length
@@ -227,7 +216,6 @@ public class JarFile extends ZipFile {
      */
     public JarFile(String filename) throws IOException {
         this(filename, true);
-
     }
 
     /**
@@ -294,25 +282,6 @@ public class JarFile extends ZipFile {
         return (JarEntry) getEntry(name);
     }
 
-
-    // BEGIN android-added
-    private byte[] getAllBytesFromStreamAndClose(InputStream is) throws IOException {
-        ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        try {
-            byte[] buf = new byte[666];
-            int iRead; int off;
-            while (is.available() > 0) {
-                iRead = is.read(buf, 0, buf.length);
-                if (iRead > 0)
-                    bs.write(buf, 0, iRead);
-            }
-        } finally {
-            is.close();
-        }
-        return bs.toByteArray();
-    }
-    // END android-added
-
     /**
      * Returns the {@code Manifest} object associated with this {@code JarFile}
      * or {@code null} if no MANIFEST entry exists.
@@ -325,69 +294,76 @@ public class JarFile extends ZipFile {
      * @see Manifest
      */
     public Manifest getManifest() throws IOException {
-        // BEGIN android-added
         if (closed) {
-            throw new IllegalStateException("JarFile has been closed.");
+            // archive.35=JarFile has been closed
+            throw new IllegalStateException(Messages.getString("archive.35")); //$NON-NLS-1$
         }
-        // END android-added
         if (manifest != null) {
             return manifest;
         }
         try {
-            // BEGIN android-modified
             InputStream is = super.getInputStream(manifestEntry);
             if (verifier != null) {
-                verifier.addMetaEntry(manifestEntry.getName(), getAllBytesFromStreamAndClose(is));
+                verifier.addMetaEntry(manifestEntry.getName(),
+                        InputStreamHelper.readFullyAndClose(is));
                 is = super.getInputStream(manifestEntry);
             }
-            // END android-modified
             try {
                 manifest = new Manifest(is, verifier != null);
             } finally {
                 is.close();
             }
-            manifestEntry = null;
-        } catch(NullPointerException e) {
+            manifestEntry = null;  // Can discard the entry now.
+        } catch (NullPointerException e) {
             manifestEntry = null;
         }
         return manifest;
     }
 
+    /**
+     * Called by the JarFile constructors, this method reads the contents of the
+     * file's META-INF/ directory and picks out the MANIFEST.MF file and
+     * verifier signature files if they exist. Any signature files found are
+     * registered with the verifier.
+     * 
+     * @throws IOException
+     *             if there is a problem reading the jar file entries.
+     */
     private void readMetaEntries() throws IOException {
-        ZipEntry[] metaEntries = getMetaEntriesImpl(null);
-        int dirLength = META_DIR.length();
+        // Get all meta directory entries
+        ZipEntry[] metaEntries = getMetaEntriesImpl();
+        if (metaEntries == null) {
+            verifier = null;
+            return;
+        }
 
         boolean signed = false;
 
-        if (null != metaEntries) {
-            for (ZipEntry entry : metaEntries) {
-                String entryName = entry.getName();
-                if (manifestEntry == null
-                        && manifest == null
-                        && Util.ASCIIIgnoreCaseRegionMatches(entryName,
-                                dirLength, MANIFEST_NAME, dirLength,
-                                MANIFEST_NAME.length() - dirLength)) {
-                    manifestEntry = entry;
-                    if (verifier == null) {
-                        break;
-                    }
-                } else if (verifier != null
-                        && entryName.length() > dirLength
-                        && (Util.ASCIIIgnoreCaseRegionMatches(entryName,
-                                entryName.length() - 3, ".SF", 0, 3) //$NON-NLS-1$
-                                || Util.ASCIIIgnoreCaseRegionMatches(entryName,
-                                        entryName.length() - 4, ".DSA", 0, 4) //$NON-NLS-1$
-                        || Util.ASCIIIgnoreCaseRegionMatches(entryName,
-                                entryName.length() - 4, ".RSA", 0, 4))) { //$NON-NLS-1$
+        for (ZipEntry entry : metaEntries) {
+            String entryName = entry.getName();
+            // Is this the entry for META-INF/MANIFEST.MF ?
+            if (manifestEntry == null
+                    && Util.asciiEqualsIgnoreCase(MANIFEST_NAME, entryName)) {
+                manifestEntry = entry;
+                // If there is no verifier then we don't need to look any further.
+                if (verifier == null) {
+                    break;
+                }
+            } else {
+                // Is this an entry that the verifier needs?
+                if (verifier != null
+                        && (Util.asciiEndsWithIgnoreCase(entryName, ".SF")
+                                || Util.asciiEndsWithIgnoreCase(entryName, ".DSA")
+                                || Util.asciiEndsWithIgnoreCase(entryName, ".RSA"))) {
                     signed = true;
                     InputStream is = super.getInputStream(entry);
-                    // BEGIN android-modified
-                    byte[] buf = getAllBytesFromStreamAndClose(is);
-                    // END android-modified
+                    byte[] buf = InputStreamHelper.readFullyAndClose(is);
                     verifier.addMetaEntry(entryName, buf);
                 }
             }
         }
+
+        // If there were no signature files, then no verifier work to do.
         if (!signed) {
             verifier = null;
         }
@@ -456,31 +432,30 @@ public class JarFile extends ZipFile {
         return je;
     }
 
-    // BEGIN android-modified
-    private ZipEntry[] getMetaEntriesImpl(byte[] buf) {
-        int n = 0;
-
-        List<ZipEntry> list = new ArrayList<ZipEntry>();
-
+    /**
+     * Returns all the ZipEntry's that relate to files in the
+     * JAR's META-INF directory.
+     *
+     * @return the list of ZipEntry's or {@code null} if there are none.
+     */
+    private ZipEntry[] getMetaEntriesImpl() {
+        List<ZipEntry> list = new ArrayList<ZipEntry>(8);
         Enumeration<? extends ZipEntry> allEntries = entries();
         while (allEntries.hasMoreElements()) {
             ZipEntry ze = allEntries.nextElement();
-            if (ze.getName().startsWith("META-INF/") && ze.getName().length() > 9) {
+            if (ze.getName().startsWith(META_DIR)
+                    && ze.getName().length() > META_DIR.length()) {
                 list.add(ze);
             }
         }
-        if (list.size() != 0) {
-            ZipEntry[] result = new ZipEntry[list.size()];
-            list.toArray(result);
-            return result;
-        }
-        else {
+        if (list.size() == 0) {
             return null;
         }
+        ZipEntry[] result = new ZipEntry[list.size()];
+        list.toArray(result);
+        return result;
     }
-    // END android-modified
 
-    // BEGIN android-added
     /**
      * Closes this {@code JarFile}.
      *
@@ -492,6 +467,4 @@ public class JarFile extends ZipFile {
         super.close();
         closed = true;
     }
-    // END android-added
-
 }

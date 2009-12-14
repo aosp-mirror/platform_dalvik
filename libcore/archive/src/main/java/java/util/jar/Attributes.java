@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -164,7 +164,7 @@ public class Attributes implements Cloneable, Map<Object, Object> {
         public static final Name IMPLEMENTATION_URL = new Name(
                 "Implementation-URL"); //$NON-NLS-1$
 
-        static final Name NAME = new Name("Name");
+        static final Name NAME = new Name("Name"); //$NON-NLS-1$
 
         /**
          * A String which must satisfy the following EBNF grammar to specify an
@@ -218,14 +218,14 @@ public class Attributes implements Cloneable, Map<Object, Object> {
         @Override
         public String toString() {
             try {
-                return new String(name, "ISO-8859-1");
+                return new String(name, "ISO-8859-1"); //$NON-NLS-1$
             } catch (UnsupportedEncodingException iee) {
                 throw new InternalError(iee.getLocalizedMessage());
             }
         }
 
         /**
-         * returns whether the argument provided is the same as the attribute
+         * Returns whether the argument provided is the same as the attribute
          * name.
          *
          * @return if the attribute names correspond.
@@ -239,7 +239,7 @@ public class Attributes implements Cloneable, Map<Object, Object> {
                 return false;
             }
 
-            return Util.equalsIgnoreCase(name, ((Name) object).name);
+            return Util.asciiEqualsIgnoreCase(name, ((Name) object).name);
         }
 
         /**

@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,7 +69,7 @@ public class GZIPInputStream extends InflaterInputStream {
     /**
      * Construct a {@code GZIPInputStream} to read from GZIP data from the
      * underlying stream. Set the internal buffer size to {@code size}.
-     * 
+     *
      * @param is
      *            the {@code InputStream} to read data from.
      * @param size
@@ -161,7 +161,6 @@ public class GZIPInputStream extends InflaterInputStream {
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
-        // BEGIN android-changed
         if (eos) {
             return -1;
         }
@@ -187,10 +186,8 @@ public class GZIPInputStream extends InflaterInputStream {
         }
 
         return bytesRead;
-        // END android-changed
     }
 
-    // BEGIN android-added
     private void verifyCrc() throws IOException {
         // Get non-compressed bytes read by fill
         int size = inf.getRemaining();
@@ -208,7 +205,6 @@ public class GZIPInputStream extends InflaterInputStream {
             throw new IOException(Messages.getString("archive.21")); //$NON-NLS-1$
         }
     }
-    // END android-added
 
     private void readFully(byte[] buffer, int offset, int length)
             throws IOException {

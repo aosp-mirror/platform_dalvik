@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,10 +53,6 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     static final int ZIPLocalHeaderVersionNeeded = 20;
 
-    // BEGIN android-removed
-    // private boolean zipClosed = false;
-    // END android-removed
-
     private boolean entriesEnd = false;
 
     private boolean hasDD = false;
@@ -96,12 +92,10 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
      */
     @Override
     public void close() throws IOException {
-        // BEGIN android-changed
-        if (closed != true) {
+        if (!closed) {
             closeEntry(); // Close the current entry
             super.close();
         }
-        // END android-changed
     }
 
     /**
@@ -111,11 +105,9 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
      *             if an {@code IOException} occurs.
      */
     public void closeEntry() throws IOException {
-        // BEGIN android-changed
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
-        // END android-changed
         if (currentEntry == null) {
             return;
         }
@@ -311,7 +303,6 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
      */
     @Override
     public int read(byte[] buffer, int start, int length) throws IOException {
-        // BEGIN android-changed
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
@@ -364,7 +355,6 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
         }
         crc.update(buffer, start, read);
         return read;
-        // END android-changed
     }
 
     /**
@@ -378,20 +368,21 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
      */
     @Override
     public long skip(long value) throws IOException {
-        if (value >= 0) {
-            long skipped = 0;
-            byte[] b = new byte[1024];
-            while (skipped != value) {
-                long rem = value - skipped;
-                int x = read(b, 0, (int) (b.length > rem ? rem : b.length));
-                if (x == -1) {
-                    return skipped;
-                }
-                skipped += x;
-            }
-            return skipped;
+        if (value < 0) {
+            throw new IllegalArgumentException();
         }
-        throw new IllegalArgumentException();
+
+        long skipped = 0;
+        byte[] b = new byte[(int)Math.min(value, 2048L)];
+        while (skipped != value) {
+            long rem = value - skipped;
+            int x = read(b, 0, (int) (b.length > rem ? rem : b.length));
+            if (x == -1) {
+                return skipped;
+            }
+            skipped += x;
+        }
+        return skipped;
     }
 
     /**
@@ -403,12 +394,10 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
      */
     @Override
     public int available() throws IOException {
-        // BEGIN android-changed
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
         return (currentEntry == null || inRead < currentEntry.size) ? 1 : 0;
-        // END android-changed
     }
 
     /**
