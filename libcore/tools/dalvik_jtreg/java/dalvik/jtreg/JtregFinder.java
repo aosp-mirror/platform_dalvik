@@ -33,9 +33,9 @@ import java.util.logging.Logger;
 /**
  * Create {@link TestRun}s for {@code .java} files with jtreg tests in them.
  */
-class Jtreg {
+class JtregFinder {
 
-    private static final Logger logger = Logger.getLogger(Jtreg.class.getName());
+    private static final Logger logger = Logger.getLogger(JtregFinder.class.getName());
 
     /**
      * The subpath of a platform implementation under which tests live. Used to
@@ -46,7 +46,7 @@ class Jtreg {
 
     private final File localTemp;
 
-    Jtreg(File localTemp) {
+    JtregFinder(File localTemp) {
         this.localTemp = localTemp;
     }
 

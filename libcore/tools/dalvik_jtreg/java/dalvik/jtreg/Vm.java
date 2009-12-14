@@ -41,6 +41,7 @@ public abstract class Vm {
     static final String DALVIK_JTREG_HOME = "dalvik/libcore/tools/dalvik_jtreg";
 
     static final Set<File> TEST_RUNNER_JAVA_FILES = new HashSet<File>(Arrays.asList(
+            new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/CaliperRunner.java"),
             new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/JUnitRunner.java"),
             new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/JtregRunner.java"),
             new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/TestRunner.java")));
@@ -48,7 +49,10 @@ public abstract class Vm {
     private final Pattern JAVA_TEST_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
     static final Classpath COMPILATION_CLASSPATH = Classpath.of(
             new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar"),
-            new File("out/host/common/core-tests.jar"));
+            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar"),
+            new File("out/target/common/obj/JAVA_LIBRARIES/jsr305_intermediates/classes.jar"),
+            new File("out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/classes.jar"),
+            new File("out/target/common/obj/JAVA_LIBRARIES/caliper_intermediates/classes.jar"));
 
     private static final Logger logger = Logger.getLogger(Vm.class.getName());
 
@@ -86,6 +90,7 @@ public abstract class Vm {
                 .classpath(COMPILATION_CLASSPATH)
                 .destination(base)
                 .compile(TEST_RUNNER_JAVA_FILES);
+
         return postCompile("testrunner", Classpath.of(base));
     }
 
@@ -174,7 +179,7 @@ public abstract class Vm {
         final Command command = newVmCommandBuilder()
                 .classpath(testRun.getTestClasses())
                 .classpath(testRunnerClasses)
-                .classpath(getRuntimeSupportClasses())
+                .classpath(getRuntimeSupportClasspath())
                 .userDir(testRun.getUserDir())
                 .debugPort(debugPort)
                 .mainClass(testRun.getTestRunner().getName())
@@ -225,7 +230,7 @@ public abstract class Vm {
      * Returns the classpath containing JUnit and the dalvik annotations
      * required for test execution.
      */
-    protected Classpath getRuntimeSupportClasses() {
+    protected Classpath getRuntimeSupportClasspath() {
         return COMPILATION_CLASSPATH;
     }
 
