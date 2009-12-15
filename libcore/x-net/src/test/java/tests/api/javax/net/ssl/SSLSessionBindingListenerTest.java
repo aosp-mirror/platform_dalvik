@@ -91,7 +91,6 @@ public class SSLSessionBindingListenerTest extends TestCase {
         method = "valueUnbound",
         args = {SSLSessionBindingEvent.class}
     )
-    @KnownFailure("this will be fixed in donutburger")
     public void test_valueUnbound() throws UnknownHostException, IOException {
         SSLSocket sock = (SSLSocket) SSLSocketFactory.getDefault()
                 .createSocket();
