@@ -67,8 +67,8 @@ public final class Double extends Number implements Comparable<Double> {
      * @since 1.1
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Double> TYPE = (Class<Double>) new double[0]
-            .getClass().getComponentType();
+    public static final Class<Double> TYPE
+            = (Class<Double>) double[].class.getComponentType();
 
     // Note: This can't be set to "double.class", since *that* is
     // defined to be "java.lang.Double.TYPE";
@@ -321,7 +321,7 @@ public final class Double extends Number implements Comparable<Double> {
      * @see #parseDouble(String)
      */
     public static Double valueOf(String string) throws NumberFormatException {
-        return new Double(parseDouble(string));
+        return parseDouble(string);
     }
 
     /**

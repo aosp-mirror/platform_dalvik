@@ -82,8 +82,8 @@ public final class Character implements Serializable, Comparable<Character> {
      * The {@link Class} object that represents the primitive type {@code char}.
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Character> TYPE = (Class<Character>) new char[0]
-            .getClass().getComponentType();
+    public static final Class<Character> TYPE
+            = (Class<Character>) char[].class.getComponentType();
 
     // Note: This can't be set to "char.class", since *that* is
     // defined to be "java.lang.Character.TYPE";
@@ -1517,9 +1517,10 @@ public final class Character implements Serializable, Comparable<Character> {
 
     /**
      * Returns a {@code Character} instance for the {@code char} value passed.
-     * For ASCII/Latin-1 characters (and generally all characters with a Unicode
-     * value up to 512), this method should be used instead of the constructor,
-     * as it maintains a cache of corresponding {@code Character} instances.
+     * <p>
+     * If it is not necessary to get a new {@code Character} instance, it is
+     * recommended to use this method instead of the constructor, since it
+     * maintains a cache of instances which may result in better performance.
      *
      * @param c
      *            the char value for which to get a {@code Character} instance.
@@ -1527,26 +1528,17 @@ public final class Character implements Serializable, Comparable<Character> {
      * @since 1.5
      */
     public static Character valueOf(char c) {
-        if (c >= CACHE_LEN ) {
-            return new Character(c);
-        }
-        return valueOfCache.CACHE[c];
+        return c < 128 ? SMALL_VALUES[c] : new Character(c);
     }
 
-    private static final int CACHE_LEN = 512;
+    /**
+     * A cache of instances used by {@link #valueOf(char)} and auto-boxing
+     */
+    private static final Character[] SMALL_VALUES = new Character[128];
 
-    static class valueOfCache {
-        /*
-        * Provides a cache for the 'valueOf' method. A size of 512 should cache the
-        * first couple pages of Unicode, which includes the ASCII/Latin-1
-        * characters, which other parts of this class are optimized for.
-        */
-        private static final Character[] CACHE = new Character[CACHE_LEN ];
-
-        static {
-            for(int i=0; i<CACHE.length; i++){
-                CACHE[i] =  new Character((char)i);
-            }
+    static {
+        for(int i = 0; i < 128; i++) {
+            SMALL_VALUES[i] = new Character((char) i);
         }
     }
     /**
@@ -3267,5 +3259,4 @@ public final class Character implements Serializable, Comparable<Character> {
     public static int toUpperCase(int codePoint) {
         return UCharacter.toUpperCase(codePoint);
     }
-
 }

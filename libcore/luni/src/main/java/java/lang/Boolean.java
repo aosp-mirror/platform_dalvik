@@ -38,9 +38,8 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
      * boolean}.
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Boolean> TYPE = (Class<Boolean>) new boolean[0]
-            .getClass().getComponentType();
-
+    public static final Class<Boolean> TYPE
+             = (Class<Boolean>) boolean[].class.getComponentType();
     // Note: This can't be set to "boolean.class", since *that* is
     // defined to be "java.lang.Boolean.TYPE";
 
@@ -122,15 +121,7 @@ public final class Boolean implements Serializable, Comparable<Boolean> {
      * @since 1.5
      */
     public int compareTo(Boolean that) {
-        if (that == null) {
-            throw new NullPointerException();
-        }
-
-        if (this.value == that.value) {
-            return 0;
-        }
-
-        return this.value ? 1 : -1;
+        return value == that.value ? 0 : value ? 1 : -1;
     }
 
     /**

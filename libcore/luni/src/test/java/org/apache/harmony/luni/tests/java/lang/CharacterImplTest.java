@@ -4,9 +4,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
-@TestTargetClass(Character.class) 
+@TestTargetClass(Character.class)
 public class CharacterImplTest extends TestCase {
 
     @TestTargetNew(
@@ -33,10 +33,15 @@ public class CharacterImplTest extends TestCase {
         method = "valueOf",
         args = {char.class}
     )
-    @AndroidOnly("valueOf doesn't return the same values on RI.")
     public void test_valueOfC() {
         // test the cache range
-        for (char c = '\u0000'; c < 512; c++) {
+// BEGIN android-changed
+// The JLS requires caching for chars between "\u0000 to \u007f"
+// http://java.sun.com/docs/books/jls/third_edition/html/conversions.html#5.1.7
+// The Harmony code cached 0-512 and tested for this behavior. The test and the
+// code have been modified to match the JLS
+        for (char c = '\u0000'; c < 128; c++) {
+// END android-changed
             Character e = new Character(c);
             Character a = Character.valueOf(c);
             assertEquals(e, a);

@@ -15,25 +15,30 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// Reimiplemented toString, bit-twiddling, etc. Faster and cleaner.
+// BEGIN android-note
+
 package java.lang;
 
 /**
  * The wrapper for the primitive type {@code int}.
  * <p>
- * As with the specification, this implementation relies on code laid out in <a
- * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
- * Delight, (Addison Wesley, 2002)</a> as well as <a
- * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
+ * Implementation note: The "bit twiddling" methods in this class use techniques
+ * described in <a href="http://www.hackersdelight.org/">Henry S. Warren,
+ * Jr.'s Hacker's Delight, (Addison Wesley, 2002)</a> and <a href=
+ * "http://graphics.stanford.edu/~seander/bithacks.html">Sean Anderson's
+ * Bit Twiddling Hacks.</a>
  *
- * @see java.lang.Number
- * @since 1.1
+ * @see java.lang.Long
+ * @since 1.0
  */
 public final class Integer extends Number implements Comparable<Integer> {
 
     private static final long serialVersionUID = 1360826667806852920L;
 
     /**
-     * The value which the receiver represents.
+     * The int value represented by this Integer
      */
     private final int value;
 
@@ -55,22 +60,75 @@ public final class Integer extends Number implements Comparable<Integer> {
      */
     public static final int SIZE = 32;
 
-    /*
-     * Progressively smaller decimal order of magnitude that can be represented
-     * by an instance of Integer. Used to help compute the String
-     * representation.
+    /**
+     * These tables are used to special-case toString computation for
+     * small values.  This serves three purposes: it reduces memory usage;
+     * it increases performance for small values; and it decreases the
+     * number of comparisons required to do the length computation.
+     * Elements of this table are lazily initialized on first use.
+     * No locking is necessary, i.e., we use the non-volatile, racy
+     * single-check idiom.
      */
-    private static final int[] decimalScale = new int[] { 1000000000, 100000000,
-            10000000, 1000000, 100000, 10000, 1000, 100, 10, 1 };
+    private static final String[] SMALL_NONNEGATIVE_VALUES = new String[100];
+    private static final String[] SMALL_NEGATIVE_VALUES = new String[100];
+
+    /** TENS[i] contains the tens digit of the number i, 0 <= i <= 99. */
+    static final char[] TENS = {
+        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
+        '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
+        '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
+        '3', '3', '3', '3', '3', '3', '3', '3', '3', '3',
+        '4', '4', '4', '4', '4', '4', '4', '4', '4', '4',
+        '5', '5', '5', '5', '5', '5', '5', '5', '5', '5',
+        '6', '6', '6', '6', '6', '6', '6', '6', '6', '6',
+        '7', '7', '7', '7', '7', '7', '7', '7', '7', '7',
+        '8', '8', '8', '8', '8', '8', '8', '8', '8', '8',
+        '9', '9', '9', '9', '9', '9', '9', '9', '9', '9'
+    };
+
+    /** Ones [i] contains the tens digit of the number i, 0 <= i <= 99. */
+    static final char[] ONES = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    };
+
+    /**
+     * The digits for all supported radices.
+     */
+    static final char[] DIGITS = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+        'u', 'v', 'w', 'x', 'y', 'z'
+    };
+
+    /**
+     * Table for Seal's algorithm for Number of Trailing Zeros. Hacker's Delight
+     * online, Figure 5-18 (http://www.hackersdelight.org/revisions.pdf)
+     * The entries whose value is -1 are never referenced.
+     */
+    private static final byte NTZ_TABLE[] = {
+        32,  0,  1, 12,  2,  6, -1, 13,   3, -1,  7, -1, -1, -1, -1, 14,
+        10,  4, -1, -1,  8, -1, -1, 25,  -1, -1, -1, -1, -1, 21, 27, 15,
+        31, 11,  5, -1, -1, -1, -1, -1,   9, -1, -1, 24, -1, -1, 20, 26,
+        30, -1, -1, -1, -1, 23, -1, 19,  29, -1, 22, 18, 28, 17, 16, -1
+    };
 
     /**
      * The {@link Class} object that represents the primitive type {@code int}.
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Integer> TYPE = (Class<Integer>) new int[0]
-            .getClass().getComponentType();
-
-    // Note: This can't be set to "int.class", since *that* is
+    public static final Class<Integer> TYPE
+            = (Class<Integer>) int[].class.getComponentType();
+    // Note: Integer.TYPE can't be set to "int.class", since *that* is
     // defined to be "java.lang.Integer.TYPE";
 
     /**
@@ -116,7 +174,9 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.2
      */
     public int compareTo(Integer object) {
-        return value > object.value ? 1 : (value < object.value ? -1 : 0);
+        int thisValue = value;
+        int thatValue = object.value;
+        return thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1);
     }
 
     /**
@@ -195,8 +255,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      */
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Integer)
-                && (value == ((Integer) o).value);
+        return o instanceof Integer && ((Integer) o).value == value;
     }
 
     @Override
@@ -412,22 +471,15 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @return the binary string representation of {@code i}.
      */
     public static String toBinaryString(int i) {
-        int count = 1, j = i;
+        int bufLen = 32;  // Max number of binary digits in an int
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
 
-        if (i < 0) {
-            count = 32;
-        } else {
-            while ((j >>>= 1) != 0) {
-                count++;
-            }
-        }
-
-        char[] buffer = new char[count];
         do {
-            buffer[--count] = (char) ((i & 1) + '0');
-            i >>>= 1;
-        } while (count > 0);
-        return new String(0, buffer.length, buffer);
+            buf[--cursor] = (char) ((i & 1) + '0');
+        }  while ((i >>>= 1) != 0);
+
+        return new String(cursor, bufLen - cursor, buf);
     }
 
     /**
@@ -440,28 +492,15 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @return the hexadecimal string representation of {@code i}.
      */
     public static String toHexString(int i) {
-        int count = 1, j = i;
+        int bufLen = 8;  // Max number of hex digits in an int
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
 
-        if (i < 0) {
-            count = 8;
-        } else {
-            while ((j >>>= 4) != 0) {
-                count++;
-            }
-        }
-
-        char[] buffer = new char[count];
         do {
-            int t = i & 15;
-            if (t > 9) {
-                t = t - 10 + 'a';
-            } else {
-                t += '0';
-            }
-            buffer[--count] = (char) t;
-            i >>>= 4;
-        } while (count > 0);
-        return new String(0, buffer.length, buffer);
+            buf[--cursor] = DIGITS[i & 0xF];
+        } while ((i >>>= 4) != 0);
+
+        return new String(cursor, bufLen - cursor, buf);
     }
 
     /**
@@ -473,22 +512,15 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @return the octal string representation of {@code i}.
      */
     public static String toOctalString(int i) {
-        int count = 1, j = i;
+        int bufLen = 11;  // Max number of octal digits in an int
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
 
-        if (i < 0) {
-            count = 11;
-        } else {
-            while ((j >>>= 3) != 0) {
-                count++;
-            }
-        }
-
-        char[] buffer = new char[count];
         do {
-            buffer[--count] = (char) ((i & 7) + '0');
-            i >>>= 3;
-        } while (count > 0);
-        return new String(0, buffer.length, buffer);
+            buf[--cursor] = (char) ((i & 7) + '0');
+        } while ((i >>>= 3) != 0);
+
+        return new String(cursor, bufLen - cursor, buf);
     }
 
     @Override
@@ -501,101 +533,80 @@ public final class Integer extends Number implements Comparable<Integer> {
      * The returned string is a concatenation of a minus sign if the number is
      * negative and characters from '0' to '9'.
      *
-     * @param value
+     * @param i
      *            the integer to convert.
-     * @return the decimal string representation of {@code value}.
+     * @return the decimal string representation of {@code i}.
      */
-    public static String toString(int value) {
-        // BEGIN android-note
-        // cache the strings in the range 0..99 to save allocations?
-        // END android-note
-        if (value == 0) {
-            return "0"; //$NON-NLS-1$
-        }
-
-        // Faster algorithm for smaller Integers
-        if (value < 1000 && value > -1000) {
-            char[] buffer = new char[4];
-            int positive_value = value < 0 ? -value : value;
-            int first_digit = 0;
-            if (value < 0) {
-                buffer[0] = '-';
-                first_digit++;
-            }
-            int last_digit = first_digit;
-            int quot = positive_value;
-            do {
-                int res = quot / 10;
-                int digit_value = quot - ((res << 3) + (res << 1));
-                digit_value += '0';
-                buffer[last_digit++] = (char) digit_value;
-                quot = res;
-            } while (quot != 0);
-
-            int count = last_digit--;
-            do {
-                char tmp = buffer[last_digit];
-                buffer[last_digit--] = buffer[first_digit];
-                buffer[first_digit++] = tmp;
-            } while (first_digit < last_digit);
-            return new String(0, count, buffer);
-        }
-        if (value == MIN_VALUE) {
-            return "-2147483648";//$NON-NLS-1$
-        }
-
-        char[] buffer = new char[11];
-        int positive_value = value < 0 ? -value : value;
-        byte first_digit = 0;
-        if (value < 0) {
-            buffer[0] = '-';
-            first_digit++;
-        }
-        byte last_digit = first_digit;
-        byte count;
-        int number;
-        boolean start = false;
-        for (int i = 0; i < 9; i++) {
-            count = 0;
-            if (positive_value < (number = decimalScale[i])) {
-                if (start) {
-                    buffer[last_digit++] = '0';
+    public static String toString(int i) {
+        boolean negative = false;
+        if (i < 0) {
+            negative = true;
+            i = -i;
+            if (i < 100) {
+                if (i < 0) // If -n is still negative, n is Integer.MIN_VALUE
+                    return "-2147483648";
+                String result = SMALL_NEGATIVE_VALUES[i];
+                if (result == null) {
+                    SMALL_NEGATIVE_VALUES[i] = result =
+                            i < 10 ? stringOf('-', ONES[i])
+                                    : stringOf('-', TENS[i], ONES[i]);
                 }
-                continue;
+                return result;
             }
-
-            if (i > 0) {
-                number = (decimalScale[i] << 3);
-                if (positive_value >= number) {
-                    positive_value -= number;
-                    count += 8;
+        } else {
+            if (i < 100) {
+                String result = SMALL_NONNEGATIVE_VALUES[i];
+                if (result == null) {
+                    SMALL_NONNEGATIVE_VALUES[i] = result =
+                        i < 10 ? stringOf(ONES[i]) : stringOf(TENS[i], ONES[i]);
                 }
-                number = (decimalScale[i] << 2);
-                if (positive_value >= number) {
-                    positive_value -= number;
-                    count += 4;
-                }
-            }
-            number = (decimalScale[i] << 1);
-            if (positive_value >= number) {
-                positive_value -= number;
-                count += 2;
-            }
-            if (positive_value >= decimalScale[i]) {
-                positive_value -= decimalScale[i];
-                count++;
-            }
-            if (count > 0 && !start) {
-                start = true;
-            }
-            if (start) {
-                buffer[last_digit++] = (char) (count + '0');
+                return result;
             }
         }
 
-        buffer[last_digit++] = (char) (positive_value + '0');
-        count = last_digit--;
-        return new String(0, count, buffer);
+        int bufLen = 11; // Max number of chars in result
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
+
+        // Calculate digits two-at-a-time till remaining digits fit in 16 bits
+        while (i >= (1 << 16)) {
+            // Compute q = n/100 and r = n % 100 as per "Hacker's Delight" 10-8
+            int q = (int) ((0x51EB851FL * i) >>> 37);
+            // BEGIN android-changed
+            int r = i - ((q << 6) + (q << 5) + (q << 2));  // int r = n - 100*q;
+            // END android-changed
+
+            buf[--cursor] = ONES[r];
+            buf[--cursor] = TENS[r];
+            i = q;
+        }
+
+        // Calculate remaining digits one-at-a-time for performance
+        while (i != 0) {
+            // Compute q = n/10 and r = n % 10 as per "Hacker's Delight" 10-8
+            int q = (0xCCCD * i) >>> 19;
+            // BEGIN android-changed
+            int r = i - ((q << 3) + (q << 1));  // int r = n - 10 * q;
+            // END android-changed
+
+            buf[--cursor] = (char) (r + '0');
+            i = q;
+        }
+
+        if (negative)
+            buf[--cursor] = '-';
+
+        return new String(cursor, bufLen - cursor, buf);
+    }
+
+    /**
+     * Returns a string composed of the specified characters. Note that the
+     * autoboxing does *not* result in an extra copy of the char array: we are
+     * using a package-private string constructor that uses incorporates the
+     * "autoboxing array" into the new string.
+     */
+    private static String stringOf(char... args) {
+        return new String(0, args.length, args);
     }
 
     /**
@@ -613,41 +624,41 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @return the string representation of {@code i}.
      */
     public static String toString(int i, int radix) {
-        // BEGIN android-note
-        // if radix==10, call thru to faster Integer.toString(int) ?
-        // only worthwhile if 10 is a popular parameter
-        // END android-note
         if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX) {
             radix = 10;
         }
-        if (i == 0) {
-            return "0"; //$NON-NLS-1$
+        if (radix == 10) {
+            return toString(i);
         }
 
-        int count = 2, j = i;
-        boolean negative = i < 0;
-        if (!negative) {
-            count = 1;
-            j = -i;
-        }
-        while ((i /= radix) != 0) {
-            count++;
+        /*
+         * If i is positive, negate it. This is the opposite of what one might
+         * expect. It is necessary because the range of the negative values is
+         * strictly larger than that of the positive values: there is no
+         * positive value corresponding to Integer.MIN_VALUE.
+         */
+        boolean negative = false;
+        if (i < 0) {
+            negative = true;
+        } else {
+            i = -i;
         }
 
-        char[] buffer = new char[count];
+        int bufLen = radix < 8 ? 33 : 12;  // Max chars in result (conservative)
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
+
         do {
-            int ch = 0 - (j % radix);
-            if (ch > 9) {
-                ch = ch - 10 + 'a';
-            } else {
-                ch += '0';
-            }
-            buffer[--count] = (char) ch;
-        } while ((j /= radix) != 0);
+            int q = i / radix;
+            buf[--cursor] = DIGITS[radix * q - i];
+            i = q;
+        } while (i != 0);
+
         if (negative) {
-            buffer[0] = '-';
+            buf[--cursor] = '-';
         }
-        return new String(0, buffer.length, buffer);
+
+        return new String(cursor, bufLen - cursor, buf);
     }
 
     /**
@@ -700,12 +711,13 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int highestOneBit(int i) {
+        // Hacker's Delight, Figure 3-1
         i |= (i >> 1);
         i |= (i >> 2);
         i |= (i >> 4);
         i |= (i >> 8);
         i |= (i >> 16);
-        return (i & ~(i >>> 1));
+        return i - (i >>> 1);
     }
 
     /**
@@ -720,7 +732,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int lowestOneBit(int i) {
-        return (i & (-i));
+        return i & -i;
     }
 
     /**
@@ -733,12 +745,28 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int numberOfLeadingZeros(int i) {
-        i |= i >> 1;
-        i |= i >> 2;
-        i |= i >> 4;
-        i |= i >> 8;
-        i |= i >> 16;
-        return bitCount(~i);
+        // Hacker's Delight, Figure 5-6
+        if (i <= 0) {
+            return (~i >> 26) & 32;
+        }
+        int n = 1;
+        if (i >> 16 == 0) {
+            n +=  16;
+            i <<= 16;
+        }
+        if (i >> 24 == 0) {
+            n +=  8;
+            i <<= 8;
+        }
+        if (i >> 28 == 0) {
+            n +=  4;
+            i <<= 4;
+        }
+        if (i >> 30 == 0) {
+            n +=  2;
+            i <<= 2;
+        }
+        return n - (i >>> 31);
     }
 
     /**
@@ -751,7 +779,14 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int numberOfTrailingZeros(int i) {
-        return bitCount((i & -i) - 1);
+        // Seal's algorithm - Hacker's Delight 5-18
+        // BEGIN android-changed - Harmony version should be one-liner in comment below
+        i &= -i;
+        i = (i <<  4) + i;    // x *= 17
+        i = (i <<  6) + i;    // x *= 65
+        i = (i << 16) - i;    // x *= 65535
+        return NTZ_TABLE[i >>> 26]; // NTZ_TABLE[((i & -i) * 0x0450FBAF) >>> 26]
+        // END android-changed
     }
 
     /**
@@ -764,12 +799,13 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int bitCount(int i) {
-        i -= ((i >> 1) & 0x55555555);
+        // Hacker's Delight, Figure 5-2
+        i -= (i >> 1) & 0x55555555;
         i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-        i = (((i >> 4) + i) & 0x0F0F0F0F);
-        i += (i >> 8);
-        i += (i >> 16);
-        return (i & 0x0000003F);
+        i = ((i >> 4) + i) & 0x0F0F0F0F;
+        i += i >> 8;
+        i += i >> 16;
+        return i & 0x0000003F;
     }
 
     /**
@@ -784,15 +820,8 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int rotateLeft(int i, int distance) {
-        if (distance == 0) {
-            return i;
-        }
-        /*
-         * According to JLS3, 15.19, the right operand of a shift is always
-         * implicitly masked with 0x1F, which the negation of 'distance' is
-         * taking advantage of.
-         */
-        return ((i << distance) | (i >>> (-distance)));
+        // Shift distances are mod 32 (JLS3 15.19), so we needn't mask -distance
+        return (i << distance) | (i >>> -distance);
     }
 
     /**
@@ -807,15 +836,8 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int rotateRight(int i, int distance) {
-        if (distance == 0) {
-            return i;
-        }
-        /*
-         * According to JLS3, 15.19, the right operand of a shift is always
-         * implicitly masked with 0x1F, which the negation of 'distance' is
-         * taking advantage of.
-         */
-        return ((i >>> distance) | (i << (-distance)));
+        // Shift distances are mod 32 (JLS3 15.19), so we needn't mask -distance
+        return (i >>> distance) | (i << -distance);
     }
 
     /**
@@ -827,11 +849,10 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int reverseBytes(int i) {
-        int b3 = i >>> 24;
-        int b2 = (i >>> 8) & 0xFF00;
-        int b1 = (i & 0xFF00) << 8;
-        int b0 = i << 24;
-        return (b0 | b1 | b2 | b3);
+        // Hacker's Delight 7-1, with minor tweak from Veldmeijer
+        // http://graphics.stanford.edu/~seander/bithacks.html
+        i =    ((i >>>  8) & 0x00FF00FF) | ((i & 0x00FF00FF) <<  8);
+        return ( i >>> 16              ) | ( i               << 16);
     }
 
     /**
@@ -843,11 +864,13 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int reverse(int i) {
-        // From Hacker's Delight, 7-1, Figure 7-1
-        i = (i & 0x55555555) << 1 | (i >> 1) & 0x55555555;
-        i = (i & 0x33333333) << 2 | (i >> 2) & 0x33333333;
-        i = (i & 0x0F0F0F0F) << 4 | (i >> 4) & 0x0F0F0F0F;
-        return reverseBytes(i);
+        // Hacker's Delight 7-1, with minor tweak from Veldmeijer
+        // http://graphics.stanford.edu/~seander/bithacks.html
+        i =    ((i >>>  1) & 0x55555555) | ((i & 0x55555555) <<  1);
+        i =    ((i >>>  2) & 0x33333333) | ((i & 0x33333333) <<  2);
+        i =    ((i >>>  4) & 0x0F0F0F0F) | ((i & 0x0F0F0F0F) <<  4);
+        i =    ((i >>>  8) & 0x00FF00FF) | ((i & 0x00FF00FF) <<  8);
+        return ((i >>> 16)             ) | ((i             ) << 16);
     }
 
     /**
@@ -861,7 +884,7 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static int signum(int i) {
-        return (i == 0 ? 0 : (i < 0 ? -1 : 1));
+        return (i >> 31) | (-i >>> 31); // Hacker's delight 2-7
     }
 
     /**
@@ -877,24 +900,17 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @since 1.5
      */
     public static Integer valueOf(int i) {
-        if (i < -128 || i > 127) {
-            return new Integer(i);
-        }
-        return valueOfCache.CACHE [i+128];
-
+        return  i >= 128 || i < -128 ? new Integer(i) : SMALL_VALUES[i + 128];
     }
 
-   static class valueOfCache {
-        /**
-         * <p>
-         * A cache of instances used by {@link Integer#valueOf(int)} and auto-boxing.
-         */
-        static final Integer[] CACHE = new Integer[256];
+    /**
+     * A cache of instances used by {@link Integer#valueOf(int)} and auto-boxing
+     */
+    private static final Integer[] SMALL_VALUES = new Integer[256];
 
-        static {
-            for(int i=-128; i<=127; i++) {
-                CACHE[i+128] = new Integer(i);
-            }
+    static {
+        for(int i = -128; i < 128; i++) {
+            SMALL_VALUES[i + 128] = new Integer(i);
         }
     }
 }
