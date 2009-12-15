@@ -2,7 +2,15 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
+ext_dirs := \
+        ../../../../external/jsr305/ri/src/main/java \
+        ../../../../external/guava/src \
+        ../../../../external/caliper/src
+
+ext_src_files := $(call all-java-files-under,$(ext_dirs))
+
 LOCAL_SRC_FILES := \
+        $(ext_src_files) \
         java/dalvik/jtreg/Adb.java \
         java/dalvik/jtreg/CaliperFinder.java \
         java/dalvik/jtreg/CaliperRunner.java \
@@ -29,7 +37,7 @@ LOCAL_SRC_FILES := \
         java/dalvik/jtreg/XmlReportPrinter.java \
 
 LOCAL_MODULE:= dalvik_jtreg
-LOCAL_STATIC_JAVA_LIBRARIES := javatest jh jtreg kxml2-2.3.0 caliper
+LOCAL_STATIC_JAVA_LIBRARIES := javatest jh jtreg kxml2-2.3.0
 
 # TODO this only works when junit is already built...
 LOCAL_JAVA_LIBRARIES := junit
