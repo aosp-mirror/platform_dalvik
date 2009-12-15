@@ -16,8 +16,10 @@
 
 #define LOG_TAG "OpenSSLSessionImpl"
 
+#include "AndroidSystemNatives.h"
+#include "JNIHelp.h"
+
 #include <jni.h>
-#include <JNIHelp.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -35,107 +37,78 @@
 
 #include "org_apache_harmony_xnet_provider_jsse_common.h"
 
-/**
- * Module scope variables initialized during JNI registration.
- */
 static jfieldID field_session;
 
-static SSL_SESSION *getSslSessionPointer(JNIEnv* env, jobject object) {
-    SSL_SESSION* session = (SSL_SESSION *)env->GetIntField(object, field_session);
-
-    return session;
+static SSL_SESSION* getSslSessionPointer(JNIEnv* env, jobject object) {
+    return reinterpret_cast<SSL_SESSION*>(env->GetIntField(object, field_session));
 }
 
-/**
- * Gets the peer certificate in the chain and fills a byte array with the
- * information therein.
- */
-static jobjectArray org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeercertificates(JNIEnv* env,
+// Fills a byte[][] with the peer certificates in the chain.
+static jobjectArray OpenSSLSessionImpl_getPeerCertificatesImpl(JNIEnv* env,
         jobject object, jint jssl)
 {
-    SSL_SESSION *ssl_session;
-    SSL_CTX* ssl_ctx;
-    SSL* ssl;
-    STACK_OF(X509) *chain;
-    jobjectArray objectArray;
-
-    ssl_session = getSslSessionPointer(env, object);
-
-    ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-    ssl = SSL_new(ssl_ctx);
+    SSL_SESSION* ssl_session = getSslSessionPointer(env, object);
+    SSL_CTX* ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+    SSL* ssl = SSL_new(ssl_ctx);
 
     SSL_set_session(ssl, ssl_session);
 
-    chain = SSL_get_peer_cert_chain(ssl);
-
-    objectArray = getcertificatebytes(env, chain);
+    STACK_OF(X509)* chain = SSL_get_peer_cert_chain(ssl);
+    jobjectArray objectArray = getcertificatebytes(env, chain);
 
     SSL_free(ssl);
     SSL_CTX_free(ssl_ctx);
-
     return objectArray;
 }
 
 /**
- * Serialize the session.
- * See apache mod_ssl
+ * Serializes the native state of the session (ID, cipher, and keys but
+ * not certificates). Returns a byte[] containing the DER-encoded state.
+ * See apache mod_ssl.
  */
-static jbyteArray org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_serialize(JNIEnv* env, jobject object)
-{
-  SSL_SESSION * ssl_session;
-  jbyteArray bytes = NULL;
-  jbyte *tmp;
-  int size;
-  unsigned char *ucp;
+static jbyteArray OpenSSLSessionImpl_getEncoded(JNIEnv* env, jobject object) {
+    SSL_SESSION* ssl_session = getSslSessionPointer(env, object);
+    if (ssl_session == NULL) {
+        return NULL;
+    }
 
-  ssl_session = getSslSessionPointer(env, object);
-  if (ssl_session == NULL) {
-    return NULL;
-  }
+    // Compute the size of the DER data
+    int size = i2d_SSL_SESSION(ssl_session, NULL);
+    if (size == 0) {
+        return NULL;
+    }
 
-  // Compute the size of the DER data
-  size = i2d_SSL_SESSION(ssl_session, NULL);
-  if (size == 0) {
-    return NULL;
-  }
-
-  bytes = env->NewByteArray(size);
-  if (bytes != NULL) {
-        tmp = env->GetByteArrayElements(bytes, NULL);
-        ucp = (unsigned char *) tmp;
+    jbyteArray bytes = env->NewByteArray(size);
+    if (bytes != NULL) {
+        jbyte* tmp = env->GetByteArrayElements(bytes, NULL);
+        unsigned char* ucp = reinterpret_cast<unsigned char*>(tmp);
         i2d_SSL_SESSION(ssl_session, &ucp);
         env->ReleaseByteArrayElements(bytes, tmp, 0);
-  }
+    }
 
-  return bytes;
-
+    return bytes;
 }
 
 /**
  * Deserialize the session.
  */
-static jint org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_deserialize(JNIEnv* env, jobject object, jbyteArray bytes, jint size)
-{
-  const unsigned char *ucp;
-  jbyte *tmp;
-  SSL_SESSION *ssl_session;
+static jint OpenSSLSessionImpl_initializeNativeImpl(JNIEnv* env, jobject object, jbyteArray bytes, jint size) {
+    if (bytes == NULL) {
+        return 0;
+    }
 
-  if (bytes != NULL) {
-        tmp = env->GetByteArrayElements(bytes, NULL);
-        ucp = (const unsigned char *) tmp;
-        ssl_session = d2i_SSL_SESSION(NULL, &ucp, (long) size);
-        env->ReleaseByteArrayElements(bytes, tmp, 0);
+    jbyte* tmp = env->GetByteArrayElements(bytes, NULL);
+    const unsigned char* ucp = reinterpret_cast<const unsigned char*>(tmp);
+    SSL_SESSION* ssl_session = d2i_SSL_SESSION(NULL, &ucp, size);
+    env->ReleaseByteArrayElements(bytes, tmp, 0);
 
-        return (jint) ssl_session;
-  }
-  return 0;
+    return static_cast<jint>(reinterpret_cast<uintptr_t>(ssl_session));
 }
 
 /**
  * Gets and returns in a byte array the ID of the actual SSL session.
  */
-static jbyteArray org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getid(JNIEnv* env, jobject object)
-{
+static jbyteArray OpenSSLSessionImpl_getId(JNIEnv* env, jobject object) {
     SSL_SESSION* ssl_session = getSslSessionPointer(env, object);
 
     jbyteArray result = env->NewByteArray(ssl_session->session_id_length);
@@ -151,76 +124,10 @@ static jbyteArray org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getid
  * Gets and returns in a long integer the creation's time of the
  * actual SSL session.
  */
-static jlong org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getcreationtime(JNIEnv* env, jobject object)
-{
-    SSL_SESSION * ssl_session;
-
-    ssl_session = getSslSessionPointer(env, object);
-
-    // convert the creation time from seconds to milliseconds
-    return (jlong)(1000L * ssl_session->time);
-}
-
-/**
- * Gets and returns in a string the peer's host's name.
- */
-static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeerhost(JNIEnv* env, jobject object)
-{
-    SSL_CTX *ssl_ctx;
-    SSL *ssl;
-    SSL_SESSION *ssl_session;
-    BIO *bio;
-    char* hostname;
-    jstring  result;
-
-    ssl_session = getSslSessionPointer(env, object);
-
-    ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-    ssl = SSL_new(ssl_ctx);
-
-    SSL_set_session(ssl, ssl_session);
-
-    bio = SSL_get_rbio(ssl);
-
-    hostname = BIO_get_conn_hostname(bio);
-
-    /* Notice: hostname can be NULL */
-    result = env->NewStringUTF(hostname);
-
-    SSL_free(ssl);
-    SSL_CTX_free(ssl_ctx);
-
-    return result;
-}
-
-/**
- * Gets and returns in a string the peer's port name (https, ftp, etc.).
- */
-static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeerport(JNIEnv* env, jobject object)
-{
-    SSL_CTX *ssl_ctx;
-    SSL *ssl;
-    SSL_SESSION *ssl_session;
-    BIO *bio;
-    char *port;
-    jstring  result;
-
-    ssl_session = getSslSessionPointer(env, object);
-
-    ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-    ssl = SSL_new(ssl_ctx);
-
-    SSL_set_session(ssl, ssl_session);
-
-    bio = SSL_get_rbio(ssl);
-    port = BIO_get_conn_port(bio);
-
-    /* Notice: port name can be NULL */
-    result = env->NewStringUTF(port);
-
-    SSL_free(ssl);
-    SSL_CTX_free(ssl_ctx);
-
+static jlong OpenSSLSessionImpl_getCreationTime(JNIEnv* env, jobject object) {
+    SSL_SESSION* ssl_session = getSslSessionPointer(env, object);
+    jlong result = SSL_SESSION_get_time(ssl_session);
+    result *= 1000; // OpenSSL uses seconds, Java uses milliseconds.
     return result;
 }
 
@@ -228,48 +135,32 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeerp
  * Gets and returns in a string the version of the SSL protocol. If it
  * returns the string "unknown" it means that no connection is established.
  */
-static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getprotocol(JNIEnv* env, jobject object)
-{
-    SSL_CTX *ssl_ctx;
-    SSL *ssl;
-    SSL_SESSION *ssl_session;
-    const char* protocol;
-    jstring  result;
-
-    ssl_session = getSslSessionPointer(env, object);
-
-    ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-    ssl = SSL_new(ssl_ctx);
+static jstring OpenSSLSessionImpl_getProtocol(JNIEnv* env, jobject object) {
+    SSL_SESSION* ssl_session = getSslSessionPointer(env, object);
+    SSL_CTX* ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+    SSL* ssl = SSL_new(ssl_ctx);
 
     SSL_set_session(ssl, ssl_session);
 
-    protocol = SSL_get_version(ssl);
-
-    result = env->NewStringUTF(protocol);
+    const char* protocol = SSL_get_version(ssl);
+    jstring result = env->NewStringUTF(protocol);
 
     SSL_free(ssl);
     SSL_CTX_free(ssl_ctx);
-
     return result;
 }
 
 /**
  * Gets and returns in a string the set of ciphers the actual SSL session uses.
  */
-static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getciphersuite(JNIEnv* env, jobject object)
-{
-    SSL_CTX *ssl_ctx;
-    SSL *ssl;
-    SSL_SESSION *ssl_session;
-
-    ssl_session = getSslSessionPointer(env, object);
-
-    ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-    ssl = SSL_new(ssl_ctx);
+static jstring OpenSSLSessionImpl_getCipherSuite(JNIEnv* env, jobject object) {
+    SSL_SESSION* ssl_session = getSslSessionPointer(env, object);
+    SSL_CTX* ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+    SSL* ssl = SSL_new(ssl_ctx);
 
     SSL_set_session(ssl, ssl_session);
 
-    SSL_CIPHER *cipher = SSL_get_current_cipher(ssl);
+    SSL_CIPHER* cipher = SSL_get_current_cipher(ssl);
     jstring result = env->NewStringUTF(SSL_CIPHER_get_name(cipher));
 
     SSL_free(ssl);
@@ -280,50 +171,31 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getciphe
 /**
  * Frees the SSL session.
  */
-static void org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_free(JNIEnv* env, jobject object, jint session)
-{
+static void OpenSSLSessionImpl_freeImpl(JNIEnv* env, jobject object, jint session) {
     LOGD("Freeing OpenSSL session");
-    SSL_SESSION* ssl_session;
-    ssl_session = (SSL_SESSION*) session;
+    SSL_SESSION* ssl_session = reinterpret_cast<SSL_SESSION*>(session);
     SSL_SESSION_free(ssl_session);
 }
 
-/**
- * The actual JNI methods' mapping table for the class OpenSSLSessionImpl.
- */
-static JNINativeMethod sMethods[] =
-{
-    {"nativegetid", "()[B", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getid},
-    {"nativegetcreationtime", "()J", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getcreationtime},
-    {"nativegetpeerhost", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeerhost},
-    {"nativegetpeerport", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeerport},
-    {"nativegetprotocol", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getprotocol},
-    {"nativegetciphersuite", "()Ljava/lang/String;", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getciphersuite},
-    {"nativegetpeercertificates", "()[[B", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_getpeercertificates},
-    {"nativefree", "(I)V", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_free},
-    {"nativeserialize", "()[B", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_serialize},
-    {"nativedeserialize", "([BI)I", (void*)org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl_deserialize}
+static JNINativeMethod sMethods[] = {
+    { "freeImpl", "(I)V", (void*) OpenSSLSessionImpl_freeImpl },
+    { "getCipherSuite", "()Ljava/lang/String;", (void*) OpenSSLSessionImpl_getCipherSuite },
+    { "getCreationTime", "()J", (void*) OpenSSLSessionImpl_getCreationTime },
+    { "getEncoded", "()[B", (void*) OpenSSLSessionImpl_getEncoded },
+    { "getId", "()[B", (void*) OpenSSLSessionImpl_getId },
+    { "getPeerCertificatesImpl", "()[[B", (void*) OpenSSLSessionImpl_getPeerCertificatesImpl },
+    { "getProtocol", "()Ljava/lang/String;", (void*) OpenSSLSessionImpl_getProtocol },
+    { "initializeNativeImpl", "([BI)I", (void*) OpenSSLSessionImpl_initializeNativeImpl }
 };
 
-/**
- * Register the native methods with JNI for the class OpenSSLSessionImpl.
- */
-extern "C" int register_org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl(JNIEnv* env)
-{
-    int ret;
-    jclass clazz;
-
-    clazz = env->FindClass("org/apache/harmony/xnet/provider/jsse/OpenSSLSessionImpl");
-
+int register_org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl(JNIEnv* env) {
+    jclass clazz = env->FindClass("org/apache/harmony/xnet/provider/jsse/OpenSSLSessionImpl");
     if (clazz == NULL) {
-        LOGE("Can't find org/apache/harmony/xnet/provider/jsse/OpenSSLSessionImpl");
         return -1;
     }
 
     field_session = env->GetFieldID(clazz, "session", "I");
 
-    ret = jniRegisterNativeMethods(env, "org/apache/harmony/xnet/provider/jsse/OpenSSLSessionImpl",
+    return jniRegisterNativeMethods(env, "org/apache/harmony/xnet/provider/jsse/OpenSSLSessionImpl",
             sMethods, NELEM(sMethods));
-
-    return ret;
 }

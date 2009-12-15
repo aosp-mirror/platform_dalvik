@@ -193,7 +193,6 @@ public class SSLSessionTest extends TestCase {
         method = "getCreationTime",
         args = {}
     )
-    @KnownFailure("Time returned is corrupted")
     @AndroidOnly("Uses bks key store. Change useBKS to false to run on the RI")
     public void test_getCreationTime() {
         try {
@@ -235,7 +234,6 @@ public class SSLSessionTest extends TestCase {
         method = "getLastAccessedTime",
         args = {}
     )
-    @KnownFailure("Time returned is corrupted")
     @AndroidOnly("Uses bks key store. Change useBKS to false to run on the RI")
     public void test_getLastAccessedTime() {
         try {
