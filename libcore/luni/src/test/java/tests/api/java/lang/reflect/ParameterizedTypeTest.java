@@ -16,11 +16,12 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -55,6 +56,7 @@ public class ParameterizedTypeTest extends GenericReflectionTestsBase {
             args = {}
         )
     })
+    @BrokenTest(value = "fails when run using CTS harness bug 2155700")
     public void testStringParameterizedSuperClass() {
         Class<? extends B> clazz = B.class;
         Type genericSuperclass = clazz.getGenericSuperclass();
@@ -91,6 +93,7 @@ public class ParameterizedTypeTest extends GenericReflectionTestsBase {
             args = {}
         )
     })
+    @BrokenTest(value = "fails when run using CTS harness bug 2155700")
     public void testTypeParameterizedSuperClass() {
         Class<? extends D> clazz = D.class;
         Type genericSuperclass = clazz.getGenericSuperclass();
