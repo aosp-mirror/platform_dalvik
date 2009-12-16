@@ -17,6 +17,11 @@
 
 package dalvik.jtreg;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -25,6 +30,19 @@ import java.util.Iterator;
  * Utility methods for strings.
  */
 public class Strings {
+
+    static String readFile(File f) throws IOException {
+        StringBuilder result = new StringBuilder();
+        BufferedReader in =
+                new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+        String line;
+        while ((line = in.readLine()) != null) {
+            result.append(line);
+            result.append('\n');
+        }
+        in.close();
+        return result.toString();
+    }
 
     static String join(Object[] objects, String delimiter) {
         return join(Arrays.asList(objects), delimiter);

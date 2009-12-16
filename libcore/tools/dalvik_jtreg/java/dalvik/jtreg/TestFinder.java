@@ -17,8 +17,11 @@
 package dalvik.jtreg;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A pluggable strategy for converting files into test runs.
@@ -73,7 +76,24 @@ abstract class TestFinder {
             throw new IllegalArgumentException("Not a .java file: " + file);
         }
 
-        String fqClass = filePath.replaceAll(".*/test/java/", "");
-        return fqClass.replace('/', '.').substring(0, fqClass.length() - 5);
+        // We can get the unqualified class name from the path.
+        // It's the last element minus the trailing ".java".
+        String filename = file.getName();
+        String className = filename.substring(0, filename.length() - 5);
+
+        // For the package, the only foolproof way is to look for the package
+        // declaration inside the file.
+        try {
+            String content = Strings.readFile(file);
+            Pattern packagePattern = Pattern.compile("(?m)^\\s*package\\s+(\\S+)\\s*;");
+            Matcher packageMatcher = packagePattern.matcher(content);
+            if (!packageMatcher.find()) {
+                throw new IllegalArgumentException("No package in '" + file + "'\n"+content);
+            }
+            String packageName = packageMatcher.group(1);
+            return packageName + "." + className;
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Couldn't read '" + file + "': " + ex.getMessage());
+        }
     }
 }
