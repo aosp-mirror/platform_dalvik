@@ -278,6 +278,7 @@ ifeq ($(dvm_arch),arm)
     LOCAL_SRC_FILES += \
 		compiler/codegen/arm/RallocUtil.c \
 		compiler/codegen/arm/$(dvm_arch_variant)/Codegen.c \
+		compiler/codegen/arm/$(dvm_arch_variant)/CallingConvention.S \
 		compiler/codegen/arm/Assemble.c \
 		compiler/codegen/arm/ArchUtility.c \
 		compiler/codegen/arm/LocalOptimizations.c \
