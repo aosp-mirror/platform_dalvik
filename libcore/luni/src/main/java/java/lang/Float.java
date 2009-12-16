@@ -64,8 +64,8 @@ public final class Float extends Number implements Comparable<Float> {
      * @since 1.1
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Float> TYPE = (Class<Float>) new float[0]
-            .getClass().getComponentType();
+    public static final Class<Float> TYPE
+            = (Class<Float>) float[].class.getComponentType();
 
     // Note: This can't be set to "float.class", since *that* is
     // defined to be "java.lang.Float.TYPE";
@@ -324,7 +324,7 @@ public final class Float extends Number implements Comparable<Float> {
      * @see #parseFloat(String)
      */
     public static Float valueOf(String string) throws NumberFormatException {
-        return valueOf(parseFloat(string));
+        return parseFloat(string);
     }
 
     /**

@@ -53,16 +53,10 @@ public final class Byte extends Number implements Comparable<Byte> {
      * The {@link Class} object that represents the primitive type {@code byte}.
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Byte> TYPE = (Class<Byte>) new byte[0].getClass()
-            .getComponentType();
-
+    public static final Class<Byte> TYPE
+            = (Class<Byte>) byte[].class.getComponentType();
     // Note: This can't be set to "byte.class", since *that* is
     // defined to be "java.lang.Byte.TYPE";
-
-    /**
-     * A cache of instances used by {@link #valueOf(byte)} and auto-boxing.
-     */
-    private static final Byte[] CACHE = new Byte[256];
 
     /**
      * Constructs a new {@code Byte} with the specified primitive byte value.
@@ -295,10 +289,17 @@ public final class Byte extends Number implements Comparable<Byte> {
      * @since 1.5
      */
     public static Byte valueOf(byte b) {
-        synchronized (CACHE) {
-            int idx = b - MIN_VALUE;
-            Byte result = CACHE[idx];
-            return (result == null ? CACHE[idx] = new Byte(b) : result);
+        return VALUES[b + 128];
+    }
+
+    /**
+     * A cache of instances used by {@link Byte#valueOf(byte)} and auto-boxing
+     */
+    private static final Byte[] VALUES = new Byte[256];
+
+    static {
+        for (int i = -128; i < 128; i++) {
+            VALUES[i + 128] = new Byte((byte) i);
         }
     }
 }

@@ -15,17 +15,22 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// Reimiplemented toString, bit-twiddling, etc. Faster and cleaner.
+// BEGIN android-note
+
 package java.lang;
 
 /**
  * The wrapper for the primitive type {@code long}.
  * <p>
- * As with the specification, this implementation relies on code laid out in <a
- * href="http://www.hackersdelight.org/">Henry S. Warren, Jr.'s Hacker's
- * Delight, (Addison Wesley, 2002)</a> as well as <a
- * href="http://aggregate.org/MAGIC/">The Aggregate's Magic Algorithms</a>.
+ * Implementation note: The "bit twiddling" methods in this class use techniques
+ * described in <a href="http://www.hackersdelight.org/">Henry S. Warren,
+ * Jr.'s Hacker's Delight, (Addison Wesley, 2002)</a> and <a href=
+ * "http://graphics.stanford.edu/~seander/bithacks.html">Sean Anderson's
+ * Bit Twiddling Hacks.</a>
  *
- * @see java.lang.Number
+ * @see java.lang.Integer
  * @since 1.0
  */
 public final class Long extends Number implements Comparable<Long> {
@@ -51,10 +56,9 @@ public final class Long extends Number implements Comparable<Long> {
      * The {@link Class} object that represents the primitive type {@code long}.
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Long> TYPE = (Class<Long>) new long[0].getClass()
-            .getComponentType();
-
-    // Note: This can't be set to "long.class", since *that* is
+    public static final Class<Long> TYPE
+            = (Class<Long>) long[].class.getComponentType();
+    // Note: Long.TYPE can't be set to "long.class", since *that* is
     // defined to be "java.lang.Long.TYPE";
 
     /**
@@ -65,10 +69,18 @@ public final class Long extends Number implements Comparable<Long> {
      */
     public static final int SIZE = 64;
 
+    /**
+     * Table for MOD / DIV 10 computation described in Section 10-21
+     * of Hank Warren's "Hacker's Delight" online addendum.
+     * http://www.hackersdelight.org/divcMore.pdf
+     */
+    private static final char[] MOD_10_TABLE = {
+        0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 7, 7, 8, 8, 9, 0
+    };
 
     /**
      * Constructs a new {@code Long} with the specified primitive long value.
-     * 
+     *
      * @param value
      *            the primitive long value to store in the new instance.
      */
@@ -78,7 +90,7 @@ public final class Long extends Number implements Comparable<Long> {
 
     /**
      * Constructs a new {@code Long} from the specified string.
-     * 
+     *
      * @param string
      *            the string representation of a long value.
      * @throws NumberFormatException
@@ -97,7 +109,7 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Compares this object to the specified long object to determine their
      * relative order.
-     * 
+     *
      * @param object
      *            the long object to compare this object to.
      * @return a negative value if the value of this long is less than the value
@@ -108,7 +120,9 @@ public final class Long extends Number implements Comparable<Long> {
      * @since 1.2
      */
     public int compareTo(Long object) {
-        return value > object.value ? 1 : (value < object.value ? -1 : 0);
+        long thisValue = this.value;
+        long thatValue = object.value;
+        return thisValue < thatValue ? -1 : (thisValue == thatValue ? 0 : 1);
     }
 
     /**
@@ -116,7 +130,7 @@ public final class Long extends Number implements Comparable<Long> {
      * string can be decoded into a long value. The string may be an optional
      * minus sign "-" followed by a hexadecimal ("0x..." or "#..."), octal
      * ("0..."), or decimal ("...") representation of a long.
-     * 
+     *
      * @param string
      *            a string representation of a long value.
      * @return a {@code Long} containing the value represented by {@code string}.
@@ -172,7 +186,7 @@ public final class Long extends Number implements Comparable<Long> {
      * Compares this instance with the specified object and indicates if they
      * are equal. In order to be equal, {@code o} must be an instance of
      * {@code Long} and have the same long value as this object.
-     * 
+     *
      * @param o
      *            the object to compare this long with.
      * @return {@code true} if the specified object is equal to this
@@ -180,8 +194,7 @@ public final class Long extends Number implements Comparable<Long> {
      */
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Long)
-                && (value == ((Long) o).value);
+        return o instanceof Long && ((Long) o).value == value;
     }
 
     @Override
@@ -194,7 +207,7 @@ public final class Long extends Number implements Comparable<Long> {
      * {@code string}. Returns {@code null} if {@code string} is {@code null}
      * or empty, if the property can not be found or if its value can not be
      * parsed as a long.
-     * 
+     *
      * @param string
      *            the name of the requested system property.
      * @return the requested property's value as a {@code Long} or {@code null}.
@@ -219,7 +232,7 @@ public final class Long extends Number implements Comparable<Long> {
      * {@code string}. Returns the specified default value if {@code string} is
      * {@code null} or empty, if the property can not be found or if its value
      * can not be parsed as a long.
-     * 
+     *
      * @param string
      *            the name of the requested system property.
      * @param defaultValue
@@ -248,7 +261,7 @@ public final class Long extends Number implements Comparable<Long> {
      * {@code string}. Returns the specified default value if {@code string} is
      * {@code null} or empty, if the property can not be found or if its value
      * can not be parsed as a long.
-     * 
+     *
      * @param string
      *            the name of the requested system property.
      * @param defaultValue
@@ -284,7 +297,7 @@ public final class Long extends Number implements Comparable<Long> {
 
     /**
      * Gets the primitive value of this long.
-     * 
+     *
      * @return this object's primitive value.
      */
     @Override
@@ -295,7 +308,7 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Parses the specified string as a signed decimal long value. The ASCII
      * character \u002d ('-') is recognized as the minus sign.
-     * 
+     *
      * @param string
      *            the string representation of a long value.
      * @return the primitive long value represented by {@code string}.
@@ -310,7 +323,7 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Parses the specified string as a signed long value using the specified
      * radix. The ASCII character \u002d ('-') is recognized as the minus sign.
-     * 
+     *
      * @param string
      *            the string representation of a long value.
      * @param radix
@@ -376,92 +389,76 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Converts the specified long value into its binary string representation.
      * The returned string is a concatenation of '0' and '1' characters.
-     * 
-     * @param l
+     *
+     * @param v
      *            the long value to convert.
      * @return the binary string representation of {@code l}.
      */
-    public static String toBinaryString(long l) {
-        int count = 1;
-        long j = l;
-
-        if (l < 0) {
-            count = 64;
-        } else {
-            while ((j >>= 1) != 0) {
-                count++;
-            }
+    public static String toBinaryString(long v) {
+        int i = (int) v;
+        if (i == v) {
+            return Integer.toBinaryString(i);
         }
 
-        char[] buffer = new char[count];
+        int bufLen = 64;  // Max number of binary digits in a long
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
+
         do {
-            buffer[--count] = (char) ((l & 1) + '0');
-            l >>= 1;
-        } while (count > 0);
-        return new String(0, buffer.length, buffer);
-    }
+            buf[--cursor] = (char) ((v & 1) + '0');
+        }  while ((v >>>= 1) != 0);
+
+        return new String(cursor, bufLen - cursor, buf);
+     }
 
     /**
      * Converts the specified long value into its hexadecimal string
      * representation. The returned string is a concatenation of characters from
      * '0' to '9' and 'a' to 'f'.
-     * 
-     * @param l
+     *
+     * @param v
      *            the long value to convert.
      * @return the hexadecimal string representation of {@code l}.
      */
-    public static String toHexString(long l) {
-        int count = 1;
-        long j = l;
-
-        if (l < 0) {
-            count = 16;
-        } else {
-            while ((j >>= 4) != 0) {
-                count++;
-            }
+    public static String toHexString(long v) {
+        int i = (int) v;
+        if (i == v) {
+            return Integer.toHexString(i);
         }
 
-        char[] buffer = new char[count];
+        int bufLen = 16;  // Max number of hex digits in a long
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
+
         do {
-            int t = (int) (l & 15);
-            if (t > 9) {
-                t = t - 10 + 'a';
-            } else {
-                t += '0';
-            }
-            buffer[--count] = (char) t;
-            l >>= 4;
-        } while (count > 0);
-        return new String(0, buffer.length, buffer);
+            buf[--cursor] = Integer.DIGITS[((int) v) & 0xF];
+        } while ((v >>>= 4) != 0);
+
+        return new String(cursor, bufLen - cursor, buf);
     }
 
     /**
      * Converts the specified long value into its octal string representation.
      * The returned string is a concatenation of characters from '0' to '7'.
-     * 
-     * @param l
+     *
+     * @param v
      *            the long value to convert.
      * @return the octal string representation of {@code l}.
      */
-    public static String toOctalString(long l) {
-        int count = 1;
-        long j = l;
-
-        if (l < 0) {
-            count = 22;
-        } else {
-            while ((j >>>= 3) != 0) {
-                count++;
-            }
+    public static String toOctalString(long v) {
+        int i = (int) v;
+        if (i == v) {
+            return Integer.toOctalString(i);
         }
+        int bufLen = 22;  // Max number of octal digits in a long
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
 
-        char[] buffer = new char[count];
         do {
-            buffer[--count] = (char) ((l & 7) + '0');
-            l >>>= 3;
-        } while (count > 0);
-        return new String(0, buffer.length, buffer);
+            buf[--cursor] = (char) (((int)v & 7) + '0');
+        } while ((v >>>= 3) != 0);
+
+        return new String(cursor, bufLen - cursor, buf);
     }
 
     @Override
@@ -473,13 +470,116 @@ public final class Long extends Number implements Comparable<Long> {
      * Converts the specified long value into its decimal string representation.
      * The returned string is a concatenation of a minus sign if the number is
      * negative and characters from '0' to '9'.
-     * 
-     * @param l
+     *
+     * @param n
      *            the long to convert.
      * @return the decimal string representation of {@code l}.
      */
-    public static String toString(long l) {
-        return toString(l, 10);
+    public static String toString(long n) {
+        int i = (int) n;
+        if (i == n)
+            return Integer.toString(i);
+
+        boolean negative = (n < 0);
+        if (negative) {
+            n = -n;
+            if (n < 0)  // If -n is still negative, n is Long.MIN_VALUE
+                return "-9223372036854775808";
+        }
+
+        int bufLen = 20; // Maximum number of chars in result
+        char[] buf = new char[bufLen];
+
+        int low = (int) (n % 1000000000); // Extract low-order 9 digits
+        int cursor = intIntoCharArray(buf, bufLen, low);
+
+        // Zero-pad Low order part to 9 digits
+        while (cursor != (bufLen - 9))
+            buf[--cursor] = '0';
+
+        /*
+         * The remaining digits are (n - low) / 1,000,000,000.  This
+         * "exact division" is done as per the online addendum to Hank Warren's
+         * "Hacker's Delight" 10-20, http://www.hackersdelight.org/divcMore.pdf
+         */
+        n = ((n - low) >>> 9) * 0x8E47CE423A2E9C6DL;
+
+        /*
+         * If the remaining digits fit in an int, emit them using a
+         * single call to intIntoCharArray. Otherwise, strip off the
+         * low-order digit, put it in buf, and then call intIntoCharArray
+         * on the remaining digits (which now fit in an int).
+         */
+        if ((n & (-1L << 32)) == 0) {
+            cursor = intIntoCharArray(buf, cursor, (int) n);
+        } else {
+            /*
+             * Set midDigit to n % 10
+             */
+            int lo32 = (int) n;
+            int hi32 = (int) (n >>> 32);
+
+            // midDigit = ((unsigned) low32) % 10, per "Hacker's Delight" 10-21
+            int midDigit = MOD_10_TABLE[
+                (0x19999999 * lo32 + (lo32 >>> 1) + (lo32 >>> 3)) >>> 28];
+
+            // Adjust midDigit for hi32. (assert hi32 == 1 || hi32 == 2)
+            midDigit -= hi32 << 2;  // 1L << 32 == -4 MOD 10
+            if (midDigit < 0)
+                midDigit += 10;
+
+            buf[--cursor] = (char) (midDigit + '0');
+
+            // Exact division as per Warren 10-20
+            int rest = ((int) ((n - midDigit) >> 1)) * 0xCCCCCCCD;
+            cursor = intIntoCharArray(buf, cursor, rest);
+        }
+
+        if (negative)
+            buf[--cursor] = '-';
+
+        return new String(cursor, bufLen - cursor, buf);
+    }
+
+    /**
+     * Inserts the unsigned decimal integer represented by n into the specified
+     * character array starting at position cursor.  Returns the index after
+     * the last character inserted (i.e., the value to pass in as cursor the
+     * next time this method is called). Note that n is interpreted as a large
+     * positive integer (not a negative integer) if its sign bit is set.
+     */
+    static int intIntoCharArray(char[] buf, int cursor, int n) {
+        // Calculate digits two-at-a-time till remaining digits fit in 16 bits
+        while ((n & 0xffff0000) != 0) {
+            /*
+             * Compute q = n/100 and r = n % 100 as per "Hacker's Delight" 10-8.
+             * This computation is sligthly different from the corresponding
+             * computation in Integer.toString: the shifts before and after
+             * multiply can't be combined, as that would yield the wrong result
+             * if n's sign bit were set.
+             */
+            int q = (int) ((0x51EB851FL * (n >>> 2)) >>> 35);
+            // BEGIN android-changed
+            int r = n - ((q << 6) + (q << 5) + (q << 2));  // int r = n - 100*q;
+            // END android-changed
+
+            buf[--cursor] = Integer.ONES[r];
+            buf[--cursor] = Integer.TENS[r];
+            n = q;
+        }
+
+        // Calculate remaining digits one-at-a-time for performance
+        while (n != 0) {
+            // Compute q = n / 10 and r = n % 10 as per "Hacker's Delight" 10-8
+            int q = (0xCCCD * n) >>> 19;
+            // BEGIN android-changed
+            int r = n - ((q << 3) + (q << 1));  // int r = n - 10 * q;
+            // END android-changed
+
+            buf[--cursor] = (char) (r + '0');
+            n = q;
+        }
+        return cursor;
     }
 
     /**
@@ -489,51 +589,59 @@ public final class Long extends Number implements Comparable<Long> {
      * 'z', depending on the radix. If {@code radix} is not in the interval
      * defined by {@code Character.MIN_RADIX} and {@code Character.MAX_RADIX}
      * then 10 is used as the base for the conversion.
-     * 
-     * @param l
+     *
+     * @param v
      *            the long to convert.
      * @param radix
      *            the base to use for the conversion.
-     * @return the string representation of {@code l}.
+     * @return the string representation of {@code v}.
      */
-    public static String toString(long l, int radix) {
+    public static String toString(long v, int radix) {
+        int i = (int) v;
+        if (i == v) {
+            return Integer.toString(i, radix);
+        }
+
         if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX) {
             radix = 10;
         }
-        if (l == 0) {
-            return "0"; //$NON-NLS-1$
+        if (radix == 10) {
+            return toString(v);
         }
 
-        int count = 2;
-        long j = l;
-        boolean negative = l < 0;
-        if (!negative) {
-            count = 1;
-            j = -l;
-        }
-        while ((l /= radix) != 0) {
-            count++;
+        /*
+         * If v is positive, negate it. This is the opposite of what one might
+         * expect. It is necessary because the range of the negative values is
+         * strictly larger than that of the positive values: there is no
+         * positive value corresponding to Integer.MIN_VALUE.
+         */
+        boolean negative = false;
+        if (v < 0) {
+            negative = true;
+        } else {
+            v = -v;
         }
 
-        char[] buffer = new char[count];
+        int bufLen = radix < 8 ? 65 : 23;  // Max chars in result (conservative)
+        char[] buf = new char[bufLen];
+        int cursor = bufLen;
+
         do {
-            int ch = 0 - (int) (j % radix);
-            if (ch > 9) {
-                ch = ch - 10 + 'a';
-            } else {
-                ch += '0';
-            }
-            buffer[--count] = (char) ch;
-        } while ((j /= radix) != 0);
+            long q = v / radix;
+            buf[--cursor] = Integer.DIGITS[(int) (radix * q - v)];
+            v = q;
+        } while (v != 0);
+
         if (negative) {
-            buffer[0] = '-';
+            buf[--cursor] = '-';
         }
-        return new String(0, buffer.length, buffer);
+
+        return new String(cursor, bufLen - cursor, buf);
     }
 
     /**
      * Parses the specified string as a signed decimal long value.
-     * 
+     *
      * @param string
      *            the string representation of a long value.
      * @return a {@code Long} instance containing the long value represented by
@@ -550,7 +658,7 @@ public final class Long extends Number implements Comparable<Long> {
     /**
      * Parses the specified string as a signed long value using the specified
      * radix.
-     * 
+     *
      * @param string
      *            the string representation of a long value.
      * @param radix
@@ -574,20 +682,21 @@ public final class Long extends Number implements Comparable<Long> {
      * 1 and returns the bit mask value for that bit. This is also referred to
      * as the Most Significant 1 Bit. Returns zero if the specified long is
      * zero.
-     * 
-     * @param lng
+     *
+     * @param v
      *            the long to examine.
-     * @return the bit mask indicating the highest 1 bit in {@code lng}.
+     * @return the bit mask indicating the highest 1 bit in {@code v}.
      * @since 1.5
      */
-    public static long highestOneBit(long lng) {
-        lng |= (lng >> 1);
-        lng |= (lng >> 2);
-        lng |= (lng >> 4);
-        lng |= (lng >> 8);
-        lng |= (lng >> 16);
-        lng |= (lng >> 32);
-        return (lng & ~(lng >>> 1));
+    public static long highestOneBit(long v) {
+        // Hacker's Delight, Figure 3-1
+        v |= (v >> 1);
+        v |= (v >> 2);
+        v |= (v >> 4);
+        v |= (v >> 8);
+        v |= (v >> 16);
+        v |= (v >> 32);
+        return v - (v >>> 1);
     }
 
     /**
@@ -595,166 +704,196 @@ public final class Long extends Number implements Comparable<Long> {
      * 1 and returns the bit mask value for that bit. This is also referred to
      * as the Least Significant 1 Bit. Returns zero if the specified long is
      * zero.
-     * 
-     * @param lng
+     *
+     * @param v
      *            the long to examine.
-     * @return the bit mask indicating the lowest 1 bit in {@code lng}.
+     * @return the bit mask indicating the lowest 1 bit in {@code v}.
      * @since 1.5
      */
-    public static long lowestOneBit(long lng) {
-        return (lng & (-lng));
+    public static long lowestOneBit(long v) {
+        return v & -v;
     }
 
     /**
      * Determines the number of leading zeros in the specified long value prior
      * to the {@link #highestOneBit(long) highest one bit}.
      *
-     * @param lng
+     * @param v
      *            the long to examine.
-     * @return the number of leading zeros in {@code lng}.
+     * @return the number of leading zeros in {@code v}.
      * @since 1.5
      */
-    public static int numberOfLeadingZeros(long lng) {
-        lng |= lng >> 1;
-        lng |= lng >> 2;
-        lng |= lng >> 4;
-        lng |= lng >> 8;
-        lng |= lng >> 16;
-        lng |= lng >> 32;
-        return bitCount(~lng);
+    public static int numberOfLeadingZeros(long v) {
+        // After Hacker's Delight, Figure 5-6
+        if (v < 0) {
+            return 0;
+        }
+        if (v == 0) {
+            return 64;
+        }
+        // On a 64-bit VM, the two previous tests should probably be replaced by
+        // if (v <= 0) return ((int) (~v >> 57)) & 64;
+
+        int n = 1;
+        int i = (int) (v >>> 32);
+        if (i == 0) {
+            n +=  32;
+            i = (int) v;
+        }
+        if (i >> 16 == 0) {
+            n +=  16;
+            i <<= 16;
+        }
+        if (i >> 24 == 0) {
+            n +=  8;
+            i <<= 8;
+        }
+        if (i >> 28 == 0) {
+            n +=  4;
+            i <<= 4;
+        }
+        if (i >> 30 == 0) {
+            n +=  2;
+            i <<= 2;
+        }
+        return n - (i >>> 31);
     }
 
     /**
      * Determines the number of trailing zeros in the specified long value after
      * the {@link #lowestOneBit(long) lowest one bit}.
      *
-     * @param lng
+     * @param v
      *            the long to examine.
-     * @return the number of trailing zeros in {@code lng}.
+     * @return the number of trailing zeros in {@code v}.
      * @since 1.5
      */
-    public static int numberOfTrailingZeros(long lng) {
-        return bitCount((lng & -lng) - 1);
+    public static int numberOfTrailingZeros(long v) {
+        int low = (int) v;
+        return low !=0 ? Integer.numberOfTrailingZeros(low)
+                       : 32 + Integer.numberOfTrailingZeros((int) (v >>> 32));
     }
 
     /**
      * Counts the number of 1 bits in the specified long value; this is also
      * referred to as population count.
      *
-     * @param lng
+     * @param v
      *            the long to examine.
-     * @return the number of 1 bits in {@code lng}.
+     * @return the number of 1 bits in {@code v}.
      * @since 1.5
      */
-    public static int bitCount(long lng) {
-        lng = (lng & 0x5555555555555555L) + ((lng >> 1) & 0x5555555555555555L);
-        lng = (lng & 0x3333333333333333L) + ((lng >> 2) & 0x3333333333333333L);
-        // adjust for 64-bit integer
-        int i = (int) ((lng >>> 32) + lng);
+    public static int bitCount(long v) {
+        // Combines techniques from several sources
+        v -=  (v >>> 1) & 0x5555555555555555L;
+        v = (v & 0x3333333333333333L) + ((v >> 2) & 0x3333333333333333L);
+        int i =  ((int)(v >>> 32)) + (int) v;
         i = (i & 0x0F0F0F0F) + ((i >> 4) & 0x0F0F0F0F);
-        i = (i & 0x00FF00FF) + ((i >> 8) & 0x00FF00FF);
-        i = (i & 0x0000FFFF) + ((i >> 16) & 0x0000FFFF);
-        return i;
+        i += i >>> 8;
+        i += i >>> 16;
+        return i  & 0x0000007F;
     }
+
+    /*
+     * On a modern 64-bit processor with a fast hardware multiply, this is
+     * much faster (assuming you're running a 64-bit VM):
+     *
+     * // http://chessprogramming.wikispaces.com/Population+Count
+     * int bitCount (long x) {
+     *     x -=  (x >>> 1) & 0x5555555555555555L;
+     *     x = (x & 0x3333333333333333L) + ((x >>> 2) & 0x3333333333333333L);
+     *     x = (x + (x >>> 4)) & 0x0f0f0f0f0f0f0f0fL;
+     *     x = (x * 0x0101010101010101L) >>> 56;
+     *     return (int) x;
+     * }
+     *
+     * Really modern processors (e.g., Nehalem, K-10) have hardware popcount
+     * instructions.
+     */
 
     /**
      * Rotates the bits of the specified long value to the left by the specified
      * number of bits.
      *
-     * @param lng
+     * @param v
      *            the long value to rotate left.
      * @param distance
      *            the number of bits to rotate.
      * @return the rotated value.
      * @since 1.5
      */
-    public static long rotateLeft(long lng, int distance) {
-        if (distance == 0) {
-            return lng;
-        }
-        /*
-         * According to JLS3, 15.19, the right operand of a shift is always
-         * implicitly masked with 0x3F, which the negation of 'distance' is
-         * taking advantage of.
-         */
-        return ((lng << distance) | (lng >>> (-distance)));
+    public static long rotateLeft(long v, int distance) {
+        // Shift distances are mod 64 (JLS3 15.19), so we needn't mask -distance
+        return (v << distance) | (v >>> -distance);
     }
 
     /**
-     * <p>
      * Rotates the bits of the specified long value to the right by the
      * specified number of bits.
      *
-     * @param lng
+     * @param v
      *            the long value to rotate right.
      * @param distance
      *            the number of bits to rotate.
      * @return the rotated value.
      * @since 1.5
      */
-    public static long rotateRight(long lng, int distance) {
-        if (distance == 0) {
-            return lng;
-        }
-        /*
-         * According to JLS3, 15.19, the right operand of a shift is always
-         * implicitly masked with 0x3F, which the negation of 'distance' is
-         * taking advantage of.
-         */
-        return ((lng >>> distance) | (lng << (-distance)));
+    public static long rotateRight(long v, int distance) {
+        // Shift distances are mod 64 (JLS3 15.19), so we needn't mask -distance
+        return (v >>> distance) | (v << -distance);
     }
 
     /**
      * Reverses the order of the bytes of the specified long value.
-     * 
-     * @param lng
+     *
+     * @param v
      *            the long value for which to reverse the byte order.
      * @return the reversed value.
      * @since 1.5
      */
-    public static long reverseBytes(long lng) {
-        long b7 = lng >>> 56;
-        long b6 = (lng >>> 40) & 0xFF00L;
-        long b5 = (lng >>> 24) & 0xFF0000L;
-        long b4 = (lng >>> 8) & 0xFF000000L;
-        long b3 = (lng & 0xFF000000L) << 8;
-        long b2 = (lng & 0xFF0000L) << 24;
-        long b1 = (lng & 0xFF00L) << 40;
-        long b0 = lng << 56;
-        return (b0 | b1 | b2 | b3 | b4 | b5 | b6 | b7);
+    public static long reverseBytes(long v) {
+        // Hacker's Delight 7-1, with minor tweak from Veldmeijer
+        // http://graphics.stanford.edu/~seander/bithacks.html
+        v = ((v >> 8) & 0x00FF00FF00FF00FFL) | ((v & 0x00FF00FF00FF00FFL) << 8);
+        v = ((v >>16) & 0x0000FFFF0000FFFFL) | ((v & 0x0000FFFF0000FFFFL) <<16);
+        return ((v >>32)                   ) | ((v                      ) <<32);
     }
 
     /**
      * Reverses the order of the bits of the specified long value.
-     * 
-     * @param lng
+     *
+     * @param v
      *            the long value for which to reverse the bit order.
      * @return the reversed value.
      * @since 1.5
      */
-    public static long reverse(long lng) {
-        // From Hacker's Delight, 7-1, Figure 7-1
-        lng = (lng & 0x5555555555555555L) << 1 | (lng >> 1)
-                & 0x5555555555555555L;
-        lng = (lng & 0x3333333333333333L) << 2 | (lng >> 2)
-                & 0x3333333333333333L;
-        lng = (lng & 0x0F0F0F0F0F0F0F0FL) << 4 | (lng >> 4)
-                & 0x0F0F0F0F0F0F0F0FL;
-        return reverseBytes(lng);
+    public static long reverse(long v) {
+        // Hacker's Delight 7-1, with minor tweak from Veldmeijer
+        // http://graphics.stanford.edu/~seander/bithacks.html
+        v = ((v >> 1) & 0x5555555555555555L) | ((v & 0x5555555555555555L) << 1);
+        v = ((v >> 2) & 0x3333333333333333L) | ((v & 0x3333333333333333L) << 2);
+        v = ((v >> 4) & 0x0F0F0F0F0F0F0F0FL) | ((v & 0x0F0F0F0F0F0F0F0FL) << 4);
+        v = ((v >> 8) & 0x00FF00FF00FF00FFL) | ((v & 0x00FF00FF00FF00FFL) << 8);
+        v = ((v >>16) & 0x0000FFFF0000FFFFL) | ((v & 0x0000FFFF0000FFFFL) <<16);
+        return ((v >>32)                   ) | ((v                      ) <<32);
     }
 
     /**
      * Returns the value of the {@code signum} function for the specified long
      * value.
-     * 
-     * @param lng
+     *
+     * @param v
      *            the long value to check.
-     * @return -1 if {@code lng} is negative, 1 if {@code lng} is positive, 0 if
-     *         {@code lng} is zero.
+     * @return -1 if {@code v} is negative, 1 if {@code v} is positive, 0 if
+     *         {@code v} is zero.
      * @since 1.5
      */
-    public static int signum(long lng) {
-        return (lng == 0 ? 0 : (lng < 0 ? -1 : 1));
+    public static int signum(long v) {
+        // BEGIN android-changed
+        return v < 0 ? -1 : (v == 0 ? 0 : 1);
+        // END android-changed
+//      The following branch-free version is faster on modern desktops/servers
+//      return ((int)(v >> 63)) | (int) (-v >>> 63); // Hacker's delight 2-7
     }
 
     /**
@@ -764,29 +903,24 @@ public final class Long extends Number implements Comparable<Long> {
      * recommended to use this method instead of the constructor, since it
      * maintains a cache of instances which may result in better performance.
      *
-     * @param lng
+     * @param v
      *            the long value to store in the instance.
-     * @return a {@code Long} instance containing {@code lng}.
+     * @return a {@code Long} instance containing {@code v}.
      * @since 1.5
      */
-    public static Long valueOf(long lng) {
-        if (lng < -128 || lng > 127) {
-            return new Long(lng);
-        }
-        return valueOfCache.CACHE[128+(int)lng];
+    public static Long valueOf(long v) {
+        return  v >= 128 || v < -128 ? new Long(v)
+                                     : SMALL_VALUES[((int) v) + 128];
     }
 
-    static class valueOfCache {
-        /**
-         * <p>
-         * A cache of instances used by {@link Long#valueOf(long)} and auto-boxing.
-         */
-        static final Long[] CACHE = new Long[256];
+    /**
+     * A cache of instances used by {@link Long#valueOf(long)} and auto-boxing.
+     */
+    private static final Long[] SMALL_VALUES = new Long[256];
 
-        static {
-            for(int i=-128; i<=127; i++) {
-                CACHE[i+128] = new Long(i);
-            }
+    static {
+        for(int i = -128; i < 128; i++) {
+            SMALL_VALUES[i + 128] = new Long(i);
         }
     }
 }

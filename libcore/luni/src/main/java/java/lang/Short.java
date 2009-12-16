@@ -19,7 +19,7 @@ package java.lang;
 
 /**
  * The wrapper for the primitive type {@code short}.
- * 
+ *
  * @see java.lang.Number
  * @since 1.1
  */
@@ -55,13 +55,11 @@ public final class Short extends Number implements Comparable<Short> {
      * short}.
      */
     @SuppressWarnings("unchecked")
-    public static final Class<Short> TYPE = (Class<Short>) new short[0]
-            .getClass().getComponentType();
+    public static final Class<Short> TYPE
+            = (Class<Short>) short[].class.getComponentType();
+    // Note: Short.TYPE can't be set to "short.class", since *that* is
+    // defined to be "java.lang.Short.TYPE";
 
-	// Note: This can't be set to "short.class", since *that* is
-	// defined to be "java.lang.Short.TYPE";
-
-    
     /**
      * Constructs a new {@code Short} from the specified string.
      *
@@ -93,7 +91,7 @@ public final class Short extends Number implements Comparable<Short> {
     /**
      * Compares this object to the specified short object to determine their
      * relative order.
-     * 
+     *
      * @param object
      *            the short object to compare this object to.
      * @return a negative value if the value of this short is less than the
@@ -277,19 +275,17 @@ public final class Short extends Number implements Comparable<Short> {
 			throws NumberFormatException {
 		return valueOf(parseShort(string, radix));
 	}
-    
+
     /**
      * Reverses the bytes of the specified short.
-     * 
+     *
      * @param s
      *            the short value for which to reverse bytes.
      * @return the reversed value.
      * @since 1.5
      */
     public static short reverseBytes(short s) {
-        int high = (s >> 8) & 0xFF;
-        int low = (s & 0xFF) << 8;
-        return (short) (low | high);
+        return (short) ((s << 8) | ((s >>> 8) & 0xFF));
     }
 
     /**
@@ -305,22 +301,17 @@ public final class Short extends Number implements Comparable<Short> {
      * @since 1.5
      */
     public static Short valueOf(short s) {
-        if (s < -128 || s > 127) {
-            return new Short(s);
-        }
-        return valueOfCache.CACHE[s+128];
+        return s < -128 || s >= 128 ? new Short(s) : SMALL_VALUES[s + 128];
     }
 
-    static class valueOfCache {
-        /**
-         * A cache of instances used by {@link Short#valueOf(short)} and auto-boxing.
-         */
-        private static final Short[] CACHE = new Short[256];
+    /**
+     * A cache of instances used by {@link Short#valueOf(short)} and auto-boxing.
+     */
+    private static final Short[] SMALL_VALUES = new Short[256];
 
-        static {
-            for(int i=-128; i<=127; i++) {
-                CACHE[i+128] = new Short((short)i);
-            }
+    static {
+        for(int i = -128; i < 128; i++) {
+            SMALL_VALUES[i + 128] = new Short((short) i);
         }
     }
 }
