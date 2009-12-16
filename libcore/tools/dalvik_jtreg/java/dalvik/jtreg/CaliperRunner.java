@@ -24,7 +24,11 @@ import com.google.caliper.Runner;
 public final class CaliperRunner extends TestRunner {
 
     @Override public boolean test() {
-        Runner.main(className);
+        try {
+            Runner.main(className);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return false; // always print benchmarking results
     }
 

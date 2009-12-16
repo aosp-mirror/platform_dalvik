@@ -17,20 +17,17 @@
 package org.apache.harmony.luni.tests.java.util;
 
 import com.google.caliper.Benchmark;
-import com.google.caliper.DefaultBenchmarkSuite;
+import com.google.caliper.SimpleBenchmark;
 
 /**
  * This class exists only to force a dependency from our libraries on Caliper,
  * our micro benchmarking framework. 
  */
-public class NullBenchmarkSuite extends DefaultBenchmarkSuite {
+public class NullBenchmarkSuite extends SimpleBenchmark {
 
-    class NullBenchmark extends Benchmark {
-        @Override public Object run(int trials) throws Exception {
+    public void timeNullBenchmark(int trials) throws Exception {
             for (int i = 0; i < trials; i++) {
                 // code under test goes here!
             }
-            return null;
-        }
     }
 }
