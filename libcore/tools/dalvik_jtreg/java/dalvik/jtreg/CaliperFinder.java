@@ -25,7 +25,7 @@ import java.io.File;
 class CaliperFinder extends TestFinder {
 
     @Override protected boolean matches(File file) {
-        return file.getName().endsWith("BenchmarkSuite.java");
+        return file.getName().endsWith("Benchmark.java");
     }
 
     @Override protected String testName(File file) {
