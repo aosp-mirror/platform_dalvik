@@ -23,6 +23,7 @@ import dalvik.annotation.TestTargetClass;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -300,6 +301,57 @@ public class AbstractMapTest extends junit.framework.TestCase {
         amt.putAll(ht);
       
         assertEquals("Should be equal", amt, ht);
+    }
+
+    public void testEqualsWithNullValues() {
+        Map<String, String> a = new HashMap<String, String>();
+        a.put("a", null);
+        a.put("b", null);
+
+        Map<String, String> b = new HashMap<String, String>();
+        a.put("c", "cat");
+        a.put("d", "dog");
+
+        assertFalse(a.equals(b));
+        assertFalse(b.equals(a));
+    }
+
+    public void testNullsOnViews() {
+        Map<String, String> nullHostile = new Hashtable<String, String>();
+
+        nullHostile.put("a", "apple");
+        testNullsOnView(nullHostile.entrySet());
+
+        nullHostile.put("a", "apple");
+        testNullsOnView(nullHostile.keySet());
+
+        nullHostile.put("a", "apple");
+        testNullsOnView(nullHostile.values());
+    }
+
+    private void testNullsOnView(Collection<?> view) {
+        try {
+            assertFalse(view.contains(null));
+        } catch (NullPointerException optional) {
+        }
+
+        try {
+            assertFalse(view.remove(null));
+        } catch (NullPointerException optional) {
+        }
+
+        Set<Object> setOfNull = Collections.singleton(null);
+        assertFalse(view.equals(setOfNull));
+
+        try {
+            assertFalse(view.removeAll(setOfNull));
+        } catch (NullPointerException optional) {
+        }
+
+        try {
+            assertTrue(view.retainAll(setOfNull)); // destructive
+        } catch (NullPointerException optional) {
+        }
     }
 
     protected void setUp() {

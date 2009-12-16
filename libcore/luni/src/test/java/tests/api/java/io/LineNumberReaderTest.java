@@ -19,6 +19,7 @@ package tests.api.java.io;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.Reader;
 import java.io.StringReader;
 
 import dalvik.annotation.TestLevel;
@@ -256,6 +257,54 @@ public class LineNumberReaderTest extends junit.framework.TestCase {
         } catch (IOException e) {
             // Expected.
         }
+    }
+
+    public void testReadLineSourceThrows() throws IOException {
+        lnr = new LineNumberReader(new Reader() {
+            private StringReader delegate = new StringReader("hello\nworld");
+            private int calls = 0;
+            @Override public void close() throws IOException {}
+            @Override public int read(char[] buf, int offset, int len) throws IOException {
+                if (calls++ < 2) {
+                    throw new IOException();
+                } else {
+                    return delegate.read(buf, offset, len);
+                }
+            }
+        });
+
+        assertEquals(0, lnr.getLineNumber());
+        try {
+            lnr.readLine();
+            fail();
+        } catch (IOException expected) {
+        }
+
+        assertEquals(0, lnr.getLineNumber());
+        try {
+            lnr.readLine();
+            fail();
+        } catch (IOException expected) {
+        }
+
+        assertEquals(0, lnr.getLineNumber());
+        assertEquals("hello", lnr.readLine());
+        assertEquals(1, lnr.getLineNumber());
+        assertEquals("world", lnr.readLine());
+        assertEquals(2, lnr.getLineNumber());
+    }
+
+    public void testGetLineNumberAfterEnd() throws IOException {
+        lnr = new LineNumberReader(new StringReader("hello\nworld"));
+        assertEquals(0, lnr.getLineNumber());
+        assertEquals("hello", lnr.readLine());
+        assertEquals(1, lnr.getLineNumber());
+        assertEquals("world", lnr.readLine());
+        assertEquals(2, lnr.getLineNumber());
+        assertEquals(null, lnr.readLine());
+        assertEquals(2, lnr.getLineNumber());
+        assertEquals(null, lnr.readLine());
+        assertEquals(2, lnr.getLineNumber());
     }
 
     /**

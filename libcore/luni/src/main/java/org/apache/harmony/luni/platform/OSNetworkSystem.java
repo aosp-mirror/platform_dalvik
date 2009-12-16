@@ -494,8 +494,7 @@ final class OSNetworkSystem implements INetworkSystem {
             DatagramPacket packet, int address, int offset, int length,
             int receiveTimeout, boolean peek) throws IOException;
 
-    // BEGIN android-changed
-    //     copied from a newer version of Harmony
+
     public boolean select(FileDescriptor[] readFDs, FileDescriptor[] writeFDs,
             int numReadable, int numWritable, long timeout, int[] flags)
             throws SocketException {
@@ -514,7 +513,6 @@ final class OSNetworkSystem implements INetworkSystem {
         return selectImpl(readFDs, writeFDs, numReadable, numWritable, flags, timeout);
         // END android-changed
     }
-    // END android-changed
 
     // BEGIN android-changed: return type (we throw in native code, with descriptive errors)
     static native boolean selectImpl(FileDescriptor[] readfd,
@@ -704,8 +702,6 @@ final class OSNetworkSystem implements INetworkSystem {
         return true;
     }
 
-    // BEGIN android-changed
-    //     copied from a newer version of Harmony
     private boolean validateFDs(FileDescriptor[] readFDs,
             FileDescriptor[] writeFDs, int countRead, int countWrite) {
         for (int i = 0; i < countRead; ++i) {
@@ -721,7 +717,6 @@ final class OSNetworkSystem implements INetworkSystem {
         }
         return true;
     }
-    // END android-changed
 
     /**
      * Write bytes from a byte array to a socket.

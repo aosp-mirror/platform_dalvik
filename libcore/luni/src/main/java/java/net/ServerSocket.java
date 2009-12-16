@@ -162,14 +162,7 @@ public class ServerSocket {
 
         Socket aSocket = new Socket();
         try {
-            synchronized (this) {
-                implAccept(aSocket);
-            }
-            SecurityManager security = System.getSecurityManager();
-            if (security != null) {
-                security.checkAccept(aSocket.getInetAddress().getHostAddress(),
-                        aSocket.getPort());
-            }
+            implAccept(aSocket);
         } catch (SecurityException e) {
             aSocket.close();
             throw e;
@@ -284,8 +277,15 @@ public class ServerSocket {
      *             if the connection cannot be accepted.
      */
     protected final void implAccept(Socket aSocket) throws IOException {
-        impl.accept(aSocket.impl);
-        aSocket.accepted();
+        synchronized (this) {
+            impl.accept(aSocket.impl);
+            aSocket.accepted();
+        }
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkAccept(aSocket.getInetAddress().getHostAddress(),
+                    aSocket.getPort());
+        }
     }
 
     /**

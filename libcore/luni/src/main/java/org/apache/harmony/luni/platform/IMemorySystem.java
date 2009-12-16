@@ -188,7 +188,7 @@ public interface IMemorySystem {
      */
     public void setByteArray(int address, byte[] bytes, int offset, int length)
             throws NullPointerException, IndexOutOfBoundsException;
-    
+
     // BEGIN android-added
     /**
      * Copies <code>length</code> shorts from the short array <code>short</code>

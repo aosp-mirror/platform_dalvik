@@ -49,7 +49,8 @@ public class URLEncoder {
      */
     @Deprecated
     public static String encode(String s) {
-        StringBuilder buf = new StringBuilder();
+        // Guess a bit bigger for encoded form
+        StringBuilder buf = new StringBuilder(s.length() + 16);
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
@@ -95,7 +96,8 @@ public class URLEncoder {
         // check for UnsupportedEncodingException
         "".getBytes(enc); //$NON-NLS-1$
 
-        StringBuffer buf = new StringBuffer();
+        // Guess a bit bigger for encoded form
+        StringBuffer buf = new StringBuffer(s.length() + 16);
         int start = -1;
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);

@@ -318,4 +318,8 @@ public class OutputStreamWriter extends Writer {
             convert(chars);
         }
     }
+
+    @Override boolean checkError() {
+        return out.checkError();
+    }
 }

@@ -139,8 +139,7 @@ public class LineNumberReader extends BufferedReader {
      * <p>
      * The line number count is incremented if a line terminator is encountered.
      * Recognized line terminator sequences are {@code '\r'}, {@code '\n'} and
-     * {@code "\r\n"}. Line terminator sequences are always translated into
-     * {@code '\n'}.
+     * {@code "\r\n"}.
      *
      * @param buffer
      *            the array in which to store the characters read.
@@ -193,8 +192,15 @@ public class LineNumberReader extends BufferedReader {
     @Override
     public String readLine() throws IOException {
         synchronized (lock) {
-            lineNumber++;
-            return super.readLine();
+            if (lastWasCR) {
+                chompNewline();
+                lastWasCR = false;
+            }
+            String result = super.readLine();
+            if (result != null) {
+                lineNumber++;
+            }
+            return result;
         }
     }
 

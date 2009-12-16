@@ -697,9 +697,19 @@ public final class URL implements java.io.Serializable {
      *             through proxies.
      */
     public URLConnection openConnection(Proxy proxy) throws IOException {
-        if (null == proxy) {
+        if (proxy == null) {
+            // K034c=proxy should not be null
             throw new IllegalArgumentException(Msg.getString("K034c")); //$NON-NLS-1$
         }
+
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null && proxy.type() != Proxy.Type.DIRECT) {
+            InetSocketAddress pAddress = (InetSocketAddress) proxy.address();
+            String pHostName = pAddress.isUnresolved() ? pAddress.getHostName()
+                    : pAddress.getAddress().getHostAddress();
+            sm.checkConnect(pHostName, pAddress.getPort());
+        }
+
         return strmHandler.openConnection(this, proxy);
     }
 

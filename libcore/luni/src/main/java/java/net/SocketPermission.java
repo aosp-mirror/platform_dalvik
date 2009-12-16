@@ -142,7 +142,7 @@ public final class SocketPermission extends Permission implements Serializable {
      * Compares the argument {@code o} to this instance and returns {@code true}
      * if they represent the same permission using a class specific comparison.
      *
-     * @param o
+     * @param other
      *            the object to compare with this {@code SocketPermission}
      *            instance.
      * @return {@code true} if they represent the same permission, {@code false}
@@ -150,16 +150,16 @@ public final class SocketPermission extends Permission implements Serializable {
      * @see #hashCode
      */
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object other) {
+        if (this == other) {
             return true;
         }
-        if (o == null || this.getClass() != o.getClass()) {
+        if (other == null || this.getClass() != other.getClass()) {
             return false;
         }
-        SocketPermission sp = (SocketPermission) o;
-        if (!hostName.equals(sp.hostName)) {
-            if (getIPString() == null || !ipString.equals(sp.getIPString())) {
+        SocketPermission sp = (SocketPermission) other;
+        if (!hostName.equalsIgnoreCase(sp.hostName)) {
+            if (getIPString(true) == null || !ipString.equalsIgnoreCase(sp.getIPString(true))) {
                 return false;
             }
         }
@@ -379,10 +379,10 @@ public final class SocketPermission extends Permission implements Serializable {
         return actions = sb.substring(1, sb.length());
     }
 
-    private String getIPString() {
+    private String getIPString(boolean isCheck) {
         if (!resolved) {
             try {
-                ipString = InetAddress.getHostNameInternal(hostName);
+                ipString = InetAddress.getHostNameInternal(hostName, isCheck);
             } catch (UnknownHostException e) {
                 // ignore
             }
@@ -483,7 +483,7 @@ public final class SocketPermission extends Permission implements Serializable {
         }
         // The ipString may not be the same, some hosts resolve to
         // multiple ips
-        return (getIPString() != null && ipString.equals(sp.getIPString()))
+        return (getIPString(false) != null && ipString.equals(sp.getIPString(false)))
                 || hostName.equals(sp.hostName);
     }
 

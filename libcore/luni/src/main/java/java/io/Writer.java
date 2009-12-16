@@ -149,11 +149,7 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
      *             if this writer is closed or another I/O error occurs.
      */
     public void write(String str) throws IOException {
-        char buf[] = new char[str.length()];
-        str.getChars(0, buf.length, buf, 0);
-        synchronized (lock) {
-            write(buf);
-        }
+        write(str, 0, str.length());
     }
 
     /**
@@ -180,7 +176,7 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
         str.getChars(offset, offset + count, buf, 0);
 
         synchronized (lock) {
-            write(buf);
+            write(buf, 0, buf.length);
         }
     }
 
@@ -251,5 +247,13 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
             write(csq.subSequence(start, end).toString());
         }
         return this;
+    }
+
+    /**
+     * Returns true if this writer has encountered and suppressed an error. Used
+     * by PrintWriters as an alternative to checked exceptions.
+     */
+    boolean checkError() {
+        return false;
     }
 }

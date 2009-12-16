@@ -260,9 +260,14 @@ public class InputStreamReader extends Reader {
             while (out.hasRemaining()) {
                 // fill the buffer if needed
                 if (needInput) {
-                    if ((in.available() == 0) && (out.position() > offset)) {
-                        // we could return the result without blocking read
-                        break;
+                    try {
+                        if ((in.available() == 0) 
+                            && (out.position() > offset)) {
+                            // we could return the result without blocking read
+                            break;
+                        }
+                    } catch (IOException e) {
+                        // available didn't work so just try the read
                     }
 
                     int to_read = bytes.capacity() - bytes.limit();

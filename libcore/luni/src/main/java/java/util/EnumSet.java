@@ -118,7 +118,7 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
         if (c instanceof EnumSet) {
             return copyOf((EnumSet<E>) c);
         }
-        if (0 == c.size()) {
+        if (c.isEmpty()) {
             throw new IllegalArgumentException();
         }
         Iterator<E> iterator = c.iterator();
@@ -319,15 +319,13 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     @Override
     public EnumSet<E> clone() {
         try {
-            Object set = super.clone();
-            return (EnumSet<E>) set;
+            return (EnumSet<E>) super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new AssertionError(e); // android-changed
+            throw new AssertionError(e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    boolean isValidType(Class cls) {
+    boolean isValidType(Class<?> cls) {
         return cls == elementClass || cls.getSuperclass() == elementClass;
     }
 

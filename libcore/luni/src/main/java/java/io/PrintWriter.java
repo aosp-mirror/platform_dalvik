@@ -239,10 +239,13 @@ public class PrintWriter extends Writer {
      * @see #setError()
      */
     public boolean checkError() {
-        if (out != null) {
-            flush();
+        Writer delegate = out;
+        if (delegate == null) {
+            return ioError;
         }
-        return ioError;
+
+        flush();
+        return ioError || delegate.checkError();
     }
 
     /**
@@ -389,16 +392,6 @@ public class PrintWriter extends Writer {
     }
 
     /**
-     * Print a new line String onto the writer, flushing if autoflush enabled.
-     */
-    private void newline() {
-        print(lineSeparator);
-        if (autoflush) {
-            flush();
-        }
-    }
-
-    /**
      * Prints the string representation of the specified character array
      * to the target.
      *
@@ -510,7 +503,10 @@ public class PrintWriter extends Writer {
      */
     public void println() {
         synchronized (lock) {
-            newline();
+            print(lineSeparator);
+            if (autoflush) {
+                flush();
+            }
         }
     }
 
@@ -621,7 +617,7 @@ public class PrintWriter extends Writer {
     public void println(String str) {
         synchronized (lock) {
             print(str);
-            newline();
+            println();
         }
     }
 

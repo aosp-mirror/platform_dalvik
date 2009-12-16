@@ -133,4 +133,12 @@ public abstract class OutputStream implements Closeable, Flushable {
      *             if an error occurs while writing to this stream.
      */
     public abstract void write(int oneByte) throws IOException;
+
+    /**
+     * Returns true if this writer has encountered and suppressed an error. Used
+     * by PrintStreams as an alternative to checked exceptions.
+     */
+    boolean checkError() {
+        return false;
+    }
 }

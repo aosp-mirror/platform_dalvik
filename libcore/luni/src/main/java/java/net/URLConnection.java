@@ -232,9 +232,6 @@ public abstract class URLConnection {
 
         if (contentHandlerFactory != null) {
             cHandler = contentHandlerFactory.createContentHandler(type);
-            if (!(cHandler instanceof ContentHandler)) {
-                throw new UnknownServiceException();
-            }
             contentHandlers.put(type, cHandler);
             return (ContentHandler) cHandler;
         }
@@ -399,10 +396,12 @@ public abstract class URLConnection {
         // Must use lazy initialization or there is a bootstrap problem
         // trying to load the MimeTable resource from a .jar before
         // JarURLConnection has finished initialization.
-        if (fileNameMap == null) {
-            fileNameMap = new MimeTable();
+        synchronized (URLConnection.class) {
+            if (fileNameMap == null) {
+                fileNameMap = new MimeTable();
+            }
+            return fileNameMap;
         }
-        return fileNameMap;
     }
 
     /**
@@ -908,7 +907,9 @@ public abstract class URLConnection {
         if (manager != null) {
             manager.checkSetFactory();
         }
-        fileNameMap = map;
+        synchronized (URLConnection.class) {
+            fileNameMap = map;
+        }
     }
 
     /**

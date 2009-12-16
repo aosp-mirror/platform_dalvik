@@ -17,11 +17,6 @@
 
 package java.io;
 
-// BEGIN android-note
-// lots of tidying up of implementation, including renaming fields and changing
-// the implementation of read(char[], int, int)
-// END android-note
-
 import org.apache.harmony.luni.util.Msg;
 
 // BEGIN android-added
@@ -302,19 +297,9 @@ public class BufferedReader extends Reader {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005b")); //$NON-NLS-1$
             }
-            // BEGIN android-changed
-            // Exception priorities (in case of multiple errors) differ from
-            // RI, but are spec-compliant.
-            // made implicit null check explicit, used (offset | length) < 0
-            // instead of (offset < 0) || (length < 0) to safe one operation
-            if (buffer == null) {
-                throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+            if (offset < 0 || offset > buffer.length - length || length < 0) {
+                throw new IndexOutOfBoundsException();
             }
-            if ((offset | length) < 0 || offset > buffer.length - length) {
-                throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
-            }
-            // END android-changed
-
             int outstanding = length;
             while (outstanding > 0) {
 
@@ -367,6 +352,17 @@ public class BufferedReader extends Reader {
 
             int count = length - outstanding;
             return (count > 0 || count == length) ? count : -1;
+        }
+    }
+
+    /**
+     * Peeks at the next input character, refilling the buffer if necessary. If
+     * this character is a newline character ("\n"), it is discarded.
+     */
+    final void chompNewline() throws IOException {
+        if ((pos != end || fillBuf() != -1)
+                && buf[pos] == '\n') {
+            pos++;
         }
     }
 

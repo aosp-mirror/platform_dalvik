@@ -18,20 +18,18 @@ package java.util;
 
 
 /**
- * This is a concrete subclass of EnumSet designed specifically for enum type
- * with more than 64 elements.
- * 
+ * A concrete EnumSet for enums with more than 64 elements.
  */
 @SuppressWarnings("serial")
 final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
     
+    private static final int BIT_IN_LONG = 64;
+
     final private E[] enums;
     
     private long[] bits;
     
     private int size;
-    
-    private static final int BIT_IN_LONG = 64;
     
     // BEGIN android-changed
     /**
@@ -45,72 +43,79 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
         super(elementType);
         this.enums = enums;
         bits = new long[(enums.length + BIT_IN_LONG - 1) / BIT_IN_LONG];
-        Arrays.fill(bits, 0);
     }
     // END android-changed
     
     private class HugeEnumSetIterator implements Iterator<E> {
 
-        private long[] unProcessedBits;
-
-        private int bitsPosition = 0;
-
-        /*
-         * Mask for current element.
+        /**
+         * The bits yet to be returned for the long in bits[index]. As values from the current index
+         * are returned, their bits are zeroed out. When this reaches zero, the index must be
+         * incremented.
          */
-        private long currentElementMask = 0;
+        private long currentBits = bits[0];
 
-        boolean canProcess = true;
+        /**
+         * The index into HugeEnumSet.bits of the next value to return.
+         */
+        private int index;
+
+        /**
+         * The single bit of the next value to return.
+         */
+        private long mask;
+
+        /**
+         * The candidate for removal. If null, no value may be removed.
+         */
+        private E last;
 
         private HugeEnumSetIterator() {
-            unProcessedBits = new long[bits.length];
-            System.arraycopy(bits, 0, unProcessedBits, 0, bits.length);
-            bitsPosition = unProcessedBits.length;
-            findNextNoneZeroPosition(0);
-            if (bitsPosition == unProcessedBits.length) {
-                canProcess = false;
-            }
+            computeNextElement();
         }
 
-        private void findNextNoneZeroPosition(int start) {
-            for (int i = start; i < unProcessedBits.length; i++) {
-                if (0 != bits[i]) {
-                    bitsPosition = i;
-                    break;
+        /**
+         * Assigns mask and index to the next available value, cycling currentBits as necessary.
+         */
+        void computeNextElement() {
+            while (true) {
+                if (currentBits != 0) {
+                    mask = currentBits & -currentBits; // the lowest 1 bit in currentBits
+                    return;
+                } else if (++index < bits.length) {
+                    currentBits = bits[index];
+                } else {
+                    mask = 0;
+                    return;
                 }
             }
         }
 
         public boolean hasNext() {
-            return canProcess;
+            return mask != 0;
         }
 
         public E next() {
-            if (!canProcess) {
+            if (mask == 0) {
                 throw new NoSuchElementException();
             }
-            currentElementMask = unProcessedBits[bitsPosition]
-                    & (-unProcessedBits[bitsPosition]);
-            unProcessedBits[bitsPosition] -= currentElementMask;
-            int index = Long.numberOfTrailingZeros(currentElementMask)
-                    + bitsPosition * BIT_IN_LONG;
-            if (0 == unProcessedBits[bitsPosition]) {
-                int oldBitsPosition = bitsPosition;
-                findNextNoneZeroPosition(bitsPosition + 1);
-                if (bitsPosition == oldBitsPosition) {
-                    canProcess = false;
-                }
-            }
-            return enums[index];
+
+            int ordinal = Long.numberOfTrailingZeros(mask) + index * BIT_IN_LONG;
+            last = enums[ordinal];
+
+            currentBits &= ~mask;
+            computeNextElement();
+
+            return last;
         }
 
         public void remove() {
-            if (currentElementMask == 0) {
+            if (last == null) {
                 throw new IllegalStateException();
             }
-            bits[bitsPosition] &= ~currentElementMask;
-            size--;
-            currentElementMask = 0;
+
+            HugeEnumSet.this.remove(last);
+            last = null;
         }
     }
     
@@ -119,38 +124,44 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
         if (!isValidType(element.getDeclaringClass())) {
             throw new ClassCastException();
         }
-        calculateElementIndex(element);
 
-        bits[bitsIndex] |= (1l << elementInBits);
-        if (oldBits == bits[bitsIndex]) {
-            return false;
+        int ordinal = element.ordinal();
+        int index = ordinal / BIT_IN_LONG;
+        int inBits = ordinal % BIT_IN_LONG;
+        long oldBits = bits[index];
+        long newBits = oldBits | (1L << inBits);
+        if (oldBits != newBits) {
+            bits[index] = newBits;
+            size++;
+            return true;
         }
-        size++;
-        return true;
+        return false;
     }
     
     @Override
     public boolean addAll(Collection<? extends E> collection) {
-        if (0 == collection.size() || this == collection) {
+        if (collection.isEmpty() || collection == this) {
             return false;
         }
+
         if (collection instanceof EnumSet) {
-            EnumSet set = (EnumSet) collection;
+            EnumSet<?> set = (EnumSet) collection; // raw type due to javac bug 6548436
             if (!isValidType(set.elementClass)) {
                 throw new ClassCastException();
             }
-            HugeEnumSet hugeSet = (HugeEnumSet) set;
-            boolean addSuccessful = false;
+
+            HugeEnumSet<E> hugeSet = (HugeEnumSet<E>) set;
+            boolean changed = false;
             for (int i = 0; i < bits.length; i++) {
-                oldBits = bits[i];
-                bits[i] |= hugeSet.bits[i];
-                if (oldBits != bits[i]) {
-                    addSuccessful = true;
-                    size = size - Long.bitCount(oldBits)
-                            + Long.bitCount(bits[i]);
+                long oldBits = bits[i];
+                long newBits = oldBits | hugeSet.bits[i];
+                if (oldBits != newBits) {
+                    bits[i] = newBits;
+                    size += Long.bitCount(newBits) - Long.bitCount(oldBits);
+                    changed = true;
                 }
             }
-            return addSuccessful;
+            return changed;
         }
         return super.addAll(collection);
     }
@@ -168,61 +179,53 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
     
     @Override
     protected void complement() {
-        if (0 != enums.length) {
-            bitsIndex = enums.length / BIT_IN_LONG;
+        size = 0;
+        for (int i = 0, length = bits.length; i < length; i++) {
+            long b = ~bits[i];
 
-            size = 0;
-            int bitCount = 0;
-            for (int i = 0; i <= bitsIndex; i++) {
-                bits[i] = ~bits[i];
-                bitCount = Long.bitCount(bits[i]);
-                size += bitCount;
+            // zero out unused bits on the last element
+            if (i == length - 1) {
+                b &= -1L >>> (BIT_IN_LONG - (enums.length % BIT_IN_LONG));
             }
-            bits[bitsIndex] &= (-1l >>> (BIT_IN_LONG - enums.length
-                    % BIT_IN_LONG));
-            size -= bitCount;
-            bitCount = Long.bitCount(bits[bitsIndex]);
-            size += bitCount;
+
+            size += Long.bitCount(b);
+            bits[i] = b;
         }
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     public boolean contains(Object object) {
-        if (null == object) {
+        if (object == null || !isValidType(object.getClass())) {
             return false;
         }
-        if (!isValidType(object.getClass())) {
-            return false;
-        }
-        calculateElementIndex((E)object);
-        return (bits[bitsIndex] & (1l << elementInBits)) != 0;
+
+        @SuppressWarnings("unchecked") // guarded by isValidType()
+        int ordinal = ((E) object).ordinal();
+        int index = ordinal / BIT_IN_LONG;
+        int inBits = ordinal % BIT_IN_LONG;
+        return (bits[index] & (1L << inBits)) != 0;
     }
     
     @Override
-    @SuppressWarnings("unchecked")
     public HugeEnumSet<E> clone() {
-        Object set = super.clone();
-        if (null != set) {
-            ((HugeEnumSet<E>) set).bits = bits.clone();
-            return (HugeEnumSet<E>) set;
-        }
-        return null;
+        HugeEnumSet<E> set = (HugeEnumSet<E>) super.clone();
+        set.bits = bits.clone();
+        return set;
     }
     
     @Override
     public boolean containsAll(Collection<?> collection) {
-        if (collection.size() == 0) {
+        if (collection.isEmpty()) {
             return true;
         }
         if (collection instanceof HugeEnumSet) {
-            HugeEnumSet set = (HugeEnumSet) collection;
-            if(isValidType(set.elementClass )) {
-                for(int i = 0; i < bits.length; i++) {
-                    if((bits[i] & set.bits[i]) != set.bits[i]){
+            HugeEnumSet<?> set = (HugeEnumSet<?>) collection;
+            if (isValidType(set.elementClass)) {
+                for (int i = 0; i < bits.length; i++) {
+                    long setBits = set.bits[i];
+                    if ((bits[i] & setBits) != setBits) {
                         return false;
                     }
-                    
                 }
                 return true;
             }
@@ -232,13 +235,13 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
     
     @Override
     public boolean equals(Object object) {
-        if (null == object) {
+        if (object == null) {
             return false;
         }
         if (!isValidType(object.getClass())) {
             return super.equals(object);
         }
-        return Arrays.equals(bits, ((HugeEnumSet) object).bits);
+        return Arrays.equals(bits, ((HugeEnumSet<?>) object).bits);
     }
     
     @Override
@@ -248,38 +251,48 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
     
     @Override
     public boolean remove(Object object) {
-        if (!contains(object)) {
+        if (object == null || !isValidType(object.getClass())) {
             return false;
         }
-        bits[bitsIndex] -= (1l << elementInBits);
-        size--;
-        return true;
+
+        @SuppressWarnings("unchecked") // guarded by isValidType()
+        int ordinal = ((E) object).ordinal();
+        int index = ordinal / BIT_IN_LONG;
+        int inBits = ordinal % BIT_IN_LONG;
+        long oldBits = bits[index];
+        long newBits = oldBits & ~(1L << inBits);
+        if (oldBits != newBits) {
+            bits[index] = newBits;
+            size--;
+            return true;
+        }
+        return false;
     }
     
     @Override
     public boolean removeAll(Collection<?> collection) {
-        if (0 == collection.size()) {
+        if (collection.isEmpty()) {
             return false;
         }
         
         if (collection instanceof EnumSet) {
-            EnumSet<E> set = (EnumSet<E>) collection;
+            EnumSet<?> set = (EnumSet<?>) collection;
             if (!isValidType(set.elementClass)) {
                 return false;
             }
-            boolean removeSuccessful = false;
-            long mask = 0;
+
+            HugeEnumSet<E> hugeSet = (HugeEnumSet<E>) set;
+            boolean changed = false;
             for (int i = 0; i < bits.length; i++) {
-                oldBits = bits[i];
-                mask = bits[i] & ((HugeEnumSet<E>) set).bits[i];
-                if (mask != 0) {
-                    bits[i] -= mask;
-                    size = (size - Long.bitCount(oldBits) + Long
-                            .bitCount(bits[i]));
-                    removeSuccessful = true;
+                long oldBits = bits[i];
+                long newBits = oldBits & ~hugeSet.bits[i];
+                if (oldBits != newBits) {
+                    bits[i] = newBits;
+                    size += Long.bitCount(newBits) - Long.bitCount(oldBits);
+                    changed = true;
                 }
             }
-            return removeSuccessful;
+            return changed;
         }
         return super.removeAll(collection);
     }
@@ -287,72 +300,65 @@ final class HugeEnumSet<E extends Enum<E>> extends EnumSet<E> {
     @Override
     public boolean retainAll(Collection<?> collection) {
         if (collection instanceof EnumSet) {
-            EnumSet<E> set = (EnumSet<E>) collection;
+            EnumSet<?> set = (EnumSet<?>) collection;
             if (!isValidType(set.elementClass)) {
-                clear();
-                return true;
-            }
-
-            boolean retainSuccessful = false;
-            oldBits = 0;
-            for (int i = 0; i < bits.length; i++) {
-                oldBits = bits[i];
-                bits[i] &= ((HugeEnumSet<E>) set).bits[i];
-                if (oldBits != bits[i]) {
-                    size = size - Long.bitCount(oldBits)
-                            + Long.bitCount(bits[i]);
-                    retainSuccessful = true;
+                if (size > 0) {
+                    clear();
+                    return true;
+                } else {
+                    return false;
                 }
             }
-            return retainSuccessful;
+
+            HugeEnumSet<E> hugeSet = (HugeEnumSet<E>) set;
+            boolean changed = false;
+            for (int i = 0; i < bits.length; i++) {
+                long oldBits = bits[i];
+                long newBits = oldBits & hugeSet.bits[i];
+                if (oldBits != newBits) {
+                    bits[i] = newBits;
+                    size += Long.bitCount(newBits) - Long.bitCount(oldBits);
+                    changed = true;
+                }
+            }
+            return changed;
         }
         return super.retainAll(collection);
     }
     
     @Override
     void setRange(E start, E end) {
-        calculateElementIndex(start);
-        int startBitsIndex = bitsIndex;
-        int startElementInBits = elementInBits;
-        calculateElementIndex(end);
-        int endBitsIndex = bitsIndex;
-        int endElementInBits = elementInBits;
-        long range = 0;
-        if (startBitsIndex == endBitsIndex) {
-            range = (-1l >>> (BIT_IN_LONG -(endElementInBits - startElementInBits + 1))) << startElementInBits;
-            size -= Long.bitCount(bits[bitsIndex]);
-            bits[bitsIndex] |= range;
-            size += Long.bitCount(bits[bitsIndex]);
-        } else {
-            range = (-1l >>> startElementInBits) << startElementInBits;
-            size -= Long.bitCount(bits[startBitsIndex]);
-            bits[startBitsIndex] |= range;
-            size += Long.bitCount(bits[startBitsIndex]);
+        int startOrdinal = start.ordinal();
+        int startIndex = startOrdinal / BIT_IN_LONG;
+        int startInBits = startOrdinal % BIT_IN_LONG;
 
-            // endElementInBits + 1 is the number of consecutive ones.
-            // 63 - endElementInBits is the following zeros of the right most one.
-            range = -1l >>> (BIT_IN_LONG - (endElementInBits + 1));
-            size -= Long.bitCount(bits[endBitsIndex]);
-            bits[endBitsIndex] |= range;
-            size += Long.bitCount(bits[endBitsIndex]);
-            for(int i = (startBitsIndex + 1); i <= (endBitsIndex - 1); i++) {
+        int endOrdinal = end.ordinal();
+        int endIndex = endOrdinal / BIT_IN_LONG;
+        int endInBits = endOrdinal % BIT_IN_LONG;
+
+        if (startIndex == endIndex) {
+            long range = (-1L >>> (BIT_IN_LONG -(endInBits - startInBits + 1))) << startInBits;
+            size -= Long.bitCount(bits[startIndex]);
+            bits[startIndex] |= range;
+            size += Long.bitCount(bits[startIndex]);
+
+        } else {
+            long range = (-1L >>> startInBits) << startInBits;
+            size -= Long.bitCount(bits[startIndex]);
+            bits[startIndex] |= range;
+            size += Long.bitCount(bits[startIndex]);
+
+            // endInBits + 1 is the number of consecutive ones.
+            // 63 - endInBits is the following zeros of the right most one.
+            range = -1L >>> (BIT_IN_LONG - (endInBits + 1));
+            size -= Long.bitCount(bits[endIndex]);
+            bits[endIndex] |= range;
+            size += Long.bitCount(bits[endIndex]);
+            for (int i = (startIndex + 1); i <= (endIndex - 1); i++) {
                 size -= Long.bitCount(bits[i]);
-                bits[i] = -1l;
+                bits[i] = -1L;
                 size += Long.bitCount(bits[i]);
             }
         }
     }
-    
-    private void calculateElementIndex(E element) {
-        int elementOrdinal = element.ordinal();
-        bitsIndex = elementOrdinal / BIT_IN_LONG;
-        elementInBits = elementOrdinal % BIT_IN_LONG;
-        oldBits = bits[bitsIndex];
-    }
-    
-    private int bitsIndex;
-
-    private int elementInBits;
-
-    private long oldBits;
 }

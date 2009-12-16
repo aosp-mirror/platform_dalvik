@@ -106,6 +106,10 @@ public class BufferedOutputStream extends FilterOutputStream {
      */
     @Override
     public synchronized void flush() throws IOException {
+        if (buf == null) {
+            throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
+        }
+
         flushInternal();
         out.flush();
     }
@@ -138,12 +142,17 @@ public class BufferedOutputStream extends FilterOutputStream {
     @Override
     public synchronized void write(byte[] buffer, int offset, int length)
             throws IOException {
+        byte[] internalBuffer = buf;
+        if (internalBuffer == null) {
+            throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
+        }
+
         if (buffer == null) {
             // K0047=buffer is null
             throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
-
-        if (length >= buf.length) {
+        
+        if (length >= internalBuffer.length) {
             flushInternal();
             out.write(buffer, offset, length);
             return;
@@ -160,13 +169,25 @@ public class BufferedOutputStream extends FilterOutputStream {
         }
 
         // flush the internal buffer first if we have not enough space left
-        if (length >= (buf.length - count)) {
+        if (length >= (internalBuffer.length - count)) {
             flushInternal();
         }
 
-        // the length is always less than (buf.length - count) here so arraycopy is safe
-        System.arraycopy(buffer, offset, buf, count, length);
+        // the length is always less than (internalBuffer.length - count) here so arraycopy is safe
+        System.arraycopy(buffer, offset, internalBuffer, count, length);
         count += length;
+    }
+
+    @Override public synchronized void close() throws IOException {
+        if (buf == null) {
+            return;
+        }
+        
+        try {
+            super.close();
+        } finally {
+            buf = null;
+        }
     }
 
     /**
@@ -183,11 +204,16 @@ public class BufferedOutputStream extends FilterOutputStream {
      */
     @Override
     public synchronized void write(int oneByte) throws IOException {
-        if (count == buf.length) {
-            out.write(buf, 0, count);
+        byte[] internalBuffer = buf;
+        if (internalBuffer == null) {
+            throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
+        }
+
+        if (count == internalBuffer.length) {
+            out.write(internalBuffer, 0, count);
             count = 0;
         }
-        buf[count++] = (byte) oneByte;
+        internalBuffer[count++] = (byte) oneByte;
     }
 
     /**
@@ -196,7 +222,7 @@ public class BufferedOutputStream extends FilterOutputStream {
     private void flushInternal() throws IOException {
         if (count > 0) {
             out.write(buf, 0, count);
+            count = 0;
         }
-        count = 0;
     }
 }

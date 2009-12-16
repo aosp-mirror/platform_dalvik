@@ -25,6 +25,7 @@ import dalvik.annotation.TestTargetClass;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 @TestTargetClass(Timer.class) 
 public class TimerTest extends junit.framework.TestCase {
@@ -1262,6 +1263,25 @@ public class TimerTest extends junit.framework.TestCase {
             if (t != null)
                 t.cancel();
         }
+    }
+
+    /**
+     * We used to swallow RuntimeExceptions thrown by tasks. Instead, we need to
+     * let those exceptions bubble up, where they will both notify the thread's
+     * uncaught exception handler and terminate the timer's thread.
+     */
+    public void testThrowingTaskKillsTimerThread() throws InterruptedException {
+        final AtomicReference<Thread> threadRef = new AtomicReference<Thread>();
+        new Timer().schedule(new TimerTask() {
+            @Override public void run() {
+                threadRef.set(Thread.currentThread());
+                throw new RuntimeException("task failure!");
+            }
+        }, 1);
+
+        Thread.sleep(400);
+        Thread timerThread = threadRef.get();
+        assertFalse(timerThread.isAlive());
     }
 
     protected void setUp() {

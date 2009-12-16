@@ -403,7 +403,7 @@ public abstract class URLStreamHandler {
      */
     protected boolean hostsEqual(URL url1, URL url2) {
         String host1 = getHost(url1), host2 = getHost(url2);
-        if (host1 == host2 || (host1 != null && host1.equalsIgnoreCase(host2))) {
+        if (host1 != null && host1.equalsIgnoreCase(host2)) {
             return true;
         }
         // Compare host address if the host name is not equal.
