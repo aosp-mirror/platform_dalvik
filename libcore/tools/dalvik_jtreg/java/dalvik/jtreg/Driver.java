@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -89,8 +88,7 @@ final class Driver {
 
         // build and install tests in a background thread. Using lots of
         // threads helps for packages that contain many unsupported tests
-        ExecutorService builders = Executors.newFixedThreadPool(
-                Runtime.getRuntime().availableProcessors());
+        ExecutorService builders = Threads.threadPerCpuExecutor();
         for (final TestRun testRun : tests) {
             builders.submit(new Runnable() {
                 public void run() {

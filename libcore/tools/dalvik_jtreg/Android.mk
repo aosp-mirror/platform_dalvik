@@ -33,6 +33,7 @@ LOCAL_SRC_FILES := \
         java/dalvik/jtreg/TestRun.java \
         java/dalvik/jtreg/TestFinder.java \
         java/dalvik/jtreg/TestRunner.java \
+        java/dalvik/jtreg/Threads.java \
         java/dalvik/jtreg/Vm.java \
         java/dalvik/jtreg/XmlReportPrinter.java \
 

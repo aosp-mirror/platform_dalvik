@@ -44,7 +44,7 @@ public final class TestRun {
     private final String qualifiedName;
     private final String description;
 
-    private Classpath testClasses;
+    private Classpath testClasspath;
     private File userDir = new File(System.getProperty("user.dir"));
 
     private ExpectedResult expectedResult = ExpectedResult.SUCCESS;
@@ -121,12 +121,12 @@ public final class TestRun {
      * Initializes the path to the jar file or directory containing test
      * classes.
      */
-    public void setTestClasses(Classpath classes) {
-        this.testClasses = classes;
+    public void setTestClasspath(Classpath classpath) {
+        this.testClasspath = classpath;
     }
 
-    public Classpath getTestClasses() {
-        return testClasses;
+    public Classpath getTestClasspath() {
+        return testClasspath;
     }
 
     /**
@@ -141,10 +141,11 @@ public final class TestRun {
     }
 
     /**
-     * Returns true if this test is ready for execution.
+     * Returns true if this test is ready for execution. Such tests have their
+     * classpath prepared and have not yet been assigned a result.
      */
     public boolean isRunnable() {
-        return testClasses != null;
+        return testClasspath != null && result == null;
     }
 
     public void setResult(Result result, Throwable e) {

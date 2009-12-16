@@ -56,7 +56,8 @@ public abstract class Vm {
 
     private static final Logger logger = Logger.getLogger(Vm.class.getName());
 
-    protected final ExecutorService outputReaders = Executors.newFixedThreadPool(1);
+    protected final ExecutorService outputReaders
+            = Executors.newFixedThreadPool(1, Threads.daemonThreadFactory());
 
     protected final Integer debugPort;
     protected final long timeoutSeconds;
@@ -123,7 +124,7 @@ public abstract class Vm {
             testRun.setResult(Result.ERROR, e);
             return;
         }
-        testRun.setTestClasses(testClasses);
+        testRun.setTestClasspath(testClasses);
     }
 
     /**
@@ -177,7 +178,7 @@ public abstract class Vm {
         }
 
         final Command command = newVmCommandBuilder()
-                .classpath(testRun.getTestClasses())
+                .classpath(testRun.getTestClasspath())
                 .classpath(testRunnerClasses)
                 .classpath(getRuntimeSupportClasspath())
                 .userDir(testRun.getUserDir())
