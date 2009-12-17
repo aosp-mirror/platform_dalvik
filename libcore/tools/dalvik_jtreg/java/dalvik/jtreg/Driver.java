@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -89,7 +90,9 @@ final class Driver {
         // build and install tests in a background thread. Using lots of
         // threads helps for packages that contain many unsupported tests
         ExecutorService builders = Threads.threadPerCpuExecutor();
+        int t = 0;
         for (final TestRun testRun : tests) {
+            final int runIndex = t++;
             builders.submit(new Runnable() {
                 public void run() {
                     try {
@@ -99,6 +102,8 @@ final class Driver {
                         testRun.setResult(Result.ERROR, throwable);
                     }
                     try {
+                        logger.fine("installed test " + runIndex + "; "
+                                + readyToRun.size() + " are ready to run");
                         readyToRun.put(testRun);
                     } catch (InterruptedException e) {
                         logger.log(Level.SEVERE, "Unexpected interruption", e);
@@ -114,7 +119,16 @@ final class Driver {
 
         List<TestRun> runs = new ArrayList<TestRun>(tests.size());
         for (int i = 0; i < tests.size(); i++) {
-            TestRun testRun = readyToRun.take();
+            logger.fine("executing test " + i + "; "
+                    + readyToRun.size() + " are ready to run");
+
+            // if it takes 5 minutes for build and install, something is broken
+            TestRun testRun = readyToRun.poll(300, TimeUnit.SECONDS);
+            if (testRun == null) {
+                throw new IllegalStateException(
+                        "Expected " + tests.size() + " tests but found only " + i);
+            }
+
             runs.add(testRun);
 
             if (testRun.getResult() == Result.UNSUPPORTED) {
