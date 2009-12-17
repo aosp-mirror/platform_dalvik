@@ -531,7 +531,7 @@ public final class Long extends Number implements Comparable<Long> {
             buf[--cursor] = (char) (midDigit + '0');
 
             // Exact division as per Warren 10-20
-            int rest = ((int) ((n - midDigit) >> 1)) * 0xCCCCCCCD;
+            int rest = ((int) ((n - midDigit) >>> 1)) * 0xCCCCCCCD;
             cursor = intIntoCharArray(buf, cursor, rest);
         }
 
@@ -740,19 +740,19 @@ public final class Long extends Number implements Comparable<Long> {
             n +=  32;
             i = (int) v;
         }
-        if (i >> 16 == 0) {
+        if (i >>> 16 == 0) {
             n +=  16;
             i <<= 16;
         }
-        if (i >> 24 == 0) {
+        if (i >>> 24 == 0) {
             n +=  8;
             i <<= 8;
         }
-        if (i >> 28 == 0) {
+        if (i >>> 28 == 0) {
             n +=  4;
             i <<= 4;
         }
-        if (i >> 30 == 0) {
+        if (i >>> 30 == 0) {
             n +=  2;
             i <<= 2;
         }
@@ -786,9 +786,9 @@ public final class Long extends Number implements Comparable<Long> {
     public static int bitCount(long v) {
         // Combines techniques from several sources
         v -=  (v >>> 1) & 0x5555555555555555L;
-        v = (v & 0x3333333333333333L) + ((v >> 2) & 0x3333333333333333L);
+        v = (v & 0x3333333333333333L) + ((v >>> 2) & 0x3333333333333333L);
         int i =  ((int)(v >>> 32)) + (int) v;
-        i = (i & 0x0F0F0F0F) + ((i >> 4) & 0x0F0F0F0F);
+        i = (i & 0x0F0F0F0F) + ((i >>> 4) & 0x0F0F0F0F);
         i += i >>> 8;
         i += i >>> 16;
         return i  & 0x0000007F;
@@ -854,9 +854,9 @@ public final class Long extends Number implements Comparable<Long> {
     public static long reverseBytes(long v) {
         // Hacker's Delight 7-1, with minor tweak from Veldmeijer
         // http://graphics.stanford.edu/~seander/bithacks.html
-        v = ((v >> 8) & 0x00FF00FF00FF00FFL) | ((v & 0x00FF00FF00FF00FFL) << 8);
-        v = ((v >>16) & 0x0000FFFF0000FFFFL) | ((v & 0x0000FFFF0000FFFFL) <<16);
-        return ((v >>32)                   ) | ((v                      ) <<32);
+        v = ((v >>> 8) & 0x00FF00FF00FF00FFL) | ((v & 0x00FF00FF00FF00FFL) << 8);
+        v = ((v >>>16) & 0x0000FFFF0000FFFFL) | ((v & 0x0000FFFF0000FFFFL) <<16);
+        return ((v >>>32)                   ) | ((v                      ) <<32);
     }
 
     /**
@@ -870,12 +870,12 @@ public final class Long extends Number implements Comparable<Long> {
     public static long reverse(long v) {
         // Hacker's Delight 7-1, with minor tweak from Veldmeijer
         // http://graphics.stanford.edu/~seander/bithacks.html
-        v = ((v >> 1) & 0x5555555555555555L) | ((v & 0x5555555555555555L) << 1);
-        v = ((v >> 2) & 0x3333333333333333L) | ((v & 0x3333333333333333L) << 2);
-        v = ((v >> 4) & 0x0F0F0F0F0F0F0F0FL) | ((v & 0x0F0F0F0F0F0F0F0FL) << 4);
-        v = ((v >> 8) & 0x00FF00FF00FF00FFL) | ((v & 0x00FF00FF00FF00FFL) << 8);
-        v = ((v >>16) & 0x0000FFFF0000FFFFL) | ((v & 0x0000FFFF0000FFFFL) <<16);
-        return ((v >>32)                   ) | ((v                      ) <<32);
+        v = ((v >>> 1) & 0x5555555555555555L) | ((v & 0x5555555555555555L) << 1);
+        v = ((v >>> 2) & 0x3333333333333333L) | ((v & 0x3333333333333333L) << 2);
+        v = ((v >>> 4) & 0x0F0F0F0F0F0F0F0FL) | ((v & 0x0F0F0F0F0F0F0F0FL) << 4);
+        v = ((v >>> 8) & 0x00FF00FF00FF00FFL) | ((v & 0x00FF00FF00FF00FFL) << 8);
+        v = ((v >>>16) & 0x0000FFFF0000FFFFL) | ((v & 0x0000FFFF0000FFFFL) <<16);
+        return ((v >>>32)                   ) | ((v                      ) <<32);
     }
 
     /**
