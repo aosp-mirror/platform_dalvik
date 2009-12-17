@@ -17,7 +17,6 @@
 package dalvik.jtreg;
 
 import java.io.File;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 /**
@@ -32,18 +31,17 @@ final class DeviceDalvikVm extends Vm {
             new File("/system/framework/jsr305.jar"));
 
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
-    private final File deviceTemp = new File("/data/jtreg" + UUID.randomUUID());
+    private final File runnerDir = new File("/sdcard/dalvikrunner");
+    private final File testTemp = new File(runnerDir, "/tests.tmp");
 
     private final Adb adb = new Adb();
-    private final File testTemp;
 
     DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp) {
         super(debugPort, timeoutSeconds, sdkJar, localTemp);
-        this.testTemp = new File(deviceTemp, "/tests.tmp");
     }
 
     @Override public void prepare() {
-        adb.mkdir(deviceTemp);
+        adb.rm(runnerDir);
         adb.mkdir(testTemp);
         if (debugPort != null) {
             adb.forwardTcp(debugPort, debugPort);
@@ -59,7 +57,7 @@ final class DeviceDalvikVm extends Vm {
         new Dx().dex(localDex.toString(), targetClasses);
 
         // post the local dex to the device
-        File deviceDex = new File(deviceTemp, localDex.getName());
+        File deviceDex = new File(runnerDir, localDex.getName());
         adb.push(localDex, deviceDex);
 
         return Classpath.of(deviceDex);
@@ -67,16 +65,26 @@ final class DeviceDalvikVm extends Vm {
 
     @Override public void shutdown() {
         super.shutdown();
-        adb.rm(deviceTemp);
+        adb.rm(runnerDir);
     }
 
     @Override public void buildAndInstall(TestRun testRun) {
         super.buildAndInstall(testRun);
 
-        File base = new File(deviceTemp, testRun.getQualifiedName());
-        adb.mkdir(base);
-        adb.push(testRun.getTestDirectory(), base);
-        testRun.setUserDir(base);
+        File testClassesDirOnDevice = testClassesDirOnDevice(testRun);
+        adb.mkdir(testClassesDirOnDevice);
+        adb.push(testRun.getTestDirectory(), testClassesDirOnDevice);
+        testRun.setUserDir(testClassesDirOnDevice);
+    }
+
+    @Override public void cleanup(TestRun testRun) {
+        super.cleanup(testRun);
+
+        adb.rm(testClassesDirOnDevice(testRun));
+    }
+
+    private File testClassesDirOnDevice(TestRun testRun) {
+        return new File(runnerDir, testRun.getQualifiedName());
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder() {

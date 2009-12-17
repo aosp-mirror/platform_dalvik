@@ -46,6 +46,12 @@ final class Driver {
     private final Vm vm;
     private final File xmlReportsDirectory;
 
+    /**
+     * The number of tests that weren't run because they aren't supported by
+     * this runner.
+     */
+    private int unsupportedTests = 0;
+
     public Driver(File localTemp, Vm vm, Set<File> expectationDirs,
             File xmlReportsDirectory, JtregFinder jtregFinder,
             JUnitFinder junit, CaliperFinder caliperFinder) {
@@ -115,8 +121,6 @@ final class Driver {
 
         vm.prepare();
 
-        int unsupportedTests = 0;
-
         List<TestRun> runs = new ArrayList<TestRun>(tests.size());
         for (int i = 0; i < tests.size(); i++) {
             logger.fine("executing test " + i + "; "
@@ -130,18 +134,8 @@ final class Driver {
             }
 
             runs.add(testRun);
-
-            if (testRun.getResult() == Result.UNSUPPORTED) {
-                logger.fine("skipping " + testRun.getQualifiedName());
-                unsupportedTests++;
-                continue;
-            }
-
-            if (testRun.isRunnable()) {
-                vm.runTest(testRun);
-            }
-
-            printResult(testRun);
+            execute(testRun);
+            vm.cleanup(testRun);
         }
 
         if (unsupportedTests > 0) {
@@ -153,6 +147,23 @@ final class Driver {
             int numFiles = new XmlReportPrinter().generateReports(xmlReportsDirectory, runs);
             logger.info(numFiles + " XML files written.");
         }
+    }
+
+    /**
+     * Executes a single test and then prints the result.
+     */
+    private void execute(TestRun testRun) {
+        if (testRun.getResult() == Result.UNSUPPORTED) {
+            logger.fine("skipping " + testRun.getQualifiedName());
+            unsupportedTests++;
+            return;
+        }
+
+        if (testRun.isRunnable()) {
+            vm.runTest(testRun);
+        }
+
+        printResult(testRun);
     }
 
     private void printResult(TestRun testRun) {
