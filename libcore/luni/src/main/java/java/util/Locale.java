@@ -36,11 +36,32 @@ import com.ibm.icu4jni.util.Resources;
 // END android-changed
 
 /**
- * {@code Locale} represents a language/country/variant combination. It is an identifier
- * which dictates particular conventions for the presentation of information.
- * The language codes are two letter lowercase codes as defined by ISO-639. The
- * country codes are three letter uppercase codes as defined by ISO-3166. The
- * variant codes are unspecified.
+ * {@code Locale} represents a language/country/variant combination. Locales are used to
+ * alter the presentation of information such as numbers or dates to suit the conventions
+ * in the region they describe.
+ *
+ * <p>The language codes are two-letter lowercase ISO language codes (such as "en") as defined by
+ * <a href="http://en.wikipedia.org/wiki/ISO_639-1">ISO 639-1</a>.
+ * The country codes are two-letter uppercase ISO country codes (such as "US") as defined by
+ * <a href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO 3166-1</a>.
+ * The variant codes are unspecified.
+ *
+ * <p>Note that Java uses several deprecated two-letter codes. The Hebrew ("he") language
+ * code is rewritten as "iw", Indonesian ("id") as "in", and Yiddish ("yi") as "ji". This
+ * is true even if you construct your own {@code Locale} object, not just of instances returned by
+ * the various lookup methods.
+ *
+ * <p>Just because you can create a {@code Locale} doesn't mean that it makes much sense.
+ * Imagine "de_US" for German as spoken in the US, for example. It is also a mistake to
+ * assume that all devices have the same locales available. A device sold in the US will
+ * almost certainly support en_US and sp_US (English and Spanish, as spoken in the US),
+ * but not necessarily en_GB or sp_SP (English as spoken in Great Britain or Spanish as
+ * spoken in Spain), for example. The opposite may well be true for a device sold in Europe.
+ * (This limitation even affects those locales pre-defined as constants in this class.)
+ *
+ * <p>You can use {@code getDefault} to get an appropriate locale for the device you're
+ * running on, or {@code getAvailableLocales} to get a list of all the locales available
+ * on the device you're running on.
  *
  * @see ResourceBundle
  */
@@ -331,13 +352,13 @@ public final class Locale implements Cloneable, Serializable {
     }
     // END android-added
 
-	/**
-     * Gets the list of installed {@code Locale}. At least a {@code Locale} that is equal to
+    /**
+     * Gets the list of installed {@code Locale}s. At least a {@code Locale} that is equal to
      * {@code Locale.US} must be contained in this array.
-     *
+     * 
      * @return an array of {@code Locale}s.
-	 */
-	public static Locale[] getAvailableLocales() {
+     */
+    public static Locale[] getAvailableLocales() {
         // BEGIN android-changed
         // ULocale[] ulocales =  ULocale.getAvailableLocales();
         // Locale[] locales = new Locale[ulocales.length];
@@ -350,7 +371,7 @@ public final class Locale implements Cloneable, Serializable {
         }
         return availableLocales.clone();
         // END android-changed
-	}
+    }
 
     /**
      * Gets the country code for this {@code Locale} or an empty string of no country
@@ -670,14 +691,14 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Returns the string representation of this {@code Locale}. It consists of the
-     * language followed by the country and at the end the variant. They are
-     * separated by underscores. If the language is missing the string begins
+     * language code, country code and variant separated by underscores.
+     * If the language is missing the string begins
      * with an underscore. If the country is missing there are 2 underscores
-     * between the language and the variant. the variant alone canot be defined
-     * without a language and/or a country (in this case this method would
-     * return the empty string).
+     * between the language and the variant. The variant cannot stand alone
+     * without a language and/or country code: in this case this method would
+     * return the empty string.
      *
-     * Examples: "en", "en_US", "_US", "en__POSIX", "en_US_POSIX"
+     * <p>Examples: "en", "en_US", "_US", "en__POSIX", "en_US_POSIX"
      *
      * @return the string representation of this {@code Locale}.
      */
