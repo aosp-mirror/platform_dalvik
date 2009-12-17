@@ -3545,6 +3545,11 @@ static jobject NewDirectByteBuffer(JNIEnv* env, void* address, jlong capacity)
     Object* platformAddress = NULL;
     JValue callResult;
     jobject result = NULL;
+    ClassObject* tmpClazz;
+
+    tmpClazz = gDvm.methOrgApacheHarmonyLuniPlatformPlatformAddress_on->clazz;
+    if (!dvmIsClassInitialized(tmpClazz) && !dvmInitClass(tmpClazz))
+        goto bail;
 
     /* get an instance of PlatformAddress that wraps the provided address */
     dvmCallMethod(self,
@@ -3559,10 +3564,10 @@ static jobject NewDirectByteBuffer(JNIEnv* env, void* address, jlong capacity)
     LOGV("tracking %p for address=%p\n", platformAddress, address);
 
     /* create an instance of java.nio.ReadWriteDirectByteBuffer */
-    ClassObject* clazz = gDvm.classJavaNioReadWriteDirectByteBuffer;
-    if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
+    tmpClazz = gDvm.classJavaNioReadWriteDirectByteBuffer;
+    if (!dvmIsClassInitialized(tmpClazz) && !dvmInitClass(tmpClazz))
         goto bail;
-    Object* newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
+    Object* newObj = dvmAllocObject(tmpClazz, ALLOC_DONT_TRACK);
     if (newObj != NULL) {
         /* call the (PlatformAddress, int, int) constructor */
         result = addLocalReference(env, newObj);

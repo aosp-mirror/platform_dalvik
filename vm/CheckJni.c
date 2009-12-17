@@ -85,12 +85,13 @@ static void checkCallResultCommon(const u4* args, JValue* pResult,
          *
          * Since we're returning an instance of declType, it's safe to
          * assume that it has been loaded and initialized (or, for the case
-         * of an array, generated), so we can just look for it in the
-         * loaded-classes list.
+         * of an array, generated).  However, the current class loader may
+         * not be listed as an initiating loader, so we can't just look for
+         * it in the loaded-classes list.
          */
         ClassObject* declClazz;
 
-        declClazz = dvmLookupClass(declType, method->clazz->classLoader, false);
+        declClazz = dvmFindClassNoInit(declType, method->clazz->classLoader);
         if (declClazz == NULL) {
             LOGW("JNI WARNING: method declared to return '%s' returned '%s'\n",
                 declType, objType);
