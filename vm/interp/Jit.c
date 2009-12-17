@@ -397,7 +397,7 @@ done:
         gDvmJit.pJitEntryTable = pJitTable;
         gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
         gDvmJit.jitTableEntriesUsed = 0;
-        gDvmJit.pProfTableCopy = gDvmJit.pProfTable = pJitProfTable;
+        gDvmJit.pProfTable = pJitProfTable;
         dvmUnlockMutex(&gDvmJit.tableLock);
     }
     return res;
@@ -420,7 +420,7 @@ void dvmJitStopTranslationRequests()
      * bytes, and no further attempt will be made to re-allocate it.  Can't
      * free it because some thread may be holding a reference.
      */
-    gDvmJit.pProfTable = gDvmJit.pProfTableCopy = NULL;
+    gDvmJit.pProfTable = NULL;
 }
 
 #if defined(EXIT_STATS)
