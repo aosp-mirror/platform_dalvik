@@ -17,6 +17,7 @@
 
 package tests.api.java.util;
 
+import tests.support.Support_Locale;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
@@ -216,6 +217,10 @@ public class CurrencyTest extends junit.framework.TestCase {
 
                 new Locale("da", ""), new Locale("ja", ""),
                 new Locale("en", "")};
+        if (!Support_Locale.areLocalesAvailable(loc1)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
                 
         String[] euro    = new String[] {"EUR", "\u20ac"};
         // \u00a5 and \uffe5 are actually the same symbol, just different code points.

@@ -17,12 +17,12 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.AndroidOnly;
+import tests.support.Support_Locale;
 
 import java.security.Permission;
 import java.util.Arrays;
@@ -258,8 +258,12 @@ public class LocaleTest extends junit.framework.TestCase {
         method = "getDisplayCountry",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayCountryLjava_util_Locale() {
+        Locale[] requiredLocales = {Locale.ITALY};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // Test for method java.lang.String
         // java.util.Locale.getDisplayCountry(java.util.Locale)
         assertEquals("Returned incorrect country", "Italie", Locale.ITALY
@@ -296,8 +300,12 @@ public class LocaleTest extends junit.framework.TestCase {
         method = "getDisplayLanguage",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayLanguageLjava_util_Locale() {
+        Locale[] requiredLocales = {testLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // Test for method java.lang.String
         // java.util.Locale.getDisplayLanguage(java.util.Locale)
         assertTrue("Returned incorrect language: "
@@ -329,8 +337,12 @@ public class LocaleTest extends junit.framework.TestCase {
         method = "getDisplayName",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayNameLjava_util_Locale() {
+        Locale[] requiredLocales = {testLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // Test for method java.lang.String
         // java.util.Locale.getDisplayName(java.util.Locale)
         assertTrue("Returned incorrect name: " + testLocale.getDisplayName(l),
