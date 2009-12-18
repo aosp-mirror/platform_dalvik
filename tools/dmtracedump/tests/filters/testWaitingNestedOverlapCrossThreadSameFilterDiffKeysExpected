@@ -1,0 +1,232 @@
+<html>
+<head>
+<script type="text/javascript" src="(null)sortable.js"></script>
+<script langugage="javascript">
+function toggle(item) {
+    obj=document.getElementById(item);
+    visible=(obj.style.display!="none" && obj.style.display!="");
+    key=document.getElementById("x" + item);
+    if (visible) {
+        obj.style.display="none";
+        key.innerHTML="+";
+    } else {
+        obj.style.display="block";
+        key.innerHTML="-";
+    }
+}
+function onMouseOver(obj) {
+    obj.style.background="lightblue";
+}
+function onMouseOut(obj) {
+    obj.style.background="white";
+}
+</script>
+<style type="text/css">
+div { font-family: courier; font-size: 13 }
+div.parent { margin-left: 15; display: none }
+div.leaf { margin-left: 10 }
+div.header { margin-left: 10 }
+div.link { margin-left: 10; cursor: move }
+span.parent { padding-right: 10; }
+span.leaf { padding-right: 10; }
+a img { border: 0;}
+table.sortable th { border-width: 0px 1px 1px 1px; background-color: #ccc;}
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+table.sortable th, table.sortable td { text-align: left;}table.sortable tr.odd td { background-color: #ddd; }
+table.sortable tr.even td { background-color: #fff; }
+</style>
+</head><body>
+
+<a name="contents"></a>
+<h2>Table of Contents</h2>
+<ul>
+  <li><a href="#exclusive">Exclusive profile</a></li>
+  <li><a href="#inclusive">Inclusive profile</a></li>
+  <li><a href="#thread">Thread profile</a></li>
+  <li><a href="#class">Class/method profile</a></li>
+  <li><a href="#method">Method/class profile</a></li>
+</ul>
+
+<a name="exclusive"></a>
+<hr>
+<a href="#contents">[Top]</a>
+<a href="#exclusive">[Exclusive]</a>
+<a href="#inclusive">[Inclusive]</a>
+<a href="#thread">[Thread]</a>
+<a href="#class">[Class]</a>
+<a href="#method">[Method]</a>
+<br><br>
+Total cycles: 16
+
+<br><br>
+Exclusive elapsed times for each method, not including time spent in
+children, sorted by exclusive time.
+
+<br><br>
+<pre>
+    Usecs  self %  sum %  Method
+        8   50.00  50.00  <a href="#m1">[1]</a> Z.m ()
+        2   12.50  62.50  <a href="#m2">[2]</a> A.m ()
+        2   12.50  75.00  <a href="#m3">[3]</a> B.m ()
+        2   12.50  87.50  <a href="#m4">[4]</a> R.m ()
+        2   12.50 100.00  <a href="#m5">[5]</a> S.m ()
+</pre>
+<a name="inclusive"></a>
+<hr>
+<a href="#contents">[Top]</a>
+<a href="#exclusive">[Exclusive]</a>
+<a href="#inclusive">[Inclusive]</a>
+<a href="#thread">[Thread]</a>
+<a href="#class">[Class]</a>
+<a href="#method">[Method]</a>
+<br><br>
+
+Inclusive elapsed times for each method and its parents and children,
+sorted by inclusive time.
+
+<br><br>
+<pre>
+index  %/total %/self  index     calls         usecs name
+<a name="m0"></a>----------------------------------------------------
+[0]    100.0%                     0+0             16 (toplevel)
+                 0.0%   excl                       0
+                50.0%    <a href="#m1">[1]</a>      2/2              8 Z.m ()
+                12.5%    <a href="#m2">[2]</a>      1/1              2 A.m ()
+                12.5%    <a href="#m3">[3]</a>      1/1              2 B.m ()
+                12.5%    <a href="#m4">[4]</a>      1/1              2 R.m ()
+                12.5%    <a href="#m5">[5]</a>      1/1              2 S.m ()
+<a name="m1"></a>----------------------------------------------------
+               100.0%    <a href="#m0">[0]</a>      2/2              8 (toplevel)
+[1]     50.0%                     2+0              8 Z.m ()
+               100.0%   excl                       8
+<a name="m2"></a>----------------------------------------------------
+               100.0%    <a href="#m0">[0]</a>      1/1              2 (toplevel)
+[2]     12.5%                     1+0              2 A.m ()
+               100.0%   excl                       2
+<a name="m3"></a>----------------------------------------------------
+               100.0%    <a href="#m0">[0]</a>      1/1              2 (toplevel)
+[3]     12.5%                     1+0              2 B.m ()
+               100.0%   excl                       2
+<a name="m4"></a>----------------------------------------------------
+               100.0%    <a href="#m0">[0]</a>      1/1              2 (toplevel)
+[4]     12.5%                     1+0              2 R.m ()
+               100.0%   excl                       2
+<a name="m5"></a>----------------------------------------------------
+               100.0%    <a href="#m0">[0]</a>      1/1              2 (toplevel)
+[5]     12.5%                     1+0              2 S.m ()
+               100.0%   excl                       2
+</pre>
+<a name="thread"></a>
+<hr>
+<a href="#contents">[Top]</a>
+<a href="#exclusive">[Exclusive]</a>
+<a href="#inclusive">[Inclusive]</a>
+<a href="#thread">[Thread]</a>
+<a href="#class">[Class]</a>
+<a href="#method">[Method]</a>
+<br><br>
+
+Elapsed times for each thread, sorted by elapsed time.
+Also includes percentage of time spent during the <i>execution</i> of any filters.
+
+<br><br>
+<pre>
+    Usecs   self %  sum %  FirstFilter %  SecondFilter %  RepeatedFilter %  tid   ThreadName
+        8   50.00  50.00  50.00   0.00   0.00      1 main
+        8   50.00 100.00 100.00   0.00 100.00      2 foo
+        0    0.00 100.00    nan    nan    nan      3 bar
+        0    0.00 100.00    nan    nan    nan      4 blah
+</pre><br />
+
+Break-down of portion of time spent by each thread while waiting on a filter method.
+<br/><br/>
+<pre>
+Filter: FirstFilter
+Total waiting cycles: 12 ( 75.00% of total)
+Details: 
+
+ Waiting cycles    % of total waiting time   execution time while waiting    thread name
+        12                   100.00                      33.33               main
+         8                    66.67                      66.67               foo
+         0                     0.00                       0.00               bar
+         0                     0.00                       0.00               blah
+</pre>
+<br/><br/>
+<pre>
+Filter: SecondFilter
+Total waiting cycles: 0 (  0.00% of total)
+</pre>
+<br/><br/>
+<pre>
+Filter: RepeatedFilter
+Total waiting cycles: 8 ( 50.00% of total)
+Details: 
+
+ Waiting cycles    % of total waiting time   execution time while waiting    thread name
+         0                     0.00                       0.00               main
+         8                   100.00                     100.00               foo
+         0                     0.00                       0.00               bar
+         0                     0.00                       0.00               blah
+</pre>
+<a name="class"></a>
+<hr>
+<a href="#contents">[Top]</a>
+<a href="#exclusive">[Exclusive]</a>
+<a href="#inclusive">[Inclusive]</a>
+<a href="#thread">[Thread]</a>
+<a href="#class">[Class]</a>
+<a href="#method">[Method]</a>
+<br><br>
+
+Exclusive elapsed time for each class, summed over all the methods
+in the class.
+
+<br><br>
+<div class="header"><span class="parent">&nbsp;</span>&nbsp;&nbsp;&nbsp;Cycles %/total Cumul.% &nbsp;Calls+Recur&nbsp; Class</div>
+<div class="link" onClick="javascript:toggle('d0')" onMouseOver="javascript:onMouseOver(this)" onMouseOut="javascript:onMouseOut(this)"><span class="parent" id="xd0">+</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8 &nbsp;&nbsp;&nbsp;50.0 &nbsp;&nbsp;&nbsp;50.0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Z</div>
+<div class="parent" id="d0">
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m1">[1]</a>&nbsp;m&nbsp;()</div>
+</div>
+<div class="link" onClick="javascript:toggle('d1')" onMouseOver="javascript:onMouseOver(this)" onMouseOut="javascript:onMouseOut(this)"><span class="parent" id="xd1">+</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 &nbsp;&nbsp;&nbsp;12.5 &nbsp;&nbsp;&nbsp;62.5 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A</div>
+<div class="parent" id="d1">
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m2">[2]</a>&nbsp;m&nbsp;()</div>
+</div>
+<div class="link" onClick="javascript:toggle('d2')" onMouseOver="javascript:onMouseOver(this)" onMouseOut="javascript:onMouseOut(this)"><span class="parent" id="xd2">+</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 &nbsp;&nbsp;&nbsp;12.5 &nbsp;&nbsp;&nbsp;75.0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; B</div>
+<div class="parent" id="d2">
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m3">[3]</a>&nbsp;m&nbsp;()</div>
+</div>
+<div class="link" onClick="javascript:toggle('d3')" onMouseOver="javascript:onMouseOver(this)" onMouseOut="javascript:onMouseOut(this)"><span class="parent" id="xd3">+</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 &nbsp;&nbsp;&nbsp;12.5 &nbsp;&nbsp;&nbsp;87.5 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; R</div>
+<div class="parent" id="d3">
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m4">[4]</a>&nbsp;m&nbsp;()</div>
+</div>
+<div class="link" onClick="javascript:toggle('d4')" onMouseOver="javascript:onMouseOver(this)" onMouseOut="javascript:onMouseOut(this)"><span class="parent" id="xd4">+</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 &nbsp;&nbsp;&nbsp;12.5 &nbsp;&nbsp;100.0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S</div>
+<div class="parent" id="d4">
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m5">[5]</a>&nbsp;m&nbsp;()</div>
+</div>
+<a name="method"></a>
+<hr>
+<a href="#contents">[Top]</a>
+<a href="#exclusive">[Exclusive]</a>
+<a href="#inclusive">[Inclusive]</a>
+<a href="#thread">[Thread]</a>
+<a href="#class">[Class]</a>
+<a href="#method">[Method]</a>
+<br><br>
+
+Exclusive elapsed time for each method, summed over all the classes
+that contain a method with the same name.
+
+<br><br>
+<div class="header"><span class="parent">&nbsp;</span>&nbsp;&nbsp;&nbsp;Cycles %/total Cumul.% &nbsp;Calls+Recur&nbsp; Method</div>
+<div class="link" onClick="javascript:toggle('e0')" onMouseOver="javascript:onMouseOver(this)" onMouseOut="javascript:onMouseOut(this)"><span class="parent" id="xe0">+</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;16 &nbsp;&nbsp;100.0 &nbsp;&nbsp;100.0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m</div>
+<div class="parent" id="e0">
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;8&nbsp;&nbsp;&nbsp;&nbsp;50.0&nbsp;&nbsp;&nbsp;&nbsp;50.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m1">[1]</a>&nbsp;Z.m&nbsp;()</div>
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;12.5&nbsp;&nbsp;&nbsp;&nbsp;62.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m2">[2]</a>&nbsp;A.m&nbsp;()</div>
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;12.5&nbsp;&nbsp;&nbsp;&nbsp;75.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m3">[3]</a>&nbsp;B.m&nbsp;()</div>
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;12.5&nbsp;&nbsp;&nbsp;&nbsp;87.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m4">[4]</a>&nbsp;R.m&nbsp;()</div>
+<div class="leaf"><span class="leaf">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;&nbsp;&nbsp;12.5&nbsp;&nbsp;&nbsp;100.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#m5">[5]</a>&nbsp;S.m&nbsp;()</div>
+</div>
+
+</body>
+</html>
