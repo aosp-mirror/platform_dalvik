@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
+package dalvik.runner;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,8 +44,7 @@ class ExpectedResult {
     /**
      * The expectation of a general successful test run.
      */
-    static final ExpectedResult SUCCESS = new ExpectedResult(
-            Result.SUCCESS, ".*");
+    static final ExpectedResult SUCCESS = new ExpectedResult(Result.SUCCESS, ".*");
 
     private final Result result;
     private final String pattern;

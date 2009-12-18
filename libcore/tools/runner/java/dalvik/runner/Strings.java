@@ -15,7 +15,7 @@
  */
 
 
-package dalvik.jtreg;
+package dalvik.runner;
 
 import java.io.BufferedReader;
 import java.io.File;

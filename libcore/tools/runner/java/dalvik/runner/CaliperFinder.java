@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
+package dalvik.runner;
+
+import java.io.File;
 
 /**
- * A test run result.
+ * Create {@link TestRun}s for {@code .java} files with Caliper benchmarks in
+ * them.
  */
-public enum Result {
+class CaliperFinder extends TestFinder {
 
-    /**
-     * A test that cannot be run by this harness, such as a shell script.
-     */
-    UNSUPPORTED,
+    @Override protected boolean matches(File file) {
+        return file.getName().endsWith("Benchmark.java");
+    }
 
-    COMPILE_FAILED,
-    EXEC_FAILED,
-    EXEC_TIMEOUT,
-    ERROR,
-    SUCCESS
+    @Override protected String testName(File file) {
+        return "caliper";
+    }
+
+    @Override protected Class<? extends TestRunner> runnerClass() {
+        return CaliperRunner.class;
+    }
 }

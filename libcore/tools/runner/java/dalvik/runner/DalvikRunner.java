@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
+package dalvik.runner;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,9 +29,9 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * Command line interface for running jtreg tests.
+ * Command line interface for running benchmarks and tests on dalvik.
  */
-public final class Harness {
+public final class DalvikRunner {
 
     private final File localTemp;
     private File sdkJar;
@@ -44,11 +44,11 @@ public final class Harness {
     private String deviceRunnerDir = "/sdcard/dalvikrunner";
     private List<File> testFiles = new ArrayList<File>();
 
-    private Harness() {
+    private DalvikRunner() {
         localTemp = new File("/tmp/" + UUID.randomUUID());
         timeoutSeconds = 10 * 60; // default is ten minutes
         sdkJar = new File("/home/dalvik-prebuild/android-sdk-linux/platforms/android-2.0/android.jar");
-        expectationDirs.add(new File("dalvik/libcore/tools/dalvik_jtreg/expectations"));
+        expectationDirs.add(new File("dalvik/libcore/tools/runner/expectations"));
     }
 
     private void prepareLogging() {
@@ -59,7 +59,7 @@ public final class Harness {
                 return r.getMessage() + "\n";
             }
         });
-        Logger logger = Logger.getLogger("dalvik.jtreg");
+        Logger logger = Logger.getLogger("dalvik.runner");
         logger.addHandler(handler);
         logger.setUseParentHandlers(false);
     }
@@ -101,7 +101,7 @@ public final class Harness {
                 clean = false;
 
             } else if ("--verbose".equals(args[i])) {
-                Logger.getLogger("dalvik.jtreg").setLevel(Level.FINE);
+                Logger.getLogger("dalvik.runner").setLevel(Level.FINE);
 
             } else if ("--xml-reports-directory".equals(args[i])) {
                 xmlReportsDirectory = new File(args[++i]);
@@ -128,10 +128,10 @@ public final class Harness {
     }
 
     private void printUsage() {
-        System.out.println("Usage: JTRegRunner [options]... <tests>...");
+        System.out.println("Usage: DalvikRunner [options]... <tests>...");
         System.out.println();
         System.out.println("  <tests>: a .java file containing a jtreg test, JUnit test,");
-        System.out.println("      or a directory of such tests.");
+        System.out.println("      Caliper benchmark, or a directory of such tests.");
         System.out.println();
         System.out.println("OPTIONS");
         System.out.println();
@@ -190,12 +190,12 @@ public final class Harness {
     }
 
     public static void main(String[] args) throws Exception {
-        Harness harness = new Harness();
-        if (!harness.parseArgs(args)) {
-            harness.printUsage();
+        DalvikRunner dalvikRunner = new DalvikRunner();
+        if (!dalvikRunner.parseArgs(args)) {
+            dalvikRunner.printUsage();
             return;
         }
-        harness.prepareLogging();
-        harness.run();
+        dalvikRunner.prepareLogging();
+        dalvikRunner.run();
     }
 }

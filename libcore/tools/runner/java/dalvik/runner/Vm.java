@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
+package dalvik.runner;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,13 +38,13 @@ import java.util.regex.Pattern;
  */
 public abstract class Vm {
 
-    static final String DALVIK_JTREG_HOME = "dalvik/libcore/tools/dalvik_jtreg";
+    static final String DALVIK_RUNNER_HOME = "dalvik/libcore/tools/runner";
 
     static final Set<File> TEST_RUNNER_JAVA_FILES = new HashSet<File>(Arrays.asList(
-            new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/CaliperRunner.java"),
-            new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/JUnitRunner.java"),
-            new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/JtregRunner.java"),
-            new File(DALVIK_JTREG_HOME + "/java/dalvik/jtreg/TestRunner.java")));
+            new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/CaliperRunner.java"),
+            new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/JUnitRunner.java"),
+            new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/JtregRunner.java"),
+            new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/TestRunner.java")));
 
     private final Pattern JAVA_TEST_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
     static final Classpath COMPILATION_CLASSPATH = Classpath.of(

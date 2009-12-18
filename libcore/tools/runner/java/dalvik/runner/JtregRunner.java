@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
+package dalvik.runner;
 
 import java.lang.reflect.Method;
 

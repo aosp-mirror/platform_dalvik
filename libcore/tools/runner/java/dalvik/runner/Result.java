@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
+package dalvik.runner;
 
 /**
- * A dx command.
+ * The result of a test or benchmark execution.
  */
-final class Dx {
+public enum Result {
 
-    public void dex(String output, Classpath classpath) {
-        new Command.Builder()
-                .args("dx")
-                .args("--dex")
-                .args("--output=" + output)
-                .args(Strings.objectsToStrings(classpath.getElements()))
-                .execute();
-    }
+    /**
+     * A test that cannot be run by this harness, such as a shell script.
+     */
+    UNSUPPORTED,
+
+    COMPILE_FAILED,
+    EXEC_FAILED,
+    EXEC_TIMEOUT,
+    ERROR,
+    SUCCESS
 }

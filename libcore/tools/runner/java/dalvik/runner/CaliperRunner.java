@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
+package dalvik.runner;
 
-import java.io.File;
+import com.google.caliper.Runner;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with Caliper benchmarks in
- * them.
+ * Runs a <a href="http://code.google.com/p/caliper/">Caliper</a> benchmark.
  */
-class CaliperFinder extends TestFinder {
+public final class CaliperRunner extends TestRunner {
 
-    @Override protected boolean matches(File file) {
-        return file.getName().endsWith("Benchmark.java");
+    @Override public boolean test() {
+        try {
+            Runner.main(className);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false; // always print benchmarking results
     }
 
-    @Override protected String testName(File file) {
-        return "caliper";
-    }
-
-    @Override protected Class<? extends TestRunner> runnerClass() {
-        return CaliperRunner.class;
+    public static void main(String[] args) throws Exception {
+        new CaliperRunner().run();
     }
 }

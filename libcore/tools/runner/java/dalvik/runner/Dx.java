@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package dalvik.jtreg;
-
-import com.google.caliper.Runner;
+package dalvik.runner;
 
 /**
- * Runs a <a href="http://code.google.com/p/caliper/">Caliper</a> benchmark.
+ * A dx command.
  */
-public final class CaliperRunner extends TestRunner {
+final class Dx {
 
-    @Override public boolean test() {
-        try {
-            Runner.main(className);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return false; // always print benchmarking results
-    }
-
-    public static void main(String[] args) throws Exception {
-        new CaliperRunner().run();
+    public void dex(String output, Classpath classpath) {
+        new Command.Builder()
+                .args("dx")
+                .args("--dex")
+                .args("--output=" + output)
+                .args(Strings.objectsToStrings(classpath.getElements()))
+                .execute();
     }
 }
