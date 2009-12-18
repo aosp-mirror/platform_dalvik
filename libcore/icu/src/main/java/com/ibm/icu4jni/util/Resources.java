@@ -368,11 +368,11 @@ public class Resources {
                 return "-1";
             }
             int res = getFractionDigitsNative(key);
-            if(res < 0) {
+            if (res < 0) {
                 throw new MissingResourceException("couldn't find resource.", 
                         ISO4CurrenciesToDigits.class.getName(), key);
             }
-            return "" + res;
+            return Integer.toString(res);
         }
 
     }
