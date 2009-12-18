@@ -40,69 +40,51 @@ public class UnixSocketTest extends TestCase {
     public void test_getInputStream() throws IOException {
         // Simple read/write test over the IO streams
         final ServerSocket pingServer = new ServerSocket(0);
-        Runnable runnable = new Runnable() {
-            public void run() {
-                try {
-                    Socket worker = pingServer.accept();
-                    pingServer.close();
-                    InputStream in = worker.getInputStream();
-                    in.read();
-                    OutputStream out = worker.getOutputStream();
-                    out.write(new byte[42]);
-                    worker.close();
-                } catch (IOException e) {
-                    fail(e.getMessage());
-                }
-            }
-        };
-        Thread thread = new Thread(runnable, "UnixSocket.getInputStream");
-        thread.start();
+        Socket pingClient = new Socket();
 
-        Socket pingClient = new Socket(InetAddress.getLocalHost(), pingServer
-                .getLocalPort());
+        try {
+            pingClient.connect(new InetSocketAddress(
+                    InetAddress.getLocalHost(), pingServer.getLocalPort()));
 
-        // Busy wait until the client is connected.
-        int c = 0;
-        while (!pingClient.isConnected()) {
+            Socket worker = pingServer.accept();
+            pingServer.close();
+
+            // Write some data to the server to provoke it
+            OutputStream clientOut = pingClient.getOutputStream();
+            clientOut.write(new byte[256]);
+            InputStream in = worker.getInputStream();
+            in.read();
+
+            OutputStream out = worker.getOutputStream();
+            out.write(new byte[42]);
+            worker.close();
+            InputStream clientIn = pingClient.getInputStream();
+            clientIn.read(new byte[42]);
+
             try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                // ignore
+                clientIn.read();
+                fail("Should throw SocketException");
+            } catch (SocketException e) {
+                // expected
             }
-            if (++c > 4) {
-                fail("thread is not alive");
+            clientIn.close();
+
+            try {
+                clientIn.read();
+                fail("Should throw SocketException");
+            } catch (SocketException e) {
+                // expected
             }
+            try {
+                clientIn.read(new byte[5]);
+                fail("Should throw SocketException");
+            } catch (SocketException e) {
+                // expected
+            }
+        } finally {
+            pingClient.close();
+            pingServer.close();
         }
-
-        // Write some data to the server to provoke it
-        OutputStream out = pingClient.getOutputStream();
-        out.write(new byte[256]);
-
-        InputStream in = pingClient.getInputStream();
-        in.read(new byte[42]);
-        try {
-            in.read();
-            fail("Should throw SocketException");
-        } catch (SocketException e) {
-            // expected
-        }
-        in.close();
-
-        try {
-            in.read();
-            fail("Should throw SocketException");
-        } catch (SocketException e) {
-            // expected
-        }
-        try {
-            in.read(new byte[5]);
-            fail("Should throw SocketException");
-        } catch (SocketException e) {
-            // expected
-        }
-
-        pingClient.close();
-        pingServer.close();
     }
 
     public void test_connectLjava_net_SocketAddressI() throws Exception {
@@ -122,7 +104,13 @@ public class UnixSocketTest extends TestCase {
 
     public void test_getOutputStream() throws Exception {
         // Regression test for HARMONY-2934
-        Socket socket = new Socket("127.0.0.1", 0, false);
+        // Port 0 is not allowed to be used in connect() on some platforms, 
+        // get a free port here
+        ServerSocket ss = new ServerSocket(0);
+        int port = ss.getLocalPort();
+        ss.close();
+        
+        Socket socket = new Socket("127.0.0.1", port, false);
         OutputStream o = socket.getOutputStream();
         try {
             o.write(1);

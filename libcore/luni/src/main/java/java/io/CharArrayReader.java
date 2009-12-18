@@ -54,7 +54,6 @@ public class CharArrayReader extends Reader {
      *            the char array from which to read.
      */
     public CharArrayReader(char[] buf) {
-        super(buf);
         this.buf = buf;
         this.count = buf.length;
     }
@@ -75,26 +74,22 @@ public class CharArrayReader extends Reader {
      *             {@code offset} is greater than the size of {@code buf} .
      */
     public CharArrayReader(char[] buf, int offset, int length) {
-        super(buf);
-        // BEGIN android-changed
-        // Exception priorities (in case of multiple errors) differ from
-        // RI, but are spec-compliant.
-        // made implicit null check explicit,
-        // removed redundant check, used (offset | length) < 0 instead of
-        // (offset < 0) || (length < 0) to safe one operation
-        if (buf == null) {
-            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        /*
+         * The spec of this constructor is broken. In defining the legal values
+         * of offset and length, it doesn't consider buffer's length. And to be
+         * compatible with the broken spec, we must also test whether
+         * (offset + length) overflows.
+         */
+        if (offset < 0 || offset > buf.length || length < 0 || offset + length < 0) {
+            throw new IllegalArgumentException();
         }
-        if ((offset | length) < 0 || offset > buf.length) {
-            throw new IllegalArgumentException(Msg.getString("K002f")); //$NON-NLS-1$
-        }
-        // END android-changed
         this.buf = buf;
         this.pos = offset;
         this.markedPos = offset;
 
         /* This is according to spec */
-        this.count = this.pos + length < buf.length ? length : buf.length;
+        int bufferLength = buf.length;
+        this.count = offset + length < bufferLength ? length : bufferLength;
     }
 
     /**

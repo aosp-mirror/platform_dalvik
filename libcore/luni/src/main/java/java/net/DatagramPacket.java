@@ -215,6 +215,15 @@ public final class DatagramPacket {
     }
 
     /**
+     * Gets the current capacity value.
+     * 
+     * @return the current capacity value
+     */
+    synchronized int getCapacity() {
+        return capacity;
+    }
+
+    /**
      * Sets the length of the datagram packet. This length plus the offset must
      * be lesser than or equal to the buffer size.
      * 
@@ -227,6 +236,19 @@ public final class DatagramPacket {
         }
         length = len;
         capacity = len;
+    }
+
+    /**
+     * An alternative to {@link #setLength(int)}, that doesn't reset the {@link #capacity}
+     * field.
+     * 
+     * @param len the length of this datagram packet
+     */
+    synchronized void setLengthOnly(int len) {
+        if (0 > len || offset + len > data.length) {
+            throw new IllegalArgumentException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        length = len;
     }
 
     /**

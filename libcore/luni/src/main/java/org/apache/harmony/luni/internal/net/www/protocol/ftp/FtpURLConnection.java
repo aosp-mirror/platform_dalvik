@@ -18,6 +18,7 @@
 package org.apache.harmony.luni.internal.net.www.protocol.ftp;
 
 import java.io.BufferedInputStream;
+import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -337,7 +338,6 @@ public class FtpURLConnection extends URLConnection {
      * @see java.io.IOException
      * 
      */
-
     @Override
     public OutputStream getOutputStream() throws IOException {
         if (!connected) {
@@ -348,8 +348,15 @@ public class FtpURLConnection extends URLConnection {
 
     private int getReply() throws IOException {
         byte[] code = new byte[3];
-        ctrlInput.read(code, 0, code.length);
+        for (int i = 0; i < code.length; i++) {
+            final int tmp = ctrlInput.read();
+            if (tmp == -1) {
+                throw new EOFException();
+            }
+            code[i] = (byte) tmp;
+        }
         replyCode = new String(code, "ISO8859_1"); //$NON-NLS-1$
+        
         boolean multiline = false;
         if (ctrlInput.read() == '-') {
             multiline = true;
@@ -359,7 +366,12 @@ public class FtpURLConnection extends URLConnection {
             while (readMultiLine()) {/* Read all of a multiline reply */
             }
         }
-        return Integer.parseInt(new String(code, "ISO8859_1")); //$NON-NLS-1$
+        
+        try {
+            return Integer.parseInt(replyCode);
+        } catch (NumberFormatException e) {
+            throw (IOException)(new IOException("reply code is invalid").initCause(e));
+        }
     }
 
     private void login() throws IOException {

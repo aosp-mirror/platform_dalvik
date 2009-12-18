@@ -20,18 +20,18 @@ import java.lang.ref.Reference;
 
 final class RuntimeMemorySpy extends AbstractMemorySpy {
 
-	public RuntimeMemorySpy() {
-		super();
-	}
+    public RuntimeMemorySpy() {
+        super();
+    }
 
-	public void alloc(PlatformAddress address) {
-		// Pay a tax on the allocation to see if there are any frees pending.
-		Reference ref = notifyQueue.poll(); // non-blocking check
-		while (ref != null) {
-			orphanedMemory(ref);
-			ref = notifyQueue.poll();
-		}
+    public void alloc(PlatformAddress address) {
+        // Pay a tax on the allocation to see if there are any frees pending.
+        Reference ref = notifyQueue.poll(); // non-blocking check
+        while (ref != null) {
+            orphanedMemory(ref);
+            ref = notifyQueue.poll();
+        }
 
         super.alloc(address);
-	}
+    }
 }

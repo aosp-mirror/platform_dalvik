@@ -217,7 +217,7 @@ public class Timer {
                         // no tasks scheduled -- sleep until any task appear
                         try {
                             this.wait();
-                        } catch (InterruptedException e) {
+                        } catch (InterruptedException ignored) {
                         }
                         continue;
                     }
@@ -241,8 +241,7 @@ public class Timer {
                         // sleep!
                         try {
                             this.wait(timeToSleep);
-                        } catch (InterruptedException e) {
-                            // Ignored
+                        } catch (InterruptedException ignored) {
                         }
                         continue;
                     }
@@ -285,11 +284,16 @@ public class Timer {
                     }
                 }
 
-                // run the task
+                boolean taskCompletedNormally = false;
                 try {
                     task.run();
-                } catch (Exception e) {
-                    // Ignored
+                    taskCompletedNormally = true;
+                } finally {
+                    if (!taskCompletedNormally) {
+                        synchronized (this) {
+                            cancelled = true;
+                        }
+                    }
                 }
             }
         }
@@ -549,7 +553,7 @@ public class Timer {
             throw new IllegalArgumentException();
         }
         long delay = when.getTime() - System.currentTimeMillis();
-        scheduleImpl(task, delay < 0 ? 0 : delay, period, true);
+        scheduleImpl(task, delay, period, true);
     }
 
     /*

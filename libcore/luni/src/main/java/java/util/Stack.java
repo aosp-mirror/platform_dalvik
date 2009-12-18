@@ -39,7 +39,7 @@ public class Stack<E> extends Vector<E> {
      * @return {@code true} if the stack is empty, {@code false} otherwise.
      */
     public boolean empty() {
-        return elementCount == 0;
+        return isEmpty();
     }
 
     /**

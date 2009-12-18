@@ -618,11 +618,17 @@ public class InetAddress extends Object implements Serializable {
     static native String gethostname();
     // END android-changed
 
-    static String getHostNameInternal(String host) throws UnknownHostException {
+    static String getHostNameInternal(String host, boolean isCheck) throws UnknownHostException {
         if (host == null || 0 == host.length()) {
             return Inet4Address.LOOPBACK.getHostAddress();
         }
         if (isHostName(host)) {
+            if (isCheck) {
+                SecurityManager sm = System.getSecurityManager();
+                if (sm != null) {
+                    sm.checkConnect(host, -1);
+                }
+            }
             return lookupHostByName(host)[0].getHostAddress();
         }
         return host;

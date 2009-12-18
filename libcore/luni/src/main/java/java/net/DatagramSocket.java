@@ -363,8 +363,8 @@ public class DatagramSocket {
                     if (e.getMessage().equals(
                             "The socket does not support the operation")) { //$NON-NLS-1$
                         // receive packet to temporary buffer
-                        tempPack = new DatagramPacket(new byte[pack.capacity],
-                                pack.capacity);
+                        tempPack = new DatagramPacket(new byte[pack.getCapacity()],
+                                pack.getCapacity());
                         impl.receive(tempPack);
                         // tempPack's length field is now updated, capacity is unchanged
                         // let's extract address & port
@@ -406,11 +406,11 @@ public class DatagramSocket {
                     .getOffset(), tempPack.getLength());
             // we shouldn't update the pack's capacity field in order to be
             // compatible with RI
-            pack.length = tempPack.length;
+            pack.setLengthOnly(tempPack.getLength());
             pack.setAddress(tempPack.getAddress());
             pack.setPort(tempPack.getPort());
         } else {
-            pack.setLength(pack.capacity);
+            pack.setLength(pack.getCapacity());
             impl.receive(pack);
             // pack's length field is now updated by native code call;
             // pack's capacity field is unchanged
@@ -444,7 +444,7 @@ public class DatagramSocket {
         } else {
             // not connected so the target address is not allowed to be null
             if (packAddr == null) {
-                if (pack.port == -1) {
+                if (pack.getPort() == -1) {
                     // KA019 Destination address is null
                     throw new NullPointerException(Msg.getString("KA019")); //$NON-NLS-1$
                 }

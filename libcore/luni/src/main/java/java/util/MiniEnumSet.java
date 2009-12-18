@@ -18,9 +18,7 @@ package java.util;
 
 
 /**
- * This is a concrete subclass of EnumSet designed specifically for enum type
- * with less than or equal to 64 elements.
- * 
+ * A concrete EnumSet for enums with 64 or fewer elements.
  */
 @SuppressWarnings("serial")
 final class MiniEnumSet<E extends Enum<E>> extends EnumSet<E> {
@@ -48,45 +46,47 @@ final class MiniEnumSet<E extends Enum<E>> extends EnumSet<E> {
     
     private class MiniEnumSetIterator implements Iterator<E> {
 
-        private long unProcessedBits;
-
-        /*
-         * Mask for current element.
+        /**
+         * The bits yet to be returned for bits. As values from the current index are returned,
+         * their bits are zeroed out.
          */
-        private long currentElementMask;
+        private long currentBits = bits;
 
-        private boolean canProcess = true;
+        /**
+         * The single bit of the next value to return.
+         */
+        private long mask = currentBits & -currentBits; // the lowest 1 bit in currentBits
 
-        private MiniEnumSetIterator() {
-            unProcessedBits = bits;
-            if (0 == unProcessedBits) {
-                canProcess = false;
-            }
-        }
+        /**
+         * The candidate for removal. If null, no value may be removed.
+         */
+        private E last;
 
         public boolean hasNext() {
-            return canProcess;
+            return mask != 0;
         }
 
         public E next() {
-            if (!canProcess) {
+            if (mask == 0) {
                 throw new NoSuchElementException();
             }
-            currentElementMask = unProcessedBits & (-unProcessedBits);
-            unProcessedBits -= currentElementMask;
-            if (0 == unProcessedBits) {
-                canProcess = false;
-            }
-            return enums[Long.numberOfTrailingZeros(currentElementMask)];
+
+            int ordinal = Long.numberOfTrailingZeros(mask);
+            last = enums[ordinal];
+
+            currentBits &= ~mask;
+            mask = currentBits & -currentBits; // the lowest 1 bit in currentBits
+
+            return last;
         }
 
         public void remove() {
-            if ( currentElementMask == 0 ) {
+            if (last == null) {
                 throw new IllegalStateException();
             }
-            bits &= ~currentElementMask;
-            size = Long.bitCount(bits);
-            currentElementMask = 0;
+
+            MiniEnumSet.this.remove(last);
+            last = null;
         }
     }
 
@@ -111,77 +111,83 @@ final class MiniEnumSet<E extends Enum<E>> extends EnumSet<E> {
         if (!isValidType(element.getDeclaringClass())) {
             throw new ClassCastException();
         }
-        long mask = 1l << element.ordinal();
-        if ((bits & mask) == mask) {
-            return false;
-        }
-        bits |= mask;
 
-        size++;
-        return true;
+        long oldBits = bits;
+        long newBits = oldBits | (1L << element.ordinal());
+        if (oldBits != newBits) {
+            bits = newBits;
+            size++;
+            return true;
+        }
+        return false;
     }
     
     @Override
     public boolean addAll(Collection<? extends E> collection) {
-        if (0 == collection.size()) {
+        if (collection.isEmpty()) {
             return false;
         }
         if (collection instanceof EnumSet) {
-            EnumSet<?> set = (EnumSet)collection;
+            EnumSet<?> set = (EnumSet) collection; // raw type due to javac bug 6548436
             if (!isValidType(set.elementClass)) {
                 throw new ClassCastException();
             }
+
             MiniEnumSet<?> miniSet = (MiniEnumSet<?>) set;
             long oldBits = bits;
-            bits |= miniSet.bits;
-            size = Long.bitCount(bits);
-            return (oldBits != bits);
+            long newBits = oldBits | miniSet.bits;
+            bits = newBits;
+            size = Long.bitCount(newBits);
+            return (oldBits != newBits);
         }
         return super.addAll(collection);
     }
     
     @Override
     public boolean contains(Object object) {
-        if (null == object) {
+        if (object == null || !isValidType(object.getClass())) {
             return false;
         }
-        if (!isValidType(object.getClass())) {
-            return false;
-        }
-        Enum<?> element = (Enum<?>) object;
+
+        @SuppressWarnings("unchecked") // guarded by isValidType()
+        Enum<E> element = (Enum<E>) object;
         int ordinal = element.ordinal();
-        return (bits & (1l << ordinal)) != 0;
+        return (bits & (1L << ordinal)) != 0;
     }
     
     @Override
     public boolean containsAll(Collection<?> collection) {
-        if (collection.size() == 0) {
+        if (collection.isEmpty()) {
             return true;
         }
         if (collection instanceof MiniEnumSet) {
             MiniEnumSet<?> set = (MiniEnumSet<?>) collection;
-            return isValidType(set.elementClass ) && ((bits & set.bits) == set.bits);
+            long setBits = set.bits;
+            return isValidType(set.elementClass) && ((bits & setBits) == setBits);
         }
         return !(collection instanceof EnumSet) && super.containsAll(collection);  
     }
     
     @Override
     public boolean removeAll(Collection<?> collection) {
-        if (0 == collection.size()) {
+        if (collection.isEmpty()) {
             return false;
         }
         if (collection instanceof EnumSet) {
-            EnumSet<E> set = (EnumSet<E>) collection;
-            boolean removeSuccessful = false;
-            if (isValidType(set.elementClass)) {
-                long mask = bits & ((MiniEnumSet<E>) set).bits;
-                if (mask != 0) {
-                    bits -= mask;
-                    size = Long.bitCount(bits);
-                    removeSuccessful = true;
-                }
+            EnumSet<?> set = (EnumSet<?>) collection;
+            if (!isValidType(set.elementClass)) {
+                return false;
             }
-            return removeSuccessful;
+
+            MiniEnumSet<E> miniSet = (MiniEnumSet<E>) set;
+            long oldBits = bits;
+            long newBits = oldBits & ~miniSet.bits;
+            if (oldBits != newBits) {
+                bits = newBits;
+                size = Long.bitCount(newBits);
+                return true;
+            }
+            return false;
         }
         return super.removeAll(collection);
     }
@@ -189,33 +195,46 @@ final class MiniEnumSet<E extends Enum<E>> extends EnumSet<E> {
     @Override
     public boolean retainAll(Collection<?> collection) {
         if (collection instanceof EnumSet) {
-            EnumSet<E> set = (EnumSet<E>) collection;
+            EnumSet<?> set = (EnumSet<?>) collection;
             if (!isValidType(set.elementClass)) {
-                clear();
+                if (size > 0) {
+                    clear();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            MiniEnumSet<E> miniSet = (MiniEnumSet<E>) set;
+            long oldBits = bits;
+            long newBits = oldBits & miniSet.bits;
+            if (oldBits != newBits) {
+                bits = newBits;
+                size = Long.bitCount(newBits);
                 return true;
             }
-            boolean retainSuccessful = false;
-            long oldBits = bits;
-            bits &= ((MiniEnumSet<E>)set).bits;
-            if (oldBits != bits) {
-                size = Long.bitCount(bits);
-                retainSuccessful = true;
-            }
-            return retainSuccessful;
+            return false;
         }
         return super.retainAll(collection);
     }
     
     @Override
     public boolean remove(Object object) {
-        if (!contains(object)) {
+        if (object == null || !isValidType(object.getClass())) {
             return false;
         }
-        Enum<?> element = (Enum<?>) object;
+
+        @SuppressWarnings("unchecked") // guarded by isValidType() 
+        Enum<E> element = (Enum<E>) object;
         int ordinal = element.ordinal();
-        bits -= (1l << ordinal);
-        size--;
-        return true;
+        long oldBits = bits;
+        long newBits = oldBits & ~(1L << ordinal);
+        if (oldBits != newBits) {
+            bits = newBits;
+            size--;
+            return true;
+        }
+        return false;
     }
     
     @Override
@@ -223,18 +242,18 @@ final class MiniEnumSet<E extends Enum<E>> extends EnumSet<E> {
         if (!(object instanceof EnumSet)) {
             return super.equals(object);
         }
-        EnumSet<?> set =(EnumSet<?>)object; 
-        if( !isValidType(set.elementClass) ) {
-            return size == 0 && set.size() == 0;
+        EnumSet<?> set =(EnumSet<?>) object;
+        if (!isValidType(set.elementClass)) {
+            return size == 0 && set.isEmpty();
         }
-        return bits == ((MiniEnumSet<?>)set).bits;
+        return bits == ((MiniEnumSet<?>) set).bits;
     }
     
     @Override
     void complement() {
-        if (0 != enums.length) {
+        if (enums.length != 0) {
             bits = ~bits;
-            bits &= (-1l >>> (MAX_ELEMENTS - enums.length));
+            bits &= (-1L >>> (MAX_ELEMENTS - enums.length));
             size = enums.length - size;
         }
     }
@@ -242,7 +261,7 @@ final class MiniEnumSet<E extends Enum<E>> extends EnumSet<E> {
     @Override
     void setRange(E start, E end) {
         int length = end.ordinal() - start.ordinal() + 1;
-        long range = (-1l >>> (MAX_ELEMENTS - length)) << start.ordinal();
+        long range = (-1L >>> (MAX_ELEMENTS - length)) << start.ordinal();
         bits |= range;
         size = Long.bitCount(bits);
     }

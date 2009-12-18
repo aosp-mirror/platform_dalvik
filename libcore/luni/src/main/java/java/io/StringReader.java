@@ -224,13 +224,19 @@ public class StringReader extends Reader {
     }
 
     /**
-     * Skips {@code amount} characters in the source string. Subsequent calls of
-     * {@code read} methods will not return these characters unless {@code
-     * reset()} is used.
+     * Moves {@code ns} characters in the source string. Unlike the {@link
+     * Reader#skip(long) overridden method}, this method may skip negative skip
+     * distances: this rewinds the input so that characters may be read again.
+     * When the end of the source string has been reached, the input cannot be
+     * rewound.
      *
      * @param ns
-     *            the maximum number of characters to skip.
-     * @return the number of characters actually skipped or 0 if {@code ns < 0}.
+     *            the maximum number of characters to skip. Positive values skip
+     *            forward; negative values skip backward.
+     * @return the number of characters actually skipped. This is bounded below
+     *            by the number of characters already read and above by the
+     *            number of characters remaining:<br> {@code -(num chars already
+     *            read) <= distance skipped <= num chars remaining}.
      * @throws IOException
      *             if this reader is closed.
      * @see #mark(int)
@@ -243,18 +249,18 @@ public class StringReader extends Reader {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K0083")); //$NON-NLS-1$
             }
-            if (ns <= 0) {
-                return 0;
+
+            int minSkip = -pos;
+            int maxSkip = count - pos;
+
+            if (maxSkip == 0 || ns > maxSkip) {
+                ns = maxSkip; // no rewinding if we're at the end
+            } else if (ns < minSkip) {
+                ns = minSkip;
             }
-            long skipped = 0;
-            if (ns < this.count - pos) {
-                pos = pos + (int) ns;
-                skipped = ns;
-            } else {
-                skipped = this.count - pos;
-                pos = this.count;
-            }
-            return skipped;
+
+            pos += ns;
+            return ns;
         }
     }
 }

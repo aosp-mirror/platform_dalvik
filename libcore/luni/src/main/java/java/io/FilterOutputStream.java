@@ -18,6 +18,7 @@
 package java.io;
 
 import org.apache.harmony.luni.util.Msg;
+import org.apache.harmony.luni.util.SneakyThrow;
 
 /**
  * Wraps an existing {@link OutputStream} and performs some transformation on
@@ -55,13 +56,24 @@ public class FilterOutputStream extends OutputStream {
      */
     @Override
     public void close() throws IOException {
+        Throwable thrown = null;
         try {
             flush();
-        } catch (IOException e) {
-            // Ignored
+        } catch (Throwable e) {
+            thrown = e;
         }
-        /* Make sure we clean up this stream if exception fires */
-        out.close();
+
+        try {
+            out.close();
+        } catch (Throwable e) {
+            if (thrown == null) {
+                thrown = e;
+            }
+        }
+
+        if (thrown != null) {
+            SneakyThrow.sneakyThrow(thrown);
+        }
     }
 
     /**

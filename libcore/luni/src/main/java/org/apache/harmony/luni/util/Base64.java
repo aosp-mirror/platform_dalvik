@@ -17,7 +17,6 @@
 
 /**
 * @author Alexander Y. Kleymenov
-* @version $Revision$
 */
 
 package org.apache.harmony.luni.util;
