@@ -63,15 +63,18 @@ public abstract class Vm {
     protected final long timeoutSeconds;
     protected final File sdkJar;
     protected final File localTemp;
+    protected final boolean clean;
 
     /** The path of the test runner's compiled classes */
     private Classpath testRunnerClasses;
 
-    Vm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp) {
+    Vm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
+            boolean clean) {
         this.debugPort = debugPort;
         this.timeoutSeconds = timeoutSeconds;
         this.sdkJar = sdkJar;
         this.localTemp = localTemp;
+        this.clean = clean;
     }
 
     /**
@@ -132,10 +135,12 @@ public abstract class Vm {
      * the given test.
      */
     public void cleanup(TestRun testRun) {
-        logger.fine("clean " + testRun.getQualifiedName());
+        if (clean) {
+            logger.fine("clean " + testRun.getQualifiedName());
 
-        new Command.Builder().args("rm", "-r", testClassesDir(testRun).getPath())
-                .execute();
+            new Command.Builder().args("rm", "-rf", testClassesDir(testRun).getPath())
+                    .execute();
+        }
     }
 
     /**

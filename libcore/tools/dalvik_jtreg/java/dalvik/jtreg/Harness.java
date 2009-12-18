@@ -40,6 +40,8 @@ public final class Harness {
     private Set<File> expectationDirs = new LinkedHashSet<File>();
     private File xmlReportsDirectory;
     private String javaHome;
+    private boolean clean = true;
+    private String deviceRunnerDir = "/sdcard/dalvikrunner";
     private List<File> testFiles = new ArrayList<File>();
 
     private Harness() {
@@ -67,6 +69,9 @@ public final class Harness {
             if ("--debug".equals(args[i])) {
                 debugPort = Integer.valueOf(args[++i]);
 
+            } else if ("--device-runner-dir".equals(args[i])) {
+                deviceRunnerDir = args[++i];
+
             } else if ("--expectations".equals(args[i])) {
                 File expectationDir = new File(args[++i]);
                 if (!expectationDir.isDirectory()) {
@@ -75,7 +80,7 @@ public final class Harness {
                 }
                 expectationDirs.add(expectationDir);
 
-            } else if ("--javaHome".equals(args[i])) {
+            } else if ("--java-home".equals(args[i])) {
                 javaHome = args[++i];
                 if (!new File(javaHome, "/bin/java").exists()) {
                     System.out.println("Invalid java home: " + javaHome);
@@ -91,6 +96,9 @@ public final class Harness {
                     System.out.println("Could not find SDK jar: " + sdkJar);
                     return false;
                 }
+
+            } else if ("--skip-clean".equals(args[i])) {
+                clean = false;
 
             } else if ("--verbose".equals(args[i])) {
                 Logger.getLogger("dalvik.jtreg").setLevel(Level.FINE);
@@ -131,12 +139,16 @@ public final class Harness {
         System.out.println("      This port must be free both on the device and on the local");
         System.out.println("      system.");
         System.out.println();
+        System.out.println("  ----device-runner-dir <directory>: use the specified directory for");
+        System.out.println("      on-device temporary files and code.");
+        System.out.println("      Default is: " + deviceRunnerDir);
+        System.out.println();
         System.out.println("  --expectations <directory>: use the specified directory when");
         System.out.println("      looking for test expectations. The directory should include");
         System.out.println("      <test>.expected files describing expected results.");
         System.out.println("      Default is: " + expectationDirs);
         System.out.println();
-        System.out.println("  --javaHome <java_home>: execute the tests on the local workstation");
+        System.out.println("  --java-home <java_home>: execute the tests on the local workstation");
         System.out.println("      using the specified java home directory. This does not impact");
         System.out.println("      which javac gets used. When unset, tests are run on a device");
         System.out.println("      using adb.");
@@ -146,6 +158,10 @@ public final class Harness {
         System.out.println("      where <SDK> is the path to an Android SDK path and <X.X> is");
         System.out.println("      a release version like 1.5.");
         System.out.println("      Default is: " + sdkJar);
+        System.out.println();
+        System.out.println("  --skip-clean: leave temporary files in their place. Useful when");
+        System.out.println("      coupled with --verbose if you'd like to manually re-run");
+        System.out.println("      commands afterwards.");
         System.out.println();
         System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
         System.out.println("      test before the runner aborts it.");
@@ -160,8 +176,9 @@ public final class Harness {
 
     private void run() throws Exception {
         Vm vm = javaHome != null
-                ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp, javaHome)
-                : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar, localTemp);
+                ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp, javaHome, clean)
+                : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar, localTemp,
+                        clean, deviceRunnerDir);
         JtregFinder jtregFinder = new JtregFinder(localTemp);
         JUnitFinder jUnitFinder = new JUnitFinder();
         CaliperFinder caliperFinder = new CaliperFinder();

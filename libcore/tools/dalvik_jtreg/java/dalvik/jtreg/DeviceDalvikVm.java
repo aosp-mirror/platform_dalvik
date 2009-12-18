@@ -31,13 +31,17 @@ final class DeviceDalvikVm extends Vm {
             new File("/system/framework/jsr305.jar"));
 
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
-    private final File runnerDir = new File("/sdcard/dalvikrunner");
-    private final File testTemp = new File(runnerDir, "/tests.tmp");
+    private final File runnerDir;
+    private final File testTemp;
 
     private final Adb adb = new Adb();
 
-    DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp);
+    DeviceDalvikVm(Integer debugPort, long timeoutSeconds,
+            File sdkJar, File localTemp, boolean clean, String runnerDir) {
+        super(debugPort, timeoutSeconds, sdkJar, localTemp, clean);
+
+        this.runnerDir = new File(runnerDir);
+        this.testTemp = new File(this.runnerDir, "/tests.tmp");
     }
 
     @Override public void prepare() {
@@ -65,7 +69,10 @@ final class DeviceDalvikVm extends Vm {
 
     @Override public void shutdown() {
         super.shutdown();
-        adb.rm(runnerDir);
+
+        if (clean) {
+            adb.rm(runnerDir);
+        }
     }
 
     @Override public void buildAndInstall(TestRun testRun) {
@@ -80,7 +87,9 @@ final class DeviceDalvikVm extends Vm {
     @Override public void cleanup(TestRun testRun) {
         super.cleanup(testRun);
 
-        adb.rm(testClassesDirOnDevice(testRun));
+        if (clean) {
+            adb.rm(testClassesDirOnDevice(testRun));
+        }
     }
 
     private File testClassesDirOnDevice(TestRun testRun) {

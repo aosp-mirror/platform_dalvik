@@ -26,8 +26,8 @@ final class JavaVm extends Vm {
     private final String javaHome;
 
     JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar,
-            File localTemp, String javaHome) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp);
+            File localTemp, String javaHome, boolean clean) {
+        super(debugPort, timeoutSeconds, sdkJar, localTemp, clean);
         this.javaHome = javaHome;
     }
 
