@@ -714,11 +714,11 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
                 + " " + cal.getTimeZone().getID() + " " + cal.get(Calendar.YEAR);//$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    private String toTwoDigits(int digit) {
-        if(digit >= 10) {
-            return "" + digit;//$NON-NLS-1$
+    private String toTwoDigits(int n) {
+        if (n >= 10) {
+            return Integer.toString(n);//$NON-NLS-1$
         } else {
-            return "0" + digit;//$NON-NLS-1$
+            return "0" + n;//$NON-NLS-1$
         }
     }
 

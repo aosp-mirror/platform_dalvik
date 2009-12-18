@@ -475,7 +475,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
             if (ch < 0 || ch > Character.MAX_VALUE) {
                 return null;
             }
-            return Character.toString((char) ch);
+            return String.valueOf((char) ch);
         } catch (NumberFormatException ex) {
             return null;
         }

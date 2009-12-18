@@ -125,23 +125,23 @@ public class DecimalFormatSymbols implements Cloneable {
 
     public void setDecimalSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_DECIMAL_SEPARATOR_SYMBOL.ordinal(), 
-                "" + symbol);
+                UNumberFormatSymbol.UNUM_DECIMAL_SEPARATOR_SYMBOL.ordinal(),
+                String.valueOf(symbol));
     }
 
     public void setDigit(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_DIGIT_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setGroupingSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_GROUPING_SEPARATOR_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setInfinity(String symbol) {
@@ -159,43 +159,43 @@ public class DecimalFormatSymbols implements Cloneable {
     public void setMinusSign(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_MINUS_SIGN_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setMonetaryDecimalSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_MONETARY_SEPARATOR_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setNaN(String symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_NAN_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setPatternSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_PATTERN_SEPARATOR_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setPercent(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_PERCENT_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setPerMill(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_PERMILL_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
 
     public void setZeroDigit(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_ZERO_DIGIT_SYMBOL.ordinal(), 
-                "" + symbol);
+                String.valueOf(symbol));
     }
  
     public Currency getCurrency() {
