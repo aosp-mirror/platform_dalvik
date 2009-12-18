@@ -59,6 +59,8 @@ typedef struct JdwpTransport {
     bool (*awaitingHandshake)(struct JdwpState* state);
     bool (*processIncoming)(struct JdwpState* state);
     bool (*sendRequest)(struct JdwpState* state, ExpandBuf* pReq);
+    bool (*sendBufferedRequest)(struct JdwpState* state, const void* header,
+        size_t headerLen, const void* body, size_t bodyLen);
 } JdwpTransport;
 
 const JdwpTransport* dvmJdwpSocketTransport();
@@ -166,6 +168,12 @@ INLINE bool dvmJdwpProcessIncoming(JdwpState* state) {
 }
 INLINE bool dvmJdwpSendRequest(JdwpState* state, ExpandBuf* pReq) {
     return (*state->transport->sendRequest)(state, pReq);
+}
+INLINE bool dvmJdwpSendBufferedRequest(JdwpState* state, const void* header,
+    size_t headerLen, const void* body, size_t bodyLen)
+{
+    return (*state->transport->sendBufferedRequest)(state, header, headerLen,
+        body, bodyLen);
 }
 
 #endif /*_DALVIK_JDWP_JDWPPRIV*/
