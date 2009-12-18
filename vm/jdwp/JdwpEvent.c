@@ -1260,38 +1260,17 @@ bool dvmJdwpPostFieldAccess(JdwpState* state, int STUFF, ObjectId thisPtr,
  */
 void dvmJdwpDdmSendChunk(JdwpState* state, int type, int len, const u1* buf)
 {
-    ExpandBuf* pReq;
-    u1* outBuf;
+    u1 header[kJDWPHeaderLen + 8];
 
-    /*
-     * Write the chunk header and data into the ExpandBuf.
-     */
-    pReq = expandBufAlloc();
-    expandBufAddSpace(pReq, kJDWPHeaderLen);
-    expandBufAdd4BE(pReq, type);
-    expandBufAdd4BE(pReq, len);
-    if (len > 0) {
-        outBuf = expandBufAddSpace(pReq, len);
-        memcpy(outBuf, buf, len);
-    }
+    /* form the header (JDWP plus DDMS) */
+    set4BE(header, sizeof(header) + len);
+    set4BE(header+4, dvmJdwpNextRequestSerial(state));
+    set1(header+8, 0);     /* flags */
+    set1(header+9, kJDWPDdmCmdSet);
+    set1(header+10, kJDWPDdmCmd);
+    set4BE(header+11, type);
+    set4BE(header+15, len);
 
-    /*
-     * Go back and write the JDWP header.
-     */
-    outBuf = expandBufGetBuffer(pReq);
-
-    set4BE(outBuf, expandBufGetLength(pReq));
-    set4BE(outBuf+4, dvmJdwpNextRequestSerial(state));
-    set1(outBuf+8, 0);     /* flags */
-    set1(outBuf+9, kJDWPDdmCmdSet);
-    set1(outBuf+10, kJDWPDdmCmd);
-
-    /*
-     * Send it up.
-     */
-    //LOGD("Sending chunk (type=0x%08x len=%d)\n", type, len);
-    dvmJdwpSendRequest(state, pReq);
-
-    expandBufFree(pReq);
+    dvmJdwpSendBufferedRequest(state, header, sizeof(header), buf, len);
 }
 
