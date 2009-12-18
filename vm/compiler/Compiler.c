@@ -112,6 +112,18 @@ static void *compilerThreadStart(void *arg)
 {
     dvmChangeStatus(NULL, THREAD_VMWAIT);
 
+    /*
+     * Wait a little before recieving translation requests on the assumption
+     * that process start-up code isn't worth compiling.  The trace
+     * selector won't attempt to request a translation if the queue is
+     * filled, so we'll prevent by keeping the high water mark at zero
+     * for a shore time.
+     */
+    assert(gDvmJit.compilerHighWater == 0);
+    usleep(1000);
+    gDvmJit.compilerHighWater =
+        COMPILER_WORK_QUEUE_SIZE - (COMPILER_WORK_QUEUE_SIZE/4);
+
     dvmLockMutex(&gDvmJit.compilerLock);
     /*
      * Since the compiler thread will not touch any objects on the heap once
@@ -233,8 +245,8 @@ bool dvmCompilerStartup(void)
            sizeof(CompilerWorkOrder) * COMPILER_WORK_QUEUE_SIZE);
     gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
     gDvmJit.compilerQueueLength = 0;
-    gDvmJit.compilerHighWater =
-        COMPILER_WORK_QUEUE_SIZE - (COMPILER_WORK_QUEUE_SIZE/4);
+    /* Block new entries via HighWater until compiler thread is ready */
+    gDvmJit.compilerHighWater = 0;
 
     assert(gDvmJit.compilerHighWater < COMPILER_WORK_QUEUE_SIZE);
     if (!dvmCreateInternalThread(&gDvmJit.compilerHandle, "Compiler",

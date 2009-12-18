@@ -690,7 +690,6 @@ struct DvmJitGlobals {
 
     /* Array of profile threshold counters */
     unsigned char *pProfTable;
-    unsigned char *pProfTableCopy;
 
     /* Size of JIT hash table in entries.  Must be a power of 2 */
     unsigned int jitTableSize;
