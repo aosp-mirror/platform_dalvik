@@ -1,5 +1,0 @@
-# The test is checking that the implementation doesn't read any characters
-# earlier than it absolutely needs to. This is a bogus requirement; streams
-# are allowed to buffer input as necessary.
-result=EXEC_FAILED
-pattern=.*should get token \\[\, but get -1.*

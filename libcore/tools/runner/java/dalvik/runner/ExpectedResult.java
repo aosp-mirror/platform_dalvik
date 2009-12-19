@@ -16,50 +16,56 @@
 
 package dalvik.runner;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.Properties;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * The expected outcome of a test execution. This is typically encoded in a
- * properties file named by the test name and the {@code .expected} suffix; for
- * example, {@code java.util.Arrays.CopyMethods.expected}.
+ * The expected outcome of a test execution. This is typically encoded in the
+ * expectations text file, which has the following format:
+ * <pre>
+ * test java.io.StreamTokenizer.Reset
+ * result UNSUPPORTED
+ * pattern .*should get token \\[\, but get -1.*
+ *
+ * # should we fix this?
+ * test java.util.Arrays.CopyMethods
+ * result COMPILE_FAILED
+ * pattern .*cannot find symbol.*
+ * </pre>
  */
 class ExpectedResult {
 
-    /**
-     * Property identifier for the test's expected result, such as {@code
-     * EXEC_FAILED}. This property is required.
-     */
-    static final String RESULT = "result";
-
-    /**
-     * Property identifier for a regular expression that is the expected output
-     * will match. This property is optional.
-     */
-    static final String PATTERN = "pattern";
+    /** Matches lines in the file containing a key and value pair. */
+    private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s+(.+)");
 
     /**
      * The expectation of a general successful test run.
      */
     static final ExpectedResult SUCCESS = new ExpectedResult(Result.SUCCESS, ".*");
 
+    /**
+     * The test's expected result, such as {@code EXEC_FAILED}. This property is
+     * required.
+     */
     private final Result result;
+
+    /**
+     * A regular expression that is the expected output will match. This field
+     * is optional.
+     */
     private final String pattern;
 
-    private ExpectedResult(File expectationFile) throws IOException {
-        Properties properties = new Properties();
-        FileInputStream in = new FileInputStream(expectationFile);
-        properties.load(in);
-        in.close();
-
-        result = Result.valueOf(properties.getProperty(RESULT));
-        pattern = properties.getProperty(PATTERN);
-    }
-
     private ExpectedResult(Result result, String pattern) {
+        if (result == null) {
+            throw new IllegalArgumentException();
+        }
+
         this.result = result;
         this.pattern = pattern;
     }
@@ -72,16 +78,76 @@ class ExpectedResult {
         return pattern;
     }
 
-    public static ExpectedResult forRun(
-            Set<File> searchDirectories, TestRun testRun) throws IOException {
-        for (File expectationDir : searchDirectories) {
-            File expectationFile = new File(
-                    expectationDir, testRun.getQualifiedName() + ".expected");
-            if (expectationFile.exists()) {
-                return new ExpectedResult(expectationFile);
-            }
-        }
+    public static Map<String, ExpectedResult> parse(File expectationsFile)
+            throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(expectationsFile));
+        try {
+            Map<String, ExpectedResult> results = new HashMap<String, ExpectedResult>();
+            Matcher keyValuePairMatcher = KEY_VALUE_PAIR_PATTERN.matcher("");
 
-        return SUCCESS;
+            // the fields of interest for the current element
+            String qualifiedName = null;
+            Result result = null;
+            String pattern = null;
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+
+                if (line.length() == 0 || line.startsWith("#")) {
+                    continue; // skip comment and blank lines
+                }
+
+                keyValuePairMatcher.reset(line);
+                if (!keyValuePairMatcher.matches()) {
+                    throw new IllegalArgumentException("Unexpected line " + line
+                            + " in file " + expectationsFile);
+                }
+
+                String key = keyValuePairMatcher.group(1);
+                String value = keyValuePairMatcher.group(2);
+                if (key.equals("result") && result == null) {
+                    result = Result.valueOf(value);
+
+                } else if (key.equals("pattern") && pattern == null) {
+                    pattern = value;
+
+                } else if (key.equals("test")) {
+                    // when we encounter a new qualified name, the previous
+                    // element is complete. Add it to the results.
+                    if (qualifiedName != null) {
+                        ExpectedResult expectation = new ExpectedResult(result, pattern);
+                        ExpectedResult previous = results.put(qualifiedName, expectation);
+                        if (previous != null) {
+                            throw new IllegalArgumentException(
+                                    "Duplicate expectations for " + qualifiedName);
+                        }
+
+                        result = null;
+                        pattern = null;
+                    }
+
+                    qualifiedName = value;
+
+                } else {
+                    throw new IllegalArgumentException("Unexpected key " + key
+                            + " in file " + expectationsFile);
+                }
+            }
+
+            // add the last element in the file
+            if (qualifiedName != null) {
+                ExpectedResult expectation = new ExpectedResult(result, pattern);
+                ExpectedResult previous = results.put(qualifiedName, expectation);
+                if (previous != null) {
+                    throw new IllegalArgumentException(
+                            "Duplicate expectations for " + qualifiedName);
+                }
+            }
+
+            return results;
+        } finally {
+            reader.close();
+        }
     }
 }

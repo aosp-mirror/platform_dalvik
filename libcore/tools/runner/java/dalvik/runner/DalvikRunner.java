@@ -37,7 +37,7 @@ public final class DalvikRunner {
     private File sdkJar;
     private Integer debugPort;
     private long timeoutSeconds;
-    private Set<File> expectationDirs = new LinkedHashSet<File>();
+    private Set<File> expectationFiles = new LinkedHashSet<File>();
     private File xmlReportsDirectory;
     private String javaHome;
     private boolean clean = true;
@@ -48,7 +48,7 @@ public final class DalvikRunner {
         localTemp = new File("/tmp/" + UUID.randomUUID());
         timeoutSeconds = 10 * 60; // default is ten minutes
         sdkJar = new File("/home/dalvik-prebuild/android-sdk-linux/platforms/android-2.0/android.jar");
-        expectationDirs.add(new File("dalvik/libcore/tools/runner/expectations"));
+        expectationFiles.add(new File("dalvik/libcore/tools/runner/expectations.txt"));
     }
 
     private void prepareLogging() {
@@ -73,12 +73,7 @@ public final class DalvikRunner {
                 deviceRunnerDir = args[++i];
 
             } else if ("--expectations".equals(args[i])) {
-                File expectationDir = new File(args[++i]);
-                if (!expectationDir.isDirectory()) {
-                    System.out.println("Invalid expectation directory: " + expectationDir);
-                    return false;
-                }
-                expectationDirs.add(expectationDir);
+                expectationFiles.add(new File(args[++i]));
 
             } else if ("--java-home".equals(args[i])) {
                 javaHome = args[++i];
@@ -143,10 +138,10 @@ public final class DalvikRunner {
         System.out.println("      on-device temporary files and code.");
         System.out.println("      Default is: " + deviceRunnerDir);
         System.out.println();
-        System.out.println("  --expectations <directory>: use the specified directory when");
-        System.out.println("      looking for test expectations. The directory should include");
-        System.out.println("      <test>.expected files describing expected results.");
-        System.out.println("      Default is: " + expectationDirs);
+        System.out.println("  --expectations <file>: include the specified file when looking for");
+        System.out.println("      test expectations. The file should include qualified test names");
+        System.out.println("      and the corresponding expected output.");
+        System.out.println("      Default is: " + expectationFiles);
         System.out.println();
         System.out.println("  --java-home <java_home>: execute the tests on the local workstation");
         System.out.println("      using the specified java home directory. This does not impact");
@@ -183,8 +178,9 @@ public final class DalvikRunner {
         JUnitFinder jUnitFinder = new JUnitFinder();
         CaliperFinder caliperFinder = new CaliperFinder();
         Driver driver = new Driver(localTemp,
-                vm, expectationDirs, xmlReportsDirectory, jtregFinder,
+                vm, expectationFiles, xmlReportsDirectory, jtregFinder,
                 jUnitFinder, caliperFinder);
+        driver.loadExpectations();
         driver.buildAndRunAllTests(testFiles);
         vm.shutdown();
     }

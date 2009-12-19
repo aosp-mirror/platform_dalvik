@@ -17,17 +17,19 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -39,12 +41,13 @@ final class Driver {
     private static final Logger logger = Logger.getLogger(Driver.class.getName());
 
     private final File localTemp;
-    private final Set<File> expectationDirs;
+    private final Set<File> expectationFiles;
     private final JtregFinder jtregFinder;
     private final JUnitFinder junitFinder;
     private final CaliperFinder caliperFinder;
     private final Vm vm;
     private final File xmlReportsDirectory;
+    private final Map<String, ExpectedResult> expectedResults = new HashMap<String, ExpectedResult>();
 
     /**
      * The number of tests that weren't run because they aren't supported by
@@ -52,16 +55,24 @@ final class Driver {
      */
     private int unsupportedTests = 0;
 
-    public Driver(File localTemp, Vm vm, Set<File> expectationDirs,
+    public Driver(File localTemp, Vm vm, Set<File> expectationFiles,
             File xmlReportsDirectory, JtregFinder jtregFinder,
             JUnitFinder junit, CaliperFinder caliperFinder) {
         this.localTemp = localTemp;
-        this.expectationDirs = expectationDirs;
+        this.expectationFiles = expectationFiles;
         this.vm = vm;
         this.xmlReportsDirectory = xmlReportsDirectory;
         this.jtregFinder = jtregFinder;
         this.junitFinder = junit;
         this.caliperFinder = caliperFinder;
+    }
+
+    public void loadExpectations() throws IOException {
+        for (File f : expectationFiles) {
+            if (f.exists()) {
+                expectedResults.putAll(ExpectedResult.parse(f));
+            }
+        }
     }
 
     /**
@@ -102,17 +113,20 @@ final class Driver {
             builders.submit(new Runnable() {
                 public void run() {
                     try {
-                        testRun.setExpectedResult(ExpectedResult.forRun(expectationDirs, testRun));
+                        ExpectedResult expectedResult = expectedResults.get(
+                                testRun.getQualifiedName());
+                        if (expectedResult == null) {
+                            expectedResult = ExpectedResult.SUCCESS;
+                        }
+                        testRun.setExpectedResult(expectedResult);
+
                         vm.buildAndInstall(testRun);
-                    } catch (Throwable throwable) {
-                        testRun.setResult(Result.ERROR, throwable);
-                    }
-                    try {
                         logger.fine("installed test " + runIndex + "; "
                                 + readyToRun.size() + " are ready to run");
+
                         readyToRun.put(testRun);
-                    } catch (InterruptedException e) {
-                        logger.log(Level.SEVERE, "Unexpected interruption", e);
+                    } catch (Throwable throwable) {
+                        testRun.setResult(Result.ERROR, throwable);
                     }
                 }
             });

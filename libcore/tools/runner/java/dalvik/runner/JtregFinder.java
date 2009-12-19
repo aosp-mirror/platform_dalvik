@@ -35,6 +35,9 @@ import java.util.logging.Logger;
  */
 class JtregFinder {
 
+    // TODO: add support for the  @library directive, as seen in
+    //   test/com/sun/crypto/provider/Cipher/AES/TestKATForECB_VT.java
+
     private static final Logger logger = Logger.getLogger(JtregFinder.class.getName());
 
     /**
