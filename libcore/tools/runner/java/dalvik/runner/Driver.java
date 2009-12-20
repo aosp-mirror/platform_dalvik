@@ -31,7 +31,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Compiles, installs, runs and reports tests.
@@ -181,18 +180,7 @@ final class Driver {
     }
 
     private void printResult(TestRun testRun) {
-        ExpectedResult expected = testRun.getExpectedResult();
-        boolean patternSuccess;
-
-        if (expected.getPattern() != null) {
-            Pattern pattern = Pattern.compile(expected.getPattern(),
-                    Pattern.MULTILINE | Pattern.DOTALL);
-            patternSuccess = pattern.matcher(Strings.join(testRun.getOutputLines(), "\n")).matches();
-        } else {
-            patternSuccess = true;
-        }
-
-        if (expected.getResult() == testRun.getResult() && patternSuccess) {
+        if (testRun.isExpectedResult()) {
             logger.info("OK " + testRun.getQualifiedName() + " (" + testRun.getResult() + ")");
             return;
         }
@@ -203,17 +191,6 @@ final class Driver {
             logger.info("  \"" + description + "\"");
         }
 
-        if (expected.getResult() != Result.SUCCESS
-                && expected.getResult() != testRun.getResult()) {
-            logger.info("  Expected result: " + expected.getResult());
-        }
-
-        if (!patternSuccess) {
-            logger.info("  Expected output to match \"" + expected.getPattern() + "\"");
-        }
-
-        for (String output : testRun.getOutputLines()) {
-            logger.info("  " + output);
-        }
+        logger.info("  " + testRun.getFailureMessage().replace("\n", "\n  "));
     }
 }

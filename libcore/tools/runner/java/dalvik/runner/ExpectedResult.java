@@ -47,40 +47,35 @@ class ExpectedResult {
     /** Matches lines in the file containing a key and value pair. */
     private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s+(.+)");
 
-    /**
-     * The expectation of a general successful test run.
-     */
-    static final ExpectedResult SUCCESS = new ExpectedResult(Result.SUCCESS, ".*");
+    /** The pattern to use when no expected output is specified */
+    private static final Pattern MATCH_ALL_PATTERN
+            = Pattern.compile(".*", Pattern.MULTILINE | Pattern.DOTALL);
 
-    /**
-     * The test's expected result, such as {@code EXEC_FAILED}. This property is
-     * required.
-     */
+    /** The expectation of a general successful test run. */
+    static final ExpectedResult SUCCESS = new ExpectedResult(Result.SUCCESS, null);
+
+    /** The test's expected result, such as {@code EXEC_FAILED}. */
     private final Result result;
 
-    /**
-     * A regular expression that is the expected output will match. This field
-     * is optional.
-     */
-    private final String pattern;
+    /** The pattern the expected output will match. */
+    private final Pattern pattern;
 
     private ExpectedResult(Result result, String pattern) {
         if (result == null) {
             throw new IllegalArgumentException();
         }
-        if (pattern != null) {
-            Pattern.compile(pattern); // verify that the pattern is well-formed
-        }
 
         this.result = result;
-        this.pattern = pattern;
+        this.pattern = pattern != null
+                ? Pattern.compile(pattern, Pattern.MULTILINE | Pattern.DOTALL)
+                : MATCH_ALL_PATTERN;
     }
 
     public Result getResult() {
         return result;
     }
 
-    public String getPattern() {
+    public Pattern getPattern() {
         return pattern;
     }
 

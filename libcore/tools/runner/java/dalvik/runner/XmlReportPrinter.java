@@ -25,7 +25,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,18 +41,6 @@ import java.util.TimeZone;
  * TODO: unify this and com.google.coretests.XmlReportPrinter
  */
 public class XmlReportPrinter {
-
-    /**
-     * Test results of these types are omitted from the report, as if the tests
-     * never existed. Equivalent to the core test runner's @BrokenTest.
-     */
-    private static final EnumSet<Result> IGNORED_RESULTS
-            = EnumSet.of(Result.COMPILE_FAILED);
-
-    private static final EnumSet<Result> FAILED_RESULTS
-            = EnumSet.of(Result.EXEC_FAILED);
-    private static final EnumSet<Result> ERROR_RESULTS
-            = EnumSet.complementOf(EnumSet.of(Result.EXEC_FAILED, Result.SUCCESS));
 
     private static final String TESTSUITE = "testsuite";
     private static final String TESTCASE = "testcase";
@@ -116,7 +103,7 @@ public class XmlReportPrinter {
     private Map<String, Suite> testsToSuites(Collection<TestRun> testRuns) {
         Map<String, Suite> result = new LinkedHashMap<String, Suite>();
         for (TestRun testRun : testRuns) {
-            if (IGNORED_RESULTS.contains(testRun.getResult())) {
+            if (testRun.getResult() == Result.UNSUPPORTED) {
                 continue;
             }
 
@@ -128,10 +115,13 @@ public class XmlReportPrinter {
             }
 
             suite.tests.add(testRun);
-            if (FAILED_RESULTS.contains(testRun.getResult())) {
-                suite.failuresCount++;
-            } else if (ERROR_RESULTS.contains(testRun.getResult())) {
-                suite.errorsCount++;
+
+            if (!testRun.isExpectedResult()) {
+                if (testRun.getResult() == Result.EXEC_FAILED) {
+                    suite.failuresCount++;
+                } else {
+                    suite.errorsCount++;
+                }
             }
         }
         return result;
@@ -172,11 +162,8 @@ public class XmlReportPrinter {
             serializer.attribute(ns, ATTR_CLASSNAME, testRun.getSuiteName());
             serializer.attribute(ns, ATTR_TIME, "0");
 
-            String result = ERROR_RESULTS.contains(testRun.getResult()) ? ERROR
-                    : FAILED_RESULTS.contains(testRun.getResult()) ? FAILURE
-                    : null;
-
-            if (result != null) {
+            if (!testRun.isExpectedResult()) {
+                String result = testRun.getResult() == Result.EXEC_FAILED ? FAILURE : ERROR;
                 serializer.startTag(ns, result);
                 String title = testRun.getDescription();
                 if (title != null && title.length() > 0) {

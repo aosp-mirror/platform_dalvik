@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * A test run and its outcome. This class tracks the complete lifecycle of a
@@ -176,11 +177,51 @@ public final class TestRun {
         return outputLines;
     }
 
-    public ExpectedResult getExpectedResult() {
-        return expectedResult;
-    }
-
     public Class<? extends TestRunner> getTestRunner() {
         return testRunner;
+    }
+
+    /**
+     * Returns true if the outcome of this run matches what was expected.
+     */
+    public boolean isExpectedResult() {
+        return result == expectedResult.getResult() && matchesExpectedPattern();
+    }
+
+    /**
+     * Returns true if the test's output matches the expected output.
+     */
+    private boolean matchesExpectedPattern() {
+        return expectedResult.getPattern()
+                .matcher(Strings.join(outputLines, "\n"))
+                .matches();
+    }
+
+    /**
+     * Returns the failure message for this failed test run. This message is
+     * intended to help to diagnose why the test result didn't match what was
+     * expected.
+     */
+    public String getFailureMessage() {
+        StringBuilder builder = new StringBuilder();
+
+        if (expectedResult.getResult() != Result.SUCCESS
+                && expectedResult.getResult() != result) {
+            builder.append("Expected result: ")
+                    .append(expectedResult.getResult())
+                    .append("\n");
+        }
+
+        if (!matchesExpectedPattern()) {
+            builder.append("Expected output to match \"")
+                    .append(expectedResult.getPattern().pattern())
+                    .append("\"\n");
+        }
+
+        for (String output : outputLines) {
+            builder.append(output).append("\n");
+        }
+
+        return builder.toString();
     }
 }
