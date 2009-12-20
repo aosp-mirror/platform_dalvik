@@ -233,7 +233,7 @@ public class CurrencyTest extends junit.framework.TestCase {
         String[] dollar  = new String[] {"USD", "$", "US$", "$US"};
         // BEGIN android-changed
         // Starting CLDR 1.7 release, currency symbol for CAD changed to CA$ in some locales such as ja.
-        String[] cDollar = new String[] {"CA$", "CAD", "$", "Can$", "$Ca"};
+        String[] cDollar = new String[] {"CA$", "CAD", "$", "Can$", "$CA"};
         // END android-changed
 
         Currency currE   = Currency.getInstance("EUR");
