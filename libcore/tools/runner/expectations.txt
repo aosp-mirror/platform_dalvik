@@ -15,7 +15,7 @@ pattern .*Hit infinite wait condition.*
 # are allowed to buffer input as necessary.
 test java.io.StreamTokenizer.Reset
 result EXEC_FAILED
-pattern .*should get token \\[\, but get -1.*
+pattern .*Test failed: should get token \[, but get -1.*
 
 
 # These tests rely on Java 6 APIs

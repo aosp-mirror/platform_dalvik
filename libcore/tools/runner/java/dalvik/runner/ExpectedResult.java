@@ -22,6 +22,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,7 +32,7 @@ import java.util.regex.Pattern;
  * <pre>
  * test java.io.StreamTokenizer.Reset
  * result UNSUPPORTED
- * pattern .*should get token \\[\, but get -1.*
+ * pattern .*should get token \[, but get -1.*
  *
  * # should we fix this?
  * test java.util.Arrays.CopyMethods
@@ -40,6 +41,8 @@ import java.util.regex.Pattern;
  * </pre>
  */
 class ExpectedResult {
+
+    private static final Logger logger = Logger.getLogger(ExpectedResult.class.getName());
 
     /** Matches lines in the file containing a key and value pair. */
     private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s+(.+)");
@@ -65,6 +68,9 @@ class ExpectedResult {
         if (result == null) {
             throw new IllegalArgumentException();
         }
+        if (pattern != null) {
+            Pattern.compile(pattern); // verify that the pattern is well-formed
+        }
 
         this.result = result;
         this.pattern = pattern;
@@ -80,6 +86,8 @@ class ExpectedResult {
 
     public static Map<String, ExpectedResult> parse(File expectationsFile)
             throws IOException {
+        logger.fine("loading expectations file " + expectationsFile);
+
         BufferedReader reader = new BufferedReader(new FileReader(expectationsFile));
         try {
             Map<String, ExpectedResult> results = new HashMap<String, ExpectedResult>();
@@ -145,6 +153,7 @@ class ExpectedResult {
                 }
             }
 
+            logger.fine("loaded " + results.size() + " expectations.");
             return results;
         } finally {
             reader.close();
