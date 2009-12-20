@@ -396,7 +396,7 @@ public final class Long extends Number implements Comparable<Long> {
      */
     public static String toBinaryString(long v) {
         int i = (int) v;
-        if (i == v) {
+        if (v >= 0 && i == v) {
             return Integer.toBinaryString(i);
         }
 
@@ -422,7 +422,7 @@ public final class Long extends Number implements Comparable<Long> {
      */
     public static String toHexString(long v) {
         int i = (int) v;
-        if (i == v) {
+        if (v >= 0 && i == v) {
             return Integer.toHexString(i);
         }
 
@@ -447,7 +447,7 @@ public final class Long extends Number implements Comparable<Long> {
      */
     public static String toOctalString(long v) {
         int i = (int) v;
-        if (i == v) {
+        if (v >= 0 && i == v) {
             return Integer.toOctalString(i);
         }
         int bufLen = 22;  // Max number of octal digits in a long
