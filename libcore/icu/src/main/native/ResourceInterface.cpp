@@ -54,9 +54,9 @@ static jstring getJStringFromUnicodeString(JNIEnv *env, UnicodeString string) {
     int stringLength = string.length();
     jchar *res = (jchar *) malloc(sizeof(jchar) * (stringLength + 1));
     string.extract(res, stringLength+1, status);
-    if(U_FAILURE(status)) {
+    if (U_FAILURE(status)) {
         free(res);
-        LOGI("Error getting string for getJStringFromUnicodeString");
+        LOGE("Error getting string for getJStringFromUnicodeString: %s", u_errorName(status));
         status = U_ZERO_ERROR;
         return NULL;
     }
@@ -76,10 +76,7 @@ static void addObject(JNIEnv *env, jobjectArray result, const char *keyStr, jobj
     env->DeleteLocalRef(element);
 } 
 
-static jint getFractionDigitsNative(JNIEnv* env, jclass clazz, 
-        jstring currencyCode) {
-    // LOGI("ENTER getFractionDigitsNative");
-    
+static jint getCurrencyFractionDigitsNative(JNIEnv* env, jclass clazz, jstring currencyCode) {
     UErrorCode status = U_ZERO_ERROR;
     
     NumberFormat *fmt = NumberFormat::createCurrencyInstance(status);
@@ -229,135 +226,77 @@ static jstring getCurrencySymbolNative(JNIEnv* env, jclass clazz,
 
 static jstring getDisplayCountryNative(JNIEnv* env, jclass clazz, 
         jstring targetLocale, jstring locale) {
-    // LOGI("ENTER getDisplayCountryNative");
-    
-    UErrorCode status = U_ZERO_ERROR;
 
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
-    
+
     UnicodeString string;
     targetLoc.getDisplayCountry(loc, string);
-
-    jstring result = getJStringFromUnicodeString(env, string);
-
-    return result;
+    return getJStringFromUnicodeString(env, string);
 }
 
 static jstring getDisplayLanguageNative(JNIEnv* env, jclass clazz, 
         jstring targetLocale, jstring locale) {
-    // LOGI("ENTER getDisplayLanguageNative");
 
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
 
     UnicodeString string;
     targetLoc.getDisplayLanguage(loc, string);
-    
-    jstring result = getJStringFromUnicodeString(env, string);
-    
-    return result;
+    return getJStringFromUnicodeString(env, string);
 }
 
 static jstring getDisplayVariantNative(JNIEnv* env, jclass clazz, 
         jstring targetLocale, jstring locale) {
-    // LOGI("ENTER getDisplayVariantNative");
 
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
-    
+
     UnicodeString string;
     targetLoc.getDisplayVariant(loc, string);
-    
-    jstring result = getJStringFromUnicodeString(env, string);
-    
-    return result;
+    return getJStringFromUnicodeString(env, string);
 }
 
 static jstring getISO3CountryNative(JNIEnv* env, jclass clazz, jstring locale) {
-    // LOGI("ENTER getISO3CountryNative");
-
     Locale loc = getLocale(env, locale);
-    
-    const char *string = loc.getISO3Country();
-    
-    jstring result = env->NewStringUTF(string);
-    
-    return result;
+    return env->NewStringUTF(loc.getISO3Country());
 }
 
 static jstring getISO3LanguageNative(JNIEnv* env, jclass clazz, jstring locale) {
-    // LOGI("ENTER getISO3LanguageNative");
-
     Locale loc = getLocale(env, locale);
-    
-    const char *string = loc.getISO3Language();
-    
-    jstring result = env->NewStringUTF(string);
-    
+    return env->NewStringUTF(loc.getISO3Language());
+}
+
+static jobjectArray toStringArray(JNIEnv* env, const char* const* strings) {
+    size_t count = 0;
+    while (strings[count] != NULL) {
+        ++count;
+    }
+    jobjectArray result = env->NewObjectArray(count, string_class, NULL);
+    for (size_t i = 0; i < count; ++i) {
+        jstring s = env->NewStringUTF(strings[i]);
+        env->SetObjectArrayElement(result, i, s);
+        env->DeleteLocalRef(s);
+    }
     return result;
 }
 
 static jobjectArray getISOCountriesNative(JNIEnv* env, jclass clazz) {
-    // LOGI("ENTER getISOCountriesNative");
-
-    const char* const* strings = Locale::getISOCountries();
-    
-    int count = 0;
-    while(strings[count] != NULL) {
-        count++;
-    }
-  
-    jobjectArray result = env->NewObjectArray(count, string_class, NULL);
-
-    jstring res;
-    for(int i = 0; i < count; i++) {
-        res = env->NewStringUTF(strings[i]);
-        env->SetObjectArrayElement(result, i, res);
-        env->DeleteLocalRef(res);
-    }
-    return result;
+    return toStringArray(env, Locale::getISOCountries());
 }
 
 static jobjectArray getISOLanguagesNative(JNIEnv* env, jclass clazz) {
-    // LOGI("ENTER getISOLanguagesNative");
-    
-    const char* const* strings = Locale::getISOLanguages();
-    
-    const char *string = strings[0];
-    
-    int count = 0;
-    while(strings[count] != NULL) {
-        count++;
-    }
-    
-    jobjectArray result = env->NewObjectArray(count, string_class, NULL);
-
-    jstring res;
-    for(int i = 0; i < count; i++) {
-        res = env->NewStringUTF(strings[i]);
-        env->SetObjectArrayElement(result, i, res);
-        env->DeleteLocalRef(res);
-    }
-    return result;
+    return toStringArray(env, Locale::getISOLanguages());
 }
 
 static jobjectArray getAvailableLocalesNative(JNIEnv* env, jclass clazz) {
-    // LOGI("ENTER getAvailableLocalesNative");
-    
-    int count = uloc_countAvailable();
-    
+    size_t count = uloc_countAvailable();
     jobjectArray result = env->NewObjectArray(count, string_class, NULL);
-
-    jstring res;
-    const char * string;    
-    for(int i = 0; i < count; i++) {
-        string = uloc_getAvailable(i);
-        res = env->NewStringUTF(string);
-        env->SetObjectArrayElement(result, i, res);
-        env->DeleteLocalRef(res);
+    for (size_t i = 0; i < count; ++i) {
+        jstring s = env->NewStringUTF(uloc_getAvailable(i));
+        env->SetObjectArrayElement(result, i, s);
+        env->DeleteLocalRef(s);
     }
-
     return result;
 }
 
@@ -497,64 +436,53 @@ static jstring getDisplayTimeZoneNative(JNIEnv* env, jclass clazz,
     return result;
 }
 
-static void getDayInitVector(JNIEnv *env, UResourceBundle *gregorian, int *values) {
-
-    UErrorCode status = U_ZERO_ERROR;
+static void getDayIntVector(JNIEnv *env, UResourceBundle *gregorian, int *values) {
 
     // get the First day of week and the minimal days in first week numbers
+    UErrorCode status = U_ZERO_ERROR;
     UResourceBundle *gregorianElems = ures_getByKey(gregorian, "DateTimeElements", NULL, &status);
-    if(U_FAILURE(status)) {
+    if (U_FAILURE(status)) {
         return;
     }
 
     int intVectSize;
-    const int *result;
-    result = ures_getIntVector(gregorianElems, &intVectSize, &status);
-    if(U_FAILURE(status)) {
+    const int* result = ures_getIntVector(gregorianElems, &intVectSize, &status);
+    if (U_FAILURE(status)) {
         ures_close(gregorianElems);
         return;
     }
-
-    if(intVectSize == 2) {
+    
+    if (intVectSize == 2) {
         values[0] = result[0];
         values[1] = result[1];
     }
 
     ures_close(gregorianElems);
-
 }
 
 static jobjectArray getAmPmMarkers(JNIEnv *env, UResourceBundle *gregorian) {
-    
-    jobjectArray amPmMarkers;
-    jstring pmU, amU;
-
     UErrorCode status = U_ZERO_ERROR;
-
-    UResourceBundle *gregorianElems;
-
-    gregorianElems = ures_getByKey(gregorian, "AmPmMarkers", NULL, &status);
-    if(U_FAILURE(status)) {
+    UResourceBundle *gregorianElems = ures_getByKey(gregorian, "AmPmMarkers", NULL, &status);
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    int lengthAm, lengthPm;
-
     ures_resetIterator(gregorianElems);
 
+    int lengthAm, lengthPm;
     const jchar* am = ures_getStringByIndex(gregorianElems, 0, &lengthAm, &status);
     const jchar* pm = ures_getStringByIndex(gregorianElems, 1, &lengthPm, &status);
 
-    if(U_FAILURE(status)) {
+    if (U_FAILURE(status)) {
         ures_close(gregorianElems);
         return NULL;
     }
     
-    amPmMarkers = env->NewObjectArray(2, string_class, NULL);
-    amU = env->NewString(am, lengthAm);
+    jobjectArray amPmMarkers = env->NewObjectArray(2, string_class, NULL);
+    jstring amU = env->NewString(am, lengthAm);
     env->SetObjectArrayElement(amPmMarkers, 0, amU);
     env->DeleteLocalRef(amU);
-    pmU = env->NewString(pm, lengthPm);
+    jstring pmU = env->NewString(pm, lengthPm);
     env->SetObjectArrayElement(amPmMarkers, 1, pmU);
     env->DeleteLocalRef(pmU);
     ures_close(gregorianElems);
@@ -813,41 +741,26 @@ static jobjectArray getShortWeekdayNames(JNIEnv *env, UResourceBundle *gregorian
 }
 
 static jstring getDecimalPatternChars(JNIEnv *env, UResourceBundle *rootElems) {
-    
     UErrorCode status = U_ZERO_ERROR;
 
     int zeroL, digitL, decSepL, groupL, listL, percentL, permillL, expL, currSepL, minusL;
-    int patternLength;
-
-    jchar *patternChars;
 
     const jchar* zero = ures_getStringByIndex(rootElems, 4, &zeroL, &status);
-
     const jchar* digit = ures_getStringByIndex(rootElems, 5, &digitL, &status);
-
     const jchar* decSep = ures_getStringByIndex(rootElems, 0, &decSepL, &status);
-
     const jchar* group = ures_getStringByIndex(rootElems, 1, &groupL, &status);
-
     const jchar* list = ures_getStringByIndex(rootElems, 2, &listL, &status);
-
     const jchar* percent = ures_getStringByIndex(rootElems, 3, &percentL, &status);
-
     const jchar* permill = ures_getStringByIndex(rootElems, 8, &permillL, &status);
-
     const jchar* exp = ures_getStringByIndex(rootElems, 7, &expL, &status);
-
     const jchar* currSep = ures_getStringByIndex(rootElems, 0, &currSepL, &status);
-
     const jchar* minus = ures_getStringByIndex(rootElems, 6, &minusL, &status);
 
-    if(U_FAILURE(status)) {
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-
-    patternChars = (jchar *) malloc(11 * sizeof(jchar));
-
+    jchar patternChars[11];
     patternChars[0] = 0;
 
     u_strncat(patternChars, zero, 1);
@@ -861,11 +774,7 @@ static jstring getDecimalPatternChars(JNIEnv *env, UResourceBundle *rootElems) {
     u_strncat(patternChars, currSep, 1);
     u_strncat(patternChars, minus, 1);
 
-    jstring decimalPatternChars = env->NewString(patternChars, 10);
-
-    free(patternChars);
-
-    return decimalPatternChars;
+    return env->NewString(patternChars, 10);
 }
 
 static jstring getIntCurrencyCode(JNIEnv *env, jclass clazz, jstring locale) {
@@ -891,31 +800,20 @@ static jstring getIntCurrencyCode(JNIEnv *env, jclass clazz, jstring locale) {
 }
 
 static jstring getCurrencySymbol(JNIEnv *env, jclass clazz, jstring locale, jstring intCurrencySymbol) {
-
     jstring result = getCurrencySymbolNative(env, clazz, locale, intCurrencySymbol);
-    if(result == intCurrencySymbol) {
-        return NULL;
-    }
-    return result;
-
+    return (result == intCurrencySymbol) ? NULL : result;
 }
 
-static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, 
-        jstring locale, jboolean needsTZ) {
-    
-    UErrorCode status = U_ZERO_ERROR;
-
+static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
     const char *loc = env->GetStringUTFChars(locale, NULL);
-    UResourceBundle *root = ures_openU(NULL, loc, &status);
-
+    UErrorCode status = U_ZERO_ERROR;
+    UResourceBundle* root = ures_openU(NULL, loc, &status);
     env->ReleaseStringUTFChars(locale, loc);
-    if(U_FAILURE(status)) {
-        LOGI("Error getting resources");
+    if (U_FAILURE(status)) {
+        LOGE("Error getting resources: %s", u_errorName(status));
         status = U_ZERO_ERROR;
         return NULL;
     }
-
-
 
     jclass obj_class = env->FindClass("[Ljava/lang/Object;");
     jclass integer_class = env->FindClass("java/lang/Integer");
@@ -952,7 +850,6 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz,
 
     int counter = 0;
 
-    int firstDayVals[2] = {-1, -1};
 
     const jchar* nan = (const jchar *)NULL;
     const jchar* inf = (const jchar *)NULL;
@@ -981,7 +878,8 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz,
 
 
     // adding the first day of week and minimal days in first week values
-    getDayInitVector(env, gregorian, firstDayVals);
+    int firstDayVals[2] = {-1, -1};
+    getDayIntVector(env, gregorian, firstDayVals);
     if((firstDayVals[0] != -1) && (firstDayVals[1] != -1)) {
         firstDayOfWeek = env->NewObject(integer_class, integerInit, firstDayVals[0]);
         minimalDaysInFirstWeek = env->NewObject(integer_class, integerInit, firstDayVals[1]);
@@ -1254,20 +1152,10 @@ zones:
     ures_close(root);
 
 
-    if(needsTZ == JNI_TRUE) {
-        counter++; //add empty timezone
-    }
-
-
-
     // collect all content and put it into an array
     result = env->NewObjectArray(counter, obj_class, NULL);
 
     int index = 0;
-    
-    if(needsTZ == JNI_TRUE) {
-        addObject(env, result, "timezones", NULL, index++);
-    }
     if(firstDayOfWeek != NULL && index < counter) {
         addObject(env, result, "First_Day", firstDayOfWeek, index++);
     }
@@ -1353,16 +1241,16 @@ zones:
 
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    {"getFractionDigitsNative", "(Ljava/lang/String;)I",                   
-            (void*) getFractionDigitsNative},
+    {"getCurrencyFractionDigitsNative", "(Ljava/lang/String;)I",
+            (void*) getCurrencyFractionDigitsNative},
     {"getCurrencyCodeNative", "(Ljava/lang/String;)Ljava/lang/String;",
             (void*) getCurrencyCodeNative},
     {"getCurrencySymbolNative", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
             (void*) getCurrencySymbolNative},
-    {"getDisplayCountryNative", 
+    {"getDisplayCountryNative",
             "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
             (void*) getDisplayCountryNative},
-    {"getDisplayLanguageNative", 
+    {"getDisplayLanguageNative",
             "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
             (void*) getDisplayLanguageNative},
     {"getDisplayVariantNative",
@@ -1380,14 +1268,14 @@ static JNINativeMethod gMethods[] = {
             (void*) getISOLanguagesNative},
     {"getAvailableLocalesNative", "()[Ljava/lang/String;",
             (void*) getAvailableLocalesNative},
-    {"getTimeZonesNative", 
+    {"getTimeZonesNative",
             "([[Ljava/lang/String;Ljava/lang/String;)V",
             (void*) getTimeZonesNative},
-    {"getDisplayTimeZoneNative", 
+    {"getDisplayTimeZoneNative",
             "(Ljava/lang/String;ZILjava/lang/String;)Ljava/lang/String;",
             (void*) getDisplayTimeZoneNative},
-    {"getContentImpl", 
-            "(Ljava/lang/String;Z)[[Ljava/lang/Object;",
+    {"getContentImpl",
+            "(Ljava/lang/String;)[[Ljava/lang/Object;",
             (void*) getContentImpl},
 };
 

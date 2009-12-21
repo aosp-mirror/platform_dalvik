@@ -25,7 +25,6 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
 import java.security.AccessController;
-import java.security.PrivilegedAction;
 // import java.util.zip.ZipEntry;
 // import java.util.zip.ZipFile;
 
@@ -200,6 +199,7 @@ public final class Locale implements Cloneable, Serializable {
     private transient String countryCode;
     private transient String languageCode;
     private transient String variantCode;
+    private transient String cachedToStringResult;
 
     // BEGIN android-removed
     // private transient ULocale uLocale;
@@ -412,29 +412,18 @@ public final class Locale implements Cloneable, Serializable {
      *            the {@code Locale} for which the display name is retrieved.
      * @return a country name.
      */
-	public String getDisplayCountry(Locale locale) {
+    public String getDisplayCountry(Locale locale) {
         // BEGIN android-changed
-		// return ULocale.forLocale(this).getDisplayCountry(ULocale.forLocale(locale));
         if (countryCode.length() == 0) {
             return countryCode;
         }
-        try {
-            // First try the specified locale
-            ResourceBundle bundle = getBundle("Country", locale); //$NON-NLS-1$
-            String result = bundle.getString(this.toString());
-            if (result != null) {
-                return result;
-            }
-            // Now use the default locale
-            if (locale != Locale.getDefault()) {
-                bundle = getBundle("Country", Locale.getDefault()); //$NON-NLS-1$
-            }
-            return bundle.getString(countryCode);
-        } catch (MissingResourceException e) {
-            return countryCode;
+        String result = Resources.getDisplayCountryNative(toString(), locale.toString());
+        if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
+            result = Resources.getDisplayCountryNative(toString(), Locale.getDefault().toString());
         }
+        return result;
         // END android-changed
-	}
+    }
 
     /**
      * Gets the full language name in the default {@code Locale} for the language code
@@ -456,29 +445,18 @@ public final class Locale implements Cloneable, Serializable {
      *            the {@code Locale} for which the display name is retrieved.
      * @return a language name.
      */
-	public String getDisplayLanguage(Locale locale) {
+    public String getDisplayLanguage(Locale locale) {
         // BEGIN android-changed
-        // return ULocale.forLocale(this).getDisplayLanguage(ULocale.forLocale(locale));
         if (languageCode.length() == 0) {
             return languageCode;
         }
-        try {
-            // First try the specified locale
-            ResourceBundle bundle = getBundle("Language", locale); //$NON-NLS-1$
-            String result = bundle.getString(this.toString());
-            if (result != null) {
-                return result;
-            }
-            // Now use the default locale
-            if (locale != Locale.getDefault()) {
-                bundle = getBundle("Language", Locale.getDefault()); //$NON-NLS-1$
-            }
-            return bundle.getString(languageCode);
-        } catch (MissingResourceException e) {
-            return languageCode;
+        String result = Resources.getDisplayLanguageNative(toString(), locale.toString());
+        if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
+            result = Resources.getDisplayLanguageNative(toString(), Locale.getDefault().toString());
         }
+        return result;
         // END android-changed
-	}
+    }
 
     /**
      * Gets the full language, country, and variant names in the default {@code Locale}
@@ -547,29 +525,18 @@ public final class Locale implements Cloneable, Serializable {
      *            the {@code Locale} for which the display name is retrieved.
      * @return a variant name.
      */
-	public String getDisplayVariant(Locale locale) {
+    public String getDisplayVariant(Locale locale) {
         // BEGIN android-changed
-        // return ULocale.forLocale(this).getDisplayVariant(ULocale.forLocale(locale));
         if (variantCode.length() == 0) {
             return variantCode;
         }
-        try {
-            // First try the specified locale
-            ResourceBundle bundle = getBundle("Variant", locale); //$NON-NLS-1$
-            String result = bundle.getString(this.toString());
-            if (result != null) {
-                return result;
-            }
-            // Now use the default locale
-            if (locale != Locale.getDefault()) {
-                bundle = getBundle("Variant", Locale.getDefault()); //$NON-NLS-1$
-            }
-            return bundle.getString(variantCode);
-        } catch (MissingResourceException e) {
-            return variantCode;
+        String result = Resources.getDisplayVariantNative(toString(), locale.toString());
+        if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
+            result = Resources.getDisplayVariantNative(toString(), Locale.getDefault().toString());
         }
+        return result;
         // END android-changed
-	}
+    }
 
     /**
      * Gets the three letter ISO country code which corresponds to the country
@@ -579,16 +546,14 @@ public final class Locale implements Cloneable, Serializable {
      * @throws MissingResourceException
      *                if there is no matching three letter ISO country code.
      */
-	public String getISO3Country() throws MissingResourceException {
+    public String getISO3Country() throws MissingResourceException {
         // BEGIN android-changed
-        // return ULocale.forLocale(this).getISO3Country();
         if (countryCode.length() == 0) {
-            return ""; //$NON-NLS-1$
+            return countryCode;
         }
-        ResourceBundle bundle = getBundle("ISO3Countries", this); //$NON-NLS-1$
-        return bundle.getString(this.toString());
+        return Resources.getISO3CountryNative(toString());
         // END android-changed
-	}
+    }
 
     /**
      * Gets the three letter ISO language code which corresponds to the language
@@ -598,16 +563,14 @@ public final class Locale implements Cloneable, Serializable {
      * @throws MissingResourceException
      *                if there is no matching three letter ISO language code.
      */
-	public String getISO3Language() throws MissingResourceException {
+    public String getISO3Language() throws MissingResourceException {
         // BEGIN android-changed
-        // return ULocale.forLocale(this).getISO3Language();
         if (languageCode.length() == 0) {
-            return ""; //$NON-NLS-1$
+            return languageCode;
         }
-        ResourceBundle bundle = getBundle("ISO3Languages", this); //$NON-NLS-1$
-        return bundle.getString(this.toString());
+        return Resources.getISO3LanguageNative(toString());
         // END android-changed
-	}
+    }
 
     /**
      * Gets the list of two letter ISO country codes which can be used as the
@@ -617,7 +580,6 @@ public final class Locale implements Cloneable, Serializable {
      */
     public static String[] getISOCountries() {
         // BEGIN android-changed
-        // return ULocale.getISOCountries();
         return Resources.getISOCountries();
         // END android-changed
     }
@@ -628,12 +590,11 @@ public final class Locale implements Cloneable, Serializable {
      *
      * @return an array of strings.
      */
-	public static String[] getISOLanguages() {
+    public static String[] getISOLanguages() {
         // BEGIN android-changed
-        // return ULocale.getISOLanguages();
         return Resources.getISOLanguages();
         // END android-changed
-	}
+    }
 
     /**
      * Gets the language code for this {@code Locale} or the empty string of no language
@@ -646,7 +607,7 @@ public final class Locale implements Cloneable, Serializable {
     }
 
     /**
-     * Gets the variant code for this {@code Locale} or an empty {@code String} of no variant
+     * Gets the variant code for this {@code Locale} or an empty {@code String} if no variant
      * was set.
      *
      * @return a variant code.
@@ -704,33 +665,31 @@ public final class Locale implements Cloneable, Serializable {
      */
     @Override
     public final String toString() {
-        StringBuilder result = new StringBuilder();
-        result.append(languageCode);
-        if (countryCode.length() > 0) {
-            result.append('_');
-            result.append(countryCode);
-        }
-        if (variantCode.length() > 0 && result.length() > 0) {
-            if (0 == countryCode.length()) {
-                result.append("__"); //$NON-NLS-1$
-            } else {
-                result.append('_');
-            }
-            result.append(variantCode);
-        }
-        return result.toString();
+        String result = cachedToStringResult;
+        return (result == null) ? (cachedToStringResult = toNewString()) : result;
     }
 
-    // BEGIN android-added
-    static ResourceBundle getBundle(final String clName, final Locale locale) {
-        return AccessController.doPrivileged(new PrivilegedAction<ResourceBundle>() {
-            public ResourceBundle run() {
-                return ResourceBundle.getBundle("org.apache.harmony.luni.internal.locale." //$NON-NLS-1$
-                        + clName, locale);
-            }
-        });
+    private String toNewString() {
+        // The string form of a locale that only has a variant is the empty string.
+        if (languageCode.length() == 0 && countryCode.length() == 0) {
+            return "";
+        }
+        // Otherwise, the output format is "ll_cc_variant", where language and country are always
+        // two letters, but the variant is an arbitrary length. A size of 11 characters has room
+        // for "en_US_POSIX", the largest "common" value. (In practice, the string form is almost
+        // always 5 characters: "ll_cc".)
+        StringBuilder result = new StringBuilder(11);
+        result.append(languageCode);
+        if (countryCode.length() > 0 || variantCode.length() > 0) {
+            result.append('_');
+        }
+        result.append(countryCode);
+        if (variantCode.length() > 0) {
+            result.append('_');
+        }
+        result.append(variantCode);
+        return result.toString();
     }
-    // END android-added
 
     private static final ObjectStreamField[] serialPersistentFields = {
             new ObjectStreamField("country", String.class), //$NON-NLS-1$
