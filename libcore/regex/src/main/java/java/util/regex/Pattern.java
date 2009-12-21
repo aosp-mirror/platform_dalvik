@@ -47,7 +47,7 @@ import com.ibm.icu4jni.regex.NativeRegEx;
  *     boolean b2 = Pattern.matches("Hello, A[a-z]*!", "Hello, Robot!");   // false
  * </pre>
  * <p/>
- * Please consult the <a href="package.html">package documentation</a> for an
+ * Please consult the <a href="package-descr.html">package documentation</a> for an
  * overview of the regular expression syntax used in this class as well as
  * Android-specific implementation details.
  * 
