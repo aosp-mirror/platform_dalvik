@@ -28,7 +28,7 @@ result COMPILE_FAILED
 pattern .*cannot find symbol.*
 
 
-# Dalvik don't include the "SunJCE" crypto provider
+# Dalvik doesn't include the "SunJCE" crypto provider
 test com.sun.crypto.provider.Cipher.AES.Test4513830
 result EXEC_FAILED
 pattern .*NoClassDefFoundError: com.sun.crypto.provider.SunJCE.*
@@ -601,3 +601,76 @@ pattern .*package com.sun.jdi does not exist.*
 test com.sun.jdi.VMDeathRequestTest
 result COMPILE_FAILED
 pattern .*package com.sun.jdi does not exist.*
+
+
+# Dalvik doesn't include a com.sun.net HTTP server
+test com.sun.net.httpserver
+result UNSUPPORTED
+
+test sun.net.www
+result UNSUPPORTED
+
+
+# Dalvik doesn't include AWT except the font package
+test java.awt
+result UNSUPPORTED
+
+test java.awt.FontClass
+result SUCCESS
+
+
+# Dalvik doesn't include java.beans except for property listeners
+test java.beans
+result UNSUPPORTED
+
+test java.beans.PropertyChangeSupport
+result SUCCESS
+
+
+# Dalvik doesn't include java.lang.instrument
+test java.lang.instrument
+result UNSUPPORTED
+
+
+# Dalvik doesn't include java.lang.management
+test java.lang.management
+result UNSUPPORTED
+
+
+# Dalvik doesn't include RMI
+test java.rmi
+result UNSUPPORTED
+
+test sun.rmi
+result UNSUPPORTED
+
+
+# Dalvik doesn't include javax.management
+test javax.management
+result UNSUPPORTED
+
+
+# Dalvik doesn't include javax.naming
+test javax.naming
+result UNSUPPORTED
+
+
+# Dalvik doesn't include javax.sound
+test javax.sound
+result UNSUPPORTED
+
+
+# Dalvik doesn't include javax.swing
+test javax.swing
+result UNSUPPORTED
+
+
+# Dalvik doesn't include sun.management
+test sun.management
+result UNSUPPORTED
+
+
+# Dalvik doesn't include javax.smartcardio
+test sun.security.smartcardio
+result UNSUPPORTED
+

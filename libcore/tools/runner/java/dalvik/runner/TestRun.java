@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * A test run and its outcome. This class tracks the complete lifecycle of a
@@ -223,5 +222,9 @@ public final class TestRun {
         }
 
         return builder.toString();
+    }
+
+    @Override public String toString() {
+        return qualifiedName;
     }
 }

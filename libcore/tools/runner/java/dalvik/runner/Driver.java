@@ -112,16 +112,19 @@ final class Driver {
             builders.submit(new Runnable() {
                 public void run() {
                     try {
-                        ExpectedResult expectedResult = expectedResults.get(
-                                testRun.getQualifiedName());
-                        if (expectedResult == null) {
-                            expectedResult = ExpectedResult.SUCCESS;
-                        }
+                        ExpectedResult expectedResult = lookupExpectedResult(testRun);
                         testRun.setExpectedResult(expectedResult);
 
-                        vm.buildAndInstall(testRun);
-                        logger.fine("installed test " + runIndex + "; "
-                                + readyToRun.size() + " are ready to run");
+                        if (expectedResult.getResult() == Result.UNSUPPORTED) {
+                            testRun.setResult(Result.UNSUPPORTED, Collections.<String>emptyList());
+                            logger.fine("skipping test " + testRun
+                                    + " because the expectations file says it is unsupported.");
+
+                        } else {
+                            vm.buildAndInstall(testRun);
+                            logger.fine("installed test " + runIndex + "; "
+                                    + readyToRun.size() + " are ready to run");
+                        }
 
                         readyToRun.put(testRun);
                     } catch (Throwable throwable) {
@@ -159,6 +162,29 @@ final class Driver {
             logger.info("Printing XML Reports... ");
             int numFiles = new XmlReportPrinter().generateReports(xmlReportsDirectory, runs);
             logger.info(numFiles + " XML files written.");
+        }
+    }
+
+    /**
+     * Finds the expected result for the specified test run. This strips off
+     * parts of the test's qualified name until it either finds a match or runs
+     * out of name.
+     */
+    private ExpectedResult lookupExpectedResult(TestRun testRun) {
+        String name = testRun.getQualifiedName();
+
+        while (true) {
+            ExpectedResult expectedResult = expectedResults.get(name);
+            if (expectedResult != null) {
+                return expectedResult;
+            }
+
+            int dot = name.lastIndexOf('.');
+            if (dot == -1) {
+                return ExpectedResult.SUCCESS;
+            }
+
+            name = name.substring(0, dot);
         }
     }
 
