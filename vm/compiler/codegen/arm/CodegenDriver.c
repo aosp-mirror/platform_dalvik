@@ -2098,7 +2098,7 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_MONITOR_EXIT:
         case OP_MONITOR_ENTER:
-#if defined(WITH_DEADLOCK_PREDICTION) || defined(WITH_MONITOR_TRACKING)
+#if 1 || defined(WITH_DEADLOCK_PREDICTION) || defined(WITH_MONITOR_TRACKING)
             genMonitorPortable(cUnit, mir);
 #else
             genMonitor(cUnit, mir);
