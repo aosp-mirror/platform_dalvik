@@ -285,15 +285,6 @@ u4 dvmFixMethodFlags(u4 flags)
 }
 
 
-/*
- * Return the hash code for the specified object.
- */
-u4 dvmGetObjectHashCode(Object* obj)
-{
-    return (u4) obj;
-}
-
-
 #define NUM_DOPRIV_FUNCS    4
 
 /*

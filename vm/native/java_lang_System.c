@@ -245,7 +245,7 @@ static void Dalvik_java_lang_System_identityHashCode(const u4* args,
     JValue* pResult)
 {
     Object* thisPtr = (Object*) args[0];
-    RETURN_INT(dvmGetObjectHashCode(thisPtr));
+    RETURN_INT(dvmIdentityHashCode(thisPtr));
 }
 
 /*

@@ -77,11 +77,6 @@ void dvmFreeDexOrJar(void* vptr);
  */
 bool dvmIsPrivilegedMethod(const Method* method);
 
-/*
- * Return the hash code for the specified object.
- */
-u4 dvmGetObjectHashCode(Object* obj);
-
 
 /*
  * Tables of methods.

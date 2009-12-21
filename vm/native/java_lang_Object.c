@@ -42,7 +42,7 @@ static void Dalvik_java_lang_Object_internalClone(const u4* args,
 static void Dalvik_java_lang_Object_hashCode(const u4* args, JValue* pResult)
 {
     Object* thisPtr = (Object*) args[0];
-    RETURN_INT(dvmGetObjectHashCode(thisPtr));
+    RETURN_INT(dvmIdentityHashCode(thisPtr));
 }
 
 /*

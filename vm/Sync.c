@@ -93,9 +93,10 @@ static void expandObjClear(ExpandingObjectList* pList);
  * (ACM 1998).  Things are even easier for us, though, because we have
  * a full 32 bits to work with.
  *
- * The two states that an Object's lock may have are referred to as
- * "thin" and "fat".  The lock may transition between the two states
- * for various reasons.
+ * The two states of an Object's lock are referred to as "thin" and
+ * "fat".  A lock may transition from the "thin" state to the "fat"
+ * state and this transition is referred to as inflation.  Once a lock
+ * has been inflated it remains in the "fat" state indefinitely.
  *
  * The lock value itself is stored in Object.lock, which is a union of
  * the form:
@@ -105,25 +106,20 @@ static void expandObjClear(ExpandingObjectList* pList);
  *         Monitor*    mon;
  *     } Lock;
  *
- * It is possible to tell the current state of the lock from the actual
- * value, so we do not need to store any additional state.  When the
- * lock is "thin", it has the form:
+ * The LSB of the lock value encodes its state.  If cleared, the lock
+ * is in the "thin" state and its bits are formatted as follows:
+ * 
+ *    [31 ---- 19] [18 ---- 3] [2 ---- 1] [0]
+ *     lock count   thread id  hash state  0
  *
- *     [31 ---- 16] [15 ---- 1] [0]
- *      lock count   thread id   1
+ * If set, the lock is in the "fat" state and its bits are formatted
+ * as follows:
  *
- * When it is "fat", the field is simply a (Monitor *).  Since the pointer
- * will always be 4-byte-aligned, bits 1 and 0 will always be zero when
- * the field holds a pointer.  Hence, we can tell the current fat-vs-thin
- * state by checking the least-significant bit.
+ *    [31 ---- 3] [2 ---- 1] [0]
+ *      pointer   hash state  1
  *
  * For an in-depth description of the mechanics of thin-vs-fat locking,
  * read the paper referred to above.
- *
- * To reduce the amount of work when attempting a compare and exchange,
- * Thread.threadId is guaranteed to have bit 0 set, and all new Objects
- * have their lock fields initialized to the value 0x1, or
- * DVM_LOCK_INITIAL_THIN_VALUE, via DVM_OBJECT_INIT().
  */
 
 /*
@@ -186,6 +182,10 @@ Monitor* dvmCreateMonitor(Object* obj)
     mon = (Monitor*) calloc(1, sizeof(Monitor));
     if (mon == NULL) {
         LOGE("Unable to allocate monitor\n");
+        dvmAbort();
+    }
+    if (((u4)mon & 7) != 0) {
+        LOGE("Misaligned monitor: %p\n", mon);
         dvmAbort();
     }
     mon->obj = obj;
@@ -275,6 +275,8 @@ Object* dvmGetMonitorObject(Monitor* mon)
  */
 bool dvmHoldsLock(Thread* thread, Object* obj)
 {
+    u4 thin;
+
     if (thread == NULL || obj == NULL) {
         return false;
     }
@@ -283,11 +285,11 @@ bool dvmHoldsLock(Thread* thread, Object* obj)
      * latch it so that it doesn't change out from under
      * us if we get preempted.
      */
-    Lock lock = obj->lock;
-    if (IS_LOCK_FAT(&lock)) {
-        return thread == lock.mon->owner;
+    thin = obj->lock.thin;
+    if (LW_SHAPE(thin) == LW_SHAPE_FAT) {
+        return thread == LW_MONITOR(thin)->owner;
     } else {
-        return thread->threadId == (lock.thin & 0xffff);
+        return thread->threadId == LW_LOCK_OWNER(thin);
     }
 }
 
@@ -305,10 +307,10 @@ void dvmFreeObjectMonitor_internal(Lock *lock)
 
 #ifdef WITH_DEADLOCK_PREDICTION
     if (gDvm.deadlockPredictMode != kDPOff)
-        removeCollectedObject(lock->mon->obj);
+        removeCollectedObject(LW_MONITOR(lock->thin)->obj);
 #endif
 
-    mon = lock->mon;
+    mon = LW_MONITOR(lock->thin);
     lock->thin = DVM_LOCK_INITIAL_THIN_VALUE;
 
     /* This lock is associated with an object
@@ -468,8 +470,8 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     bool timed;
     int cc;
 
-    /* Make sure that the lock is fat and that we hold it. */
-    if (mon == NULL || ((u4)mon & 1) != 0 || mon->owner != self) {
+    /* Make sure that we hold the lock. */
+    if (mon == NULL || mon->owner != self) {
         dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
             "object not locked by thread before wait()");
         return;
@@ -674,8 +676,8 @@ done:
  */
 static void notifyMonitor(Thread* self, Monitor* mon)
 {
-    /* Make sure that the lock is fat and that we hold it. */
-    if (mon == NULL || ((u4)mon & 1) != 0 || mon->owner != self) {
+    /* Make sure that we hold the lock. */
+    if (mon == NULL || mon->owner != self) {
         dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
             "object not locked by thread before notify()");
         return;
@@ -708,8 +710,8 @@ static void notifyMonitor(Thread* self, Monitor* mon)
  */
 static void notifyAllMonitor(Thread* self, Monitor* mon)
 {
-    /* Make sure that the lock is fat and that we hold it. */
-    if (mon == NULL || ((u4)mon & 1) != 0 || mon->owner != self) {
+    /* Make sure that we hold the lock. */
+    if (mon == NULL || mon->owner != self) {
         dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
             "object not locked by thread before notifyAll()");
         return;
@@ -743,36 +745,40 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
 void dvmLockObject(Thread* self, Object *obj)
 {
     volatile u4 *thinp = &obj->lock.thin;
+    u4 thin;
     u4 threadId = self->threadId;
+    Monitor *mon;
 
     /* First, try to grab the lock as if it's thin;
      * this is the common case and will usually succeed.
      */
+    thin = threadId << LW_LOCK_OWNER_SHIFT;
+    thin |= *thinp & (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
     if (!ATOMIC_CMP_SWAP((int32_t *)thinp,
                          (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
-                         (int32_t)threadId)) {
+                         (int32_t)thin)) {
         /* The lock is either a thin lock held by someone (possibly 'self'),
          * or a fat lock.
          */
-        if ((*thinp & 0xffff) == threadId) {
+        if (LW_LOCK_OWNER(*thinp) == threadId) {
             /* 'self' is already holding the thin lock; we can just
              * bump the count.  Atomic operations are not necessary
              * because only the thread holding the lock is allowed
              * to modify the Lock field.
              */
-            *thinp += 1<<16;
+            *thinp += 1 << LW_LOCK_COUNT_SHIFT;
         } else {
             /* If this is a thin lock we need to spin on it, if it's fat
              * we need to acquire the monitor.
              */
-            if ((*thinp & 1) != 0) {
+            if (LW_SHAPE(*thinp) == LW_SHAPE_THIN) {
                 ThreadStatus oldStatus;
                 static const unsigned long maxSleepDelay = 1 * 1024 * 1024;
                 unsigned long sleepDelay;
 
                 LOG_THIN("(%d) spin on lock 0x%08x: 0x%08x (0x%08x) 0x%08x\n",
                          threadId, (uint)&obj->lock,
-                         DVM_LOCK_INITIAL_THIN_VALUE, *thinp, threadId);
+                         DVM_LOCK_INITIAL_THIN_VALUE, *thinp, thin);
 
                 /* The lock is still thin, but some other thread is
                  * holding it.  Let the VM know that we're about
@@ -788,8 +794,8 @@ void dvmLockObject(Thread* self, Object *obj)
                      * we need to watch out for some other thread
                      * fattening the lock behind our back.
                      */
-                    while (*thinp != DVM_LOCK_INITIAL_THIN_VALUE) {
-                        if ((*thinp & 1) == 0) {
+                    while (LW_LOCK_OWNER(*thinp) != 0) {
+                        if (LW_SHAPE(*thinp) == LW_SHAPE_FAT) {
                             /* The lock has been fattened already.
                              */
                             LOG_THIN("(%d) lock 0x%08x surprise-fattened\n",
@@ -808,13 +814,15 @@ void dvmLockObject(Thread* self, Object *obj)
                             }
                         }
                     }
+                    thin = threadId << LW_LOCK_OWNER_SHIFT;
+                    thin |= *thinp & (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
                 } while (!ATOMIC_CMP_SWAP((int32_t *)thinp,
                                           (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
-                                          (int32_t)threadId));
+                                          (int32_t)thin));
                 LOG_THIN("(%d) spin on lock done 0x%08x: "
                          "0x%08x (0x%08x) 0x%08x\n",
                          threadId, (uint)&obj->lock,
-                         DVM_LOCK_INITIAL_THIN_VALUE, *thinp, threadId);
+                         DVM_LOCK_INITIAL_THIN_VALUE, *thinp, thin);
 
                 /* We've got the thin lock; let the VM know that we're
                  * done waiting.
@@ -825,7 +833,8 @@ void dvmLockObject(Thread* self, Object *obj)
                  * We could also create the monitor in an "owned" state
                  * to avoid "re-locking" it in fat_lock.
                  */
-                obj->lock.mon = dvmCreateMonitor(obj);
+                mon = dvmCreateMonitor(obj);
+                obj->lock.thin = (u4)mon | LW_SHAPE_FAT;
                 LOG_THIN("(%d) lock 0x%08x fattened\n",
                          threadId, (uint)&obj->lock);
 
@@ -837,8 +846,8 @@ void dvmLockObject(Thread* self, Object *obj)
              * that obj->lock.mon is a regular (Monitor *).
              */
         fat_lock:
-            assert(obj->lock.mon != NULL);
-            lockMonitor(self, obj->lock.mon);
+            assert(LW_MONITOR(obj->lock.thin) != NULL);
+            lockMonitor(self, LW_MONITOR(obj->lock.thin));
         }
     }
     // else, the lock was acquired with the ATOMIC_CMP_SWAP().
@@ -904,19 +913,21 @@ bool dvmUnlockObject(Thread* self, Object *obj)
 {
     volatile u4 *thinp = &obj->lock.thin;
     u4 threadId = self->threadId;
+    u4 thin;
 
     /* Check the common case, where 'self' has locked 'obj' once, first.
      */
-    if (*thinp == threadId) {
+    thin = *thinp;
+    if (LW_LOCK_OWNER(thin) == threadId && LW_LOCK_COUNT(thin) == 0) {
         /* Unlock 'obj' by clearing our threadId from 'thin'.
          * The lock protects the lock field itself, so it's
          * safe to update non-atomically.
          */
-        *thinp = DVM_LOCK_INITIAL_THIN_VALUE;
-    } else if ((*thinp & 1) != 0) {
+        *thinp &= (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
+    } else if (LW_SHAPE(*thinp) == LW_SHAPE_THIN) {
         /* If the object is locked, it had better be locked by us.
          */
-        if ((*thinp & 0xffff) != threadId) {
+        if (LW_LOCK_OWNER(*thinp) != threadId) {
             /* The JNI spec says that we should throw an exception
              * in this case.
              */
@@ -930,12 +941,12 @@ bool dvmUnlockObject(Thread* self, Object *obj)
         /* It's a thin lock, but 'self' has locked 'obj'
          * more than once.  Decrement the count.
          */
-        *thinp -= 1<<16;
+        *thinp -= 1 << LW_LOCK_COUNT_SHIFT;
     } else {
         /* It's a fat lock.
          */
-        assert(obj->lock.mon != NULL);
-        if (!unlockMonitor(self, obj->lock.mon)) {
+        assert(LW_MONITOR(obj->lock.thin) != NULL);
+        if (!unlockMonitor(self, LW_MONITOR(obj->lock.thin))) {
             /* exception has been raised */
             return false;
         }
@@ -957,15 +968,15 @@ bool dvmUnlockObject(Thread* self, Object *obj)
 void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
     bool interruptShouldThrow)
 {
-    Monitor* mon = obj->lock.mon;
+    Monitor* mon = LW_MONITOR(obj->lock.thin);
     u4 thin = obj->lock.thin;
 
     /* If the lock is still thin, we need to fatten it.
      */
-    if ((thin & 1) != 0) {
+    if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
         /* Make sure that 'self' holds the lock.
          */
-        if ((thin & 0xffff) != self->threadId) {
+        if (LW_LOCK_OWNER(thin) != self->threadId) {
             dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
                 "object not locked by thread before wait()");
             return;
@@ -982,7 +993,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
          * make sure that the monitor reflects this.
          */
         lockMonitor(self, mon);
-        mon->lockCount = thin >> 16;
+        mon->lockCount = LW_LOCK_COUNT(thin);
         LOG_THIN("(%d) lock 0x%08x fattened by wait() to count %d\n",
                  self->threadId, (uint)&obj->lock, mon->lockCount);
 
@@ -990,7 +1001,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
         /* Make the monitor public now that it's in the right state.
          */
         MEM_BARRIER();
-        obj->lock.mon = mon;
+        obj->lock.thin = (u4)mon | LW_SHAPE_FAT;
     }
 
     waitMonitor(self, mon, msec, nsec, interruptShouldThrow);
@@ -1001,16 +1012,15 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
  */
 void dvmObjectNotify(Thread* self, Object *obj)
 {
-    Monitor* mon = obj->lock.mon;
     u4 thin = obj->lock.thin;
 
     /* If the lock is still thin, there aren't any waiters;
      * waiting on an object forces lock fattening.
      */
-    if ((thin & 1) != 0) {
+    if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
         /* Make sure that 'self' holds the lock.
          */
-        if ((thin & 0xffff) != self->threadId) {
+        if (LW_LOCK_OWNER(thin) != self->threadId) {
             dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
                 "object not locked by thread before notify()");
             return;
@@ -1021,7 +1031,7 @@ void dvmObjectNotify(Thread* self, Object *obj)
     } else {
         /* It's a fat lock.
          */
-        notifyMonitor(self, mon);
+        notifyMonitor(self, LW_MONITOR(thin));
     }
 }
 
@@ -1035,10 +1045,10 @@ void dvmObjectNotifyAll(Thread* self, Object *obj)
     /* If the lock is still thin, there aren't any waiters;
      * waiting on an object forces lock fattening.
      */
-    if ((thin & 1) != 0) {
+    if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
         /* Make sure that 'self' holds the lock.
          */
-        if ((thin & 0xffff) != self->threadId) {
+        if (LW_LOCK_OWNER(thin) != self->threadId) {
             dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
                 "object not locked by thread before notifyAll()");
             return;
@@ -1047,11 +1057,9 @@ void dvmObjectNotifyAll(Thread* self, Object *obj)
         /* no-op;  there are no waiters to notify.
          */
     } else {
-        Monitor* mon = obj->lock.mon;
-
         /* It's a fat lock.
          */
-        notifyAllMonitor(self, mon);
+        notifyAllMonitor(self, LW_MONITOR(thin));
     }
 }
 
@@ -1258,6 +1266,10 @@ gotit:
     unlockMonitor(self, mon);
 }
 
+u4 dvmIdentityHashCode(Object *obj)
+{
+    return (u4)obj;
+}
 
 #ifdef WITH_DEADLOCK_PREDICTION
 /*
@@ -1670,10 +1682,10 @@ static void updateDeadlockPrediction(Thread* self, Object* acqObj)
      */
     if (!IS_LOCK_FAT(&acqObj->lock)) {
         LOGVV("fattening lockee %p (recur=%d)\n",
-            acqObj, acqObj->lock.thin >> 16);
+            acqObj, LW_LOCK_COUNT(acqObj->lock.thin));
         Monitor* newMon = dvmCreateMonitor(acqObj);
         lockMonitor(self, newMon);      // can't stall, don't need VMWAIT
-        newMon->lockCount += acqObj->lock.thin >> 16;
+        newMon->lockCount += LW_LOCK_COUNT(acqObj->lock.thin);
         acqObj->lock.mon = newMon;
     }
 
@@ -1717,10 +1729,10 @@ static void updateDeadlockPrediction(Thread* self, Object* acqObj)
      */
     if (!IS_LOCK_FAT(&mrl->obj->lock)) {
         LOGVV("fattening parent %p f/b/o child %p (recur=%d)\n",
-            mrl->obj, acqObj, mrl->obj->lock.thin >> 16);
+            mrl->obj, acqObj, LW_LOCK_COUNT(mrl->obj->lock.thin));
         Monitor* newMon = dvmCreateMonitor(mrl->obj);
         lockMonitor(self, newMon);      // can't stall, don't need VMWAIT
-        newMon->lockCount += mrl->obj->lock.thin >> 16;
+        newMon->lockCount += LW_LOCK_COUNT(mrl->obj->lock.thin);
         mrl->obj->lock.mon = newMon;
     }
 
