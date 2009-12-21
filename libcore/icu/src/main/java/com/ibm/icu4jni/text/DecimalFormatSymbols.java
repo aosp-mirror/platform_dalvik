@@ -37,13 +37,7 @@ public class DecimalFormatSymbols implements Cloneable {
     
     public DecimalFormatSymbols(Locale locale) {
         this.loc = locale;
-        ResourceBundle bundle = AccessController.
-        doPrivileged(new PrivilegedAction<ResourceBundle>() {
-            public ResourceBundle run() {
-            return ResourceBundle.getBundle(
-                    "org.apache.harmony.luni.internal.locale.Locale", loc); //$NON-NLS-1$
-            }
-        });
+        ResourceBundle bundle = com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
         String pattern = bundle.getString("Number");
         this.addr = NativeDecimalFormat.openDecimalFormatImpl(
                 locale.toString(), pattern);

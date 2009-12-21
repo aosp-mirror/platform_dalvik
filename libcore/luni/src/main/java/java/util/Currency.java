@@ -18,10 +18,14 @@
 package java.util;
 
 // BEGIN android-added
+import com.ibm.icu4jni.util.Resources;
+import java.util.logging.Logger;
 import org.apache.harmony.luni.util.Msg;
 // END android-added
 
+import java.security.AccessController;
 import java.io.Serializable;
+import java.security.PrivilegedAction;
 
 /**
  * This class represents a currency as identified in the ISO 4217 currency
@@ -31,25 +35,36 @@ public final class Currency implements Serializable {
 
     private static final long serialVersionUID = -158308464356906721L;
 
-    private static Hashtable<String, Currency> codesToCurrencies = new Hashtable<String, Currency>();
+    private static final Hashtable<String, Currency> codesToCurrencies = new Hashtable<String, Currency>();
 
-    private String currencyCode;
+    private final String currencyCode;
 
     // BEGIN android-added
-    private static String currencyVars = "EURO, HK, PREEURO"; //$NON-NLS-1$
-
+    // TODO: this isn't set if we're restored from serialized form,
+    // so getDefaultFractionDigits always returns 0!
     private transient int defaultFractionDigits;
     // END android-added
 
-    /**
-     * @param currencyCode
-     */
     private Currency(String currencyCode) {
+        // BEGIN android-changed
         this.currencyCode = currencyCode;
+
+        // In some places the code XXX is used as the fall back currency.
+        // The RI returns -1, but ICU defaults to 2 for unknown currencies.
+        if (currencyCode.equals("XXX")) {
+            this.defaultFractionDigits = -1;
+            return;
+        }
+
+        this.defaultFractionDigits = Resources.getCurrencyFractionDigitsNative(currencyCode);
+        if (defaultFractionDigits < 0) {
+            throw new IllegalArgumentException(Msg.getString("K0322", currencyCode));
+        }
+        // END android-changed
     }
 
     /**
-     * Returns the {@code Currency} instance for this currency code.
+     * Returns the {@code Currency} instance for the given currency code.
      * <p>
      *
      * @param currencyCode
@@ -61,29 +76,14 @@ public final class Currency implements Serializable {
      *             code.
      */
     public static Currency getInstance(String currencyCode) {
+        // BEGIN android-changed
         Currency currency = codesToCurrencies.get(currencyCode);
-
         if (currency == null) {
-            // BEGIN android-added
-            ResourceBundle bundle = Locale.getBundle(
-                    "ISO4CurrenciesToDigits", Locale.getDefault()); //$NON-NLS-1$
             currency = new Currency(currencyCode);
-
-            String defaultFractionDigits = null;
-            try {
-                defaultFractionDigits = bundle.getString(currencyCode);
-            } catch (MissingResourceException e) {
-                throw new IllegalArgumentException(
-                        org.apache.harmony.luni.util.Msg.getString(
-                                "K0322", currencyCode)); //$NON-NLS-1$
-            }
-            currency.defaultFractionDigits = Integer
-                    .parseInt(defaultFractionDigits);
-            // END android-added
             codesToCurrencies.put(currencyCode, currency);
         }
-
         return currency;
+        // END android-changed
     }
 
     /**
@@ -98,38 +98,20 @@ public final class Currency implements Serializable {
      */
     public static Currency getInstance(Locale locale) {
         // BEGIN android-changed
-        // com.ibm.icu.util.Currency currency = null;
-        // try {
-        //     currency = com.ibm.icu.util.Currency.getInstance(locale);
-        // } catch (IllegalArgumentException e) {
-        //     return null;
-        // }
-        // if (currency == null) {
-        //     throw new IllegalArgumentException(locale.getCountry());
-        // }
-        // String currencyCode = currency.getCurrencyCode();
         String country = locale.getCountry();
         String variant = locale.getVariant();
-        if (!variant.equals("") && currencyVars.indexOf(variant) > -1) { //$NON-NLS-1$
-            country = country + "_" + variant; //$NON-NLS-1$
+        if (variant.length() > 0 && "EURO, HK, PREEURO".indexOf(variant) != -1) {
+            country = country + "_" + variant;
         }
 
-        ResourceBundle bundle = Locale.getBundle(
-                "ISO4Currencies", Locale.getDefault()); //$NON-NLS-1$
-        String currencyCode = null;
-        try {
-            currencyCode = bundle.getString(country);
-        } catch (MissingResourceException e) {
-            throw new IllegalArgumentException(Msg.getString(
-                    "K0323", locale.toString())); //$NON-NLS-1$
-        }
-        // END android-changed
-
-        if (currencyCode.equals("None")) { //$NON-NLS-1$
+        String currencyCode = com.ibm.icu4jni.util.Resources.getCurrencyCodeNative(country);
+        if (currencyCode == null) {
+            throw new IllegalArgumentException(Msg.getString("K0323", locale.toString()));
+        } else if (currencyCode.equals("None")) {
             return null;
         }
-
         return getInstance(currencyCode);
+        // END android-changed
     }
 
     /**
@@ -176,40 +158,38 @@ public final class Currency implements Serializable {
      *         locale.
      */
     public String getSymbol(Locale locale) {
-        if (locale.getCountry().equals("")) { //$NON-NLS-1$
+        // BEGIN android-changed
+        if (locale.getCountry().length() == 0) {
             return currencyCode;
         }
 
-        // BEGIN android-changed
-        // return com.ibm.icu.util.Currency.getInstance(currencyCode).getSymbol(locale);
-        // check in the Locale bundle first, if the local has the same currency
-        ResourceBundle bundle = Locale.getBundle("Locale", locale); //$NON-NLS-1$
-        if (((String) bundle.getObject("IntCurrencySymbol")) //$NON-NLS-1$
-                .equals(currencyCode)) {
-            return (String) bundle.getObject("CurrencySymbol"); //$NON-NLS-1$
+        // Check the Locale bundle first, in case the locale has the same currency.
+        ResourceBundle localeBundle = com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
+        if (localeBundle.getString("IntCurrencySymbol").equals(currencyCode)) {
+            return localeBundle.getString("CurrencySymbol");
         }
 
-        // search for a Currency bundle
-        bundle = null;
+        // check if the currency bundle for this locale has an entry for this currency
         try {
-            bundle = Locale.getBundle("Currency", locale); //$NON-NLS-1$
+            ResourceBundle currencyBundle = getCurrencyBundle(locale);
+
+            // is the bundle found for a different country? (for instance the
+            // default locale's currency bundle)
+            if (!currencyBundle.getLocale().getCountry().equals(locale.getCountry())) {
+                // TODO: the fact I never see output from this when running the tests suggests we
+                // don't have a test for this. Does it ever even happen? If it does, can we just
+                // ask ICU a slightly different question to get the behavior we want?
+                Logger.global.info("currencyBundle " + currencyBundle + " for " + locale +
+                        " came back with locale " + currencyBundle.getLocale());
+                return currencyCode;
+            }
+
+            // Return the currency bundle's value, or currencyCode.
+            String result = (String) currencyBundle.handleGetObject(currencyCode);
+            return (result != null) ? result : currencyCode;
         } catch (MissingResourceException e) {
             return currencyCode;
         }
-
-        // is the bundle found for a different country? (for instance the
-        // default locale's currency bundle)
-        if (!bundle.getLocale().getCountry().equals(locale.getCountry())) {
-            return currencyCode;
-        }
-
-        // check if the currency bundle for this locale
-        // has an entry for this currency
-        String result = (String) bundle.handleGetObject(currencyCode);
-        if (result != null) {
-            return result;
-        }
-        return currencyCode;
         // END android-changed
     }
 
@@ -240,5 +220,15 @@ public final class Currency implements Serializable {
 
     private Object readResolve() {
         return getInstance(currencyCode);
+    }
+
+    // TODO: remove this in favor of direct access (and no ResourceBundle cruft).
+    private static ResourceBundle getCurrencyBundle(final Locale locale) {
+        return AccessController.doPrivileged(new PrivilegedAction<ResourceBundle>() {
+            public ResourceBundle run() {
+                String bundle = "org.apache.harmony.luni.internal.locale.Currency";
+                return ResourceBundle.getBundle(bundle, locale);
+            }
+        });
     }
 }

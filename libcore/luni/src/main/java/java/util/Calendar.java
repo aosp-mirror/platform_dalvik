@@ -691,7 +691,7 @@ public abstract class Calendar implements Serializable, Cloneable,
         //                 .getTimeZone(timezone.getID()), locale);
         // setFirstDayOfWeek(icuCalendar.getFirstDayOfWeek());
         // setMinimalDaysInFirstWeek(icuCalendar.getMinimalDaysInFirstWeek());
-        ResourceBundle bundle = Locale.getBundle("Locale", locale); //$NON-NLS-1$
+        ResourceBundle bundle = com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
         setFirstDayOfWeek(((Integer) bundle.getObject("First_Day")).intValue()); //$NON-NLS-1$
         setMinimalDaysInFirstWeek(((Integer) bundle.getObject("Minimal_Days")) //$NON-NLS-1$
                 .intValue());

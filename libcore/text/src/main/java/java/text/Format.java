@@ -89,15 +89,8 @@ public abstract class Format implements Serializable, Cloneable {
     }
 
     // BEGIN android-added
-    static ResourceBundle getBundle(final Locale locale) {
-        return AccessController
-                .doPrivileged(new PrivilegedAction<ResourceBundle>() {
-                    public ResourceBundle run() {
-                        return ResourceBundle
-                                .getBundle(
-                                        "org.apache.harmony.luni.internal.locale.Locale", locale); //$NON-NLS-1$
-                    }
-                });
+    static ResourceBundle getBundle(Locale locale) {
+        return com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
     }
     // END android-added
 
