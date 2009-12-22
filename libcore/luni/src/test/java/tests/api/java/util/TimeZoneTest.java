@@ -32,6 +32,7 @@ import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
+import tests.support.Support_Locale;
 import tests.support.Support_TimeZone;
 
 @TestTargetClass(TimeZone.class) 
@@ -306,8 +307,12 @@ public class TimeZoneTest extends junit.framework.TestCase {
         method = "getDisplayName",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayNameLjava_util_Locale() {
+        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
         assertEquals("Pacific Standard Time", tz.getDisplayName(new Locale("US")));
         assertEquals("Heure normale du Pacifique", tz.getDisplayName(Locale.FRANCE));
@@ -333,8 +338,12 @@ public class TimeZoneTest extends junit.framework.TestCase {
         args = {boolean.class, int.class, java.util.Locale.class}
     )
     @AndroidOnly("fail on RI. See comment below")
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_getDisplayNameZILjava_util_Locale() {
+        Locale[] requiredLocales = {Locale.US, Locale.UK, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
         assertEquals("PST",                   tz.getDisplayName(false, 0, Locale.US));
         assertEquals("Pacific Daylight Time", tz.getDisplayName(true,  1, Locale.US));

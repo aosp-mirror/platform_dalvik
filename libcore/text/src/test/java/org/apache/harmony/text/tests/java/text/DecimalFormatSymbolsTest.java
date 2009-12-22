@@ -17,6 +17,7 @@
 
 package org.apache.harmony.text.tests.java.text;
 
+import tests.support.Support_Locale;
 import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
@@ -146,8 +147,16 @@ public class DecimalFormatSymbolsTest extends TestCase {
         method = "getCurrency",
         args = {}
     )
-    @KnownFailure("some locales were removed last minute in cupcake")
     public void test_getCurrency() {
+        Locale csCzLocale = new Locale("cs", "CZ");
+        Locale czLocale = new Locale("", "CZ");
+        Locale csLocale = new Locale("cs", "");
+        Locale deLocale = new Locale("de", "AT");
+        Locale[] requiredLocales = {Locale.US, csCzLocale, czLocale, csLocale, deLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Currency currency = Currency.getInstance("USD");
         assertEquals("Returned incorrect currency",
                 dfsUS.getCurrency(), currency);
@@ -159,8 +168,8 @@ public class DecimalFormatSymbolsTest extends TestCase {
         Currency currE = Currency.getInstance("EUR");
         // Currency currF = Currency.getInstance("FRF");
 
-        DecimalFormatSymbols dfs1 = new DecimalFormatSymbols(new Locale("cs",
-                "CZ"));
+
+        DecimalFormatSymbols dfs1 = new DecimalFormatSymbols(csCzLocale);
         assertTrue("Test1: Returned incorrect currency",
                 dfs1.getCurrency() == currC);
         assertEquals("Test1: Returned incorrect currencySymbol", "K\u010d", dfs1
@@ -168,7 +177,8 @@ public class DecimalFormatSymbolsTest extends TestCase {
         assertEquals("Test1: Returned incorrect intlCurrencySymbol", "CZK",
                 dfs1.getInternationalCurrencySymbol());
 
-        dfs1 = new DecimalFormatSymbols(new Locale("", "CZ"));
+
+        dfs1 = new DecimalFormatSymbols(czLocale);
         assertTrue("Test2: Returned incorrect currency",
                 dfs1.getCurrency() == currC);
         assertEquals("Test2: Returned incorrect currencySymbol", "CZK", dfs1
@@ -176,7 +186,7 @@ public class DecimalFormatSymbolsTest extends TestCase {
         assertEquals("Test2: Returned incorrect intlCurrencySymbol", "CZK",
                 dfs1.getInternationalCurrencySymbol());
 
-        dfs1 = new DecimalFormatSymbols(new Locale("cs", ""));
+        dfs1 = new DecimalFormatSymbols(csLocale);
         assertEquals("Test3: Returned incorrect currency",
                 currX, dfs1.getCurrency());
         assertEquals("Test3: Returned incorrect currencySymbol", "\u00a4", dfs1
@@ -184,7 +194,7 @@ public class DecimalFormatSymbolsTest extends TestCase {
         assertEquals("Test3: Returned incorrect intlCurrencySymbol", "XXX",
                 dfs1.getInternationalCurrencySymbol());
 
-        dfs1 = new DecimalFormatSymbols(new Locale("de", "AT"));
+        dfs1 = new DecimalFormatSymbols(deLocale);
         assertTrue("Test4: Returned incorrect currency",
                 dfs1.getCurrency() == currE);
         assertEquals("Test4: Returned incorrect currencySymbol", "\u20ac", dfs1

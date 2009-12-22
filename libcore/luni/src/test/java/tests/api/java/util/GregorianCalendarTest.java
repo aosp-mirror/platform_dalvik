@@ -22,6 +22,7 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 import dalvik.annotation.KnownFailure;
+import tests.support.Support_Locale;
 
 import java.util.BitSet;
 import java.util.Calendar;
@@ -148,8 +149,12 @@ public class GregorianCalendarTest extends junit.framework.TestCase {
         method = "GregorianCalendar",
         args = {java.util.Locale.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_ConstructorLjava_util_Locale() {
+        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // Test for method java.util.GregorianCalendar(java.util.Locale)
         Date date = new Date();
         GregorianCalendar gcUS = new GregorianCalendar(Locale.US);
