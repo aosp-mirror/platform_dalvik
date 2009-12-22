@@ -243,8 +243,11 @@ typedef struct Object {
     /* ptr to class object */
     ClassObject*    clazz;
 
-    /* thin lock or "fat" monitor */
-    Lock            lock;
+    /*
+     * A word containing either a "thin" lock or a "fat" monitor.  See
+     * the comments in Sync.c for a description of its layout.
+     */
+    u4              lock;
 } Object;
 
 /*

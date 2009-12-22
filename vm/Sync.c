@@ -285,7 +285,7 @@ bool dvmHoldsLock(Thread* thread, Object* obj)
      * latch it so that it doesn't change out from under
      * us if we get preempted.
      */
-    thin = obj->lock.thin;
+    thin = obj->lock;
     if (LW_SHAPE(thin) == LW_SHAPE_FAT) {
         return thread == LW_MONITOR(thin)->owner;
     } else {
@@ -297,7 +297,7 @@ bool dvmHoldsLock(Thread* thread, Object* obj)
  * Free the monitor associated with an object and make the object's lock
  * thin again.  This is called during garbage collection.
  */
-void dvmFreeObjectMonitor_internal(Lock *lock)
+void dvmFreeObjectMonitor_internal(u4 *lock)
 {
     Monitor *mon;
 
@@ -307,11 +307,11 @@ void dvmFreeObjectMonitor_internal(Lock *lock)
 
 #ifdef WITH_DEADLOCK_PREDICTION
     if (gDvm.deadlockPredictMode != kDPOff)
-        removeCollectedObject(LW_MONITOR(lock->thin)->obj);
+        removeCollectedObject(LW_MONITOR(*lock)->obj);
 #endif
 
-    mon = LW_MONITOR(lock->thin);
-    lock->thin = DVM_LOCK_INITIAL_THIN_VALUE;
+    mon = LW_MONITOR(*lock);
+    *lock = DVM_LOCK_INITIAL_THIN_VALUE;
 
     /* This lock is associated with an object
      * that's being swept.  The only possible way
@@ -748,7 +748,8 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
  */
 void dvmLockObject(Thread* self, Object *obj)
 {
-    volatile u4 *thinp = &obj->lock.thin;
+    volatile u4 *thinp = &obj->lock;
+    u4 hashState;
     u4 thin;
     u4 threadId = self->threadId;
     Monitor *mon;
@@ -757,7 +758,7 @@ void dvmLockObject(Thread* self, Object *obj)
      * this is the common case and will usually succeed.
      */
     thin = threadId << LW_LOCK_OWNER_SHIFT;
-    thin |= *thinp & (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
+    thin |= LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
     if (!ATOMIC_CMP_SWAP((int32_t *)thinp,
                          (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
                          (int32_t)thin)) {
@@ -819,7 +820,7 @@ void dvmLockObject(Thread* self, Object *obj)
                         }
                     }
                     thin = threadId << LW_LOCK_OWNER_SHIFT;
-                    thin |= *thinp & (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
+                    thin |= LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
                 } while (!ATOMIC_CMP_SWAP((int32_t *)thinp,
                                           (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
                                           (int32_t)thin));
@@ -838,7 +839,8 @@ void dvmLockObject(Thread* self, Object *obj)
                  * to avoid "re-locking" it in fat_lock.
                  */
                 mon = dvmCreateMonitor(obj);
-                obj->lock.thin = (u4)mon | LW_SHAPE_FAT;
+                hashState = LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
+                obj->lock = (u4)mon | hashState | LW_SHAPE_FAT;
                 LOG_THIN("(%d) lock 0x%08x fattened\n",
                          threadId, (uint)&obj->lock);
 
@@ -847,11 +849,11 @@ void dvmLockObject(Thread* self, Object *obj)
             }
 
             /* The lock is already fat, which means
-             * that obj->lock.mon is a regular (Monitor *).
+             * that obj->lock is a regular (Monitor *).
              */
         fat_lock:
-            assert(LW_MONITOR(obj->lock.thin) != NULL);
-            lockMonitor(self, LW_MONITOR(obj->lock.thin));
+            assert(LW_MONITOR(obj->lock) != NULL);
+            lockMonitor(self, LW_MONITOR(obj->lock));
         }
     }
     // else, the lock was acquired with the ATOMIC_CMP_SWAP().
@@ -915,7 +917,7 @@ void dvmLockObject(Thread* self, Object *obj)
  */
 bool dvmUnlockObject(Thread* self, Object *obj)
 {
-    volatile u4 *thinp = &obj->lock.thin;
+    volatile u4 *thinp = &obj->lock;
     u4 threadId = self->threadId;
     u4 thin;
 
@@ -949,8 +951,8 @@ bool dvmUnlockObject(Thread* self, Object *obj)
     } else {
         /* It's a fat lock.
          */
-        assert(LW_MONITOR(obj->lock.thin) != NULL);
-        if (!unlockMonitor(self, LW_MONITOR(obj->lock.thin))) {
+        assert(LW_MONITOR(obj->lock) != NULL);
+        if (!unlockMonitor(self, LW_MONITOR(obj->lock))) {
             /* exception has been raised */
             return false;
         }
@@ -972,8 +974,9 @@ bool dvmUnlockObject(Thread* self, Object *obj)
 void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
     bool interruptShouldThrow)
 {
-    Monitor* mon = LW_MONITOR(obj->lock.thin);
-    u4 thin = obj->lock.thin;
+    Monitor* mon = LW_MONITOR(obj->lock);
+    u4 hashState;
+    u4 thin = obj->lock;
 
     /* If the lock is still thin, we need to fatten it.
      */
@@ -1005,7 +1008,8 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
         /* Make the monitor public now that it's in the right state.
          */
         MEM_BARRIER();
-        obj->lock.thin = (u4)mon | LW_SHAPE_FAT;
+        hashState = LW_HASH_STATE(thin) << LW_HASH_STATE_SHIFT;
+        obj->lock = (u4)mon | hashState | LW_SHAPE_FAT;
     }
 
     waitMonitor(self, mon, msec, nsec, interruptShouldThrow);
@@ -1016,7 +1020,7 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
  */
 void dvmObjectNotify(Thread* self, Object *obj)
 {
-    u4 thin = obj->lock.thin;
+    u4 thin = obj->lock;
 
     /* If the lock is still thin, there aren't any waiters;
      * waiting on an object forces lock fattening.
@@ -1044,7 +1048,7 @@ void dvmObjectNotify(Thread* self, Object *obj)
  */
 void dvmObjectNotifyAll(Thread* self, Object *obj)
 {
-    u4 thin = obj->lock.thin;
+    u4 thin = obj->lock;
 
     /* If the lock is still thin, there aren't any waiters;
      * waiting on an object forces lock fattening.
@@ -1413,13 +1417,13 @@ static int expandObjCheckForDuplicates(const ExpandingObjectList* pList)
  */
 static bool objectInChildList(const Object* parent, Object* child)
 {
-    Lock lock = parent->lock;
+    u4 lock = parent->lock;
     if (!IS_LOCK_FAT(&lock)) {
         //LOGI("on thin\n");
         return false;
     }
 
-    return expandObjHas(&lock.mon->historyChildren, child);
+    return expandObjHas(&LW_MONITOR(lock)->historyChildren, child);
 }
 
 /*
@@ -1427,7 +1431,7 @@ static bool objectInChildList(const Object* parent, Object* child)
  */
 static void dumpKids(Object* parent)
 {
-    Monitor* mon = parent->lock.mon;
+    Monitor* mon = LW_MONITOR(parent->lock);
 
     printf("Children of %p:", parent);
     expandObjDump(&mon->historyChildren);
@@ -1440,17 +1444,17 @@ static void dumpKids(Object* parent)
  */
 static void linkParentToChild(Object* parent, Object* child)
 {
-    //assert(parent->lock.mon->owner == dvmThreadSelf());   // !owned for merge
+    //assert(LW_MONITOR(parent->lock)->owner == dvmThreadSelf());   // !owned for merge
     assert(IS_LOCK_FAT(&parent->lock));
     assert(IS_LOCK_FAT(&child->lock));
     assert(parent != child);
     Monitor* mon;
 
-    mon = parent->lock.mon;
+    mon = LW_MONITOR(parent->lock);
     assert(!expandObjHas(&mon->historyChildren, child));
     expandObjAddEntry(&mon->historyChildren, child);
 
-    mon = child->lock.mon;
+    mon = LW_MONITOR(child->lock);
     assert(!expandObjHas(&mon->historyParents, parent));
     expandObjAddEntry(&mon->historyParents, parent);
 }
@@ -1461,20 +1465,20 @@ static void linkParentToChild(Object* parent, Object* child)
  */
 static void unlinkParentFromChild(Object* parent, Object* child)
 {
-    //assert(parent->lock.mon->owner == dvmThreadSelf());   // !owned for GC
+    //assert(LW_MONITOR(parent->lock)->owner == dvmThreadSelf());   // !owned for GC
     assert(IS_LOCK_FAT(&parent->lock));
     assert(IS_LOCK_FAT(&child->lock));
     assert(parent != child);
     Monitor* mon;
 
-    mon = parent->lock.mon;
+    mon = LW_MONITOR(parent->lock);
     if (!expandObjRemoveEntry(&mon->historyChildren, child)) {
         LOGW("WARNING: child %p not found in parent %p\n", child, parent);
     }
     assert(!expandObjHas(&mon->historyChildren, child));
     assert(expandObjCheckForDuplicates(&mon->historyChildren) < 0);
 
-    mon = child->lock.mon;
+    mon = LW_MONITOR(child->lock);
     if (!expandObjRemoveEntry(&mon->historyParents, parent)) {
         LOGW("WARNING: parent %p not found in child %p\n", parent, child);
     }
@@ -1517,7 +1521,7 @@ static void logHeldMonitors(Thread* self)
 static bool traverseTree(Thread* self, const Object* obj)
 {
     assert(IS_LOCK_FAT(&obj->lock));
-    Monitor* mon = obj->lock.mon;
+    Monitor* mon = LW_MONITOR(obj->lock);
 
     /*
      * Have we been here before?
@@ -1561,7 +1565,7 @@ static bool traverseTree(Thread* self, const Object* obj)
     int i;
     for (i = expandBufGetCount(pList)-1; i >= 0; i--) {
         const Object* child = expandBufGetEntry(pList, i);
-        Lock lock = child->lock;
+        u4 lock = child->lock;
         if (!IS_LOCK_FAT(&lock))
             continue;
         if (!traverseTree(self, child)) {
@@ -1621,13 +1625,14 @@ static void updateDeadlockPrediction(Thread* self, Object* acqObj)
             acqObj, LW_LOCK_COUNT(acqObj->lock.thin));
         Monitor* newMon = dvmCreateMonitor(acqObj);
         lockMonitor(self, newMon);      // can't stall, don't need VMWAIT
-        newMon->lockCount += LW_LOCK_COUNT(acqObj->lock.thin);
-        acqObj->lock.mon = newMon;
+        newMon->lockCount += LW_LOCK_COUNT(acqObj->lock);
+        u4 hashState = LW_HASH_STATE(acqObj->lock) << LW_HASH_STATE_SHIFT;
+        acqObj->lock = (u4)newMon | hashState | LW_SHAPE_FAT;
     }
 
     /* if we don't have a stack trace for this monitor, establish one */
-    if (acqObj->lock.mon->historyRawStackTrace == NULL) {
-        Monitor* mon = acqObj->lock.mon;
+    if (LW_MONITOR(acqObj->lock)->historyRawStackTrace == NULL) {
+        Monitor* mon = LW_MONITOR(acqObj->lock);
         mon->historyRawStackTrace = dvmFillInStackTraceRaw(self,
             &mon->historyStackDepth);
     }
@@ -1665,11 +1670,12 @@ static void updateDeadlockPrediction(Thread* self, Object* acqObj)
      */
     if (!IS_LOCK_FAT(&mrl->obj->lock)) {
         LOGVV("fattening parent %p f/b/o child %p (recur=%d)\n",
-            mrl->obj, acqObj, LW_LOCK_COUNT(mrl->obj->lock.thin));
+            mrl->obj, acqObj, LW_LOCK_COUNT(mrl->obj->lock));
         Monitor* newMon = dvmCreateMonitor(mrl->obj);
         lockMonitor(self, newMon);      // can't stall, don't need VMWAIT
-        newMon->lockCount += LW_LOCK_COUNT(mrl->obj->lock.thin);
-        mrl->obj->lock.mon = newMon;
+        newMon->lockCount += LW_LOCK_COUNT(mrl->obj->lock);
+        u4 hashState = LW_HASH_STATE(mrl->obj->lock) << LW_HASH_STATE_SHIFT;
+        mrl->obj->lock = (u4)newMon | hashState | LW_SHAPE_FAT;
     }
 
     /*
@@ -1732,7 +1738,7 @@ static void mergeChildren(Object* parent, const Object* child)
     int i;
 
     assert(IS_LOCK_FAT(&child->lock));
-    mon = child->lock.mon;
+    mon = LW_MONITOR(child->lock);
     ExpandingObjectList* pList = &mon->historyChildren;
 
     for (i = expandBufGetCount(pList)-1; i >= 0; i--) {
@@ -1791,11 +1797,11 @@ static void removeCollectedObject(Object* obj)
     int i;
 
     assert(IS_LOCK_FAT(&obj->lock));
-    mon = obj->lock.mon;
+    mon = LW_MONITOR(obj->lock);
     pList = &mon->historyParents;
     for (i = expandBufGetCount(pList)-1; i >= 0; i--) {
         Object* parent = expandBufGetEntry(pList, i);
-        Monitor* parentMon = parent->lock.mon;
+        Monitor* parentMon = LW_MONITOR(parent->lock);
 
         if (!expandObjRemoveEntry(&parentMon->historyChildren, obj)) {
             LOGW("WARNING: child %p not found in parent %p\n", obj, parent);
@@ -1812,7 +1818,7 @@ static void removeCollectedObject(Object* obj)
     pList = &mon->historyChildren;
     for (i = expandBufGetCount(pList)-1; i >= 0; i--) {
         Object* child = expandBufGetEntry(pList, i);
-        Monitor* childMon = child->lock.mon;
+        Monitor* childMon = LW_MONITOR(child->lock);
 
         if (!expandObjRemoveEntry(&childMon->historyParents, obj)) {
             LOGW("WARNING: parent %p not found in child %p\n", obj, child);

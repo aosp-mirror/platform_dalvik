@@ -50,30 +50,18 @@ typedef struct Monitor Monitor;
 #define QUIET_ZYGOTE_MONITOR 1
 
 /*
- * Synchronization lock, included in every object.
- *
- * We want this to be a 32-bit "thin lock", holding the lock level and
- * the owner's threadId, that inflates to a Monitor pointer when there
- * is contention or somebody waits on it.
- */
-typedef union Lock {
-    u4          thin;
-    Monitor*    mon;
-} Lock;
-
-/*
  * Initialize a Lock to the proper starting value.
  * This is necessary for thin locking.
  */
 #define DVM_LOCK_INITIAL_THIN_VALUE (0)
 
 #define DVM_LOCK_INIT(lock) \
-    do { (lock)->thin = DVM_LOCK_INITIAL_THIN_VALUE; } while (0)
+    do { *(lock) = DVM_LOCK_INITIAL_THIN_VALUE; } while (0)
 
 /*
  * Returns true if the lock has been fattened.
  */
-#define IS_LOCK_FAT(lock)   (LW_SHAPE((lock)->thin) == LW_SHAPE_FAT)
+#define IS_LOCK_FAT(lock)   (LW_SHAPE(*(lock)) == LW_SHAPE_FAT)
 
 /*
  * Acquire the object's monitor.
@@ -114,7 +102,7 @@ void dvmThreadInterrupt(volatile struct Thread* thread);
 Monitor* dvmCreateMonitor(struct Object* obj);
 
 /* free an object's monitor during GC */
-void dvmFreeObjectMonitor_internal(Lock* lock);
+void dvmFreeObjectMonitor_internal(u4 *lock);
 #define dvmFreeObjectMonitor(obj) \
     do { \
         Object *DFM_obj_ = (obj); \
