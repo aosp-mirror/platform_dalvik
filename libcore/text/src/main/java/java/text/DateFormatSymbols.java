@@ -122,8 +122,8 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      */
     public DateFormatSymbols(Locale locale) {
         // BEGIN android-changed
+        localPatternChars = SimpleDateFormat.patternChars;
         ResourceBundle bundle = Format.getBundle(locale);
-        localPatternChars = bundle.getString("LocalPatternChars"); //$NON-NLS-1$
         ampms = bundle.getStringArray("ampm"); //$NON-NLS-1$
         eras = bundle.getStringArray("eras"); //$NON-NLS-1$
         months = bundle.getStringArray("months"); //$NON-NLS-1$

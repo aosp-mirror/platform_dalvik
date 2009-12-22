@@ -122,15 +122,16 @@ static jstring getCurrencyCodeNative(JNIEnv* env, jclass clazz, jstring key) {
         return env->NewStringUTF("None");
     }
 
-    // check if there is a to date. If there is, the currency isn't used anymore.
-    {
-        ScopedResourceBundle currencyTo(ures_getByKey(currencyElem.get(), "to", NULL, &status));
-        if (!U_FAILURE(status)) {
-            // return and let the ResourceBundle throw an exception
-            return NULL;
-        }
-        status = U_ZERO_ERROR;
+    // check if there is a 'to' date. If there is, the currency isn't used anymore.
+    ScopedResourceBundle currencyTo(ures_getByKey(currencyElem.get(), "to", NULL, &status));
+    if (!U_FAILURE(status)) {
+        // return and let the caller throw an exception
+        return NULL;
     }
+    // We need to reset 'status'. It works like errno in that ICU doesn't set it
+    // to U_ZERO_ERROR on success: it only touches it on error, and the test
+    // above means it now holds a failure code.
+    status = U_ZERO_ERROR;
 
     ScopedResourceBundle currencyId(ures_getByKey(currencyElem.get(), "id", NULL, &status));
     if (U_FAILURE(status)) {
@@ -255,53 +256,38 @@ static jobjectArray getAvailableLocalesNative(JNIEnv* env, jclass clazz) {
     return result;
 }
 
+static TimeZone* timeZoneFromId(JNIEnv* env, jstring id) {
+    const jchar* chars = env->GetStringChars(id, NULL);
+    const UnicodeString zoneID(reinterpret_cast<const UChar*>(chars), env->GetStringLength(id));
+    env->ReleaseStringChars(id, chars);
+    return TimeZone::createTimeZone(zoneID);
+}
+
 static void getTimeZonesNative(JNIEnv* env, jclass clazz,
         jobjectArray outerArray, jstring locale) {
-    // LOGI("ENTER getTimeZonesNative");
-    
-    UErrorCode status = U_ZERO_ERROR;
-
-    jobjectArray zoneIdArray;
-    jobjectArray longStdTimeArray;
-    jobjectArray shortStdTimeArray;
-    jobjectArray longDlTimeArray;
-    jobjectArray shortDlTimeArray;
-
-    jstring content;
-    jstring strObj;
-    const jchar* res;
-    UnicodeString resU;
-    jint length;
-    const UnicodeString* zoneID;
-    DateFormat* df;
-
-    UnicodeString longPattern("zzzz","");
-    UnicodeString shortPattern("z","");
-      
-    Locale loc = getLocale(env, locale);
-
-    SimpleDateFormat longFormat(longPattern, loc, status);
-    SimpleDateFormat shortFormat(shortPattern, loc, status);
-
-
-    zoneIdArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 0);
-    longStdTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 1);
-    shortStdTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 2);
-    longDlTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 3);
-    shortDlTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 4);
 
     // get all timezone objects
+    jobjectArray zoneIdArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 0);
     int count = env->GetArrayLength(zoneIdArray);
     TimeZone* zones[count];
     for(int i = 0; i < count; i++) {
-        strObj = (jstring) env->GetObjectArrayElement(zoneIdArray, i);
-        length = env->GetStringLength(strObj);
-        res = env->GetStringChars(strObj, NULL);
-        const UnicodeString zoneID((UChar*)res, length);
-        env->ReleaseStringChars(strObj, res);
-        zones[i] = TimeZone::createTimeZone(zoneID);
-        env->DeleteLocalRef(strObj);
+        jstring id = (jstring) env->GetObjectArrayElement(zoneIdArray, i);
+        zones[i] = timeZoneFromId(env, id);
+        env->DeleteLocalRef(id);
     }
+
+    Locale loc = getLocale(env, locale);
+
+    UErrorCode status = U_ZERO_ERROR;
+    UnicodeString longPattern("zzzz","");
+    SimpleDateFormat longFormat(longPattern, loc, status);
+    UnicodeString shortPattern("z","");
+    SimpleDateFormat shortFormat(shortPattern, loc, status);
+
+    jobjectArray longStdTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 1);
+    jobjectArray shortStdTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 2);
+    jobjectArray longDlTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 3);
+    jobjectArray shortDlTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 4);
 
     // 15th January 2008
     UDate date1 = 1203105600000.0;
@@ -331,7 +317,7 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
 
         UnicodeString str;
         shortFormat.format(daylightSavingDate, str);
-        content = env->NewString(str.getBuffer(), str.length());
+        jstring content = env->NewString(str.getBuffer(), str.length());
         env->SetObjectArrayElement(shortDlTimeArray, i, content);
         env->DeleteLocalRef(content);
 
@@ -355,16 +341,10 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
 }
 
 static jstring getDisplayTimeZoneNative(JNIEnv* env, jclass clazz,
-        jstring zoneID, jboolean isDST, jint style, jstring localeID) {
+        jstring zoneId, jboolean isDST, jint style, jstring localeId) {
 
-    // Build TimeZone object
-    const jchar* idChars = env->GetStringChars(zoneID, NULL);
-    jint idLength = env->GetStringLength(zoneID);
-    UnicodeString idString((UChar*)idChars, idLength);
-    TimeZone* zone = TimeZone::createTimeZone(idString);
-    env->ReleaseStringChars(zoneID, idChars);
-
-    Locale locale = getLocale(env, localeID);
+    TimeZone* zone = timeZoneFromId(env, zoneId);
+    Locale locale = getLocale(env, localeId);
 
     // Try to get the display name of the TimeZone according to the Locale
     UnicodeString displayName;
@@ -617,7 +597,6 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
     jobject minimalDaysInFirstWeek = NULL;
     jobjectArray amPmMarkers = NULL;
     jobjectArray eras = NULL;
-    jstring localPatternChars = NULL;
     jobjectArray weekdays = NULL;
     jobjectArray shortWeekdays = NULL;
     jobjectArray months = NULL;
@@ -693,12 +672,6 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
     if(eras != NULL) {
         counter++;
     }
-
-
-    // local pattern chars are initially always the same
-    localPatternChars = env->NewStringUTF("GyMdkHmsSEDFwWahKzZ");
-    // adding local pattern chars string to the result
-    counter++;
 
 
     // adding month names string array to the result
@@ -966,9 +939,6 @@ zones:
     }
     if(eras != NULL && index < counter) {
         addObject(env, result, "eras", eras, index++);
-    }
-    if(localPatternChars != NULL && index < counter) {
-        addObject(env, result, "LocalPatternChars", localPatternChars, index++);
     }
     if(weekdays != NULL && index < counter) {
         addObject(env, result, "weekdays", weekdays, index++);
