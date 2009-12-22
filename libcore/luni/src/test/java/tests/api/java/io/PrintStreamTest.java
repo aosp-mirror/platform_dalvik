@@ -29,10 +29,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.IllegalFormatException;
 import java.util.Locale;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
+
+import tests.support.Support_Locale;
 
 @TestTargetClass(PrintStream.class) 
 public class PrintStreamTest extends junit.framework.TestCase {
@@ -987,8 +988,12 @@ public class PrintStreamTest extends junit.framework.TestCase {
         method = "format",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
+        Locale[] requiredLocales = {Locale.US, Locale.GERMANY};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         PrintStream tobj;
 
         tobj = new PrintStream(baos, false);
@@ -1100,8 +1105,12 @@ public class PrintStreamTest extends junit.framework.TestCase {
         method = "printf",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
+        Locale[] requiredLocales = {Locale.US, Locale.GERMANY};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         PrintStream tobj;
 
         tobj = new PrintStream(baos, false);

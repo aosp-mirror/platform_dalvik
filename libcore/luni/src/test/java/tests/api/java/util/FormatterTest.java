@@ -15,6 +15,8 @@
  */
 package tests.api.java.util;
 
+import tests.support.Support_Locale;
+
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -1765,8 +1767,12 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongConversionD() {
+        Locale[] requiredLocales = {Locale.GERMAN};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         final Object[][] triple = { 
                 { 0,                "%d",                  "0" }, 
                 { 0,                "%10d",       "         0" }, 
@@ -2030,8 +2036,12 @@ public class FormatterTest extends TestCase {
         args = {java.lang.String.class, java.lang.Object[].class}
     )
     @AndroidOnly("ICU data is different from RI data")
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion() {
+        Locale[] requiredLocales = {Locale.FRANCE, Locale.CHINA, Locale.GERMAN, Locale.US};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         /*
          * Implementation note: For a millisecond date based on Long.MAX_VALUE,
          * the RI produces different formatted minutes and seconds than we do.
@@ -2808,8 +2818,12 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$LBigInteger() {
+        Locale[] requiredLocales = {Locale.ITALY, Locale.GERMAN, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         final Object[][] tripleD = {
                 {new BigInteger("123456789012345678901234567890"),          "%d",       "123456789012345678901234567890"}, //$NON-NLS-2$
                 {new BigInteger("123456789012345678901234567890"),          "%10d",     "123456789012345678901234567890"}, //$NON-NLS-2$
@@ -2911,8 +2925,12 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigIntegerPaddingConversion() {
+        Locale[] requiredLocales = {Locale.GERMAN};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Formatter f = null;
 
         BigInteger bigInt = new BigInteger("123456789012345678901234567890");
@@ -4617,8 +4635,12 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_formatLjava_util_LocaleLjava_lang_StringLjava_lang_Object() {
+        Locale[] requiredLocales = {Locale.GERMAN, Locale.FRANCE, Locale.US, Locale.CANADA};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Double val = new Double(3.14);
         Calendar cal = Calendar.getInstance();
         Formatter fLoc = null;
