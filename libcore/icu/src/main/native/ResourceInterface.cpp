@@ -38,34 +38,35 @@
 #include <time.h>
 #include <sys/time.h>
 
-jclass string_class;
+static jclass string_class;
 
-static Locale getLocale(JNIEnv *env, jstring locale) {
-    const char *name = env->GetStringUTFChars(locale, NULL);
+class ScopedResourceBundle {
+public:
+    ScopedResourceBundle(UResourceBundle* bundle) : mBundle(bundle) {
+    }
+
+    ~ScopedResourceBundle() {
+        if (mBundle != NULL) {
+            ures_close(mBundle);
+        }
+    }
+
+    UResourceBundle* get() {
+        return mBundle;
+    }
+
+private:
+    UResourceBundle* mBundle;
+};
+
+static Locale getLocale(JNIEnv* env, jstring locale) {
+    const char* name = env->GetStringUTFChars(locale, NULL);
     Locale result = Locale::createFromName(name);
     env->ReleaseStringUTFChars(locale, name);
     return result;
 }
 
-static jstring getJStringFromUnicodeString(JNIEnv *env, UnicodeString string) {
-    
-    UErrorCode status = U_ZERO_ERROR;
-
-    int stringLength = string.length();
-    jchar *res = (jchar *) malloc(sizeof(jchar) * (stringLength + 1));
-    string.extract(res, stringLength+1, status);
-    if (U_FAILURE(status)) {
-        free(res);
-        LOGE("Error getting string for getJStringFromUnicodeString: %s", u_errorName(status));
-        status = U_ZERO_ERROR;
-        return NULL;
-    }
-    jstring result = env->NewString(res, stringLength);
-    free(res);
-    return result;
-}
-
-static void addObject(JNIEnv *env, jobjectArray result, const char *keyStr, jobject elem, int index) {
+static void addObject(JNIEnv* env, jobjectArray result, const char* keyStr, jobject elem, int index) {
     jclass objArray_class = env->FindClass("java/lang/Object");
     jobjectArray element = env->NewObjectArray(2, objArray_class, NULL);
     jstring key = env->NewStringUTF(keyStr);
@@ -79,99 +80,67 @@ static void addObject(JNIEnv *env, jobjectArray result, const char *keyStr, jobj
 static jint getCurrencyFractionDigitsNative(JNIEnv* env, jclass clazz, jstring currencyCode) {
     UErrorCode status = U_ZERO_ERROR;
     
-    NumberFormat *fmt = NumberFormat::createCurrencyInstance(status);
-    if(U_FAILURE(status)) {
+    NumberFormat* fmt = NumberFormat::createCurrencyInstance(status);
+    if (U_FAILURE(status)) {
         return -1;
     }
 
-    const jchar *cCode = env->GetStringChars(currencyCode, NULL);
+    const jchar* cCode = env->GetStringChars(currencyCode, NULL);
     fmt->setCurrency(cCode, status);
     env->ReleaseStringChars(currencyCode, cCode);
-    if(U_FAILURE(status)) {
+    if (U_FAILURE(status)) {
         return -1;
     }
     
     // for CurrencyFormats the minimum and maximum fraction digits are the same.
     int result = fmt->getMinimumFractionDigits(); 
-    delete(fmt);
+    delete fmt;
     return result;
 }
 
-static jstring getCurrencyCodeNative(JNIEnv* env, jclass clazz, 
-        jstring key) {
-    // LOGI("ENTER getCurrencyCodeNative");
-
+static jstring getCurrencyCodeNative(JNIEnv* env, jclass clazz, jstring key) {
     UErrorCode status = U_ZERO_ERROR;
-
-    UResourceBundle *supplData = ures_openDirect(NULL, "supplementalData", &status);
-    if(U_FAILURE(status)) {
+    ScopedResourceBundle supplData(ures_openDirect(NULL, "supplementalData", &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    UResourceBundle *currencyMap = ures_getByKey(supplData, "CurrencyMap", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(supplData);
+    ScopedResourceBundle currencyMap(ures_getByKey(supplData.get(), "CurrencyMap", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    const char *keyChars = env->GetStringUTFChars(key, NULL);
-    UResourceBundle *currency = ures_getByKey(currencyMap, keyChars, NULL, &status);
+    const char* keyChars = env->GetStringUTFChars(key, NULL);
+    ScopedResourceBundle currency(ures_getByKey(currencyMap.get(), keyChars, NULL, &status));
     env->ReleaseStringUTFChars(key, keyChars);
-    if(U_FAILURE(status)) {
-        ures_close(currencyMap);
-        ures_close(supplData);
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    UResourceBundle *currencyElem = ures_getByIndex(currency, 0, NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(currency);
-        ures_close(currencyMap);
-        ures_close(supplData);
+    ScopedResourceBundle currencyElem(ures_getByIndex(currency.get(), 0, NULL, &status));
+    if (U_FAILURE(status)) {
         return env->NewStringUTF("None");
     }
 
     // check if there is a to date. If there is, the currency isn't used anymore.
-    UResourceBundle *currencyTo = ures_getByKey(currencyElem, "to", NULL, &status);
-    if(!U_FAILURE(status)) {
-        // return and let the ResourceBundle throw an exception
-        ures_close(currencyElem);
-        ures_close(currency);
-        ures_close(currencyMap);
-        ures_close(supplData);
-        return NULL;
+    {
+        ScopedResourceBundle currencyTo(ures_getByKey(currencyElem.get(), "to", NULL, &status));
+        if (!U_FAILURE(status)) {
+            // return and let the ResourceBundle throw an exception
+            return NULL;
+        }
+        status = U_ZERO_ERROR;
     }
-    status = U_ZERO_ERROR;
-    ures_close(currencyTo);
 
-    UResourceBundle *currencyId = ures_getByKey(currencyElem, "id", NULL, &status);
-    if(U_FAILURE(status)) {
+    ScopedResourceBundle currencyId(ures_getByKey(currencyElem.get(), "id", NULL, &status));
+    if (U_FAILURE(status)) {
         // No id defined for this country
-        ures_close(currencyElem);
-        ures_close(currency);
-        ures_close(currencyMap);
-        ures_close(supplData);
         return env->NewStringUTF("None");
     }
 
     int length;
-    const jchar *id = ures_getString(currencyId, &length, &status);
-    if(U_FAILURE(status)) {
-        ures_close(currencyId);
-        ures_close(currencyElem);
-        ures_close(currency);
-        ures_close(currencyMap);
-        ures_close(supplData);
-        return env->NewStringUTF("None");
-    }
-
-    ures_close(currencyId);
-    ures_close(currencyElem);
-    ures_close(currency);
-    ures_close(currencyMap);
-    ures_close(supplData);
-
-    if(length == 0) {
+    const jchar* id = ures_getString(currencyId.get(), &length, &status);
+    if (U_FAILURE(status) || length == 0) {
         return env->NewStringUTF("None");
     }
     return env->NewString(id, length);
@@ -181,47 +150,33 @@ static jstring getCurrencySymbolNative(JNIEnv* env, jclass clazz,
         jstring locale, jstring currencyCode) {
     // LOGI("ENTER getCurrencySymbolNative");
 
+    const char* locName = env->GetStringUTFChars(locale, NULL);
     UErrorCode status = U_ZERO_ERROR;
-
-    const char *locName = env->GetStringUTFChars(locale, NULL);
-    UResourceBundle *root = ures_open(NULL, locName, &status);
+    ScopedResourceBundle root(ures_open(NULL, locName, &status));
     env->ReleaseStringUTFChars(locale, locName);
-    if(U_FAILURE(status)) {
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    UResourceBundle *rootElems = ures_getByKey(root, "Currencies", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(root);
+    ScopedResourceBundle rootElems(ures_getByKey(root.get(), "Currencies", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    const char *currName = env->GetStringUTFChars(currencyCode, NULL);
-    UResourceBundle *currencyElems = ures_getByKey(rootElems, currName, NULL, &status);
+    const char* currName = env->GetStringUTFChars(currencyCode, NULL);
+    ScopedResourceBundle currencyElems(ures_getByKey(rootElems.get(), currName, NULL, &status));
     env->ReleaseStringUTFChars(currencyCode, currName);
-    if(U_FAILURE(status)) {
-        ures_close(rootElems);
-        ures_close(root);
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
     int currSymbL;
-    const jchar *currSymbU = ures_getStringByIndex(currencyElems, 0, &currSymbL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(currencyElems);
-        ures_close(rootElems);
-        ures_close(root);
+    const jchar* currSymbU = ures_getStringByIndex(currencyElems.get(), 0, &currSymbL, &status);
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    ures_close(currencyElems);
-    ures_close(rootElems);
-    ures_close(root);
-
-    if(currSymbL == 0) {
-        return NULL;
-    }
-    return env->NewString(currSymbU, currSymbL);
+    return (currSymbL == 0) ? NULL : env->NewString(currSymbU, currSymbL);
 }
 
 static jstring getDisplayCountryNative(JNIEnv* env, jclass clazz, 
@@ -230,9 +185,9 @@ static jstring getDisplayCountryNative(JNIEnv* env, jclass clazz,
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
 
-    UnicodeString string;
-    targetLoc.getDisplayCountry(loc, string);
-    return getJStringFromUnicodeString(env, string);
+    UnicodeString str;
+    targetLoc.getDisplayCountry(loc, str);
+    return env->NewString(str.getBuffer(), str.length());
 }
 
 static jstring getDisplayLanguageNative(JNIEnv* env, jclass clazz, 
@@ -241,9 +196,9 @@ static jstring getDisplayLanguageNative(JNIEnv* env, jclass clazz,
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
 
-    UnicodeString string;
-    targetLoc.getDisplayLanguage(loc, string);
-    return getJStringFromUnicodeString(env, string);
+    UnicodeString str;
+    targetLoc.getDisplayLanguage(loc, str);
+    return env->NewString(str.getBuffer(), str.length());
 }
 
 static jstring getDisplayVariantNative(JNIEnv* env, jclass clazz, 
@@ -252,9 +207,9 @@ static jstring getDisplayVariantNative(JNIEnv* env, jclass clazz,
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
 
-    UnicodeString string;
-    targetLoc.getDisplayVariant(loc, string);
-    return getJStringFromUnicodeString(env, string);
+    UnicodeString str;
+    targetLoc.getDisplayVariant(loc, str);
+    return env->NewString(str.getBuffer(), str.length());
 }
 
 static jstring getISO3CountryNative(JNIEnv* env, jclass clazz, jstring locale) {
@@ -314,11 +269,11 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
 
     jstring content;
     jstring strObj;
-    const jchar *res;
+    const jchar* res;
     UnicodeString resU;
     jint length;
-    const UnicodeString *zoneID;
-    DateFormat *df;
+    const UnicodeString* zoneID;
+    DateFormat* df;
 
     UnicodeString longPattern("zzzz","");
     UnicodeString shortPattern("z","");
@@ -335,16 +290,14 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
     longDlTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 3);
     shortDlTimeArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 4);
 
-    int count = env->GetArrayLength(zoneIdArray);
-
-    TimeZone* zones[count];
-    
     // get all timezone objects
+    int count = env->GetArrayLength(zoneIdArray);
+    TimeZone* zones[count];
     for(int i = 0; i < count; i++) {
         strObj = (jstring) env->GetObjectArrayElement(zoneIdArray, i);
         length = env->GetStringLength(strObj);
         res = env->GetStringChars(strObj, NULL);
-        const UnicodeString zoneID((UChar *)res, length);
+        const UnicodeString zoneID((UChar*)res, length);
         env->ReleaseStringChars(strObj, res);
         zones[i] = TimeZone::createTimeZone(zoneID);
         env->DeleteLocalRef(strObj);
@@ -355,57 +308,51 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
     // 15th July 2008
     UDate date2 = 1218826800000.0;
 
-    for (int i = 0; i < count; i++) {
-           TimeZone *tz = zones[i];
-           longFormat.setTimeZone(*tz);
-           shortFormat.setTimeZone(*tz);
-           
-           int32_t daylightOffset;
-           int32_t rawOffset;
-           UDate standardDate;
-           UDate daylightSavingDate;
-           tz->getOffset(date1, false, rawOffset, daylightOffset, status);
-           if (daylightOffset != 0) {
-               // The Timezone is reporting that we are in daylight time
-               // for the winter date.  The dates are for the wrong hemisphere,
-               // swap them.
-               standardDate = date2;
-               daylightSavingDate = date1;
-           } else {
-               standardDate = date1;
-               daylightSavingDate = date2;
-           }
-                     
-           UnicodeString shortDayLight;
-           UnicodeString longDayLight;
-           UnicodeString shortStandard;
-           UnicodeString longStandard;
-           
-           shortFormat.format(daylightSavingDate, shortDayLight);
-           content = getJStringFromUnicodeString(env, shortDayLight);
-           env->SetObjectArrayElement(shortDlTimeArray, i, content);
-           env->DeleteLocalRef(content);
+    for (int i = 0; i < count; ++i) {
+        TimeZone* tz = zones[i];
+        longFormat.setTimeZone(*tz);
+        shortFormat.setTimeZone(*tz);
 
-           shortFormat.format(standardDate, shortStandard);
-           content = getJStringFromUnicodeString(env, shortStandard);
-           env->SetObjectArrayElement(shortStdTimeArray, i, content);
-           env->DeleteLocalRef(content);
+        int32_t daylightOffset;
+        int32_t rawOffset;
+        tz->getOffset(date1, false, rawOffset, daylightOffset, status);
+        UDate standardDate;
+        UDate daylightSavingDate;
+        if (daylightOffset != 0) {
+            // The Timezone is reporting that we are in daylight time
+            // for the winter date.  The dates are for the wrong hemisphere,
+            // swap them.
+            standardDate = date2;
+            daylightSavingDate = date1;
+        } else {
+            standardDate = date1;
+            daylightSavingDate = date2;
+        }
 
-           longFormat.format (daylightSavingDate, longDayLight);
-           content = getJStringFromUnicodeString(env, longDayLight);
-           env->SetObjectArrayElement(longDlTimeArray, i, content);
-           env->DeleteLocalRef(content);
+        UnicodeString str;
+        shortFormat.format(daylightSavingDate, str);
+        content = env->NewString(str.getBuffer(), str.length());
+        env->SetObjectArrayElement(shortDlTimeArray, i, content);
+        env->DeleteLocalRef(content);
 
-           longFormat.format (standardDate, longStandard);
-           content = getJStringFromUnicodeString(env, longStandard);
-           env->SetObjectArrayElement(longStdTimeArray, i, content);
-           env->DeleteLocalRef(content);
-           delete(tz);
+        shortFormat.format(standardDate, str);
+        content = env->NewString(str.getBuffer(), str.length());
+        env->SetObjectArrayElement(shortStdTimeArray, i, content);
+        env->DeleteLocalRef(content);
+
+        longFormat.format(daylightSavingDate, str);
+        content = env->NewString(str.getBuffer(), str.length());
+        env->SetObjectArrayElement(longDlTimeArray, i, content);
+        env->DeleteLocalRef(content);
+
+        longFormat.format(standardDate, str);
+        content = env->NewString(str.getBuffer(), str.length());
+        env->SetObjectArrayElement(longStdTimeArray, i, content);
+        env->DeleteLocalRef(content);
+
+        delete tz;
     }
 }
-
-
-
 
 static jstring getDisplayTimeZoneNative(JNIEnv* env, jclass clazz,
         jstring zoneID, jboolean isDST, jint style, jstring localeID) {
@@ -417,64 +364,48 @@ static jstring getDisplayTimeZoneNative(JNIEnv* env, jclass clazz,
     TimeZone* zone = TimeZone::createTimeZone(idString);
     env->ReleaseStringChars(zoneID, idChars);
 
-    // Build Locale object (can we rely on zero termination of JNI result?)
-    const char* localeChars = env->GetStringUTFChars(localeID, NULL);
-    jint localeLength = env->GetStringLength(localeID);
-    Locale locale = Locale::createFromName(localeChars);
+    Locale locale = getLocale(env, localeID);
 
     // Try to get the display name of the TimeZone according to the Locale
-    UnicodeString buffer;
-    zone->getDisplayName((UBool)isDST, (style == 0 ? TimeZone::SHORT : TimeZone::LONG), locale, buffer);
-    const UChar* tempChars = buffer.getBuffer();
-    int tempLength = buffer.length();
-    jstring result = env->NewString((jchar*)tempChars, tempLength);
-    env->ReleaseStringUTFChars(localeID, localeChars);
-
-    // Clean up everything
-    delete(zone);
-    
+    UnicodeString displayName;
+    zone->getDisplayName((UBool)isDST, (style == 0 ? TimeZone::SHORT : TimeZone::LONG), locale, displayName);
+    jstring result = env->NewString(displayName.getBuffer(), displayName.length());
+    delete zone;
     return result;
 }
 
-static void getDayIntVector(JNIEnv *env, UResourceBundle *gregorian, int *values) {
+static void getDayIntVector(JNIEnv* env, UResourceBundle* gregorian, int* values) {
 
     // get the First day of week and the minimal days in first week numbers
     UErrorCode status = U_ZERO_ERROR;
-    UResourceBundle *gregorianElems = ures_getByKey(gregorian, "DateTimeElements", NULL, &status);
+    ScopedResourceBundle gregorianElems(ures_getByKey(gregorian, "DateTimeElements", NULL, &status));
     if (U_FAILURE(status)) {
         return;
     }
 
     int intVectSize;
-    const int* result = ures_getIntVector(gregorianElems, &intVectSize, &status);
-    if (U_FAILURE(status)) {
-        ures_close(gregorianElems);
+    const int* result = ures_getIntVector(gregorianElems.get(), &intVectSize, &status);
+    if (U_FAILURE(status) || intVectSize != 2) {
         return;
     }
-    
-    if (intVectSize == 2) {
-        values[0] = result[0];
-        values[1] = result[1];
-    }
-
-    ures_close(gregorianElems);
+    values[0] = result[0];
+    values[1] = result[1];
 }
 
-static jobjectArray getAmPmMarkers(JNIEnv *env, UResourceBundle *gregorian) {
+static jobjectArray getAmPmMarkers(JNIEnv* env, UResourceBundle* gregorian) {
     UErrorCode status = U_ZERO_ERROR;
-    UResourceBundle *gregorianElems = ures_getByKey(gregorian, "AmPmMarkers", NULL, &status);
+    ScopedResourceBundle gregorianElems(ures_getByKey(gregorian, "AmPmMarkers", NULL, &status));
     if (U_FAILURE(status)) {
         return NULL;
     }
 
-    ures_resetIterator(gregorianElems);
+    ures_resetIterator(gregorianElems.get());
 
     int lengthAm, lengthPm;
-    const jchar* am = ures_getStringByIndex(gregorianElems, 0, &lengthAm, &status);
-    const jchar* pm = ures_getStringByIndex(gregorianElems, 1, &lengthPm, &status);
+    const jchar* am = ures_getStringByIndex(gregorianElems.get(), 0, &lengthAm, &status);
+    const jchar* pm = ures_getStringByIndex(gregorianElems.get(), 1, &lengthPm, &status);
 
     if (U_FAILURE(status)) {
-        ures_close(gregorianElems);
         return NULL;
     }
     
@@ -485,262 +416,130 @@ static jobjectArray getAmPmMarkers(JNIEnv *env, UResourceBundle *gregorian) {
     jstring pmU = env->NewString(pm, lengthPm);
     env->SetObjectArrayElement(amPmMarkers, 1, pmU);
     env->DeleteLocalRef(pmU);
-    ures_close(gregorianElems);
 
     return amPmMarkers;
 }
 
-static jobjectArray getEras(JNIEnv* env, UResourceBundle *gregorian) {
-    
-    jobjectArray eras;
-    jstring eraU;
-    const jchar* era;
-
+static jobjectArray getEras(JNIEnv* env, UResourceBundle* gregorian) {
     UErrorCode status = U_ZERO_ERROR;
-
-    UResourceBundle *gregorianElems;
-    UResourceBundle *eraElems;
-
-    gregorianElems = ures_getByKey(gregorian, "eras", NULL, &status);
-    if(U_FAILURE(status)) {
+    ScopedResourceBundle gregorianElems(ures_getByKey(gregorian, "eras", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    eraElems = ures_getByKey(gregorianElems, "abbreviated", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(gregorianElems);
+    ScopedResourceBundle eraElems(ures_getByKey(gregorianElems.get(), "abbreviated", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    int eraLength;
+    int eraCount = ures_getSize(eraElems.get());
+    jobjectArray eras = env->NewObjectArray(eraCount, string_class, NULL);
 
-    int eraCount = ures_getSize(eraElems);
-    eras = env->NewObjectArray(eraCount, string_class, NULL);
-
-    ures_resetIterator(eraElems);
-    for(int i = 0; i < eraCount; i++) {
-        era = ures_getStringByIndex(eraElems, i, &eraLength, &status);
-        if(U_FAILURE(status)) {
-            ures_close(gregorianElems);
-            ures_close(eraElems);
+    ures_resetIterator(eraElems.get());
+    for (int i = 0; i < eraCount; ++i) {
+        int eraLength;
+        const jchar* era = ures_getStringByIndex(eraElems.get(), i, &eraLength, &status);
+        if (U_FAILURE(status)) {
             return NULL;
         }
-        eraU = env->NewString(era, eraLength);
+        jstring eraU = env->NewString(era, eraLength);
         env->SetObjectArrayElement(eras, i, eraU);
         env->DeleteLocalRef(eraU);
     }
-    ures_close(eraElems);
-    ures_close(gregorianElems);
-
     return eras;
 }
 
-static jobjectArray getMonthNames(JNIEnv *env, UResourceBundle *gregorian) {
-    
+static jobjectArray getMonthNames(JNIEnv* env, UResourceBundle* gregorian, bool longNames) {
     UErrorCode status = U_ZERO_ERROR;
-
-    const jchar* month;
-    jstring monthU;
-
-    UResourceBundle *gregorianElems = ures_getByKey(gregorian, "monthNames", NULL, &status);
-    if(U_FAILURE(status)) {
+    ScopedResourceBundle gregorianElems(ures_getByKey(gregorian, "monthNames", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
-
-    UResourceBundle *monthNameElems = ures_getByKey(gregorianElems, "format", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(gregorianElems);
+    
+    ScopedResourceBundle monthNameElems(ures_getByKey(gregorianElems.get(), "format", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
-
-    UResourceBundle *monthNameElemsFormat = ures_getByKey(monthNameElems, "wide", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(monthNameElems);
-        ures_close(gregorianElems);
+    
+    ScopedResourceBundle monthNameElemsFormat(ures_getByKey(monthNameElems.get(), longNames ? "wide" : "abbreviated", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
-
-    int monthNameLength;
-    ures_resetIterator(monthNameElemsFormat);
-    int monthCount = ures_getSize(monthNameElemsFormat);
+    
+    ures_resetIterator(monthNameElemsFormat.get());
+    int monthCount = ures_getSize(monthNameElemsFormat.get());
+    // the array length is +1 because the harmony locales had an empty string at the end of their month name array
     jobjectArray months = env->NewObjectArray(monthCount + 1, string_class, NULL);
-    for(int i = 0; i < monthCount; i++) {
-        month = ures_getStringByIndex(monthNameElemsFormat, i, &monthNameLength, &status);
-        if(U_FAILURE(status)) {
-            ures_close(monthNameElemsFormat);
-            ures_close(monthNameElems);
-            ures_close(gregorianElems);
+    for (int i = 0; i < monthCount; ++i) {
+        int monthNameLength;
+        const jchar* month = ures_getStringByIndex(monthNameElemsFormat.get(), i, &monthNameLength, &status);
+        if (U_FAILURE(status)) {
             return NULL;
         }
-        monthU = env->NewString(month, monthNameLength);
+        jstring monthU = env->NewString(month, monthNameLength);
         env->SetObjectArrayElement(months, i, monthU);
         env->DeleteLocalRef(monthU);
     }
-
-    monthU = env->NewStringUTF("");
+    
+    jstring monthU = env->NewStringUTF("");
     env->SetObjectArrayElement(months, monthCount, monthU);
     env->DeleteLocalRef(monthU);
-
-    ures_close(monthNameElemsFormat);
-    ures_close(monthNameElems);
-    ures_close(gregorianElems);
+    
     return months;
 }
 
-static jobjectArray getShortMonthNames(JNIEnv *env, UResourceBundle *gregorian) {
-    
-    UErrorCode status = U_ZERO_ERROR;
-
-    const jchar* shortMonth;
-    jstring shortMonthU;
-
-    UResourceBundle *gregorianElems = ures_getByKey(gregorian, "monthNames", NULL, &status);
-    if(U_FAILURE(status)) {
-        return NULL;
-    }
-
-    UResourceBundle *monthNameElems = ures_getByKey(gregorianElems, "format", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(gregorianElems);
-        return NULL;
-    }
-
-    UResourceBundle *monthNameElemsFormat = ures_getByKey(monthNameElems, "abbreviated", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(monthNameElems);
-        ures_close(gregorianElems);
-        return NULL;
-    }
-
-    int shortMonthNameLength;
-    ures_resetIterator(monthNameElemsFormat);
-    int shortMonthCount = ures_getSize(monthNameElemsFormat);
-    // the array length is +1 because the harmony locales had an empty string at the end of their month name array
-    jobjectArray shortMonths = env->NewObjectArray(shortMonthCount + 1, string_class, NULL);
-    for(int i = 0; i < shortMonthCount; i++) {
-        shortMonth = ures_getStringByIndex(monthNameElemsFormat, i, &shortMonthNameLength, &status);
-        if(U_FAILURE(status)) {
-            ures_close(monthNameElemsFormat);
-            ures_close(monthNameElems);
-            ures_close(gregorianElems);
-            return NULL;
-        }
-        shortMonthU = env->NewString(shortMonth, shortMonthNameLength);
-        env->SetObjectArrayElement(shortMonths, i, shortMonthU);
-        env->DeleteLocalRef(shortMonthU);
-    }
-
-    shortMonthU = env->NewStringUTF("");
-    env->SetObjectArrayElement(shortMonths, shortMonthCount, shortMonthU);
-    env->DeleteLocalRef(shortMonthU);
-
-    ures_close(monthNameElemsFormat);
-    ures_close(monthNameElems);
-    ures_close(gregorianElems);
-    return shortMonths;
+static jobjectArray getLongMonthNames(JNIEnv* env, UResourceBundle* gregorian) {
+    return getMonthNames(env, gregorian, true);
 }
 
-static jobjectArray getWeekdayNames(JNIEnv *env, UResourceBundle *gregorian) {
-    
+static jobjectArray getShortMonthNames(JNIEnv* env, UResourceBundle* gregorian) {
+    return getMonthNames(env, gregorian, false);
+}
+
+static jobjectArray getWeekdayNames(JNIEnv* env, UResourceBundle* gregorian, bool longNames) {
     UErrorCode status = U_ZERO_ERROR;
-
-    const jchar* day;
-    jstring dayU;
-
-    UResourceBundle *gregorianElems = ures_getByKey(gregorian, "dayNames", NULL, &status);
-    if(U_FAILURE(status)) {
+    ScopedResourceBundle gregorianElems(ures_getByKey(gregorian, "dayNames", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    UResourceBundle *dayNameElems = ures_getByKey(gregorianElems, "format", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(gregorianElems);
+    ScopedResourceBundle dayNameElems(ures_getByKey(gregorianElems.get(), "format", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    UResourceBundle *dayNameElemsFormat = ures_getByKey(dayNameElems, "wide", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(dayNameElems);
-        ures_close(gregorianElems);
+    ScopedResourceBundle dayNameElemsFormat(ures_getByKey(dayNameElems.get(), longNames ? "wide" : "abbreviated", NULL, &status));
+    if (U_FAILURE(status)) {
         return NULL;
     }
 
-    int dayNameLength;
-    ures_resetIterator(dayNameElemsFormat);
-    int dayCount = ures_getSize(dayNameElemsFormat);
+    ures_resetIterator(dayNameElemsFormat.get());
+    int dayCount = ures_getSize(dayNameElemsFormat.get());
     jobjectArray weekdays = env->NewObjectArray(dayCount + 1, string_class, NULL);
     // first entry in the weekdays array is an empty string
     env->SetObjectArrayElement(weekdays, 0, env->NewStringUTF(""));
     for(int i = 0; i < dayCount; i++) {
-        day = ures_getStringByIndex(dayNameElemsFormat, i, &dayNameLength, &status);
+        int dayNameLength;
+        const jchar* day = ures_getStringByIndex(dayNameElemsFormat.get(), i, &dayNameLength, &status);
         if(U_FAILURE(status)) {
-            ures_close(dayNameElemsFormat);
-            ures_close(dayNameElems);
-            ures_close(gregorianElems);
             return NULL;
         }
-        dayU = env->NewString(day, dayNameLength);
+        jstring dayU = env->NewString(day, dayNameLength);
         env->SetObjectArrayElement(weekdays, i + 1, dayU);
         env->DeleteLocalRef(dayU);
     }
-    
-    ures_close(dayNameElemsFormat);
-    ures_close(dayNameElems);
-    ures_close(gregorianElems);
     return weekdays;
-
 }
 
-static jobjectArray getShortWeekdayNames(JNIEnv *env, UResourceBundle *gregorian) {
-    
-    UErrorCode status = U_ZERO_ERROR;
-
-    const jchar* shortDay;
-    jstring shortDayU;
-
-    UResourceBundle *gregorianElems = ures_getByKey(gregorian, "dayNames", NULL, &status);
-    if(U_FAILURE(status)) {
-        return NULL;
-    }
-
-    UResourceBundle *dayNameElems = ures_getByKey(gregorianElems, "format", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(gregorianElems);
-        return NULL;
-    }
-
-    UResourceBundle *dayNameElemsFormat = ures_getByKey(dayNameElems, "abbreviated", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(dayNameElems);
-        ures_close(gregorianElems);
-        return NULL;
-    }
-
-    int shortDayNameLength;
-    ures_resetIterator(dayNameElemsFormat);
-    int shortDayCount = ures_getSize(dayNameElemsFormat);
-    jobjectArray shortWeekdays = env->NewObjectArray(shortDayCount + 1, string_class, NULL);
-    env->SetObjectArrayElement(shortWeekdays, 0, env->NewStringUTF(""));
-    for(int i = 0; i < shortDayCount; i++) {
-        shortDay = ures_getStringByIndex(dayNameElemsFormat, i, &shortDayNameLength, &status);
-        if(U_FAILURE(status)) {
-            ures_close(dayNameElemsFormat);
-            ures_close(dayNameElems);
-            ures_close(gregorianElems);
-            return NULL;
-        }
-        shortDayU = env->NewString(shortDay, shortDayNameLength);
-        env->SetObjectArrayElement(shortWeekdays, i + 1, shortDayU);
-        env->DeleteLocalRef(shortDayU);
-    }
-
-    ures_close(dayNameElemsFormat);
-    ures_close(dayNameElems);
-    ures_close(gregorianElems);
-    return shortWeekdays;
+static jobjectArray getLongWeekdayNames(JNIEnv* env, UResourceBundle* gregorian) {
+    return getWeekdayNames(env, gregorian, true);
 }
 
-static jstring getDecimalPatternChars(JNIEnv *env, UResourceBundle *rootElems) {
+static jobjectArray getShortWeekdayNames(JNIEnv* env, UResourceBundle* gregorian) {
+    return getWeekdayNames(env, gregorian, false);
+}
+
+static jstring getDecimalPatternChars(JNIEnv* env, UResourceBundle* rootElems) {
     UErrorCode status = U_ZERO_ERROR;
 
     int zeroL, digitL, decSepL, groupL, listL, percentL, permillL, expL, currSepL, minusL;
@@ -777,9 +576,8 @@ static jstring getDecimalPatternChars(JNIEnv *env, UResourceBundle *rootElems) {
     return env->NewString(patternChars, 10);
 }
 
-static jstring getIntCurrencyCode(JNIEnv *env, jclass clazz, jstring locale) {
-
-    const char *locStr = env->GetStringUTFChars(locale, NULL);
+static jstring getIntCurrencyCode(JNIEnv* env, jclass clazz, jstring locale) {
+    const char* locStr = env->GetStringUTFChars(locale, NULL);
     char country[3] = {0,0,0};
 
     // getting the 2 character country name
@@ -799,13 +597,8 @@ static jstring getIntCurrencyCode(JNIEnv *env, jclass clazz, jstring locale) {
     return getCurrencyCodeNative(env, clazz, env->NewStringUTF(country));
 }
 
-static jstring getCurrencySymbol(JNIEnv *env, jclass clazz, jstring locale, jstring intCurrencySymbol) {
-    jstring result = getCurrencySymbolNative(env, clazz, locale, intCurrencySymbol);
-    return (result == intCurrencySymbol) ? NULL : result;
-}
-
 static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
-    const char *loc = env->GetStringUTFChars(locale, NULL);
+    const char* loc = env->GetStringUTFChars(locale, NULL);
     UErrorCode status = U_ZERO_ERROR;
     UResourceBundle* root = ures_openU(NULL, loc, &status);
     env->ReleaseStringUTFChars(locale, loc);
@@ -851,14 +644,14 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
     int counter = 0;
 
 
-    const jchar* nan = (const jchar *)NULL;
-    const jchar* inf = (const jchar *)NULL;
+    const jchar* nan = NULL;
+    const jchar* inf = NULL;
     int nanL, infL;
 
 
-    UResourceBundle *gregorian;
-    UResourceBundle *gregorianElems;
-    UResourceBundle *rootElems;
+    UResourceBundle* gregorian;
+    UResourceBundle* gregorianElems;
+    UResourceBundle* rootElems;
 
 
 
@@ -909,7 +702,7 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
 
 
     // adding month names string array to the result
-    months = getMonthNames(env, gregorian);
+    months = getLongMonthNames(env, gregorian);
     if(months != NULL) {
         counter++;
     }
@@ -923,7 +716,7 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
 
 
     // adding day names string array to the result
-    weekdays = getWeekdayNames(env, gregorian);
+    weekdays = getLongWeekdayNames(env, gregorian);
     if(weekdays != NULL) {
         counter++;
     }
@@ -935,13 +728,13 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
         counter++;
     }
 
-    const UChar *pattern;
+    const UChar* pattern;
     jchar check[2] = {0, 0};
     u_uastrcpy(check, "v");
     jchar replacement[2] = {0, 0};
     u_uastrcpy(replacement, "z");
-    jchar *pos;
-    jchar *patternCopy;
+    jchar* pos;
+    jchar* patternCopy;
     int patternLength;
 
     // adding date and time format patterns to the result
@@ -957,10 +750,10 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
     // about the same result as 'v', the timezone name. 
     // 'v' -> "PT", 'z' -> "PST", v is the generic timezone and z the standard tz
     // "vvvv" -> "Pacific Time", "zzzz" -> "Pacific Standard Time"
-    patternCopy = (jchar *) malloc((patternLength + 1) * sizeof(jchar));
+    patternCopy = new jchar[patternLength + 1];
     u_strcpy(patternCopy, pattern);
     if(U_FAILURE(status)) {
-        free(patternCopy);
+        delete[] patternCopy;
         status = U_ZERO_ERROR;
         goto endOfCalendar;
     }
@@ -968,7 +761,7 @@ static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
         u_memset(pos, replacement[0], 1);
     }
     time_FULL = env->NewString(patternCopy, patternLength);
-    free(patternCopy);
+    delete[] patternCopy;
     counter++;
 
     pattern = ures_getStringByIndex(gregorianElems, 1, &patternLength, &status);
@@ -1074,7 +867,13 @@ endOfCalendar:
     intCurrencySymbol = getIntCurrencyCode(env, clazz, locale);
     if(intCurrencySymbol != NULL) {
         // adding currency symbol to result
-        currencySymbol = getCurrencySymbol(env, clazz, locale, intCurrencySymbol);
+        currencySymbol = getCurrencySymbolNative(env, clazz, locale, intCurrencySymbol);
+        // TODO: this is broken; the two will never be identical *unless*
+        // they're NULL. Given that string equality is hard here, and this
+        // code has always been broken, does this matter?
+        if (currencySymbol == intCurrencySymbol) {
+            currencySymbol = NULL;
+        }
     } else {
         intCurrencySymbol = env->NewStringUTF("XXX");
     }
@@ -1088,8 +887,8 @@ endOfCalendar:
     // adding number format patterns to the result
     int numOfEntries;
     int decSepOffset;
-    NumberFormat *nf;
-    jchar *tmpPattern;
+    NumberFormat* nf;
+    jchar* tmpPattern;
 
     rootElems = ures_getByKey(root, "NumberPatterns", NULL, &status);
     if(U_FAILURE(status)) {
@@ -1119,10 +918,10 @@ endOfCalendar:
     UChar decSep[sizeof(c_decSep)];
     u_charsToUChars(c_decSep, decSep, sizeof(c_decSep));
     decSepOffset = u_strcspn(pattern, decSep);
-    tmpPattern =  (jchar *) malloc((decSepOffset + 1) * sizeof(jchar));
+    tmpPattern = new jchar[decSepOffset + 1];
     u_strncpy(tmpPattern, pattern, decSepOffset);
     integerPattern = env->NewString(tmpPattern, decSepOffset);
-    free(tmpPattern);
+    delete[] tmpPattern;
     counter++;
 
     // currency pattern
@@ -1280,20 +1079,12 @@ static JNINativeMethod gMethods[] = {
 };
 
 int register_com_ibm_icu4jni_util_Resources(JNIEnv* env) {
-    
-    // initializing String
-
     jclass stringclass = env->FindClass("java/lang/String");
-
-    if(stringclass == NULL) {
-        LOGE("Can't find java/lang/String");
-        jniThrowException(env, "java/lang/ClassNotFoundException", "java.lang.String");
+    if (stringclass == NULL) {
         return -1;
     }
-    
     string_class = (jclass) env->NewGlobalRef(stringclass);
-    
-    return jniRegisterNativeMethods(env, 
-            "com/ibm/icu4jni/util/Resources", gMethods, 
-            NELEM(gMethods));
+
+    return jniRegisterNativeMethods(env, "com/ibm/icu4jni/util/Resources",
+            gMethods, NELEM(gMethods));
 }
