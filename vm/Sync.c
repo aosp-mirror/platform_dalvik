@@ -108,7 +108,7 @@ static void expandObjClear(ExpandingObjectList* pList);
  *
  * The LSB of the lock value encodes its state.  If cleared, the lock
  * is in the "thin" state and its bits are formatted as follows:
- * 
+ *
  *    [31 ---- 19] [18 ---- 3] [2 ---- 1] [0]
  *     lock count   thread id  hash state  0
  *
@@ -470,8 +470,11 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     bool timed;
     int cc;
 
+    assert(self != NULL);
+    assert(mon != NULL);
+
     /* Make sure that we hold the lock. */
-    if (mon == NULL || mon->owner != self) {
+    if (mon->owner != self) {
         dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
             "object not locked by thread before wait()");
         return;
@@ -676,8 +679,11 @@ done:
  */
 static void notifyMonitor(Thread* self, Monitor* mon)
 {
+    assert(self != NULL);
+    assert(mon != NULL);
+
     /* Make sure that we hold the lock. */
-    if (mon == NULL || mon->owner != self) {
+    if (mon->owner != self) {
         dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
             "object not locked by thread before notify()");
         return;
@@ -710,8 +716,11 @@ static void notifyMonitor(Thread* self, Monitor* mon)
  */
 static void notifyAllMonitor(Thread* self, Monitor* mon)
 {
+    assert(self != NULL);
+    assert(mon != NULL);
+
     /* Make sure that we hold the lock. */
-    if (mon == NULL || mon->owner != self) {
+    if (mon->owner != self) {
         dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
             "object not locked by thread before notifyAll()");
         return;
