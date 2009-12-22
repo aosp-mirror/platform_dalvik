@@ -1,13 +1,13 @@
-/* 
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +16,12 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.BrokenTest;
+import tests.support.Support_Locale;
 
 import junit.framework.TestCase;
 
@@ -34,7 +34,7 @@ import java.text.ParsePosition;
 import java.util.Currency;
 import java.util.Locale;
 
-@TestTargetClass(NumberFormat.class) 
+@TestTargetClass(NumberFormat.class)
 public class NumberFormatTest extends TestCase {
 
     /**
@@ -153,6 +153,12 @@ public class NumberFormatTest extends TestCase {
         // Locale arLocale = new Locale("ar", "AE");
         Locale chLocale = new Locale("de", "CH");
         // END android-changed
+
+        Locale[] requiredLocales = {usLocale, chLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
 
         DecimalFormat format = (DecimalFormat) NumberFormat
                 .getIntegerInstance(usLocale);
@@ -292,20 +298,20 @@ public class NumberFormatTest extends TestCase {
             fail("Expected UnsupportedOperationException");
         } catch (UnsupportedOperationException e) {
         }
-        
+
         try {
             NumberFormat.getInstance().setCurrency(null);
             fail("NullPointerException was thrown.");
         } catch(NullPointerException npe) {
-            //expected   
+            //expected
         }
-        
+
         try {
             NumberFormat.getIntegerInstance().setCurrency(null);
             fail("NullPointerException was thrown.");
         } catch(NullPointerException npe) {
-            //expected   
-        }        
+            //expected
+        }
     }
 
     /**
@@ -319,45 +325,50 @@ public class NumberFormatTest extends TestCase {
         args = {java.lang.String.class, java.text.ParsePosition.class}
     )
     public void test_parseObjectLjava_lang_StringLjava_text_ParsePosition() {
+        Locale[] requiredLocales = {Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // regression test for HARMONY-1003
         assertNull(NumberFormat.getInstance().parseObject("0",
                 new ParsePosition(-1)));
 
-        parseObjectTest(NumberFormat.getInstance(), "123.123", 
+        parseObjectTest(NumberFormat.getInstance(), "123.123",
                 new ParsePosition(1), new Double(23.123), 7, true);
-        
-        parseObjectTest(NumberFormat.getInstance(), "123.123abc123", 
-                new ParsePosition(3), new Double(0.123), 7, true);        
-        
-        parseObjectTest(NumberFormat.getInstance(Locale.FRANCE), 
-                "asd123,123abc123", 
-                new ParsePosition(3), new Double(123.123), 10, true); 
-        
-        parseObjectTest(NumberFormat.getInstance(Locale.FRANCE), 
-                "test test", 
-                new ParsePosition(0), null, 0, false); 
-        
-        parseObjectTest(NumberFormat.getIntegerInstance(), 
-                "asd123.123abc123", 
+
+        parseObjectTest(NumberFormat.getInstance(), "123.123abc123",
+                new ParsePosition(3), new Double(0.123), 7, true);
+
+        parseObjectTest(NumberFormat.getInstance(Locale.FRANCE),
+                "asd123,123abc123",
+                new ParsePosition(3), new Double(123.123), 10, true);
+
+        parseObjectTest(NumberFormat.getInstance(Locale.FRANCE),
+                "test test",
+                new ParsePosition(0), null, 0, false);
+
+        parseObjectTest(NumberFormat.getIntegerInstance(),
+                "asd123.123abc123",
                 new ParsePosition(3), new Long(123), 6, true);
-        
-        parseObjectTest(NumberFormat.getNumberInstance(), 
-                "$-123,123.123#", 
+
+        parseObjectTest(NumberFormat.getNumberInstance(),
+                "$-123,123.123#",
                 new ParsePosition(1), new Double(-123123.123), 13, true);
-        parseObjectTest(NumberFormat.getNumberInstance(), 
-                "$-123,123.123#", 
-                new ParsePosition(0), null, 0, false);      
-        parseObjectTest(NumberFormat.getNumberInstance(), 
-                "$-123,123.123#", 
-                new ParsePosition(13), null, 13, false); 
-        parseObjectTest(NumberFormat.getPercentInstance(), 
-                "%20.123#", 
-                new ParsePosition(0), new Double(20.123), 0, false);        
-        parseObjectTest(NumberFormat.getPercentInstance(), 
-                "%-200,123.123#", 
-                new ParsePosition(0), null, 0, false);        
-        
-        
+        parseObjectTest(NumberFormat.getNumberInstance(),
+                "$-123,123.123#",
+                new ParsePosition(0), null, 0, false);
+        parseObjectTest(NumberFormat.getNumberInstance(),
+                "$-123,123.123#",
+                new ParsePosition(13), null, 13, false);
+        parseObjectTest(NumberFormat.getPercentInstance(),
+                "%20.123#",
+                new ParsePosition(0), new Double(20.123), 0, false);
+        parseObjectTest(NumberFormat.getPercentInstance(),
+                "%-200,123.123#",
+                new ParsePosition(0), null, 0, false);
+
+
         // Regression for HARMONY-1685
         try {
             NumberFormat.getInstance().parseObject("test", null);
@@ -366,8 +377,8 @@ public class NumberFormatTest extends TestCase {
             // expected
         }
     }
-    
-    void parseObjectTest(NumberFormat nf, String sourseStr, ParsePosition position, 
+
+    void parseObjectTest(NumberFormat nf, String sourseStr, ParsePosition position,
             Object resultObj, int outIndex, boolean isSuccess) {
         int indexBefore = position.getIndex();
         Object result = nf.parseObject(sourseStr, position);
@@ -451,11 +462,17 @@ public class NumberFormatTest extends TestCase {
         args = {double.class}
     )
     public void test_formatLdouble() {
+        Locale deLocale = new Locale("de", "CH");
+        Locale[] requiredLocales = {Locale.US, deLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // BEGIN android-changed
         NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
         // use de_CH instead
         // NumberFormat nf2 = NumberFormat.getInstance(new Locale("ar", "AR"));
-        NumberFormat nf2 = NumberFormat.getInstance(new Locale("de", "CH"));
+        NumberFormat nf2 = NumberFormat.getInstance(deLocale);
 
         String out = nf1.format(1234567890.0123456789);
         assertEquals("Wrong result for double : " + out, "1,234,567,890.012",
@@ -490,11 +507,17 @@ public class NumberFormatTest extends TestCase {
         args = {long.class}
     )
     public void test_formatLlong() {
+        Locale deLocale = new Locale("de", "CH");
+        Locale[] requiredLocales = {Locale.US, deLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // BEGIN android-changed
         NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
         // use de_CH instead
         // NumberFormat nf2 = NumberFormat.getInstance(Locale.CANADA_FRENCH);
-        NumberFormat nf2 = NumberFormat.getInstance(new Locale("de", "CH"));
+        NumberFormat nf2 = NumberFormat.getInstance(deLocale);
 
         String out = nf1.format(Long.MAX_VALUE);
         assertEquals("Wrong result for double : " + out,
@@ -594,6 +617,12 @@ public class NumberFormatTest extends TestCase {
         // Locale mkLocale = new Locale("mk", "MK");
         Locale atLocale = new Locale("de", "AT");
 
+        Locale[] requiredLocales = {usLocale, atLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
+
         NumberFormat format = NumberFormat.getCurrencyInstance(usLocale);
 
         assertNotSame("Instance is null", null, format);
@@ -616,7 +645,7 @@ public class NumberFormatTest extends TestCase {
         // use de_AT instead
         // format = NumberFormat.getCurrencyInstance(mkLocale);
         format = NumberFormat.getCurrencyInstance(atLocale);
-        
+
         assertEquals(
                 "Test5: NumberFormat.getCurrencyInstance(new Locale(\"de\", \"AT\")).format(35.76) returned wrong value",
                 "\u20ac 35,76", format.format(35.76));
@@ -689,11 +718,17 @@ public class NumberFormatTest extends TestCase {
         args = {java.util.Locale.class}
     )
     public void test_getInstanceLjava_util_Locale() {
+        Locale testLocale = new Locale("de", "CH");
+        Locale[] requiredLocales = {Locale.US, testLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // BEGIN android-changed
         Locale.setDefault(Locale.US);
         // use de_CH instead
         // NumberFormat format = NumberFormat.getInstance(new Locale("ar", "AR"));
-        NumberFormat format = NumberFormat.getInstance(new Locale("de", "CH"));
+        NumberFormat format = NumberFormat.getInstance(testLocale);
 
         assertNotSame("Instance is null", null, format);
         assertTrue("Object is not instance of NumberFormat",
@@ -765,11 +800,16 @@ public class NumberFormatTest extends TestCase {
         args = {java.util.Locale.class}
     )
     public void test_getNumberInstanceLjava_util_Locale() {
+        Locale deLocale = new Locale("de", "CH");
+        Locale[] requiredLocales = {Locale.US, deLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         // BEGIN android-changed
         Locale.setDefault(Locale.US);
         // use de_CH instead
-        NumberFormat format = NumberFormat.getNumberInstance(new Locale("de",
-                "CH"));
+        NumberFormat format = NumberFormat.getNumberInstance(deLocale);
         // NumberFormat format = NumberFormat.getNumberInstance(new Locale("ar",
         //         "AR"));
 
@@ -843,9 +883,14 @@ public class NumberFormatTest extends TestCase {
         args = {java.util.Locale.class}
     )
     public void test_getPercentInstanceLjava_util_Locale() {
+        Locale csLocale = new Locale("cs", "CZ");
+        Locale[] requiredLocales = {Locale.US, csLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Locale.setDefault(Locale.US);
-        NumberFormat format = NumberFormat.getPercentInstance(new Locale("cs",
-                "CZ"));
+        NumberFormat format = NumberFormat.getPercentInstance(csLocale);
 
         assertNotSame("Instance is null", null, format);
         assertTrue("Object is not instance of NumberFormat",
@@ -1054,6 +1099,12 @@ public class NumberFormatTest extends TestCase {
         args = {boolean.class}
     )
     public void test_setGroupingUsed() {
+        Locale csLocale = new Locale("cs", "CZ");
+        Locale[] requiredLocales = {Locale.US, csLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         NumberFormat nf1 = NumberFormat.getInstance(Locale.US);
         nf1.setGroupingUsed(false);
 
@@ -1079,8 +1130,7 @@ public class NumberFormatTest extends TestCase {
         assertEquals("grouping is not used for -1234567890.1",
                 "-1,234,567,890.1", nf1.format(-1234567890.1));
 
-        NumberFormat nf2 = NumberFormat.getPercentInstance(new Locale("cs",
-                "CZ"));
+        NumberFormat nf2 = NumberFormat.getPercentInstance(csLocale);
         nf2.setGroupingUsed(false);
         assertEquals(
                 "Locale(\"cs\", \"CZ\"): grouping is used for 1234567890.1",

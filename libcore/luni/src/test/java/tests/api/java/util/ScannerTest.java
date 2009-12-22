@@ -51,6 +51,7 @@ import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
+import tests.support.Support_Locale;
 import tests.support.Support_PortManager;
 
 import junit.framework.TestCase;
@@ -1120,8 +1121,12 @@ public class ScannerTest extends TestCase {
         method = "nextInt",
         args = {int.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextIntI() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, Locale.CHINESE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt(10));
         assertEquals(456, s.nextInt(10));
@@ -1335,8 +1340,12 @@ public class ScannerTest extends TestCase {
         method = "nextInt",
         args = {}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextInt() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.CHINESE, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt());
         assertEquals(456, s.nextInt());
@@ -1730,8 +1739,12 @@ public class ScannerTest extends TestCase {
         method = "nextFloat",
         args = {}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_nextFloat() throws IOException {
+        Locale[] requiredLocales = {Locale.ENGLISH, Locale.GERMANY};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertEquals((float)123.0, s.nextFloat());
@@ -2147,6 +2160,11 @@ public class ScannerTest extends TestCase {
         args = {int.class}
     )
     public void test_nextShortI() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.CHINESE, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertEquals(123, s.nextShort(10));
         assertEquals(456, s.nextShort(10));
@@ -2304,6 +2322,11 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_nextShort() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.CHINESE, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertEquals(123, s.nextShort());
         assertEquals(456, s.nextShort());
@@ -2464,6 +2487,11 @@ public class ScannerTest extends TestCase {
         args = {int.class}
     )
     public void test_nextLongI() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.CHINESE, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertEquals(123, s.nextLong(10));
         assertEquals(456, s.nextLong(10));
@@ -2621,6 +2649,11 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_nextLong() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.CHINESE, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertEquals(123, s.nextLong());
         assertEquals(456, s.nextLong());
@@ -3716,8 +3749,16 @@ public class ScannerTest extends TestCase {
         method = "hasNextInt",
         args = {int.class}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextIntI() throws IOException {
+        Locale mkLocale = new Locale("mk", "MK");
+        Locale arLocale = new Locale("ar", "AE");
+        Locale deLocale = new Locale("de", "CH");
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, Locale.CHINESE,
+                mkLocale, arLocale, deLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt(10));
         assertTrue(s.hasNextInt(10));
@@ -3762,7 +3803,7 @@ public class ScannerTest extends TestCase {
         s = new Scanner("23'456");
         s.useLocale(Locale.GERMANY);
         assertFalse(s.hasNextInt(10));
-        s.useLocale(new Locale("de", "CH"));
+        s.useLocale(deLocale);
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextInt(10));
 
@@ -3863,7 +3904,7 @@ public class ScannerTest extends TestCase {
          * by scanner with locale mk_MK. But this is not the case on RI.
          */
         s = new Scanner("-123 123- -123-");
-        s.useLocale(new Locale("ar", "AE"));
+        s.useLocale(arLocale);
         assertTrue(s.hasNextInt(10));
         assertEquals(-123, s.nextInt(10));
         // The following test case fails on RI
@@ -3880,7 +3921,7 @@ public class ScannerTest extends TestCase {
         }
 
         s = new Scanner("-123 123- (123)");
-        s.useLocale(new Locale("mk", "MK"));
+        s.useLocale(mkLocale);
         assertTrue(s.hasNextInt(10));
         assertEquals(-123, s.nextInt(10));
         assertFalse(s.hasNextInt(10));
@@ -3949,8 +3990,16 @@ public class ScannerTest extends TestCase {
         method = "hasNextInt",
         args = {}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextInt() throws IOException {
+        Locale mkLocale = new Locale("mk", "MK");
+        Locale arLocale = new Locale("ar", "AE");
+        Locale deLocale = new Locale("de", "CH");
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, Locale.CHINESE,
+                mkLocale, arLocale, deLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertTrue(s.hasNextInt());
         assertEquals(123, s.nextInt());
@@ -3996,7 +4045,7 @@ public class ScannerTest extends TestCase {
         s = new Scanner("23'456");
         s.useLocale(Locale.GERMANY);
         assertFalse(s.hasNextInt());
-        s.useLocale(new Locale("de", "CH"));
+        s.useLocale(deLocale);
         assertTrue(s.hasNextInt());
 
         /*
@@ -4084,7 +4133,7 @@ public class ScannerTest extends TestCase {
          * by scanner with locale mk_MK. But this is not the case on RI.
          */
         s = new Scanner("-123 123- -123-");
-        s.useLocale(new Locale("ar", "AE"));
+        s.useLocale(arLocale);
         assertTrue(s.hasNextInt());
         assertEquals(-123, s.nextInt());
         // The following test case fails on RI
@@ -4101,7 +4150,7 @@ public class ScannerTest extends TestCase {
         }
 
         s = new Scanner("-123 123- (123)");
-        s.useLocale(new Locale("mk", "MK"));
+        s.useLocale(mkLocale);
         assertTrue(s.hasNextInt());
         assertEquals(-123, s.nextInt());
         try {
@@ -4137,8 +4186,14 @@ public class ScannerTest extends TestCase {
         method = "hasNextFloat",
         args = {}
     )
-    @KnownFailure("Some locales were removed last minute in cupcake")
     public void test_hasNextFloat() throws IOException {
+        Locale mkLocale = new Locale("mk", "MK");
+        Locale arLocale = new Locale("ar", "AE");
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, mkLocale, arLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertTrue(s.hasNextFloat());
@@ -4225,7 +4280,7 @@ public class ScannerTest extends TestCase {
         assertEquals((float)23456.7, s.nextFloat());
 
         s = new Scanner("-123.4 123.4- -123.4-");
-        s.useLocale(new Locale("ar", "AE"));
+        s.useLocale(arLocale);
         assertTrue(s.hasNextFloat());
         assertEquals((float)-123.4, s.nextFloat());
         //The following test case fails on RI
@@ -4241,7 +4296,7 @@ public class ScannerTest extends TestCase {
         }
 
         s = new Scanner("(123) 123- -123");
-        s.useLocale(new Locale("mk", "MK"));
+        s.useLocale(mkLocale);
         if (!disableRIBugs) {
             assertTrue(s.hasNextFloat());
             assertEquals((float)-123.0, s.nextFloat());
@@ -4284,6 +4339,11 @@ public class ScannerTest extends TestCase {
         args = {int.class}
     )
     public void test_hasNextShortI() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, Locale.CHINESE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertTrue(s.hasNextShort(10));
         assertEquals(123, s.nextShort(10));
@@ -4460,6 +4520,15 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_hasNextShort() throws IOException {
+        Locale deLocale = new Locale("de", "CH");
+        Locale arLocale = new Locale("ar", "AE");
+        Locale mkLocale = new Locale("mk", "MK");
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, Locale.CHINESE, deLocale,
+                arLocale, mkLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertTrue(s.hasNextShort());
         assertEquals(123, s.nextShort());
@@ -4528,7 +4597,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("de", "CH"));
+        s.useLocale(deLocale);
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextShort());
         assertEquals(23456, s.nextShort());
@@ -4617,12 +4686,12 @@ public class ScannerTest extends TestCase {
         assertEquals(12300, s.nextShort());
 
         s = new Scanner("-123");
-        s.useLocale(new Locale("ar", "AE"));
+        s.useLocale(arLocale);
         assertTrue(s.hasNextShort());
         assertEquals(-123, s.nextShort());
 
         s = new Scanner("-123");
-        s.useLocale(new Locale("mk", "MK"));
+        s.useLocale(mkLocale);
         assertTrue(s.hasNextShort());
         assertEquals(-123, s.nextShort());
         
@@ -4687,6 +4756,11 @@ public class ScannerTest extends TestCase {
         args = {int.class}
     )
     public void test_hasNextLongI() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, Locale.CHINESE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertTrue(s.hasNextLong(10));
         assertEquals(123, s.nextLong(10));
@@ -4904,6 +4978,15 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_hasNextLong() throws IOException {
+        Locale deLocale = new Locale("de", "CH");
+        Locale arLocale = new Locale("ar", "AE");
+        Locale mkLocale = new Locale("mk", "MK");
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH, Locale.CHINESE, deLocale,
+                arLocale, mkLocale};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 456");
         assertTrue(s.hasNextLong());
         assertEquals(123, s.nextLong());
@@ -4972,7 +5055,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("de", "CH"));
+        s.useLocale(deLocale);
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextLong());
         assertEquals(23456, s.nextLong());
@@ -5061,12 +5144,12 @@ public class ScannerTest extends TestCase {
         assertEquals(12300, s.nextLong());
 
         s = new Scanner("-123");
-        s.useLocale(new Locale("ar", "AE"));
+        s.useLocale(arLocale);
         assertTrue(s.hasNextLong());
         assertEquals(-123, s.nextLong());
 
         s = new Scanner("-123");
-        s.useLocale(new Locale("mk", "MK"));
+        s.useLocale(mkLocale);
         assertTrue(s.hasNextLong());
         assertEquals(-123, s.nextLong());
         
@@ -5090,6 +5173,11 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_hasNextDouble() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertTrue(s.hasNextDouble());
@@ -5203,6 +5291,11 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_hasNextBigDecimal() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertTrue(s.hasNextBigDecimal());
@@ -6335,6 +6428,11 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_nextDouble() throws IOException {
+        Locale[] requiredLocales = {Locale.GERMANY, Locale.ENGLISH};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertEquals(123.0, s.nextDouble());
@@ -6427,6 +6525,11 @@ public class ScannerTest extends TestCase {
         args = {}
     )
     public void test_nextBigDecimal() throws IOException {
+        Locale[] requiredLocales = {Locale.ENGLISH, Locale.GERMANY};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertEquals(new BigDecimal("123"), s.nextBigDecimal());

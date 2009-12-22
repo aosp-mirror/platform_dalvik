@@ -16,7 +16,6 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
@@ -196,7 +195,8 @@ public class DateFormatTest extends junit.framework.TestCase {
             assertTrue("Doesn't work",
                     f1.format(new Date()).getClass() == String.class);
         }
-        assertTrue("Missing locales", english && german);
+        // TODO: currently, it is not mandatory to have both English and German locales bug 1943269
+        // assertTrue("Missing locales", english && german);
     }
 
     /**

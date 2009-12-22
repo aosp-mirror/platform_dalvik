@@ -17,11 +17,11 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass; 
+import tests.support.Support_Locale;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -901,6 +901,11 @@ public class CalendarTest extends junit.framework.TestCase {
         )
     })
     public void test_getFirstDayOfWeek() {
+        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Calendar cal = Calendar.getInstance();
 
         assertEquals(Calendar.SUNDAY, cal.getFirstDayOfWeek());
@@ -917,6 +922,11 @@ public class CalendarTest extends junit.framework.TestCase {
         args = {java.util.Locale.class}
     )
     public void test_getInstanceLjava_util_Locale() {
+        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Calendar cal1 = Calendar.getInstance(Locale.FRANCE);
         Locale.setDefault(Locale.FRANCE);
         Calendar cal2 = Calendar.getInstance();
@@ -945,6 +955,11 @@ public class CalendarTest extends junit.framework.TestCase {
         args = {java.util.TimeZone.class, java.util.Locale.class}
     )
     public void test_getInstanceLjava_util_TimeZoneLjava_util_Locale() {
+        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"), Locale.FRANCE);
         Locale.setDefault(Locale.FRANCE);
         Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
@@ -963,6 +978,11 @@ public class CalendarTest extends junit.framework.TestCase {
         args = {}
     )
     public void test_getMinimalDaysInFirstWeek() {
+        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Calendar cal = Calendar.getInstance();
         assertTrue(cal.getMinimalDaysInFirstWeek()==1);
         Locale.setDefault(Locale.FRANCE);
@@ -1008,6 +1028,11 @@ public class CalendarTest extends junit.framework.TestCase {
         args = {}
     )
     public void test_hashCode() {
+        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         Calendar cal1 = Calendar.getInstance();
         Locale.setDefault(Locale.FRANCE);
         Calendar cal2 = Calendar.getInstance();
