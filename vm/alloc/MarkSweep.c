@@ -820,8 +820,6 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
     const int offReferent = gDvm.offJavaLangRefReference_referent;
     bool workRequired = false;
 
-size_t numCleared = 0;
-size_t numEnqueued = 0;
     reference = refListHead;
     while (reference != NULL) {
         Object *next;
@@ -888,8 +886,6 @@ size_t numEnqueued = 0;
                 schedEnqueue = false;
                 break;
             }
-numCleared += schedClear ? 1 : 0;
-numEnqueued += schedEnqueue ? 1 : 0;
 
             if (schedClear || schedEnqueue) {
                 uintptr_t workBits;
@@ -929,11 +925,6 @@ numEnqueued += schedEnqueue ? 1 : 0;
 
         reference = next;
     }
-#define refType2str(r) \
-    ((r) == REF_SOFT ? "soft" : ( \
-     (r) == REF_WEAK ? "weak" : ( \
-     (r) == REF_PHANTOM ? "phantom" : "UNKNOWN" )))
-LOGD_HEAP("dvmHeapHandleReferences(): cleared %zd, enqueued %zd %s references\n", numCleared, numEnqueued, refType2str(refType));
 
     /* Walk though the reference list again, and mark any non-clear/marked
      * referents.  Only PhantomReferences can have non-clear referents
