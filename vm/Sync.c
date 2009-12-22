@@ -731,11 +731,6 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
     }
 }
 
-#if THIN_LOCKING
-/*
- * Thin locking support
- */
-
 /*
  * Implements monitorenter for "synchronized" stuff.
  *
@@ -1062,74 +1057,6 @@ void dvmObjectNotifyAll(Thread* self, Object *obj)
         notifyAllMonitor(self, LW_MONITOR(thin));
     }
 }
-
-#else  // not THIN_LOCKING
-
-/*
- * Implements monitorenter for "synchronized" stuff.
- *
- * This does not fail or throw an exception.
- */
-void dvmLockObject(Thread* self, Object* obj)
-{
-    Monitor* mon = obj->lock.mon;
-
-    if (mon == NULL) {
-        mon = dvmCreateMonitor(obj);
-        if (!ATOMIC_CMP_SWAP((int32_t *)&obj->lock.mon,
-                             (int32_t)NULL, (int32_t)mon)) {
-            /* somebody else beat us to it */
-            releaseMonitor(mon);
-            mon = obj->lock.mon;
-        }
-    }
-
-    lockMonitor(self, mon);
-}
-
-/*
- * Implements monitorexit for "synchronized" stuff.
- */
-bool dvmUnlockObject(Thread* self, Object* obj)
-{
-    Monitor* mon = obj->lock.mon;
-
-    return unlockMonitor(self, mon);
-}
-
-
-/*
- * Object.wait().
- */
-void dvmObjectWait(Thread* self, Object* obj, u8 msec, u4 nsec)
-{
-    Monitor* mon = obj->lock.mon;
-
-    waitMonitor(self, mon, msec, nsec);
-}
-
-/*
- * Object.notify().
- */
-void dvmObjectNotify(Thread* self, Object* obj)
-{
-    Monitor* mon = obj->lock.mon;
-
-    notifyMonitor(self, mon);
-}
-
-/*
- * Object.notifyAll().
- */
-void dvmObjectNotifyAll(Thread* self, Object* obj)
-{
-    Monitor* mon = obj->lock.mon;
-
-    notifyAllMonitor(self, mon);
-}
-
-#endif  // not THIN_LOCKING
-
 
 /*
  * This implements java.lang.Thread.sleep(long msec, int nsec).

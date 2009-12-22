@@ -180,7 +180,6 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
  */
 static void genMonitor(CompilationUnit *cUnit, MIR *mir)
 {
-#if defined (THIN_LOCKING)
     RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
     bool enter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
     ArmLIR *target;
@@ -229,9 +228,6 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
     target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
     branch->generic.target = (LIR *)target;
-#else
-    genMonitorPortable(cUnit, mir);
-#endif
 }
 
 /*

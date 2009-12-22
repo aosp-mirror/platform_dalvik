@@ -65,7 +65,6 @@ typedef union Lock {
  * Initialize a Lock to the proper starting value.
  * This is necessary for thin locking.
  */
-#define THIN_LOCKING 1
 #define DVM_LOCK_INITIAL_THIN_VALUE (0)
 
 #define DVM_LOCK_INIT(lock) \
@@ -74,7 +73,7 @@ typedef union Lock {
 /*
  * Returns true if the lock has been fattened.
  */
-#define IS_LOCK_FAT(lock)   (((lock)->thin & 1) == 1 && (lock)->mon != NULL)
+#define IS_LOCK_FAT(lock)   (LW_SHAPE((lock)->thin) == LW_SHAPE_FAT)
 
 /*
  * Acquire the object's monitor.
