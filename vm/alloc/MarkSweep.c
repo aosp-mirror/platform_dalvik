@@ -742,65 +742,36 @@ void dvmHeapScanMarkedObjects()
     LOG_SCAN("done with marked objects\n");
 }
 
-/** @return true if we need to schedule a call to clear().
+/** Clear the referent field.
  */
-static bool clearReference(Object *reference)
+static void clearReference(Object *reference)
 {
     /* This is what the default implementation of Reference.clear()
      * does.  We're required to clear all references to a given
      * referent atomically, so we can't pop in and out of interp
      * code each time.
      *
-     * Also, someone may have subclassed one of the basic Reference
-     * types, overriding clear().  We can't trust the clear()
-     * implementation to call super.clear();  we cannot let clear()
-     * resurrect the referent.  If we clear it here, we can safely
-     * call any overriding implementations.
+     * We don't ever actaully call overriding implementations of
+     * Reference.clear().
      */
     dvmSetFieldObject(reference,
             gDvm.offJavaLangRefReference_referent, NULL);
-
-#if FANCY_REFERENCE_SUBCLASS
-    /* See if clear() has actually been overridden.  If so,
-     * we need to schedule a call to it before calling enqueue().
-     */
-    if (reference->clazz->vtable[gDvm.voffJavaLangRefReference_clear]->clazz !=
-            gDvm.classJavaLangRefReference)
-    {
-        /* clear() has been overridden;  return true to indicate
-         * that we need to schedule a call to the real clear()
-         * implementation.
-         */
-        return true;
-    }
-#endif
-
-    return false;
 }
 
 /** @return true if we need to schedule a call to enqueue().
  */
 static bool enqueueReference(Object *reference)
 {
-#if FANCY_REFERENCE_SUBCLASS
-    /* See if this reference class has overridden enqueue();
-     * if not, we can take a shortcut.
-     */
-    if (reference->clazz->vtable[gDvm.voffJavaLangRefReference_enqueue]->clazz
-            == gDvm.classJavaLangRefReference)
-#endif
-    {
-        Object *queue = dvmGetFieldObject(reference,
-                gDvm.offJavaLangRefReference_queue);
-        Object *queueNext = dvmGetFieldObject(reference,
-                gDvm.offJavaLangRefReference_queueNext);
-        if (queue == NULL || queueNext != NULL) {
-            /* There is no queue, or the reference has already
-             * been enqueued.  The Reference.enqueue() method
-             * will do nothing even if we call it.
-             */
-            return false;
-        }
+    Object *queue = dvmGetFieldObject(reference,
+            gDvm.offJavaLangRefReference_queue);
+    Object *queueNext = dvmGetFieldObject(reference,
+            gDvm.offJavaLangRefReference_queueNext);
+    if (queue == NULL || queueNext != NULL) {
+        /* There is no queue, or the reference has already
+         * been enqueued.  The Reference.enqueue() method
+         * will do nothing even if we call it.
+         */
+        return false;
     }
 
     /* We need to call enqueue(), but if we called it from
@@ -835,7 +806,7 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
         //      the list, and it would be nice to avoid the extra
         //      work.
         if (referent != NULL && !isMarked(ptr2chunk(referent), markContext)) {
-            bool schedClear, schedEnqueue;
+            bool schedEnqueue;
 
             /* This is the strongest reference that refers to referent.
              * Do the right thing.
@@ -843,7 +814,7 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
             switch (refType) {
             case REF_SOFT:
             case REF_WEAK:
-                schedClear = clearReference(reference);
+                clearReference(reference);
                 schedEnqueue = enqueueReference(reference);
                 break;
             case REF_PHANTOM:
@@ -867,12 +838,11 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
                     if (queue == gDvm.jniWeakGlobalRefQueue) {
                         LOGV("+++ WGR: clearing + not queueing %p:%p\n",
                             reference, referent);
-                        schedClear = clearReference(reference);
+                        clearReference(reference);
                         schedEnqueue = false;
                         break;
                     }
                 }
-                schedClear = false;
 
                 /* A PhantomReference is only useful with a
                  * queue, but since it's possible to create one
@@ -882,17 +852,15 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
                 break;
             default:
                 assert(!"Bad reference type");
-                schedClear = false;
                 schedEnqueue = false;
                 break;
             }
 
-            if (schedClear || schedEnqueue) {
+            if (schedEnqueue) {
                 uintptr_t workBits;
 
-                /* Stuff the clear/enqueue bits in the bottom of
-                 * the pointer.  Assumes that objects are 8-byte
-                 * aligned.
+                /* Stuff the enqueue bit in the bottom of the pointer.
+                 * Assumes that objects are 8-byte aligned.
                  *
                  * Note that we are adding the *Reference* (which
                  * is by definition already marked at this point) to
@@ -900,12 +868,10 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
                  * has already been cleared).
                  */
                 assert(((intptr_t)reference & 3) == 0);
-                assert(((WORKER_CLEAR | WORKER_ENQUEUE) & ~3) == 0);
-                workBits = (schedClear ? WORKER_CLEAR : 0) |
-                           (schedEnqueue ? WORKER_ENQUEUE : 0);
+                assert((WORKER_ENQUEUE & ~3) == 0);
                 if (!dvmHeapAddRefToLargeTable(
                         &gDvm.gcHeap->referenceOperations,
-                        (Object *)((uintptr_t)reference | workBits)))
+                        (Object *)((uintptr_t)reference | WORKER_ENQUEUE)))
                 {
                     LOGE_HEAP("dvmMalloc(): no room for any more "
                             "reference operations\n");

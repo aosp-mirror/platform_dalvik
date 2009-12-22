@@ -236,9 +236,9 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
     if (obj != NULL) {
         uintptr_t workBits;
 
-        workBits = (uintptr_t)obj & (WORKER_CLEAR | WORKER_ENQUEUE);
+        workBits = (uintptr_t)obj & WORKER_ENQUEUE;
         assert(workBits != 0);
-        obj = (Object *)((uintptr_t)obj & ~(WORKER_CLEAR | WORKER_ENQUEUE));
+        obj = (Object *)((uintptr_t)obj & ~WORKER_ENQUEUE);
 
         *op = workBits;
     } else {
