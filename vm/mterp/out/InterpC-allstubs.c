@@ -2840,14 +2840,15 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE /*vB, {vD, vE, vF, vG}, inline@CCCC*/)
          * the rest uninitialized.  We're assuming that, if the method
          * needs them, they'll be specified in the call.
          *
-         * This annoys gcc when optimizations are enabled, causing a
-         * "may be used uninitialized" warning.  We can quiet the warnings
-         * for a slight penalty (5%: 373ns vs. 393ns on empty method).  Note
-         * that valgrind is perfectly happy with this arrangement, because
-         * the uninitialiezd values are never actually used.
+         * However, this annoys gcc when optimizations are enabled,
+         * causing a "may be used uninitialized" warning.  Quieting
+         * the warnings incurs a slight penalty (5%: 373ns vs. 393ns
+         * on empty method).  Note that valgrind is perfectly happy
+         * either way as the uninitialiezd values are never actually
+         * used.
          */
         u4 arg0, arg1, arg2, arg3;
-        //arg0 = arg1 = arg2 = arg3 = 0;
+        arg0 = arg1 = arg2 = arg3 = 0;
 
         EXPORT_PC();
 
