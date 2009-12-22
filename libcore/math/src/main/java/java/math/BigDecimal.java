@@ -2148,7 +2148,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         long newScale = scale;
 
         if (isZero()) {
-            return new BigDecimal("0");
+            return this;
         }
         BigInteger strippedBI = getUnscaledValue();
         BigInteger[] quotAndRem;
