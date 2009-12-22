@@ -674,3 +674,25 @@ result UNSUPPORTED
 test sun.security.smartcardio
 result UNSUPPORTED
 
+# Our exception messages don't match the RIs
+test java.lang.StringBuilder.Exceptions
+result EXEC_FAILED
+pattern .*got java\.lang\.StringIndexOutOfBoundsException: null - FAILED.*
+
+test java.lang.StringBuffer.Exceptions
+result EXEC_FAILED
+pattern .*got java\.lang\.StringIndexOutOfBoundsException: null - FAILED.*
+
+
+# We don't expose Java 6 APIs
+test java.lang.String.IsEmpty
+result COMPILE_FAILED
+pattern .*cannot find symbol.*method isEmpty\(\).*
+
+test java.lang.String.Exceptions
+result COMPILE_FAILED
+pattern .*cannot find symbol.*new String.*
+
+test java.lang.String.Encodings
+result COMPILE_FAILED
+pattern .*cannot find symbol.*new String.*
