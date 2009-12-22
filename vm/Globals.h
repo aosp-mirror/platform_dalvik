@@ -261,14 +261,8 @@ struct DvmGlobals {
     int         offJavaLangRefReference_queueNext;
     int         offJavaLangRefReference_vmData;
 
-#if FANCY_REFERENCE_SUBCLASS
-    /* method offsets - java.lang.ref.Reference */
-    int         voffJavaLangRefReference_clear;
-    int         voffJavaLangRefReference_enqueue;
-#else
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;
-#endif
 
     /* field offsets - java.nio.Buffer and java.nio.DirectByteBufferImpl */
     //int         offJavaNioBuffer_capacity;
