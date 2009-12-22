@@ -316,8 +316,7 @@ public class SimpleDateFormat extends DateFormat {
     private static final long serialVersionUID = 4774881970558875024L;
 
     // BEGIN android-changed
-    // private static final String patternChars = "GyMdkHmsSEDFwWahKzYeugAZvcLQqV"; //$NON-NLS-1$
-    private static final String patternChars = "GyMdkHmsSEDFwWahKzZ"; //$NON-NLS-1$
+    static final String patternChars = "GyMdkHmsSEDFwWahKzZ"; //$NON-NLS-1$
     // END android-changed
 
     private String pattern;
