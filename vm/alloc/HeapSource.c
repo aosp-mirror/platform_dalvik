@@ -97,7 +97,7 @@ live ratio of small heap after a gc; scale it based on that.
 typedef struct {
     /* The mspace to allocate from.
      */
-    mspace *msp;
+    mspace msp;
 
     /* The bitmap that keeps track of where objects are in the heap.
      */
@@ -274,10 +274,10 @@ countFree(Heap *heap, const void *ptr, bool isObj)
 
 static HeapSource *gHs = NULL;
 
-static mspace *
+static mspace
 createMspace(size_t startSize, size_t absoluteMaxSize, size_t id)
 {
-    mspace *msp;
+    mspace msp;
     char name[PATH_MAX];
 
     /* If two ashmem regions have the same name, only one gets
@@ -316,7 +316,7 @@ createMspace(size_t startSize, size_t absoluteMaxSize, size_t id)
 }
 
 static bool
-addNewHeap(HeapSource *hs, mspace *msp, size_t mspAbsoluteMaxSize)
+addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
 {
     Heap heap;
 
@@ -361,7 +361,7 @@ addNewHeap(HeapSource *hs, mspace *msp, size_t mspAbsoluteMaxSize)
     /* Don't let the soon-to-be-old heap grow any further.
      */
     if (hs->numHeaps > 0) {
-        mspace *msp = hs->heaps[0].msp;
+        mspace msp = hs->heaps[0].msp;
         mspace_set_max_allowed_footprint(msp, mspace_footprint(msp));
     }
 
@@ -993,7 +993,7 @@ setSoftLimit(HeapSource *hs, size_t softLimit)
      * max_allowed, because the heap may not have grown all the
      * way to the allowed size yet.
      */
-    mspace *msp = hs->heaps[0].msp;
+    mspace msp = hs->heaps[0].msp;
     size_t currentHeapSize = mspace_footprint(msp);
     if (softLimit < currentHeapSize) {
         /* Don't let the heap grow any more, and impose a soft limit.
@@ -1020,7 +1020,7 @@ setIdealFootprint(size_t max)
     HeapSource *hs = gHs;
 #if DEBUG_HEAP_SOURCE
     HeapSource oldHs = *hs;
-    mspace *msp = hs->heaps[0].msp;
+    mspace msp = hs->heaps[0].msp;
     size_t oldAllowedFootprint =
             mspace_max_allowed_footprint(msp);
 #endif
