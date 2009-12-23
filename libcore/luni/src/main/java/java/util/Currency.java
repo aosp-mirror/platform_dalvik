@@ -18,6 +18,7 @@
 package java.util;
 
 // BEGIN android-added
+import com.ibm.icu4jni.util.LocaleData;
 import com.ibm.icu4jni.util.Resources;
 import java.util.logging.Logger;
 import org.apache.harmony.luni.util.Msg;
@@ -163,10 +164,10 @@ public final class Currency implements Serializable {
             return currencyCode;
         }
 
-        // Check the Locale bundle first, in case the locale has the same currency.
-        ResourceBundle localeBundle = com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
-        if (localeBundle.getString("IntCurrencySymbol").equals(currencyCode)) {
-            return localeBundle.getString("CurrencySymbol");
+        // Check the locale first, in case the locale has the same currency.
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        if (localeData.internationalCurrencySymbol.equals(currencyCode)) {
+            return localeData.currencySymbol;
         }
 
         // check if the currency bundle for this locale has an entry for this currency

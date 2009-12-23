@@ -33,8 +33,8 @@ import java.util.logging.Logger;
  */
 public class Resources {
     // A cache for the locale-specific data.
-    private static final ConcurrentHashMap<String, LocaleResourceBundle> localeInstanceCache =
-            new ConcurrentHashMap<String, LocaleResourceBundle>();
+    private static final ConcurrentHashMap<String, LocaleData> localeDataCache =
+            new ConcurrentHashMap<String, LocaleData>();
 
     /**
      * Cache for ISO language names.
@@ -57,40 +57,37 @@ public class Resources {
     private static String[] availableTimezones = null;
 
     /**
-     * Returns a LocaleResourceBundle corresponding to the given locale.
-     * TODO: return something that allows cheap static field lookup rather than
-     * expensive chained hash table lookup.
+     * Returns a shared LocaleData for the given locale.
      */
-    public static ResourceBundle getLocaleInstance(Locale locale) {
+    public static LocaleData getLocaleData(Locale locale) {
         if (locale == null) {
             locale = Locale.getDefault();
         }
         String localeName = locale.toString();
-        LocaleResourceBundle bundle = localeInstanceCache.get(localeName);
-        if (bundle != null) {
-            return bundle;
+        LocaleData localeData = localeDataCache.get(localeName);
+        if (localeData != null) {
+            return localeData;
         }
-        bundle = makeLocaleResourceBundle(locale);
-        localeInstanceCache.put(localeName, bundle);
-        boolean absent = (localeInstanceCache.putIfAbsent(localeName, bundle) == null);
-        return absent ? bundle : localeInstanceCache.get(localeName);
+        localeData = makeLocaleData(locale);
+        boolean absent = (localeDataCache.putIfAbsent(localeName, localeData) == null);
+        return absent ? localeData : localeDataCache.get(localeName);
     }
 
-    private static LocaleResourceBundle makeLocaleResourceBundle(Locale locale) {
-        LocaleResourceBundle result = new LocaleResourceBundle(locale);
-        
-        // Anything not found in this ResourceBundle should be passed on to
-        // a parent ResourceBundle corresponding to the next-most-specific locale.
-        String country = locale.getCountry();
+    private static LocaleData makeLocaleData(Locale locale) {
         String language = locale.getLanguage();
-        if (locale.getVariant().length() > 0) {
-            result.setParent(getLocaleInstance(new Locale(language, country, "")));
+        String country = locale.getCountry();
+        String variant = locale.getVariant();
+        // Start with data from the parent (next-most-specific) locale...
+        LocaleData result = new LocaleData();
+        if (variant.length() > 0) {
+            result.overrideWithDataFrom(getLocaleData(new Locale(language, country, "")));
         } else if (country.length() > 0) {
-            result.setParent(getLocaleInstance(new Locale(language, "", "")));
+            result.overrideWithDataFrom(getLocaleData(new Locale(language, "", "")));
         } else if (language.length() > 0) {
-            result.setParent(getLocaleInstance(new Locale("", "", "")));
+            result.overrideWithDataFrom(getLocaleData(new Locale("", "", "")));
         }
-        
+        // Override with data from this locale.
+        result.overrideWithDataFrom(initLocaleData(locale));
         return result;
     }
 
@@ -270,7 +267,7 @@ public class Resources {
         return createTimeZoneNamesFor(locale);
     }
 
-    private static String[][] clone2dStringArray(String[][] array) {
+    public static String[][] clone2dStringArray(String[][] array) {
         String[][] result = new String[array.length][];
         for (int i = 0; i < array.length; ++i) {
             result[i] = array[i].clone();
@@ -308,48 +305,6 @@ public class Resources {
 
     }
 
-    /**
-     * Internal ResourceBundle mimicking the Harmony "Locale_*" bundles.
-     * The content covers a wide range of
-     * data items, with values even being arrays in some cases. Note we are
-     * cheating with the "timezones" entry, since we normally don't want to
-     * waste our precious RAM on several thousand of these Strings.
-     */
-    private static final class LocaleResourceBundle extends ListResourceBundle {
-        private final Locale locale;
-        
-        public LocaleResourceBundle(Locale locale) {
-            this.locale = locale;
-        }
-        
-        // We can't set the superclass' locale field, so we need our own, and our own accessor.
-        @Override
-        public Locale getLocale() {
-            return locale;
-        }
-
-        @Override
-        protected Object[][] getContents() {
-            return getContentImpl(locale.toString());
-        }
-
-        // Increase accessibility of this method so we can call it.
-        @Override
-        public void setParent(ResourceBundle bundle) {
-            this.parent = bundle;
-        }
-        
-        @Override
-        public String toString() {
-            StringBuilder result = new StringBuilder();
-            result.append("LocaleResourceBundle[locale=");
-            result.append(getLocale());
-            result.append(",contents=");
-            result.append(Arrays.deepToString(getContents()));
-            return result.toString();
-        }
-    }
-
     // --- Native methods accessing ICU's database ----------------------------
 
     public static native String getDisplayCountryNative(String countryCode, String locale);
@@ -374,5 +329,25 @@ public class Resources {
     private static native String getDisplayTimeZoneNative(String id, boolean isDST, int style,
             String locale);
 
-    private static native Object[][] getContentImpl(String locale);
+    private static LocaleData initLocaleData(Locale locale) {
+        LocaleData localeData = new LocaleData();
+        if (!initLocaleDataImpl(locale.toString(), localeData)) {
+            throw new AssertionError("couldn't initialize LocaleData for locale " + locale);
+        }
+        if (localeData.fullTimeFormat != null) {
+            // There are some full time format patterns in ICU that use the pattern character 'v'.
+            // Java doesn't accept this, so we replace it with 'z' which has about the same result
+            // as 'v', the timezone name.
+            // 'v' -> "PT", 'z' -> "PST", v is the generic timezone and z the standard tz
+            // "vvvv" -> "Pacific Time", "zzzz" -> "Pacific Standard Time"
+            localeData.fullTimeFormat = localeData.fullTimeFormat.replace('v', 'z');
+        }
+        if (localeData.numberPattern != null) {
+            String numberPattern = localeData.numberPattern;
+            localeData.integerPattern = numberPattern.substring(0, numberPattern.indexOf('.'));
+        }
+        return localeData;
+    }
+
+    private static native boolean initLocaleDataImpl(String locale, LocaleData result);
 }

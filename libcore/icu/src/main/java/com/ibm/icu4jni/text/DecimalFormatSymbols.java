@@ -17,6 +17,7 @@
 package com.ibm.icu4jni.text;
 
 import com.ibm.icu4jni.text.NativeDecimalFormat.UNumberFormatSymbol;
+import com.ibm.icu4jni.util.LocaleData;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -36,18 +37,15 @@ public class DecimalFormatSymbols implements Cloneable {
     }
     
     public DecimalFormatSymbols(Locale locale) {
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
         this.loc = locale;
-        ResourceBundle bundle = com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
-        String pattern = bundle.getString("Number");
-        this.addr = NativeDecimalFormat.openDecimalFormatImpl(
-                locale.toString(), pattern);
-        String currSymbol = bundle.getString("CurrencySymbol");
-        String intCurrSymbol = bundle.getString("IntCurrencySymbol");
+        this.addr = NativeDecimalFormat.openDecimalFormatImpl(locale.toString(),
+                localeData.numberPattern);
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_CURRENCY_SYMBOL.ordinal(), currSymbol);
+                UNumberFormatSymbol.UNUM_CURRENCY_SYMBOL.ordinal(), localeData.currencySymbol);
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_INTL_CURRENCY_SYMBOL.ordinal(), 
-                intCurrSymbol);
+                localeData.internationalCurrencySymbol);
     }
     
     @Override

@@ -32,6 +32,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 // END android-added
 
+import com.ibm.icu4jni.util.LocaleData;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -356,7 +357,8 @@ public abstract class NumberFormat extends Format {
      */
     public static NumberFormat getCurrencyInstance(Locale locale) {
         // BEGIN android-changed
-        return getInstance(locale, "Currency"); //$NON-NLS-1$
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        return getInstance(locale, localeData.currencyPattern);
         // END android-changed
     }
 
@@ -380,9 +382,10 @@ public abstract class NumberFormat extends Format {
      */
     public static NumberFormat getIntegerInstance(Locale locale) {
         // BEGIN android-changed
-        NumberFormat format = getInstance(locale, "Integer"); //$NON-NLS-1$
-        format.setParseIntegerOnly(true);
-        return format;
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        NumberFormat result = getInstance(locale, localeData.integerPattern);
+        result.setParseIntegerOnly(true);
+        return result;
         // END android-changed
     }
 
@@ -409,9 +412,8 @@ public abstract class NumberFormat extends Format {
     }
 
     // BEGIN android-added
-    static NumberFormat getInstance(Locale locale, String type) {
-        return new DecimalFormat(getPattern(locale, type),
-                new DecimalFormatSymbols(locale));
+    private static NumberFormat getInstance(Locale locale, String pattern) {
+        return new DecimalFormat(pattern, new DecimalFormatSymbols(locale));
     }
     // END android-added
 
@@ -477,16 +479,10 @@ public abstract class NumberFormat extends Format {
      */
     public static NumberFormat getNumberInstance(Locale locale) {
         // BEGIN android-changed
-        return getInstance(locale, "Number"); //$NON-NLS-1$
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        return getInstance(locale, localeData.numberPattern);
         // END android-changed
     }
-
-    // BEGIN android-added
-    static String getPattern(Locale locale, String type) {
-        ResourceBundle bundle = getBundle(locale);
-        return bundle.getString(type);
-    }
-    // END android-added
 
     /**
      * Returns a {@code NumberFormat} for formatting and parsing percentage
@@ -508,7 +504,8 @@ public abstract class NumberFormat extends Format {
      */
     public static NumberFormat getPercentInstance(Locale locale) {
         // BEGIN android-changed
-        return getInstance(locale, "Percent"); //$NON-NLS-1$
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        return getInstance(locale, localeData.percentPattern);
         // END android-changed
     }
 

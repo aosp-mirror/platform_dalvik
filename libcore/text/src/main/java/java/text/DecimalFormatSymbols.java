@@ -33,6 +33,8 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 // END android-added
 
+import com.ibm.icu4jni.util.LocaleData;
+
 /**
  * Encapsulates the set of symbols (such as the decimal separator, the grouping
  * separator, and so on) needed by {@code DecimalFormat} to format numbers.
@@ -82,10 +84,10 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      */
     public DecimalFormatSymbols(Locale locale) {
         // BEGIN android-changed
-        ResourceBundle bundle = Format.getBundle(locale);
-        patternChars = bundle.getString("DecimalPatternChars").toCharArray(); //$NON-NLS-1$
-        infinity = bundle.getString("Infinity"); //$NON-NLS-1$
-        NaN = bundle.getString("NaN"); //$NON-NLS-1$
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        this.patternChars = localeData.decimalPatternChars.toCharArray();
+        this.infinity = localeData.infinity;
+        this.NaN = localeData.NaN;
         this.locale = locale;
         try {
             currency = Currency.getInstance(locale);
@@ -93,8 +95,8 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
             intlCurrencySymbol = currency.getCurrencyCode();
         } catch (IllegalArgumentException e) {
             currency = Currency.getInstance("XXX"); //$NON-NLS-1$
-            currencySymbol = bundle.getString("CurrencySymbol"); //$NON-NLS-1$
-            intlCurrencySymbol = bundle.getString("IntCurrencySymbol"); //$NON-NLS-1$
+            currencySymbol = localeData.currencySymbol;
+            intlCurrencySymbol = localeData.internationalCurrencySymbol;
         }
         // END android-changed
     }
