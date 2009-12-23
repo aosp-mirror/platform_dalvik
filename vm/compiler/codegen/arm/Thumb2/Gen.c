@@ -171,7 +171,7 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
  *
  * r0 -> self pointer [arg0 for dvm[Lock/Unlock]Object
  * r1 -> object [arg1 for dvm[Lock/Unlock]Object
- * r2 -> intial contents of object->lock.thin, later result of strex
+ * r2 -> intial contents of object->lock, later result of strex
  * r3 -> self->threadId
  * r7 -> temp to hold new lock value [unlock only]
  * r4 -> allow to be used by utilities as general temp
@@ -205,9 +205,9 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     loadWordDisp(cUnit, r0, offsetof(Thread, threadId), r3); // Get threadId
     newLIR3(cUnit, kThumb2Ldrex, r2, r1,
-            offsetof(Object, lock.thin) >> 2); // Get object->lock.thin
+            offsetof(Object, lock) >> 2); // Get object->lock
     opRegImm(cUnit, kOpLsl, r3, LW_LOCK_OWNER_SHIFT); // Align owner
-    // Is lock.thin unheld on lock or held by us (==threadId) on unlock?
+    // Is lock unheld on lock or held by us (==threadId) on unlock?
     if (enter) {
         newLIR4(cUnit, kThumb2Bfi, r3, r2, 0, LW_LOCK_OWNER_SHIFT - 1);
         newLIR3(cUnit, kThumb2Bfc, r2, LW_HASH_STATE_SHIFT,
@@ -225,10 +225,10 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
     newLIR0(cUnit, kThumb2Clrex);
     if (enter) {
         newLIR4(cUnit, kThumb2Strex, r2, r3, r1,
-                offsetof(Object, lock.thin) >> 2);
+                offsetof(Object, lock) >> 2);
     } else {
         newLIR4(cUnit, kThumb2Strex, r2, r7, r1,
-                offsetof(Object, lock.thin) >> 2);
+                offsetof(Object, lock) >> 2);
     }
     // Note: end of IT block
 
