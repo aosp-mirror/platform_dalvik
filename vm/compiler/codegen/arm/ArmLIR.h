@@ -598,7 +598,11 @@ typedef enum ArmOpCode {
                                   imm8[7-0] */
     kThumb2Strex,        /* strex [111010000100] rn[19-16] rt[11-8] rd[11-8]
                                   imm8[7-0] */
-    kThumb2Clrex,       /* clrex [111100111011111110000111100101111\ */
+    kThumb2Clrex,        /* clrex [111100111011111110000111100101111] */
+    kThumb2Bfi,          /* bfi [111100110110] rn[19-16] [0] imm3[14-12]
+                                  rd[11-8] imm2[7-6] [0] msb[4-0] */
+    kThumb2Bfc,          /* bfc [11110011011011110] [0] imm3[14-12]
+                                  rd[11-8] imm2[7-6] [0] msb[4-0] */
 
     kArmLast,
 } ArmOpCode;
