@@ -859,6 +859,14 @@ ArmEncodingMap EncodingMap[kArmLast] = {
     ENCODING_MAP(kThumb2Clrex,       0xf3bf8f2f,
                  kFmtUnused, -1, -1, kFmtUnused, -1, -1, kFmtUnused, -1, -1,
                  kFmtUnused, -1, -1, NO_OPERAND, "clrex", "", 2),
+    ENCODING_MAP(kThumb2Bfi,         0xf3600000,
+                 kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtShift5, -1, -1,
+                 kFmtBitBlt, 4, 0, IS_QUAD_OP | REG_DEF0_USE1,
+                 "bfi", "r!0d,r!1d,#!2d,#!3d", 2),
+    ENCODING_MAP(kThumb2Bfc,         0xf36f0000,
+                 kFmtBitBlt, 11, 8, kFmtShift5, -1, -1, kFmtBitBlt, 4, 0,
+                 kFmtUnused, -1, -1, IS_TERTIARY_OP | REG_DEF0,
+                 "bfc", "r!0d,#!1d,#!2d", 2),
 };
 
 /*

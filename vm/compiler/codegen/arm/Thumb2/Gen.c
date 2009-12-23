@@ -177,6 +177,18 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
  * r4 -> allow to be used by utilities as general temp
  *
  * The result of the strex is 0 if we acquire the lock.
+ *
+ * See comments in Sync.c for the layout of the lock word.
+ * Of particular interest to this code is the test for the
+ * simple case - which we handle inline.  For monitor enter, the
+ * simple case is thin lock, held by no-one.  For monitor exit,
+ * the simple case is thin lock, held by the unlocking thread with
+ * a recurse count of 0.
+ *
+ * A minor complication is that there is a field in the lock word
+ * unrelated to locking: the hash state.  This field must be ignored, but
+ * preserved.
+ *
  */
 static void genMonitor(CompilationUnit *cUnit, MIR *mir)
 {
@@ -185,6 +197,7 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
     ArmLIR *target;
     ArmLIR *branch;
 
+    assert(LW_SHAPE_THIN == 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);  // Get obj
     lockAllTemps(cUnit);  // Prepare for explicit register usage
     freeTemp(cUnit, r4PC);  // Free up r4 for general use
@@ -193,11 +206,18 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
     loadWordDisp(cUnit, r0, offsetof(Thread, threadId), r3); // Get threadId
     newLIR3(cUnit, kThumb2Ldrex, r2, r1,
             offsetof(Object, lock.thin) >> 2); // Get object->lock.thin
+    opRegImm(cUnit, kOpLsl, r3, LW_LOCK_OWNER_SHIFT); // Align owner
     // Is lock.thin unheld on lock or held by us (==threadId) on unlock?
     if (enter) {
-        opRegImm(cUnit, kOpSub, r2, DVM_LOCK_INITIAL_THIN_VALUE);
+        newLIR4(cUnit, kThumb2Bfi, r3, r2, 0, LW_LOCK_OWNER_SHIFT - 1);
+        newLIR3(cUnit, kThumb2Bfc, r2, LW_HASH_STATE_SHIFT,
+                 LW_LOCK_OWNER_SHIFT - 1);
+        opRegImm(cUnit, kOpCmp, r2, 0);
     } else {
-        loadConstant(cUnit, r7, DVM_LOCK_INITIAL_THIN_VALUE);
+        opRegRegImm(cUnit, kOpAnd, r7, r2,
+                (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT));
+        newLIR3(cUnit, kThumb2Bfc, r2, LW_HASH_STATE_SHIFT,
+                 LW_LOCK_OWNER_SHIFT - 1);
         opRegReg(cUnit, kOpSub, r2, r3);
     }
     // Note: start of IT block.  If last sub result != clear, else strex
