@@ -171,13 +171,22 @@ typedef struct Thread {
     Object*     classLoaderOverride;
 
     /* pointer to the monitor lock we're currently waiting on */
-    /* (do not set or clear unless the Monitor itself is held) */
+    /* guarded by waitMutex */
     /* TODO: consider changing this to Object* for better JDWP interaction */
     Monitor*    waitMonitor;
-    /* set when we confirm that the thread must be interrupted from a wait */
-    bool        interruptingWait;
+
     /* thread "interrupted" status; stays raised until queried or thrown */
+    /* guarded by waitMutex */
     bool        interrupted;
+
+    /* links to the next thread in the wait set this thread is part of */
+    struct Thread*     waitNext;
+
+    /* object to sleep on while we are waiting for a monitor */
+    pthread_cond_t     waitCond;
+
+    /* mutex to guard the interrupted and the waitMonitor members */
+    pthread_mutex_t    waitMutex;
 
     /*
      * Set to true when the thread is in the process of throwing an
