@@ -23,6 +23,8 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
 
+import com.ibm.icu4jni.util.LocaleData;
+
 /**
  * {@code Calendar} is an abstract base class for converting between a
  * {@code Date} object and a set of integer fields such as
@@ -686,15 +688,9 @@ public abstract class Calendar implements Serializable, Cloneable,
     protected Calendar(TimeZone timezone, Locale locale) {
         this(timezone);
         // BEGIN android-changed
-        // com.ibm.icu.util.Calendar icuCalendar = com.ibm.icu.util.Calendar
-        //         .getInstance(com.ibm.icu.util.SimpleTimeZone
-        //                 .getTimeZone(timezone.getID()), locale);
-        // setFirstDayOfWeek(icuCalendar.getFirstDayOfWeek());
-        // setMinimalDaysInFirstWeek(icuCalendar.getMinimalDaysInFirstWeek());
-        ResourceBundle bundle = com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
-        setFirstDayOfWeek(((Integer) bundle.getObject("First_Day")).intValue()); //$NON-NLS-1$
-        setMinimalDaysInFirstWeek(((Integer) bundle.getObject("Minimal_Days")) //$NON-NLS-1$
-                .intValue());
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        setFirstDayOfWeek(localeData.firstDayOfWeek.intValue());
+        setMinimalDaysInFirstWeek(localeData.minimalDaysInFirstWeek.intValue());
         // END android-changed
     }
 

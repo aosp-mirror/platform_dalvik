@@ -66,17 +66,6 @@ static Locale getLocale(JNIEnv* env, jstring locale) {
     return result;
 }
 
-static void addObject(JNIEnv* env, jobjectArray result, const char* keyStr, jobject elem, int index) {
-    jclass objArray_class = env->FindClass("java/lang/Object");
-    jobjectArray element = env->NewObjectArray(2, objArray_class, NULL);
-    jstring key = env->NewStringUTF(keyStr);
-    env->SetObjectArrayElement(element, 0, key);
-    env->SetObjectArrayElement(element, 1, elem);
-    env->SetObjectArrayElement(result, index, element);
-    env->DeleteLocalRef(key);
-    env->DeleteLocalRef(element);
-} 
-
 static jint getCurrencyFractionDigitsNative(JNIEnv* env, jclass clazz, jstring currencyCode) {
     UErrorCode status = U_ZERO_ERROR;
     
@@ -159,13 +148,13 @@ static jstring getCurrencySymbolNative(JNIEnv* env, jclass clazz,
         return NULL;
     }
 
-    ScopedResourceBundle rootElems(ures_getByKey(root.get(), "Currencies", NULL, &status));
+    ScopedResourceBundle currencies(ures_getByKey(root.get(), "Currencies", NULL, &status));
     if (U_FAILURE(status)) {
         return NULL;
     }
 
     const char* currName = env->GetStringUTFChars(currencyCode, NULL);
-    ScopedResourceBundle currencyElems(ures_getByKey(rootElems.get(), currName, NULL, &status));
+    ScopedResourceBundle currencyElems(ures_getByKey(currencies.get(), currName, NULL, &status));
     env->ReleaseStringUTFChars(currencyCode, currName);
     if (U_FAILURE(status)) {
         return NULL;
@@ -354,22 +343,23 @@ static jstring getDisplayTimeZoneNative(JNIEnv* env, jclass clazz,
     return result;
 }
 
-static void getDayIntVector(JNIEnv* env, UResourceBundle* gregorian, int* values) {
-
+static bool getDayIntVector(JNIEnv* env, UResourceBundle* gregorian, int* values) {
     // get the First day of week and the minimal days in first week numbers
     UErrorCode status = U_ZERO_ERROR;
     ScopedResourceBundle gregorianElems(ures_getByKey(gregorian, "DateTimeElements", NULL, &status));
     if (U_FAILURE(status)) {
-        return;
+        return false;
     }
 
     int intVectSize;
     const int* result = ures_getIntVector(gregorianElems.get(), &intVectSize, &status);
     if (U_FAILURE(status) || intVectSize != 2) {
-        return;
+        return false;
     }
+
     values[0] = result[0];
     values[1] = result[1];
+    return true;
 }
 
 static jobjectArray getAmPmMarkers(JNIEnv* env, UResourceBundle* gregorian) {
@@ -556,456 +546,139 @@ static jstring getDecimalPatternChars(JNIEnv* env, UResourceBundle* rootElems) {
     return env->NewString(patternChars, 10);
 }
 
-static jstring getIntCurrencyCode(JNIEnv* env, jclass clazz, jstring locale) {
+static jstring getIntCurrencyCode(JNIEnv* env, jstring locale) {
     const char* locStr = env->GetStringUTFChars(locale, NULL);
-    char country[3] = {0,0,0};
 
-    // getting the 2 character country name
-    if(strlen(locStr) < 5) {
+    // Extract the 2-character country name.
+    if (strlen(locStr) < 5) {
         env->ReleaseStringUTFChars(locale, locStr);
         return NULL;
     }
-    if(locStr[3] < 'A' || locStr[3] > 'Z' || locStr[4] < 'A' || locStr[4] > 'Z') {
+    if (locStr[3] < 'A' || locStr[3] > 'Z' || locStr[4] < 'A' || locStr[4] > 'Z') {
         env->ReleaseStringUTFChars(locale, locStr);
         return NULL;
     }
+
+    char country[3] = {0,0,0};
     country[0] = locStr[3];
     country[1] = locStr[4];
 
     env->ReleaseStringUTFChars(locale, locStr);
 
-    return getCurrencyCodeNative(env, clazz, env->NewStringUTF(country));
+    return getCurrencyCodeNative(env, NULL, env->NewStringUTF(country));
 }
 
-static jobjectArray getContentImpl(JNIEnv* env, jclass clazz, jstring locale) {
+static void setIntegerField(JNIEnv* env, jobject obj, const char* fieldName, int value) {
+    // Convert our int to a java.lang.Integer.
+    // TODO: switch to Integer.valueOf, add error checking.
+    jclass integerClass = env->FindClass("java/lang/Integer");
+    jmethodID constructor = env->GetMethodID(integerClass, "<init>", "(I)V");
+    jobject integerValue = env->NewObject(integerClass, constructor, value);
+    // Set the field.
+    jclass localeDataClass = env->FindClass("com/ibm/icu4jni/util/LocaleData");
+    jfieldID fid = env->GetFieldID(localeDataClass, fieldName, "Ljava/lang/Integer;");
+    env->SetObjectField(obj, fid, integerValue);
+}
+
+static void setStringField(JNIEnv* env, jobject obj, const char* fieldName, jstring value) {
+    jclass localeDataClass = env->FindClass("com/ibm/icu4jni/util/LocaleData");
+    jfieldID fid = env->GetFieldID(localeDataClass, fieldName, "Ljava/lang/String;");
+    env->SetObjectField(obj, fid, value);
+}
+
+static void setStringArrayField(JNIEnv* env, jobject obj, const char* fieldName, jobjectArray value) {
+    jclass localeDataClass = env->FindClass("com/ibm/icu4jni/util/LocaleData");
+    jfieldID fid = env->GetFieldID(localeDataClass, fieldName, "[Ljava/lang/String;");
+    env->SetObjectField(obj, fid, value);
+}
+
+static void setStringField(JNIEnv* env, jobject obj, const char* fieldName, UResourceBundle* bundle, int index) {
+    UErrorCode status = U_ZERO_ERROR;
+    int charCount;
+    const UChar* chars = ures_getStringByIndex(bundle, index, &charCount, &status);
+    if (U_SUCCESS(status)) {
+        setStringField(env, obj, fieldName, env->NewString(chars, charCount));
+    }
+}
+
+static jboolean initLocaleDataImpl(JNIEnv* env, jclass clazz, jstring locale, jobject localeData) {
     const char* loc = env->GetStringUTFChars(locale, NULL);
     UErrorCode status = U_ZERO_ERROR;
-    UResourceBundle* root = ures_openU(NULL, loc, &status);
+    ScopedResourceBundle root(ures_openU(NULL, loc, &status));
     env->ReleaseStringUTFChars(locale, loc);
     if (U_FAILURE(status)) {
-        LOGE("Error getting resources: %s", u_errorName(status));
+        LOGE("Error getting ICU resource bundle: %s", u_errorName(status));
         status = U_ZERO_ERROR;
-        return NULL;
+        return JNI_FALSE;
     }
 
-    jclass obj_class = env->FindClass("[Ljava/lang/Object;");
-    jclass integer_class = env->FindClass("java/lang/Integer");
-    jmethodID integerInit = env->GetMethodID(integer_class, "<init>", "(I)V");
-    jobjectArray result;
+    ScopedResourceBundle calendar(ures_getByKey(root.get(), "calendar", NULL, &status));
+    if (U_FAILURE(status)) {
+        return JNI_FALSE;
+    }
 
-    jobject firstDayOfWeek = NULL;
-    jobject minimalDaysInFirstWeek = NULL;
-    jobjectArray amPmMarkers = NULL;
-    jobjectArray eras = NULL;
-    jobjectArray weekdays = NULL;
-    jobjectArray shortWeekdays = NULL;
-    jobjectArray months = NULL;
-    jobjectArray shortMonths = NULL;
-    jstring time_SHORT = NULL;
-    jstring time_MEDIUM = NULL;
-    jstring time_LONG = NULL;
-    jstring time_FULL = NULL;
-    jstring date_SHORT = NULL;
-    jstring date_MEDIUM = NULL;
-    jstring date_LONG = NULL;
-    jstring date_FULL = NULL;
-    jstring decimalPatternChars = NULL;
-    jstring naN = NULL;
-    jstring infinity = NULL;
+    ScopedResourceBundle gregorian(ures_getByKey(calendar.get(), "gregorian", NULL, &status));
+    if (U_FAILURE(status)) {
+        return JNI_FALSE;
+    }
+
+    int firstDayVals[2];
+    if (getDayIntVector(env, gregorian.get(), firstDayVals)) {
+        setIntegerField(env, localeData, "firstDayOfWeek", firstDayVals[0]);
+        setIntegerField(env, localeData, "minimalDaysInFirstWeek", firstDayVals[1]);
+    }
+
+    setStringArrayField(env, localeData, "amPm", getAmPmMarkers(env, gregorian.get()));
+    setStringArrayField(env, localeData, "eras", getEras(env, gregorian.get()));
+
+    setStringArrayField(env, localeData, "longMonthNames", getLongMonthNames(env, gregorian.get()));
+    setStringArrayField(env, localeData, "shortMonthNames", getShortMonthNames(env, gregorian.get()));
+    setStringArrayField(env, localeData, "longWeekdayNames", getLongWeekdayNames(env, gregorian.get()));
+    setStringArrayField(env, localeData, "shortWeekdayNames", getShortWeekdayNames(env, gregorian.get()));
+
+    ScopedResourceBundle gregorianElems(ures_getByKey(gregorian.get(), "DateTimePatterns", NULL, &status));
+    if (U_SUCCESS(status)) {
+        setStringField(env, localeData, "fullTimeFormat", gregorianElems.get(), 0);
+        setStringField(env, localeData, "longTimeFormat", gregorianElems.get(), 1);
+        setStringField(env, localeData, "mediumTimeFormat", gregorianElems.get(), 2);
+        setStringField(env, localeData, "shortTimeFormat", gregorianElems.get(), 3);
+        setStringField(env, localeData, "fullDateFormat", gregorianElems.get(), 4);
+        setStringField(env, localeData, "longDateFormat", gregorianElems.get(), 5);
+        setStringField(env, localeData, "mediumDateFormat", gregorianElems.get(), 6);
+        setStringField(env, localeData, "shortDateFormat", gregorianElems.get(), 7);
+    }
+    status = U_ZERO_ERROR;
+
+    ScopedResourceBundle numberElements(ures_getByKey(root.get(), "NumberElements", NULL, &status));
+    if (U_SUCCESS(status) && ures_getSize(numberElements.get()) >= 11) {
+        setStringField(env, localeData, "decimalPatternChars", getDecimalPatternChars(env, numberElements.get()));
+        setStringField(env, localeData, "infinity", numberElements.get(), 9);
+        setStringField(env, localeData, "NaN", numberElements.get(), 10);
+    }
+    status = U_ZERO_ERROR;
+
+    jstring internationalCurrencySymbol = getIntCurrencyCode(env, locale);
     jstring currencySymbol = NULL;
-    jstring intCurrencySymbol = NULL;
-    jstring numberPattern = NULL;
-    jstring integerPattern = NULL;
-    jstring currencyPattern = NULL;
-    jstring percentPattern = NULL;
-    jobjectArray zones = NULL;
-
-    int counter = 0;
-
-
-    const jchar* nan = NULL;
-    const jchar* inf = NULL;
-    int nanL, infL;
-
-
-    UResourceBundle* gregorian;
-    UResourceBundle* gregorianElems;
-    UResourceBundle* rootElems;
-
-
-
-
-    // get the resources needed
-    rootElems = ures_getByKey(root, "calendar", NULL, &status);
-    if(U_FAILURE(status)) {
-        return NULL;
-    }
-
-    gregorian = ures_getByKey(rootElems, "gregorian", NULL, &status);
-    if(U_FAILURE(status)) {
-        ures_close(rootElems);
-        return NULL;
-    }
-
-
-
-    // adding the first day of week and minimal days in first week values
-    int firstDayVals[2] = {-1, -1};
-    getDayIntVector(env, gregorian, firstDayVals);
-    if((firstDayVals[0] != -1) && (firstDayVals[1] != -1)) {
-        firstDayOfWeek = env->NewObject(integer_class, integerInit, firstDayVals[0]);
-        minimalDaysInFirstWeek = env->NewObject(integer_class, integerInit, firstDayVals[1]);
-        // adding First_Day and Minimal_Days integer to the result
-        counter += 2;
-    }
-
-
-    // adding ampm string array to the result");
-    amPmMarkers = getAmPmMarkers(env, gregorian);
-    if(amPmMarkers != NULL) {
-        counter++;
-    }
-
-
-    // adding eras string array to the result
-    eras = getEras(env, gregorian);
-    if(eras != NULL) {
-        counter++;
-    }
-
-
-    // adding month names string array to the result
-    months = getLongMonthNames(env, gregorian);
-    if(months != NULL) {
-        counter++;
-    }
-
-
-    // adding short month names string array to the result
-    shortMonths = getShortMonthNames(env, gregorian);
-    if(shortMonths != NULL) {
-        counter++;
-    }
-
-
-    // adding day names string array to the result
-    weekdays = getLongWeekdayNames(env, gregorian);
-    if(weekdays != NULL) {
-        counter++;
-    }
-
-
-    // adding short day names string array to the result
-    shortWeekdays = getShortWeekdayNames(env, gregorian);
-    if(shortWeekdays != NULL) {
-        counter++;
-    }
-
-    const UChar* pattern;
-    jchar check[2] = {0, 0};
-    u_uastrcpy(check, "v");
-    jchar replacement[2] = {0, 0};
-    u_uastrcpy(replacement, "z");
-    jchar* pos;
-    jchar* patternCopy;
-    int patternLength;
-
-    // adding date and time format patterns to the result
-    gregorianElems = ures_getByKey(gregorian, "DateTimePatterns", NULL, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-
-    pattern = ures_getStringByIndex(gregorianElems, 0, &patternLength, &status);
-    // there are some patterns in icu that use the pattern character 'v'
-    // java doesn't accept this, so it gets replaced by 'z' which has
-    // about the same result as 'v', the timezone name. 
-    // 'v' -> "PT", 'z' -> "PST", v is the generic timezone and z the standard tz
-    // "vvvv" -> "Pacific Time", "zzzz" -> "Pacific Standard Time"
-    patternCopy = new jchar[patternLength + 1];
-    u_strcpy(patternCopy, pattern);
-    if(U_FAILURE(status)) {
-        delete[] patternCopy;
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    while((pos = u_strchr(patternCopy, check[0])) != NULL) {
-        u_memset(pos, replacement[0], 1);
-    }
-    time_FULL = env->NewString(patternCopy, patternLength);
-    delete[] patternCopy;
-    counter++;
-
-    pattern = ures_getStringByIndex(gregorianElems, 1, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    time_LONG = env->NewString(pattern, patternLength);
-    counter++;
-
-    pattern = ures_getStringByIndex(gregorianElems, 2, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    time_MEDIUM = env->NewString(pattern, patternLength);
-    counter++;
-
-    pattern = ures_getStringByIndex(gregorianElems, 3, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    time_SHORT = env->NewString(pattern, patternLength);
-    counter++;
-
-    pattern = ures_getStringByIndex(gregorianElems, 4, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    date_FULL = env->NewString(pattern, patternLength);
-    counter++;
-
-    pattern = ures_getStringByIndex(gregorianElems, 5, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    date_LONG = env->NewString(pattern, patternLength);
-    counter++;
-
-    pattern = ures_getStringByIndex(gregorianElems, 6, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    date_MEDIUM = env->NewString(pattern, patternLength);
-    counter++;
-
-    pattern = ures_getStringByIndex(gregorianElems, 7, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto endOfCalendar;
-    }
-    date_SHORT = env->NewString(pattern, patternLength);
-    counter++;
-
-
-endOfCalendar:
-
-    if(gregorianElems != NULL) {
-        ures_close(gregorianElems);
-    }
-    ures_close(gregorian);
-    ures_close(rootElems);
-
-
-    rootElems = ures_getByKey(root, "NumberElements", NULL, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-    }
-
-    if(ures_getSize(rootElems) >= 11) {
-
-        // adding decimal pattern chars to the result
-        decimalPatternChars = getDecimalPatternChars(env, rootElems);
-        if(decimalPatternChars != NULL) {
-            counter++;
-        }
-
-        // adding NaN pattern char to the result
-        nan = ures_getStringByIndex(rootElems, 10, &nanL, &status);
-        if(U_SUCCESS(status)) {
-            naN = env->NewString(nan, nanL);
-            counter++;
-        }
-        status = U_ZERO_ERROR;
-
-        // adding infinity pattern char to the result
-        inf = ures_getStringByIndex(rootElems, 9, &infL, &status);
-        if(U_SUCCESS(status)) {
-            infinity = env->NewString(inf, infL);
-            counter++;
-        }
-        status = U_ZERO_ERROR;
-    }
-
-    ures_close(rootElems);
-
-
-    // adding intl currency code to result
-    intCurrencySymbol = getIntCurrencyCode(env, clazz, locale);
-    if(intCurrencySymbol != NULL) {
-        // adding currency symbol to result
-        currencySymbol = getCurrencySymbolNative(env, clazz, locale, intCurrencySymbol);
-        // TODO: this is broken; the two will never be identical *unless*
-        // they're NULL. Given that string equality is hard here, and this
-        // code has always been broken, does this matter?
-        if (currencySymbol == intCurrencySymbol) {
-            currencySymbol = NULL;
-        }
+    if (internationalCurrencySymbol != NULL) {
+        currencySymbol = getCurrencySymbolNative(env, clazz, locale, internationalCurrencySymbol);
     } else {
-        intCurrencySymbol = env->NewStringUTF("XXX");
+        internationalCurrencySymbol = env->NewStringUTF("XXX");
     }
-    if(currencySymbol == NULL) {
-        // creating a new string explicitly with the UTF-8 encoding of "\u00a4"
+    if (currencySymbol == NULL) {
+        // This is the UTF-8 encoding of U+00A4 (CURRENCY SIGN).
         currencySymbol = env->NewStringUTF("\xc2\xa4");
     }
-    counter += 2;
+    setStringField(env, localeData, "currencySymbol", currencySymbol);
+    setStringField(env, localeData, "internationalCurrencySymbol", internationalCurrencySymbol);
 
-
-    // adding number format patterns to the result
-    int numOfEntries;
-    int decSepOffset;
-    NumberFormat* nf;
-    jchar* tmpPattern;
-
-    rootElems = ures_getByKey(root, "NumberPatterns", NULL, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        goto zones;
+    ScopedResourceBundle numberPatterns(ures_getByKey(root.get(), "NumberPatterns", NULL, &status));
+    if (U_SUCCESS(status) && ures_getSize(numberPatterns.get()) >= 3) {
+        setStringField(env, localeData, "numberPattern", numberPatterns.get(), 0);
+        setStringField(env, localeData, "currencyPattern", numberPatterns.get(), 1);
+        setStringField(env, localeData, "percentPattern", numberPatterns.get(), 2);
     }
 
-    numOfEntries = ures_getSize(rootElems);
-    if(numOfEntries < 3) {
-        ures_close(rootElems);
-        goto zones;
-    }
-
-    // number pattern
-    pattern = ures_getStringByIndex(rootElems, 0, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        ures_close(rootElems);
-        goto zones;
-    }
-    numberPattern = env->NewString(pattern, patternLength);
-    counter++;
-
-    // integer pattern derived from number pattern
-    // We need to convert a C string literal to a UChar string for u_strcspn.
-    static const char c_decSep[] = ".";
-    UChar decSep[sizeof(c_decSep)];
-    u_charsToUChars(c_decSep, decSep, sizeof(c_decSep));
-    decSepOffset = u_strcspn(pattern, decSep);
-    tmpPattern = new jchar[decSepOffset + 1];
-    u_strncpy(tmpPattern, pattern, decSepOffset);
-    integerPattern = env->NewString(tmpPattern, decSepOffset);
-    delete[] tmpPattern;
-    counter++;
-
-    // currency pattern
-    pattern = ures_getStringByIndex(rootElems, 1, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        ures_close(rootElems);
-        goto zones;
-    }
-    currencyPattern = env->NewString(pattern, patternLength);
-    counter++;
-
-    // percent pattern
-    pattern = ures_getStringByIndex(rootElems, 2, &patternLength, &status);
-    if(U_FAILURE(status)) {
-        status = U_ZERO_ERROR;
-        ures_close(rootElems);
-        goto zones;
-    }
-    percentPattern = env->NewString(pattern, patternLength);
-    counter++;
-
-    ures_close(rootElems);
-
-zones:
-
-    ures_close(root);
-
-
-    // collect all content and put it into an array
-    result = env->NewObjectArray(counter, obj_class, NULL);
-
-    int index = 0;
-    if(firstDayOfWeek != NULL && index < counter) {
-        addObject(env, result, "First_Day", firstDayOfWeek, index++);
-    }
-    if(minimalDaysInFirstWeek != NULL && index < counter) {
-        addObject(env, result, "Minimal_Days", minimalDaysInFirstWeek, index++);
-    }
-    if(amPmMarkers != NULL && index < counter) {
-        addObject(env, result, "ampm", amPmMarkers, index++);
-    }
-    if(eras != NULL && index < counter) {
-        addObject(env, result, "eras", eras, index++);
-    }
-    if(weekdays != NULL && index < counter) {
-        addObject(env, result, "weekdays", weekdays, index++);
-    }
-    if(shortWeekdays != NULL && index < counter) {
-        addObject(env, result, "shortWeekdays", shortWeekdays, index++);
-    }
-    if(months != NULL && index < counter) {
-        addObject(env, result, "months", months, index++);
-    }
-    if(shortMonths != NULL && index < counter) {
-        addObject(env, result, "shortMonths", shortMonths, index++);
-    }
-    if(time_SHORT != NULL && index < counter) {
-        addObject(env, result, "Time_SHORT", time_SHORT, index++);
-    }
-    if(time_MEDIUM != NULL && index < counter) {
-        addObject(env, result, "Time_MEDIUM", time_MEDIUM, index++);
-    }
-    if(time_LONG != NULL && index < counter) {
-        addObject(env, result, "Time_LONG", time_LONG, index++);
-    }
-    if(time_FULL != NULL && index < counter) {
-        addObject(env, result, "Time_FULL", time_FULL, index++);
-    }
-    if(date_SHORT != NULL && index < counter) {
-        addObject(env, result, "Date_SHORT", date_SHORT, index++);
-    }
-    if(date_MEDIUM != NULL && index < counter) {
-        addObject(env, result, "Date_MEDIUM", date_MEDIUM, index++);
-    }
-    if(date_LONG != NULL && index < counter) {
-        addObject(env, result, "Date_LONG", date_LONG, index++);
-    }
-    if(date_FULL != NULL && index < counter) {
-        addObject(env, result, "Date_FULL", date_FULL, index++);
-    }
-    if(decimalPatternChars != NULL && index < counter) {
-        addObject(env, result, "DecimalPatternChars", decimalPatternChars, index++);
-    }
-    if(naN != NULL && index < counter) {
-        addObject(env, result, "NaN", naN, index++);
-    }
-    if(infinity != NULL && index < counter) {
-        addObject(env, result, "Infinity", infinity, index++);
-    }
-    if(currencySymbol != NULL && index < counter) {
-        addObject(env, result, "CurrencySymbol", currencySymbol, index++);
-    }
-    if(intCurrencySymbol != NULL && index < counter) {
-        addObject(env, result, "IntCurrencySymbol", intCurrencySymbol, index++);
-    }
-    if(numberPattern != NULL && index < counter) {
-        addObject(env, result, "Number", numberPattern, index++);
-    }
-    if(integerPattern != NULL && index < counter) {
-        addObject(env, result, "Integer", integerPattern, index++);
-    }
-    if(currencyPattern != NULL && index < counter) {
-        addObject(env, result, "Currency", currencyPattern, index++);
-    }
-    if(percentPattern != NULL && index < counter) {
-        addObject(env, result, "Percent", percentPattern, index++);
-    }
-
-    return result;
-
+    return JNI_TRUE;
 }
 
 static JNINativeMethod gMethods[] = {
@@ -1043,9 +716,9 @@ static JNINativeMethod gMethods[] = {
     {"getDisplayTimeZoneNative",
             "(Ljava/lang/String;ZILjava/lang/String;)Ljava/lang/String;",
             (void*) getDisplayTimeZoneNative},
-    {"getContentImpl",
-            "(Ljava/lang/String;)[[Ljava/lang/Object;",
-            (void*) getContentImpl},
+    {"initLocaleDataImpl",
+            "(Ljava/lang/String;Lcom/ibm/icu4jni/util/LocaleData;)Z",
+            (void*) initLocaleDataImpl},
 };
 
 int register_com_ibm_icu4jni_util_Resources(JNIEnv* env) {

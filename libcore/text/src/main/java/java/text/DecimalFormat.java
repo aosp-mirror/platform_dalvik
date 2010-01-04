@@ -32,6 +32,8 @@ import java.security.PrivilegedAction;
 import java.util.Currency;
 import java.util.Locale;
 
+import com.ibm.icu4jni.util.LocaleData;
+
 /**
  * A concrete subclass of {@link NumberFormat} that formats decimal numbers. It
  * has a variety of features designed to make it possible to parse and format
@@ -565,8 +567,8 @@ public class DecimalFormat extends NumberFormat {
         icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
         symbols = new DecimalFormatSymbols(locale);
         // BEGIN android-changed
-        dform = new com.ibm.icu4jni.text.DecimalFormat(
-                getPattern(Locale.getDefault(), "Number"), icuSymbols);
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(Locale.getDefault());
+        dform = new com.ibm.icu4jni.text.DecimalFormat(localeData.numberPattern, icuSymbols);
         // END android-changed
 
         super.setMaximumFractionDigits(dform.getMaximumFractionDigits());

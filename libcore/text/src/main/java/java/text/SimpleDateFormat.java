@@ -36,6 +36,7 @@ import java.util.TimeZone;
 // END android-added
 import java.util.Vector;
 
+import com.ibm.icu4jni.util.LocaleData;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -618,10 +619,8 @@ public class SimpleDateFormat extends DateFormat {
 
     // BEGIN android-added
     private static String defaultPattern() {
-        ResourceBundle bundle = getBundle(Locale.getDefault());
-        String styleName = getStyleName(SHORT);
-        return bundle.getString("Date_" + styleName) + " " //$NON-NLS-1$ //$NON-NLS-2$
-                + bundle.getString("Time_" + styleName); //$NON-NLS-1$
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(Locale.getDefault());
+        return getDateFormat(localeData, SHORT) + " " + getTimeFormat(localeData, SHORT);
     }
     // END android-added
 

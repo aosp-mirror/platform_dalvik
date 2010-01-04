@@ -31,6 +31,7 @@ import java.util.ResourceBundle;
 // BEGIN android-added
 import java.util.TimeZone;
 
+import com.ibm.icu4jni.util.LocaleData;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -470,9 +471,8 @@ public abstract class DateFormat extends Format {
     public final static DateFormat getDateInstance(int style, Locale locale) {
         checkDateStyle(style);
         // BEGIN android-changed
-        ResourceBundle bundle = getBundle(locale);
-        String pattern = bundle.getString("Date_" + getStyleName(style)); //$NON-NLS-1$
-        return new SimpleDateFormat(pattern, locale);
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        return new SimpleDateFormat(getDateFormat(localeData, style), locale);
         // END android-changed
     }
 
@@ -528,9 +528,8 @@ public abstract class DateFormat extends Format {
         checkTimeStyle(timeStyle);
         checkDateStyle(dateStyle);
         // BEGIN android-changed
-        ResourceBundle bundle = getBundle(locale);
-        String pattern = bundle.getString("Date_" + getStyleName(dateStyle)) //$NON-NLS-1$
-                + " " + bundle.getString("Time_" + getStyleName(timeStyle)); //$NON-NLS-1$ //$NON-NLS-2$
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        String pattern = getDateFormat(localeData, dateStyle) + " " + getTimeFormat(localeData, timeStyle);
         return new SimpleDateFormat(pattern, locale);
         // END android-changed
     }
@@ -555,26 +554,37 @@ public abstract class DateFormat extends Format {
         return numberFormat;
     }
 
-    static String getStyleName(int style) {
-        String styleName;
+    // BEGIN android-added
+    protected static String getDateFormat(LocaleData localeData, int style) {
         switch (style) {
-            case SHORT:
-                styleName = "SHORT"; //$NON-NLS-1$
-                break;
-            case MEDIUM:
-                styleName = "MEDIUM"; //$NON-NLS-1$
-                break;
-            case LONG:
-                styleName = "LONG"; //$NON-NLS-1$
-                break;
-            case FULL:
-                styleName = "FULL"; //$NON-NLS-1$
-                break;
-            default:
-                styleName = ""; //$NON-NLS-1$
+        case SHORT:
+            return localeData.shortDateFormat;
+        case MEDIUM:
+            return localeData.mediumDateFormat;
+        case LONG:
+            return localeData.longDateFormat;
+        case FULL:
+            return localeData.fullDateFormat;
         }
-        return styleName;
+        throw new AssertionError();
     }
+    // END android-added
+
+    // BEGIN android-added
+    protected static String getTimeFormat(LocaleData localeData, int style) {
+        switch (style) {
+        case SHORT:
+            return localeData.shortTimeFormat;
+        case MEDIUM:
+            return localeData.mediumTimeFormat;
+        case LONG:
+            return localeData.longTimeFormat;
+        case FULL:
+            return localeData.fullTimeFormat;
+        }
+        throw new AssertionError();
+    }
+    // END android-added
 
     /**
      * Returns a {@code DateFormat} instance for formatting and parsing time
@@ -620,9 +630,8 @@ public abstract class DateFormat extends Format {
     public final static DateFormat getTimeInstance(int style, Locale locale) {
         checkTimeStyle(style);
         // BEGIN android-changed
-        ResourceBundle bundle = getBundle(locale);
-        String pattern = bundle.getString("Time_" + getStyleName(style)); //$NON-NLS-1$
-        return new SimpleDateFormat(pattern, locale);
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        return new SimpleDateFormat(getTimeFormat(localeData, style), locale);
         // END android-changed
     }
 

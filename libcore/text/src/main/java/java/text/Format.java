@@ -88,12 +88,6 @@ public abstract class Format implements Serializable, Cloneable {
         }
     }
 
-    // BEGIN android-added
-    static ResourceBundle getBundle(Locale locale) {
-        return com.ibm.icu4jni.util.Resources.getLocaleInstance(locale);
-    }
-    // END android-added
-
     String convertPattern(String template, String fromChars, String toChars,
             boolean check) {
         if (!check && fromChars.equals(toChars)) {

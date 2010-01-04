@@ -31,6 +31,7 @@ import java.util.ResourceBundle;
 // END android-added
 
 // BEGIN android-added
+import com.ibm.icu4jni.util.LocaleData;
 import com.ibm.icu4jni.util.Resources;
 // END android-added
 /**
@@ -121,16 +122,16 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      *            the locale.
      */
     public DateFormatSymbols(Locale locale) {
-        // BEGIN android-changed
-        localPatternChars = SimpleDateFormat.patternChars;
-        ResourceBundle bundle = Format.getBundle(locale);
-        ampms = bundle.getStringArray("ampm"); //$NON-NLS-1$
-        eras = bundle.getStringArray("eras"); //$NON-NLS-1$
-        months = bundle.getStringArray("months"); //$NON-NLS-1$
-        shortMonths = bundle.getStringArray("shortMonths"); //$NON-NLS-1$
-        shortWeekdays = bundle.getStringArray("shortWeekdays"); //$NON-NLS-1$
-        weekdays = bundle.getStringArray("weekdays"); //$NON-NLS-1$
         this.locale = locale;
+        // BEGIN android-changed
+        this.localPatternChars = SimpleDateFormat.patternChars;
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        this.ampms = localeData.amPm;
+        this.eras = localeData.eras;
+        this.months = localeData.longMonthNames;
+        this.shortMonths = localeData.shortMonthNames;
+        this.weekdays = localeData.longWeekdayNames;
+        this.shortWeekdays = localeData.shortWeekdayNames;
         // END android-changed
     }
 
@@ -334,13 +335,8 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      */
     public String[][] getZoneStrings() {
         // BEGIN android-changed
-        String[][] zoneStrings = internalZoneStrings();
+        return Resources.clone2dStringArray(internalZoneStrings());
         // END android-changed
-        String[][] clone = new String[zoneStrings.length][];
-        for (int i = zoneStrings.length; --i >= 0;) {
-            clone[i] = zoneStrings[i].clone();
-        }
-        return clone;
     }
 
     @Override
@@ -477,6 +473,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      *            the two-dimensional array of strings.
      */
     public void setZoneStrings(String[][] data) {
-        zoneStrings = data.clone();
+        zoneStrings = Resources.clone2dStringArray(data);
     }
 }
