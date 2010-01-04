@@ -16,6 +16,8 @@
 
 package com.ibm.icu4jni.util;
 
+import java.text.DateFormat;
+
 /**
  * Passes locale-specific from ICU native code to Java.
  * <p>
@@ -165,5 +167,33 @@ public class LocaleData {
         if (overrides.percentPattern != null) {
             percentPattern = overrides.percentPattern;
         }
+    }
+    
+    public String getDateFormat(int style) {
+        switch (style) {
+        case DateFormat.SHORT:
+            return shortDateFormat;
+        case DateFormat.MEDIUM:
+            return mediumDateFormat;
+        case DateFormat.LONG:
+            return longDateFormat;
+        case DateFormat.FULL:
+            return fullDateFormat;
+        }
+        throw new AssertionError();
+    }
+    
+    public String getTimeFormat(int style) {
+        switch (style) {
+        case DateFormat.SHORT:
+            return shortTimeFormat;
+        case DateFormat.MEDIUM:
+            return mediumTimeFormat;
+        case DateFormat.LONG:
+            return longTimeFormat;
+        case DateFormat.FULL:
+            return fullTimeFormat;
+        }
+        throw new AssertionError();
     }
 }

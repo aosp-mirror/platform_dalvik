@@ -620,7 +620,7 @@ public class SimpleDateFormat extends DateFormat {
     // BEGIN android-added
     private static String defaultPattern() {
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(Locale.getDefault());
-        return getDateFormat(localeData, SHORT) + " " + getTimeFormat(localeData, SHORT);
+        return localeData.getDateFormat(SHORT) + " " + localeData.getTimeFormat(SHORT);
     }
     // END android-added
 

@@ -472,7 +472,7 @@ public abstract class DateFormat extends Format {
         checkDateStyle(style);
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        return new SimpleDateFormat(getDateFormat(localeData, style), locale);
+        return new SimpleDateFormat(localeData.getDateFormat(style), locale);
         // END android-changed
     }
 
@@ -529,7 +529,7 @@ public abstract class DateFormat extends Format {
         checkDateStyle(dateStyle);
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        String pattern = getDateFormat(localeData, dateStyle) + " " + getTimeFormat(localeData, timeStyle);
+        String pattern = localeData.getDateFormat(dateStyle) + " " + localeData.getTimeFormat(timeStyle);
         return new SimpleDateFormat(pattern, locale);
         // END android-changed
     }
@@ -553,38 +553,6 @@ public abstract class DateFormat extends Format {
     public NumberFormat getNumberFormat() {
         return numberFormat;
     }
-
-    // BEGIN android-added
-    protected static String getDateFormat(LocaleData localeData, int style) {
-        switch (style) {
-        case SHORT:
-            return localeData.shortDateFormat;
-        case MEDIUM:
-            return localeData.mediumDateFormat;
-        case LONG:
-            return localeData.longDateFormat;
-        case FULL:
-            return localeData.fullDateFormat;
-        }
-        throw new AssertionError();
-    }
-    // END android-added
-
-    // BEGIN android-added
-    protected static String getTimeFormat(LocaleData localeData, int style) {
-        switch (style) {
-        case SHORT:
-            return localeData.shortTimeFormat;
-        case MEDIUM:
-            return localeData.mediumTimeFormat;
-        case LONG:
-            return localeData.longTimeFormat;
-        case FULL:
-            return localeData.fullTimeFormat;
-        }
-        throw new AssertionError();
-    }
-    // END android-added
 
     /**
      * Returns a {@code DateFormat} instance for formatting and parsing time
@@ -631,7 +599,7 @@ public abstract class DateFormat extends Format {
         checkTimeStyle(style);
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        return new SimpleDateFormat(getTimeFormat(localeData, style), locale);
+        return new SimpleDateFormat(localeData.getTimeFormat(style), locale);
         // END android-changed
     }
 
