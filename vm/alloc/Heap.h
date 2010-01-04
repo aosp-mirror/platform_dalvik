@@ -52,9 +52,21 @@ void dvmHeapShutdown(void);
 size_t dvmObjectSizeInHeap(const Object *obj);
 #endif
 
+enum GcReason {
+    /* Not enough space for an "ordinary" Object to be allocated. */
+    GC_FOR_MALLOC,
+    /* Explicit GC via Runtime.gc(), VMRuntime.gc(), or SIGUSR1. */
+    GC_EXPLICIT,
+    /* GC to try to reduce heap footprint to allow more non-GC'ed memory. */
+    GC_EXTERNAL_ALLOC,
+    /* GC to dump heap contents to a file, only used under WITH_HPROF */
+    GC_HPROF_DUMP_HEAP
+};
+
 /*
  * Run the garbage collector without doing any locking.
  */
-void dvmCollectGarbageInternal(bool collectSoftReferences);
+void dvmCollectGarbageInternal(bool collectSoftReferences,
+                               enum GcReason reason);
 
 #endif  // _DALVIK_ALLOC_HEAP

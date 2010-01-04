@@ -1476,7 +1476,7 @@ gcForExternalAlloc(bool collectSoftReferences)
         }
     }
 #endif
-    dvmCollectGarbageInternal(collectSoftReferences);
+    dvmCollectGarbageInternal(collectSoftReferences, GC_EXTERNAL_ALLOC);
 }
 
 /*
