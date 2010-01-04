@@ -4117,6 +4117,9 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
             gDvmJit.printMe = oldPrintMe;;
             break;
         }
+        case kWorkOrderICPatch:
+            res = dvmJitPatchInlineCache((void *) work->pc, work->info);
+            break;
         default:
             res = false;
             dvmAbort();

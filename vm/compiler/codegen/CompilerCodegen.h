@@ -31,6 +31,9 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit);
 /* Assemble LIR into machine code */
 void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info);
 
+/* Patch inline cache content for polymorphic callsites */
+bool dvmJitPatchInlineCache(void *cellPtr, void *contentPtr);
+
 /* Implemented in the codegen/<target>/ArchUtility.c */
 void dvmCompilerCodegenDump(CompilationUnit *cUnit);
 

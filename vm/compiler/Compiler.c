@@ -54,14 +54,16 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     int cc;
     int i;
     int numWork;
+    int oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
+    bool result = true;
 
     dvmLockMutex(&gDvmJit.compilerLock);
 
     /* Queue full */
     if (gDvmJit.compilerQueueLength == COMPILER_WORK_QUEUE_SIZE ||
         gDvmJit.codeCacheFull == true) {
-        dvmUnlockMutex(&gDvmJit.compilerLock);
-        return false;
+        result = false;
+        goto done;
     }
 
     for (numWork = gDvmJit.compilerQueueLength,
@@ -83,7 +85,8 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->info = info;
     newOrder->result.codeAddress = NULL;
     newOrder->result.discardResult =
-        (kind == kWorkOrderTraceDebug) ? true : false;
+        (kind == kWorkOrderTraceDebug || kind == kWorkOrderICPatch) ?
+        true : false;
     gDvmJit.compilerWorkEnqueueIndex++;
     if (gDvmJit.compilerWorkEnqueueIndex == COMPILER_WORK_QUEUE_SIZE)
         gDvmJit.compilerWorkEnqueueIndex = 0;
@@ -93,7 +96,8 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
 
 done:
     dvmUnlockMutex(&gDvmJit.compilerLock);
-    return true;
+    dvmChangeStatus(NULL, oldStatus);
+    return result;
 }
 
 /* Block until queue length is 0 */
@@ -106,6 +110,93 @@ void dvmCompilerDrainQueue(void)
     }
     dvmUnlockMutex(&gDvmJit.compilerLock);
     dvmChangeStatus(NULL, oldStatus);
+}
+
+bool dvmCompilerSetupCodeCache(void)
+{
+    extern void dvmCompilerTemplateStart(void);
+    extern void dmvCompilerTemplateEnd(void);
+
+    /* Allocate the code cache */
+    gDvmJit.codeCache = mmap(0, CODE_CACHE_SIZE,
+                          PROT_READ | PROT_WRITE | PROT_EXEC,
+                          MAP_PRIVATE | MAP_ANON, -1, 0);
+    if (gDvmJit.codeCache == MAP_FAILED) {
+        LOGE("Failed to create the code cache: %s\n", strerror(errno));
+        return false;
+    }
+
+    /* Copy the template code into the beginning of the code cache */
+    int templateSize = (intptr_t) dmvCompilerTemplateEnd -
+                       (intptr_t) dvmCompilerTemplateStart;
+    memcpy((void *) gDvmJit.codeCache,
+           (void *) dvmCompilerTemplateStart,
+           templateSize);
+
+    gDvmJit.templateSize = templateSize;
+    gDvmJit.codeCacheByteUsed = templateSize;
+
+    /* Only flush the part in the code cache that is being used now */
+    cacheflush((intptr_t) gDvmJit.codeCache,
+               (intptr_t) gDvmJit.codeCache + templateSize, 0);
+    return true;
+}
+
+static void resetCodeCache(void)
+{
+    Thread* self = dvmThreadSelf();
+    Thread* thread;
+
+    LOGD("Reset the JIT code cache (%d bytes used)", gDvmJit.codeCacheByteUsed);
+
+    /* Stop the world */
+    dvmSuspendAllThreads(SUSPEND_FOR_CC_RESET);
+
+    /* Wipe out the returnAddr field that soon will point to stale code */
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        if (thread == self)
+            continue;
+
+        /* Crawl the Dalvik stack frames */
+        StackSaveArea *ssaPtr = ((StackSaveArea *) thread->curFrame) - 1;
+        while (ssaPtr != ((StackSaveArea *) NULL) - 1) {
+            ssaPtr->returnAddr = NULL;
+            ssaPtr = ((StackSaveArea *) ssaPtr->prevFrame) - 1;
+        };
+    }
+
+    /* Reset the JitEntry table contents to the initial unpopulated state */
+    dvmJitResetTable();
+
+#if 0
+    /*
+     * Uncomment the following code when testing/debugging.
+     *
+     * Wipe out the code cache content to force immediate crashes if
+     * stale JIT'ed code is invoked.
+     */
+    memset(gDvmJit.codeCache,
+           (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed,
+           0);
+    cacheflush((intptr_t) gDvmJit.codeCache,
+               (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed, 0);
+#endif
+
+    /* Reset the current mark of used bytes to the end of template code */
+    gDvmJit.codeCacheByteUsed = gDvmJit.templateSize;
+    gDvmJit.numCompilations = 0;
+
+    /* Reset the work queue */
+    memset(gDvmJit.compilerWorkQueue, 0,
+           sizeof(CompilerWorkOrder) * COMPILER_WORK_QUEUE_SIZE);
+    gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
+    gDvmJit.compilerQueueLength = 0;
+
+    /* All clear now */
+    gDvmJit.codeCacheFull = false;
+
+    /* Resume all threads */
+    dvmResumeAllThreads(SUSPEND_FOR_CC_RESET);
 }
 
 static void *compilerThreadStart(void *arg)
@@ -156,11 +247,17 @@ static void *compilerThreadStart(void *arg)
                     if (!dvmCompilerDoWork(&work)) {
                         work.result.codeAddress = gDvmJit.interpretTemplate;
                     }
-                    dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
-                                      work.result.instructionSet);
+                    if (!work.result.discardResult) {
+                        dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
+                                          work.result.instructionSet);
+                    }
                 }
                 free(work.info);
                 dvmLockMutex(&gDvmJit.compilerLock);
+
+                if (gDvmJit.codeCacheFull == true) {
+                    resetCodeCache();
+                }
             } while (workQueueLength() != 0);
         }
     }
@@ -176,36 +273,6 @@ static void *compilerThreadStart(void *arg)
 
     LOGD("Compiler thread shutting down\n");
     return NULL;
-}
-
-bool dvmCompilerSetupCodeCache(void)
-{
-    extern void dvmCompilerTemplateStart(void);
-    extern void dmvCompilerTemplateEnd(void);
-
-    /* Allocate the code cache */
-    gDvmJit.codeCache = mmap(0, CODE_CACHE_SIZE,
-                          PROT_READ | PROT_WRITE | PROT_EXEC,
-                          MAP_PRIVATE | MAP_ANON, -1, 0);
-    if (gDvmJit.codeCache == MAP_FAILED) {
-        LOGE("Failed to create the code cache: %s\n", strerror(errno));
-        return false;
-    }
-
-    /* Copy the template code into the beginning of the code cache */
-    int templateSize = (intptr_t) dmvCompilerTemplateEnd -
-                       (intptr_t) dvmCompilerTemplateStart;
-    memcpy((void *) gDvmJit.codeCache,
-           (void *) dvmCompilerTemplateStart,
-           templateSize);
-
-    gDvmJit.templateSize = templateSize;
-    gDvmJit.codeCacheByteUsed = templateSize;
-
-    /* Only flush the part in the code cache that is being used now */
-    cacheflush((intptr_t) gDvmJit.codeCache,
-               (intptr_t) gDvmJit.codeCache + templateSize, 0);
-    return true;
 }
 
 bool dvmCompilerStartup(void)

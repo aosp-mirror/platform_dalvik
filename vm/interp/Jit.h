@@ -104,10 +104,9 @@ typedef union JitEntryInfoUnion {
 } JitEntryInfoUnion;
 
 typedef struct JitEntry {
-    JitEntryInfoUnion u;
-    u2                chain;              /* Index of next in chain */
-    const u2*         dPC;                /* Dalvik code address */
-    void*             codeAddress;        /* Code address of native translation */
+    JitEntryInfoUnion   u;
+    const u2*           dPC;            /* Dalvik code address */
+    void*               codeAddress;    /* Code address of native translation */
 } JitEntry;
 
 int dvmJitStartup(void);
@@ -118,6 +117,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState);
 void dvmJitStopTranslationRequests(void);
 void dvmJitStats(void);
 bool dvmJitResizeJitTable(unsigned int size);
+void dvmJitResetTable(void);
 struct JitEntry *dvmFindJitEntry(const u2* pc);
 s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);

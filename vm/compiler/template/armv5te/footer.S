@@ -32,8 +32,17 @@
     cmp     r1, #0                      @ null?
     str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
     ldr     r0, [r10, #offStackSaveArea_savedPc] @ reload rPC
-    bne     .LhandleException             @ no, handle exception
-    bx      r2
+
+    @ r0 = dalvikCallsitePC
+    bne     .LhandleException           @ no, handle exception
+
+    cmp     r2, #0                      @ return chaining cell still exists?
+    bxne    r2                          @ yes - go ahead
+
+    @ continue executing the next instruction through the interpreter
+    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
+    add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
+    mov     pc, r1
 
 /*
  * On entry:
