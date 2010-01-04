@@ -27,9 +27,9 @@ import java.util.ResourceBundle;
 
 public class DecimalFormatSymbols implements Cloneable {
     
-    private int addr;
+    private final int addr;
     
-    private Locale loc;
+    private final Locale loc;
 
     private DecimalFormatSymbols(int addr, Locale loc) {
         this.addr = addr;
@@ -44,8 +44,42 @@ public class DecimalFormatSymbols implements Cloneable {
         NativeDecimalFormat.setSymbol(this.addr,
                 UNumberFormatSymbol.UNUM_CURRENCY_SYMBOL.ordinal(), localeData.currencySymbol);
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_INTL_CURRENCY_SYMBOL.ordinal(), 
+                UNumberFormatSymbol.UNUM_INTL_CURRENCY_SYMBOL.ordinal(),
                 localeData.internationalCurrencySymbol);
+    }
+    
+    public DecimalFormatSymbols(Locale locale, java.text.DecimalFormatSymbols symbols) {
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        this.loc = locale;
+        this.addr = NativeDecimalFormat.openDecimalFormatImpl(locale.toString(),
+                localeData.numberPattern);
+        copySymbols(symbols);
+    }
+    
+    /**
+     * Copies the java.text.DecimalFormatSymbols' settings into this object.
+     */
+    public void copySymbols(final java.text.DecimalFormatSymbols dfs) {
+        Currency currency = dfs.getCurrency();
+        if (currency == null) {
+            setCurrency(Currency.getInstance("XXX")); //$NON-NLS-1$
+        } else {
+            setCurrency(Currency.getInstance(currency.getCurrencyCode()));
+        }
+        
+        setCurrencySymbol(dfs.getCurrencySymbol());
+        setDecimalSeparator(dfs.getDecimalSeparator());
+        setDigit(dfs.getDigit());
+        setGroupingSeparator(dfs.getGroupingSeparator());
+        setInfinity(dfs.getInfinity());
+        setInternationalCurrencySymbol(dfs.getInternationalCurrencySymbol());
+        setMinusSign(dfs.getMinusSign());
+        setMonetaryDecimalSeparator(dfs.getMonetaryDecimalSeparator());
+        setNaN(dfs.getNaN());
+        setPatternSeparator(dfs.getPatternSeparator());
+        setPercent(dfs.getPercent());
+        setPerMill(dfs.getPerMill());
+        setZeroDigit(dfs.getZeroDigit());
     }
     
     @Override
@@ -117,77 +151,64 @@ public class DecimalFormatSymbols implements Cloneable {
 
     public void setDecimalSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_DECIMAL_SEPARATOR_SYMBOL.ordinal(),
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_DECIMAL_SEPARATOR_SYMBOL.ordinal(), symbol);
     }
 
     public void setDigit(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_DIGIT_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_DIGIT_SYMBOL.ordinal(), symbol);
     }
 
     public void setGroupingSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_GROUPING_SEPARATOR_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_GROUPING_SEPARATOR_SYMBOL.ordinal(), symbol);
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL.ordinal(), symbol);
     }
 
     public void setInfinity(String symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_INFINITY_SYMBOL.ordinal(), 
-                symbol);
+                UNumberFormatSymbol.UNUM_INFINITY_SYMBOL.ordinal(), symbol);
     }
 
     public void setInternationalCurrencySymbol(String symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_INTL_CURRENCY_SYMBOL.ordinal(), 
-                symbol);
+                UNumberFormatSymbol.UNUM_INTL_CURRENCY_SYMBOL.ordinal(), symbol);
     }
 
     public void setMinusSign(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_MINUS_SIGN_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_MINUS_SIGN_SYMBOL.ordinal(), symbol);
     }
 
     public void setMonetaryDecimalSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_MONETARY_SEPARATOR_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_MONETARY_SEPARATOR_SYMBOL.ordinal(), symbol);
     }
 
     public void setNaN(String symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_NAN_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_NAN_SYMBOL.ordinal(), symbol);
     }
 
     public void setPatternSeparator(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_PATTERN_SEPARATOR_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_PATTERN_SEPARATOR_SYMBOL.ordinal(), symbol);
     }
 
     public void setPercent(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_PERCENT_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_PERCENT_SYMBOL.ordinal(), symbol);
     }
 
     public void setPerMill(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_PERMILL_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_PERMILL_SYMBOL.ordinal(), symbol);
     }
 
     public void setZeroDigit(char symbol) {
         NativeDecimalFormat.setSymbol(this.addr,
-                UNumberFormatSymbol.UNUM_ZERO_DIGIT_SYMBOL.ordinal(), 
-                String.valueOf(symbol));
+                UNumberFormatSymbol.UNUM_ZERO_DIGIT_SYMBOL.ordinal(), symbol);
     }
  
     public Currency getCurrency() {

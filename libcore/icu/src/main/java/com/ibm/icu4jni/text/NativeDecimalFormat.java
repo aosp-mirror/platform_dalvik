@@ -84,6 +84,7 @@ final class NativeDecimalFormat {
     static native int cloneImpl(int addr);
     
     static native void setSymbol(int addr, int symbol, String str);
+    static native void setSymbol(int addr, int symbol, char ch);
     
     static native String getSymbol(int addr, int symbol);
     
