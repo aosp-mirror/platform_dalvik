@@ -30,21 +30,6 @@
  *  - using a pool of monitor objects, with some sort of recycling scheme
  *
  * TODO: recycle native-level monitors when objects are garbage collected.
- *
- * NOTE: if we broadcast a notify, and somebody sneaks in a Thread.interrupt
- * before the notify finishes (i.e. before all threads sleeping on the
- * condition variable have awoken), we could end up with a nonzero value for
- * "notifying" after everybody is gone because one of the notified threads
- * will actually exit via the "interrupted" path.  This can be detected as
- * (notifying + interrupting > waiting), i.e. the number of threads that need
- * to be woken is greater than the number waiting.  The fix is to test and
- * adjust "notifying" at the start of the wait() call.
- * -> This is probably not a problem if we notify less than the full set
- * before the interrupt comes in.  If we have four waiters, two pending
- * notifies, and an interrupt hits, we will interrupt one thread and notify
- * two others.  Doesn't matter if the interrupted thread would have been
- * one of the notified.  Count is only screwed up if we have two waiters,
- * in which case it's safe to fix it at the start of the next wait().
  */
 #include "Dalvik.h"
 
@@ -430,7 +415,7 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
 
 /*
  * Checks the wait set for circular structure.  Returns 0 if the list
- * is not circular.  Otherwise, returns 1.
+ * is not circular.  Otherwise, returns 1.  Used only by asserts.
  */
 static int waitSetCheck(Monitor *mon)
 {
@@ -501,6 +486,9 @@ static void waitSetRemove(Monitor *mon, Thread *thread)
     }
 }
 
+/*
+ * Converts the given relative waiting time into an absolute time.
+ */
 static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 {
     s8 endSec;
@@ -1117,16 +1105,6 @@ void dvmThreadSleep(u8 msec, u4 nsec)
 
 /*
  * Implement java.lang.Thread.interrupt().
- *
- * We need to increment the monitor's "interrupting" count, and set the
- * interrupted status for the thread in question.  Doing so requires
- * gaining the monitor's lock, which may not happen in a timely fashion.
- * We are left with a decision between failing to interrupt the thread
- * and stalling the interrupting thread.
- *
- * We must take some care to ensure that we don't try to interrupt the same
- * thread on the same mutex twice.  Doing so would leave us with an
- * incorrect value for Monitor.interrupting.
  */
 void dvmThreadInterrupt(Thread* thread)
 {

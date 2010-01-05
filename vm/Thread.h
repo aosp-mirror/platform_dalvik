@@ -170,6 +170,9 @@ typedef struct Thread {
     /* hack to make JNI_OnLoad work right */
     Object*     classLoaderOverride;
 
+    /* mutex to guard the interrupted and the waitMonitor members */
+    pthread_mutex_t    waitMutex;
+
     /* pointer to the monitor lock we're currently waiting on */
     /* guarded by waitMutex */
     /* TODO: consider changing this to Object* for better JDWP interaction */
@@ -184,9 +187,6 @@ typedef struct Thread {
 
     /* object to sleep on while we are waiting for a monitor */
     pthread_cond_t     waitCond;
-
-    /* mutex to guard the interrupted and the waitMonitor members */
-    pthread_mutex_t    waitMutex;
 
     /*
      * Set to true when the thread is in the process of throwing an
