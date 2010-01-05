@@ -582,7 +582,8 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
         objArray2 = new Object[hmSize];
         for (int i = 0; i < objArray.length; i++) {
             objArray[i] = new Integer(i);
-            objArray2[i] = objArray[i].toString();
+            // android-changed: the containsKey test requires unique strings.
+            objArray2[i] = new String(objArray[i].toString());
         }
 
         hm = new IdentityHashMap();
