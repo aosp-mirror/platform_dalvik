@@ -1000,7 +1000,7 @@ static bool prepareThread(Thread* thread)
     /*
      * Initialize invokeReq.
      */
-    pthread_mutex_init(&thread->invokeReq.lock, NULL);
+    dvmInitMutex(&thread->invokeReq.lock);
     pthread_cond_init(&thread->invokeReq.cv, NULL);
 
     /*
@@ -1027,6 +1027,9 @@ static bool prepareThread(Thread* thread)
         return false;
 
     memset(&thread->jniMonitorRefTable, 0, sizeof(thread->jniMonitorRefTable));
+
+    pthread_cond_init(&thread->waitCond, NULL);
+    dvmInitMutex(&thread->waitMutex);
 
     return true;
 }

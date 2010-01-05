@@ -96,7 +96,7 @@ void dvmThreadSleep(u8 msec, u4 nsec);
  *
  * Interrupt a thread.  If it's waiting on a monitor, wake it up.
  */
-void dvmThreadInterrupt(volatile struct Thread* thread);
+void dvmThreadInterrupt(struct Thread* thread);
 
 /* create a new Monitor struct */
 Monitor* dvmCreateMonitor(struct Object* obj);

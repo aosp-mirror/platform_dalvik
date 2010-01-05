@@ -98,21 +98,14 @@ static void expandObjClear(ExpandingObjectList* pList);
  * state and this transition is referred to as inflation.  Once a lock
  * has been inflated it remains in the "fat" state indefinitely.
  *
- * The lock value itself is stored in Object.lock, which is a union of
- * the form:
- *
- *     typedef union Lock {
- *         u4          thin;
- *         Monitor*    mon;
- *     } Lock;
- *
- * The LSB of the lock value encodes its state.  If cleared, the lock
- * is in the "thin" state and its bits are formatted as follows:
+ * The lock value itself is stored in Object.lock.  The LSB of the
+ * lock encodes its state.  When cleared, the lock is in the "thin"
+ * state and its bits are formatted as follows:
  *
  *    [31 ---- 19] [18 ---- 3] [2 ---- 1] [0]
  *     lock count   thread id  hash state  0
  *
- * If set, the lock is in the "fat" state and its bits are formatted
+ * When set, the lock is in the "fat" state and its bits are formatted
  * as follows:
  *
  *    [31 ---- 3] [2 ---- 1] [0]
@@ -138,12 +131,9 @@ struct Monitor {
     int         lockCount;      /* owner's recursive lock depth */
     Object*     obj;            /* what object are we part of [debug only] */
 
-    int         waiting;        /* total #of threads waiting on this */
-    int         notifying;      /* #of threads being notified */
-    int         interrupting;   /* #of threads being interrupted */
+    Thread*     waitSet;	/* threads currently waiting on this monitor */
 
     pthread_mutex_t lock;
-    pthread_cond_t  cond;
 
     Monitor*    next;
 
@@ -190,7 +180,6 @@ Monitor* dvmCreateMonitor(Object* obj)
     }
     mon->obj = obj;
     dvmInitMutex(&mon->lock);
-    pthread_cond_init(&mon->cond, NULL);
 
     /* replace the head of the list with the new monitor */
     do {
@@ -322,7 +311,6 @@ void dvmFreeObjectMonitor_internal(u4 *lock)
      */
     assert(pthread_mutex_trylock(&mon->lock) == 0);
     pthread_mutex_destroy(&mon->lock);
-    pthread_cond_destroy(&mon->cond);
 #if 1
 //TODO: unlink from the monitor list (would require a lock)
 // (might not -- the GC suspension may be enough)
@@ -406,6 +394,7 @@ static bool tryLockMonitor(Thread* self, Monitor* mon)
  */
 static bool unlockMonitor(Thread* self, Monitor* mon)
 {
+    assert(self != NULL);
     assert(mon != NULL);        // can this happen?
 
     if (mon->owner == self) {
@@ -440,6 +429,108 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
 }
 
 /*
+ * Checks the wait set for circular structure.  Returns 0 if the list
+ * is not circular.  Otherwise, returns 1.
+ */
+static int waitSetCheck(Monitor *mon)
+{
+    Thread *fast, *slow;
+    size_t n;
+
+    assert(mon != NULL);
+    fast = slow = mon->waitSet;
+    n = 0;
+    for (;;) {
+        if (fast == NULL) return 0;
+        if (fast->waitNext == NULL) return 0;
+        if (!(fast == slow && n > 0)) return 1;
+        n += 2;
+        fast = fast->waitNext->waitNext;
+        slow = slow->waitNext;
+    }
+}
+
+/*
+ * Links a thread into a monitor's wait set.
+ */
+static void waitSetAppend(Monitor *mon, Thread *thread)
+{
+    Thread *elt;
+
+    assert(mon != NULL);
+    assert(thread != NULL);
+    assert(thread->waitNext == NULL);
+    assert(waitSetCheck(mon) == 0);
+    if (mon->waitSet == NULL) {
+        mon->waitSet = thread;
+        return;
+    }
+    elt = mon->waitSet;
+    while (elt->waitNext != NULL) {
+        elt = elt->waitNext;
+    }
+    elt->waitNext = thread;
+}
+
+/*
+ * Unlinks a thread from a monitor's wait set.
+ */
+static void waitSetRemove(Monitor *mon, Thread *thread)
+{
+    Thread *elt;
+
+    assert(mon != NULL);
+    assert(thread != NULL);
+    assert(waitSetCheck(mon) == 0);
+    if (mon->waitSet == NULL) {
+        return;
+    }
+    if (mon->waitSet == thread) {
+        mon->waitSet = thread->waitNext;
+        thread->waitNext = NULL;
+        return;
+    }
+    elt = mon->waitSet;
+    while (elt->waitNext != NULL) {
+        if (elt->waitNext == thread) {
+            elt->waitNext = thread->waitNext;
+            thread->waitNext = NULL;
+            return;
+        }
+        elt = elt->waitNext;
+    }
+}
+
+static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
+{
+    s8 endSec;
+
+#ifdef HAVE_TIMEDWAIT_MONOTONIC
+    clock_gettime(CLOCK_MONOTONIC, ts);
+#else
+    {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        ts->tv_sec = tv.tv_sec;
+        ts->tv_nsec = tv.tv_usec * 1000;
+    }
+#endif
+    endSec = ts->tv_sec + msec / 1000;
+    if (endSec >= 0x7fffffff) {
+        LOGV("NOTE: end time exceeds epoch\n");
+        endSec = 0x7ffffffe;
+    }
+    ts->tv_sec = endSec;
+    ts->tv_nsec = (ts->tv_nsec + (msec % 1000) * 1000000) + nsec;
+
+    /* catch rollover */
+    if (ts->tv_nsec >= 1000000000L) {
+        ts->tv_sec++;
+        ts->tv_nsec -= 1000000000L;
+    }
+}
+
+/*
  * Wait on a monitor until timeout, interrupt, or notification.  Used for
  * Object.wait() and (somewhat indirectly) Thread.sleep() and Thread.join().
  *
@@ -468,7 +559,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     struct timespec ts;
     bool wasInterrupted = false;
     bool timed;
-    int cc;
+    int ret;
 
     assert(self != NULL);
     assert(mon != NULL);
@@ -495,50 +586,8 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     if (msec == 0 && nsec == 0) {
         timed = false;
     } else {
-        s8 endSec;
-
-#ifdef HAVE_TIMEDWAIT_MONOTONIC
-        struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
-        endSec = now.tv_sec + msec / 1000;
-        if (endSec >= 0x7fffffff) {
-            LOGV("NOTE: end time exceeds epoch\n");
-            endSec = 0x7ffffffe;
-        }
-        ts.tv_sec = endSec;
-        ts.tv_nsec = (now.tv_nsec + (msec % 1000) * 1000 * 1000) + nsec;
-#else
-        struct timeval now;
-        gettimeofday(&now, NULL);
-        endSec = now.tv_sec + msec / 1000;
-        if (endSec >= 0x7fffffff) {
-            LOGV("NOTE: end time exceeds epoch\n");
-            endSec = 0x7ffffffe;
-        }
-        ts.tv_sec = endSec;
-        ts.tv_nsec = (now.tv_usec + (msec % 1000) * 1000) * 1000 + nsec;
-#endif
-
-        /* catch rollover */
-        if (ts.tv_nsec >= 1000000000L) {
-            ts.tv_sec++;
-            ts.tv_nsec -= 1000000000L;
-        }
+        absoluteTime(msec, nsec, &ts);
         timed = true;
-    }
-
-    /*
-     * Make sure "notifying" wasn't screwed up by earlier activity.  If this
-     * is wrong we could end up waking up too many people.  (This is a rare
-     * situation, but we need to handle it correctly.)
-     */
-    if (mon->notifying + mon->interrupting > mon->waiting) {
-        LOGD("threadid=%d: bogus mon %d+%d>%d; adjusting\n",
-            self->threadId, mon->notifying, mon->interrupting,
-            mon->waiting);
-
-        assert(mon->waiting >= mon->interrupting);
-        mon->notifying = mon->waiting - mon->interrupting;
     }
 
     /*
@@ -553,7 +602,6 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
 
     prevLockCount = mon->lockCount;
     mon->lockCount = 0;
-    mon->waiting++;
     mon->owner = NULL;
 
     /*
@@ -566,12 +614,15 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     else
         dvmChangeStatus(self, THREAD_WAIT);
 
+    ret = pthread_mutex_lock(&self->waitMutex);
+    assert(ret == 0);
+
     /*
-     * Tell the thread which monitor we're waiting on.  This is necessary
-     * so that Thread.interrupt() can wake us up.  Thread.interrupt needs
-     * to gain ownership of the monitor mutex before it can signal us, so
-     * we're still not worried about race conditions.
+     * Set waitMonitor to the monitor object we will be waiting on.
+     * When waitMonitor is non-NULL a notifying or interrupting thread
+     * must signal the thread's waitCond to wake it up.
      */
+    assert(self->waitMonitor == NULL);
     self->waitMonitor = mon;
 
     /*
@@ -580,81 +631,50 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
      */
     if (self->interrupted) {
         wasInterrupted = true;
+        self->waitMonitor = NULL;
+        pthread_mutex_unlock(&self->waitMutex);
         goto done;
     }
 
-    LOGVV("threadid=%d: waiting on %p\n", self->threadId, mon);
+    waitSetAppend(mon, self);
 
-    while (true) {
-        if (!timed) {
-            cc = pthread_cond_wait(&mon->cond, &mon->lock);
-            assert(cc == 0);
-        } else {
+    /*
+     * Release the monitor lock and wait for a notification or
+     * a timeout to occur.
+     */
+    pthread_mutex_unlock(&mon->lock);
+
+    if (!timed) {
+        ret = pthread_cond_wait(&self->waitCond, &self->waitMutex);
+        assert(ret == 0);
+    } else {
 #ifdef HAVE_TIMEDWAIT_MONOTONIC
-            cc = pthread_cond_timedwait_monotonic(&mon->cond, &mon->lock, &ts);
+        ret = pthread_cond_timedwait_monotonic(&self->waitCond, &self->waitMutex, &ts);
 #else
-            cc = pthread_cond_timedwait(&mon->cond, &mon->lock, &ts);
+        ret = pthread_cond_timedwait(&self->waitCond, &self->waitMutex, &ts);
 #endif
-            if (cc == ETIMEDOUT) {
-                LOGVV("threadid=%d wakeup: timeout\n", self->threadId);
-                break;
-            }
-        }
-
-        /*
-         * We woke up because of an interrupt (which does a broadcast) or
-         * a notification (which might be a signal or a broadcast).  Figure
-         * out what we need to do.
-         */
-        if (self->interruptingWait) {
-            /*
-             * The other thread successfully gained the monitor lock, and
-             * has confirmed that we were waiting on it.  If this is an
-             * interruptible wait, we bail out immediately.  If not, we
-             * continue on.
-             */
-            self->interruptingWait = false;
-            mon->interrupting--;
-            assert(self->interrupted);
-            if (interruptShouldThrow) {
-                wasInterrupted = true;
-                LOGD("threadid=%d wakeup: interrupted\n", self->threadId);
-                break;
-            } else {
-                LOGD("threadid=%d wakeup: not interruptible\n", self->threadId);
-            }
-        }
-        if (mon->notifying) {
-            /*
-             * One or more threads are being notified.  Remove ourselves
-             * from the set.
-             */
-            mon->notifying--;
-            LOGVV("threadid=%d wakeup: notified\n", self->threadId);
-            break;
-        } else {
-            /*
-             * Looks like we were woken unnecessarily, probably as a
-             * result of another thread being interrupted.  Go back to
-             * sleep.
-             */
-            LOGVV("threadid=%d wakeup: going back to sleep\n", self->threadId);
-        }
+        assert(ret == 0 || ret == ETIMEDOUT);
+    }
+    if (self->interrupted) {
+        wasInterrupted = true;
     }
 
-done:
-    //if (wasInterrupted) {
-    //    LOGW("threadid=%d: throwing InterruptedException:\n", self->threadId);
-    //    dvmDumpThread(self, false);
-    //}
+    self->interrupted = false;
+    self->waitMonitor = NULL;
 
+    pthread_mutex_unlock(&self->waitMutex);
+
+    /* Reaquire the monitor lock. */
+    lockMonitor(self, mon);
+
+    waitSetRemove(mon, self);
+
+done:
     /*
      * Put everything back.  Again, we hold the pthread mutex, so the order
      * here isn't significant.
      */
-    self->waitMonitor = NULL;
     mon->owner = self;
-    mon->waiting--;
     mon->lockCount = prevLockCount;
 
     /* set self->status back to THREAD_RUNNING, and self-suspend if needed */
@@ -679,6 +699,9 @@ done:
  */
 static void notifyMonitor(Thread* self, Monitor* mon)
 {
+    Thread* thread;
+    int ret;
+
     assert(self != NULL);
     assert(mon != NULL);
 
@@ -688,34 +711,28 @@ static void notifyMonitor(Thread* self, Monitor* mon)
             "object not locked by thread before notify()");
         return;
     }
-
-    /*
-     * Check to see if anybody is there to notify.  We subtract off
-     * threads that are being interrupted and anything that has
-     * potentially already been notified.
-     */
-    if (mon->notifying + mon->interrupting < mon->waiting) {
-        /* wake up one thread */
-        int cc;
-
-        LOGVV("threadid=%d: signaling on %p\n", self->threadId, mon);
-
-        mon->notifying++;
-        cc = pthread_cond_signal(&mon->cond);
-        assert(cc == 0);
-    } else {
-        LOGVV("threadid=%d: nobody to signal on %p\n", self->threadId, mon);
+    /* Signal the first thread in the wait set. */
+    if (mon->waitSet != NULL) {
+        thread = mon->waitSet;
+        mon->waitSet = thread->waitNext;
+        thread->waitNext = NULL;
+        pthread_mutex_lock(&thread->waitMutex);
+        /* Check to see if the thread is still waiting. */
+        if (thread->waitMonitor != NULL) {
+            pthread_cond_signal(&thread->waitCond);
+        }
+        pthread_mutex_unlock(&thread->waitMutex);
     }
 }
 
 /*
  * Notify all threads waiting on this monitor.
- *
- * We keep a count of how many threads we notified, so that our various
- * counts remain accurate.
  */
 static void notifyAllMonitor(Thread* self, Monitor* mon)
 {
+    Thread* thread;
+    int ret;
+
     assert(self != NULL);
     assert(mon != NULL);
 
@@ -725,18 +742,17 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
             "object not locked by thread before notifyAll()");
         return;
     }
-
-    mon->notifying = mon->waiting - mon->interrupting;
-    if (mon->notifying > 0) {
-        int cc;
-
-        LOGVV("threadid=%d: broadcasting to %d threads on %p\n",
-            self->threadId, mon->notifying, mon);
-
-        cc = pthread_cond_broadcast(&mon->cond);
-        assert(cc == 0);
-    } else {
-        LOGVV("threadid=%d: nobody to broadcast to on %p\n", self->threadId,mon);
+    /* Signal all threads in the wait set. */
+    while (mon->waitSet != NULL) {
+        thread = mon->waitSet;
+        mon->waitSet = thread->waitNext;
+        thread->waitNext = NULL;
+        pthread_mutex_lock(&thread->waitMutex);
+        /* Check to see if the thread is still waiting. */
+        if (thread->waitMonitor != NULL) {
+            pthread_cond_signal(&thread->waitCond);
+        }
+        pthread_mutex_unlock(&thread->waitMutex);
     }
 }
 
@@ -1112,9 +1128,22 @@ void dvmThreadSleep(u8 msec, u4 nsec)
  * thread on the same mutex twice.  Doing so would leave us with an
  * incorrect value for Monitor.interrupting.
  */
-void dvmThreadInterrupt(volatile Thread* thread)
+void dvmThreadInterrupt(Thread* thread)
 {
     Monitor* mon;
+
+    assert(thread != NULL);
+
+    pthread_mutex_lock(&thread->waitMutex);
+
+    /*
+     * If the interrupted flag is already set no additional action is
+     * required.
+     */
+    if (thread->interrupted == true) {
+        pthread_mutex_unlock(&thread->waitMutex);
+        return;
+    }
 
     /*
      * Raise the "interrupted" flag.  This will cause it to bail early out
@@ -1131,79 +1160,11 @@ void dvmThreadInterrupt(volatile Thread* thread)
      * is only set when a thread actually waits on a monitor,
      * which implies that the monitor has already been fattened.
      */
-    mon = thread->waitMonitor;
-    if (mon == NULL)
-        return;
-
-    /*
-     * Try to acquire the monitor, if we don't already own it.  We need
-     * to hold the same mutex as the thread in order to signal the
-     * condition it's waiting on.  When the thread goes to sleep it will
-     * release the monitor's mutex, allowing us to signal it.
-     *
-     * TODO: we may be able to get rid of the explicit lock by coordinating
-     * this more closely with waitMonitor.
-     */
-    Thread* self = dvmThreadSelf();
-    if (!tryLockMonitor(self, mon)) {
-        /*
-         * Failed to get the monitor the thread is waiting on; most likely
-         * the other thread is in the middle of doing something.
-         */
-        const int kSpinSleepTime = 500*1000;        /* 0.5s */
-        u8 startWhen = dvmGetRelativeTimeUsec();
-        int sleepIter = 0;
-
-        while (dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
-            /*
-             * Still time left on the clock, try to grab it again.
-             */
-            if (tryLockMonitor(self, mon))
-                goto gotit;
-
-            /*
-             * If the target thread is no longer waiting on the same monitor,
-             * the "interrupted" flag we set earlier will have caused the
-             * interrupt when the thread woke up, so we can stop now.
-             */
-            if (thread->waitMonitor != mon)
-                return;
-        }
-
-        /*
-         * We have to give up or risk deadlock.
-         */
-        LOGW("threadid=%d: unable to interrupt threadid=%d\n",
-            self->threadId, thread->threadId);
-        return;
+    if (thread->waitMonitor != NULL) {
+        pthread_cond_signal(&thread->waitCond);
     }
 
-gotit:
-    /*
-     * We've got the monitor lock, which means nobody can be added or
-     * removed from the wait list.  This also means that the Thread's
-     * waitMonitor/interruptingWait fields can't be modified by anyone
-     * else.
-     *
-     * If things look good, raise flags and wake the threads sleeping
-     * on the monitor's condition variable.
-     */
-    if (thread->waitMonitor == mon &&       // still on same monitor?
-        thread->interrupted &&              // interrupt still pending?
-        !thread->interruptingWait)          // nobody else is interrupting too?
-    {
-        int cc;
-
-        LOGVV("threadid=%d: interrupting threadid=%d waiting on %p\n",
-            self->threadId, thread->threadId, mon);
-
-        thread->interruptingWait = true;    // prevent re-interrupt...
-        mon->interrupting++;                // ...so we only do this once
-        cc = pthread_cond_broadcast(&mon->cond);
-        assert(cc == 0);
-    }
-
-    unlockMonitor(self, mon);
+    pthread_mutex_unlock(&thread->waitMutex);
 }
 
 u4 dvmIdentityHashCode(Object *obj)
