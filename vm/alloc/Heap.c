@@ -1045,13 +1045,8 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
         }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;
-    if (gcElapsedTime < 10000) {
-        LOGD("%s freed %d objects / %zd bytes in %dms\n",
-             GcReasonStr[reason], numFreed, sizeFreed, (int)gcElapsedTime);
-    } else {
-        LOGD("%s freed %d objects / %zd bytes in %d sec\n",
-             GcReasonStr[reason], numFreed, sizeFreed, (int)(gcElapsedTime / 1000));
-    }
+    LOGD("%s freed %d objects / %zd bytes in %dms\n",
+         GcReasonStr[reason], numFreed, sizeFreed, (int)gcElapsedTime);
     dvmLogGcStats(numFreed, sizeFreed, gcElapsedTime);
 
     if (gcHeap->ddmHpifWhen != 0) {
