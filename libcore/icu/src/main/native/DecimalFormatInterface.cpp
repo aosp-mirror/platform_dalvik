@@ -68,28 +68,24 @@ static void closeDecimalFormatImpl(JNIEnv *env, jclass clazz, jint addr) {
     unum_close(fmt);
 }
 
-static void setSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol,
-        jstring text) {
-
-    // the errorcode returned by unum_setSymbol
+static void setSymbol(JNIEnv *env, uintptr_t addr, jint symbol,
+        const UChar* chars, int32_t charCount) {
     UErrorCode status = U_ZERO_ERROR;
-
-    // get the pointer to the number format
-    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
-
-    // prepare the symbol string for the call to unum_setSymbol
-    const UChar *textChars = env->GetStringChars(text, NULL);
-    int textLen = env->GetStringLength(text);
-
-    // set the symbol
-    unum_setSymbol(fmt, (UNumberFormatSymbol) symbol, textChars, textLen,
-            &status);
-
-    // release previously allocated space
-    env->ReleaseStringChars(text, textChars);
-
-    // check if an error occurred
+    UNumberFormat* fmt = reinterpret_cast<UNumberFormat*>(addr);
+    unum_setSymbol(fmt, static_cast<UNumberFormatSymbol>(symbol),
+            chars, charCount, &status);
     icu4jni_error(env, status);
+}
+
+static void setSymbol_String(JNIEnv *env, jclass, jint addr, jint symbol, jstring s) {
+    const UChar* chars = env->GetStringChars(s, NULL);
+    const int32_t charCount = env->GetStringLength(s);
+    setSymbol(env, addr, symbol, chars, charCount);
+    env->ReleaseStringChars(s, chars);
+}
+
+static void setSymbol_char(JNIEnv *env, jclass, jint addr, jint symbol, jchar ch) {
+    setSymbol(env, addr, symbol, &ch, 1);
 }
 
 static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
@@ -773,7 +769,8 @@ static JNINativeMethod gMethods[] = {
     {"openDecimalFormatImpl", "(Ljava/lang/String;Ljava/lang/String;)I",
             (void*) openDecimalFormatImpl},
     {"closeDecimalFormatImpl", "(I)V", (void*) closeDecimalFormatImpl},
-    {"setSymbol", "(IILjava/lang/String;)V", (void*) setSymbol},
+    {"setSymbol", "(IIC)V", (void*) setSymbol_char},
+    {"setSymbol", "(IILjava/lang/String;)V", (void*) setSymbol_String},
     {"getSymbol", "(II)Ljava/lang/String;", (void*) getSymbol},
     {"setAttribute", "(III)V", (void*) setAttribute},
     {"getAttribute", "(II)I", (void*) getAttribute},

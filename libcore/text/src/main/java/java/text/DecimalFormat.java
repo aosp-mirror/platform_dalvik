@@ -564,9 +564,9 @@ public class DecimalFormat extends NumberFormat {
      */
     public DecimalFormat() {
         Locale locale = Locale.getDefault();
+        // BEGIN android-changed
         icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
         symbols = new DecimalFormatSymbols(locale);
-        // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(Locale.getDefault());
         dform = new com.ibm.icu4jni.text.DecimalFormat(localeData.numberPattern, icuSymbols);
         // END android-changed
@@ -588,7 +588,9 @@ public class DecimalFormat extends NumberFormat {
      */
     public DecimalFormat(String pattern) {
         Locale locale = Locale.getDefault();
+        // BEGIN android-changed
         icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
+        // END android-changed
         symbols = new DecimalFormatSymbols(locale);
         dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, icuSymbols);
 
@@ -612,9 +614,9 @@ public class DecimalFormat extends NumberFormat {
     public DecimalFormat(String pattern, DecimalFormatSymbols value) {
         symbols = (DecimalFormatSymbols) value.clone();
         Locale locale = symbols.getLocale();
-        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
-        copySymbols(icuSymbols, symbols);
-
+        // BEGIN android-changed
+        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale, symbols);
+        // END android-changed
         dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, icuSymbols);
 
         super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
@@ -1045,7 +1047,7 @@ public class DecimalFormat extends NumberFormat {
         if (value != null) {
             symbols = (DecimalFormatSymbols) value.clone();
             icuSymbols = dform.getDecimalFormatSymbols();
-            copySymbols(icuSymbols, symbols);
+            icuSymbols.copySymbols(symbols); // android-changed
             dform.setDecimalFormatSymbols(icuSymbols);
         }
     }
@@ -1386,16 +1388,11 @@ public class DecimalFormat extends NumberFormat {
         this.serialVersionOnStream = fields.get("serialVersionOnStream", 0);
 
         Locale locale = (Locale) Format.getInternalField("locale", symbols);
-        // BEGIN android-removed
-        // dform = new com.ibm.icu4jni.text.DecimalFormat("", //$NON-NLS-1$
-        //         new com.ibm.icu4jni.text.DecimalFormatSymbols(locale));
-        // END android-removed
-        // BEGIN android-added
-        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
-        copySymbols(icuSymbols, symbols);
+        // BEGIN android-changed
+        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale, symbols);
         dform = new com.ibm.icu4jni.text.DecimalFormat("", //$NON-NLS-1$
                 icuSymbols);
-        // END android-added
+        // END android-changed
         setInternalField("useExponentialNotation", dform, Boolean
                 .valueOf(useExponentialNotation));
         setInternalField("minExponentDigits", dform,
@@ -1431,41 +1428,6 @@ public class DecimalFormat extends NumberFormat {
                     Boolean.FALSE);
         }
         serialVersionOnStream = 3;
-    }
-
-    /*
-     * Copies decimal format symbols from text object to ICU one.
-     * 
-     * @param icu the object which receives the new values. @param dfs the
-     * object which contains the new values.
-     */
-    private void copySymbols(final com.ibm.icu4jni.text.DecimalFormatSymbols icu,
-            final DecimalFormatSymbols dfs) {
-        Currency currency = dfs.getCurrency();
-        // BEGIN android-changed
-        if (currency == null) {
-            icu.setCurrency(Currency.getInstance("XXX")); //$NON-NLS-1$
-        } else {
-            icu.setCurrency(Currency.getInstance(dfs.getCurrency()
-                    .getCurrencyCode()));
-        }
-        // END android-changed
-       
-        icu.setCurrencySymbol(dfs.getCurrencySymbol());
-        icu.setDecimalSeparator(dfs.getDecimalSeparator());
-        icu.setDigit(dfs.getDigit());
-        icu.setGroupingSeparator(dfs.getGroupingSeparator());
-        icu.setInfinity(dfs.getInfinity());
-        icu
-                .setInternationalCurrencySymbol(dfs
-                        .getInternationalCurrencySymbol());
-        icu.setMinusSign(dfs.getMinusSign());
-        icu.setMonetaryDecimalSeparator(dfs.getMonetaryDecimalSeparator());
-        icu.setNaN(dfs.getNaN());
-        icu.setPatternSeparator(dfs.getPatternSeparator());
-        icu.setPercent(dfs.getPercent());
-        icu.setPerMill(dfs.getPerMill());
-        icu.setZeroDigit(dfs.getZeroDigit());
     }
 
     /*
