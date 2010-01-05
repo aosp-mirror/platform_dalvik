@@ -358,7 +358,7 @@ public abstract class NumberFormat extends Format {
     public static NumberFormat getCurrencyInstance(Locale locale) {
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        return getInstance(locale, localeData.currencyPattern);
+        return getInstance(localeData.currencyPattern, locale);
         // END android-changed
     }
 
@@ -383,7 +383,7 @@ public abstract class NumberFormat extends Format {
     public static NumberFormat getIntegerInstance(Locale locale) {
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        NumberFormat result = getInstance(locale, localeData.integerPattern);
+        NumberFormat result = getInstance(localeData.integerPattern, locale);
         result.setParseIntegerOnly(true);
         return result;
         // END android-changed
@@ -412,8 +412,8 @@ public abstract class NumberFormat extends Format {
     }
 
     // BEGIN android-added
-    private static NumberFormat getInstance(Locale locale, String pattern) {
-        return new DecimalFormat(pattern, new DecimalFormatSymbols(locale));
+    private static NumberFormat getInstance(String pattern, Locale locale) {
+        return new DecimalFormat(pattern, locale);
     }
     // END android-added
 
@@ -480,7 +480,7 @@ public abstract class NumberFormat extends Format {
     public static NumberFormat getNumberInstance(Locale locale) {
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        return getInstance(locale, localeData.numberPattern);
+        return getInstance(localeData.numberPattern, locale);
         // END android-changed
     }
 
@@ -505,7 +505,7 @@ public abstract class NumberFormat extends Format {
     public static NumberFormat getPercentInstance(Locale locale) {
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        return getInstance(locale, localeData.percentPattern);
+        return getInstance(localeData.percentPattern, locale);
         // END android-changed
     }
 

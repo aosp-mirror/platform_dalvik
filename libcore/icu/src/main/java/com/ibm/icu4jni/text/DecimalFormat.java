@@ -69,7 +69,6 @@ public class DecimalFormat extends NumberFormat {
     @Override
     public Object clone() {
         String pat = this.toPattern();
-        Locale loc = this.symbols.getLocale();
         DecimalFormatSymbols sym = (DecimalFormatSymbols) this.symbols.clone();
         DecimalFormat newdf = new DecimalFormat(pat, sym);
         newdf.setMaximumIntegerDigits(this.getMaximumIntegerDigits());

@@ -625,6 +625,19 @@ public class DecimalFormat extends NumberFormat {
         super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
 
+    // BEGIN android-added: used by NumberFormat.getInstance because cloning DecimalFormatSymbols is slow.
+    DecimalFormat(String pattern, Locale locale) {
+        this.symbols = new DecimalFormatSymbols(locale);
+        this.icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale, symbols);
+        this.dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, icuSymbols);
+
+        super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
+        super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
+        super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
+        super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
+    }
+    // END android-added
+
     // BEGIN android-removed
     // DecimalFormat(String pattern, DecimalFormatSymbols value, com.ibm.icu4jni.text.DecimalFormat icuFormat) {
     //     symbols = value;
