@@ -37,6 +37,13 @@
 #define kNonCollectableRefDefault   16
 #define kFinalizableRefDefault      128
 
+static const char* GcReasonStr[] = {
+    [GC_FOR_MALLOC] = "GC_FOR_MALLOC",
+    [GC_EXPLICIT] = "GC_EXPLICIT",
+    [GC_EXTERNAL_ALLOC] = "GC_EXTERNAL_ALLOC",
+    [GC_HPROF_DUMP_HEAP] = "GC_HPROF_DUMP_HEAP"
+};
+
 /*
  * Initialize the GC heap.
  *
@@ -326,7 +333,7 @@ static void gcForMalloc(bool collectSoftReferences)
      */
     LOGD_HEAP("dvmMalloc initiating GC%s\n",
             collectSoftReferences ? "(collect SoftReferences)" : "");
-    dvmCollectGarbageInternal(collectSoftReferences);
+    dvmCollectGarbageInternal(collectSoftReferences, GC_FOR_MALLOC);
 }
 
 /* Try as hard as possible to allocate some memory.
@@ -720,7 +727,7 @@ size_t dvmObjectSizeInHeap(const Object *obj)
  * way to enforce this is to refuse to GC on an allocation made by the
  * JDWP thread -- we have to expand the heap or fail.
  */
-void dvmCollectGarbageInternal(bool collectSoftReferences)
+void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
     Object *softReferences;
@@ -762,7 +769,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
     }
     gcHeap->gcStartTime = now;
 
-    LOGV_HEAP("GC starting -- suspending threads\n");
+    LOGV_HEAP("%s starting -- suspending threads\n", GcReasonStr[reason]);
 
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
 
@@ -1039,11 +1046,11 @@ void dvmCollectGarbageInternal(bool collectSoftReferences)
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;
     if (gcElapsedTime < 10000) {
-        LOGD("GC freed %d objects / %zd bytes in %dms\n",
-                numFreed, sizeFreed, (int)gcElapsedTime);
+        LOGD("%s freed %d objects / %zd bytes in %dms\n",
+             GcReasonStr[reason], numFreed, sizeFreed, (int)gcElapsedTime);
     } else {
-        LOGD("GC freed %d objects / %zd bytes in %d sec\n",
-                numFreed, sizeFreed, (int)(gcElapsedTime / 1000));
+        LOGD("%s freed %d objects / %zd bytes in %d sec\n",
+             GcReasonStr[reason], numFreed, sizeFreed, (int)(gcElapsedTime / 1000));
     }
     dvmLogGcStats(numFreed, sizeFreed, gcElapsedTime);
 
@@ -1077,7 +1084,7 @@ int hprofDumpHeap(const char* fileName)
 
     gDvm.gcHeap->hprofDumpOnGc = true;
     gDvm.gcHeap->hprofFileName = fileName;
-    dvmCollectGarbageInternal(false);
+    dvmCollectGarbageInternal(false, GC_HPROF_DUMP_HEAP);
     result = gDvm.gcHeap->hprofResult;
 
     dvmUnlockMutex(&gDvm.gcHeapLock);
