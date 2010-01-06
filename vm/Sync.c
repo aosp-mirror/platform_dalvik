@@ -428,7 +428,7 @@ static int waitSetCheck(Monitor *mon)
     for (;;) {
         if (fast == NULL) return 0;
         if (fast->waitNext == NULL) return 0;
-        if (!(fast == slow && n > 0)) return 1;
+        if (fast == slow && n > 0) return 1;
         n += 2;
         fast = fast->waitNext->waitNext;
         slow = slow->waitNext;
