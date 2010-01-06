@@ -654,28 +654,6 @@ public final class String implements Serializable, Comparable<String>,
         return Character.toLowerCase(Character.toUpperCase(ch));
     }
 
-    // Optimized for ASCII
-    private char toLowerCase(char ch) {
-        if (ch < 128) {
-            if ('A' <= ch && ch <= 'Z') {
-                return (char) (ch + ('a' - 'A'));
-            }
-            return ch;
-        }
-        return Character.toLowerCase(ch);
-    }
-
-    // Optimized for ASCII
-    private char toUpperCase(char ch) {
-        if (ch < 128) {
-            if ('a' <= ch && ch <= 'z') {
-                return (char) (ch - ('a' - 'A'));
-            }
-            return ch;
-        }
-        return Character.toUpperCase(ch);
-    }
-
     /**
      * Compares the specified string to this string using the Unicode values of
      * the characters. Returns 0 if the strings contain the same characters in
@@ -904,9 +882,9 @@ public final class String implements Serializable, Comparable<String>,
         char[] target = string.value;
         while (o1 < end) {
             if ((c1 = value[o1++]) != (c2 = target[o2++])
-                    && toUpperCase(c1) != toUpperCase(c2)
+                    && Character.toUpperCase(c1) != Character.toUpperCase(c2)
                     // Required for unicode that we test both cases
-                    && toLowerCase(c1) != toLowerCase(c2)) {
+                    && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
                 return false;
             }
         }
@@ -1435,9 +1413,9 @@ public final class String implements Serializable, Comparable<String>,
             char[] target = string.value;
             while (thisStart < end) {
                 if ((c1 = value[thisStart++]) != (c2 = target[start++])
-                        && toUpperCase(c1) != toUpperCase(c2)
+                        && Character.toUpperCase(c1) != Character.toUpperCase(c2)
                         // Required for unicode that we test both cases
-                        && toLowerCase(c1) != toLowerCase(c2)) {
+                        && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
                     return false;
                 }
             }
@@ -1613,48 +1591,31 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the characters in this string to lowercase, using the default
-     * Locale.
+     * Converts this string to lowercase, using the rules of the default locale.
      * 
-     * @return a new string containing the lowercase characters equivalent to
-     *         the characters in this string.
+     * @return a new lowercase string, or {@code this} if it's already all-lowercase.
      */
     public String toLowerCase() {
-        return toLowerCase(Locale.getDefault());
+        return CaseMapper.toLowerCase(Locale.getDefault(), this, value, offset, count);
     }
 
     /**
-     * Converts the characters in this string to lowercase, using the specified
-     * Locale.
+     * Converts this string to lowercase, using the rules of the specified locale.
+     * <p>
+     * Most case mappings are unaffected by the language of a {@code Locale}. Exceptions include
+     * dotted and dotless I in Azeri and Turkish locales, and dotted and dotless I and J in
+     * Lithuanian locales. On the other hand, it isn't necessary to provide, a Greek locale to get
+     * correct case mapping of Greek characters: any locale will do.
+     * <p>
+     * See <a href="http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt">http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt</a>
+     * for full details of context- and language-specific special cases.
      * 
      * @param locale
      *            the Locale to use.
-     * @return a new string containing the lowercase characters equivalent to
-     *         the characters in this string.
+     * @return a new lowercase string, or {@code this} if it's already all-lowercase.
      */
     public String toLowerCase(Locale locale) {
-        for (int o = offset, end = offset + count; o < end; o++) {
-            char ch = value[o];
-            if (ch != toLowerCase(ch)) {
-                char[] buffer = new char[count];
-                int i = o - offset;
-                // Not worth checking for i == 0 case
-                System.arraycopy(value, offset, buffer, 0, i);
-                // Turkish
-                if (!"tr".equals(locale.getLanguage())) { //$NON-NLS-1$
-                    while (i < count) {
-                        buffer[i++] = toLowerCase(value[o++]);
-                    }
-                } else {
-                    while (i < count) {
-                        buffer[i++] = (ch = value[o++]) != 0x49 ? toLowerCase(ch)
-                                : (char) 0x131;
-                    }
-                }
-                return new String(0, count, buffer);
-            }
-        }
-        return this;
+        return CaseMapper.toLowerCase(locale, this, value, offset, count);
     }
 
     /**
@@ -1751,7 +1712,10 @@ public final class String implements Serializable, Comparable<String>,
      *         the characters in this string.
      */
     public String toUpperCase(Locale locale) {
-        boolean turkish = "tr".equals(locale.getLanguage()); //$NON-NLS-1$
+        // BEGIN android-changed: support Azeri.
+        String languageCode = locale.getLanguage();
+        boolean turkishOrAzeri = languageCode.equals("tr") || languageCode.equals("az");
+
         char[] output = null;
         int i = 0;
         for (int o = offset, end = offset + count; o < end; o++) {
@@ -1763,15 +1727,14 @@ public final class String implements Serializable, Comparable<String>,
                     System.arraycopy(output, 0, newoutput, 0, output.length);
                     output = newoutput;
                 }
-                char upch = !turkish ? toUpperCase(ch)
-                        : (ch != 0x69 ? toUpperCase(ch)
+                char upch = !turkishOrAzeri ? Character.toUpperCase(ch)
+                        : (ch != 0x69 ? Character.toUpperCase(ch)
                                 : (char) 0x130);
                 if (ch != upch) {
                     if (output == null) {
                         output = new char[count];
                         i = o - offset;
                         System.arraycopy(value, offset, output, 0, i);
-
                     }
                     output[i++] = upch;
                 } else if (output != null) {
@@ -1804,6 +1767,7 @@ public final class String implements Serializable, Comparable<String>,
         }
         return output.length == i || output.length - i < 8 ? new String(0, i,
                 output) : new String(output, 0, i);
+        // END android-changed
     }
 
     /**
@@ -2287,7 +2251,7 @@ public final class String implements Serializable, Comparable<String>,
      * substantially better than the default algorithm if the "needle" (the
      * subString being searched for) is a constant string.
      *
-     * For example, a JIT, upon encoutering a call to String.indexOf(String),
+     * For example, a JIT, upon encountering a call to String.indexOf(String),
      * where the needle is a constant string, may compute the values cache, md2
      * and lastChar, and change the call to the following method.
      */
@@ -2324,12 +2288,5 @@ public final class String implements Serializable, Comparable<String>,
             i++;
         }
         return -1;
-    }
-
-    /*
-     * Returns the character array for this string.
-     */
-    char[] getValue() {
-        return value;
     }
 }
