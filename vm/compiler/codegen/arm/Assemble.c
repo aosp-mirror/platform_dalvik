@@ -1407,35 +1407,65 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
      */
     cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
 
-    /* Stop the world */
-    dvmSuspendAllThreads(SUSPEND_FOR_IC_PATCH);
+    PredictedChainingCell *newCell =
+        (PredictedChainingCell *) malloc(sizeof(PredictedChainingCell));
 
     int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
     int branchOffset = tgtAddr - baseAddr;
 
-    COMPILER_TRACE_CHAINING(
-        LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) patched",
-             cell, cell->clazz ? cell->clazz->descriptor : "NULL",
-             clazz->descriptor,
-             method->name));
+    newCell->branch = assembleChainingBranch(branchOffset, true);
+    newCell->clazz = clazz;
+    newCell->method = method;
 
-    cell->branch = assembleChainingBranch(branchOffset, true);
-    cell->clazz = clazz;
-    cell->method = method;
     /*
      * Reset the counter again in case other mutator threads got invoked
      * between the previous rest and dvmSuspendAllThreads call.
      */
-    cell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
+    newCell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
 
-    cacheflush((long) cell, (long) (cell+1), 0);
+    /*
+     * Enter the work order to the queue for the compiler thread to patch the
+     * chaining cell.
+     *
+     * No blocking call is added here because the patched result is not
+     * intended to be immediately consumed by the requesting thread. Its
+     * execution is simply resumed by chasing the class pointer to resolve the
+     * callsite.
+     */
+    dvmCompilerWorkEnqueue((const u2 *) cell, kWorkOrderICPatch, newCell);
+#endif
+done:
+    return method;
+}
+
+/*
+ * Patch the inline cache content based on the content passed from the work
+ * order.
+ */
+bool dvmJitPatchInlineCache(void *cellPtr, void *contentPtr)
+{
+    PredictedChainingCell *cellDest = (PredictedChainingCell *) cellPtr;
+    PredictedChainingCell *newContent = (PredictedChainingCell *) contentPtr;
+
+    /* Stop the world */
+    dvmSuspendAllThreads(SUSPEND_FOR_IC_PATCH);
+
+    COMPILER_TRACE_CHAINING(
+        LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) patched",
+             cellDest, cellDest->clazz ? cellDest->clazz->descriptor : "NULL",
+             newContent->clazz->descriptor,
+             newContent->method->name));
+
+    /* Install the new cell content */
+    *cellDest = *newContent;
+
+    /* Then synchronize the I/D$ */
+    cacheflush((long) cellDest, (long) (cellDest+1), 0);
 
     /* All done - resume all other threads */
     dvmResumeAllThreads(SUSPEND_FOR_IC_PATCH);
-#endif
 
-done:
-    return method;
+    return true;
 }
 
 /*

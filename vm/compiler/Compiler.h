@@ -38,7 +38,7 @@ typedef enum JitInstructionSetType {
 typedef struct JitTranslationInfo {
     void *codeAddress;
     JitInstructionSetType instructionSet;
-    bool discardResult;          // Used for debugging divergence
+    bool discardResult;         // Used for debugging divergence and IC patching
 } JitTranslationInfo;
 
 typedef enum WorkOrderKind {
@@ -46,6 +46,7 @@ typedef enum WorkOrderKind {
     kWorkOrderMethod = 1,       // Work is to compile a whole method
     kWorkOrderTrace = 2,        // Work is to compile code fragment(s)
     kWorkOrderTraceDebug = 3,   // Work is to compile/debug code fragment(s)
+    kWorkOrderICPatch = 4,      // Work is to patch a polymorphic callsite
 } WorkOrderKind;
 
 typedef struct CompilerWorkOrder {

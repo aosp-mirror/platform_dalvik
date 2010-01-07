@@ -386,7 +386,7 @@ int dvmJitStartup(void)
             res = false;
             goto done;
         }
-        memset(pJitProfTable,gDvmJit.threshold,JIT_PROF_SIZE);
+        memset(pJitProfTable, gDvmJit.threshold, JIT_PROF_SIZE);
         for (i=0; i < gDvmJit.jitTableSize; i++) {
            pJitTable[i].u.info.chain = gDvmJit.jitTableSize;
         }
@@ -890,7 +890,7 @@ JitEntry *dvmJitLookupAndAdd(const u2* dPC)
         if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
             /*
              * Initialize codeAddress and allocate the slot.  Must
-             * happen in this order (ince dPC is set, the entry is live.
+             * happen in this order (since dPC is set, the entry is live.
              */
             gDvmJit.pJitEntryTable[idx].dPC = dPC;
             gDvmJit.jitTableEntriesUsed++;
@@ -986,7 +986,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                 dvmJitStopTranslationRequests();
             } else if (slot->u.info.traceConstruction) {
                 /*
-                 * Trace already request in progress, but most likely it
+                 * Trace request already in progress, but most likely it
                  * aborted without cleaning up.  Assume the worst and
                  * mark trace head as untranslatable.  If we're wrong,
                  * the compiler thread will correct the entry when the
@@ -1118,6 +1118,24 @@ bool dvmJitResizeJitTable( unsigned int size )
     dvmResumeAllThreads(SUSPEND_FOR_TBL_RESIZE);
 
     return false;
+}
+
+/*
+ * Reset the JitTable to the initial clean state.
+ */
+void dvmJitResetTable(void)
+{
+    JitEntry *jitEntry = gDvmJit.pJitEntryTable;
+    unsigned int size = gDvmJit.jitTableSize;
+    unsigned int i;
+
+    dvmLockMutex(&gDvmJit.tableLock);
+    memset((void *) jitEntry, 0, sizeof(JitEntry) * size);
+    for (i=0; i< size; i++) {
+        jitEntry[i].u.info.chain = size;  /* Initialize chain termination */
+    }
+    gDvmJit.jitTableEntriesUsed = 0;
+    dvmUnlockMutex(&gDvmJit.tableLock);
 }
 
 /*
