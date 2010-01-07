@@ -116,7 +116,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xincludeselectedmethod\n");
     dvmFprintf(stderr, "  -Xjitthreshold:decimalvalue\n");
     dvmFprintf(stderr, "  -Xjitblocking\n");
-    dvmFprintf(stderr, "  -Xjitmethod:signture[,signature]* "
+    dvmFprintf(stderr, "  -Xjitmethod:signature[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
     dvmFprintf(stderr, "  -Xjitverbose\n");
     dvmFprintf(stderr, "  -Xjitprofile\n");
