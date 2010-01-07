@@ -474,7 +474,7 @@ public class URLConnectionTest extends TestCase {
 
         // validate the request by asking the server what was received
         Map<String, String> headers = server.pathToRequest().get(path).getHeaders();
-        assertEquals("*, */*", headers.get("Accept"));
+        assertNull(headers.get("Accept"));
         assertEquals("application/x-www-form-urlencoded", headers.get("Content-Type"));
         assertEquals("5", headers.get("Content-Length"));
         assertEquals("localhost:" + port, headers.get("Host"));
