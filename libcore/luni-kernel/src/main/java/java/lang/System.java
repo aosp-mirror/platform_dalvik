@@ -603,10 +603,14 @@ public final class System {
     }
 
     /**
-     * Sets the active security manager. Note that once the security manager has
-     * been set, it can not be changed. Attempts to do that will cause a
+     * <strong>Warning:</strong> security managers do <strong>not</strong>
+     * provide a secure environment for executing untrusted code. Untrusted code
+     * cannot be safely isolated within the Dalvik VM.
+     *
+     * <p>Sets the active security manager. Note that once the security manager
+     * has been set, it can not be changed. Attempts to do that will cause a
      * security exception.
-     * 
+     *
      * @param sm
      *            the new security manager.
      * @throws SecurityException

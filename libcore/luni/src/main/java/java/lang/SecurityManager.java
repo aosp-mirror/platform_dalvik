@@ -41,7 +41,11 @@ import java.util.StringTokenizer;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * Provides security verification facilities for applications. {@code
+ * <strong>Warning:</strong> security managers do <strong>not</strong> provide a
+ * secure environment for executing untrusted code. Untrusted code cannot be
+ * safely isolated within the Dalvik VM.
+ *
+ * <p>Provides security verification facilities for applications. {@code
  * SecurityManager} contains a set of {@code checkXXX} methods which determine
  * if it is safe to perform a specific operation such as establishing network
  * connections, modifying files, and many more. In general, these methods simply
