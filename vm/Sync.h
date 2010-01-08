@@ -101,15 +101,12 @@ void dvmThreadInterrupt(struct Thread* thread);
 /* create a new Monitor struct */
 Monitor* dvmCreateMonitor(struct Object* obj);
 
-/* free an object's monitor during GC */
-void dvmFreeObjectMonitor_internal(u4 *lock);
-#define dvmFreeObjectMonitor(obj) \
-    do { \
-        Object *DFM_obj_ = (obj); \
-        if (IS_LOCK_FAT(&DFM_obj_->lock)) { \
-            dvmFreeObjectMonitor_internal(&DFM_obj_->lock); \
-        } \
-    } while (0)
+/*
+ * Frees unmarked monitors from the monitor list.  The given callback
+ * routine should return a non-zero value when passed a pointer to an
+ * unmarked object.
+ */
+void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*));
 
 /* free monitor list */
 void dvmFreeMonitorList(void);
