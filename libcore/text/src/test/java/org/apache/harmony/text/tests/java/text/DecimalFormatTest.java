@@ -2467,6 +2467,11 @@ public class DecimalFormatTest extends TestCase {
         args = {}
     )
     public void test_serializationHarmonyRICompatible() throws Exception {
+        Locale[] requiredLocales = {Locale.FRANCE};
+        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
+            // locale dependent test, bug 1943269
+            return;
+        }
         NumberFormat nf = NumberFormat.getInstance(Locale.FRANCE);
 
         DecimalFormat df = null;
