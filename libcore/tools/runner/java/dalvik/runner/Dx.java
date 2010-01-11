@@ -22,8 +22,13 @@ package dalvik.runner;
 final class Dx {
 
     public void dex(String output, Classpath classpath) {
+        // We pass --core-library so that we can write tests in the same package they're testing,
+        // even when that's a core library package. If you're actually just using this tool to
+        // execute arbitrary code, this has the unfortunate side-effect of preventing "dx" from
+        // protecting you from yourself.
         new Command.Builder()
                 .args("dx")
+                .args("--core-library")
                 .args("--dex")
                 .args("--output=" + output)
                 .args(Strings.objectsToStrings(classpath.getElements()))
