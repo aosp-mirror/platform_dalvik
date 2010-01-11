@@ -343,8 +343,13 @@ public class Resources {
             localeData.fullTimeFormat = localeData.fullTimeFormat.replace('v', 'z');
         }
         if (localeData.numberPattern != null) {
-            String numberPattern = localeData.numberPattern;
-            localeData.integerPattern = numberPattern.substring(0, numberPattern.indexOf('.'));
+            // The number pattern might contain positive and negative subpatterns. Arabic, for
+            // example, might look like "#,##0.###;#,##0.###-" because the minus sign should be
+            // written last. Macedonian supposedly looks something like "#,##0.###;(#,##0.###)".
+            // (The negative subpattern is optional, though, and not present in most locales.)
+            // By only swallowing '#'es and ','s after the '.', we ensure that we don't
+            // accidentally eat too much.
+            localeData.integerPattern = localeData.numberPattern.replaceAll("\\.[#,]*", "");
         }
         return localeData;
     }
