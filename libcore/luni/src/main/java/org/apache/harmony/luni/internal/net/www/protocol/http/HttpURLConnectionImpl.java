@@ -1403,11 +1403,11 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             }
             output.append("\r\n"); //$NON-NLS-1$
         }
-        if (reqHeader.get("Accept") == null) { //$NON-NLS-1$
-            // BEGIN android-changed
-            output.append("Accept: *, */*\r\n"); //$NON-NLS-1$
-            // END android-changed
-        }
+        // BEGIN android-removed
+        //     there's no utility in sending an "accept everything" header "*/*"
+        // if (reqHeader.get("Accept") == null) { //$NON-NLS-1$
+        // }
+        // END android-removed
         if (httpVersion > 0 && reqHeader.get("Connection") == null) { //$NON-NLS-1$
             output.append("Connection: Keep-Alive\r\n"); //$NON-NLS-1$
         }

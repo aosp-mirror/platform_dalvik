@@ -561,7 +561,7 @@ public class Support_TestWebServer implements Support_HttpConstants {
             while (buf[i] == ' ') {
                 i++;
             }
-            String headerValue = new String(buf, i, nread-i);
+            String headerValue = new String(buf, i, nread - i - 2); // drop \r\n
 
             headers.put(headerName, headerValue);
             return nread;
