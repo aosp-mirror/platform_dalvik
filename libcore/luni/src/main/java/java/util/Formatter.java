@@ -905,29 +905,27 @@ public final class Formatter implements Closeable, Flushable {
             transformer = new Transformer(this, locale);
         }
 
-        FormatSpecifierParser fsp = new FormatSpecifierParser();
+        FormatSpecifierParser fsp = new FormatSpecifierParser(format);
 
         int currentObjectIndex = 0;
         Object lastArgument = null;
         boolean hasLastArgumentSet = false;
 
-        char[] chars = format.toCharArray();
-        int length = chars.length;
+        int length = format.length();
         int i = 0;
         while (i < length) {
             // Find the maximal plain-text sequence...
             int plainTextStart = i;
-            while (i < length && chars[i] != '%') {
-                ++i;
-            }
+            int nextPercent = format.indexOf('%', i);
+            int plainTextEnd = (nextPercent == -1) ? length : nextPercent;
             // ...and output it.
-            int plainTextEnd = i;
             if (plainTextEnd > plainTextStart) {
                 outputCharSequence(format, plainTextStart, plainTextEnd);
             }
+            i = plainTextEnd;
             // Do we have a format specifier?
             if (i < length) {
-                FormatToken token = fsp.parseFormatToken(chars, i + 1);
+                FormatToken token = fsp.parseFormatToken(i + 1);
 
                 Object argument = null;
                 if (token.requireArgument()) {
@@ -2573,16 +2571,25 @@ public final class Formatter implements Closeable, Flushable {
     }
 
     private static class FormatSpecifierParser {
-        private char[] chars;
+        private String format;
+        private int length;
+
         private int startIndex;
         private int i;
 
         /**
-         * Returns a FormatToken representing the format specifier starting at 'offset' in 'chars'.
+         * Constructs a new parser for the given format string.
+         */
+        FormatSpecifierParser(String format) {
+            this.format = format;
+            this.length = format.length();
+        }
+
+        /**
+         * Returns a FormatToken representing the format specifier starting at 'offset'.
          * @param offset the first character after the '%'
          */
-        FormatToken parseFormatToken(char[] chars, int offset) {
-            this.chars = chars;
+        FormatToken parseFormatToken(int offset) {
             this.startIndex = offset;
             this.i = offset;
             return parseArgumentIndexAndFlags(new FormatToken());
@@ -2593,18 +2600,18 @@ public final class Formatter implements Closeable, Flushable {
          * Used to construct error messages.
          */
         String getFormatSpecifierText() {
-            return new String(chars, startIndex, i - startIndex);
+            return format.substring(startIndex, i);
         }
 
         private int peek() {
-            return (i < chars.length) ? chars[i] : -1;
+            return (i < length) ? format.charAt(i) : -1;
         }
 
         private char advance() {
-            if (i >= chars.length) {
+            if (i >= length) {
                 throw new UnknownFormatConversionException(getFormatSpecifierText());
             }
-            return chars[i++];
+            return format.charAt(i++);
         }
 
         private FormatToken parseArgumentIndexAndFlags(FormatToken token) {
@@ -2687,10 +2694,9 @@ public final class Formatter implements Closeable, Flushable {
 
         // Parses an integer (of arbitrary length, but typically just one digit).
         private int nextInt() {
-            int length = chars.length;
             long value = 0;
-            while (i < length && Character.isDigit(chars[i])) {
-                value = 10 * value + (chars[i++] - '0');
+            while (i < length && Character.isDigit(format.charAt(i))) {
+                value = 10 * value + (format.charAt(i++) - '0');
                 if (value > Integer.MAX_VALUE) {
                     return failNextInt();
                 }
