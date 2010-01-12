@@ -2372,20 +2372,10 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
                 "vmData", "I");
     assert(gDvm.offJavaLangRefReference_vmData >= 0);
 
-#if FANCY_REFERENCE_SUBCLASS
-    meth = dvmFindVirtualMethodByDescriptor(clazz, "clear", "()V");
-    assert(meth != NULL);
-    gDvm.voffJavaLangRefReference_clear = meth->methodIndex;
-
-    meth = dvmFindVirtualMethodByDescriptor(clazz, "enqueue", "()Z");
-    assert(meth != NULL);
-    gDvm.voffJavaLangRefReference_enqueue = meth->methodIndex;
-#else
     /* enqueueInternal() is private and thus a direct method. */
     meth = dvmFindDirectMethodByDescriptor(clazz, "enqueueInternal", "()Z");
     assert(meth != NULL);
     gDvm.methJavaLangRefReference_enqueueInternal = meth;
-#endif
 
     return true;
 }
