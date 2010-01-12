@@ -15,6 +15,7 @@
  */
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
@@ -266,6 +267,7 @@ public class CharsetProviderTest extends TestCase {
         method = "charsetForName",
         args = {String.class}
     )
+    @BrokenTest(value = "fails when run using CTS harness bug 2155700")
     public void testIsSupported_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());
@@ -299,6 +301,7 @@ public class CharsetProviderTest extends TestCase {
         method = "charsetForName",
         args = {String.class}
     )
+    @BrokenTest(value = "fails when run using CTS harness bug 2155700")
     public void testForName_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());

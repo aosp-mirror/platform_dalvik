@@ -16,11 +16,10 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestTargets;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -201,6 +200,7 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         args = {}
     )
     @SuppressWarnings("unchecked")
+    @BrokenTest(value = "fails when run using CTS harness bug 2155700")
     public void testSimpleInheritance() throws Exception {
         Class<? extends SimpleInheritance> clazz = SimpleInheritance.class;
         TypeVariable<Class> subTypeVariable = getTypeParameter(clazz);
