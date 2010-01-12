@@ -1027,9 +1027,14 @@ public final class Formatter implements Closeable, Flushable {
 
         private StringBuilder strFlags;
 
-        private char dateSuffix;// will be used in new feature.
+        private char dateSuffix;
 
         private char conversionType = (char) UNSET;
+
+        // Tests whether there were no flags, no width, and no precision specified.
+        boolean isDefault() {
+            return flags == 0 && width == UNSET && precision == UNSET;
+        }
 
         boolean isPrecisionSet() {
             return precision != UNSET;
@@ -1200,10 +1205,28 @@ public final class Formatter implements Closeable, Flushable {
          * argument.
          */
         CharSequence transform(FormatToken token, Object argument) {
-
-            /* init data member to print */
             this.formatToken = token;
             this.arg = argument;
+
+            // There are only two format specifiers that matter: "%d" and "%s".
+            // Nothing else is common in the wild. We fast-path these two to
+            // avoid the heavyweight machinery needed to cope with all the
+            if (token.isDefault()) {
+                switch (token.getConversionType()) {
+                case 's':
+                    if (!(arg instanceof Formattable)) {
+                        return arg.toString();
+                    }
+                    break;
+                case 'd':
+                    if (arg instanceof Integer || arg instanceof Long || arg instanceof Short || arg instanceof Byte) {
+                        // TODO: when we fix the rest of formatter to correctly use locale-specific
+                        // digits when getDecimalFormatSymbols().getZeroDigit() != '0', we'll need
+                        // to add a special case here too.
+                        return arg.toString();
+                    }
+                }
+            }
 
             CharSequence result;
             switch (token.getConversionType()) {
@@ -1268,7 +1291,7 @@ public final class Formatter implements Closeable, Flushable {
             }
 
             if (Character.isUpperCase(token.getConversionType())) {
-                if (null != result) {
+                if (result != null) {
                     result = result.toString().toUpperCase(locale);
                 }
             }
@@ -2684,10 +2707,11 @@ public final class Formatter implements Closeable, Flushable {
         }
 
         private FormatToken parseConversionType(FormatToken token) {
-            char ch = advance(); // This is mandatory, so no need to peek.
-            token.setConversionType(ch);
-            if (ch == 't' || ch == 'T') {
-                token.setDateSuffix(advance());
+            char conversionType = advance(); // A conversion type is mandatory.
+            token.setConversionType(conversionType);
+            if (conversionType == 't' || conversionType == 'T') {
+                char dateSuffix = advance(); // A date suffix is mandatory for 't' or 'T'.
+                token.setDateSuffix(dateSuffix);
             }
             return token;
         }
