@@ -1210,7 +1210,8 @@ public final class Formatter implements Closeable, Flushable {
 
             // There are only two format specifiers that matter: "%d" and "%s".
             // Nothing else is common in the wild. We fast-path these two to
-            // avoid the heavyweight machinery needed to cope with all the
+            // avoid the heavyweight machinery needed to cope with flags, width,
+            // and precision.
             if (token.isDefault()) {
                 switch (token.getConversionType()) {
                 case 's':
