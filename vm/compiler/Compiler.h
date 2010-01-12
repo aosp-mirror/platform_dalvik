@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <Thread.h>
+
 #ifndef _DALVIK_VM_COMPILER
 #define _DALVIK_VM_COMPILER
 
@@ -39,6 +41,7 @@ typedef struct JitTranslationInfo {
     void *codeAddress;
     JitInstructionSetType instructionSet;
     bool discardResult;         // Used for debugging divergence and IC patching
+    Thread *requestingThread;   // For debugging purpose
 } JitTranslationInfo;
 
 typedef enum WorkOrderKind {

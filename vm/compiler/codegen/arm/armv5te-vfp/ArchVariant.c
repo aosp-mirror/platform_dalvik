@@ -49,7 +49,6 @@ bool dvmCompilerArchVariantInit(void)
 #undef JIT_TEMPLATE
 
     /* Target-specific configuration */
-    gDvmJit.blockingMode = false;
     gDvmJit.jitTableSize = 1 << 9; // 512
     gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
     gDvmJit.threshold = 200;

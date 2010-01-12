@@ -781,7 +781,7 @@ JitEntry *dvmFindJitEntry(const u2* pc)
 void* dvmJitGetCodeAddr(const u2* dPC)
 {
     int idx = dvmJitHash(dPC);
-    u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
+    const u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
 
     if (npc != NULL) {
         if (npc == dPC) {

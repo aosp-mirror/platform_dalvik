@@ -765,6 +765,9 @@ struct DvmJitGlobals {
     /* Table to track the overall and trace statistics of hot methods */
     HashTable*  methodStatsTable;
 
+    /* Filter method compilation blacklist with call-graph information */
+    bool checkCallGraph;
+
 #if defined(WITH_SELF_VERIFICATION)
     /* Spin when error is detected, volatile so GDB can reset it */
     volatile bool selfVerificationSpin;

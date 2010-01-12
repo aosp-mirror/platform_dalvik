@@ -87,6 +87,8 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->result.discardResult =
         (kind == kWorkOrderTraceDebug || kind == kWorkOrderICPatch) ?
         true : false;
+    newOrder->result.requestingThread = dvmThreadSelf();
+
     gDvmJit.compilerWorkEnqueueIndex++;
     if (gDvmJit.compilerWorkEnqueueIndex == COMPILER_WORK_QUEUE_SIZE)
         gDvmJit.compilerWorkEnqueueIndex = 0;

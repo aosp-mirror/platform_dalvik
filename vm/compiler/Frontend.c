@@ -249,6 +249,36 @@ static CompilerMethodStats *analyzeMethodBody(const Method *method)
 }
 
 /*
+ * Crawl the stack of the thread that requesed compilation to see if any of the
+ * ancestors are on the blacklist.
+ */
+bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
+{
+    /* Crawl the Dalvik stack frames and compare the method name*/
+    StackSaveArea *ssaPtr = ((StackSaveArea *) thread->curFrame) - 1;
+    while (ssaPtr != ((StackSaveArea *) NULL) - 1) {
+        const Method *method = ssaPtr->method;
+        if (method) {
+            int hashValue = dvmComputeUtf8Hash(method->name);
+            bool found =
+                dvmHashTableLookup(gDvmJit.methodTable, hashValue,
+                               (char *) method->name,
+                               (HashCompareFunc) strcmp, false) !=
+                NULL;
+            if (found) {
+                LOGD("Method %s (--> %s) found on the JIT %s list",
+                     method->name, curMethodName,
+                     gDvmJit.includeSelectedMethod ? "white" : "black");
+                return true;
+            }
+
+        }
+        ssaPtr = ((StackSaveArea *) ssaPtr->prevFrame) - 1;
+    };
+    return false;
+}
+
+/*
  * Main entry point to start trace compilation. Basic blocks are constructed
  * first and they will be passed to the codegen routines to convert Dalvik
  * bytecode into machine code.
@@ -319,6 +349,16 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
                                    (char *) desc->method->name,
                                    (HashCompareFunc) strcmp, false) !=
                     NULL;
+
+                /*
+                 * Debug by call-graph is enabled. Check if the debug list
+                 * covers any methods on the VM stack.
+                 */
+                if (methodFound == false && gDvmJit.checkCallGraph == true) {
+                    methodFound =
+                        filterMethodByCallGraph(info->requestingThread,
+                                                desc->method->name);
+                }
             }
         }
 

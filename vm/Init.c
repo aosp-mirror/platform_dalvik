@@ -118,6 +118,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xjitblocking\n");
     dvmFprintf(stderr, "  -Xjitmethod:signature[,signature]* "
                        "(eg Ljava/lang/String\\;replace)\n");
+    dvmFprintf(stderr, "  -Xjitcheckcg\n");
     dvmFprintf(stderr, "  -Xjitverbose\n");
     dvmFprintf(stderr, "  -Xjitprofile\n");
     dvmFprintf(stderr, "  -Xjitdisableopt\n");
@@ -907,6 +908,10 @@ static int dvmProcessOptions(int argc, const char* const argv[],
           gDvmJit.includeSelectedOp = true;
         } else if (strncmp(argv[i], "-Xincludeselectedmethod", 23) == 0) {
           gDvmJit.includeSelectedMethod = true;
+        } else if (strncmp(argv[i], "-Xjitcheckcg", 12) == 0) {
+          gDvmJit.checkCallGraph = true;
+          /* Need to enable blocking mode due to stack crawling */
+          gDvmJit.blockingMode = true;
         } else if (strncmp(argv[i], "-Xjitverbose", 12) == 0) {
           gDvmJit.printMe = true;
         } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
