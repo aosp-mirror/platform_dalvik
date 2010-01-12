@@ -348,12 +348,6 @@ int dvmJitStartup(void)
     unsigned int i;
     bool res = true;  /* Assume success */
 
-#if defined(WITH_SELF_VERIFICATION)
-    // Force JIT into blocking, translate everything mode
-    gDvmJit.threshold = 1;
-    gDvmJit.blockingMode = true;
-#endif
-
     // Create the compiler thread and setup miscellaneous chores */
     res &= dvmCompilerStartup();
 
@@ -787,27 +781,26 @@ JitEntry *dvmFindJitEntry(const u2* pc)
 void* dvmJitGetCodeAddr(const u2* dPC)
 {
     int idx = dvmJitHash(dPC);
+    u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
 
-    /* If anything is suspended, don't re-enter the code cache */
-    if (gDvm.sumThreadSuspendCount > 0) {
-        return NULL;
-    }
-
-    /* Expect a high hit rate on 1st shot */
-    if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+    if (npc != NULL) {
+        if (npc == dPC) {
 #if defined(EXIT_STATS)
-        gDvmJit.addrLookupsFound++;
+            gDvmJit.addrLookupsFound++;
 #endif
-        return gDvmJit.pJitEntryTable[idx].codeAddress;
-    } else {
-        int chainEndMarker = gDvmJit.jitTableSize;
-        while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
-            idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
-            if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
+            return gDvm.sumThreadSuspendCount ? NULL :
+                gDvmJit.pJitEntryTable[idx].codeAddress;
+        } else {
+            int chainEndMarker = gDvmJit.jitTableSize;
+            while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
+                idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
+                if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
 #if defined(EXIT_STATS)
-                gDvmJit.addrLookupsFound++;
+                    gDvmJit.addrLookupsFound++;
 #endif
-                return gDvmJit.pJitEntryTable[idx].codeAddress;
+                    return gDvm.sumThreadSuspendCount ? NULL :
+                        gDvmJit.pJitEntryTable[idx].codeAddress;
+                }
             }
         }
     }

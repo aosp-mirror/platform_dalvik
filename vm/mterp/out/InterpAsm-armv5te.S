@@ -9714,11 +9714,11 @@ common_testUpdateProfile:
 
 common_updateProfile:
     eor     r3,rPC,rPC,lsr #12 @ cheap, but fast hash function
-    lsl     r3,r3,#23          @ shift out excess 511
-    ldrb    r1,[r0,r3,lsr #23] @ get counter
+    lsl     r3,r3,#21          @ shift out excess 2047
+    ldrb    r1,[r0,r3,lsr #21] @ get counter
     GET_INST_OPCODE(ip)
     subs    r1,r1,#1           @ decrement counter
-    strb    r1,[r0,r3,lsr #23] @ and store it
+    strb    r1,[r0,r3,lsr #21] @ and store it
     GOTO_OPCODE_IFNE(ip)       @ if not threshold, fallthrough otherwise */
 
 /*
@@ -9728,7 +9728,7 @@ common_updateProfile:
  * jump to it now).
  */
     GET_JIT_THRESHOLD(r1)
-    strb    r1,[r0,r3,lsr #23] @ reset counter
+    strb    r1,[r0,r3,lsr #21] @ reset counter
     EXPORT_PC()
     mov     r0,rPC
     bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
