@@ -58,7 +58,7 @@ import junit.framework.TestCase;
 
 @TestTargetClass(Scanner.class) 
 public class ScannerTest extends TestCase {
-    static final boolean disableRIBugs = true;
+    static final boolean disableRIBugs = false;
 
     private Scanner s;
 
@@ -1290,34 +1290,37 @@ public class ScannerTest extends TestCase {
             // expected
         }
 
-        s = new Scanner("-123 123- (123)");
-        s.useLocale(new Locale("mk", "MK"));
-        assertEquals(-123, s.nextInt(10));
-        try {
-            s.nextInt();
-            fail("Should throw InputMismatchException");
-        } catch (InputMismatchException e) {
-            // expected
-        }
-        // Skip the un-recognizable token 123-.
-        assertEquals("123-", s.next());
-        // The following test case fails on RI
-        if (!disableRIBugs) {
+        // locale dependent test, bug 1943269
+        if (Support_Locale.areLocalesAvailable(new Locale[] { new Locale("mk", "MK")})) {
+            s = new Scanner("-123 123- (123)");
+            s.useLocale(new Locale("mk", "MK"));
             assertEquals(-123, s.nextInt(10));
-
-        // If the parameter radix is illegal, the following test cases fail on
-        // RI
             try {
-                s.nextInt(Character.MIN_RADIX - 1);
-                fail("Should throw IllegalArgumentException");
-            } catch (IllegalArgumentException e) {
-                // Expected
+                s.nextInt();
+                fail("Should throw InputMismatchException");
+            } catch (InputMismatchException e) {
+                // expected
             }
-            try {
-                s.nextInt(Character.MAX_RADIX + 1);
-                fail("Should throw IllegalArgumentException");
-            } catch (IllegalArgumentException e) {
-                // Expected
+            // Skip the un-recognizable token 123-.
+            assertEquals("123-", s.next());
+            // The following test case fails on RI
+            if (!disableRIBugs) {
+                assertEquals(-123, s.nextInt(10));
+
+            // If the parameter radix is illegal, the following test cases fail on
+            // RI
+                try {
+                    s.nextInt(Character.MIN_RADIX - 1);
+                    fail("Should throw IllegalArgumentException");
+                } catch (IllegalArgumentException e) {
+                    // Expected
+                }
+                try {
+                    s.nextInt(Character.MAX_RADIX + 1);
+                    fail("Should throw IllegalArgumentException");
+                } catch (IllegalArgumentException e) {
+                    // Expected
+                }
             }
         }
         
@@ -1515,20 +1518,23 @@ public class ScannerTest extends TestCase {
             // expected
         }
 
-        s = new Scanner("-123 123- (123)");
-        s.useLocale(new Locale("mk", "MK"));
-        assertEquals(-123, s.nextInt());
-        try {
-            s.nextInt();
-            fail("Should throw InputMismatchException");
-        } catch (InputMismatchException e) {
-            // expected
-        }
-        // Skip the un-recognizable token 123-.
-        assertEquals("123-", s.next());
-        // The following test case fails on RI
-        if (!disableRIBugs) {
+        // locale dependent test, bug 1943269
+        if (Support_Locale.areLocalesAvailable(new Locale[] { new Locale("mk", "MK")})) {
+            s = new Scanner("-123 123- (123)");
+            s.useLocale(new Locale("mk", "MK"));
             assertEquals(-123, s.nextInt());
+            try {
+                s.nextInt();
+                fail("Should throw InputMismatchException");
+            } catch (InputMismatchException e) {
+                // expected
+            }
+            // Skip the un-recognizable token 123-.
+            assertEquals("123-", s.next());
+            // The following test case fails on RI
+            if (!disableRIBugs) {
+                assertEquals(-123, s.nextInt());
+            }
         }
         
         s.close();
@@ -1808,35 +1814,43 @@ public class ScannerTest extends TestCase {
         s.useLocale(Locale.GERMANY);
         assertEquals((float)23456.7, s.nextFloat());
 
-        s = new Scanner("-123.4 123.4- -123.4-");
-        s.useLocale(new Locale("ar", "AE"));
-        assertEquals((float)-123.4, s.nextFloat());
-        //The following test case fails on RI
-        if (!disableRIBugs) {
+        // locale dependent test, bug 1943269
+        // Note: although "123.4-" is the correct localized form for ar_AE, the
+        // RI only accepts "-123.4".
+        if (false) {
+            s = new Scanner("-123.4 123.4- -123.4-");
+            s.useLocale(new Locale("ar", "AE"));
             assertEquals((float)-123.4, s.nextFloat());
-        }
-        try {
-            s.nextFloat();
-            fail("Should throw InputMismatchException");
-        } catch (InputMismatchException e) {
-            // Expected
+            //The following test case fails on RI
+            if (!disableRIBugs) {
+                assertEquals((float)-123.4, s.nextFloat());
+            }
+            try {
+                s.nextFloat();
+                fail("Should throw InputMismatchException");
+            } catch (InputMismatchException e) {
+                // Expected
+            }
         }
 
-        s = new Scanner("(123) 123- -123");
-        s.useLocale(new Locale("mk", "MK"));
-        if (!disableRIBugs) {
-            assertEquals((float)-123.0, s.nextFloat());
-        }
-        try {
-            s.nextFloat();
-            fail("Should throw InputMismatchException");
-        } catch (InputMismatchException e) {
-            // Expected
-        }
-        // Skip the un-recognizable token 123-.
-        if (!disableRIBugs) {
-            assertEquals("123-", s.next());
-            assertEquals((float)-123.0, s.nextFloat());
+        // locale dependent test, bug 1943269
+        if (Support_Locale.areLocalesAvailable(new Locale[] { new Locale("mk", "MK") })) {
+            s = new Scanner("(123) 123- -123");
+            s.useLocale(new Locale("mk", "MK"));
+            if (!disableRIBugs) {
+                assertEquals((float)-123.0, s.nextFloat());
+            }
+            try {
+                s.nextFloat();
+                fail("Should throw InputMismatchException");
+            } catch (InputMismatchException e) {
+                // Expected
+            }
+            // Skip the un-recognizable token 123-.
+            if (!disableRIBugs) {
+                assertEquals("123-", s.next());
+                assertEquals((float)-123.0, s.nextFloat());
+            }
         }
         
         s.close();
