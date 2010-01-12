@@ -208,6 +208,8 @@ final class Driver {
     private void printResult(TestRun testRun) {
         if (testRun.isExpectedResult()) {
             logger.info("OK " + testRun.getQualifiedName() + " (" + testRun.getResult() + ")");
+            // In --verbose mode, show the output even on success.
+            logger.fine("  " + testRun.getFailureMessage().replace("\n", "\n  "));
             return;
         }
 
