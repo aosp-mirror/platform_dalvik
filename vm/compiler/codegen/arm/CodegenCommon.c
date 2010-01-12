@@ -329,6 +329,9 @@ extern ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
                               ArmLIR *branch,
                               ArmLIR *pcrLabel)
 {
+    /* Forget all def info (because we might rollback here.  Bug #2367397 */
+    resetDefTracking(cUnit);
+
     /* Set up the place holder to reconstruct this Dalvik PC */
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + dOffset);
