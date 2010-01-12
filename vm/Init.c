@@ -1015,14 +1015,6 @@ static void setCommandLineDefaults()
      */
 #if defined(WITH_JIT)
     gDvm.executionMode = kExecutionModeJit;
-    /* 
-     * TODO - check system property and insert command-line options in 
-     *        frameworks/base/core/jni/AndroidRuntime.cpp
-     */
-    gDvmJit.blockingMode = false;
-    gDvmJit.jitTableSize = 512;
-    gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
-    gDvmJit.threshold = 200;
 #else
     gDvm.executionMode = kExecutionModeInterpFast;
 #endif

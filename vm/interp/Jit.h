@@ -21,7 +21,7 @@
 
 #include "InterpDefs.h"
 
-#define JIT_PROF_SIZE 512
+#define JIT_PROF_SIZE 2048
 
 #define JIT_MAX_TRACE_LEN 100
 

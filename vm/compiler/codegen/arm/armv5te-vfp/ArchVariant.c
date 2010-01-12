@@ -48,6 +48,18 @@ bool dvmCompilerArchVariantInit(void)
 #include "../../../template/armv5te-vfp/TemplateOpList.h"
 #undef JIT_TEMPLATE
 
+    /* Target-specific configuration */
+    gDvmJit.blockingMode = false;
+    gDvmJit.jitTableSize = 1 << 9; // 512
+    gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
+    gDvmJit.threshold = 200;
+
+#if defined(WITH_SELF_VERIFICATION)
+    /* Force into blocking, translate everything mode */
+    gDvmJit.blockingMode = true;
+    gDvmJit.threshold = 1;
+#endif
+
     /* Codegen-specific assumptions */
     assert(offsetof(ClassObject, vtable) < 128 &&
            (offsetof(ClassObject, vtable) & 0x3) == 0);
