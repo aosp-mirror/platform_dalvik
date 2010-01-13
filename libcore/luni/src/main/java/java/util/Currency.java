@@ -105,7 +105,7 @@ public final class Currency implements Serializable {
             country = country + "_" + variant;
         }
 
-        String currencyCode = com.ibm.icu4jni.util.Resources.getCurrencyCodeNative(country);
+        String currencyCode = Resources.getCurrencyCodeNative(country);
         if (currencyCode == null) {
             throw new IllegalArgumentException(Msg.getString("K0323", locale.toString()));
         } else if (currencyCode.equals("None")) {
@@ -138,18 +138,14 @@ public final class Currency implements Serializable {
 
     /**
      * Returns the symbol for this currency in the given {@code Locale}.
+     * That is, given "USD" and Locale.US, you'd get "$", but given "USD" and a non-US locale,
+     * you'd get "US$".
      * <p>
-     * If the locale doesn't have any countries (e.g.
+     * If the locale only specifies a language rather than a language and a countries (e.g.
      * {@code Locale.JAPANESE, new Locale("en","")}), the the ISO
      * 4217 currency code is returned.
      * <p>
-     * First the locale's resource bundle is checked, if the locale has the same currency,
-     * the CurrencySymbol in this locale bundle is returned.
-     * <p>
-     * Then a currency bundle for this locale is searched.
-     * <p>
-     * If a currency bundle for this locale does not exist, or there is no
-     * symbol for this currency in this bundle, then the
+     * If there is no currency symbol specific to this locale does not exist, the
      * ISO 4217 currency code is returned.
      * <p>
      *
@@ -165,32 +161,12 @@ public final class Currency implements Serializable {
         }
 
         // Check the locale first, in case the locale has the same currency.
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        LocaleData localeData = Resources.getLocaleData(locale);
         if (localeData.internationalCurrencySymbol.equals(currencyCode)) {
             return localeData.currencySymbol;
         }
 
-        // check if the currency bundle for this locale has an entry for this currency
-        try {
-            ResourceBundle currencyBundle = getCurrencyBundle(locale);
-
-            // is the bundle found for a different country? (for instance the
-            // default locale's currency bundle)
-            if (!currencyBundle.getLocale().getCountry().equals(locale.getCountry())) {
-                // TODO: the fact I never see output from this when running the tests suggests we
-                // don't have a test for this. Does it ever even happen? If it does, can we just
-                // ask ICU a slightly different question to get the behavior we want?
-                Logger.global.info("currencyBundle " + currencyBundle + " for " + locale +
-                        " came back with locale " + currencyBundle.getLocale());
-                return currencyCode;
-            }
-
-            // Return the currency bundle's value, or currencyCode.
-            String result = (String) currencyBundle.handleGetObject(currencyCode);
-            return (result != null) ? result : currencyCode;
-        } catch (MissingResourceException e) {
-            return currencyCode;
-        }
+        return Resources.getCurrencySymbolNative(locale.toString(), currencyCode);
         // END android-changed
     }
 
