@@ -176,14 +176,6 @@ Monitor* dvmCreateMonitor(Object* obj)
 }
 
 /*
- * Release a Monitor.
- */
-static void releaseMonitor(Monitor* mon)
-{
-    // TODO
-}
-
-/*
  * Free the monitor list.  Only used when shutting the VM down.
  */
 void dvmFreeMonitorList(void)
@@ -271,21 +263,19 @@ bool dvmHoldsLock(Thread* thread, Object* obj)
  * Free the monitor associated with an object and make the object's lock
  * thin again.  This is called during garbage collection.
  */
-void dvmFreeObjectMonitor_internal(u4 *lock)
+static void freeObjectMonitor(Object* obj)
 {
     Monitor *mon;
 
-    /* The macro that wraps this function checks IS_LOCK_FAT() first.
-     */
-    assert(IS_LOCK_FAT(lock));
+    assert(LW_SHAPE(obj->lock) == LW_SHAPE_FAT);
 
 #ifdef WITH_DEADLOCK_PREDICTION
     if (gDvm.deadlockPredictMode != kDPOff)
-        removeCollectedObject(LW_MONITOR(*lock)->obj);
+        removeCollectedObject(obj);
 #endif
 
-    mon = LW_MONITOR(*lock);
-    *lock = DVM_LOCK_INITIAL_THIN_VALUE;
+    mon = LW_MONITOR(obj->lock);
+    obj->lock = DVM_LOCK_INITIAL_THIN_VALUE;
 
     /* This lock is associated with an object
      * that's being swept.  The only possible way
@@ -296,24 +286,40 @@ void dvmFreeObjectMonitor_internal(u4 *lock)
      */
     assert(pthread_mutex_trylock(&mon->lock) == 0);
     pthread_mutex_destroy(&mon->lock);
-#if 1
-//TODO: unlink from the monitor list (would require a lock)
-// (might not -- the GC suspension may be enough)
-    {
-        Monitor *next;
-        next = mon->next;
 #ifdef WITH_DEADLOCK_PREDICTION
-        expandObjClear(&mon->historyChildren);
-        expandObjClear(&mon->historyParents);
-        free(mon->historyRawStackTrace);
+    expandObjClear(&mon->historyChildren);
+    expandObjClear(&mon->historyParents);
+    free(mon->historyRawStackTrace);
 #endif
-        memset(mon, 0, sizeof (*mon));
-        mon->next = next;
-    }
-//free(mon);
-#endif
+    free(mon);
 }
 
+/*
+ * Frees monitor objects belonging to unmarked objects.
+ */
+void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*))
+{
+    Monitor handle;
+    Monitor *prev, *curr;
+    Object *obj;
+
+    assert(mon != NULL);
+    assert(*mon != NULL);
+    assert(isUnmarkedObject != NULL);
+    prev = &handle;
+    prev->next = curr = *mon;
+    while (curr != NULL) {
+        obj = curr->obj;
+        if (obj != NULL && (*isUnmarkedObject)(obj) != 0) {
+            prev->next = curr = curr->next;
+            freeObjectMonitor(obj);
+        } else {
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+    *mon = handle.next;
+}
 
 /*
  * Lock a monitor.

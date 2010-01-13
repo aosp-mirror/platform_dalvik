@@ -1147,10 +1147,6 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
         hc = (DvmHeapChunk *)*ptrs++;
         obj = (Object *)chunk2ptr(hc);
 
-        /* Free the monitor associated with the object.
-         */
-        dvmFreeObjectMonitor(obj);
-
         /* NOTE: Dereferencing clazz is dangerous.  If obj was the last
          * one to reference its class object, the class object could be
          * on the sweep list, and could already have been swept, leaving
@@ -1192,8 +1188,7 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
     return true;
 }
 
-/* A function suitable for passing to dvmHashForeachRemove()
- * to clear out any unmarked objects.  Clears the low bits
+/* Returns true if the given object is unmarked.  Ignores the low bits
  * of the pointer because the intern table may set them.
  */
 static int isUnmarkedObject(void *object)
@@ -1241,6 +1236,8 @@ dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed)
 #if WITH_HPROF && WITH_HPROF_UNREACHABLE
     hprofDumpUnmarkedObjects(markBitmaps, objectBitmaps, numBitmaps);
 #endif
+
+    dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);
 
     dvmHeapBitmapXorWalkLists(markBitmaps, objectBitmaps, numBitmaps,
             sweepBitmapCallback, NULL);
