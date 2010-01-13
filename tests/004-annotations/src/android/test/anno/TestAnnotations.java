@@ -81,6 +81,41 @@ public class TestAnnotations {
         return 2;
     }
 
+
+    @AnnoArrayField
+    String thing1;
+
+    @AnnoArrayField(
+            zz = {true,false,true},
+            bb = {-1,0,1},
+            cc = {'Q'},
+            ss = {12,13,14,15,16,17},
+            ii = {1,2,3,4},
+            ff = {1.1f,1.2f,1.3f},
+            jj = {-5,0,5},
+            dd = {0.3,0.6,0.9},
+            str = {"hickory","dickory","dock"}
+            )
+    String thing2;
+
+    public static void testArrays() {
+        TestAnnotations ta = new TestAnnotations();
+        Field field;
+        Annotation[] annotations;
+
+        try {
+            field = TestAnnotations.class.getDeclaredField("thing1");
+            annotations = field.getAnnotations();
+            System.out.println(field + ": " + annotations[0].toString());
+
+            field = TestAnnotations.class.getDeclaredField("thing2");
+            annotations = field.getAnnotations();
+            System.out.println(field + ": " + annotations[0].toString());
+        } catch (NoSuchFieldException nsfe) {
+            throw new RuntimeException(nsfe);
+        }
+    }
+
     public static void testArrayProblem() {
         Method meth;
         ExportedProperty property;
@@ -105,6 +140,7 @@ public class TestAnnotations {
     public static void main(String[] args) {
         System.out.println("TestAnnotations...");
 
+        testArrays();
         testArrayProblem();
         //System.exit(0);
 

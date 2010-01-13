@@ -617,10 +617,8 @@ static bool processAnnotationValue(const ClassObject* clazz,
  *
  * For an array annotation, the type of the extracted object will always
  * be java.lang.Object[], but we want it to match the type that the
- * annotation member is expected to return.  In theory we can just stomp
- * the object's class to have the correct type, but this strikes me as a
- * risky proposition (at the very least we would need to call instanceof()
- * on every element).
+ * annotation member is expected to return.  In some cases this may
+ * involve un-boxing primitive values.
  *
  * We allocate a second array with the correct type, then copy the data
  * over.  This releases the tracked allocation on "valueObj" and returns
@@ -642,18 +640,26 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
     ClassObject* dstElemClass;
 
     /*
-     * Strip off one '[' to get element class.  Note this is not the
-     * same as clazz->elementClass.
+     * We always extract kDexAnnotationArray into Object[], so we expect to
+     * find that here.  This means we can skip the FindClass on
+     * (valueObj->clazz->descriptor+1, valueObj->clazz->classLoader).
      */
-    srcElemClass = dvmFindClass(valueObj->clazz->descriptor+1,
-        valueObj->clazz->classLoader);
-    dstElemClass = dvmFindClass(methodReturn->descriptor+1,
-        methodReturn->classLoader);
-    if (srcElemClass->primitiveType != PRIM_NOT ||
-        dstElemClass->primitiveType != PRIM_NOT)
-    {
-        LOGE("ERROR: array of primitives not expected here\n");
-        dvmAbort();
+    if (strcmp(valueObj->clazz->descriptor, "[Ljava/lang/Object;") != 0) {
+        LOGE("Unexpected src type class (%s)\n", valueObj->clazz->descriptor);
+        return NULL;
+    }
+    srcElemClass = gDvm.classJavaLangObject;
+
+    /*
+     * Skip past the '[' to get element class name.  Note this is not always
+     * the same as methodReturn->elementClass.
+     */
+    char firstChar = methodReturn->descriptor[1];
+    if (firstChar == 'L' || firstChar == '[') {
+        dstElemClass = dvmFindClass(methodReturn->descriptor+1,
+            methodReturn->classLoader);
+    } else {
+        dstElemClass = dvmFindPrimitiveClass(firstChar);
     }
     LOGV("HEY: converting valueObj from [%s to [%s\n",
         srcElemClass->descriptor, dstElemClass->descriptor);
@@ -669,7 +675,13 @@ static Object* convertReturnType(Object* valueObj, ClassObject* methodReturn)
         goto bail;
     }
 
-    if (!dvmCopyObjectArray(newArray, srcArray, dstElemClass)) {
+    bool success;
+    if (dstElemClass->primitiveType == PRIM_NOT) {
+        success = dvmCopyObjectArray(newArray, srcArray, dstElemClass);
+    } else {
+        success = dvmUnboxObjectArray(newArray, srcArray, dstElemClass);
+    }
+    if (!success) {
         LOGE("Annotation array copy failed\n");
         dvmReleaseTrackedAlloc((Object*)newArray, self);
         newArray = NULL;

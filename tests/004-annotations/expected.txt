@@ -1,4 +1,6 @@
 TestAnnotations...
+java.lang.String android.test.anno.TestAnnotations.thing1: @android.test.anno.AnnoArrayField(bb=[], cc=[a, b], dd=[0.987654321], ff=[3.1415927], ii=[], jj=[], ss=[], str=[], zz=[])
+java.lang.String android.test.anno.TestAnnotations.thing2: @android.test.anno.AnnoArrayField(bb=[-1, 0, 1], cc=[Q], dd=[0.3, 0.6, 0.9], ff=[1.1, 1.2, 1.3], ii=[1, 2, 3, 4], jj=[-5, 0, 5], ss=[12, 13, 14, 15, 16, 17], str=[hickory, dickory, dock], zz=[true, false, true])
 mapping is class [Landroid.test.anno.IntToString;
   0='@android.test.anno.IntToString(from=0, to=NORMAL_FOCUS)'
   1='@android.test.anno.IntToString(from=2, to=WEAK_FOCUS)'
@@ -85,7 +87,7 @@ annotations on TYPE class android.test.anno.FullyNoted(1):
   annotations on FIELD int android.test.anno.FullyNoted.mBar:
     @android.test.anno.AnnoFancyField(nombre=fubar)
       interface android.test.anno.AnnoFancyField
-    aff: @android.test.anno.AnnoFancyField(nombre=fubar) / class $Proxy16
+    aff: @android.test.anno.AnnoFancyField(nombre=fubar) / class $Proxy17
     --> nombre is 'fubar'
 
 SimplyNoted.get(AnnoSimpleType) = @android.test.anno.AnnoSimpleType()

@@ -132,4 +132,12 @@ INLINE bool dvmIsArrayClass(const ClassObject* clazz)
 bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     ClassObject* dstElemClass);
 
+/*
+ * Copy the entire contents of an array of boxed primitives into an
+ * array of primitives.  The boxed value must fit in the primitive (i.e.
+ * narrowing conversions are not allowed).
+ */
+bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
+    ClassObject* dstElemClass);
+
 #endif /*_DALVIK_OO_ARRAY*/

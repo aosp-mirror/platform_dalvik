@@ -689,6 +689,82 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
 }
 
 /*
+ * Copy the entire contents of an array of boxed primitives into an
+ * array of primitives.  The boxed value must fit in the primitive (i.e.
+ * narrowing conversions are not allowed).
+ */
+bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
+    ClassObject* dstElemClass)
+{
+    Object** src = (Object**)srcArray->contents;
+    void* dst = (void*)dstArray->contents;
+    u4 count = dstArray->length;
+    PrimitiveType typeIndex = dstElemClass->primitiveType;
+
+    assert(typeIndex != PRIM_NOT);
+    assert(srcArray->length == dstArray->length);
+
+    while (count--) {
+        JValue result;
+
+        /*
+         * This will perform widening conversions as appropriate.  It
+         * might make sense to be more restrictive and require that the
+         * primitive type exactly matches the box class, but it's not
+         * necessary for correctness.
+         */
+        if (!dvmUnwrapPrimitive(*src, dstElemClass, &result)) {
+            LOGW("dvmCopyObjectArray: can't store %s in %s\n",
+                (*src)->clazz->descriptor, dstElemClass->descriptor);
+            return false;
+        }
+
+        /* would be faster with 4 loops, but speed not crucial here */
+        switch (typeIndex) {
+        case PRIM_BOOLEAN:
+        case PRIM_BYTE:
+            {
+                u1* tmp = dst;
+                *tmp++ = result.b;
+                dst = tmp;
+            }
+            break;
+        case PRIM_CHAR:
+        case PRIM_SHORT:
+            {
+                u2* tmp = dst;
+                *tmp++ = result.s;
+                dst = tmp;
+            }
+            break;
+        case PRIM_FLOAT:
+        case PRIM_INT:
+            {
+                u4* tmp = dst;
+                *tmp++ = result.i;
+                dst = tmp;
+            }
+            break;
+        case PRIM_DOUBLE:
+        case PRIM_LONG:
+            {
+                u8* tmp = dst;
+                *tmp++ = result.j;
+                dst = tmp;
+            }
+            break;
+        default:
+            /* should not be possible to get here */
+            dvmAbort();
+        }
+
+        src++;
+    }
+
+    return true;
+}
+
+/*
  * Add all primitive classes to the root set of objects.
 TODO: do these belong to the root class loader?
  */
