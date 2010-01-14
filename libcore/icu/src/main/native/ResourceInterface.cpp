@@ -252,6 +252,12 @@ static TimeZone* timeZoneFromId(JNIEnv* env, jstring id) {
     return TimeZone::createTimeZone(zoneID);
 }
 
+static jstring formatDate(JNIEnv* env, const SimpleDateFormat& fmt, const UDate& when) {
+    UnicodeString str;
+    fmt.format(when, str);
+    return env->NewString(str.getBuffer(), str.length());
+}
+
 static void getTimeZonesNative(JNIEnv* env, jclass clazz,
         jobjectArray outerArray, jstring locale) {
 
@@ -304,24 +310,19 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
             daylightSavingDate = date2;
         }
 
-        UnicodeString str;
-        shortFormat.format(daylightSavingDate, str);
-        jstring content = env->NewString(str.getBuffer(), str.length());
+        jstring content = formatDate(env, shortFormat, daylightSavingDate);
         env->SetObjectArrayElement(shortDlTimeArray, i, content);
         env->DeleteLocalRef(content);
 
-        shortFormat.format(standardDate, str);
-        content = env->NewString(str.getBuffer(), str.length());
+        content = formatDate(env, shortFormat, standardDate);
         env->SetObjectArrayElement(shortStdTimeArray, i, content);
         env->DeleteLocalRef(content);
 
-        longFormat.format(daylightSavingDate, str);
-        content = env->NewString(str.getBuffer(), str.length());
+        content = formatDate(env, longFormat, daylightSavingDate);
         env->SetObjectArrayElement(longDlTimeArray, i, content);
         env->DeleteLocalRef(content);
 
-        longFormat.format(standardDate, str);
-        content = env->NewString(str.getBuffer(), str.length());
+        content = formatDate(env, longFormat, standardDate);
         env->SetObjectArrayElement(longStdTimeArray, i, content);
         env->DeleteLocalRef(content);
 

@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 /**
  * Makes ICU data accessible to Java.
  *
- * TODO: finish removing the expensive ResourceBundle nonsense and rename this class.
+ * TODO: move the LocaleData stuff into LocaleData and rename this class.
  */
 public class Resources {
     // A cache for the locale-specific data.
@@ -152,13 +152,34 @@ public class Resources {
      * Returns the display name for the given time zone using the given locale.
      * 
      * @param id The time zone ID, for example "Europe/Berlin"
-     * @param isDST Indicates whether daylight savings is in use
+     * @param daylight Indicates whether daylight savings is in use
      * @param style The style, 0 for long, 1 for short
      * @param locale The locale name, for example "en_US".
      * @return The desired display name
      */
-    public static String getDisplayTimeZone(String id, boolean isDST, int style, String locale) {
-        return getDisplayTimeZoneNative(id, isDST, style, locale);
+    public static String getDisplayTimeZone(String id, boolean daylight, int style, String locale) {
+        // If we already have the strings, linear search through them is 10x quicker than
+        // calling ICU for just the one we want.
+        if (DefaultTimeZones.locale.equals(locale)) {
+            String result = lookupDisplayTimeZone(DefaultTimeZones.names, id, daylight, style);
+            if (result != null) {
+                return result;
+            }
+        }
+        return getDisplayTimeZoneNative(id, daylight, style, locale);
+    }
+
+    public static String lookupDisplayTimeZone(String[][] zoneStrings, String id, boolean daylight, int style) {
+        for (String[] row : zoneStrings) {
+            if (row[0].equals(id)) {
+                if (daylight) {
+                    return (style == TimeZone.LONG) ? row[3] : row[4];
+                } else {
+                    return (style == TimeZone.LONG) ? row[1] : row[2];
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -238,7 +259,7 @@ public class Resources {
      *         "Europe/Berlin". The other columns then hold for each row the
      *         four time zone names with and without daylight savings and in
      *         long and short format. It's exactly the array layout required by
-     *         the TomeZone class.
+     *         the TimeZone class.
      */
     public static String[][] getDisplayTimeZones(String locale) {
         String defaultLocale = Locale.getDefault().toString();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ package java.util;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-public class AllTests {
-    public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
-        suite.addTestSuite(java.util.DateTest.class);
-        suite.addTestSuite(java.util.FormatterTest.class);
-        return suite;
+public class DateTest extends junit.framework.TestCase {
+    // http://code.google.com/p/android/issues/detail?id=6013
+    public void test_toString() throws Exception {
+        // Ensure that no matter where this is run, we know what time zone
+        // to expect. (Though we still assume an "en" locale.)
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Chicago"));
+        assertEquals("Wed Dec 31 18:00:00 CST 1969", new Date(0).toString());
     }
 }

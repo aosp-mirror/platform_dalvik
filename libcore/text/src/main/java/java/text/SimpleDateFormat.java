@@ -30,13 +30,13 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 // BEGIN android-added
-import java.util.ResourceBundle;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 // END android-added
 import java.util.Vector;
 
 import com.ibm.icu4jni.util.LocaleData;
+import com.ibm.icu4jni.util.Resources;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -894,7 +894,7 @@ public class SimpleDateFormat extends DateFormat {
             // BEGIN android-changed
             case (TIMEZONE_FIELD + 1): // Z
                 dateFormatField = Field.TIME_ZONE;
-                appendTimeZone(buffer, count, false);
+                appendNumericTimeZone(buffer, false);
                 break;
             // END android-changed
         }
@@ -918,62 +918,65 @@ public class SimpleDateFormat extends DateFormat {
         }
     }
     
-    private void appendTimeZone(StringBuffer buffer, int count,
-            boolean generalTimezone) {
-        // cannot call TimeZone.getDisplayName() because it would not use
-        // the DateFormatSymbols of this SimpleDateFormat
-
-        if (generalTimezone) {
-            String id = calendar.getTimeZone().getID();
-            // BEGIN android-changed
-            String[][] zones = formatData.internalZoneStrings();
-            // END android-changed
-            String[] zone = null;
-            for (String[] element : zones) {
-                if (id.equals(element[0])) {
-                    zone = element;
-                    break;
-                }
+    /**
+     * Append a representation of the time zone of 'calendar' to 'buffer'.
+     * 
+     * @param count the number of z or Z characters in the format string; "zzz" would be 3,
+     * for example.
+     * @param generalTimeZone true if we should use a display name ("PDT") if available;
+     * false implies that we should use RFC 822 format ("-0800") instead. This corresponds to 'z'
+     * versus 'Z' in the format string.
+     */
+    private void appendTimeZone(StringBuffer buffer, int count, boolean generalTimeZone) {
+        // BEGIN android-changed: optimized.
+        if (generalTimeZone) {
+            TimeZone tz = calendar.getTimeZone();
+            boolean daylight = (calendar.get(Calendar.DST_OFFSET) != 0);
+            int style = count < 4 ? TimeZone.SHORT : TimeZone.LONG;
+            if (!formatData.customZoneStrings) {
+                buffer.append(tz.getDisplayName(daylight, style, formatData.locale));
+                return;
             }
-            if (zone == null) {
-                int offset = calendar.get(Calendar.ZONE_OFFSET)
-                        + calendar.get(Calendar.DST_OFFSET);
-                char sign = '+';
-                if (offset < 0) {
-                    sign = '-';
-                    offset = -offset;
-                }
-                buffer.append("GMT"); //$NON-NLS-1$
-                buffer.append(sign);
-                appendNumber(buffer, 2, offset / 3600000);
-                buffer.append(':');
-                appendNumber(buffer, 2, (offset % 3600000) / 60000);
-            } else {
-                int daylight = calendar.get(Calendar.DST_OFFSET) == 0 ? 0 : 2;
-                if (count < 4) {
-                    buffer.append(zone[2 + daylight]);
-                } else {
-                    buffer.append(zone[1 + daylight]);
-                }
+            // We can't call TimeZone.getDisplayName() because it would not use
+            // the custom DateFormatSymbols of this SimpleDateFormat.
+            String custom = Resources.lookupDisplayTimeZone(formatData.zoneStrings, tz.getID(), daylight, style);
+            if (custom != null) {
+                buffer.append(custom);
+                return;
             }
-        } else {
-            int offset = calendar.get(Calendar.ZONE_OFFSET)
-                    + calendar.get(Calendar.DST_OFFSET);
-            char sign = '+';
-            if (offset < 0) {
-                sign = '-';
-                offset = -offset;
-            }
-            buffer.append(sign);
-            appendNumber(buffer, 2, offset / 3600000);
-            appendNumber(buffer, 2, (offset % 3600000) / 60000);
         }
+        // We didn't find what we were looking for, so default to a numeric time zone.
+        appendNumericTimeZone(buffer, generalTimeZone);
+        // END android-changed
     }
+
+    // BEGIN android-added: factored out duplication.
+    /**
+     * @param generalTimeZone "GMT-08:00" rather than "-0800".
+     */
+    private void appendNumericTimeZone(StringBuffer buffer, boolean generalTimeZone) {
+        int offset = calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET);
+        char sign = '+';
+        if (offset < 0) {
+            sign = '-';
+            offset = -offset;
+        }
+        if (generalTimeZone) {
+            buffer.append("GMT");
+        }
+        buffer.append(sign);
+        appendNumber(buffer, 2, offset / 3600000);
+        if (generalTimeZone) {
+            buffer.append(':');
+        }
+        appendNumber(buffer, 2, (offset % 3600000) / 60000);
+    }
+    // END android-added
 
     private void appendNumber(StringBuffer buffer, int count, int value) {
         int minimumIntegerDigits = numberFormat.getMinimumIntegerDigits();
         numberFormat.setMinimumIntegerDigits(count);
-        numberFormat.format(new Integer(value), buffer, new FieldPosition(0));
+        numberFormat.format(Integer.valueOf(value), buffer, new FieldPosition(0));
         numberFormat.setMinimumIntegerDigits(minimumIntegerDigits);
     }
 
@@ -1296,7 +1299,7 @@ public class SimpleDateFormat extends DateFormat {
             return null;
         }
         position.setIndex(index);
-        return new Integer(result);
+        return Integer.valueOf(result);
     }
 
     private int parseNumber(int max, String string, int offset, int field,
