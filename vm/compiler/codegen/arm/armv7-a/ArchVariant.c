@@ -47,12 +47,12 @@ bool dvmCompilerArchVariantInit(void)
     /* Target-specific configuration */
     gDvmJit.jitTableSize = 1 << 12; // 4096
     gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
-    gDvmJit.threshold = 40;
+    gDvmJit.threshold = 200;
 
 #if defined(WITH_SELF_VERIFICATION)
     /* Force into blocking, translate everything mode */
     gDvmJit.blockingMode = true;
-    gDvmJit.threshold = 1;
+    gDvmJit.threshold = 5;
 #endif
 
     /* Codegen-specific assumptions */
