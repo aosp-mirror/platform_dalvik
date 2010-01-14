@@ -91,17 +91,6 @@ public class Resources {
         return result;
     }
 
-    // TODO: fix remaining caller and remove this.
-    public static ResourceBundle getInstance(String bundleName, String locale) {
-        if (locale == null) {
-            locale = Locale.getDefault().toString();
-        }
-        if (bundleName.startsWith("Currency")) {
-            return new CurrencyResourceBundle(locale);
-        }
-        throw new AssertionError("bundle="+bundleName+" locale="+locale);
-    }
-
     /**
      * Returns an array of ISO language names (two-letter codes), fetched either
      * from ICU's database or from our memory cache.
@@ -273,36 +262,6 @@ public class Resources {
             result[i] = array[i].clone();
         }
         return result;
-    }
-
-    // --- Specialized ResourceBundle subclasses ------------------------------
-
-    /**
-     * Internal ResourceBundle mimicking the Harmony "Currency_*" bundles. Keys
-     * are the three-letter ISO currency codes. Values are the printable
-     * currency names in terms of the specified locale. An example entry is
-     * "USD"->"$" (for inside the US) and "USD->"US$" (for outside the US).
-     */
-    private static final class CurrencyResourceBundle extends ResourceBundle {
-
-        private String locale;
-
-        public CurrencyResourceBundle(String locale) {
-            super();
-            this.locale = locale;
-        }
-
-        @Override
-        public Enumeration<String> getKeys() {
-            // Won't get used
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        protected Object handleGetObject(String key) {
-            return getCurrencySymbolNative(locale, key);
-        }
-
     }
 
     // --- Native methods accessing ICU's database ----------------------------

@@ -24,7 +24,6 @@ import java.security.PrivilegedAction;
 
 // BEGIN android-changed
 // import org.apache.harmony.kernel.vm.VM;
-import com.ibm.icu4jni.util.Resources;
 import dalvik.system.VMStack;
 // END android-changed
 import org.apache.harmony.luni.util.Msg;
@@ -355,25 +354,11 @@ public abstract class ResourceBundle {
         }
 
         try {
-            // BEGIN android-changed
-            /*
-             * Intercept loading of ResourceBundles that contain Harmony
-             * I18N data. Deliver our special, ICU-based bundles in this case.
-             * All other ResourceBundles use the ordinary mechanism, so user
-             * code behaves as it should.
-             */
-            if(bundleName.startsWith("org.apache.harmony.luni.internal.locale.")) {
-                String icuBundleName = bundleName.substring(40);
-                String icuLocale = (locale.length() > 0 ? locale.substring(1) : locale);
-                // we know that Resources will deliver an assignable class
-                bundle = Resources.getInstance(icuBundleName, icuLocale);
-            } else {
-                Class<?> bundleClass = Class.forName(bundleName, true, loader);
-                if (ResourceBundle.class.isAssignableFrom(bundleClass)) {
-                    bundle = (ResourceBundle) bundleClass.newInstance();
-                }
+            Class<?> bundleClass = Class.forName(bundleName, true, loader);
+            
+            if (ResourceBundle.class.isAssignableFrom(bundleClass)) {
+                bundle = (ResourceBundle) bundleClass.newInstance();
             }
-            // END android-changed
         } catch (LinkageError e) {
         } catch (Exception e) {
         }
