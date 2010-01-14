@@ -54,9 +54,8 @@ bool dvmCompilerArchVariantInit(void)
     gDvmJit.threshold = 200;
 
 #if defined(WITH_SELF_VERIFICATION)
-    /* Force into blocking, translate everything mode */
+    /* Force into blocking mode */
     gDvmJit.blockingMode = true;
-    gDvmJit.threshold = 1;
 #endif
 
     /* Codegen-specific assumptions */
