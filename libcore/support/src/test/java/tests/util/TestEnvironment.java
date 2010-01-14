@@ -18,7 +18,9 @@ package tests.util;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -57,8 +59,18 @@ public final class TestEnvironment {
     public static synchronized void reset() {
         resetSystemProperties();
         resetPreferences();
+        resetDefaultLocale();
+        resetDefaultTimeZone();
+        // TODO: SecurityManager?
+    }
 
-        // TODO: TimeZone?, SecurityManager?
+    private static void resetDefaultLocale() {
+        // This is hard-coded in resetSystemProperties, so no need to be clever here.
+        Locale.setDefault(Locale.US);
+    }
+
+    private static void resetDefaultTimeZone() {
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
     }
 
     private static void resetSystemProperties() {

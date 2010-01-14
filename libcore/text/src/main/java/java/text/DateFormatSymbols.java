@@ -79,7 +79,10 @@ public class DateFormatSymbols implements Serializable, Cloneable {
 
     String[] ampms, eras, months, shortMonths, shortWeekdays, weekdays;
 
+    // Localized display names.
     String[][] zoneStrings;
+    // Has the user called setZoneStrings?
+    transient boolean customZoneStrings;
 
     // BEGIN android-removed
     // transient private com.ibm.icu4jni.text.DateFormatSymbols icuSymbols;
@@ -474,5 +477,6 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      */
     public void setZoneStrings(String[][] data) {
         zoneStrings = Resources.clone2dStringArray(data);
+        customZoneStrings = true;
     }
 }

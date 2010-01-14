@@ -53,7 +53,7 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
         "Aug", "Sep", "Oct", "Nov", "Dec"};  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
     /**
-     * Initializes this {@code Date} instance to the current date and time.
+     * Initializes this {@code Date} instance to the current time.
      */
     public Date() {
         this(System.currentTimeMillis());
@@ -675,6 +675,7 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
      */
     @Deprecated
     public String toGMTString() {
+        // TODO: why does this insert the year manually instead of using one SimpleDateFormat?
         SimpleDateFormat format1 = new SimpleDateFormat("d MMM ", Locale.US); //$NON-NLS-1$
         SimpleDateFormat format2 = new SimpleDateFormat(
                 " HH:mm:ss 'GMT'", Locale.US); //$NON-NLS-1$
@@ -700,18 +701,29 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the string representation of this {@code Date} in the format: Tue Jun 22
-     * 13:07:00 GMT 1999
+     * Returns a string representation of this {@code Date}.
+     * The formatting is equivalent to using a {@code SimpleDateFormat} with
+     * the format string "EEE MMM dd HH:mm:ss zzz yyyy", which looks something
+     * like "Tue Jun 22 13:07:00 PDT 1999". The current default time zone and
+     * locale are used. If you need control over the time zone or locale,
+     * use {@code SimpleDateFormat} instead.
      *
      * @return the string representation of this {@code Date}.
      */
     @Override
     public String toString() {
+        // BEGIN android-changed: fixed to use time zone display names ("PST")
+        // rather than ids ("America/Los_Angeles").
+        // Equivalent to the following one-liner, though that's currently 8x slower
+        // at 1655us versus 195us...
+        //   return new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy").format(d);
         Calendar cal = new GregorianCalendar(milliseconds);
+        TimeZone tz = cal.getTimeZone();
         return dayOfWeekNames[cal.get(Calendar.DAY_OF_WEEK) - 1] + " " + monthNames[cal.get(Calendar.MONTH)]//$NON-NLS-1$
                 + " " + toTwoDigits(cal.get(Calendar.DAY_OF_MONTH)) + " " + toTwoDigits(cal.get(Calendar.HOUR_OF_DAY))//$NON-NLS-1$ //$NON-NLS-2$
                 + ":" + toTwoDigits(cal.get(Calendar.MINUTE)) + ":" + toTwoDigits(cal.get(Calendar.SECOND))//$NON-NLS-1$ //$NON-NLS-2$
-                + " " + cal.getTimeZone().getID() + " " + cal.get(Calendar.YEAR);//$NON-NLS-1$ //$NON-NLS-2$
+                + " " + tz.getDisplayName(tz.inDaylightTime(this), TimeZone.SHORT) + " " + cal.get(Calendar.YEAR);//$NON-NLS-1$ //$NON-NLS-2$
+        // END android-changed
     }
 
     private String toTwoDigits(int n) {
