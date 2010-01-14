@@ -1048,12 +1048,15 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
             secondOp = kOpXor;
             break;
         case OP_NEG_LONG: {
+            //TUNING: can improve this using Thumb2 code
+            int tReg = allocTemp(cUnit);
             rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
             rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
-            loadConstantValue(cUnit, rlResult.highReg, 0);
+            loadConstantValue(cUnit, tReg, 0);
             opRegRegReg(cUnit, kOpSub, rlResult.lowReg,
-                        rlResult.highReg, rlSrc2.lowReg);
-            opRegReg(cUnit, kOpSbc, rlResult.highReg, rlSrc2.highReg);
+                        tReg, rlSrc2.lowReg);
+            opRegReg(cUnit, kOpSbc, tReg, rlSrc2.highReg);
+            genRegCopy(cUnit, rlResult.highReg, tReg);
             storeValueWide(cUnit, rlDest, rlResult);
             return false;
         }
