@@ -20,141 +20,29 @@ import java.lang.Character.UnicodeBlock;
 
 public class UCharacter {
 
-    public static int digit(int codePoint, int radix) {
-        return digitImpl(codePoint, radix);
-    }
+    public static native boolean isDefined(int codePoint);
+    public static native boolean isDigit(int codePoint);
+    public static native boolean isIdentifierIgnorable(int codePoint);
+    public static native boolean isLetter(int codePoint);
+    public static native boolean isLetterOrDigit(int codePoint);
+    public static native boolean isLowerCase(int codePoint);
+    public static native boolean isMirrored(int codePoint);
+    public static native boolean isSpaceChar(int codePoint);
+    public static native boolean isTitleCase(int codePoint);
+    public static native boolean isUnicodeIdentifierPart(int codePoint);
+    public static native boolean isUnicodeIdentifierStart(int codePoint);
+    public static native boolean isUpperCase(int codePoint);
+    public static native boolean isWhitespace(int codePoint);
+    public static native byte getDirectionality(int codePoint);
+    public static native int digit(int codePoint, int radix);
+    public static native int forName(String blockName);
+    public static native int getNumericValue(int codePoint);
+    public static native int getType(int codePoint);
+    public static native int of(int codePoint);
+    public static native int toLowerCase(int codePoint);
+    public static native int toTitleCase(int codePoint);
+    public static native int toUpperCase(int codePoint);
 
-    private static native int digitImpl(int codePoint, int radix);
-
-    public static int getType(int codePoint) {
-        return getTypeImpl(codePoint);
-    }
-
-    private static native int getTypeImpl(int codePoint);
-    
-    public static byte getDirectionality(int codePoint) {
-        return getDirectionalityImpl(codePoint);
-    }
-
-    private static native byte getDirectionalityImpl(int codePoint);
-    
-    public static boolean isMirrored(int codePoint) {
-        return isMirroredImpl(codePoint);
-    }
-
-    private static native boolean isMirroredImpl(int codePoint);
-    
-    public static int getNumericValue(int codePoint) {
-        return getNumericValueImpl(codePoint);
-    }
-
-    private static native int getNumericValueImpl(int codePoint);
-    
-    public static boolean isDefined(int codePoint) {
-        return isDefinedValueImpl(codePoint);
-    }
-
-    private static native boolean isDefinedValueImpl(int codePoint);
-
-    public static boolean isDigit(int codePoint) {
-        return isDigitImpl(codePoint);
-    }
-
-    private static native boolean isDigitImpl(int codePoint);
-
-    public static boolean isIdentifierIgnorable(int codePoint) {
-        return isIdentifierIgnorableImpl(codePoint);
-    }
-
-    private static native boolean isIdentifierIgnorableImpl(int codePoint);
-
-    public static boolean isLetter(int codePoint) {
-        return isLetterImpl(codePoint);
-    }
-
-    private static native boolean isLetterImpl(int codePoint);
-
-    public static boolean isLetterOrDigit(int codePoint) {
-        return isLetterOrDigitImpl(codePoint);
-    }
-
-    private static native boolean isLetterOrDigitImpl(int codePoint);
-
-    public static boolean isSpaceChar(int codePoint) {
-        return isSpaceCharImpl(codePoint);
-    }
-
-    private static native boolean isSpaceCharImpl(int codePoint);
-
-    public static boolean isTitleCase(int codePoint) {
-        return isTitleCaseImpl(codePoint);
-    }
-
-    private static native boolean isTitleCaseImpl(int codePoint);
-
-    public static boolean isUnicodeIdentifierPart(int codePoint) {
-        return isUnicodeIdentifierPartImpl(codePoint);
-    }
-
-    private static native boolean isUnicodeIdentifierPartImpl(int codePoint);
-
-    public static boolean isUnicodeIdentifierStart(int codePoint) {
-        return isUnicodeIdentifierStartImpl(codePoint);
-    }
-
-    private static native boolean isUnicodeIdentifierStartImpl(int codePoint);
-
-    public static boolean isWhitespace(int codePoint) {
-        return isWhitespaceImpl(codePoint);
-    }
-
-    private static native boolean isWhitespaceImpl(int codePoint);
-
-    public static int toLowerCase(int codePoint) {
-        return toLowerCaseImpl(codePoint);
-    }
-
-    private static native int toLowerCaseImpl(int codePoint);
-
-    public static int toTitleCase(int codePoint) {
-        return toTitleCaseImpl(codePoint);
-    }
-
-    private static native int toTitleCaseImpl(int codePoint);
-
-    public static int toUpperCase(int codePoint) {
-        return toUpperCaseImpl(codePoint);
-    }
-
-    private static native int toUpperCaseImpl(int codePoint);
-
-    public static boolean isUpperCase(int codePoint) {
-        return isUpperCaseImpl(codePoint);
-    }
-
-    private static native boolean isUpperCaseImpl(int codePoint);
-
-    public static boolean isLowerCase(int codePoint) {
-        return isLowerCaseImpl(codePoint);
-    }
-
-    private static native boolean isLowerCaseImpl(int codePoint);
-
-    public static int forName(String blockName) {
-        if (blockName == null) {
-            throw new NullPointerException();
-        }
-        return forname(blockName);
-    }
-
-    private static native int forname(String blockName);
-
-    public static int of(int codePoint) {
-        return codeblock(codePoint);
-    }
-
-    private static native int codeblock(int codePoint);
-    
     public static UnicodeBlock[] getBlockTable() {
         /**
          * The indices of the entries of this table correspond with the value

@@ -1,25 +1,23 @@
 /*
- * Copyright 2006 The Android Open Source Project 
- *
- * Internal native functions.  All of the functions defined here make
- * direct use of VM functions or data structures, so they can't be written
- * with JNI and shouldn't really be in a shared library.
- *
- * All functions here either complete quickly or are used to enter a wait
- * state, so we don't set the thread status to THREAD_NATIVE when executing
- * these methods.  This means that the GC will wait for these functions
- * to finish.  DO NOT perform long operations or blocking I/O in here.
- *
- * In some cases we're following the division of labor defined by GNU
- * ClassPath, e.g. java.lang.Thread has "Thread" and "VMThread", with
- * the VM-specific behavior isolated in VMThread.
+ * Copyright (C) 2006 The Android Open Source Project
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "unicode/uchar.h"
 #include <stdlib.h>
-#include <math.h>
 
 static jint digitImpl(JNIEnv *env, jclass clazz, jint codePoint, jint radix) {
     return u_digit(codePoint, radix);
@@ -69,7 +67,7 @@ static jint getNumericValueImpl(JNIEnv *env, jclass clazz, jint codePoint){
     return result;
 } 
     
-static jboolean isDefinedValueImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isDefinedImpl(JNIEnv *env, jclass clazz, jint codePoint) {
     return u_isdefined(codePoint);
 } 
 
@@ -144,14 +142,18 @@ static jboolean isLowerCaseImpl(JNIEnv *env, jclass clazz, jint codePoint) {
     return u_islower(codePoint);
 } 
 
-static int forName(JNIEnv *env, jclass clazz, jstring blockName) {
-    const char *bName = (*env)->GetStringUTFChars(env, blockName, NULL);
-    int result =  u_getPropertyValueEnum(UCHAR_BLOCK, bName);
+static int forNameImpl(JNIEnv *env, jclass clazz, jstring blockName) {
+    if (blockName == NULL) {
+        jniThrowException(env, "java/lang/NullPointerException", NULL);
+        return -1;
+    }
+    const char* bName = (*env)->GetStringUTFChars(env, blockName, NULL);
+    int result = u_getPropertyValueEnum(UCHAR_BLOCK, bName);
     (*env)->ReleaseStringUTFChars(env, blockName, bName);
     return result;
 }
 
-static int codeBlock(JNIEnv *env, jclass clazz, jint codePoint) {
+static int ofImpl(JNIEnv *env, jclass clazz, jint codePoint) {
     return ublock_getCode(codePoint);
 }
 
@@ -160,35 +162,31 @@ static int codeBlock(JNIEnv *env, jclass clazz, jint codePoint) {
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "digitImpl", "(II)I", (void*) digitImpl },
-    { "getTypeImpl", "(I)I", (void*) getTypeImpl },
-    { "getDirectionalityImpl", "(I)B", (void*) getDirectionalityImpl },
-    { "isMirroredImpl", "(I)Z", (void*) isMirroredImpl },
-    { "getNumericValueImpl", "(I)I", (void*) getNumericValueImpl },
-    { "isDefinedValueImpl", "(I)Z", (void*) isDefinedValueImpl },
-    { "isDigitImpl", "(I)Z", (void*) isDigitImpl },
-    { "isIdentifierIgnorableImpl", "(I)Z", (void*) isIdentifierIgnorableImpl },
-    { "isLetterImpl", "(I)Z", (void*) isLetterImpl },
-    { "isLetterOrDigitImpl", "(I)Z", (void*) isLetterOrDigitImpl },
-    { "isSpaceCharImpl", "(I)Z", (void*) isSpaceCharImpl },
-    { "isTitleCaseImpl", "(I)Z", (void*) isTitleCaseImpl },
-    { "isUnicodeIdentifierPartImpl", "(I)Z",
-            (void*) isUnicodeIdentifierPartImpl },
-    { "isUnicodeIdentifierStartImpl", "(I)Z",
-            (void*) isUnicodeIdentifierStartImpl },
-    { "isWhitespaceImpl", "(I)Z", (void*) isWhitespaceImpl },
-    { "toLowerCaseImpl", "(I)I", (void*) toLowerCaseImpl },
-    { "toTitleCaseImpl", "(I)I", (void*) toTitleCaseImpl },
-    { "toUpperCaseImpl", "(I)I", (void*) toUpperCaseImpl },
-    { "isUpperCaseImpl", "(I)Z", (void*) isUpperCaseImpl },
-    { "isLowerCaseImpl", "(I)Z", (void*) isLowerCaseImpl },
-    { "forname", "(Ljava/lang/String;)I", (void*) forName },
-    { "codeblock", "(I)I", (void*) codeBlock }
+    { "digit", "(II)I", (void*) digitImpl },
+    { "forName", "(Ljava/lang/String;)I", (void*) forNameImpl },
+    { "getDirectionality", "(I)B", (void*) getDirectionalityImpl },
+    { "getNumericValue", "(I)I", (void*) getNumericValueImpl },
+    { "getType", "(I)I", (void*) getTypeImpl },
+    { "isDefined", "(I)Z", (void*) isDefinedImpl },
+    { "isDigit", "(I)Z", (void*) isDigitImpl },
+    { "isIdentifierIgnorable", "(I)Z", (void*) isIdentifierIgnorableImpl },
+    { "isLetter", "(I)Z", (void*) isLetterImpl },
+    { "isLetterOrDigit", "(I)Z", (void*) isLetterOrDigitImpl },
+    { "isLowerCase", "(I)Z", (void*) isLowerCaseImpl },
+    { "isMirrored", "(I)Z", (void*) isMirroredImpl },
+    { "isSpaceChar", "(I)Z", (void*) isSpaceCharImpl },
+    { "isTitleCase", "(I)Z", (void*) isTitleCaseImpl },
+    { "isUnicodeIdentifierPart", "(I)Z", (void*) isUnicodeIdentifierPartImpl },
+    { "isUnicodeIdentifierStart", "(I)Z", (void*) isUnicodeIdentifierStartImpl },
+    { "isUpperCase", "(I)Z", (void*) isUpperCaseImpl },
+    { "isWhitespace", "(I)Z", (void*) isWhitespaceImpl },
+    { "of", "(I)I", (void*) ofImpl },
+    { "toLowerCase", "(I)I", (void*) toLowerCaseImpl },
+    { "toTitleCase", "(I)I", (void*) toTitleCaseImpl },
+    { "toUpperCase", "(I)I", (void*) toUpperCaseImpl },
 }; 
 
 int register_com_ibm_icu4jni_lang_UCharacter(JNIEnv *env) {
     return jniRegisterNativeMethods(env, "com/ibm/icu4jni/lang/UCharacter",
                 gMethods, NELEM(gMethods));
 }
-
-
