@@ -30,5 +30,7 @@ public class FormatterTest extends junit.framework.TestCase {
 
     public void test_formatNull() throws Exception {
         assertEquals("null", String.format(Locale.US, "%s", null));
+        assertEquals("null", String.format(Locale.US, "%d", null));
+        assertEquals("%", String.format(Locale.US, "%%"));
     }
 }
