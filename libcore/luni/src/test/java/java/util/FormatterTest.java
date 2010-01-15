@@ -27,4 +27,8 @@ public class FormatterTest extends junit.framework.TestCase {
         // In Turkish-language locales, there's a dotted capital "i".
         assertEquals("JAKOB ARJOUN\u0130", String.format(new Locale("tr", "TR"), "%S", "jakob arjouni"));
     }
+
+    public void test_formatNull() throws Exception {
+        assertEquals("null", String.format(Locale.US, "%s", null));
+    }
 }

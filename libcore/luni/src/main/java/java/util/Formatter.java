@@ -1213,6 +1213,9 @@ public final class Formatter implements Closeable, Flushable {
             // avoid the heavyweight machinery needed to cope with flags, width,
             // and precision.
             if (token.isDefault()) {
+                if (arg == null) {
+                    return "null"; //$NON-NLS-1$
+                }
                 switch (token.getConversionType()) {
                 case 's':
                     if (!(arg instanceof Formattable)) {
