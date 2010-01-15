@@ -1126,7 +1126,9 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
  *   |  .                            .
  *   |  |                            |
  *   |  +----------------------------+
- *   +->| Chaining cell counts       |  -> 4 bytes, chain cell counts by type
+ *   |  | Gap for large switch stmt  |  -> # cases >= MAX_CHAINED_SWITCH_CASES
+ *   |  +----------------------------+
+ *   +->| Chaining cell counts       |  -> 8 bytes, chain cell counts by type
  *      +----------------------------+
  *      | Trace description          |  -> variable sized
  *      .                            .
@@ -1150,6 +1152,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     int i;
     ChainCellCounts chainCellCounts;
     int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
+    int chainingCellGap;
 
     info->instructionSet = cUnit->instructionSet;
 
@@ -1174,6 +1177,13 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 
     /* Const values have to be word aligned */
     offset = (offset + 3) & ~3;
+
+    /*
+     * Get the gap (# of u4) between the offset of chaining cell count and
+     * the bottom of real chaining cells. If the translation has chaining
+     * cells, the gap is guaranteed to be multiples of 4.
+     */
+    chainingCellGap = (offset - cUnit->chainingCellBottom->offset) >> 2;
 
     /* Add space for chain cell counts & trace description */
     u4 chainCellOffset = offset;
@@ -1243,9 +1253,13 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     gDvmJit.numCompilations++;
 
     /* Install the chaining cell counts */
-    for (i=0; i< kChainingCellLast; i++) {
+    for (i=0; i< kChainingCellGap; i++) {
         chainCellCounts.u.count[i] = cUnit->numChainingCells[i];
     }
+
+    /* Set the gap number in the chaining cell count structure */
+    chainCellCounts.u.count[kChainingCellGap] = chainingCellGap;
+
     memcpy((char*)cUnit->baseAddr + chainCellOffset, &chainCellCounts,
            sizeof(chainCellCounts));
 
@@ -1491,7 +1505,7 @@ u4* dvmJitUnchain(void* codeAddr)
     PredictedChainingCell *predChainCell;
 
     /* Get total count of chain cells */
-    for (i = 0, cellSize = 0; i < kChainingCellLast; i++) {
+    for (i = 0, cellSize = 0; i < kChainingCellGap; i++) {
         if (i != kChainingCellInvokePredicted) {
             cellSize += pChainCellCounts->u.count[i] * 2;
         } else {
@@ -1499,11 +1513,15 @@ u4* dvmJitUnchain(void* codeAddr)
         }
     }
 
+    if (cellSize == 0)
+        return (u4 *) pChainCellCounts;
+
     /* Locate the beginning of the chain cell region */
-    pStart = pChainCells = ((u4 *) pChainCellCounts) - cellSize;
+    pStart = pChainCells = ((u4 *) pChainCellCounts) - cellSize -
+             pChainCellCounts->u.count[kChainingCellGap];
 
     /* The cells are sorted in order - walk through them and reset */
-    for (i = 0; i < kChainingCellLast; i++) {
+    for (i = 0; i < kChainingCellGap; i++) {
         int elemSize = 2; /* Most chaining cell has two words */
         if (i == kChainingCellInvokePredicted) {
             elemSize = 4;

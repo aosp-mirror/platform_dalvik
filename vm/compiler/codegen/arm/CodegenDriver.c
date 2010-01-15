@@ -3703,13 +3703,13 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
     /* Used to hold the labels of each block */
     ArmLIR *labelList =
         dvmCompilerNew(sizeof(ArmLIR) * cUnit->numBlocks, true);
-    GrowableList chainingListByType[kChainingCellLast];
+    GrowableList chainingListByType[kChainingCellGap];
     int i;
 
     /*
      * Initialize various types chaining lists.
      */
-    for (i = 0; i < kChainingCellLast; i++) {
+    for (i = 0; i < kChainingCellGap; i++) {
         dvmInitGrowableList(&chainingListByType[i], 2);
     }
 
@@ -3756,7 +3756,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
         labelList[i].operands[0] = blockList[i]->startOffset;
 
-        if (blockList[i]->blockType >= kChainingCellLast) {
+        if (blockList[i]->blockType >= kChainingCellGap) {
             /*
              * Append the label pseudo LIR first. Chaining cells will be handled
              * separately afterwards.
@@ -4023,7 +4023,7 @@ gen_fallthrough:
     }
 
     /* Handle the chaining cells in predefined order */
-    for (i = 0; i < kChainingCellLast; i++) {
+    for (i = 0; i < kChainingCellGap; i++) {
         size_t j;
         int *blockIdList = (int *) chainingListByType[i].elemList;
 
@@ -4075,6 +4075,9 @@ gen_fallthrough:
             }
         }
     }
+
+    /* Mark the bottom of chaining cells */
+    cUnit->chainingCellBottom = (LIR *) newLIR0(cUnit, kArmChainingCellBottom);
 
     /*
      * Generate the branch to the dvmJitToInterpNoChain entry point at the end
