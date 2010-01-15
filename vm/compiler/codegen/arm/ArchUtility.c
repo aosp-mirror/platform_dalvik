@@ -244,6 +244,9 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
 
     /* Handle pseudo-ops individually, and all regular insns as a group */
     switch(lir->opCode) {
+        case kArmChainingCellBottom:
+            LOGD("-------- end of chaining cells (0x%04x)\n", offset);
+            break;
         case kArmPseudoBarrier:
             LOGD("-------- BARRIER");
             break;

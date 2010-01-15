@@ -51,7 +51,9 @@ typedef enum BBType {
     kChainingCellInvokeSingleton,
     kChainingCellInvokePredicted,
     kChainingCellBackwardBranch,
-    kChainingCellLast,
+    kChainingCellGap,
+    /* Don't insert new fields between Gap and Last */
+    kChainingCellLast = kChainingCellGap + 1,
     kEntryBlock,
     kDalvikByteCode,
     kExitBlock,
@@ -61,7 +63,7 @@ typedef enum BBType {
 
 typedef struct ChainCellCounts {
     union {
-        u1 count[kChainingCellLast];
+        u1 count[kChainingCellLast]; /* include one more space for the gap # */
         u4 dummyForAlignment;
     } u;
 } ChainCellCounts;
@@ -149,8 +151,9 @@ typedef struct CompilationUnit {
     bool halveInstCount;
     bool executionCount;                // Add code to count trace executions
     bool hasLoop;
-    int numChainingCells[kChainingCellLast];
-    LIR *firstChainingLIR[kChainingCellLast];
+    int numChainingCells[kChainingCellGap];
+    LIR *firstChainingLIR[kChainingCellGap];
+    LIR *chainingCellBottom;
     struct RegisterPool *regPool;
     int optRound;                       // round number to tell an LIR's age
     JitInstructionSetType instructionSet;
