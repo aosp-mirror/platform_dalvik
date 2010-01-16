@@ -64,9 +64,7 @@ static inline void logIpString(struct addrinfo* ai, const char* name)
 }
 #endif
 
-static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name, 
-                                         jboolean preferIPv4Stack)
-{
+static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
     struct addrinfo hints, *addressList = NULL, *addrInfo;
     jobjectArray addressArray = NULL;
 
@@ -95,7 +93,7 @@ static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name,
         addressArray = env->NewObjectArray(addressCount, byteArrayClass, NULL);
         if (addressArray == NULL) {
             // Appropriate exception will be thrown.
-            LOGE("getAllByNameUsingDns: could not allocate output array");
+            LOGE("getaddrinfo: could not allocate array of size %i", addressCount);
             freeaddrinfo(addrInfo);
             return NULL;
         }
@@ -123,7 +121,7 @@ static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name,
                     break;
                 default:
                     // Unknown address family. Skip this address.
-                    LOGE("getAllByNameUsingDns: Unknown address family %d",
+                    LOGE("getaddrinfo: Unknown address family %d",
                          addrInfo->ai_family);
                     continue;
             }
@@ -132,7 +130,7 @@ static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name,
             jbyteArray bytearray = env->NewByteArray(addressLength);
             if (bytearray == NULL) {
                 // Out of memory error will be thrown on return.
-                LOGE("getAllByNameUsingDns: Can't allocate %d-byte array",
+                LOGE("getaddrinfo: Can't allocate %d-byte array",
                      addressLength);
                 addressArray = NULL;
                 break;
@@ -160,17 +158,13 @@ static jobjectArray getAllByNameUsingDns(JNIEnv* env, const char* name,
     return addressArray;
 }
 
-jobjectArray InetAddress_getallbyname(JNIEnv* env, jobject obj,
-                                      jstring javaName,
-                                      jboolean preferIPv4Stack)
-{
+jobjectArray InetAddress_getaddrinfo(JNIEnv* env, jobject obj, jstring javaName) {
     if (javaName == NULL) {
         jniThrowException(env, "java/lang/NullPointerException", NULL);
         return NULL;
     }
-
     const char* name = env->GetStringUTFChars(javaName, NULL);
-    jobjectArray out = getAllByNameUsingDns(env, name, preferIPv4Stack);
+    jobjectArray out = InetAddress_getaddrinfoImpl(env, name);
     env->ReleaseStringUTFChars(javaName, name);
     return out;
 }
@@ -184,7 +178,7 @@ jobjectArray InetAddress_getallbyname(JNIEnv* env, jobject obj,
  * @return the hostname.
  * @throws UnknownHostException: the IP address has no associated hostname.
  */
-static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
+static jstring InetAddress_getnameinfo(JNIEnv* env, jobject obj,
                                          jbyteArray javaAddress)
 {
     if (javaAddress == NULL) {
@@ -233,16 +227,12 @@ static jstring InetAddress_gethostbyaddr(JNIEnv* env, jobject obj,
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "gethostbyaddr",    "([B)Ljava/lang/String;",
-      (void*) InetAddress_gethostbyaddr },
-    { "getallbyname",     "(Ljava/lang/String;Z)[[B",
-      (void*) InetAddress_getallbyname },
-    { "gethostname",      "()Ljava/lang/String;",
-      (void*) InetAddress_gethostname  },
+    { "getaddrinfo", "(Ljava/lang/String;)[[B", (void*) InetAddress_getaddrinfo },
+    { "gethostname", "()Ljava/lang/String;", (void*) InetAddress_gethostname  },
+    { "getnameinfo", "([B)Ljava/lang/String;", (void*) InetAddress_getnameinfo },
 };
 
-extern "C" int register_java_net_InetAddress(JNIEnv* env)
-{
+extern "C" int register_java_net_InetAddress(JNIEnv* env) {
     jclass tempClass = env->FindClass("[B");
     if (tempClass) {
         byteArrayClass = (jclass) env->NewGlobalRef(tempClass);

@@ -39,25 +39,38 @@ import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * The Internet Protocol (IP) address representation class. This class
- * encapsulates an IP address and provides name and reverse name resolution
- * functions. The address is stored in network order, but as a signed (rather
- * than unsigned) integer.
+ * An Internet Protocol (IP) address. This can be either an IPv4 address or an IPv6 address, and
+ * in practice you'll have an instance of either {@code Inet4Address} or {@code Inet6Address} (this
+ * class cannot be instantiated directly). Most code does not need to distinguish between the two
+ * families, and should use {@code InetAddress}.
+ * <p>
+ * An {@code InetAddress} may have a hostname (accessible via {@code getHostName}), but may not,
+ * depending on how the {@code InetAddress} was created.
+ * <p>
+ * On Android, addresses are cached for 600 seconds (10 minutes) by default. Failed lookups are
+ * cached for 10 seconds. The underlying C library or OS may cache for longer, but you can control
+ * the Java-level caching with the usual {@code "networkaddress.cache.ttl"} and
+ * {@code "networkaddress.cache.negative.ttl"} system properties. These are parsed as integer
+ * numbers of seconds, where the special value 0 means "don't cache" and -1 means "cache forever".
+ * <p>
+ * Note also that on Android &ndash; unlike the RI &ndash; the cache is not unbounded. The current
+ * implementation caches around 512 entries, removed on a least-recently-used basis.
+ * (Obviously, you should not rely on these details.)
+ * 
+ * @see Inet4Address
+ * @see Inet6Address
  */
-public class InetAddress extends Object implements Serializable {
+public class InetAddress implements Serializable {
+    // BEGIN android-added: better DNS caching.
+    // Our Java-side DNS cache.
+    private static final AddressCache addressCache = new AddressCache();
+    // END android-added
 
     private final static INetworkSystem NETIMPL = Platform.getNetworkSystem();
 
     private static final String ERRMSG_CONNECTION_REFUSED = "Connection refused"; //$NON-NLS-1$
 
     private static final long serialVersionUID = 3286316764910316507L;
-
-    // BEGIN android-added
-    /**
-     * default time-to-live for DNS cache entries; 600 seconds == 10 minutes
-     */
-    private static final String DEFAULT_NETADDR_CACHE_TTL_SECS = "600";
-    // END android-added
 
     String hostName;
 
@@ -410,7 +423,7 @@ public class InetAddress extends Object implements Serializable {
      *             if the address lookup fails.
      */
     public static InetAddress getLocalHost() throws UnknownHostException {
-        String host = getHostNameImpl();
+        String host = gethostname();
         SecurityManager security = System.getSecurityManager();
         try {
             if (security != null) {
@@ -421,6 +434,7 @@ public class InetAddress extends Object implements Serializable {
         }
         return lookupHostByName(host)[0];
     }
+    private static native String gethostname();
 
     /**
      * Gets the hashcode of the represented IP address.
@@ -447,95 +461,41 @@ public class InetAddress extends Object implements Serializable {
     }
     // END android-changed
 
-
     /**
-     * Resolves a hostname to its IP addresses using a cache for faster lookups.
+     * Resolves a hostname to its IP addresses using a cache.
      *
      * @param host the hostname to resolve.
      * @return the IP addresses of the host.
      */
-    static synchronized InetAddress[] lookupHostByName(String host)
-            throws UnknownHostException {
-        int ttl = -1;
-
-        // BEGIN android-changed
-        String ttlValue = AccessController
-                .doPrivileged(new PriviAction<String>(
-                        "networkaddress.cache.ttl", DEFAULT_NETADDR_CACHE_TTL_SECS)); //$NON-NLS-1$
-        // END android-changed
+    // BEGIN android-changed
+    private static InetAddress[] lookupHostByName(String host) throws UnknownHostException {
+        // Do we have a result cached?
+        InetAddress[] cachedResult = addressCache.get(host);
+        if (cachedResult != null) {
+            if (cachedResult.length > 0) {
+                // A cached positive result.
+                return cachedResult;
+            } else {
+                // A cached negative result.
+                throw new UnknownHostException(host);
+            }
+        }
         try {
-            if (ttlValue != null) {
-                ttl = Integer.decode(ttlValue).intValue();
-            }
-        } catch (NumberFormatException e) {
-            // Ignored
-        }
-        CacheElement element = null;
-        // BEGIN android-changed
-        if (ttl == 0) {
-            Cache.clear();
-        } else {
-            element = Cache.get(host);
-            if (element != null && ttl > 0) {
-                long delta = System.nanoTime() - element.nanoTimeAdded;
-                if (delta > secondsToNanos(ttl)) {
-                    element = null;
-                }
-            }
-        }
-        if (element != null) {
-            return element.addresses();
-        }
-        // END android-changed
-
-        // TODO Clean up NegativeCache; there's no need to maintain the failure message
-
-        // now try the negative cache
-        String failedMessage = NegativeCache.getFailedMessage(host);
-        if (failedMessage != null) {
+            InetAddress[] addresses = bytesToInetAddresses(getaddrinfo(host), host);
+            addressCache.put(host, addresses);
+            return addresses;
+        } catch (UnknownHostException e) {
+            addressCache.putUnknownHost(host);
             throw new UnknownHostException(host);
         }
-
-        // BEGIN android-changed
-        // TODO: Avoid doing I/O from a static synchronized lock.
-        byte[][] rawAddresses;
-        try {
-            rawAddresses = getallbyname(host, Socket.preferIPv4Stack());
-        } catch (UnknownHostException e) {
-            // put the entry in the negative cache
-            NegativeCache.put(host, e.getMessage());
-            // use host for message to match RI, save the cause for giggles
-            throw (UnknownHostException)new UnknownHostException(host).initCause(e);
-        }
-
-        InetAddress[] addresses = bytesToInetAddresses(rawAddresses, host);
-
-        Cache.add(host, addresses);
-        return addresses;
-        // END android-changed
     }
-
-    // BEGIN android-added
-    /**
-     * Multiplies value by 1 billion.
-     */
-    private static long secondsToNanos(int ttl) {
-        return (long) ttl * 1000000000;
-    }
-    // END android-added
+    private static native byte[][] getaddrinfo(String name) throws UnknownHostException;
+    // END android-changed
 
     // BEGIN android-deleted
     // static native InetAddress[] getAliasesByNameImpl(String name)
     //     throws UnknownHostException;
     // END android-deleted
-
-    // BEGIN android-added
-    /**
-     * Resolves a host name to its IP addresses. Thread safe.
-     */
-    private static native byte[][] getallbyname(String name,
-            boolean preferIPv4Stack) throws UnknownHostException;
-    // END android-added
 
     /**
      * Query the IP stack for the host address. The host is in address form.
@@ -551,9 +511,9 @@ public class InetAddress extends Object implements Serializable {
     static InetAddress getHostByAddrImpl(byte[] addr)
             throws UnknownHostException {
         if (addr.length == 4) {
-            return new Inet4Address(addr, gethostbyaddr(addr));
+            return new Inet4Address(addr, getnameinfo(addr));
         } else if (addr.length == 16) {
-            return new Inet6Address(addr, gethostbyaddr(addr));
+            return new Inet6Address(addr, getnameinfo(addr));
         } else {
             throw new UnknownHostException(Msg.getString(
                     "K0339")); //$NON-NLS-1$
@@ -563,7 +523,7 @@ public class InetAddress extends Object implements Serializable {
     /**
      * Resolves an IP address to a hostname. Thread safe.
      */
-    private static native String gethostbyaddr(byte[] addr);
+    private static native String getnameinfo(byte[] addr);
     // END android-changed
 
     // BEGIN android-removed
@@ -604,20 +564,6 @@ public class InetAddress extends Object implements Serializable {
     //         boolean preferIPv6Address) throws UnknownHostException;
     // END android-removed
 
-    /**
-     * Gets the host name of the system.
-     *
-     * @return String the system hostname
-     */
-    // BEGIN android-changed
-    static String getHostNameImpl() {
-        // TODO Mapped Harmony to Android native. Get rid of indirection later.
-
-        return gethostname();
-    }
-    static native String gethostname();
-    // END android-changed
-
     static String getHostNameInternal(String host, boolean isCheck) throws UnknownHostException {
         if (host == null || 0 == host.length()) {
             return Inet4Address.LOOPBACK.getHostAddress();
@@ -643,98 +589,6 @@ public class InetAddress extends Object implements Serializable {
     @Override
     public String toString() {
         return (hostName == null ? "" : hostName) + "/" + getHostAddress(); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    // BEGIN android-changed
-    // Partly copied from a newer version of harmony
-    static class CacheElement {
-        final long nanoTimeAdded = System.nanoTime();
-
-        CacheElement next;
-        final String hostName;
-        final InetAddress[] addresses;
-
-        CacheElement(String hostName, InetAddress[] addresses) {
-            this.addresses = addresses;
-            this.hostName = hostName;
-        }
-
-        String hostName() {
-            return hostName;
-        }
-
-        InetAddress[] addresses() {
-            return addresses;
-        }
-        // END android-changed
-    }
-
-    static class Cache {
-        private static int maxSize = 5;
-
-        private static int size = 0;
-
-        private static CacheElement head;
-
-        static synchronized void clear() {
-            size = 0;
-            head = null;
-        }
-
-        static synchronized void add(String hostName, InetAddress[] addresses) {
-            CacheElement newElement = new CacheElement(hostName, addresses);
-            if (size < maxSize) {
-                size++;
-            } else {
-                deleteTail();
-            }
-            newElement.next = head; // If the head is null, this does no harm.
-            head = newElement;
-        }
-
-        static synchronized CacheElement get(String name) {
-            CacheElement previous = null;
-            CacheElement current = head;
-            boolean notFound = true;
-            while ((null != current)
-                    && (notFound = !(name.equals(current.hostName())))) {
-                previous = current;
-                current = current.next;
-            }
-            if (notFound) {
-                return null;
-            }
-            moveToHead(current, previous);
-            return current;
-        }
-
-        private synchronized static void deleteTail() {
-            if (0 == size) {
-                return;
-            }
-            if (1 == size) {
-                head = null;
-            }
-
-            CacheElement previous = null;
-            CacheElement current = head;
-            while (null != current.next) {
-                previous = current;
-                current = current.next;
-            }
-            previous.next = null;
-        }
-
-        private synchronized static void moveToHead(CacheElement element,
-                CacheElement elementPredecessor) {
-            if (null == elementPredecessor) {
-                head = element;
-            } else {
-                elementPredecessor.next = element.next;
-                element.next = head;
-                head = element;
-            }
-        }
     }
 
     /**
