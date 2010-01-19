@@ -196,7 +196,7 @@ public class InetAddress implements Serializable {
     /**
      * Converts an array of byte arrays representing raw IP addresses of a host
      * to an array of InetAddress objects, sorting to respect the value of the
-     * system preferIPv6Addresses preference.
+     * system property {@code "java.net.preferIPv6Addresses"}.
      *
      * @param rawAddresses the raw addresses to convert.
      * @param hostName the hostname corresponding to the IP address.
@@ -205,7 +205,7 @@ public class InetAddress implements Serializable {
     static InetAddress[] bytesToInetAddresses(byte[][] rawAddresses,
             String hostName) {
         // Sort the raw byte arrays.
-        Comparator<byte[]> comparator = preferIPv6Addresses()
+        Comparator<byte[]> comparator = NetUtil.preferIPv6Addresses()
                 ? LONGEST_FIRST : SHORTEST_FIRST;
         Arrays.sort(rawAddresses, comparator);
 
@@ -259,7 +259,7 @@ public class InetAddress implements Serializable {
     static InetAddress[] getAllByNameImpl(String host, boolean returnUnshared)
             throws UnknownHostException {
         if (host == null || 0 == host.length()) {
-            if (preferIPv6Addresses()) {
+            if (NetUtil.preferIPv6Addresses()) {
                 return new InetAddress[] { Inet6Address.LOOPBACK,
                                            Inet4Address.LOOPBACK };
             } else {
@@ -530,38 +530,16 @@ public class InetAddress implements Serializable {
     // static int inetAddr(String host) throws UnknownHostException
     // END android-removed
 
-    /**
-     * Convert a string containing an IPv4 Internet Protocol dotted address into
-     * a binary address. Note, the special case of '255.255.255.255' throws an
-     * exception, so this value should not be used as an argument. See also
-     * inetAddr(String).
-     */
     // BEGIN android-removed
     // static native int inetAddrImpl(String host) throws UnknownHostException;
     // END android-removed
 
-    /**
-     * Convert a binary address into a string containing an Ipv4 Internet
-     * Protocol dotted address.
-     */
     // BEGIN android-removed
     // static native String inetNtoaImpl(int hipAddr);
     // END android-removed
 
     // BEGIN android-removed
-    /**
-     * Query the IP stack for the host address. The host is in string name form.
-     *
-     * @param name
-     *            the host name to lookup
-     * @param preferIPv6Address
-     *            address preference if underlying platform is V4/V6
-     * @return InetAddress the host address
-     * @throws UnknownHostException
-     *             if an error occurs during lookup
-     */
-    // static native InetAddress getHostByNameImpl(String name,
-    //         boolean preferIPv6Address) throws UnknownHostException;
+    // static native InetAddress getHostByNameImpl(String name) throws UnknownHostException;
     // END android-removed
 
     static String getHostNameInternal(String host, boolean isCheck) throws UnknownHostException {
@@ -1140,12 +1118,6 @@ public class InetAddress implements Serializable {
                 | ((bytes[start + 1] & 255) << 16)
                 | ((bytes[start] & 255) << 24);
         return value;
-    }
-
-    static boolean preferIPv6Addresses() {
-        String result = AccessController.doPrivileged(new PriviAction<String>(
-                "java.net.preferIPv6Addresses")); //$NON-NLS-1$
-        return "true".equals(result); //$NON-NLS-1$
     }
 
     private static final ObjectStreamField[] serialPersistentFields = {

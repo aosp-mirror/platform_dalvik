@@ -187,8 +187,7 @@ public class PlainSocketImpl extends SocketImpl {
         if (0 != aPort) {
             localport = aPort;
         } else {
-            localport = netImpl.getSocketLocalPort(fd, NetUtil
-                    .preferIPv6Addresses());
+            localport = netImpl.getSocketLocalPort(fd);
         }
     }
 
@@ -210,9 +209,9 @@ public class PlainSocketImpl extends SocketImpl {
 
     @Override
     protected void connect(String aHost, int aPort) throws IOException {
-        InetAddress anAddr = netImpl.getHostByName(aHost, NetUtil
-                .preferIPv6Addresses());
-        connect(anAddr, aPort);
+        // BEGIN android-changed: remove useless IPv6 check.
+        connect(netImpl.getHostByName(aHost), aPort);
+        // END android-changed
     }
 
     @Override
@@ -378,10 +377,9 @@ public class PlainSocketImpl extends SocketImpl {
         if (null == proxyName) {
             proxyName = addr.getAddress().getHostAddress();
         }
-
-        InetAddress anAddr = netImpl.getHostByName(proxyName, NetUtil
-                .preferIPv6Addresses());
-        return anAddr;
+        // BEGIN android-changed: remove useless IPv6 check.
+        return netImpl.getHostByName(proxyName);
+        // END android-changed
     }
 
     /**

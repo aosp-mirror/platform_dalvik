@@ -2375,7 +2375,7 @@ static jboolean osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
 }
 
 static jobject osNetworkSystem_getSocketLocalAddressImpl(JNIEnv* env,
-        jclass, jobject fileDescriptor, jboolean preferIPv6Addresses) {
+        jclass, jobject fileDescriptor) {
     // LOGD("ENTER getSocketLocalAddressImpl");
 
     int fd;
@@ -2398,7 +2398,7 @@ static jobject osNetworkSystem_getSocketLocalAddressImpl(JNIEnv* env,
 }
 
 static jint osNetworkSystem_getSocketLocalPortImpl(JNIEnv* env, jclass,
-        jobject fileDescriptor, jboolean preferIPv6Addresses) {
+        jobject fileDescriptor) {
     // LOGD("ENTER getSocketLocalPortImpl");
 
     int fd;
@@ -2955,8 +2955,8 @@ static JNINativeMethod gMethods[] = {
     { "shutdownOutputImpl",                "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownOutputImpl                 },
     { "sendDatagramImpl2",                 "(Ljava/io/FileDescriptor;[BIIILjava/net/InetAddress;)I",                   (void*) osNetworkSystem_sendDatagramImpl2                  },
     { "selectImpl",                        "([Ljava/io/FileDescriptor;[Ljava/io/FileDescriptor;II[IJ)Z",               (void*) osNetworkSystem_selectImpl                         },
-    { "getSocketLocalAddressImpl",         "(Ljava/io/FileDescriptor;Z)Ljava/net/InetAddress;",                        (void*) osNetworkSystem_getSocketLocalAddressImpl          },
-    { "getSocketLocalPortImpl",            "(Ljava/io/FileDescriptor;Z)I",                                             (void*) osNetworkSystem_getSocketLocalPortImpl             },
+    { "getSocketLocalAddressImpl",         "(Ljava/io/FileDescriptor;)Ljava/net/InetAddress;",                         (void*) osNetworkSystem_getSocketLocalAddressImpl          },
+    { "getSocketLocalPortImpl",            "(Ljava/io/FileDescriptor;)I",                                              (void*) osNetworkSystem_getSocketLocalPortImpl             },
     { "getSocketOptionImpl",               "(Ljava/io/FileDescriptor;I)Ljava/lang/Object;",                            (void*) osNetworkSystem_getSocketOptionImpl                },
     { "setSocketOptionImpl",               "(Ljava/io/FileDescriptor;ILjava/lang/Object;)V",                           (void*) osNetworkSystem_setSocketOptionImpl                },
     { "getSocketFlagsImpl",                "()I",                                                                      (void*) osNetworkSystem_getSocketFlagsImpl                 },

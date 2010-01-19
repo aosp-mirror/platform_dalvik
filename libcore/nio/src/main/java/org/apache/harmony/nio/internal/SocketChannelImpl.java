@@ -298,8 +298,8 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         }
 
         // set local port
-        localPort = networkSystem.getSocketLocalPort(fd, false);
-        localAddress = networkSystem.getSocketLocalAddress(fd, false);
+        localPort = networkSystem.getSocketLocalPort(fd);
+        localAddress = networkSystem.getSocketLocalAddress(fd);
 
         // set the connected address.
         connectAddress = inetSocketAddress;
@@ -344,7 +344,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                     HY_PORT_SOCKET_STEP_CHECK, connectContext);
             finished = (result == CONNECT_SUCCESS);
             isBound = finished;
-            localAddress = networkSystem.getSocketLocalAddress(fd, false);
+            localAddress = networkSystem.getSocketLocalAddress(fd);
         } catch (ConnectException e) {
             if (isOpen()) {
                 close();
@@ -733,8 +733,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                 throw new AlreadyConnectedException();
             }
             super.connect(remoteAddr, timeout);
-            channel.localAddress = networkSystem.getSocketLocalAddress(
-                    channel.fd, false);
+            channel.localAddress = networkSystem.getSocketLocalAddress(channel.fd);
             if (super.isConnected()) {
                 channel.setConnected();
                 channel.isBound = super.isBound();

@@ -121,7 +121,7 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
         if (0 != port) {
             localPort = port;
         } else {
-            localPort = netImpl.getSocketLocalPort(fd, NetUtil.preferIPv6Addresses());
+            localPort = netImpl.getSocketLocalPort(fd);
         }
 
         try {

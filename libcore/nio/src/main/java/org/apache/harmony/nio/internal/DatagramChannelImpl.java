@@ -40,7 +40,6 @@ import java.nio.channels.IllegalBlockingModeException;
 import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.spi.SelectorProvider;
 
-import org.apache.harmony.luni.net.NetUtil;
 import org.apache.harmony.luni.net.PlainDatagramSocketImpl;
 import org.apache.harmony.luni.platform.FileDescriptorHandler;
 import org.apache.harmony.luni.platform.INetworkSystem;
@@ -135,8 +134,7 @@ class DatagramChannelImpl extends DatagramChannel implements
      * @see DatagramSocket
      */
     InetAddress getLocalAddress() {
-        return networkSystem.getSocketLocalAddress(fd, NetUtil
-                .preferIPv6Addresses());
+        return networkSystem.getSocketLocalAddress(fd);
     }
 
     /**

@@ -166,8 +166,9 @@ public interface INetworkSystem {
     public int sendDatagram2(FileDescriptor fd, byte[] data, int offset,
             int length, int port, InetAddress inetAddress) throws IOException;
 
-    public InetAddress getSocketLocalAddress(FileDescriptor aFD,
-            boolean preferIPv6Addresses);
+    // BEGIN android-changed: remove useless IPv6 check.
+    public InetAddress getSocketLocalAddress(FileDescriptor aFD);
+    // END android-changed
 
     /**
      * Select the given file descriptors for read and write operations.
@@ -203,15 +204,15 @@ public interface INetworkSystem {
             int numReadable, int numWritable, long timeout, int[] flags)
             throws SocketException;
 
+    // BEGIN android-changed: remove useless IPv6 check.
     /*
      * Query the IP stack for the local port to which this socket is bound.
      * 
-     * @param aFD the socket descriptor @param preferIPv6Addresses address
-     * preference for nodes that support both IPv4 and IPv6 @return int the
-     * local port to which the socket is bound
+     * @param aFD the socket descriptor
+     * @return int the local port to which the socket is bound
      */
-    public int getSocketLocalPort(FileDescriptor aFD,
-            boolean preferIPv6Addresses);
+    public int getSocketLocalPort(FileDescriptor aFD);
+    // END android-changed
 
     /*
      * Query the IP stack for the nominated socket option.
@@ -246,8 +247,9 @@ public interface INetworkSystem {
 
     public InetAddress getHostByAddr(byte[] addr) throws UnknownHostException;
 
-    public InetAddress getHostByName(String addr, boolean preferIPv6Addresses)
-            throws UnknownHostException;
+    // BEGIN android-changed: remove useless IPv6 check.
+    public InetAddress getHostByName(String addr) throws UnknownHostException;
+    // END android-changed
 
     public void setInetAddress(InetAddress sender, byte[] address);
 

@@ -220,18 +220,14 @@ final class OSNetworkSystem implements INetworkSystem {
     //         throws UnknownHostException;
     // END android-removed
 
-    // BEGIN android-removed
-    public InetAddress getHostByName(String hostName,
-            boolean preferIPv6Addresses) throws UnknownHostException {
-        // BEGIN android-changed
-        // Wallpaper fix for http://b/1851257.
+    // BEGIN android-changed: remove useless IPv6 check.
+    public InetAddress getHostByName(String hostName) throws UnknownHostException {
         return InetAddress.getByName(hostName);
-        // END android-changed
     }
+    // END android-changed
 
     // BEGIN android-removed
-    // static native InetAddress getHostByNameImpl(String addr,
-    //         boolean preferIPv6Addresses) throws UnknownHostException;
+    // static native InetAddress getHostByNameImpl(String addr) throws UnknownHostException;
     // END android-removed
 
     public int getSocketFlags() {
@@ -246,29 +242,15 @@ final class OSNetworkSystem implements INetworkSystem {
 
     static native int getSocketFlagsImpl();
 
-    public InetAddress getSocketLocalAddress(FileDescriptor fd,
-            boolean preferIPv6Addresses) {
-        return getSocketLocalAddressImpl(fd, preferIPv6Addresses);
+    public InetAddress getSocketLocalAddress(FileDescriptor fd) {
+        return getSocketLocalAddressImpl(fd);
     }
-    static native InetAddress getSocketLocalAddressImpl(FileDescriptor aFD,
-            boolean preferIPv6Addresses);
+    static native InetAddress getSocketLocalAddressImpl(FileDescriptor aFD);
 
-    /**
-     * Query the IP stack for the local port to which this socket is bound.
-     *
-     * @param aFD
-     *            the socket descriptor
-     * @param preferIPv6Addresses
-     *            address preference for nodes that support both IPv4 and IPv6
-     * @return the local port to which the socket is bound
-     */
-    public int getSocketLocalPort(FileDescriptor aFD,
-            boolean preferIPv6Addresses) {
-        return getSocketLocalPortImpl(aFD, preferIPv6Addresses);
+    public int getSocketLocalPort(FileDescriptor aFD) {
+        return getSocketLocalPortImpl(aFD);
     }
-
-    static native int getSocketLocalPortImpl(FileDescriptor aFD,
-            boolean preferIPv6Addresses);
+    static native int getSocketLocalPortImpl(FileDescriptor aFD);
 
     /**
      * Query the IP stack for the nominated socket option.

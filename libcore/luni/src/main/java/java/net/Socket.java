@@ -202,7 +202,7 @@ public class Socket {
      * <p><strong>Implementation note:</strong> this implementation tries each
      * IP address for the given hostname until it either connects successfully
      * or it exhausts the set. It will try both IPv4 and IPv6 addresses in the
-     * order specified by {@code preferIPv6Addresses}.
+     * order specified by the system property {@code "java.net.preferIPv6Addresses"}.
      *
      * @param dstName
      *            the target host name or IP address to connect to.
@@ -233,7 +233,7 @@ public class Socket {
      * <p><strong>Implementation note:</strong> this implementation tries each
      * IP address for the given hostname until it either connects successfully
      * or it exhausts the set. It will try both IPv4 and IPv6 addresses in the
-     * order specified by {@code preferIPv6Addresses}.
+     * order specified by the system property {@code "java.net.preferIPv6Addresses"}.
      *
      * @param dstName
      *            the target host name or IP address to connect to.
@@ -266,7 +266,7 @@ public class Socket {
      * <p><strong>Implementation note:</strong> this implementation tries each
      * IP address for the given hostname until it either connects successfully
      * or it exhausts the set. It will try both IPv4 and IPv6 addresses in the
-     * order specified by {@code preferIPv6Addresses}.
+     * order specified by the system property {@code "java.net.preferIPv6Addresses"}.
      *
      * @param hostName
      *            the target host name or IP address to connect to.
@@ -483,8 +483,7 @@ public class Socket {
         if (!isBound()) {
             return Inet4Address.ANY;
         }
-        return Platform.getNetworkSystem().getSocketLocalAddress(impl.fd,
-                InetAddress.preferIPv6Addresses());
+        return Platform.getNetworkSystem().getSocketLocalAddress(impl.fd);
     }
 
     /**
