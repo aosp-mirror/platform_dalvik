@@ -257,9 +257,15 @@ static void *compilerThreadStart(void *arg)
                 free(work.info);
                 dvmLockMutex(&gDvmJit.compilerLock);
 
+                /*
+                 * FIXME - temporarily disable code cache reset until
+                 * stale code stops leaking.
+                 */
+#if 0
                 if (gDvmJit.codeCacheFull == true) {
                     resetCodeCache();
                 }
+#endif
             } while (workQueueLength() != 0);
         }
     }
