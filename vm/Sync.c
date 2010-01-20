@@ -694,7 +694,6 @@ done:
 static void notifyMonitor(Thread* self, Monitor* mon)
 {
     Thread* thread;
-    int ret;
 
     assert(self != NULL);
     assert(mon != NULL);
@@ -725,7 +724,6 @@ static void notifyMonitor(Thread* self, Monitor* mon)
 static void notifyAllMonitor(Thread* self, Monitor* mon)
 {
     Thread* thread;
-    int ret;
 
     assert(self != NULL);
     assert(mon != NULL);
