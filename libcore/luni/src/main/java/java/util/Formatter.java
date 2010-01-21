@@ -1162,10 +1162,6 @@ public final class Formatter implements Closeable, Flushable {
                 throw new IllegalFormatPrecisionException(precision);
             }
         }
-
-        void clearAllFlagsExceptZero() {
-            flagAdd = flagComma = flagParenthesis = flagSharp = flagSpace = false;
-        }
     }
 
     /*
@@ -1641,12 +1637,12 @@ public final class Formatter implements Closeable, Flushable {
             }
 
             formatToken.setPrecision(FormatToken.UNSET);
-            formatToken.clearAllFlagsExceptZero();
+            formatToken.flagZero = false;
             return padding(source, 0);
         }
 
         private CharSequence transformFromNull() {
-            formatToken.clearAllFlagsExceptZero();
+            formatToken.flagZero = false;
             return padding("null", 0); //$NON-NLS-1$
         }
 
