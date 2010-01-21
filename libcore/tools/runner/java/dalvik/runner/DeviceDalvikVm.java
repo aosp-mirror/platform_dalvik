@@ -75,9 +75,7 @@ final class DeviceDalvikVm extends Vm {
         }
     }
 
-    @Override public void buildAndInstall(TestRun testRun) {
-        super.buildAndInstall(testRun);
-
+    @Override protected void prepareUserDir(TestRun testRun) {
         File testClassesDirOnDevice = testClassesDirOnDevice(testRun);
         adb.mkdir(testClassesDirOnDevice);
         adb.push(testRun.getTestDirectory(), testClassesDirOnDevice);
@@ -96,7 +94,10 @@ final class DeviceDalvikVm extends Vm {
         return new File(runnerDir, testRun.getQualifiedName());
     }
 
-    @Override protected VmCommandBuilder newVmCommandBuilder() {
+    @Override protected VmCommandBuilder newVmCommandBuilder(
+            File workingDirectory) {
+        // ignore the working directory; it's device-local and we can't easily
+        // set the working directory for commands run via adb shell.
         return new VmCommandBuilder()
                 .vmCommand("adb", "shell", "dalvikvm")
                 .vmArgs("-Duser.name=root")

@@ -44,6 +44,7 @@ public abstract class Vm {
             new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/CaliperRunner.java"),
             new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/JUnitRunner.java"),
             new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/JtregRunner.java"),
+            new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/MainRunner.java"),
             new File(DALVIK_RUNNER_HOME + "/java/dalvik/runner/TestRunner.java")));
 
     private final Pattern JAVA_TEST_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
@@ -128,6 +129,26 @@ public abstract class Vm {
             return;
         }
         testRun.setTestClasspath(testClasses);
+        prepareUserDir(testRun);
+    }
+
+    /**
+     * Prepares the directory from which the test will be executed. Some tests
+     * expect to read data files from the current working directory; this step
+     * should ensure such files are available.
+     */
+    protected void prepareUserDir(TestRun testRun) {
+        File testUserDir = testUserDir(testRun);
+
+        // if the user dir exists, cp would copy the files to the wrong place
+        if (testUserDir.exists()) {
+            throw new IllegalStateException();
+        }
+
+        testUserDir.getParentFile().mkdirs();
+        new Command("cp", "-r", testRun.getTestDirectory().toString(),
+                testUserDir.toString()).execute();
+        testRun.setUserDir(testUserDir);
     }
 
     /**
@@ -139,6 +160,8 @@ public abstract class Vm {
             logger.fine("clean " + testRun.getQualifiedName());
 
             new Command.Builder().args("rm", "-rf", testClassesDir(testRun).getPath())
+                    .execute();
+            new Command.Builder().args("rm", "-rf", testUserDir(testRun).getPath())
                     .execute();
         }
     }
@@ -178,6 +201,11 @@ public abstract class Vm {
         return new File(localTemp, testRun.getQualifiedName());
     }
 
+    private File testUserDir(TestRun testRun) {
+        File testTemp = new File(localTemp, "userDir");
+        return new File(testTemp, testRun.getQualifiedName());
+    }
+
     /**
      * Returns a properties object for the given test description.
      */
@@ -196,7 +224,7 @@ public abstract class Vm {
             throw new IllegalArgumentException();
         }
 
-        final Command command = newVmCommandBuilder()
+        final Command command = newVmCommandBuilder(testRun.getUserDir())
                 .classpath(testRun.getTestClasspath())
                 .classpath(testRunnerClasses)
                 .classpath(getRuntimeSupportClasspath())
@@ -242,9 +270,7 @@ public abstract class Vm {
     /**
      * Returns a VM for test execution.
      */
-    protected VmCommandBuilder newVmCommandBuilder() {
-        return new VmCommandBuilder();
-    }
+    protected abstract VmCommandBuilder newVmCommandBuilder(File workingDirectory);
 
     /**
      * Returns the classpath containing JUnit and the dalvik annotations
@@ -274,6 +300,7 @@ public abstract class Vm {
     public static class VmCommandBuilder {
         private File temp;
         private Classpath classpath = new Classpath();
+        private File workingDir;
         private File userDir;
         private Integer debugPort;
         private String mainClass;
@@ -292,6 +319,11 @@ public abstract class Vm {
 
         public VmCommandBuilder classpath(Classpath classpath) {
             this.classpath.addAll(classpath);
+            return this;
+        }
+
+        public VmCommandBuilder workingDir(File workingDir) {
+            this.workingDir = workingDir;
             return this;
         }
 
@@ -320,6 +352,9 @@ public abstract class Vm {
             builder.args(vmCommand);
             builder.args("-classpath", classpath.toString());
             builder.args("-Duser.dir=" + userDir);
+            if (workingDir != null) {
+                builder.workingDirectory(workingDir);
+            }
 
             if (temp != null) {
                 builder.args("-Djava.io.tmpdir=" + temp);

@@ -41,9 +41,7 @@ final class Driver {
 
     private final File localTemp;
     private final Set<File> expectationFiles;
-    private final JtregFinder jtregFinder;
-    private final JUnitFinder junitFinder;
-    private final CaliperFinder caliperFinder;
+    private final List<CodeFinder> codeFinders;
     private final Vm vm;
     private final File xmlReportsDirectory;
     private final Map<String, ExpectedResult> expectedResults = new HashMap<String, ExpectedResult>();
@@ -55,15 +53,12 @@ final class Driver {
     private int unsupportedTests = 0;
 
     public Driver(File localTemp, Vm vm, Set<File> expectationFiles,
-            File xmlReportsDirectory, JtregFinder jtregFinder,
-            JUnitFinder junit, CaliperFinder caliperFinder) {
+            File xmlReportsDirectory, List<CodeFinder> codeFinders) {
         this.localTemp = localTemp;
         this.expectationFiles = expectationFiles;
         this.vm = vm;
         this.xmlReportsDirectory = xmlReportsDirectory;
-        this.jtregFinder = jtregFinder;
-        this.junitFinder = junit;
-        this.caliperFinder = caliperFinder;
+        this.codeFinders = codeFinders;
     }
 
     public void loadExpectations() throws IOException {
@@ -86,18 +81,16 @@ final class Driver {
         for (File testFile : testFiles) {
             Set<TestRun> testsForFile = Collections.emptySet();
 
-            if (testFile.isDirectory()) {
-                testsForFile = jtregFinder.findTests(testFile);
-                logger.fine("found " + testsForFile.size() + " jtreg tests for " + testFile);
+            for (CodeFinder codeFinder : codeFinders) {
+                testsForFile = codeFinder.findTests(testFile);
+
+                // break as soon as we find any match. We don't need multiple
+                // matches for the same file, since that would run it twice.
+                if (!testsForFile.isEmpty()) {
+                    break;
+                }
             }
-            if (testsForFile.isEmpty()) {
-                testsForFile = junitFinder.findTests(testFile);
-                logger.fine("found " + testsForFile.size() + " JUnit tests for " + testFile);
-            }
-            if (testsForFile.isEmpty()) {
-                testsForFile = caliperFinder.findTests(testFile);
-                logger.fine("found " + testsForFile.size() + " Caliper benchmarks for " + testFile);
-            }
+
             tests.addAll(testsForFile);
         }
 

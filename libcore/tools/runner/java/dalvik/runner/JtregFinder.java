@@ -24,7 +24,7 @@ import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.RegressionTestSuite;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 /**
  * Create {@link TestRun}s for {@code .java} files with jtreg tests in them.
  */
-class JtregFinder {
+class JtregFinder implements CodeFinder {
 
     // TODO: add support for the  @library directive, as seen in
     //   test/com/sun/crypto/provider/Cipher/AES/TestKATForECB_VT.java
@@ -56,37 +56,44 @@ class JtregFinder {
     /**
      * Returns the tests in {@code directoryToScan}.
      */
-    public Set<TestRun> findTests(File directoryToScan)
-            throws TestSuite.Fault, WorkDirectory.InitializationFault,
-            FileNotFoundException, WorkDirectory.WorkDirectoryExistsFault,
-            WorkDirectory.BadDirectoryFault, TestResult.Fault {
-        logger.fine("scanning " + directoryToScan + " for jtreg tests");
-        File workDirectory = new File(localTemp, "JTwork");
-        workDirectory.mkdirs();
-
-        /*
-         * This code is capable of extracting test descriptions using jtreg 4.0
-         * and its bundled copy of jtharness. As a command line tool, jtreg's
-         * API wasn't intended for this style of use. As a consequence, this
-         * code is fragile and may be incompatible with newer versions of jtreg.
-         */
-        TestSuite testSuite = new RegressionTestSuite(directoryToScan);
-        WorkDirectory wd = WorkDirectory.convert(workDirectory, testSuite);
-        TestResultTable resultTable = wd.getTestResultTable();
-
-        Set<TestRun> result = new LinkedHashSet<TestRun>();
-        for (Iterator i = resultTable.getIterator(); i.hasNext(); ) {
-            TestResult testResult = (TestResult) i.next();
-            TestDescription description = testResult.getDescription();
-            String qualifiedName = qualifiedName(description);
-            String suiteName = suiteName(description);
-            String testName = description.getName();
-            String testClass = description.getName();
-            result.add(new TestRun(description.getDir(), description.getFile(),
-                    testClass, suiteName, testName, qualifiedName,
-                    description.getTitle(), JtregRunner.class));
+    public Set<TestRun> findTests(File directoryToScan) {
+        // for now, jtreg doesn't know how to scan anything but directories
+        if (!directoryToScan.isDirectory()) {
+            return Collections.emptySet();
         }
-        return result;
+
+        try {
+            logger.fine("scanning " + directoryToScan + " for jtreg tests");
+            File workDirectory = new File(localTemp, "JTwork");
+            workDirectory.mkdirs();
+
+            /*
+             * This code is capable of extracting test descriptions using jtreg 4.0
+             * and its bundled copy of jtharness. As a command line tool, jtreg's
+             * API wasn't intended for this style of use. As a consequence, this
+             * code is fragile and may be incompatible with newer versions of jtreg.
+             */
+            TestSuite testSuite = new RegressionTestSuite(directoryToScan);
+            WorkDirectory wd = WorkDirectory.convert(workDirectory, testSuite);
+            TestResultTable resultTable = wd.getTestResultTable();
+
+            Set<TestRun> result = new LinkedHashSet<TestRun>();
+            for (Iterator i = resultTable.getIterator(); i.hasNext(); ) {
+                TestResult testResult = (TestResult) i.next();
+                TestDescription description = testResult.getDescription();
+                String qualifiedName = qualifiedName(description);
+                String suiteName = suiteName(description);
+                String testName = description.getName();
+                String testClass = description.getName();
+                result.add(new TestRun(description.getDir(), description.getFile(),
+                        testClass, suiteName, testName, qualifiedName,
+                        description.getTitle(), JtregRunner.class));
+            }
+            return result;
+        } catch (Exception jtregFailure) {
+            // jtreg shouldn't fail in practice
+            throw new RuntimeException(jtregFailure);
+        }
     }
 
     /**

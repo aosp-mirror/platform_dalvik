@@ -18,6 +18,7 @@ package dalvik.runner;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -174,12 +175,13 @@ public final class DalvikRunner {
                 ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp, javaHome, clean)
                 : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar, localTemp,
                         clean, deviceRunnerDir);
-        JtregFinder jtregFinder = new JtregFinder(localTemp);
-        JUnitFinder jUnitFinder = new JUnitFinder();
-        CaliperFinder caliperFinder = new CaliperFinder();
+        List<CodeFinder> codeFinders = Arrays.asList(
+                new JtregFinder(localTemp),
+                new JUnitFinder(),
+                new CaliperFinder(),
+                new MainFinder());
         Driver driver = new Driver(localTemp,
-                vm, expectationFiles, xmlReportsDirectory, jtregFinder,
-                jUnitFinder, caliperFinder);
+                vm, expectationFiles, xmlReportsDirectory, codeFinders);
         driver.loadExpectations();
         driver.buildAndRunAllTests(testFiles);
         vm.shutdown();

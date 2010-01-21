@@ -19,7 +19,7 @@ package dalvik.runner;
 import java.io.File;
 
 /**
- * A Java virtual machine like Harmony or the RI.
+ * A local Java virtual machine like Harmony or the RI.
  */
 final class JavaVm extends Vm {
 
@@ -31,8 +31,10 @@ final class JavaVm extends Vm {
         this.javaHome = javaHome;
     }
 
-    @Override protected VmCommandBuilder newVmCommandBuilder() {
+    @Override protected VmCommandBuilder newVmCommandBuilder(
+            File workingDirectory) {
         return new VmCommandBuilder()
-                .vmCommand(javaHome + "/bin/java");
+                .vmCommand(javaHome + "/bin/java")
+                .workingDir(workingDirectory);
     }
 }

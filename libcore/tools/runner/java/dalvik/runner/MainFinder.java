@@ -19,20 +19,19 @@ package dalvik.runner;
 import java.io.File;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with Caliper benchmarks in
- * them.
+ * Create {@link TestRun}s for {@code .java} files with main methods in them.
  */
-class CaliperFinder extends NamingPatternCodeFinder {
+class MainFinder extends NamingPatternCodeFinder {
 
     @Override protected boolean matches(File file) {
-        return file.getName().endsWith("Benchmark.java");
+        return file.getName().endsWith(".java");
     }
 
     @Override protected String testName(File file) {
-        return "caliper";
+        return "main";
     }
 
     @Override protected Class<? extends TestRunner> runnerClass() {
-        return CaliperRunner.class;
+        return MainRunner.class;
     }
 }

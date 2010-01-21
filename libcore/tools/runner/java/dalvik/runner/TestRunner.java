@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Runs a jtreg test.
+ * Runs a test.
  */
 public abstract class TestRunner {
 

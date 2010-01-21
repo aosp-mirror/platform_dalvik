@@ -17,6 +17,7 @@
 package dalvik.runner;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ final class Command {
     private final Logger logger = Logger.getLogger(Command.class.getName());
 
     private final List<String> args;
+    private final File workingDirectory;
     private final boolean permitNonZeroExitStatus;
     private Process process;
 
@@ -43,11 +45,13 @@ final class Command {
 
     Command(List<String> args) {
         this.args = new ArrayList<String>(args);
+        this.workingDirectory = null;
         this.permitNonZeroExitStatus = false;
     }
 
     private Command(Builder builder) {
         this.args = new ArrayList<String>(builder.args);
+        this.workingDirectory = builder.workingDirectory;
         this.permitNonZeroExitStatus = builder.permitNonZeroExitStatus;
     }
 
@@ -62,10 +66,14 @@ final class Command {
 
         logger.fine("executing " + Strings.join(args, " "));
 
-        process = new ProcessBuilder()
+        ProcessBuilder processBuilder = new ProcessBuilder()
                 .command(args)
-                .redirectErrorStream(true)
-                .start();
+                .redirectErrorStream(true);
+        if (workingDirectory != null) {
+            processBuilder.directory(workingDirectory);
+        }
+
+        process = processBuilder.start();
     }
 
     public boolean isStarted() {
@@ -118,6 +126,7 @@ final class Command {
 
     static class Builder {
         private final List<String> args = new ArrayList<String>();
+        private File workingDirectory;
         private boolean permitNonZeroExitStatus = false;
 
         public Builder args(String... args) {
@@ -126,6 +135,17 @@ final class Command {
 
         public Builder args(Collection<String> args) {
             this.args.addAll(args);
+            return this;
+        }
+
+        /**
+         * Sets the working directory from which the command will be executed.
+         * This must be a <strong>local</strong> directory; Commands run on
+         * remote devices (ie. via {@code adb shell}) require a local working
+         * directory.
+         */
+        public Builder workingDirectory(File workingDirectory) {
+            this.workingDirectory = workingDirectory;
             return this;
         }
 

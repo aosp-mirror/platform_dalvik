@@ -17,22 +17,16 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.util.Set;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with Caliper benchmarks in
- * them.
+ * A strategy for finding runnable things in a directory.
  */
-class CaliperFinder extends NamingPatternCodeFinder {
+public interface CodeFinder {
 
-    @Override protected boolean matches(File file) {
-        return file.getName().endsWith("Benchmark.java");
-    }
-
-    @Override protected String testName(File file) {
-        return "caliper";
-    }
-
-    @Override protected Class<? extends TestRunner> runnerClass() {
-        return CaliperRunner.class;
-    }
+    /**
+     * Returns all test runs in the given file or directory. If the returned set
+     * is empty, no executable code of this kind were found.
+     */
+    public Set<TestRun> findTests(File file);
 }

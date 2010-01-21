@@ -24,9 +24,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A pluggable strategy for converting files into test runs.
+ * A code finder that traverses through the directory tree looking for matching
+ * naming patterns.
  */
-abstract class TestFinder {
+abstract class NamingPatternCodeFinder implements CodeFinder {
+
+    private final String PACKAGE_PATTERN = "(?m)^\\s*package\\s+(\\S+)\\s*;";
+
+    private final String TYPE_DECLARATION_PATTERN
+            = "(?m)\\b(?:public|private)\\s+(?:interface|class|enum)\\b";
 
     public Set<TestRun> findTests(File testDirectory) {
         Set<TestRun> result = new LinkedHashSet<TestRun>();
@@ -85,10 +91,16 @@ abstract class TestFinder {
         // declaration inside the file.
         try {
             String content = Strings.readFile(file);
-            Pattern packagePattern = Pattern.compile("(?m)^\\s*package\\s+(\\S+)\\s*;");
+            Pattern packagePattern = Pattern.compile(PACKAGE_PATTERN);
             Matcher packageMatcher = packagePattern.matcher(content);
             if (!packageMatcher.find()) {
-                throw new IllegalArgumentException("No package in '" + file + "'\n"+content);
+                // if it doesn't have a package, make sure there's at least a
+                // type declaration otherwise we're probably reading the wrong
+                // kind of file.
+                if (Pattern.compile(TYPE_DECLARATION_PATTERN).matcher(content).find()) {
+                    return className;
+                }
+                throw new IllegalArgumentException("Not a .java file: '" + file + "'\n"+content);
             }
             String packageName = packageMatcher.group(1);
             return packageName + "." + className;

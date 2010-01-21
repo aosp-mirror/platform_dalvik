@@ -16,23 +16,25 @@
 
 package dalvik.runner;
 
-import java.io.File;
+import java.lang.reflect.Method;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with Caliper benchmarks in
- * them.
+ * Runs a Java class with a main method.
  */
-class CaliperFinder extends NamingPatternCodeFinder {
+public final class MainRunner extends TestRunner {
 
-    @Override protected boolean matches(File file) {
-        return file.getName().endsWith("Benchmark.java");
+    @Override public boolean test() {
+        try {
+            Method mainMethod = Class.forName(className)
+                    .getDeclaredMethod("main", String[].class);
+            mainMethod.invoke(null, new Object[] { new String[0] });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false; // always print main method output
     }
 
-    @Override protected String testName(File file) {
-        return "caliper";
-    }
-
-    @Override protected Class<? extends TestRunner> runnerClass() {
-        return CaliperRunner.class;
+    public static void main(String[] args) throws Exception {
+        new MainRunner().run();
     }
 }

@@ -15,6 +15,7 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/CaliperFinder.java \
         java/dalvik/runner/CaliperRunner.java \
         java/dalvik/runner/Classpath.java \
+        java/dalvik/runner/CodeFinder.java \
         java/dalvik/runner/Command.java \
         java/dalvik/runner/CommandFailedException.java \
         java/dalvik/runner/DalvikRunner.java \
@@ -28,10 +29,12 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/Javac.java \
         java/dalvik/runner/JtregFinder.java \
         java/dalvik/runner/JtregRunner.java \
+        java/dalvik/runner/MainFinder.java \
+        java/dalvik/runner/MainRunner.java \
+        java/dalvik/runner/NamingPatternCodeFinder.java \
         java/dalvik/runner/Result.java \
         java/dalvik/runner/Strings.java \
         java/dalvik/runner/TestRun.java \
-        java/dalvik/runner/TestFinder.java \
         java/dalvik/runner/TestRunner.java \
         java/dalvik/runner/Threads.java \
         java/dalvik/runner/Vm.java \

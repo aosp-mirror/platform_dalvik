@@ -21,7 +21,7 @@ import java.io.File;
 /**
  * Create {@link TestRun}s for {@code .java} files with JUnit tests in them.
  */
-class JUnitFinder extends TestFinder {
+class JUnitFinder extends NamingPatternCodeFinder {
 
     @Override protected boolean matches(File file) {
         return file.getName().endsWith("Test.java");
