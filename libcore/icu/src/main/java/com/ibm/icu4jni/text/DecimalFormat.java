@@ -176,8 +176,7 @@ public class DecimalFormat extends NumberFormat {
             throw new NullPointerException();
         }
         String fieldType = getFieldType(field.getFieldAttribute());
-        String result = NativeDecimalFormat.format(this.addr, value, field, fieldType, null);
-        buffer.append(result.toCharArray(), 0, result.length());
+        buffer.append(NativeDecimalFormat.format(this.addr, value, field, fieldType, null));
         return buffer;
     }
 
@@ -187,8 +186,7 @@ public class DecimalFormat extends NumberFormat {
             throw new NullPointerException();
         }
         String fieldType = getFieldType(field.getFieldAttribute());
-        String result = NativeDecimalFormat.format(this.addr, value, field, fieldType, null);
-        buffer.append(result.toCharArray(), 0, result.length());
+        buffer.append(NativeDecimalFormat.format(this.addr, value, field, fieldType, null));
         return buffer;
     }
 
@@ -240,19 +238,15 @@ public class DecimalFormat extends NumberFormat {
             scale = makeScalePositive(scale, val);
             text = NativeDecimalFormat.format(this.addr, val.toString(), null,
                     null, attributes, scale);
-        } else {
+        } else if (number instanceof Double || number instanceof Float) {
             double dv = number.doubleValue();
+            text = NativeDecimalFormat.format(this.addr, dv, null, null, attributes);
+        } else {
             long lv = number.longValue();
-            if (dv == lv) {
-                text = NativeDecimalFormat.format(this.addr, lv, null,
-                        null, attributes);
-            } else {
-                text = NativeDecimalFormat.format(this.addr, dv, null,
-                        null, attributes);
-            }
+            text = NativeDecimalFormat.format(this.addr, lv, null, null, attributes);
         }
 
-        AttributedString as = new AttributedString(text.toString());
+        AttributedString as = new AttributedString(text);
 
         String[] attrs = attributes.toString().split(";");
         // add NumberFormat field attributes to the AttributedString

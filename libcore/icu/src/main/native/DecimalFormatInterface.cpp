@@ -1,18 +1,17 @@
 /*
- * Copyright 2006 The Android Open Source Project
+ * Copyright (C) 2006 The Android Open Source Project
  *
- * Internal native functions.  All of the functions defined here make
- * direct use of VM functions or data structures, so they can't be written
- * with JNI and shouldn't really be in a shared library.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * All functions here either complete quickly or are used to enter a wait
- * state, so we don't set the thread status to THREAD_NATIVE when executing
- * these methods.  This means that the GC will wait for these functions
- * to finish.  DO NOT perform long operations or blocking I/O in here.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * In some cases we're following the division of labor defined by GNU
- * ClassPath, e.g. java.lang.Thread has "Thread" and "VMThread", with
- * the VM-specific behavior isolated in VMThread.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #define LOG_TAG "DecimalFormatInterface"
@@ -254,221 +253,82 @@ static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
     return res;
 }
 
-static jstring formatLong(JNIEnv *env, jclass clazz, jint addr, jlong value,
-        jobject field, jstring fieldType, jobject attributes) {
+template <typename T>
+static jstring format(JNIEnv *env, jint addr, jobject field, jstring fieldType, jobject attributes, T val) {
+    UErrorCode status = U_ZERO_ERROR;
 
-    const char * fieldPositionClassName = "java/text/FieldPosition";
-    const char * stringBufferClassName = "java/lang/StringBuffer";
-    jclass fieldPositionClass = env->FindClass(fieldPositionClassName);
-    jclass stringBufferClass = env->FindClass(stringBufferClassName);
-    jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass,
-            "setBeginIndex", "(I)V");
-    jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass,
-            "setEndIndex", "(I)V");
-    jmethodID appendMethodID = env->GetMethodID(stringBufferClass,
-            "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
-
-    const char * fieldName = NULL;
-
-    if(fieldType != NULL) {
-        fieldName = env->GetStringUTFChars(fieldType, NULL);
+    DecimalFormat::AttributeBuffer attrBuffer;
+    attrBuffer.buffer = NULL;
+    DecimalFormat::AttributeBuffer* attrBufferPtr = NULL;
+    if (attributes != NULL || (fieldType != NULL && field != NULL)) {
+        attrBufferPtr = &attrBuffer;
+        // ICU requires that this is dynamically allocated and non-zero size.
+        // ICU grows it in chunks of 128 bytes, so that's a reasonable initial size.
+        attrBuffer.bufferSize = 128;
+        attrBuffer.buffer = new char[attrBuffer.bufferSize];
+        attrBuffer.buffer[0] = '\0';
     }
-
-    uint32_t reslenneeded;
-    int64_t val = value;
-    UChar *result = NULL;
 
     FieldPosition fp;
     fp.setField(FieldPosition::DONT_CARE);
 
-    UErrorCode status = U_ZERO_ERROR;
+    UnicodeString str;
+    DecimalFormat* fmt = reinterpret_cast<DecimalFormat*>(static_cast<uintptr_t>(addr));
+    fmt->format(val, str, fp, attrBufferPtr);
 
-    DecimalFormat::AttrBuffer attrBuffer = NULL;
-    attrBuffer = (DecimalFormat::AttrBuffer) malloc(sizeof(*attrBuffer));
-    attrBuffer->bufferSize = 128;
-    attrBuffer->buffer = (char *) malloc(129 * sizeof(char));
-    attrBuffer->buffer[0] = '\0';
-
-    DecimalFormat *fmt = (DecimalFormat *)(int)addr;
-
-    UnicodeString *res = new UnicodeString();
-
-    fmt->format(val, *res, fp, attrBuffer);
-
-    reslenneeded = res->extract(NULL, 0, status);
-
-    if(status==U_BUFFER_OVERFLOW_ERROR) {
-        status=U_ZERO_ERROR;
-
-        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));
-
-        res->extract(result, reslenneeded + 1, status);
-    }
-    if (icu4jni_error(env, status) != FALSE) {
-        free(attrBuffer->buffer);
-        free(attrBuffer);
-        free(result);
-        delete(res);
-        return NULL;
-    }
-
-    int attrLength = 0;
-
-    attrLength = (strlen(attrBuffer->buffer) + 1 );
-
-    if(strlen(attrBuffer->buffer) > 0) {
-
+    if (attrBufferPtr && strlen(attrBuffer.buffer) > 0) {
         // check if we want to get all attributes
-        if(attributes != NULL) {
-            jstring attrString = env->NewStringUTF(attrBuffer->buffer + 1);  // cut off the leading ';'
+        if (attributes != NULL) {
+            jstring attrString = env->NewStringUTF(attrBuffer.buffer + 1);  // cut off the leading ';'
+            jclass stringBufferClass = env->FindClass("java/lang/StringBuffer");
+            jmethodID appendMethodID = env->GetMethodID(stringBufferClass, "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
             env->CallObjectMethod(attributes, appendMethodID, attrString);
         }
 
         // check if we want one special attribute returned in the given FieldPos
-        if(fieldName != NULL && field != NULL) {
-            const char *delimiter = ";";
-            int begin;
-            int end;
-            char * resattr;
-            resattr = strtok(attrBuffer->buffer, delimiter);
+        if (fieldType != NULL && field != NULL) {
+            const char* fieldName = env->GetStringUTFChars(fieldType, NULL);
 
-            while(resattr != NULL && strcmp(resattr, fieldName) != 0) {
-                resattr = strtok(NULL, delimiter);
+            const char* delimiter = ";";
+            char* context = NULL;
+            char* resattr = strtok_r(attrBuffer.buffer, delimiter, &context);
+
+            while (resattr != NULL && strcmp(resattr, fieldName) != 0) {
+                resattr = strtok_r(NULL, delimiter, &context);
             }
 
-            if(resattr != NULL && strcmp(resattr, fieldName) == 0) {
-                resattr = strtok(NULL, delimiter);
-                begin = (int) strtol(resattr, NULL, 10);
-                resattr = strtok(NULL, delimiter);
-                end = (int) strtol(resattr, NULL, 10);
+            if (resattr != NULL && strcmp(resattr, fieldName) == 0) {
+                resattr = strtok_r(NULL, delimiter, &context);
+                int begin = (int) strtol(resattr, NULL, 10);
+                resattr = strtok_r(NULL, delimiter, &context);
+                int end = (int) strtol(resattr, NULL, 10);
 
+                jclass fieldPositionClass = env->FindClass("java/text/FieldPosition");
+                jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass, "setBeginIndex", "(I)V");
+                jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass, "setEndIndex", "(I)V");
                 env->CallVoidMethod(field, setBeginIndexMethodID, (jint) begin);
                 env->CallVoidMethod(field, setEndIndexMethodID, (jint) end);
             }
+            env->ReleaseStringUTFChars(fieldType, fieldName);
         }
     }
 
-    if(fieldType != NULL) {
-        env->ReleaseStringUTFChars(fieldType, fieldName);
-    }
-
-    jstring resulting = env->NewString(result, reslenneeded);
-
-    free(attrBuffer->buffer);
-    free(attrBuffer);
-    free(result);
-    delete(res);
-
-    return resulting;
+    const UChar* chars = str.getBuffer();
+    jstring result = env->NewString(chars, str.length());
+    delete[] attrBuffer.buffer;
+    return result;
 }
 
-static jstring formatDouble(JNIEnv *env, jclass clazz, jint addr, jdouble value,
+static jstring formatLong(JNIEnv* env, jclass, jint addr, jlong value,
         jobject field, jstring fieldType, jobject attributes) {
+    int64_t longValue = value;
+    return format(env, addr, field, fieldType, attributes, longValue);
+}
 
-    const char * fieldPositionClassName = "java/text/FieldPosition";
-    const char * stringBufferClassName = "java/lang/StringBuffer";
-    jclass fieldPositionClass = env->FindClass(fieldPositionClassName);
-    jclass stringBufferClass = env->FindClass(stringBufferClassName);
-    jmethodID setBeginIndexMethodID = env->GetMethodID(fieldPositionClass,
-            "setBeginIndex", "(I)V");
-    jmethodID setEndIndexMethodID = env->GetMethodID(fieldPositionClass,
-            "setEndIndex", "(I)V");
-    jmethodID appendMethodID = env->GetMethodID(stringBufferClass,
-            "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
-
-    const char * fieldName = NULL;
-
-    if(fieldType != NULL) {
-        fieldName = env->GetStringUTFChars(fieldType, NULL);
-    }
-
-    uint32_t reslenneeded;
-    double val = value;
-    UChar *result = NULL;
-
-    FieldPosition fp;
-    fp.setField(FieldPosition::DONT_CARE);
-
-    UErrorCode status = U_ZERO_ERROR;
-
-    DecimalFormat::AttrBuffer attrBuffer = NULL;
-    attrBuffer = (DecimalFormat::AttrBuffer) malloc(sizeof(*attrBuffer));
-    attrBuffer->bufferSize = 128;
-    attrBuffer->buffer = (char *) malloc(129 * sizeof(char));
-    attrBuffer->buffer[0] = '\0';
-
-    DecimalFormat *fmt = (DecimalFormat *)(int)addr;
-
-    UnicodeString *res = new UnicodeString();
-
-    fmt->format(val, *res, fp, attrBuffer);
-
-    reslenneeded = res->extract(NULL, 0, status);
-
-    if(status==U_BUFFER_OVERFLOW_ERROR) {
-        status=U_ZERO_ERROR;
-
-        result = (UChar*)malloc(sizeof(UChar) * (reslenneeded + 1));
-
-        res->extract(result, reslenneeded + 1, status);
-
-    }
-    if (icu4jni_error(env, status) != FALSE) {
-        free(attrBuffer->buffer);
-        free(attrBuffer);
-        free(result);
-        delete(res);
-        return NULL;
-    }
-
-    int attrLength = 0;
-
-    attrLength = (strlen(attrBuffer->buffer) + 1 );
-
-    if(strlen(attrBuffer->buffer) > 0) {
-
-        // check if we want to get all attributes
-        if(attributes != NULL) {
-            jstring attrString = env->NewStringUTF(attrBuffer->buffer + 1);  // cut off the leading ';'
-            env->CallObjectMethod(attributes, appendMethodID, attrString);
-        }
-
-        // check if we want one special attribute returned in the given FieldPos
-        if(fieldName != NULL && field != NULL) {
-            const char *delimiter = ";";
-            int begin;
-            int end;
-            char * resattr;
-            resattr = strtok(attrBuffer->buffer, delimiter);
-
-            while(resattr != NULL && strcmp(resattr, fieldName) != 0) {
-                resattr = strtok(NULL, delimiter);
-            }
-
-            if(resattr != NULL && strcmp(resattr, fieldName) == 0) {
-                resattr = strtok(NULL, delimiter);
-                begin = (int) strtol(resattr, NULL, 10);
-                resattr = strtok(NULL, delimiter);
-                end = (int) strtol(resattr, NULL, 10);
-
-                env->CallVoidMethod(field, setBeginIndexMethodID, (jint) begin);
-                env->CallVoidMethod(field, setEndIndexMethodID, (jint) end);
-            }
-        }
-    }
-
-    if(fieldType != NULL) {
-        env->ReleaseStringUTFChars(fieldType, fieldName);
-    }
-
-    jstring resulting = env->NewString(result, reslenneeded);
-
-    free(attrBuffer->buffer);
-    free(attrBuffer);
-    free(result);
-    delete(res);
-
-    return resulting;
+static jstring formatDouble(JNIEnv* env, jclass, jint addr, jdouble value,
+        jobject field, jstring fieldType, jobject attributes) {
+    double doubleValue = value;
+    return format(env, addr, field, fieldType, attributes, doubleValue);
 }
 
 static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring value,
