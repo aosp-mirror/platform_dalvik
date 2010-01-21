@@ -35,7 +35,7 @@ public class Support_Locale {
      *
      * @return true if all requiredLocales are available.
      */
-    public static boolean areLocalesAvailable(Locale[] requiredLocales) {
+    public static boolean areLocalesAvailable(Locale... requiredLocales) {
         Locale[] availableLocales = Locale.getAvailableLocales();
         Set<Locale> localeSet = new HashSet<Locale>(Arrays.asList(availableLocales));
         for (Locale requiredLocale : requiredLocales) {
@@ -45,5 +45,4 @@ public class Support_Locale {
         }
         return true;
     }
-
 }
