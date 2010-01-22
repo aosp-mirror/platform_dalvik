@@ -21,6 +21,85 @@
 #include "native/InternalNativePriv.h"
 
 
+/*
+ * Convert an array of char* into a String[].
+ *
+ * Returns NULL on failure, with an exception raised.
+ */
+static ArrayObject* convertStringArray(char** strings, size_t count)
+{
+    /*
+     * Allocate an array to hold the String objects.
+     */
+    ClassObject* stringArrayClass =
+        dvmFindArrayClass("[Ljava/lang/String;", NULL);
+    if (stringArrayClass == NULL) {
+        /* shouldn't happen */
+        LOGE("Unable to find [Ljava/lang/String;\n");
+        dvmAbort();
+    }
+
+    ArrayObject* stringArray =
+        dvmAllocArrayByClass(stringArrayClass, count, ALLOC_DEFAULT);
+    if (stringArray == NULL) {
+        /* probably OOM */
+        LOGD("Failed allocating array of %d strings\n", count);
+        return NULL;
+    }
+
+    /*
+     * Create the individual String objects and add them to the array.
+     *
+     * We can use ALLOC_DONT_TRACK here because the objects are being
+     * added to a tracked array object as they're created.
+     */
+    StringObject** contents = (StringObject**) stringArray->contents;
+    size_t i;
+    for (i = 0; i < count; i++) {
+        contents[i] = dvmCreateStringFromCstr(strings[i], ALLOC_DONT_TRACK);
+        if (contents[i] == NULL) {
+            /* probably OOM; drop out now */
+            assert(dvmCheckException(dvmThreadSelf()));
+            dvmReleaseTrackedAlloc((Object*)stringArray, NULL);
+            return NULL;
+        }
+    }
+
+    dvmReleaseTrackedAlloc((Object*)stringArray, NULL);
+    return stringArray;
+}
+
+/*
+ * static String[] getVmFeatureList()
+ *
+ * Return a set of strings describing available VM features (this is chiefly
+ * of interest to DDMS).  Some features may be controlled by compile-time
+ * or command-line flags.
+ */
+static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
+    JValue* pResult)
+{
+    static const int MAX_FEATURE_COUNT = 10;
+    char* features[MAX_FEATURE_COUNT];
+    int idx = 0;
+
+#ifdef WITH_PROFILER
+    /* VM responds to DDMS method profiling requests */
+    features[idx++] = "method-trace-profiling";
+#endif
+#ifdef WITH_HPROF
+    /* VM responds to DDMS heap dump requests */
+    features[idx++] = "hprof-heap-dump";
+#endif
+
+    assert(idx <= MAX_FEATURE_COUNT);
+
+    LOGV("+++ sending up %d features\n", idx);
+    ArrayObject* arrayObj = convertStringArray(features, idx);
+    RETURN_PTR(arrayObj);       /* will be null on OOM */
+}
+
+
 #ifdef WITH_PROFILER
 /* These must match the values in dalvik.system.VMDebug.
  */
@@ -736,6 +815,8 @@ static void Dalvik_dalvik_system_VMDebug_crash(const u4* args,
 }
 
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
+    { "getVmFeatureList",           "()[Ljava/lang/String;",
+        Dalvik_dalvik_system_VMDebug_getVmFeatureList },
     { "getAllocCount",              "(I)I",
         Dalvik_dalvik_system_VMDebug_getAllocCount },
     { "resetAllocCount",            "(I)V",
