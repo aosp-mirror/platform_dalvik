@@ -120,11 +120,14 @@ public final class VMDebug {
     public static native boolean isDebuggerConnected();
 
     /**
-     * Enable object allocation count logging and reporting.  Call with
-     * a depth of zero to disable.  This produces "top N" lists on every GC.
+     * Returns an array of strings that identify VM features.  This is
+     * used by DDMS to determine what sorts of operations the VM can
+     * perform.
+     *
+     * @hide
      */
-    //public static native void enableTopAllocCounts(int depth);
-    
+    public static native String[] getVmFeatureList();
+
     /**
      * Start method tracing with default name, size, and with <code>0</code>
      * flags.
