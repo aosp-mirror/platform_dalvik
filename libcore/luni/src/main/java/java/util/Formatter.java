@@ -42,344 +42,485 @@ import org.apache.harmony.luni.util.LocaleCache;
 // END android-added
 
 /**
- * <p>The {@code Formatter} class is a String-formatting utility that is designed
- * to work like the {@code printf} function of the C programming language.
- * Its key methods are the {@code format} methods which create a formatted
- * {@code String} by replacing a set of placeholders (format tokens) with formatted
- * values. The style used to format each value is determined by the format
- * token used.  For example, the call<br/>
- * {@code format("My decimal value is %d and my String is %s.", 3, "Hello");}<br/>
- * returns the {@code String}<br/>
- * {@code My decimal value is 3 and my String is Hello.}
- *
- * <p>The format token consists of a percent sign, optionally followed
- * by flags and precision arguments, and then a single character that
- * indicates the type of value
- * being formatted.  If the type is a time/date, then the type character
- * {@code t} is followed by an additional character that indicates how the
- * date is to be formatted. The two characters {@code <$} immediately
- * following the % sign indicate that the previous value should be used again
- * instead of moving on to the next value argument. A number {@code n}
- * and a dollar sign immediately following the % sign make n the next argument
- * to be used.
- *
- * <p>The available choices are the following:
- *
+ * Formats arguments according to a format string (like {@code printf} in C).
+ * <p>
+ * It's relatively rare to use a {@code Formatter} directly. A variety of classes offer convenience
+ * methods for accessing formatter functionality.
+ * Of these, {@link String#format} is generally the most useful. {@link PrintStream} and {@link
+ * PrintWriter} both offer {@code format} and {@code printf} methods.
+ * <p>
+ * <i>Format strings</i> consist of plain text interspersed with format specifiers, such
+ * as {@code "name: %s weight: %03dkg\n"}. Being a Java string, the usual Java string literal
+ * backslash escapes are of course available.
+ * <p>
+ * <i>Format specifiers</i> (such as {@code "%s"} or {@code "%03d"} in the example) start with a
+ * {@code %} and describe how to format their corresponding argument. It includes an optional
+ * argument index, optional flags, an optional width, an optional precision, and a mandatory
+ * conversion type.
+ * In the example, {@code "%s"} has no flags, no width, and no precision, while
+ * {@code "%03d"} has the flag {@code 0}, the width 3, and no precision.
+ * <p>
+ * Not all combinations of argument index, flags, width, precision, and conversion type
+ * are valid.
+ * <p>
+ * <i>Argument index</i>. Normally, each format specifier consumes the next argument to
+ * {@code format}.
+ * For convenient localization, it's possible to reorder arguments so that they appear in a
+ * different order in the output than the order in which they were supplied.
+ * For example, {@code "%4$s"} formats the fourth argument ({@code 4$}) as a string ({@code s}).
+ * It's also possible to reuse an argument with {@code <}. For example,
+ * {@code format("%o %<d %<x", 64)} results in {@code "100 64 40"}.
+ * <p>
+ * <i>Flags</i>. The available flags are:
+ * <p>
  * <table BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Text value types</B></TD>
- * </tr>
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor"> <TD COLSPAN=4> <B>Flags</B> </TD> </tr>
  * <tr>
- * <td width="5%">{@code s}</td>
- * <td width="10%">String</td>
- * <td width="30%">{@code format("%s, %s", "hello", "Hello");}</td>
- * <td width="30%">{@code hello, Hello}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code S}, {@code s}</td>
- * <td width="10%">String to capitals</td>
- * <td width="30%">{@code format("%S, %S", "hello", "Hello");}</td>
- * <td width="30%">{@code HELLO, HELLO}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code c}</td>
- * <td width="10%">Character</td>
- * <td width="30%">{@code format("%c, %c", 'd', 0x65);}</td>
- * <td width="30%">{@code d, e}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code C}</td>
- * <td width="10%">Character to capitals</td>
- * <td width="30%">{@code format("%C, %C", 'd', 0x65);}</td>
- * <td width="30%">{@code D, E}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Text option flags</B><br/>The value between the
- * option and the type character indicates the minimum width in
- * characters of the formatted value  </TD>
- * </tr>
- * <tr>
- * <td width="5%">{@code -}</td>
- * <td width="10%">Left justify (width value is required)</td>
- * <td width="30%">{@code format("%-3C, %3C", 'd', 0x65);}</td>
- * <td width="30%">{@code D  ,   E}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Integer types</B></TD>
- * </tr>
- * <tr>
- * <td width="5%">{@code d}</td>
- * <td width="10%">int, formatted as decimal</td>
- * <td width="30%">{@code format("%d, %d"1$, 35, 0x10);}</td>
- * <td width="30%">{@code 35, 16}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code o}</td>
- * <td width="10%">int, formatted as octal</td>
- * <td width="30%">{@code format("%o, %o", 8, 010);}</td>
- * <td width="30%">{@code 10, 10}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code X}, {@code x}</td>
- * <td width="10%">int, formatted as hexadecimal</td>
- * <td width="30%">{@code format("%x, %X", 10, 10);}</td>
- * <td width="30%">{@code a, A}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Integer option flags</B><br/>The value between the
- * option and the type character indicates the minimum width in
- * characters of the formatted value  </TD>
+ * <td width="5%">{@code ,}</td>
+ * <td width="25%">Use grouping separators for large numbers. (Decimal only.)</td>
+ * <td width="30%">{@code format("%,d", 1024);}</td>
+ * <td width="30%">{@code 1,234}</td>
  * </tr>
  * <tr>
  * <td width="5%">{@code +}</td>
- * <td width="10%">lead with the number's sign</td>
+ * <td width="25%">Always show sign. (Decimal only.)</td>
  * <td width="30%">{@code format("%+d, %+4d", 5, 5);}</td>
- * <td width="30%">{@code +5,   +5}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code -}</td>
- * <td width="10%">Left justify (width value is required)</td>
- * <td width="30%">{@code format("%-6dx", 5);}</td>
- * <td width="30%">{@code 5      x}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code #}</td>
- * <td width="10%">Print the leading characters that indicate
- * hexadecimal or octal (for use only with hex and octal types) </td>
- * <td width="30%">{@code format("%#o", 010);}</td>
- * <td width="30%">{@code 010}</td>
+ * <td width="30%"><pre>+5,   +5</pre></td>
  * </tr>
  * <tr>
  * <td width="5%">{@code  }</td>
- * <td width="10%">A space indicates that non-negative numbers
- * should have a leading space. </td>
+ * <td width="25%">A space indicates that non-negative numbers
+ * should have a leading space. (Decimal only.)</td>
  * <td width="30%">{@code format("x% d% 5d", 4, 4);}</td>
- * <td width="30%">{@code x 4    4}</td>
+ * <td width="30%"><pre>x 4    4</pre></td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code (}</td>
+ * <td width="25%">Put parentheses around negative numbers. (Decimal only.)</td>
+ * <td width="30%">{@code format("%(d, %(d, %(6d", 12, -12, -12);}</td>
+ * <td width="30%"><pre>12, (12),   (12)</pre></td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code -}</td>
+ * <td width="25%">Left-justify. (Requires width.)</td>
+ * <td width="30%">{@code format("%-6dx", 5);}<br/>{@code format("%-3C, %3C", 'd', 0x65);}</td>
+ * <td width="30%"><pre>5      x</pre><br/><pre>D  ,   E</pre></td>
  * </tr>
  * <tr>
  * <td width="5%">{@code 0}</td>
- * <td width="10%">Pad the number with leading zeros (width value is required)</td>
+ * <td width="25%">Pad the number with leading zeros. (Requires width.)</td>
  * <td width="30%">{@code format("%07d, %03d", 4, 5555);}</td>
  * <td width="30%">{@code 0000004, 5555}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code (}</td>
- * <td width="10%">Put parentheses around negative numbers (decimal only)</td>
- * <td width="30%">{@code format("%(d, %(d, %(6d", 12, -12, -12);}</td>
- * <td width="30%">{@code 12, (12),   (12)}</td>
+ * <td width="5%">{@code #}</td>
+ * <td width="25%">Alternate form. (Octal and hex only.) </td>
+ * <td width="30%">{@code format("%o %#o", 010, 010);}<br/>{@code format("%x %#x", 0x12, 0x12);}</td>
+ * <td width="30%">{@code 10 010}<br/>{@code 12 0x12}</td>
+ * </tr>
+ * </table>
+ * <p>
+ * <i>Width</i>. The width is a decimal integer specifying the minimum number of characters to be
+ * used to represent the argument. If the result would otherwise be shorter than the width, padding
+ * will be added (the exact details of which depend on the flags). Note that you can't use width to
+ * truncate a field, only to make it wider: see precision for control over the maximum width.
+ * <p>
+ * <i>Precision</i>. The precision is a {@code .} followed by a decimal integer, giving the minimum
+ * number of digits for {@code d}, {@code o}, {@code x}, or {@code X}; the minimum number of digits
+ * after the decimal point for {@code a}, {@code A}, {@code e}, {@code E}, {@code f}, or {@code F};
+ * the maximum number of significant digits for {@code g} or {@code G}; or the maximum number of
+ * characters for {@code s} or {@code S}.
+ * <p>
+ * <i>Conversion type</i>. One or two characters describing how to interpret the argument. Most
+ * conversions are a single character, but date/time conversions all start with {@code t} and
+ * have a single extra character describing the desired output.
+ * <p>
+ * Many conversion types have a corresponding uppercase variant that converts its result to
+ * uppercase using the rules of the relevant locale (either the default or the locale set for
+ * this formatter).
+ * <p>
+ * This table shows the available single-character (non-date/time) conversion types:
+ * <table BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+ * <TD COLSPAN=4>
+ * <B>String conversions</B>
+ * <br>
+ * All types are acceptable arguments. Values of type {@link Formattable} have their
+ * {@code formatTo} method invoked; all other types use {@code toString}.
+ * </TD>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code s}</td>
+ * <td width="25%">String.</td>
+ * <td width="30%">{@code format("%s %s", "hello", "Hello");}</td>
+ * <td width="30%">{@code hello Hello}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code S}</td>
+ * <td width="25%">Uppercase string.</td>
+ * <td width="30%">{@code format("%S %S", "hello", "Hello");}</td>
+ * <td width="30%">{@code HELLO HELLO}</td>
  * </tr>
  * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
  * <TD COLSPAN=4>
- * <B>Float types</B><br/>A value immediately following the % symbol
- * gives the minimum width in characters of the formatted value; if it
- * is followed by a period and another integer, then the second value
- * gives the precision (6 by default).</TD>
+ * <B>Character conversions</B>
+ * <br>
+ * Byte, Character, Short, and Integer (and primitives that box to those types) are all acceptable
+ * as character arguments. Any other type is an error.
+ * </TD>
  * </tr>
  * <tr>
- * <td width="5%">{@code f}</td>
- * <td width="10%">float (or double) formatted as a decimal, where
- * the precision indicates the number of digits after the decimal.</td>
- * <td width="30%">{@code format("%f %<.1f %<1.5f %<10f %<6.0f", 123.456f);}</td>
- * <td width="30%">{@code 123.456001 123.5 123.45600 123.456001    123}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code E}, {@code e}</td>
- * <td width="10%">float (or double) formatted in decimal exponential
- * notation, where the precision indicates the number of significant digits.</td>
- * <td width="30%">{@code format("%E %<.1e %<1.5E %<10E %<6.0E", 123.456f);}</td>
- * <td width="30%">{@code 1.234560E+02 1.2e+02 1.23456E+02 1.234560E+02  1E+02}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code G}, {@code g}</td>
- * <td width="10%">float (or double) formatted in decimal exponential
- * notation , where the precision indicates the maximum number of significant digits.</td>
- * <td width="30%">{@code format("%G %<.1g %<1.5G %<10G %<6.0G", 123.456f);}</td>
- * <td width="30%">{@code 123.456 1e+02 123.46    123.456  1E+02}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code A}, {@code a}</td>
- * <td width="10%">float (or double) formatted as a hexadecimal in exponential
- * notation, where the precision indicates the number of significant digits.</td>
- * <td width="30%">{@code format("%A %<.1a %<1.5A %<10A %<6.0A", 123.456f);}</td>
- * <td width="30%">{@code 0X1.EDD2F2P6 0x1.fp6 0X1.EDD2FP6 0X1.EDD2F2P6 0X1.FP6}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Float-type option flags</B><br/>See the Integer-type options.
- * The options for float-types are the
- * same as for integer types with one addition: </TD>
- * </tr>
- * <tr>
- * <td width="5%">{@code ,}</td>
- * <td width="10%">Use a comma in place of a decimal if the locale
- * requires it. </td>
- * <td width="30%">{@code format(new Locale("fr"), "%,7.2f", 6.03f);}</td>
- * <td width="30%">{@code    6,03}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Date types</B></TD>
- * </tr>
- * <tr>
- * <td width="5%">{@code t}, {@code T}</td>
- * <td width="10%">Date</td>
- * <td width="30%">{@code format(new Locale("fr"), "%tB %TB", Calendar.getInstance(), Calendar.getInstance());}</td>
- * <td width="30%">{@code avril AVRIL}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Date format precisions</B><br/>The format precision character
- * follows the {@code t}. </TD>
- * </tr>
- * <tr>
- * <td width="5%">{@code A}, {@code a}</td>
- * <td width="10%">The day of the week</td>
- * <td width="30%">{@code format("%ta %tA", cal, cal);}</td>
- * <td width="30%">{@code Tue Tuesday}</td>
- * </tr>
- * <tr>
- * <td width="5%">{@code b}, {@code B}, {@code h}</td>
- * <td width="10%">The name of the month</td>
- * <td width="30%">{@code format("%tb %<tB %<th", cal, cal, cal);}</td>
- * <td width="30%">{@code Apr April Apr}</td>
+ * <td width="5%">{@code c}</td>
+ * <td width="25%">Character.</td>
+ * <td width="30%">{@code format("%c %c", 'd', 'E');}</td>
+ * <td width="30%">{@code d E}</td>
  * </tr>
  * <tr>
  * <td width="5%">{@code C}</td>
- * <td width="10%">The century</td>
- * <td width="30%">{@code format("%tC\n", cal);}</td>
+ * <td width="25%">Uppercase character.</td>
+ * <td width="30%">{@code format("%C %C", 'd', 'E');}</td>
+ * <td width="30%">{@code D E}</td>
+ * </tr>
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+ * <TD COLSPAN=4>
+ * <B>Integer conversions</B>
+ * <br>
+ * Byte, Short, Integer, Long, and BigInteger (and primitives that box to those types) are all
+ * acceptable as integer arguments. Any other type is an error.
+ * </TD>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code d}</td>
+ * <td width="25%">Decimal.</td>
+ * <td width="30%">{@code format("%d", 26);}</td>
+ * <td width="30%">{@code 26}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code o}</td>
+ * <td width="25%">Octal.</td>
+ * <td width="30%">{@code format("%o", 032);}</td>
+ * <td width="30%">{@code 32}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code x}, {@code X}</td>
+ * <td width="25%">Hexadecimal.</td>
+ * <td width="30%">{@code format("%x %X", 0x1a, 0x1a);}</td>
+ * <td width="30%">{@code 1a 1A}</td>
+ * </tr>
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+ * <TD COLSPAN=4><B>Floating-point conversions</B>
+ * <br>
+ * Float, Double, and BigDecimal (and primitives that box to those types) are all acceptable as
+ * floating-point arguments. Any other type is an error.
+ * </TD>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code f}</td>
+ * <td width="25%">Decimal floating point.</td>
+ * <td width="30%"><pre>
+format("%f", 123.456f);
+format("%.1f", 123.456f);
+format("%1.5f", 123.456f);
+format("%10f", 123.456f);
+format("%6.0f", 123.456f);</td>
+ * <td width="30%" valign="top"><pre>
+123.456001
+123.5
+123.45600
+123.456001
+&nbsp;&nbsp;&nbsp;123</pre></td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code e}, {@code E}</td>
+ * <td width="25%">Engineering/exponential floating point.</td>
+ * <td width="30%"><pre>
+format("%e", 123.456f);
+format("%.1e", 123.456f);
+format("%1.5E", 123.456f);
+format("%10E", 123.456f);
+format("%6.0E", 123.456f);</td>
+ * <td width="30%" valign="top"><pre>
+1.234560e+02
+1.2e+02
+1.23456E+02
+1.234560E+02
+&nbsp;1E+02</pre></td>
+ * </tr>
+ * <tr>
+ * <td width="5%" valign="top">{@code g}, {@code G}</td>
+ * <td width="25%" valign="top">Decimal or engineering, depending on the magnitude of the value.</td>
+ * <td width="30%" valign="top">{@code format("%g %g", 0.123, 0.0000123);}</td>
+ * <td width="30%" valign="top">{@code 0.123000 1.23000e-05}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code a}, {@code A}</td>
+ * <td width="25%">Hexadecimal floating point.</td>
+ * <td width="30%">{@code format("%a", 123.456f);}</td>
+ * <td width="30%">{@code 0x1.edd2f2p6}</td>
+ * </tr>
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+ * <TD COLSPAN=4>
+ * <B>Boolean conversion</B>
+ * <br>
+ * Accepts Boolean values. {@code null} is considered false, and instances of all other
+ * types are considered true.
+ * </TD>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code b}, {@code B}</td>
+ * <td width="25%">Boolean.</td>
+ * <td width="30%">{@code format("%b %b", true, false);}<br>{@code format("%B %B", true, false);}<br>{@code format("%b", null);}<br>{@code format("%b", "hello");}</td>
+ * <td width="30%">{@code true false}<br>{@code TRUE FALSE}<br>{@code false}<br>{@code true}</td>
+ * </tr>
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+ * <TD COLSPAN=4>
+ * <B>Hash code conversion</B>
+ * <br>
+ * Invokes {@code hashCode} on its argument, which may be of any type.
+ * </TD>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code h}, {@code H}</td>
+ * <td width="25%">Hexadecimal hash code.</td>
+ * <td width="30%">{@code format("%h", this);}<br>{@code format("%H", this);}<br>{@code format("%h", null);}</td>
+ * <td width="30%">{@code 190d11}<br>{@code 190D11}<br>{@code null}</td>
+ * </tr>
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+ * <TD COLSPAN=4>
+ * <B>Zero-argument conversions</B></TD>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code %}</td>
+ * <td width="25%">A literal % character.</td>
+ * <td width="30%">{@code format("%d%%", 50);}</td>
+ * <td width="30%">{@code 50%}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code n}</td>
+ * <td width="25%">Newline. (The value of the system property {@code "line.separator"}.)</td>
+ * <td width="30%">{@code format("first%nsecond");}</td>
+ * <td width="30%">{@code first\nsecond}</td>
+ * </tr>
+ * </table>
+ * <p>
+ * It's also possible to format dates and times with {@code Formatter}, though you should seriously
+ * consider using {@link SimpleDateFormat} via the factory methods in {@link DateFormat} instead.
+ * The facilities offered by {@code Formatter} are low-level and place the burden of localization
+ * on the developer. Using {@link DateFormat#getDateInstance}, {@link DateFormat#getTimeInstance},
+ * and {@link DateFormat#getDateTimeInstance} is preferable for dates and times that will be
+ * presented to a human. Those methods will select the best format strings for the user's locale.
+ * <p>
+ * The best non-localized form is <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>,
+ * which you can get with {@code "%tF"} (2010-01-22), {@code "%tF %tR"} (2010-01-22 13:39),
+ * {@code "%tF %tT"} (2010-01-22 13:39:15), or {@code "%tF %tT%z"} (2010-01-22 13:39:15-0800).
+ * <p>
+ * As with the other conversions, date/time conversion has an uppercase format. Replacing
+ * {@code %t} with {@code %T} will uppercase the field according to the rules of the formatter's
+ * locale.
+ * <p>
+ * This table shows the date/time conversions:
+ * <table BORDER="1" WIDTH="100%" CELLPADDING="3" CELLSPACING="0" SUMMARY="">
+ * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
+ * <TD COLSPAN=4><B>Date/time conversions</B>
+ * <br>
+ * Calendar, Date, and Long (representing milliseconds past the epoch) are all acceptable
+ * as date/time arguments. Any other type is an error. The epoch is 1970-01-01 00:00:00 UTC.
+ * </TD>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code ta}</td>
+ * <td width="25%">Localized weekday name (abbreviated).</td>
+ * <td width="30%">{@code format("%ta", cal, cal);}</td>
+ * <td width="30%">{@code Tue}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tA}</td>
+ * <td width="25%">Localized weekday name (full).</td>
+ * <td width="30%">{@code format("%tA", cal, cal);}</td>
+ * <td width="30%">{@code Tuesday}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tb}</td>
+ * <td width="25%">Localized month name (abbreviated).</td>
+ * <td width="30%">{@code format("%tb", cal);}</td>
+ * <td width="30%">{@code Apr}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tB}</td>
+ * <td width="25%">Localized month name (full).</td>
+ * <td width="30%">{@code format("%tB", cal);}</td>
+ * <td width="30%">{@code April}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tc}</td>
+ * <td width="25%">Locale-preferred date and time representation. (See {@link DateFormat} for more variations.)</td>
+ * <td width="30%">{@code format("%tc", cal);}</td>
+ * <td width="30%">{@code Tue Apr 01 16:19:17 CEST 2008}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tC}</td>
+ * <td width="25%">2-digit century.</td>
+ * <td width="30%">{@code format("%tC", cal);}</td>
  * <td width="30%">{@code 20}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code d}, {@code e}</td>
- * <td width="10%">The day of the month (with or without leading zeros)</td>
- * <td width="30%">{@code format("%td %te", cal, cal);}</td>
- * <td width="30%">{@code 01 1}</td>
+ * <td width="5%">{@code td}</td>
+ * <td width="25%">2-digit day of month (01-31).</td>
+ * <td width="30%">{@code format("%td", cal);}</td>
+ * <td width="30%">{@code 01}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code F}</td>
- * <td width="10%">The complete date formatted as YYYY-MM-DD</td>
+ * <td width="5%">{@code tD}</td>
+ * <td width="25%">Ambiguous US date format (MM/DD/YY). Do not use.</td>
+ * <td width="30%">{@code format("%tD", cal);}</td>
+ * <td width="30%">{@code 04/01/08}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code te}</td>
+ * <td width="25%">Day of month (1-31).</td>
+ * <td width="30%">{@code format("%te", cal);}</td>
+ * <td width="30%">{@code 1}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tF}</td>
+ * <td width="25%">Full date in ISO 8601 format (YYYY-MM-DD).</td>
  * <td width="30%">{@code format("%tF", cal);}</td>
  * <td width="30%">{@code 2008-04-01}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code D}</td>
- * <td width="10%">The complete date formatted as MM/DD/YY
- * (not corrected for locale) </td>
- * <td width="30%">{@code format(new Locale("en_US"), "%tD", cal);<br/>format(new Locale("en_UK"), " %tD", cal);}</td>
- * <td width="30%">{@code 04/01/08 04/01/08}</td>
+ * <td width="5%">{@code th}</td>
+ * <td width="25%">Synonym for {@code %tb}.</td>
+ * <td width="30%"></td>
+ * <td width="30%"></td>
  * </tr>
  * <tr>
- * <td width="5%">{@code j}</td>
- * <td width="10%">The number of the day (from the beginning of the year).</td>
- * <td width="30%">{@code format("%tj\n", cal);}</td>
- * <td width="30%">{@code 092}</td>
+ * <td width="5%">{@code tH}</td>
+ * <td width="25%">24-hour hour of day (00-23).</td>
+ * <td width="30%">{@code format("%tH", cal);}</td>
+ * <td width="30%">{@code 16}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code m}</td>
- * <td width="10%">The number of the month</td>
- * <td width="30%">{@code format("%tm\n", cal);}</td>
+ * <td width="5%">{@code tI}</td>
+ * <td width="25%">12-hour hour of day (01-12).</td>
+ * <td width="30%">{@code format("%tH", cal);}</td>
  * <td width="30%">{@code 04}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code y}, {@code Y}</td>
- * <td width="10%">The year</td>
- * <td width="30%">{@code format("%ty %tY", cal, cal);}</td>
- * <td width="30%">{@code 08 2008}</td>
+ * <td width="5%">{@code tj}</td>
+ * <td width="25%">3-digit day of year (001-366).</td>
+ * <td width="30%">{@code format("%tj", cal);}</td>
+ * <td width="30%">{@code 092}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code H}, {@code I}, {@code k}, {@code l}</td>
- * <td width="10%">The hour of the day, in 12 or 24 hour format, with or
- * without a leading zero</td>
- * <td width="30%">{@code format("%tH %tI %tk %tl", cal, cal, cal, cal);}</td>
- * <td width="30%">{@code 16 04 16 4}</td>
+ * <td width="5%">{@code tk}</td>
+ * <td width="25%">24-hour hour of day (0-23).</td>
+ * <td width="30%">{@code format("%tH", cal);}</td>
+ * <td width="30%">{@code 16}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code p}</td>
- * <td width="10%">a.m. or p.m.</td>
+ * <td width="5%">{@code tl}</td>
+ * <td width="25%">12-hour hour of day (1-12).</td>
+ * <td width="30%">{@code format("%tH", cal);}</td>
+ * <td width="30%">{@code 4}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tL}</td>
+ * <td width="25%">Milliseconds.</td>
+ * <td width="30%">{@code format("%tL", cal);}</td>
+ * <td width="30%">{@code 359}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tm}</td>
+ * <td width="25%">2-digit month of year (01-12).</td>
+ * <td width="30%">{@code format("%tm", cal);}</td>
+ * <td width="30%">{@code 04}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tM}</td>
+ * <td width="25%">2-digit minute.</td>
+ * <td width="30%">{@code format("%tM", cal);}</td>
+ * <td width="30%">{@code 08}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tN}</td>
+ * <td width="25%">Nanoseconds.</td>
+ * <td width="30%">{@code format("%tN", cal);}</td>
+ * <td width="30%">{@code 359000000}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tp}</td>
+ * <td width="25%">a.m. or p.m.</td>
  * <td width="30%">{@code format("%tp %Tp", cal, cal);}</td>
  * <td width="30%">{@code pm PM}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code M}, {@code S}, {@code L}, {@code N}</td>
- * <td width="10%">The minutes, seconds, milliseconds, and nanoseconds</td>
- * <td width="30%">{@code format("%tM %tS %tL %tN", cal, cal, cal, cal);}</td>
- * <td width="30%">{@code 08 17 359 359000000}</td>
+ * <td width="5%">{@code tQ}</td>
+ * <td width="25%">Milliseconds since the epoch.</td>
+ * <td width="30%">{@code format("%tQ", cal);}</td>
+ * <td width="30%">{@code 1207059412656}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code Z}, {@code z}</td>
- * <td width="10%">The time zone: its abbreviation or offset from GMT</td>
- * <td width="30%">{@code format("%tZ %tz", cal, cal);}</td>
- * <td width="30%">{@code CEST +0100}</td>
+ * <td width="5%">{@code tr}</td>
+ * <td width="25%">Full 12-hour time ({@code %tI:%tM:%tS %Tp}).</td>
+ * <td width="30%">{@code format("%tr", cal);}</td>
+ * <td width="30%">{@code 04:15:32 PM}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code R}, {@code r}, {@code T}</td>
- * <td width="10%">The complete time</td>
- * <td width="30%">{@code format("%tR %tr %tT", cal, cal, cal);}</td>
- * <td width="30%">{@code 16:15 04:15:32 PM 16:15:32}</td>
+ * <td width="5%">{@code tR}</td>
+ * <td width="25%">Short 24-hour time ({@code %tH:%tM}).</td>
+ * <td width="30%">{@code format("%tR", cal);}</td>
+ * <td width="30%">{@code 16:15}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code s}, {@code Q}</td>
- * <td width="10%">The number of seconds or milliseconds from "the epoch"
- * (1 January 1970 00:00:00 UTC) </td>
- * <td width="30%">{@code format("%ts %tQ", cal, cal);}</td>
- * <td width="30%">{@code 1207059412 1207059412656}</td>
+ * <td width="5%">{@code ts}</td>
+ * <td width="25%">Seconds since the epoch.</td>
+ * <td width="30%">{@code format("%ts", cal);}</td>
+ * <td width="30%">{@code 1207059412}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code c}</td>
- * <td width="10%">The complete time and date</td>
- * <td width="30%">{@code format("%tc", cal);}</td>
- * <td width="30%">{@code Tue Apr 01 16:19:17 CEST 2008}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Other data types</B></TD>
+ * <td width="5%">{@code tS}</td>
+ * <td width="25%">2-digit seconds (00-60).</td>
+ * <td width="30%">{@code format("%tS", cal);}</td>
+ * <td width="30%">{@code 17}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code B}, {@code b}</td>
- * <td width="10%">Boolean</td>
- * <td width="30%">{@code format("%b, %B", true, false);}</td>
- * <td width="30%">{@code true, FALSE}</td>
+ * <td width="5%">{@code tT}</td>
+ * <td width="25%">Full 24-hour time ({@code %tH:%tM:%tS}).</td>
+ * <td width="30%">{@code format("%tT", cal);}</td>
+ * <td width="30%">{@code 16:15:32}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code H}, {@code h}</td>
- * <td width="10%">Hashcode</td>
- * <td width="30%">{@code format("%h, %H", obj, obj);}</td>
- * <td width="30%">{@code 190d11, 190D11}</td>
+ * <td width="5%">{@code ty}</td>
+ * <td width="25%">2-digit year (00-99).</td>
+ * <td width="30%">{@code format("%ty", cal);}</td>
+ * <td width="30%">{@code 08}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code n}</td>
- * <td width="10%">line separator</td>
- * <td width="30%">{@code format("first%nsecond", "???");}</td>
- * <td width="30%">{@code first<br/>second}</td>
- * </tr>
- * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
- * <TD COLSPAN=4>
- * <B>Escape sequences</B></TD>
+ * <td width="5%">{@code tY}</td>
+ * <td width="25%">4-digit year.</td>
+ * <td width="30%">{@code format("%tY", cal);}</td>
+ * <td width="30%">{@code 2008}</td>
  * </tr>
  * <tr>
- * <td width="5%">{@code %}</td>
- * <td width="10%">Escape the % character</td>
- * <td width="30%">{@code format("%d%%, %d", 50, 60);}</td>
- * <td width="30%">{@code 50%, 60}</td>
+ * <td width="5%">{@code tz}</td>
+ * <td width="25%">Time zone GMT offset.</td>
+ * <td width="30%">{@code format("%tz", cal);}</td>
+ * <td width="30%">{@code +0100}</td>
+ * </tr>
+ * <tr>
+ * <td width="5%">{@code tZ}</td>
+ * <td width="25%">Localized time zone abbreviation.</td>
+ * <td width="30%">{@code format("%tZ", cal);}</td>
+ * <td width="30%">{@code CEST}</td>
  * </tr>
  * </table>
- *
- * <p>An instance of Formatter can be created to write the formatted
- * output to standard types of output streams.  Its functionality can
- * also be accessed through the format methods of an output stream
- * or of {@code String}:<br/>
- * {@code System.out.println(String.format("%ty\n", cal));}<br/>
- * {@code System.out.format("%ty\n", cal);}
- *
- * <p>The class is not multi-threaded safe. The user is responsible for
- * maintaining a thread-safe design if a {@code Formatter} is
- * accessed by multiple threads.
+ * <p>
+ * Formatter is not thread-safe.
  *
  * @since 1.5
+ * @see DateFormat
+ * @see Formattable
+ * @see SimpleDateFormat
  */
 public final class Formatter implements Closeable, Flushable {
 
@@ -1329,7 +1470,7 @@ public final class Formatter implements Closeable, Flushable {
         }
 
         /*
-         * Transforms the hashcode of the argument to a formatted string.
+         * Transforms the hash code of the argument to a formatted string.
          */
         private CharSequence transformFromHashCode() {
             formatToken.checkMissingWidth();
