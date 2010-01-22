@@ -330,13 +330,6 @@ final class NativeConverter{
     public static final native boolean canDecode(long converterHandle,byte[] bytes);
     
     /**
-     * Gets the number of converters installed in the current installation of ICU
-     * @return int number of converters installed
-     * @internal ICU 2.4
-     */
-    public static final native int countAvailable();
-    
-    /**
      * Gets the canonical names of available converters 
      * @return Object[] names as an object array
      * @internal ICU 2.4

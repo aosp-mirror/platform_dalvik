@@ -15,7 +15,6 @@
  * @author: Ram Viswanadha
  */
 
-#include "ConverterInterface.h"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "unicode/utypes.h"   /* Basic ICU data types */
@@ -26,6 +25,10 @@
 #include "ErrorCode.h"
 #include <stdlib.h>
 #include <string.h>
+
+#define com_ibm_icu4jni_converters_NativeConverter_STOP_CALLBACK 0L
+#define com_ibm_icu4jni_converters_NativeConverter_SKIP_CALLBACK 1L
+#define com_ibm_icu4jni_converters_NativeConverter_SUBSTITUTE_CALLBACK 2L
 
 // BEGIN android-removed
 // #define UTF_16BE "UTF-16BE" 
@@ -699,10 +702,6 @@ static jboolean canDecode(JNIEnv *env, jclass jClass, jlong handle, jbyteArray s
     return (jboolean)FALSE;
 }
 
-static jint countAvailable(JNIEnv *env, jclass jClass) {
-    return ucnv_countAvailable();
-}
-
 int32_t copyString(char* dest, int32_t destCapacity, int32_t startIndex,
            const char* src, UErrorCode* status) {
     int32_t srcLen = 0, i=0;
@@ -1358,7 +1357,6 @@ static JNINativeMethod gMethods[] = {
     { "getSubstitutionBytes", "(J)[B", (void*) getSubstitutionBytes },
     { "canEncode", "(JI)Z", (void*) canEncode },
     { "canDecode", "(J[B)Z", (void*) canDecode },
-    { "countAvailable", "()I", (void*) countAvailable },
     { "getAvailable", "()[Ljava/lang/String;", (void*) getAvailable },
     { "countAliases", "(Ljava/lang/String;)I", (void*) countAliases },
     { "getAliases", "(Ljava/lang/String;)[Ljava/lang/String;", (void*) getAliases },
@@ -1374,5 +1372,3 @@ int register_com_ibm_icu4jni_converters_NativeConverter(JNIEnv *_env) {
     return jniRegisterNativeMethods(_env, "com/ibm/icu4jni/charset/NativeConverter",
                 gMethods, NELEM(gMethods));
 }
-
-

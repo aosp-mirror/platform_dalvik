@@ -525,29 +525,25 @@ static void setText(JNIEnv *env, jclass obj, jint address,
    icu4jni_error(env, status);
 }
 
-// BEGIN android-added
-static jstring getAvailableLocalesImpl(JNIEnv *env, jclass clazz, jint index) {
-
-    const char * locale = ucol_getAvailable(index);
-
-    return (*env)->NewStringUTF(env, locale);
-
+static jobjectArray getAvailableLocalesImpl(JNIEnv *env, jclass clazz) {
+    jclass stringClass = (*env)->FindClass(env, "java/lang/String");
+    if (stringClass == NULL) {
+        return NULL;
+    }
+    size_t count = ucol_countAvailable();
+    jobjectArray result = (*env)->NewObjectArray(env, count, stringClass, NULL);
+    size_t i = 0;
+    for (; i < count; ++i) {
+        jstring s = (*env)->NewStringUTF(env, ucol_getAvailable(i));
+        (*env)->SetObjectArrayElement(env, result, i, s);
+        (*env)->DeleteLocalRef(env, s);
+    }
+    return result;
 }
 
-static jint getAvailableLocalesCountImpl(JNIEnv *env, jclass clazz) {
-    return ucol_countAvailable();
-}
-// END android-added
-
-/*
- * JNI registratio
- */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    // BEGIN android-added
-    { "getAvailableLocalesImpl", "(I)Ljava/lang/String;", (void*) getAvailableLocalesImpl },
-    { "getAvailableLocalesCountImpl", "()I", (void*) getAvailableLocalesCountImpl },
-    // END android-added
+    { "getAvailableLocalesImpl", "()[Ljava/lang/String;", (void*) getAvailableLocalesImpl },
     { "openCollator", "()I", (void*) openCollator__ },
     { "openCollator", "(Ljava/lang/String;)I", (void*) openCollator__Ljava_lang_String_2 },
     { "openCollatorFromRules", "(Ljava/lang/String;II)I", (void*) openCollatorFromRules },
