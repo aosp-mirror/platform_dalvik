@@ -615,11 +615,13 @@ static jboolean initLocaleDataImpl(JNIEnv* env, jclass clazz, jstring locale, jo
 
     ScopedResourceBundle calendar(ures_getByKey(root.get(), "calendar", NULL, &status));
     if (U_FAILURE(status)) {
+        LOGE("Error getting ICU calendar resource bundle: %s", u_errorName(status));
         return JNI_FALSE;
     }
 
     ScopedResourceBundle gregorian(ures_getByKey(calendar.get(), "gregorian", NULL, &status));
     if (U_FAILURE(status)) {
+        LOGE("Error getting ICU gregorian resource bundle: %s", u_errorName(status));
         return JNI_FALSE;
     }
 

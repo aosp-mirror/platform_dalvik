@@ -1,18 +1,17 @@
 /*
- * Copyright 2006 The Android Open Source Project 
+ * Copyright (C) 2006 The Android Open Source Project
  *
- * Internal native functions.  All of the functions defined here make
- * direct use of VM functions or data structures, so they can't be written
- * with JNI and shouldn't really be in a shared library.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * All functions here either complete quickly or are used to enter a wait
- * state, so we don't set the thread status to THREAD_NATIVE when executing
- * these methods.  This means that the GC will wait for these functions
- * to finish.  DO NOT perform long operations or blocking I/O in here.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * In some cases we're following the division of labor defined by GNU
- * ClassPath, e.g. java.lang.Thread has "Thread" and "VMThread", with
- * the VM-specific behavior isolated in VMThread.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "JNIHelp.h"
@@ -22,16 +21,20 @@
 #include "unicode/putil.h"
 #include <stdlib.h>
 
-static jstring getAvailableLocalesImpl(JNIEnv *env, jclass clazz, jint index) {
-
-    const char * locale = ubrk_getAvailable(index);
-
-    return (*env)->NewStringUTF(env, locale);
-
-}
-
-static jint getAvailableLocalesCountImpl(JNIEnv *env, jclass clazz) {
-    return ubrk_countAvailable();
+static jobjectArray getAvailableLocalesImpl(JNIEnv *env, jclass clazz) {
+    jclass stringClass = (*env)->FindClass(env, "java/lang/String");
+    if (stringClass == NULL) {
+        return NULL;
+    }
+    size_t count = ubrk_countAvailable();
+    jobjectArray result = (*env)->NewObjectArray(env, count, stringClass, NULL);
+    size_t i = 0;
+    for (; i < count; ++i) {
+        jstring s = (*env)->NewStringUTF(env, ubrk_getAvailable(i));
+        (*env)->SetObjectArrayElement(env, result, i, s);
+        (*env)->DeleteLocalRef(env, s);
+    }
+    return result;
 }
 
 static jint getCharacterInstanceImpl(JNIEnv *env, jclass clazz, jstring locale) {
@@ -223,10 +226,7 @@ static jint lastImpl(JNIEnv *env, jclass clazz, jint address) {
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "getAvailableLocalesImpl", "(I)Ljava/lang/String;", 
-            (void*) getAvailableLocalesImpl },
-    { "getAvailableLocalesCountImpl", "()I", 
-            (void*) getAvailableLocalesCountImpl },
+    { "getAvailableLocalesImpl", "()[Ljava/lang/String;", (void*) getAvailableLocalesImpl },
     { "getCharacterInstanceImpl", "(Ljava/lang/String;)I", 
             (void*) getCharacterInstanceImpl },
     { "getLineInstanceImpl", "(Ljava/lang/String;)I", 

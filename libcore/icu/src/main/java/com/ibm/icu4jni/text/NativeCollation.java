@@ -245,19 +245,5 @@ final class NativeCollation
   */
   static native void setOffset(int address, int offset);
 
-  // BEGIN android-added
-  static String[] getAvailableLocalesImpl() {
-      int count =  getAvailableLocalesCountImpl();
-      String[] result = new String[count];
-      
-      for(int i = 0; i < count; i++) {
-          result[i] = getAvailableLocalesImpl(i);
-      }
-      return result;
-  }
-  
-  private static native String getAvailableLocalesImpl(int i);
-  
-  private static native int getAvailableLocalesCountImpl();
-  // END android-added
+  static native String[] getAvailableLocalesImpl();
 }
