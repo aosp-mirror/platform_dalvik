@@ -19,7 +19,9 @@ package dalvik.runner;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -61,6 +63,7 @@ public abstract class Vm {
             = Executors.newFixedThreadPool(1, Threads.daemonThreadFactory());
 
     protected final Integer debugPort;
+    protected final List<String> additionalVmArgs;
     protected final long timeoutSeconds;
     protected final File sdkJar;
     protected final File localTemp;
@@ -70,11 +73,12 @@ public abstract class Vm {
     private Classpath testRunnerClasses;
 
     Vm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
-            boolean clean) {
+            List<String> additionalVmArgs, boolean clean) {
         this.debugPort = debugPort;
         this.timeoutSeconds = timeoutSeconds;
         this.sdkJar = sdkJar;
         this.localTemp = localTemp;
+        this.additionalVmArgs = additionalVmArgs;
         this.clean = clean;
     }
 
@@ -230,6 +234,7 @@ public abstract class Vm {
                 .classpath(getRuntimeSupportClasspath())
                 .userDir(testRun.getUserDir())
                 .debugPort(debugPort)
+                .vmArgs(additionalVmArgs)
                 .mainClass(testRun.getTestRunner().getName())
                 .build();
 
@@ -305,7 +310,7 @@ public abstract class Vm {
         private Integer debugPort;
         private String mainClass;
         private List<String> vmCommand = Collections.singletonList("java");
-        private List<String> vmArgs = Collections.emptyList();
+        private List<String> vmArgs = new ArrayList<String>();
 
         public VmCommandBuilder vmCommand(String... vmCommand) {
             this.vmCommand = Arrays.asList(vmCommand.clone());
@@ -343,7 +348,11 @@ public abstract class Vm {
         }
 
         public VmCommandBuilder vmArgs(String... vmArgs) {
-            this.vmArgs = Arrays.asList(vmArgs.clone());
+            return vmArgs(Arrays.asList(vmArgs));
+        }
+
+        public VmCommandBuilder vmArgs(Collection<String> vmArgs) {
+            this.vmArgs.addAll(vmArgs);
             return this;
         }
 

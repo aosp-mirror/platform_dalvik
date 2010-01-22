@@ -17,6 +17,7 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -36,9 +37,9 @@ final class DeviceDalvikVm extends Vm {
 
     private final Adb adb = new Adb();
 
-    DeviceDalvikVm(Integer debugPort, long timeoutSeconds,
-            File sdkJar, File localTemp, boolean clean, String runnerDir) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp, clean);
+    DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar,
+            File localTemp, List<String> additionalVmArgs, boolean clean, String runnerDir) {
+        super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
 
         this.runnerDir = new File(runnerDir);
         this.testTemp = new File(this.runnerDir, "/tests.tmp");
