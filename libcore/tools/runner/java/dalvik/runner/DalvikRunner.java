@@ -41,6 +41,7 @@ public final class DalvikRunner {
     private Set<File> expectationFiles = new LinkedHashSet<File>();
     private File xmlReportsDirectory;
     private String javaHome;
+    private List<String> vmArgs = new ArrayList<String>();
     private boolean clean = true;
     private String deviceRunnerDir = "/sdcard/dalvikrunner";
     private List<File> testFiles = new ArrayList<File>();
@@ -98,6 +99,9 @@ public final class DalvikRunner {
 
             } else if ("--verbose".equals(args[i])) {
                 Logger.getLogger("dalvik.runner").setLevel(Level.FINE);
+
+            } else if ("--vm-arg".equals(args[i])) {
+                vmArgs.add(args[++i]);
 
             } else if ("--xml-reports-directory".equals(args[i])) {
                 xmlReportsDirectory = new File(args[++i]);
@@ -163,6 +167,9 @@ public final class DalvikRunner {
         System.out.println("      test before the runner aborts it.");
         System.out.println("      Default is: " + timeoutSeconds);
         System.out.println();
+        System.out.println("  --vm-arg <argument>: include the specified argument when spawning a");
+        System.out.println("      virtual machine. Examples: -Xint:fast, -ea, -Xmx16M");
+        System.out.println();
         System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
         System.out.println("      XML test results.");
         System.out.println();
@@ -172,9 +179,10 @@ public final class DalvikRunner {
 
     private void run() throws Exception {
         Vm vm = javaHome != null
-                ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp, javaHome, clean)
-                : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar, localTemp,
-                        clean, deviceRunnerDir);
+                ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp,
+                        javaHome, vmArgs, clean)
+                : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar,
+                        localTemp, vmArgs, clean, deviceRunnerDir);
         List<CodeFinder> codeFinders = Arrays.asList(
                 new JtregFinder(localTemp),
                 new JUnitFinder(),

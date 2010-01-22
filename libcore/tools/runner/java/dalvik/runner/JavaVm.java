@@ -17,6 +17,7 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * A local Java virtual machine like Harmony or the RI.
@@ -25,9 +26,9 @@ final class JavaVm extends Vm {
 
     private final String javaHome;
 
-    JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar,
-            File localTemp, String javaHome, boolean clean) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp, clean);
+    JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
+            String javaHome, List<String> additionalVmArgs, boolean clean) {
+        super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
         this.javaHome = javaHome;
     }
 
