@@ -384,8 +384,7 @@ public class ExpatParserTest extends TestCase {
                 oneStarted = true;
 
                 assertSame("ns:default", uri);
-                // TODO The result of the RI is "one"
-                assertEquals("", qName);
+                assertEquals("one", qName);
 
                 // Check atts.
                 assertEquals(1, atts.getLength());
@@ -410,8 +409,7 @@ public class ExpatParserTest extends TestCase {
                 twoStarted = true;
 
                 assertSame("ns:1", uri);
-                // TODO The result of the RI is "n1:two"
-                Assert.assertEquals("", qName);
+                Assert.assertEquals("n1:two", qName);
 
                 // Check atts.
                 assertEquals(2, atts.getLength());
@@ -451,7 +449,7 @@ public class ExpatParserTest extends TestCase {
                 oneEnded = true;
 
                 assertSame("ns:default", uri);
-                assertEquals("", qName);
+                assertEquals("one", qName);
 
                 return;
             }
@@ -465,7 +463,7 @@ public class ExpatParserTest extends TestCase {
                 twoEnded = true;
 
                 assertSame("ns:1", uri);
-                assertEquals("", qName);
+                assertEquals("n1:two", qName);
 
                 return;
             }
