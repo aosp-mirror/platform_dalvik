@@ -113,6 +113,18 @@ INLINE bool dvmIsArray(const ArrayObject* arrayObj)
 }
 
 /*
+ * Verify that the array is an object array and not a primitive array.
+ *
+ * Does not verify that the object is actually a non-NULL object.
+ */
+INLINE bool dvmIsObjectArray(const ArrayObject* arrayObj)
+{
+    const char* descriptor = arrayObj->obj.clazz->descriptor;
+    return descriptor[0] == '[' && (descriptor[1] == 'L' ||
+                                    descriptor[1] == '[');
+}
+
+/*
  * Verify that the class is an array class.
  *
  * TODO: there may be some performance advantage to setting a flag in

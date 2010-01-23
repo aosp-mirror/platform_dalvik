@@ -236,26 +236,37 @@ Object* dvmGetMonitorObject(Monitor* mon)
 }
 
 /*
+ * Returns the thread id of the thread owning the given lock.
+ */
+static u4 lockOwner(Object* obj)
+{
+    Thread *owner;
+    u4 lock;
+
+    assert(obj != NULL);
+    /*
+     * Since we're reading the lock value multiple times, latch it so
+     * that it doesn't change out from under us if we get preempted.
+     */
+    lock = obj->lock;
+    if (LW_SHAPE(lock) == LW_SHAPE_THIN) {
+        return LW_LOCK_OWNER(lock);
+    } else {
+        owner = LW_MONITOR(lock)->owner;
+        return owner ? owner->threadId : 0;
+    }
+}
+
+/*
  * Checks whether the given thread holds the given
  * objects's lock.
  */
 bool dvmHoldsLock(Thread* thread, Object* obj)
 {
-    u4 thin;
-
     if (thread == NULL || obj == NULL) {
         return false;
-    }
-
-    /* Since we're reading the lock value multiple times,
-     * latch it so that it doesn't change out from under
-     * us if we get preempted.
-     */
-    thin = obj->lock;
-    if (LW_SHAPE(thin) == LW_SHAPE_FAT) {
-        return thread == LW_MONITOR(thin)->owner;
     } else {
-        return thread->threadId == LW_LOCK_OWNER(thin);
+        return thread->threadId == lockOwner(obj);
     }
 }
 
@@ -343,12 +354,6 @@ static void lockMonitor(Thread* self, Monitor* mon)
 
         mon->owner = self;
         assert(mon->lockCount == 0);
-
-        /*
-         * "waiting", "notifying", and "interrupting" could all be nonzero
-         * if we're locking an object on which other threads are waiting.
-         * Nothing worth assert()ing about here.
-         */
     }
 }
 
@@ -442,13 +447,15 @@ static int waitSetCheck(Monitor *mon)
 }
 
 /*
- * Links a thread into a monitor's wait set.
+ * Links a thread into a monitor's wait set.  The monitor lock must be
+ * held by the caller of this routine.
  */
 static void waitSetAppend(Monitor *mon, Thread *thread)
 {
     Thread *elt;
 
     assert(mon != NULL);
+    assert(mon->owner == dvmThreadSelf());
     assert(thread != NULL);
     assert(thread->waitNext == NULL);
     assert(waitSetCheck(mon) == 0);
@@ -464,13 +471,15 @@ static void waitSetAppend(Monitor *mon, Thread *thread)
 }
 
 /*
- * Unlinks a thread from a monitor's wait set.
+ * Unlinks a thread from a monitor's wait set.  The monitor lock must
+ * be held by the caller of this routine.
  */
 static void waitSetRemove(Monitor *mon, Thread *thread)
 {
     Thread *elt;
 
     assert(mon != NULL);
+    assert(mon->owner == dvmThreadSelf());
     assert(thread != NULL);
     assert(waitSetCheck(mon) == 0);
     if (mon->waitSet == NULL) {
@@ -658,7 +667,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
 
     pthread_mutex_unlock(&self->waitMutex);
 
-    /* Reaquire the monitor lock. */
+    /* Reacquire the monitor lock. */
     lockMonitor(self, mon);
 
     waitSetRemove(mon, self);
@@ -677,7 +686,7 @@ done:
     if (wasInterrupted) {
         /*
          * We were interrupted while waiting, or somebody interrupted an
-         * un-interruptable thread earlier and we're bailing out immediately.
+         * un-interruptible thread earlier and we're bailing out immediately.
          *
          * The doc sayeth: "The interrupted status of the current thread is
          * cleared when this exception is thrown."
@@ -704,8 +713,8 @@ static void notifyMonitor(Thread* self, Monitor* mon)
             "object not locked by thread before notify()");
         return;
     }
-    /* Signal the first thread in the wait set. */
-    if (mon->waitSet != NULL) {
+    /* Signal the first waiting thread in the wait set. */
+    while (mon->waitSet != NULL) {
         thread = mon->waitSet;
         mon->waitSet = thread->waitNext;
         thread->waitNext = NULL;
@@ -713,6 +722,8 @@ static void notifyMonitor(Thread* self, Monitor* mon)
         /* Check to see if the thread is still waiting. */
         if (thread->waitMonitor != NULL) {
             pthread_cond_signal(&thread->waitCond);
+            pthread_mutex_unlock(&thread->waitMutex);
+            return;
         }
         pthread_mutex_unlock(&thread->waitMutex);
     }
@@ -765,10 +776,11 @@ void dvmLockObject(Thread* self, Object *obj)
     /* First, try to grab the lock as if it's thin;
      * this is the common case and will usually succeed.
      */
+    hashState = LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
     thin = threadId << LW_LOCK_OWNER_SHIFT;
-    thin |= LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
+    thin |= hashState;
     if (!ATOMIC_CMP_SWAP((int32_t *)thinp,
-                         (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
+                         hashState,
                          (int32_t)thin)) {
         /* The lock is either a thin lock held by someone (possibly 'self'),
          * or a fat lock.
@@ -791,7 +803,7 @@ void dvmLockObject(Thread* self, Object *obj)
 
                 LOG_THIN("(%d) spin on lock 0x%08x: 0x%08x (0x%08x) 0x%08x\n",
                          threadId, (uint)&obj->lock,
-                         DVM_LOCK_INITIAL_THIN_VALUE, *thinp, thin);
+                         hashState, *thinp, thin);
 
                 /* The lock is still thin, but some other thread is
                  * holding it.  Let the VM know that we're about
@@ -827,15 +839,16 @@ void dvmLockObject(Thread* self, Object *obj)
                             }
                         }
                     }
+                    hashState = LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
                     thin = threadId << LW_LOCK_OWNER_SHIFT;
-                    thin |= LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
+                    thin |= hashState;
                 } while (!ATOMIC_CMP_SWAP((int32_t *)thinp,
-                                          (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
+                                          (int32_t)hashState,
                                           (int32_t)thin));
                 LOG_THIN("(%d) spin on lock done 0x%08x: "
                          "0x%08x (0x%08x) 0x%08x\n",
                          threadId, (uint)&obj->lock,
-                         DVM_LOCK_INITIAL_THIN_VALUE, *thinp, thin);
+                         hashState, *thinp, thin);
 
                 /* We've got the thin lock; let the VM know that we're
                  * done waiting.
@@ -1112,8 +1125,6 @@ void dvmThreadSleep(u8 msec, u4 nsec)
  */
 void dvmThreadInterrupt(Thread* thread)
 {
-    Monitor* mon;
-
     assert(thread != NULL);
 
     pthread_mutex_lock(&thread->waitMutex);
@@ -1149,10 +1160,196 @@ void dvmThreadInterrupt(Thread* thread)
     pthread_mutex_unlock(&thread->waitMutex);
 }
 
+#ifndef WITH_COPYING_GC
 u4 dvmIdentityHashCode(Object *obj)
 {
     return (u4)obj;
 }
+#else
+static size_t arrayElementWidth(const ArrayObject *array)
+{
+    const char *descriptor;
+
+    if (dvmIsObjectArray(array)) {
+	return sizeof(Object *);
+    } else {
+	descriptor = array->obj.clazz->descriptor;
+        switch (descriptor[1]) {
+        case 'B': return 1;  /* byte */
+        case 'C': return 2;  /* char */
+        case 'D': return 8;  /* double */
+        case 'F': return 4;  /* float */
+        case 'I': return 4;  /* int */
+        case 'J': return 8;  /* long */
+        case 'S': return 2;  /* short */
+        case 'Z': return 1;  /* boolean */
+        }
+    }
+    LOGE("object %p has an unhandled descriptor '%s'", array, descriptor);
+    dvmDumpThread(dvmThreadSelf(), false);
+    dvmAbort();
+    return 0;  /* Quiet the compiler. */
+}
+
+static size_t arrayObjectLength(const ArrayObject *array)
+{
+    size_t length;
+
+    length = offsetof(ArrayObject, contents);
+    length += array->length * arrayElementWidth(array);
+    return length;
+}
+
+/*
+ * Returns the identity hash code of the given object.
+ */
+u4 dvmIdentityHashCode(Object *obj)
+{
+    Thread *self, *thread;
+    volatile u4 *lw;
+    size_t length;
+    u4 lock, owner, hashState;
+
+    if (obj == NULL) {
+        /*
+         * Null is defined to have an identity hash code of 0.
+         */
+        return 0;
+    }
+    lw = &obj->lock;
+retry:
+    hashState = LW_HASH_STATE(*lw);
+    if (hashState == LW_HASH_STATE_HASHED) {
+        /*
+         * The object has been hashed but has not had its hash code
+         * relocated by the garbage collector.  Use the raw object
+         * address.
+         */
+        return (u4)obj >> 3;
+    } else if (hashState == LW_HASH_STATE_HASHED_AND_MOVED) {
+        /*
+         * The object has been hashed and its hash code has been
+         * relocated by the collector.  Use the value of the naturally
+         * aligned word following the instance data.
+         */
+        if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
+            length = arrayObjectLength((ArrayObject *)obj);
+            length = (length + 3) & ~3;
+        } else {
+            length = obj->clazz->objectSize;
+        }
+        return *(u4 *)(((char *)obj) + length);
+    } else if (hashState == LW_HASH_STATE_UNHASHED) {
+        /*
+         * The object has never been hashed.  Change the hash state to
+         * hashed and use the raw object address.
+         */
+        self = dvmThreadSelf();
+        if (self->threadId == lockOwner(obj)) {
+            /*
+             * We already own the lock so we can update the hash state
+             * directly.
+             */
+            *lw |= (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
+            return (u4)obj >> 3;
+        }
+        /*
+         * We do not own the lock.  Try acquiring the lock.  Should
+         * this fail, we must suspend the owning thread.
+         */
+        if (LW_SHAPE(*lw) == LW_SHAPE_THIN) {
+            /*
+             * If the lock is thin assume it is unowned.  We simulate
+             * an acquire, update, and release with a single CAS.
+             */
+            lock = DVM_LOCK_INITIAL_THIN_VALUE;
+            lock |= (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
+            if (ATOMIC_CMP_SWAP((int32_t *)lw,
+                                (int32_t)DVM_LOCK_INITIAL_THIN_VALUE,
+                                (int32_t)lock)) {
+                /*
+                 * A new lockword has been installed with a hash state
+                 * of hashed.  Use the raw object address.
+                 */
+                return (u4)obj >> 3;
+            }
+        } else {
+            if (tryLockMonitor(self, LW_MONITOR(*lw))) {
+                /*
+                 * The monitor lock has been acquired.  Change the
+                 * hash state to hashed and use the raw object
+                 * address.
+                 */
+                *lw |= (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
+                unlockMonitor(self, LW_MONITOR(*lw));
+                return (u4)obj >> 3;
+            }
+        }
+        /*
+         * At this point we have failed to acquire the lock.  We must
+         * identify the owning thread and suspend it.
+         */
+        dvmLockThreadList(self);
+        /*
+         * Cache the lock word as its value can change between
+         * determining its shape and retrieving its owner.
+         */
+        lock = *lw;
+        if (LW_SHAPE(lock) == LW_SHAPE_THIN) {
+            /*
+             * Find the thread with the corresponding thread id.
+             */
+            owner = LW_LOCK_OWNER(lock);
+            assert(owner != self->threadId);
+            /*
+             * If the lock has no owner do not bother scanning the
+             * thread list and fall through to the failure handler.
+             */
+            thread = owner ? gDvm.threadList : NULL;
+            while (thread != NULL) {
+                if (thread->threadId == owner) {
+                    break;
+                }
+                thread = thread->next;
+            }
+        } else {
+            thread = LW_MONITOR(lock)->owner;
+        }
+        /*
+         * If thread is NULL the object has been released since the
+         * thread list lock was acquired.  Try again.
+         */
+        if (thread == NULL) {
+            dvmUnlockThreadList();
+            goto retry;
+        }
+        /*
+         * Wait for the owning thread to suspend.
+         */
+        dvmSuspendThread(thread);
+        if (dvmHoldsLock(thread, obj)) {
+            /*
+             * The owning thread has been suspended.  We can safely
+             * change the hash state to hashed.
+             */
+            *lw |= (LW_HASH_STATE_HASHED << LW_HASH_STATE_SHIFT);
+            dvmResumeThread(thread);
+            dvmUnlockThreadList();
+            return (u4)obj >> 3;
+        }
+        /*
+         * The wrong thread has been suspended.  Try again.
+         */
+        dvmResumeThread(thread);
+        dvmUnlockThreadList();
+        goto retry;
+    }
+    LOGE("object %p has an unknown hash state %#x", obj, hashState);
+    dvmDumpThread(dvmThreadSelf(), false);
+    dvmAbort();
+    return 0;  /* Quiet the compiler. */
+}
+#endif  /* WITH_COPYING_GC */
 
 #ifdef WITH_DEADLOCK_PREDICTION
 /*

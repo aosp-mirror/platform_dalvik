@@ -19,25 +19,46 @@
 #ifndef _DALVIK_SYNC
 #define _DALVIK_SYNC
 
+/*
+ * Monitor shape field.  Used to distinguish immediate thin locks from
+ * indirecting fat locks.
+ */
 #define LW_SHAPE_THIN 0
 #define LW_SHAPE_FAT 1
 #define LW_SHAPE_MASK 0x1
 #define LW_SHAPE(x) ((x) & LW_SHAPE_MASK)
 
+/*
+ * Hash state field.  Used to signify that an object has had its
+ * identity hash code exposed or relocated.
+ */
 #define LW_HASH_STATE_UNHASHED 0
 #define LW_HASH_STATE_HASHED 1
-#define LW_HASH_STATE_HASHED_AND_MOVED 2
+#define LW_HASH_STATE_HASHED_AND_MOVED 3
 #define LW_HASH_STATE_MASK 0x3
 #define LW_HASH_STATE_SHIFT 1
 #define LW_HASH_STATE(x) (((x) >> LW_HASH_STATE_SHIFT) & LW_HASH_STATE_MASK)
 
+/*
+ * Monitor accessor.  Extracts a monitor structure pointer from a fat
+ * lock.  Performs no error checking.
+ */
 #define LW_MONITOR(x) \
-  ((Monitor*)((x) & ~((LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT) | LW_SHAPE_MASK)))
+  ((Monitor*)((x) & ~((LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT) | \
+                      LW_SHAPE_MASK)))
 
+/*
+ * Lock owner field.  Contains the thread id of the thread currently
+ * holding the lock.
+ */
 #define LW_LOCK_OWNER_MASK 0xffff
 #define LW_LOCK_OWNER_SHIFT 3
 #define LW_LOCK_OWNER(x) (((x) >> LW_LOCK_OWNER_SHIFT) & LW_LOCK_OWNER_MASK)
 
+/*
+ * Lock recursion count field.  Contains a count of the numer of times
+ * a lock has been recursively acquired.
+ */
 #define LW_LOCK_COUNT_MASK 0x1fff
 #define LW_LOCK_COUNT_SHIFT 19
 #define LW_LOCK_COUNT(x) (((x) >> LW_LOCK_COUNT_SHIFT) & LW_LOCK_COUNT_MASK)
