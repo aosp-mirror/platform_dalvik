@@ -59,9 +59,12 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
 
     dvmLockMutex(&gDvmJit.compilerLock);
 
-    /* Queue full */
-    if (gDvmJit.compilerQueueLength == COMPILER_WORK_QUEUE_SIZE ||
-        gDvmJit.codeCacheFull == true) {
+    /*
+     * Return if queue is full.
+     * If the code cache is full, we will allow the work order to be added and
+     * we use that to trigger code cache reset.
+     */
+    if (gDvmJit.compilerQueueLength == COMPILER_WORK_QUEUE_SIZE) {
         result = false;
         goto done;
     }
@@ -128,6 +131,9 @@ bool dvmCompilerSetupCodeCache(void)
         return false;
     }
 
+    // For debugging only
+    // LOGD("Code cache starts at %p", gDvmJit.codeCache);
+
     /* Copy the template code into the beginning of the code cache */
     int templateSize = (intptr_t) dmvCompilerTemplateEnd -
                        (intptr_t) dvmCompilerTemplateStart;
@@ -144,45 +150,101 @@ bool dvmCompilerSetupCodeCache(void)
     return true;
 }
 
+static void crawlDalvikStack(Thread *thread, bool print)
+{
+    void *fp = thread->curFrame;
+    StackSaveArea* saveArea = NULL;
+    int stackLevel = 0;
+
+    if (print) {
+        LOGD("Crawling tid %d (%s / %p %s)", thread->systemTid,
+             dvmGetThreadStatusStr(thread->status),
+             thread->inJitCodeCache,
+             thread->inJitCodeCache ? "jit" : "interp");
+    }
+    /* Crawl the Dalvik stack frames to clear the returnAddr field */
+    while (fp != NULL) {
+        saveArea = SAVEAREA_FROM_FP(fp);
+
+        if (print) {
+            if (dvmIsBreakFrame(fp)) {
+                LOGD("  #%d: break frame (%p)",
+                     stackLevel, saveArea->returnAddr);
+            }
+            else {
+                LOGD("  #%d: %s.%s%s (%p)",
+                     stackLevel,
+                     saveArea->method->clazz->descriptor,
+                     saveArea->method->name,
+                     dvmIsNativeMethod(saveArea->method) ?
+                         " (native)" : "",
+                     saveArea->returnAddr);
+            }
+        }
+        stackLevel++;
+        saveArea->returnAddr = NULL;
+        assert(fp != saveArea->prevFrame);
+        fp = saveArea->prevFrame;
+    }
+    /* Make sure the stack is fully unwound to the bottom */
+    assert(saveArea == NULL ||
+           (u1 *) (saveArea+1) == thread->interpStackStart);
+}
+
 static void resetCodeCache(void)
 {
-    Thread* self = dvmThreadSelf();
     Thread* thread;
+    u8 startTime = dvmGetRelativeTimeUsec();
+    int inJit = 0;
 
-    LOGD("Reset the JIT code cache (%d bytes used)", gDvmJit.codeCacheByteUsed);
+    LOGD("Reset the JIT code cache (%d bytes used / %d time(s))",
+         gDvmJit.codeCacheByteUsed, ++gDvmJit.numCodeCacheReset);
 
     /* Stop the world */
     dvmSuspendAllThreads(SUSPEND_FOR_CC_RESET);
 
+    /* If any thread is found stuck in the JIT state, don't reset the cache */
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        if (thread->inJitCodeCache) {
+            inJit++;
+            /*
+             * STOPSHIP
+             * Change the verbose mode to false after the new code receives
+             * more QA love.
+             */
+            crawlDalvikStack(thread, true);
+        }
+    }
+
+    if (inJit) {
+        /* Wait a while for the busy threads to rest and try again */
+        gDvmJit.delayCodeCacheReset = 256;
+        goto done;
+    }
+
+    /* Drain the work queue to free the work order */
+    while (workQueueLength()) {
+        CompilerWorkOrder work = workDequeue();
+        free(work.info);
+    }
+
     /* Wipe out the returnAddr field that soon will point to stale code */
     for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
-        if (thread == self)
-            continue;
-
-        /* Crawl the Dalvik stack frames */
-        StackSaveArea *ssaPtr = ((StackSaveArea *) thread->curFrame) - 1;
-        while (ssaPtr != ((StackSaveArea *) NULL) - 1) {
-            ssaPtr->returnAddr = NULL;
-            ssaPtr = ((StackSaveArea *) ssaPtr->prevFrame) - 1;
-        };
+        crawlDalvikStack(thread, false);
     }
 
     /* Reset the JitEntry table contents to the initial unpopulated state */
     dvmJitResetTable();
 
-#if 0
     /*
-     * Uncomment the following code when testing/debugging.
-     *
      * Wipe out the code cache content to force immediate crashes if
      * stale JIT'ed code is invoked.
      */
-    memset(gDvmJit.codeCache,
-           (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed,
-           0);
+    memset((char *) gDvmJit.codeCache + gDvmJit.templateSize,
+           0,
+           gDvmJit.codeCacheByteUsed - gDvmJit.templateSize);
     cacheflush((intptr_t) gDvmJit.codeCache,
                (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed, 0);
-#endif
 
     /* Reset the current mark of used bytes to the end of template code */
     gDvmJit.codeCacheByteUsed = gDvmJit.templateSize;
@@ -197,6 +259,10 @@ static void resetCodeCache(void)
     /* All clear now */
     gDvmJit.codeCacheFull = false;
 
+    LOGD("Code cache reset takes %lld usec",
+         dvmGetRelativeTimeUsec() - startTime);
+
+done:
     /* Resume all threads */
     dvmResumeAllThreads(SUSPEND_FOR_CC_RESET);
 }
@@ -263,7 +329,15 @@ static void *compilerThreadStart(void *arg)
                  */
 #if 0
                 if (gDvmJit.codeCacheFull == true) {
-                    resetCodeCache();
+                    if (gDvmJit.delayCodeCacheReset == 0) {
+                        resetCodeCache();
+                        assert(workQueueLength() == 0 ||
+                               gDvmJit.delayCodeCacheReset != 0);
+                    } else {
+                        LOGD("Delay the next %d tries to reset code cache",
+                             gDvmJit.delayCodeCacheReset);
+                        gDvmJit.delayCodeCacheReset--;
+                    }
                 }
 #endif
             } while (workQueueLength() != 0);

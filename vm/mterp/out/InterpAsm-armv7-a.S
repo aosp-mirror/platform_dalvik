@@ -311,9 +311,12 @@ dvmMterpStdRun:
 
 #if defined(WITH_JIT)
 .Lno_singleStep:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     /* Entry is always a possible trace start */
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
+    mov    r1, #0                       @ prepare the value for the new state
+    str    r1, [r10, #offThread_inJitCodeCache] @ back to the interp land
     cmp    r0,#0
     bne    common_updateProfile
     GET_INST_OPCODE(ip)
@@ -9033,12 +9036,15 @@ dvmJitToInterpNoChain:
  */
     .global dvmJitToInterpPunt
 dvmJitToInterpPunt:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    rPC, r0
 #ifdef EXIT_STATS
     mov    r0,lr
     bl     dvmBumpPunt;
 #endif
     EXPORT_PC()
+    mov    r0, #0
+    str    r0, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     adrl   rIBASE, dvmAsmInstructionStart
     FETCH_INST()
     GET_INST_OPCODE(ip)
@@ -9060,6 +9066,7 @@ dvmJitToInterpSingleStep:
     str    r1, [rGLUE, #offGlue_entryPoint]
     mov    rPC,r0
     EXPORT_PC()
+
     adrl   rIBASE, dvmAsmInstructionStart
     mov    r2,#kJitSingleStep     @ Ask for single step and then revert
     str    r2,[rGLUE,#offGlue_jitState]
@@ -9075,9 +9082,11 @@ dvmJitToInterpSingleStep:
     .global dvmJitToTraceSelect
 dvmJitToTraceSelect:
     ldr    rPC,[lr, #-1]           @ get our target PC
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
     mov    r0,rPC
-    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    bl     dvmJitGetCodeAddr       @ Is there a translation?
+    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    2f
     mov    r1,rINST
@@ -9115,12 +9124,14 @@ dvmJitToTraceSelect:
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
     ldr    rPC,[lr, #-1]           @ get our target PC
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
 #ifdef EXIT_STATS
     bl     dvmBumpNormal
 #endif
     mov    r0,rPC
     bl     dvmJitGetCodeAddr        @ Is there a translation?
+    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     cmp    r0,#0
     beq    toInterpreter            @ go if not, otherwise do chain
     mov    r1,rINST
@@ -9140,8 +9151,10 @@ dvmJitToInterpNoChain:
 #ifdef EXIT_STATS
     bl     dvmBumpNoChain
 #endif
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC
     bl     dvmJitGetCodeAddr        @ Is there a translation?
+    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
     mov    r1, rPC                  @ arg1 of translation may need this
     mov    lr, #0                   @  in case target is HANDLER_INTERPRET
     cmp    r0,#0
@@ -9188,12 +9201,14 @@ common_updateProfile:
  * jump to it now).
  */
     GET_JIT_THRESHOLD(r1)
+    ldr     r10, [rGLUE, #offGlue_self] @ callee saved r10 <- glue->self
     strb    r1,[r0,r3,lsr #21] @ reset counter
     EXPORT_PC()
     mov     r0,rPC
     bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
-    mov    r1, rPC                      @ arg1 of translation may need this
-    mov    lr, #0                       @  in case target is HANDLER_INTERPRET
+    str     r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov     r1, rPC                     @ arg1 of translation may need this
+    mov     lr, #0                      @  in case target is HANDLER_INTERPRET
     cmp     r0,#0
 #if !defined(WITH_SELF_VERIFICATION)
     bxne    r0                          @ jump to the translation
@@ -9618,12 +9633,13 @@ common_returnFromMethod:
     ldr     r1, [r10, #offClassObject_pDvmDex]   @ r1<- method->clazz->pDvmDex
     str     rFP, [r3, #offThread_curFrame]  @ self->curFrame = fp
 #if defined(WITH_JIT)
-    ldr     r3, [r0, #offStackSaveArea_returnAddr] @ r3 = saveArea->returnAddr
+    ldr     r10, [r0, #offStackSaveArea_returnAddr] @ r10 = saveArea->returnAddr
     GET_JIT_PROF_TABLE(r0)
     mov     rPC, r9                     @ publish new rPC
     str     r1, [rGLUE, #offGlue_methodClassDex]
-    cmp     r3, #0                      @ caller is compiled code
-    blxne   r3
+    str     r10, [r3, #offThread_inJitCodeCache]  @ may return to JIT'ed land
+    cmp     r10, #0                      @ caller is compiled code
+    blxne   r10
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     cmp     r0,#0
     bne     common_updateProfile

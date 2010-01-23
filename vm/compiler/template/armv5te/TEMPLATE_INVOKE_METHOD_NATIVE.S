@@ -30,7 +30,9 @@
 
     @ go ahead and transfer control to the native code
     ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
+    mov     r2, #0
     str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r2, [r3, #offThread_inJitCodeCache] @ not in the jit code cache
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
     mov     r9, r3                      @ r9<- glue->self (preserve)
@@ -55,12 +57,16 @@
     @ r0 = dalvikCallsitePC
     bne     .LhandleException           @ no, handle exception
 
+    str     r2, [r9, #offThread_inJitCodeCache] @ set the mode properly
     cmp     r2, #0                      @ return chaining cell still exists?
     bxne    r2                          @ yes - go ahead
 
     @ continue executing the next instruction through the interpreter
     ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
+#if defined(EXIT_STATS)
+    mov     r0, #kCallsiteInterpreted
+#endif
     mov     pc, r1
 
 

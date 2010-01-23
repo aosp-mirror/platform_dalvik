@@ -157,6 +157,16 @@ typedef struct Thread {
     /* internal reference tracking */
     ReferenceTable  internalLocalRefTable;
 
+#if defined(WITH_JIT)
+    /*
+     * Whether the current top VM frame is in the interpreter or JIT cache:
+     *   NULL    : in the interpreter
+     *   non-NULL: entry address of the JIT'ed code (the actual value doesn't
+     *             matter)
+     */
+    void*       inJitCodeCache;
+#endif
+
     /* JNI local reference tracking */
 #ifdef USE_INDIRECT_REF
     IndirectRefTable jniLocalRefTable;
@@ -424,6 +434,11 @@ void dvmThreadSleep(u8 msec, u4 nsec);
  * Get the name of a thread.  (For safety, hold the thread list lock.)
  */
 char* dvmGetThreadName(Thread* thread);
+
+/*
+ * Convert ThreadStatus to a string.
+ */
+const char* dvmGetThreadStatusStr(ThreadStatus status);
 
 /*
  * Return true if a thread is on the internal list.  If it is, the

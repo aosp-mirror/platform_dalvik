@@ -16,7 +16,7 @@
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
     add     r12, lr, #2                 @ setup the punt-to-interp address
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
-    ldr     r8, [r8]                    @ r3<- suspendCount (int)
+    ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
     bxlt    r12                         @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite

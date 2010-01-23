@@ -209,6 +209,7 @@ dvmCompiler_TEMPLATE_RETURN:
     str     r0, [rGLUE, #offGlue_methodClassDex]
     cmp     r8, #0                      @ check the suspendCount
     movne   r9, #0                      @ clear the chaining cell address
+    str     r9, [r3, #offThread_inJitCodeCache] @ in code cache or not
     cmp     r9, #0                      @ chaining cell exists?
     blxne   r9                          @ jump to the chaining cell
 #if defined(EXIT_STATS)
@@ -420,7 +421,9 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
 
     @ go ahead and transfer control to the native code
     ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
+    mov     r2, #0
     str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
+    str     r2, [r3, #offThread_inJitCodeCache] @ not in the jit code cache
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
     mov     r9, r3                      @ r9<- glue->self (preserve)
@@ -445,12 +448,16 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     @ r0 = dalvikCallsitePC
     bne     .LhandleException           @ no, handle exception
 
+    str     r2, [r9, #offThread_inJitCodeCache] @ set the mode properly
     cmp     r2, #0                      @ return chaining cell still exists?
     bxne    r2                          @ yes - go ahead
 
     @ continue executing the next instruction through the interpreter
     ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
+#if defined(EXIT_STATS)
+    mov     r0, #kCallsiteInterpreted
+#endif
     mov     pc, r1
 
 
@@ -1395,7 +1402,9 @@ dvmCompiler_TEMPLATE_INTERPRET:
     @ Prep for the native call
     @ r1 = newFP, r0 = methodToCall
     ldr     r3, [rGLUE, #offGlue_self]      @ r3<- glue->self
+    mov     r2, #0
     ldr     r9, [r3, #offThread_jniLocal_topCookie] @ r9<- thread->localRef->...
+    str     r2, [r3, #offThread_inJitCodeCache] @ not in jit code cache
     str     r1, [r3, #offThread_curFrame]   @ self->curFrame = newFp
     str     r9, [r1, #(offStackSaveArea_localRefCookie - sizeofStackSaveArea)]
                                         @ newFp->localRefCookie=top
@@ -1421,12 +1430,16 @@ dvmCompiler_TEMPLATE_INTERPRET:
     @ r0 = dalvikCallsitePC
     bne     .LhandleException           @ no, handle exception
 
+    str     r2, [r9, #offThread_inJitCodeCache] @ set the new mode
     cmp     r2, #0                      @ return chaining cell still exists?
     bxne    r2                          @ yes - go ahead
 
     @ continue executing the next instruction through the interpreter
     ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
+#if defined(EXIT_STATS)
+    mov     r0, #kCallsiteInterpreted
+#endif
     mov     pc, r1
 
 /*
@@ -1434,6 +1447,9 @@ dvmCompiler_TEMPLATE_INTERPRET:
  * r0  Faulting Dalvik PC
  */
 .LhandleException:
+    ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
+    mov     r2, #0
+    str     r2, [r3, #offThread_inJitCodeCache] @ in interpreter land
     ldr     r1, .LdvmMterpCommonExceptionThrown @ PIC way of getting &func
     ldr     rIBASE, .LdvmAsmInstructionStart    @ same as above
     mov     rPC, r0                 @ reload the faulting Dalvik address

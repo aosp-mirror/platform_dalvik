@@ -68,9 +68,12 @@ dvmMterpStdRun:
 
 #if defined(WITH_JIT)
 .Lno_singleStep:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     /* Entry is always a possible trace start */
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
+    mov    r1, #0                       @ prepare the value for the new state
+    str    r1, [r10, #offThread_inJitCodeCache] @ back to the interp land
     cmp    r0,#0
     bne    common_updateProfile
     GET_INST_OPCODE(ip)

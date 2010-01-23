@@ -738,6 +738,12 @@ struct DvmJitGlobals {
     /* Flag to indicate that the code cache is full */
     bool codeCacheFull;
 
+    /* Delay count for the next code cache reset request */
+    int delayCodeCacheReset;
+
+    /* Number of times that the code cache has been reset */
+    int numCodeCacheReset;
+
     /* true/false: compile/reject opcodes specified in the -Xjitop list */
     bool includeSelectedOp;
 

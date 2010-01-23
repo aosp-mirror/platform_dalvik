@@ -106,6 +106,13 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     //LOGI("first instruction is 0x%04x\n", glue->pc[0]);
 
     changeInterp = dvmMterpStdRun(glue);
+
+#if defined(WITH_JIT)
+    if (glue->jitState != kJitSingleStep) {
+        glue->self->inJitCodeCache = NULL;
+    }
+#endif
+
     if (!changeInterp) {
         /* this is a "normal" exit; we're not coming back */
 #ifdef LOG_INSTR

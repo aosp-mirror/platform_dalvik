@@ -3268,6 +3268,25 @@ static bool getSchedulerGroup(Thread* thread, char* buf, size_t bufLen)
 }
 
 /*
+ * Convert ThreadStatus to a string.
+ */
+const char* dvmGetThreadStatusStr(ThreadStatus status)
+{
+    switch (status) {
+    case THREAD_ZOMBIE:         return "ZOMBIE";
+    case THREAD_RUNNING:        return "RUNNABLE";
+    case THREAD_TIMED_WAIT:     return "TIMED_WAIT";
+    case THREAD_MONITOR:        return "MONITOR";
+    case THREAD_WAIT:           return "WAIT";
+    case THREAD_INITIALIZING:   return "INITIALIZING";
+    case THREAD_STARTING:       return "STARTING";
+    case THREAD_NATIVE:         return "NATIVE";
+    case THREAD_VMWAIT:         return "VMWAIT";
+    default:                    return "UNKNOWN";
+    }
+}
+
+/*
  * Print information about the specified thread.
  *
  * Works best when the thread in question is "self" or has been suspended.
@@ -3277,11 +3296,6 @@ static bool getSchedulerGroup(Thread* thread, char* buf, size_t bufLen)
 void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     bool isRunning)
 {
-    /* tied to ThreadStatus enum */
-    static const char* kStatusNames[] = {
-        "ZOMBIE", "RUNNABLE", "TIMED_WAIT", "MONITOR", "WAIT",
-        "INITIALIZING", "STARTING", "NATIVE", "VMWAIT"
-    };
     Object* threadObj;
     Object* groupObj;
     StringObject* nameStr;
@@ -3333,11 +3347,10 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     if (groupName == NULL)
         groupName = strdup("(BOGUS GROUP)");
 
-    assert(thread->status < NELEM(kStatusNames));
     dvmPrintDebugMessage(target,
         "\"%s\"%s prio=%d tid=%d %s\n",
         threadName, isDaemon ? " daemon" : "",
-        priority, thread->threadId, kStatusNames[thread->status]);
+        priority, thread->threadId, dvmGetThreadStatusStr(thread->status));
     dvmPrintDebugMessage(target,
         "  | group=\"%s\" sCount=%d dsCount=%d s=%c obj=%p self=%p\n",
         groupName, thread->suspendCount, thread->dbgSuspendCount,

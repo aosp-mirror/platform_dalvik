@@ -4103,7 +4103,8 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
 {
     bool res;
 
-    if (gDvmJit.codeCacheFull) {
+    if (gDvmJit.codeCacheFull &&
+        (work->kind != kWorkOrderICPatch)) {
         return false;
     }
 
