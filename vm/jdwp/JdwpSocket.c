@@ -850,19 +850,17 @@ static bool sendRequest(JdwpState* state, ExpandBuf* pReq)
 }
 
 /*
- * Send a request that was split into two buffers.
+ * Send a request that was split into multiple buffers.
  *
  * The entire packet must be sent with a single writev() call to avoid
  * threading issues.
  *
  * Returns "true" if it was sent successfully.
  */
-static bool sendBufferedRequest(JdwpState* state, const void* header,
-    size_t headerLen, const void* body, size_t bodyLen)
+static bool sendBufferedRequest(JdwpState* state, const struct iovec* iov,
+    int iovcnt)
 {
     JdwpNetState* netState = state->netState;
-
-    assert(headerLen > 0);
 
     if (netState->clientSock < 0) {
         /* can happen with some DDMS events */
@@ -870,15 +868,10 @@ static bool sendBufferedRequest(JdwpState* state, const void* header,
         return false;
     }
 
-    struct iovec iov[2];
-    int iovcnt = 1;
-    iov[0].iov_base = (void*) header;
-    iov[0].iov_len = headerLen;
-    if (body != NULL) {
-        iovcnt++;
-        iov[1].iov_base = (void*) body;
-        iov[1].iov_len = bodyLen;
-    }
+    size_t expected = 0;
+    int i;
+    for (i = 0; i < iovcnt; i++)
+        expected += iov[i].iov_len;
 
     /*
      * TODO: we currently assume the writev() will complete in one
@@ -887,9 +880,9 @@ static bool sendBufferedRequest(JdwpState* state, const void* header,
      */
     ssize_t actual;
     actual = writev(netState->clientSock, iov, iovcnt);
-    if ((size_t)actual != headerLen + bodyLen) {
+    if ((size_t)actual != expected) {
         LOGE("Failed sending b-req to debugger: %s (%d of %zu)\n",
-            strerror(errno), (int) actual, headerLen+bodyLen);
+            strerror(errno), (int) actual, expected);
         return false;
     }
 

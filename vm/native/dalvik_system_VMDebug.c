@@ -20,6 +20,8 @@
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
 
+#include <errno.h>
+
 
 /*
  * Convert an array of char* into a String[].
@@ -86,6 +88,7 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
 #ifdef WITH_PROFILER
     /* VM responds to DDMS method profiling requests */
     features[idx++] = "method-trace-profiling";
+    features[idx++] = "method-trace-profiling-streaming";
 #endif
 #ifdef WITH_HPROF
     /* VM responds to DDMS heap dump requests */
@@ -288,12 +291,16 @@ static void Dalvik_dalvik_system_VMDebug_resetAllocCount(const u4* args,
 }
 
 /*
- * static void startMethodTracing(String traceFileName, java.io.FileDescriptor,
- *     int bufferSize, int flags)
+ * static void startMethodTracingNative(String traceFileName,
+ *     FileDescriptor fd, int bufferSize, int flags)
  *
  * Start method trace profiling.
+ *
+ * If both "traceFileName" and "fd" are null, the result will be sent
+ * directly to DDMS.  (The non-DDMS versions of the calls are expected
+ * to enforce non-NULL filenames.)
  */
-static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u4* args,
+static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args,
     JValue* pResult)
 {
 #ifdef WITH_PROFILER
@@ -301,32 +308,40 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracing(const u4* args,
     DataObject* traceFd = (DataObject*) args[1];
     int bufferSize = args[2];
     int flags = args[3];
-    char* traceFileName;
 
     if (bufferSize == 0) {
         // Default to 8MB per the documentation.
         bufferSize = 8 * 1024 * 1024;
     }
 
-    if (traceFileStr == NULL || bufferSize < 1024) {
+    if (bufferSize < 1024) {
         dvmThrowException("Ljava/lang/IllegalArgumentException;", NULL);
         RETURN_VOID();
     }
 
-    traceFileName = dvmCreateCstrFromString(traceFileStr);
+    char* traceFileName = NULL;
+    if (traceFileStr != NULL)
+        traceFileName = dvmCreateCstrFromString(traceFileStr);
 
     int fd = -1;
     if (traceFd != NULL) {
-        InstField* field = dvmFindInstanceField(traceFd->obj.clazz, "descriptor", "I");
+        InstField* field =
+            dvmFindInstanceField(traceFd->obj.clazz, "descriptor", "I");
         if (field == NULL) {
             dvmThrowException("Ljava/lang/NoSuchFieldException;",
                 "No FileDescriptor.descriptor field");
             RETURN_VOID();
         }
         fd = dup(dvmGetFieldInt(&traceFd->obj, field->byteOffset));
+        if (fd < 0) {
+            dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+                "dup() failed: %s", strerror(errno));
+            RETURN_VOID();
+        }
     }
     
-    dvmMethodTraceStart(traceFileName, fd, bufferSize, flags);
+    dvmMethodTraceStart(traceFileName != NULL ? traceFileName : "[DDMS]",
+        fd, bufferSize, flags, (traceFileName == NULL && fd == -1));
     free(traceFileName);
 #else
     // throw exception?
@@ -825,8 +840,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_startAllocCounting },
     { "stopAllocCounting",          "()V",
         Dalvik_dalvik_system_VMDebug_stopAllocCounting },
-    { "startMethodTracing",         "(Ljava/lang/String;Ljava/io/FileDescriptor;II)V",
-        Dalvik_dalvik_system_VMDebug_startMethodTracing },
+    { "startMethodTracingNative",   "(Ljava/lang/String;Ljava/io/FileDescriptor;II)V",
+        Dalvik_dalvik_system_VMDebug_startMethodTracingNative },
     { "isMethodTracingActive",      "()Z",
         Dalvik_dalvik_system_VMDebug_isMethodTracingActive },
     { "stopMethodTracing",          "()V",

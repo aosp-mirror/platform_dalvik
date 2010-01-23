@@ -156,7 +156,12 @@ public final class VMDebug {
      */
     public static void startMethodTracing(String traceFileName,
         int bufferSize, int flags) {
-        startMethodTracing(traceFileName, null, bufferSize, flags);
+
+        if (traceFileName == null) {
+            throw new NullPointerException();
+        }
+
+        startMethodTracingNative(traceFileName, null, bufferSize, flags);
     }
 
     /**
@@ -168,7 +173,33 @@ public final class VMDebug {
      * this and find it would be useful.
      * @hide
      */
-    public static native void startMethodTracing(String traceFileName,
+    public static void startMethodTracing(String traceFileName,
+        FileDescriptor fd, int bufferSize, int flags)
+    {
+        if (traceFileName == null || fd == null) {
+            throw new NullPointerException();
+        }
+
+        startMethodTracingNative(traceFileName, fd, bufferSize, flags);
+    }
+
+    /**
+     * Starts method tracing without a backing file.  When stopMethodTracing
+     * is called, the result is sent directly to DDMS.  (If DDMS is not
+     * attached when tracing ends, the profiling data will be discarded.)
+     *
+     * @hide
+     */
+    public static void startMethodTracingDdms(int bufferSize, int flags) {
+        startMethodTracingNative(null, null, bufferSize, flags);
+    }
+
+    /**
+     * Implements all startMethodTracing variants.
+     *
+     * @hide
+     */
+    private static native void startMethodTracingNative(String traceFileName,
         FileDescriptor fd, int bufferSize, int flags);
 
     /**

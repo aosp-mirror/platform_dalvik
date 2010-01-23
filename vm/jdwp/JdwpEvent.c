@@ -1258,19 +1258,39 @@ bool dvmJdwpPostFieldAccess(JdwpState* state, int STUFF, ObjectId thisPtr,
  * other debugger traffic, and can't suspend the VM, so we skip all of
  * the fun event token gymnastics.
  */
-void dvmJdwpDdmSendChunk(JdwpState* state, int type, int len, const u1* buf)
+void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
+    int iovcnt)
 {
     u1 header[kJDWPHeaderLen + 8];
+    size_t dataLen = 0;
+    int i;
+
+    assert(iov != NULL);
+    assert(iovcnt > 0 && iovcnt < 10);
+
+    /*
+     * "Wrap" the contents of the iovec with a JDWP/DDMS header.  We do
+     * this by creating a new copy of the vector with space for the header.
+     */
+    struct iovec wrapiov[iovcnt+1];
+    for (i = 0; i < iovcnt; i++) {
+        wrapiov[i+1].iov_base = iov[i].iov_base;
+        wrapiov[i+1].iov_len = iov[i].iov_len;
+        dataLen += iov[i].iov_len;
+    }
 
     /* form the header (JDWP plus DDMS) */
-    set4BE(header, sizeof(header) + len);
+    set4BE(header, sizeof(header) + dataLen);
     set4BE(header+4, dvmJdwpNextRequestSerial(state));
     set1(header+8, 0);     /* flags */
     set1(header+9, kJDWPDdmCmdSet);
     set1(header+10, kJDWPDdmCmd);
     set4BE(header+11, type);
-    set4BE(header+15, len);
+    set4BE(header+15, dataLen);
 
-    dvmJdwpSendBufferedRequest(state, header, sizeof(header), buf, len);
+    wrapiov[0].iov_base = header;
+    wrapiov[0].iov_len = sizeof(header);
+
+    dvmJdwpSendBufferedRequest(state, wrapiov, iovcnt+1);
 }
 

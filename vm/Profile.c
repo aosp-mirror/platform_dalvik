@@ -31,6 +31,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <cutils/open_memstream.h>
+
 #ifdef HAVE_ANDROID_OS
 # define UPDATE_MAGIC_PAGE      1
 #endif
@@ -319,27 +321,30 @@ static void dumpMethodList(FILE* fp)
 }
 
 /*
- * Start method tracing.  This opens the file (if an already open fd has not
- * been supplied) and allocates the buffer.
- * If any of these fail, we throw an exception and return.
+ * Start method tracing.  Method tracing is global to the VM (i.e. we
+ * trace all threads).
  *
- * Method tracing is global to the VM.
+ * This opens the output file (if an already open fd has not been supplied,
+ * and we're not going direct to DDMS) and allocates the data buffer.
+ *
+ * On failure, we throw an exception and return.
  */
 void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
-        int flags)
+    int flags, bool directToDdms)
 {
     MethodTraceState* state = &gDvm.methodTrace;
 
     assert(bufferSize > 0);
 
-    if (state->traceEnabled != 0) {
+    dvmLockMutex(&state->startStopLock);
+    while (state->traceEnabled != 0) {
         LOGI("TRACE start requested, but already in progress; stopping\n");
+        dvmUnlockMutex(&state->startStopLock);
         dvmMethodTraceStop();
+        dvmLockMutex(&state->startStopLock);
     }
     updateActiveProfilers(1);
-    LOGI("TRACE STARTED: '%s' %dKB\n",
-        traceFileName, bufferSize / 1024);
-    dvmLockMutex(&state->startStopLock);
+    LOGI("TRACE STARTED: '%s' %dKB\n", traceFileName, bufferSize / 1024);
 
     /*
      * Allocate storage and open files.
@@ -352,19 +357,25 @@ void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
         dvmThrowException("Ljava/lang/InternalError;", "buffer alloc failed");
         goto fail;
     }
-    if (traceFd < 0) {
-        state->traceFile = fopen(traceFileName, "w");
-    } else {
-        state->traceFile = fdopen(traceFd, "w");
-    }
-    if (state->traceFile == NULL) {
-        LOGE("Unable to open trace file '%s': %s\n",
-            traceFileName, strerror(errno));
-        dvmThrowException("Ljava/lang/RuntimeException;", "file open failed");
-        goto fail;
+    if (!directToDdms) {
+        if (traceFd < 0) {
+            state->traceFile = fopen(traceFileName, "w");
+        } else {
+            state->traceFile = fdopen(traceFd, "w");
+        }
+        if (state->traceFile == NULL) {
+            int err = errno;
+            LOGE("Unable to open trace file '%s': %s\n",
+                traceFileName, strerror(err));
+            dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+                "Unable to open trace file '%s': %s",
+                traceFileName, strerror(err));
+            goto fail;
+        }
     }
     memset(state->buf, (char)FILL_PATTERN, bufferSize);
 
+    state->directToDdms = directToDdms;
     state->bufferSize = bufferSize;
     state->overflow = false;
 
@@ -569,6 +580,19 @@ void dvmMethodTraceStop(void)
 
     markTouchedMethods(finalCurOffset);
 
+    char* memStreamPtr;
+    size_t memStreamSize;
+    if (state->directToDdms) {
+        assert(state->traceFile == NULL);
+        state->traceFile = open_memstream(&memStreamPtr, &memStreamSize);
+        if (state->traceFile == NULL) {
+            /* not expected */
+            LOGE("Unable to open memstream\n");
+            dvmAbort();
+        }
+    }
+    assert(state->traceFile != NULL);
+
     fprintf(state->traceFile, "%cversion\n", TOKEN_CHAR);
     fprintf(state->traceFile, "%d\n", TRACE_VERSION);
     fprintf(state->traceFile, "data-file-overflow=%s\n",
@@ -597,18 +621,36 @@ void dvmMethodTraceStop(void)
     dumpMethodList(state->traceFile);
     fprintf(state->traceFile, "%cend\n", TOKEN_CHAR);
 
-    if (fwrite(state->buf, finalCurOffset, 1, state->traceFile) != 1) {
-        LOGE("trace fwrite(%d) failed, errno=%d\n", finalCurOffset, errno);
-        dvmThrowException("Ljava/lang/RuntimeException;", "data write failed");
-        goto bail;
+    if (state->directToDdms) {
+        /*
+         * Data is in two places: memStreamPtr and state->buf.  Send
+         * the whole thing to DDMS, wrapped in an MPSE packet.
+         */
+        fflush(state->traceFile);
+
+        struct iovec iov[2];
+        iov[0].iov_base = memStreamPtr;
+        iov[0].iov_len = memStreamSize;
+        iov[1].iov_base = state->buf;
+        iov[1].iov_len = finalCurOffset;
+        dvmDbgDdmSendChunkV(CHUNK_TYPE("MPSE"), iov, 2);
+    } else {
+        /* append the profiling data */
+        if (fwrite(state->buf, finalCurOffset, 1, state->traceFile) != 1) {
+            int err = errno;
+            LOGE("trace fwrite(%d) failed, errno=%d\n", finalCurOffset, err);
+            dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
+                "Trace data write failed: %s", strerror(err));
+        }
     }
 
-bail:
+    /* done! */
     free(state->buf);
     state->buf = NULL;
     fclose(state->traceFile);
     state->traceFile = NULL;
 
+    /* wake any threads that were waiting for profiling to complete */
     int cc = pthread_cond_broadcast(&state->threadExitCond);
     assert(cc == 0);
     dvmUnlockMutex(&state->startStopLock);

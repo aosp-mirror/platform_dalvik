@@ -24,7 +24,9 @@
 #include "jdwp/Jdwp.h"
 #include "jdwp/JdwpEvent.h"
 #include "Debugger.h"
+
 #include <pthread.h>
+#include <sys/uio.h>
 
 /*
  * JDWP constants.
@@ -59,8 +61,8 @@ typedef struct JdwpTransport {
     bool (*awaitingHandshake)(struct JdwpState* state);
     bool (*processIncoming)(struct JdwpState* state);
     bool (*sendRequest)(struct JdwpState* state, ExpandBuf* pReq);
-    bool (*sendBufferedRequest)(struct JdwpState* state, const void* header,
-        size_t headerLen, const void* body, size_t bodyLen);
+    bool (*sendBufferedRequest)(struct JdwpState* state,
+        const struct iovec* iov, int iovcnt);
 } JdwpTransport;
 
 const JdwpTransport* dvmJdwpSocketTransport();
@@ -169,11 +171,10 @@ INLINE bool dvmJdwpProcessIncoming(JdwpState* state) {
 INLINE bool dvmJdwpSendRequest(JdwpState* state, ExpandBuf* pReq) {
     return (*state->transport->sendRequest)(state, pReq);
 }
-INLINE bool dvmJdwpSendBufferedRequest(JdwpState* state, const void* header,
-    size_t headerLen, const void* body, size_t bodyLen)
+INLINE bool dvmJdwpSendBufferedRequest(JdwpState* state,
+    const struct iovec* iov, int iovcnt)
 {
-    return (*state->transport->sendBufferedRequest)(state, header, headerLen,
-        body, bodyLen);
+    return (*state->transport->sendBufferedRequest)(state, iov, iovcnt);
 }
 
 #endif /*_DALVIK_JDWP_JDWPPRIV*/

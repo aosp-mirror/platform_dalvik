@@ -35,6 +35,20 @@ INLINE void dvmThrowException(const char* exceptionDescriptor,
 }
 
 /*
+ * Like dvmThrowChainedException, but takes printf-style args for the message.
+ */
+void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
+    va_list args);
+INLINE void dvmThrowExceptionFmt(const char* exceptionDescriptor,
+    const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    dvmThrowExceptionFmtV(exceptionDescriptor, fmt, args);
+    va_end(args);
+}
+
+/*
  * Throw an exception in the current thread, by class object.
  */
 void dvmThrowChainedExceptionByClass(ClassObject* exceptionClass,

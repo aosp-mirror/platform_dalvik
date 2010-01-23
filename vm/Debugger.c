@@ -3024,7 +3024,18 @@ void dvmDbgDdmDisconnected(void)
 /*
  * Send up a JDWP event packet with a DDM chunk in it.
  */
-void dvmDbgDdmSendChunk(int type, int len, const u1* buf)
+void dvmDbgDdmSendChunk(int type, size_t len, const u1* buf)
+{
+    assert(buf != NULL);
+    struct iovec vec[1] = { {(void*)buf, len} };
+    dvmDbgDdmSendChunkV(type, vec, 1);
+}
+
+/*
+ * Send up a JDWP event packet with a DDM chunk in it.  The chunk is
+ * concatenated from multiple source buffers.
+ */
+void dvmDbgDdmSendChunkV(int type, const struct iovec* iov, int iovcnt)
 {
     if (gDvm.jdwpState == NULL) {
         LOGV("Debugger thread not active, ignoring DDM send (t=0x%08x l=%d)\n",
@@ -3032,6 +3043,6 @@ void dvmDbgDdmSendChunk(int type, int len, const u1* buf)
         return;
     }
 
-    dvmJdwpDdmSendChunk(gDvm.jdwpState, type, len, buf);
+    dvmJdwpDdmSendChunkV(gDvm.jdwpState, type, iov, iovcnt);
 }
 

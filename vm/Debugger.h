@@ -301,7 +301,8 @@ bool dvmDbgDdmHandlePacket(const u1* buf, int dataLen, u1** pReplyBuf,
     int* pReplyLen);
 void dvmDbgDdmConnected(void);
 void dvmDbgDdmDisconnected(void);
-void dvmDbgDdmSendChunk(int type, int len, const u1* buf);
+void dvmDbgDdmSendChunk(int type, size_t len, const u1* buf);
+void dvmDbgDdmSendChunkV(int type, const struct iovec* iov, int iovcnt);
 
 #define CHUNK_TYPE(_name) \
     ((_name)[0] << 24 | (_name)[1] << 16 | (_name)[2] << 8 | (_name)[3])
