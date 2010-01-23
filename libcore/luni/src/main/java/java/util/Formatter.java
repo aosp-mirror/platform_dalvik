@@ -2465,13 +2465,15 @@ public final class Formatter implements Closeable, Flushable {
         }
 
         private void transform_z() {
-            int zoneOffset = calendar.get(Calendar.ZONE_OFFSET);
-            zoneOffset /= 3600000;
-            zoneOffset *= 100;
-            if (zoneOffset >= 0) {
-                result.append('+');
+            long offset = calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET);
+            char sign = '+';
+            if (offset < 0) {
+                sign = '-';
+                offset = -offset;
             }
-            result.append(paddingZeros(zoneOffset, 4));
+            result.append(sign);
+            result.append(paddingZeros(offset / 3600000, 2));
+            result.append(paddingZeros((offset % 3600000) / 60000, 2));
         }
 
         private void transform_p(boolean isLowerCase) {
