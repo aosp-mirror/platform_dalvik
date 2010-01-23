@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include "AndroidSystemNatives.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -327,11 +329,7 @@ static void reset(JNIEnv* env, jclass clazz, RegExData* data, jint position)
     }
 }
 
-/*
- * JNI registration.
- */
-static JNINativeMethod sMethods[] = {
-    /* name, signature, funcPtr */
+static JNINativeMethod gMethods[] = {
     { "open",                 "(Ljava/lang/String;I)I", (void*)open       },
     { "clone",                "(I)I",                   (void*)_clone     },
     { "close",                "(I)V",                   (void*)_close     },
@@ -351,21 +349,9 @@ static JNINativeMethod sMethods[] = {
     { "hasAnchoringBounds",   "(I)Z",             (void*)hasAnchoringBounds },
     { "hitEnd",               "(I)Z",                   (void*)hitEnd },
     { "requireEnd",           "(I)Z",                   (void*)requireEnd },
-    { "reset",                "(II)V",                  (void*)reset }
+    { "reset",                "(II)V",                  (void*)reset },
 };
-
-extern "C" int register_com_ibm_icu4jni_regex_NativeRegEx(JNIEnv* env)
-{
-    jclass clazz;
-
-    clazz = env->FindClass("com/ibm/icu4jni/regex/NativeRegEx");
-    if (clazz == NULL) {
-        return -1;
-    }
-
-    if (env->RegisterNatives(clazz, sMethods, NELEM(sMethods)) < 0) {
-        return -1;
-    }
-
-    return 0;
+int register_com_ibm_icu4jni_regex_NativeRegEx(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "com/ibm/icu4jni/regex/NativeRegEx",
+            gMethods, NELEM(gMethods));
 }

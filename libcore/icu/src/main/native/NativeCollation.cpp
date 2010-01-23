@@ -62,15 +62,15 @@ static jint compare(JNIEnv *env, jclass obj, jint address,
     const UCollator *collator  = (const UCollator *)(int)address;
     jint result = -2;
     if(collator){
-        jsize       srclength = (*env)->GetStringLength(env, source);
-        const UChar *srcstr   = (const UChar *)(*env)->GetStringCritical(env,source,0);
-        if(srcstr){
-            jsize       tgtlength = (*env)->GetStringLength(env, target);
-            const UChar *tgtstr    = (const UChar *)(*env)->GetStringCritical(env,target,0);
+        jsize       srcLength = env->GetStringLength(source);
+        const UChar *chars   = (const UChar *) env->GetStringCritical(source,0);
+        if(chars){
+            jsize       tgtlength = env->GetStringLength(target);
+            const UChar *tgtstr    = (const UChar *) env->GetStringCritical(target,0);
             if(tgtstr){ 
-                  result = ucol_strcoll(collator, srcstr, srclength, tgtstr, tgtlength);
-                  (*env)->ReleaseStringCritical(env, source, srcstr);
-                  (*env)->ReleaseStringCritical(env, target, tgtstr);
+                  result = ucol_strcoll(collator, chars, srcLength, tgtstr, tgtlength);
+                  env->ReleaseStringCritical(source, chars);
+                  env->ReleaseStringCritical(target, tgtstr);
                   return result;
             }else{
                 icu4jni_error(env,U_ILLEGAL_ARGUMENT_ERROR);
@@ -127,12 +127,12 @@ static jint getCollationElementIterator(JNIEnv *env,
     UCollator *collator  = (UCollator *)(int)address;
     jint       result=0;
     if(collator){
-        jsize srclength     = (*env)->GetStringLength(env, source);
-        const UChar *srcstr = (const UChar *)(*env)->GetStringCritical(env,source,0);
-        if(srcstr){
-            result = (jint)(ucol_openElements(collator, srcstr, srclength, &status));
+        jsize srcLength     = env->GetStringLength(source);
+        const UChar *chars = (const UChar *) env->GetStringCritical(source,0);
+        if(chars){
+            result = (jint)(ucol_openElements(collator, chars, srcLength, &status));
 
-            (*env)->ReleaseStringCritical(env, source, srcstr);
+            env->ReleaseStringCritical(source, chars);
             icu4jni_error(env, status);
         }else{
             icu4jni_error(env, U_ILLEGAL_ARGUMENT_ERROR);
@@ -187,12 +187,10 @@ static jint getNormalization(JNIEnv *env, jclass obj,
 * @param address of C collator
 * @param mode the normalization mode
 */
-static void setNormalization(JNIEnv *env, jclass obj, jint address, 
-        jint mode) {
-
-    const UCollator* collator = (const UCollator*) address;
+static void setNormalization(JNIEnv *env, jclass, jint address, jint mode) {
+    UCollator* collator = reinterpret_cast<UCollator*>(static_cast<uintptr_t>(address));
     UErrorCode status = U_ZERO_ERROR;
-    ucol_setAttribute(collator, UCOL_NORMALIZATION_MODE, mode, &status);
+    ucol_setAttribute(collator, UCOL_NORMALIZATION_MODE, UColAttributeValue(mode), &status);
     icu4jni_error(env, status);
 }
 
@@ -226,7 +224,7 @@ static jstring getRules(JNIEnv *env, jclass obj,
   const UCollator *collator = (const UCollator *)(int)address;
   int32_t length=0;
   const UChar *rules = ucol_getRules(collator, &length);
-  return (*env)->NewString(env, rules, length);
+  return env->NewString(rules, length);
 }
 
 /**
@@ -242,45 +240,45 @@ static jbyteArray getSortKey(JNIEnv *env, jclass obj,
         jint address, jstring source) {
 
   const UCollator *collator  = (const UCollator *)(int)address;
-  jbyteArray result;
+  jbyteArray result = NULL;
   if(collator && source){
       // BEGIN android-added
       if(!source) {
           return NULL;
       }
       // END android-added
-      jsize srclength            = (*env)->GetStringLength(env, source);
-      const UChar *srcstr        = (const UChar *)(*env)->GetStringCritical(env,source, 0);
-      if(srcstr){
+      jsize srcLength = env->GetStringLength(source);
+      const UChar *chars = (const UChar *) env->GetStringCritical(source, 0);
+      if (chars){
 // BEGIN android-changed
-          uint8_t bytearray[UCOL_MAX_BUFFER * 2];
-          uint8_t *largerbytearray = NULL;
-          uint8_t *usedbytearray = bytearray;
+          uint8_t byteArray[UCOL_MAX_BUFFER * 2];
+          uint8_t *largerByteArray = NULL;
+          uint8_t *usedByteArray = byteArray;
   
-          jint bytearraysize = ucol_getSortKey(collator, srcstr, srclength, bytearray, 
-                                               sizeof(bytearray) - 1);
+          size_t byteArraySize = ucol_getSortKey(collator, chars, srcLength, byteArray,
+                  sizeof(byteArray) - 1);
  
-          if (bytearraysize > sizeof(bytearray) - 1) {
-            // didn't fit, try again with a larger buffer.
-            largerbytearray = malloc(bytearraysize + 1);
-            usedbytearray = largerbytearray;
-            bytearraysize = ucol_getSortKey(collator, srcstr, srclength, largerbytearray, 
-                                               bytearraysize);
+          if (byteArraySize > sizeof(byteArray) - 1) {
+              // didn't fit, try again with a larger buffer.
+              largerByteArray = new uint8_t[byteArraySize + 1];
+              usedByteArray = largerByteArray;
+              byteArraySize = ucol_getSortKey(collator, chars, srcLength, largerByteArray,
+                      byteArraySize);
           }
  
-          (*env)->ReleaseStringCritical(env, source, srcstr);
+          env->ReleaseStringCritical(source, chars);
 
-          if (bytearraysize == 0) {
-            free(largerbytearray);
-            return NULL;
+          if (byteArraySize == 0) {
+              delete[] largerByteArray;
+              return NULL;
           }
   
           /* no problem converting uint8_t to int8_t, gives back the correct value
            * tried and tested
            */
-          result = (*env)->NewByteArray(env, bytearraysize);
-          (*env)->SetByteArrayRegion(env, result, 0, bytearraysize, usedbytearray);
-          free(largerbytearray);
+          result = env->NewByteArray(byteArraySize);
+          env->SetByteArrayRegion(result, 0, byteArraySize, reinterpret_cast<jbyte*>(usedByteArray));
+          delete[] largerByteArray;
 // END android-changed
       }else{
           icu4jni_error(env,U_ILLEGAL_ARGUMENT_ERROR);
@@ -339,9 +337,9 @@ static jint next(JNIEnv *env, jclass obj, jint address) {
 */
 static jint openCollator__(JNIEnv *env, jclass obj) {
     UErrorCode status = U_ZERO_ERROR;
-    jint result = ucol_open(NULL, &status);
+    UCollator* result = ucol_open(NULL, &status);
     icu4jni_error(env, status);
-    return result;
+    return reinterpret_cast<uintptr_t>(result);
 }
 
 
@@ -360,17 +358,17 @@ static jint openCollator__Ljava_lang_String_2(JNIEnv *env,
         jclass obj, jstring locale) {
 
     /* this will be null terminated */
-    const char* localeStr = (*env)->GetStringUTFChars(env, locale, NULL);
+    const char* localeStr = env->GetStringUTFChars(locale, NULL);
     if (localeStr == NULL) {
         icu4jni_error(env, U_ILLEGAL_ARGUMENT_ERROR);
         return 0;
     }
 
     UErrorCode status = U_ZERO_ERROR;
-    jint result = ucol_open(localeStr, &status);
-    (*env)->ReleaseStringUTFChars(env, locale, localeStr);
+    UCollator* result = ucol_open(localeStr, &status);
+    env->ReleaseStringUTFChars(locale, localeStr);
     icu4jni_error(env, status);
-    return result;
+    return reinterpret_cast<uintptr_t>(result);
 }
 
 /**
@@ -389,8 +387,8 @@ static jint openCollator__Ljava_lang_String_2(JNIEnv *env,
 static jint openCollatorFromRules(JNIEnv *env, jclass obj,
         jstring rules, jint normalizationmode, jint strength) {
 
-  jsize  ruleslength    = (*env)->GetStringLength(env, rules);
-  const UChar *rulestr  = (const UChar *)(*env)->GetStringCritical(env,rules, 0);
+  jsize  ruleslength    = env->GetStringLength(rules);
+  const UChar *rulestr  = (const UChar *) env->GetStringCritical(rules, 0);
   UErrorCode status     = U_ZERO_ERROR;
   jint   result        = 0;
   if(rulestr){
@@ -398,7 +396,7 @@ static jint openCollatorFromRules(JNIEnv *env, jclass obj,
                                    (UColAttributeValue)normalizationmode,
                                    (UCollationStrength)strength, NULL, &status);
 
-      (*env)->ReleaseStringCritical(env, rules, rulestr);
+      env->ReleaseStringCritical(rules, rulestr);
       icu4jni_error(env, status);
   }else{
       icu4jni_error(env,U_ILLEGAL_ARGUMENT_ERROR);
@@ -516,27 +514,26 @@ static void setText(JNIEnv *env, jclass obj, jint address,
 
   UCollationElements *iterator = (UCollationElements *)(int)address;
   UErrorCode status = U_ZERO_ERROR;
-  int strlength = (*env)->GetStringLength(env, source);
-  const UChar *str = (const UChar *)(*env)->GetStringCritical(env, source, 0);
+  int strlength = env->GetStringLength(source);
+  const UChar *str = (const UChar *) env->GetStringCritical(source, 0);
   
   ucol_setText(iterator, str, strlength, &status);
-  (*env)->ReleaseStringCritical(env, source, str);
+  env->ReleaseStringCritical(source, str);
 
    icu4jni_error(env, status);
 }
 
 static jobjectArray getAvailableLocalesImpl(JNIEnv *env, jclass clazz) {
-    jclass stringClass = (*env)->FindClass(env, "java/lang/String");
+    jclass stringClass = env->FindClass("java/lang/String");
     if (stringClass == NULL) {
         return NULL;
     }
     size_t count = ucol_countAvailable();
-    jobjectArray result = (*env)->NewObjectArray(env, count, stringClass, NULL);
-    size_t i = 0;
-    for (; i < count; ++i) {
-        jstring s = (*env)->NewStringUTF(env, ucol_getAvailable(i));
-        (*env)->SetObjectArrayElement(env, result, i, s);
-        (*env)->DeleteLocalRef(env, s);
+    jobjectArray result = env->NewObjectArray(count, stringClass, NULL);
+    for (size_t i = 0; i < count; ++i) {
+        jstring s = env->NewStringUTF(ucol_getAvailable(i));
+        env->SetObjectArrayElement(result, i, s);
+        env->DeleteLocalRef(s);
     }
     return result;
 }

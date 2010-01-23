@@ -32,11 +32,13 @@
 #include "unicode/ustring.h"
 #include "unicode/timezone.h"
 #include "ErrorCode.h"
-#include <cutils/log.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+
+#define LOG_TAG "Resources"
+#include "cutils/log.h"
 
 static jclass string_class;
 
