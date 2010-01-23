@@ -46,8 +46,9 @@ import org.apache.harmony.luni.util.LocaleCache;
  * <p>
  * It's relatively rare to use a {@code Formatter} directly. A variety of classes offer convenience
  * methods for accessing formatter functionality.
- * Of these, {@link String#format} is generally the most useful. {@link PrintStream} and {@link
- * PrintWriter} both offer {@code format} and {@code printf} methods.
+ * Of these, {@link String#format} is generally the most useful.
+ * {@link java.io.PrintStream} and {@link java.io.PrintWriter} both offer
+ * {@code format} and {@code printf} methods.
  * <p>
  * <i>Format strings</i> consist of plain text interspersed with format specifiers, such
  * as {@code "name: %s weight: %03dkg\n"}. Being a Java string, the usual Java string literal
