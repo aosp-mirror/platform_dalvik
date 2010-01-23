@@ -17,25 +17,26 @@
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "unicode/uchar.h"
+#include <math.h>
 #include <stdlib.h>
 
-static jint digitImpl(JNIEnv *env, jclass clazz, jint codePoint, jint radix) {
+static jint digitImpl(JNIEnv*, jclass, jint codePoint, jint radix) {
     return u_digit(codePoint, radix);
 }
 
-static jint getTypeImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jint getTypeImpl(JNIEnv*, jclass, jint codePoint) {
     return u_charType(codePoint);
 }
 
-static jbyte getDirectionalityImpl(JNIEnv *env, jclass clazz, jint codePoint) {
-    return u_charDirection (codePoint);
+static jbyte getDirectionalityImpl(JNIEnv*, jclass, jint codePoint) {
+    return u_charDirection(codePoint);
 }
 
-static jboolean isMirroredImpl(JNIEnv *env, jclass clazz, jint codePoint) {
-    return u_isMirrored (codePoint);
+static jboolean isMirroredImpl(JNIEnv*, jclass, jint codePoint) {
+    return u_isMirrored(codePoint);
 }
 
-static jint getNumericValueImpl(JNIEnv *env, jclass clazz, jint codePoint){
+static jint getNumericValueImpl(JNIEnv*, jclass, jint codePoint){
     // The letters A-Z in their uppercase ('\u0041' through '\u005A'), 
     //                          lowercase ('\u0061' through '\u007A'), 
     //             and full width variant ('\uFF21' through '\uFF3A' 
@@ -67,93 +68,86 @@ static jint getNumericValueImpl(JNIEnv *env, jclass clazz, jint codePoint){
     return result;
 } 
     
-static jboolean isDefinedImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isDefinedImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isdefined(codePoint);
 } 
 
-static jboolean isDigitImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isDigitImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isdigit(codePoint);
 } 
 
-static jboolean isIdentifierIgnorableImpl(JNIEnv *env, jclass clazz, 
-        jint codePoint) {
-
+static jboolean isIdentifierIgnorableImpl(JNIEnv*, jclass, jint codePoint) {
     // Java also returns TRUE for U+0085 Next Line (it omits U+0085 from whitespace ISO controls)
     if(codePoint == 0x0085) {
         return JNI_TRUE;
     }
-
     return u_isIDIgnorable(codePoint);
 } 
 
-static jboolean isLetterImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isLetterImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isalpha(codePoint);
 } 
 
-static jboolean isLetterOrDigitImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isLetterOrDigitImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isalnum(codePoint);
 } 
 
-static jboolean isSpaceCharImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isSpaceCharImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isJavaSpaceChar(codePoint);
 } 
 
-static jboolean isTitleCaseImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isTitleCaseImpl(JNIEnv*, jclass, jint codePoint) {
     return u_istitle(codePoint);
 } 
 
-static jboolean isUnicodeIdentifierPartImpl(JNIEnv *env, jclass clazz, 
-        jint codePoint) {
+static jboolean isUnicodeIdentifierPartImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isIDPart(codePoint);
 } 
 
-static jboolean isUnicodeIdentifierStartImpl(JNIEnv *env, jclass clazz, 
-        jint codePoint) {
+static jboolean isUnicodeIdentifierStartImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isIDStart(codePoint);
 } 
 
-static jboolean isWhitespaceImpl(JNIEnv *env, jclass clazz, jint codePoint) {
-
+static jboolean isWhitespaceImpl(JNIEnv*, jclass, jint codePoint) {
     // Java omits U+0085
     if(codePoint == 0x0085) {
         return JNI_FALSE;
     }
-
     return u_isWhitespace(codePoint);
 } 
 
-static jint toLowerCaseImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jint toLowerCaseImpl(JNIEnv*, jclass, jint codePoint) {
     return u_tolower(codePoint);
 } 
 
-static jint toTitleCaseImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jint toTitleCaseImpl(JNIEnv*, jclass, jint codePoint) {
     return u_totitle(codePoint);
 } 
 
-static jint toUpperCaseImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jint toUpperCaseImpl(JNIEnv*, jclass, jint codePoint) {
     return u_toupper(codePoint);
 } 
 
-static jboolean isUpperCaseImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isUpperCaseImpl(JNIEnv*, jclass, jint codePoint) {
     return u_isupper(codePoint);
 } 
 
-static jboolean isLowerCaseImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static jboolean isLowerCaseImpl(JNIEnv*, jclass, jint codePoint) {
     return u_islower(codePoint);
 } 
 
-static int forNameImpl(JNIEnv *env, jclass clazz, jstring blockName) {
+static int forNameImpl(JNIEnv* env, jclass, jstring blockName) {
     if (blockName == NULL) {
         jniThrowException(env, "java/lang/NullPointerException", NULL);
         return -1;
     }
-    const char* bName = (*env)->GetStringUTFChars(env, blockName, NULL);
+    const char* bName = env->GetStringUTFChars(blockName, NULL);
     int result = u_getPropertyValueEnum(UCHAR_BLOCK, bName);
-    (*env)->ReleaseStringUTFChars(env, blockName, bName);
+    env->ReleaseStringUTFChars(blockName, bName);
     return result;
 }
 
-static int ofImpl(JNIEnv *env, jclass clazz, jint codePoint) {
+static int ofImpl(JNIEnv*, jclass, jint codePoint) {
     return ublock_getCode(codePoint);
 }
 
@@ -186,7 +180,7 @@ static JNINativeMethod gMethods[] = {
     { "toUpperCase", "(I)I", (void*) toUpperCaseImpl },
 }; 
 
-int register_com_ibm_icu4jni_lang_UCharacter(JNIEnv *env) {
+int register_com_ibm_icu4jni_lang_UCharacter(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "com/ibm/icu4jni/lang/UCharacter",
                 gMethods, NELEM(gMethods));
 }

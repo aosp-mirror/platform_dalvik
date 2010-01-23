@@ -3,16 +3,16 @@
 # or BUILD_*_LIBRARY.
 
 LOCAL_SRC_FILES := \
-	BidiWrapperInterface.c \
-	BreakIteratorInterface.c \
-	DecimalFormatInterface.cpp \
-	CharacterInterface.c \
-	ConverterInterface.c \
-	CollationInterface.c \
-	RegExInterface.cpp \
-	ResourceInterface.cpp \
-	RBNFInterface.cpp \
-	ErrorCode.c
+	BidiWrapper.cpp \
+	ErrorCode.cpp \
+	NativeBreakIterator.cpp \
+	NativeCollation.cpp \
+	NativeConverter.cpp \
+	NativeDecimalFormat.cpp \
+	NativeRegEx.cpp \
+	RuleBasedNumberFormat.cpp \
+	Resources.cpp \
+	UCharacter.cpp
 
 LOCAL_C_INCLUDES += \
 	external/icu4c/common \

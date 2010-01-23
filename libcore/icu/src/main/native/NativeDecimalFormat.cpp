@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "DecimalFormatInterface"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "unicode/unum.h"
@@ -26,6 +25,8 @@
 #include "ErrorCode.h"
 #include <stdlib.h>
 #include <string.h>
+
+#define LOG_TAG "NativeDecimalFormat"
 #include "cutils/log.h"
 
 static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,

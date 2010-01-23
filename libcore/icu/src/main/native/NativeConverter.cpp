@@ -36,7 +36,7 @@
 // END android-removed
 	 	  
 /* Prototype of callback for substituting user settable sub chars */
-void  JNI_TO_U_CALLBACK_SUBSTITUTE
+static void JNI_TO_U_CALLBACK_SUBSTITUTE
  (const void *,UConverterToUnicodeArgs *,const char* ,int32_t ,UConverterCallbackReason ,UErrorCode * );
 
 /**
@@ -51,13 +51,13 @@ static jlong openConverter (JNIEnv *env, jclass jClass, jstring converterName) {
     UConverter* conv=NULL;
     UErrorCode errorCode = U_ZERO_ERROR;
 
-    const char* cnvName= (const char*) (*env)->GetStringUTFChars(env, converterName,NULL);
+    const char* cnvName= (const char*) env->GetStringUTFChars(converterName,NULL);
     if(cnvName) {
-        int count = (*env)->GetStringUTFLength(env,converterName);
+        int count = env->GetStringUTFLength(converterName);
 
         conv = ucnv_open(cnvName,&errorCode);
     }
-    (*env)->ReleaseStringUTFChars(env, converterName,cnvName);
+    env->ReleaseStringUTFChars(converterName,cnvName);
 
     if (icu4jni_error(env, errorCode) != FALSE) {
         return 0;
@@ -80,10 +80,13 @@ static void closeConverter (JNIEnv *env, jclass jClass, jlong handle) {
         // Free up any contexts created in setCallback[Encode|Decode]()
         UConverterToUCallback toAction;
         UConverterFromUCallback fromAction;
-        void * context1 = NULL;
-        void * context2 = NULL;
-        ucnv_getToUCallBack(cnv, &toAction, &context1);
-        ucnv_getFromUCallBack(cnv, &fromAction, &context2);
+        void* context1 = NULL;
+        void* context2 = NULL;
+        // TODO: ICU API bug?
+        // The documentation clearly states that the caller owns the returned
+        // pointers: http://icu-project.org/apiref/icu4c/ucnv_8h.html
+        ucnv_getToUCallBack(cnv, &toAction, const_cast<const void**>(&context1));
+        ucnv_getFromUCallBack(cnv, &fromAction, const_cast<const void**>(&context2));
         // END android-added
         ucnv_close(cnv);
         // BEGIN android-added
@@ -196,23 +199,22 @@ static jint setSubstitutionModeByteToChar (JNIEnv *env, jclass jClass, jlong han
  * @param flush boolean that specifies end of source input
  */
 static jint convertCharToByte(JNIEnv *env, jclass jClass, jlong handle,  jcharArray source,  jint sourceEnd, jbyteArray target, jint targetEnd, jintArray data, jboolean flush) {
-    
 
     UErrorCode errorCode =U_ZERO_ERROR;
     UConverter* cnv = (UConverter*)handle;
     if(cnv) {
-        jint* myData = (jint*) (*env)->GetPrimitiveArrayCritical(env,data,NULL);
+        jint* myData = (jint*) env->GetPrimitiveArrayCritical(data,NULL);
         if(myData) {
             jint* sourceOffset = &myData[0];
             jint* targetOffset = &myData[1];
-            const jchar* uSource =(jchar*) (*env)->GetPrimitiveArrayCritical(env,source, NULL);
+            const jchar* uSource =(jchar*) env->GetPrimitiveArrayCritical(source, NULL);
             if(uSource) {
-                jbyte* uTarget=(jbyte*) (*env)->GetPrimitiveArrayCritical(env,target,NULL);
+                jbyte* uTarget=(jbyte*) env->GetPrimitiveArrayCritical(target,NULL);
                 if(uTarget) {
                     const jchar* mySource = uSource+ *sourceOffset;
                     const UChar* mySourceLimit= uSource+sourceEnd;
-                    char* cTarget=uTarget+ *targetOffset;
-                    const char* cTargetLimit=uTarget+targetEnd;
+                    char* cTarget = reinterpret_cast<char*>(uTarget+ *targetOffset);
+                    const char* cTargetLimit = reinterpret_cast<const char*>(uTarget+targetEnd);
                     
                     ucnv_fromUnicode( cnv , &cTarget, cTargetLimit,&mySource,
                                     mySourceLimit,NULL,(UBool) flush, &errorCode);
@@ -220,23 +222,23 @@ static jint convertCharToByte(JNIEnv *env, jclass jClass, jlong handle,  jcharAr
                     *sourceOffset = (jint) (mySource - uSource)-*sourceOffset;
                     *targetOffset = (jint) ((jbyte*)cTarget - uTarget)- *targetOffset;
                     if(U_FAILURE(errorCode)) {
-                        (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
-                        (*env)->ReleasePrimitiveArrayCritical(env,source,(jchar*)uSource,0);
-                        (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+                        env->ReleasePrimitiveArrayCritical(target,uTarget,0);
+                        env->ReleasePrimitiveArrayCritical(source,(jchar*)uSource,0);
+                        env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
                         return errorCode;
                     }
                 }else{
                     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
                 }
-                (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
+                env->ReleasePrimitiveArrayCritical(target,uTarget,0);
             }else{
-                    errorCode = U_ILLEGAL_ARGUMENT_ERROR;
+                errorCode = U_ILLEGAL_ARGUMENT_ERROR;
             }
-            (*env)->ReleasePrimitiveArrayCritical(env,source,(jchar*)uSource,0); 
+            env->ReleasePrimitiveArrayCritical(source,(jchar*)uSource,0);
         }else{
-                    errorCode = U_ILLEGAL_ARGUMENT_ERROR;
+            errorCode = U_ILLEGAL_ARGUMENT_ERROR;
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+        env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
         return errorCode;
     }
     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
@@ -245,9 +247,9 @@ static jint convertCharToByte(JNIEnv *env, jclass jClass, jlong handle,  jcharAr
 
 static jint encode(JNIEnv *env, jclass jClass, jlong handle, jcharArray source, jint sourceEnd, jbyteArray target, jint targetEnd, jintArray data, jboolean flush) {
    
-    UErrorCode ec = convertCharToByte(env,jClass,handle,source,sourceEnd, target,targetEnd,data,flush);
+    UErrorCode ec = UErrorCode(convertCharToByte(env, jClass,handle,source,sourceEnd, target,targetEnd,data,flush));
     UConverter* cnv = (UConverter*)handle;
-    jint* myData = (jint*) (*env)->GetPrimitiveArrayCritical(env,data,NULL);
+    jint* myData = (jint*) env->GetPrimitiveArrayCritical(data,NULL);
 
     if(cnv && myData) {
         
@@ -264,7 +266,7 @@ static jint encode(JNIEnv *env, jclass jClass, jlong handle, jcharArray source, 
             }	  
         }
     }
-    (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+    env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
     return ec;
 }
 
@@ -285,17 +287,17 @@ static jint convertByteToChar(JNIEnv *env, jclass jClass, jlong handle, jbyteArr
     UErrorCode errorCode =U_ZERO_ERROR;
     UConverter* cnv = (UConverter*)handle;
     if(cnv) {
-        jint* myData = (jint*) (*env)->GetPrimitiveArrayCritical(env,data,NULL);
+        jint* myData = (jint*) env->GetPrimitiveArrayCritical(data,NULL);
         if(myData) {
             jint* sourceOffset = &myData[0];
             jint* targetOffset = &myData[1];
 
-            const jbyte* uSource =(jbyte*) (*env)->GetPrimitiveArrayCritical(env,source, NULL);
+            const jbyte* uSource =(jbyte*) env->GetPrimitiveArrayCritical(source, NULL);
             if(uSource) {
-                jchar* uTarget=(jchar*) (*env)->GetPrimitiveArrayCritical(env,target,NULL);
+                jchar* uTarget=(jchar*) env->GetPrimitiveArrayCritical(target,NULL);
                 if(uTarget) {
                     const jbyte* mySource = uSource+ *sourceOffset;
-                    const char* mySourceLimit= uSource+sourceEnd;
+                    const char* mySourceLimit = reinterpret_cast<const char*>(uSource+sourceEnd);
                     UChar* cTarget=uTarget+ *targetOffset;
                     const UChar* cTargetLimit=uTarget+targetEnd;
                     
@@ -305,23 +307,23 @@ static jint convertByteToChar(JNIEnv *env, jclass jClass, jlong handle, jbyteArr
                     *sourceOffset = mySource - uSource - *sourceOffset  ;
                     *targetOffset = cTarget - uTarget - *targetOffset;
                     if(U_FAILURE(errorCode)) {
-                        (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
-                        (*env)->ReleasePrimitiveArrayCritical(env,source,(jchar*)uSource,0);
-                        (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+                        env->ReleasePrimitiveArrayCritical(target,uTarget,0);
+                        env->ReleasePrimitiveArrayCritical(source,(jchar*)uSource,0);
+                        env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
                         return errorCode;
                     }
                 }else{
                     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
                 }
-                (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
+                env->ReleasePrimitiveArrayCritical(target,uTarget,0);
             }else{
                 errorCode = U_ILLEGAL_ARGUMENT_ERROR;
             }
-            (*env)->ReleasePrimitiveArrayCritical(env,source,(jchar*)uSource,0); 
+            env->ReleasePrimitiveArrayCritical(source,(jchar*)uSource,0);
         }else{
             errorCode = U_ILLEGAL_ARGUMENT_ERROR;
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+        env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
         return errorCode;
     }
     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
@@ -332,7 +334,7 @@ static jint decode(JNIEnv *env, jclass jClass, jlong handle, jbyteArray source, 
 
     jint ec = convertByteToChar(env, jClass,handle,source,sourceEnd, target,targetEnd,data,flush);
 
-    jint* myData = (jint*) (*env)->GetPrimitiveArrayCritical(env,data,NULL);
+    jint* myData = (jint*) env->GetPrimitiveArrayCritical(data,NULL);
     UConverter* cnv = (UConverter*)handle;
 
     if(myData && cnv) {
@@ -349,7 +351,7 @@ static jint decode(JNIEnv *env, jclass jClass, jlong handle, jbyteArray source, 
             }	  
         }
     }
-    (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+    env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
     return ec;
 }
 static void resetByteToChar(JNIEnv *env, jclass jClass, jlong handle) {
@@ -376,11 +378,11 @@ static jint countInvalidBytes (JNIEnv *env, jclass jClass, jlong handle, jintArr
     if(cnv) {
         char invalidChars[32];
 
-        jint* len = (jint*) (*env)->GetPrimitiveArrayCritical(env,length, NULL);
+        jint* len = (jint*) env->GetPrimitiveArrayCritical(length, NULL);
         if(len) {
             ucnv_getInvalidChars(cnv,invalidChars,(int8_t*)len,&errorCode);
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,length,(jint*)len,0);
+        env->ReleasePrimitiveArrayCritical(length,(jint*)len,0);
         return errorCode;
     }
     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
@@ -395,11 +397,11 @@ static jint countInvalidChars(JNIEnv *env, jclass jClass, jlong handle, jintArra
     UConverter* cnv = (UConverter*)handle;
     UChar invalidUChars[32];
     if(cnv) {
-        jint* len = (jint*) (*env)->GetPrimitiveArrayCritical(env,length, NULL);
+        jint* len = (jint*) env->GetPrimitiveArrayCritical(length, NULL);
         if(len) {
             ucnv_getInvalidUChars(cnv,invalidUChars,(int8_t*)len,&errorCode);
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,length,(jint*)len,0);
+        env->ReleasePrimitiveArrayCritical(length,(jint*)len,0);
         return errorCode;
     }
     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
@@ -440,13 +442,13 @@ static jint flushByteToChar(JNIEnv *env, jclass jClass,jlong handle, jcharArray 
     UConverter* cnv = (UConverter*)handle;
     if(cnv) {
         jbyte source ='\0';
-        jint* myData = (jint*) (*env)->GetPrimitiveArrayCritical(env,data,NULL);
+        jint* myData = (jint*) env->GetPrimitiveArrayCritical(data,NULL);
         if(myData) {
             jint* targetOffset = &myData[1];
-            jchar* uTarget=(jchar*) (*env)->GetPrimitiveArrayCritical(env,target,NULL);
+            jchar* uTarget=(jchar*) env->GetPrimitiveArrayCritical(target,NULL);
             if(uTarget) {
-                const jbyte* mySource =&source;
-                const char* mySourceLimit=&source;
+                const jbyte* mySource = &source;
+                const char* mySourceLimit = reinterpret_cast<char*>(&source);
                 UChar* cTarget=uTarget+ *targetOffset;
                 const UChar* cTargetLimit=uTarget+targetEnd;
 
@@ -456,19 +458,19 @@ static jint flushByteToChar(JNIEnv *env, jclass jClass,jlong handle, jcharArray 
 
                 *targetOffset = (jint) ((jchar*)cTarget - uTarget)- *targetOffset;
                 if(U_FAILURE(errorCode)) {
-                    (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
-                    (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+                    env->ReleasePrimitiveArrayCritical(target,uTarget,0);
+                    env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
                     return errorCode;
                 }
             }else{
                 errorCode = U_ILLEGAL_ARGUMENT_ERROR;
             }
-            (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
+            env->ReleasePrimitiveArrayCritical(target,uTarget,0);
 
         }else{
             errorCode = U_ILLEGAL_ARGUMENT_ERROR;
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+        env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
         return errorCode;
     }
     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
@@ -481,15 +483,15 @@ static jint flushCharToByte (JNIEnv *env, jclass jClass, jlong handle, jbyteArra
     UConverter* cnv = (UConverter*)handle;
     jchar source = '\0';
     if(cnv) {
-        jint* myData = (jint*) (*env)->GetPrimitiveArrayCritical(env,data,NULL);
+        jint* myData = (jint*) env->GetPrimitiveArrayCritical(data,NULL);
         if(myData) {
             jint* targetOffset = &myData[1];
-            jbyte* uTarget=(jbyte*) (*env)->GetPrimitiveArrayCritical(env,target,NULL);
+            jbyte* uTarget=(jbyte*) env->GetPrimitiveArrayCritical(target,NULL);
             if(uTarget) {
                 const jchar* mySource = &source;
                 const UChar* mySourceLimit= &source;
-                char* cTarget=uTarget+ *targetOffset;
-                const char* cTargetLimit=uTarget+targetEnd;
+                char* cTarget = reinterpret_cast<char*>(uTarget+ *targetOffset);
+                const char* cTargetLimit = reinterpret_cast<char*>(uTarget+targetEnd);
 
                 ucnv_fromUnicode( cnv , &cTarget, cTargetLimit,&mySource,
                                   mySourceLimit,NULL,TRUE, &errorCode);
@@ -497,26 +499,26 @@ static jint flushCharToByte (JNIEnv *env, jclass jClass, jlong handle, jbyteArra
 
                 *targetOffset = (jint) ((jbyte*)cTarget - uTarget)- *targetOffset;
                 if(U_FAILURE(errorCode)) {
-                    (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
+                    env->ReleasePrimitiveArrayCritical(target,uTarget,0);
                 
-                    (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+                    env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
                     return errorCode;
                 }
             }else{
                 errorCode = U_ILLEGAL_ARGUMENT_ERROR;
             }
-            (*env)->ReleasePrimitiveArrayCritical(env,target,uTarget,0);
+            env->ReleasePrimitiveArrayCritical(target,uTarget,0);
         }else{
             errorCode = U_ILLEGAL_ARGUMENT_ERROR;
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,data,(jint*)myData,0);
+        env->ReleasePrimitiveArrayCritical(data,(jint*)myData,0);
         return errorCode;
     }
     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
     return errorCode;
 }
 
-void toChars(const UChar* us, char* cs, int32_t length) {
+static void toChars(const UChar* us, char* cs, int32_t length) {
     UChar u;
     while(length>0) {
         u=*us++;
@@ -529,21 +531,21 @@ static jint setSubstitutionBytes(JNIEnv *env, jclass jClass, jlong handle, jbyte
     UConverter* cnv = (UConverter*) handle;
     UErrorCode errorCode = U_ZERO_ERROR;
     if(cnv) {
-        jbyte* u_subChars = (*env)->GetPrimitiveArrayCritical(env,subChars,NULL);
+        jbyte* u_subChars = reinterpret_cast<jbyte*>(env->GetPrimitiveArrayCritical(subChars, NULL));
         if(u_subChars) {
-             char* mySubChars= (char*)malloc(sizeof(char)*length);
+            char* mySubChars = new char[length];
              toChars((UChar*)u_subChars,&mySubChars[0],length);
              ucnv_setSubstChars(cnv,mySubChars, (char)length,&errorCode);
              if(U_FAILURE(errorCode)) {
-                (*env)->ReleasePrimitiveArrayCritical(env,subChars,mySubChars,0);
+                env->ReleasePrimitiveArrayCritical(subChars,mySubChars,0);
                 return errorCode;
              }
-             free(mySubChars);
+             delete[] mySubChars;
         }
         else{   
            errorCode =  U_ILLEGAL_ARGUMENT_ERROR;
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,subChars,u_subChars,0); 
+        env->ReleasePrimitiveArrayCritical(subChars,u_subChars,0);
         return errorCode;
     }
     errorCode = U_ILLEGAL_ARGUMENT_ERROR;
@@ -553,11 +555,11 @@ static jint setSubstitutionBytes(JNIEnv *env, jclass jClass, jlong handle, jbyte
 
 #define VALUE_STRING_LENGTH 32
 
-typedef struct{
+struct SubCharStruct {
     int length;
     UChar subChars[256];
     UBool stopOnIllegal;
-}SubCharStruct;
+};
 
 
 static UErrorCode 
@@ -601,14 +603,14 @@ static jint setSubstitutionChars(JNIEnv *env, jclass jClass, jlong handle, jchar
     jchar* u_subChars=NULL;
     if(cnv) {
         if(subChars) {
-            int len = (*env)->GetArrayLength(env,subChars);
-            u_subChars = (*env)->GetPrimitiveArrayCritical(env,subChars,NULL);
+            int len = env->GetArrayLength(subChars);
+            u_subChars = reinterpret_cast<jchar*>(env->GetPrimitiveArrayCritical(subChars,NULL));
             if(u_subChars) {
                errorCode =  setToUCallbackSubs(cnv,u_subChars,len,FALSE);
             }else{
                 errorCode = U_ILLEGAL_ARGUMENT_ERROR;
             }
-            (*env)->ReleasePrimitiveArrayCritical(env,subChars,u_subChars,0);
+            env->ReleasePrimitiveArrayCritical(subChars,u_subChars,0);
             return errorCode;
         }
     }
@@ -616,7 +618,7 @@ static jint setSubstitutionChars(JNIEnv *env, jclass jClass, jlong handle, jchar
 }
 
 
-void  JNI_TO_U_CALLBACK_SUBSTITUTE( const void *context, UConverterToUnicodeArgs *toArgs, const char* codeUnits, int32_t length, UConverterCallbackReason reason, UErrorCode * err) {
+static void JNI_TO_U_CALLBACK_SUBSTITUTE( const void *context, UConverterToUnicodeArgs *toArgs, const char* codeUnits, int32_t length, UConverterCallbackReason reason, UErrorCode * err) {
 
     if(context) {
         SubCharStruct* temp = (SubCharStruct*)context;
@@ -676,33 +678,32 @@ static jboolean canDecode(JNIEnv *env, jclass jClass, jlong handle, jbyteArray s
     UErrorCode errorCode =U_ZERO_ERROR;
     UConverter* cnv = (UConverter*)handle;
     if(cnv) {
-        jint len = (*env)->GetArrayLength(env,source);    
-        jbyte* cSource =(jbyte*) (*env)->GetPrimitiveArrayCritical(env,source, NULL);
+        jint len = env->GetArrayLength(source);
+        jbyte* cSource =(jbyte*) env->GetPrimitiveArrayCritical(source, NULL);
         if(cSource) {
-            const jbyte* cSourceLimit = cSource+len;
+            const char* cSourceLimit = reinterpret_cast<const char*>(cSource+len);
 
             /* Assume that we need at most twice the length of source */
             UChar* target = (UChar*) malloc(sizeof(UChar)* (len<<1));
             UChar* targetLimit = target + (len<<1);
             if(target) {
-                ucnv_toUnicode(cnv,&target,targetLimit, 
-                               (const char**)&cSource, 
-                               cSourceLimit,NULL, TRUE,&errorCode);
+                ucnv_toUnicode(cnv,&target,targetLimit, (const char**)&cSource,
+                        cSourceLimit,NULL, TRUE,&errorCode);
 
                 if(U_SUCCESS(errorCode)) {
                     free(target);
-                    (*env)->ReleasePrimitiveArrayCritical(env,source,cSource,0);        
+                    env->ReleasePrimitiveArrayCritical(source,cSource,0);
                     return (jboolean)TRUE;
                 }
             }
             free(target);
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,source,cSource,0);        
+        env->ReleasePrimitiveArrayCritical(source,cSource,0);
     }
     return (jboolean)FALSE;
 }
 
-int32_t copyString(char* dest, int32_t destCapacity, int32_t startIndex,
+static int32_t copyString(char* dest, int32_t destCapacity, int32_t startIndex,
            const char* src, UErrorCode* status) {
     int32_t srcLen = 0, i=0;
     if(U_FAILURE(*status)) {
@@ -725,7 +726,7 @@ int32_t copyString(char* dest, int32_t destCapacity, int32_t startIndex,
     return startIndex;
 }
 
-int32_t getJavaCanonicalName1(const char* icuCanonicalName, 
+static int32_t getJavaCanonicalName1(const char* icuCanonicalName,
                      char* canonicalName, int32_t capacity, 
                      UErrorCode* status) {
  /*
@@ -791,9 +792,8 @@ static jobjectArray getAvailable(JNIEnv *env, jclass jClass) {
     UErrorCode error = U_ZERO_ERROR;
     const char* name =NULL;
     char canonicalName[256]={0};
-    ret= (jobjectArray)(*env)->NewObjectArray( env,num,
-                                               (*env)->FindClass(env,"java/lang/String"),
-                                               (*env)->NewStringUTF(env,""));
+    ret= env->NewObjectArray(num, env->FindClass("java/lang/String"),
+            env->NewStringUTF(""));
 
     for(i=0;i<num;i++) {
         name = ucnv_getAvailableName(i);
@@ -806,9 +806,9 @@ static jobjectArray getAvailable(JNIEnv *env, jclass jClass) {
         printf("canonical name for %s\n", canonicalName);
 #endif
         // BEGIN android-changed
-        jstring canonName = (*env)->NewStringUTF(env,canonicalName);
-        (*env)->SetObjectArrayElement(env,ret,i,canonName);
-        (*env)->DeleteLocalRef(env, canonName);
+        jstring canonName = env->NewStringUTF(canonicalName);
+        env->SetObjectArrayElement(ret,i,canonName);
+        env->DeleteLocalRef(canonName);
         // END android-changed
         /*printf("canonical name : %s  at %i\n", name,i); */
         canonicalName[0]='\0';/* nul terminate */
@@ -820,13 +820,13 @@ static jint countAliases(JNIEnv *env, jclass jClass,jstring enc) {
     
     UErrorCode error = U_ZERO_ERROR;
     jint num =0;
-    const char* encName = (*env)->GetStringUTFChars(env,enc,NULL);
+    const char* encName = env->GetStringUTFChars(enc,NULL);
     
     if(encName) {
         num = ucnv_countAliases(encName,&error);
     }
     
-    (*env)->ReleaseStringUTFChars(env,enc,encName);
+    env->ReleaseStringUTFChars(enc,encName);
 
     return num;
 }
@@ -837,7 +837,7 @@ static jobjectArray getAliases(JNIEnv *env, jclass jClass, jstring enc) {
     jobjectArray ret=NULL;
     int32_t aliasNum = 0;
     UErrorCode error = U_ZERO_ERROR;
-    const char* encName = (*env)->GetStringUTFChars(env,enc,NULL);
+    const char* encName = env->GetStringUTFChars(enc,NULL);
     int i=0;
     int j=0;
     const char* aliasArray[50];
@@ -880,19 +880,18 @@ static jobjectArray getAliases(JNIEnv *env, jclass jClass, jstring enc) {
             // }
             // END android-removed
 
-            ret =  (jobjectArray)(*env)->NewObjectArray(env,j,
-                                                        (*env)->FindClass(env,"java/lang/String"),
-                                                        (*env)->NewStringUTF(env,""));
+            ret =  (jobjectArray)env->NewObjectArray(j,
+                    env->FindClass("java/lang/String"), env->NewStringUTF(""));
             for(;--j>=0;) {
                  // BEGIN android-changed
-                 jstring alias = (*env)->NewStringUTF(env, aliasArray[j]);
-                 (*env)->SetObjectArrayElement(env, ret, j, alias);
-                 (*env)->DeleteLocalRef(env, alias);
+                 jstring alias = env->NewStringUTF(aliasArray[j]);
+                 env->SetObjectArrayElement(ret, j, alias);
+                 env->DeleteLocalRef(alias);
                  // END android-changed
             }
         }            
     }
-    (*env)->ReleaseStringUTFChars(env,enc,encName);
+    env->ReleaseStringUTFChars(enc,encName);
 
     return (ret);
 }
@@ -900,7 +899,7 @@ static jobjectArray getAliases(JNIEnv *env, jclass jClass, jstring enc) {
 static jstring getCanonicalName(JNIEnv *env, jclass jClass,jstring enc) {
 
     UErrorCode error = U_ZERO_ERROR;
-    const char* encName = (*env)->GetStringUTFChars(env,enc,NULL);
+    const char* encName = env->GetStringUTFChars(enc,NULL);
     const char* canonicalName = "";
     // BEGIN android-changed
     jstring ret = NULL;
@@ -909,8 +908,8 @@ static jstring getCanonicalName(JNIEnv *env, jclass jClass,jstring enc) {
         if(canonicalName !=NULL && strstr(canonicalName,",")!=0) {
             canonicalName = ucnv_getAlias(canonicalName,1,&error);
         }
-        ret = ((*env)->NewStringUTF(env, canonicalName));
-        (*env)->ReleaseStringUTFChars(env,enc,encName);
+        ret = (env->NewStringUTF(canonicalName));
+        env->ReleaseStringUTFChars(enc,encName);
     }
     // END android-changed
     return ret;
@@ -919,42 +918,42 @@ static jstring getCanonicalName(JNIEnv *env, jclass jClass,jstring enc) {
 static jstring getICUCanonicalName(JNIEnv *env, jclass jClass, jstring enc) {
 
     UErrorCode error = U_ZERO_ERROR;
-    const char* encName = (*env)->GetStringUTFChars(env,enc,NULL);
+    const char* encName = env->GetStringUTFChars(enc,NULL);
     const char* canonicalName = NULL;
     jstring ret = NULL;
     if(encName) {
         // BEGIN android-removed
         // if(strcmp(encName,"UTF-16")==0) {
-        //     ret = ((*env)->NewStringUTF(env,UTF_16BE));
+        //     ret = (env->NewStringUTF(UTF_16BE));
         // }else
         // END android-removed
         if((canonicalName = ucnv_getCanonicalName(encName, "MIME", &error))!=NULL) {
-            ret = ((*env)->NewStringUTF(env, canonicalName));
+            ret = (env->NewStringUTF(canonicalName));
         }else if((canonicalName = ucnv_getCanonicalName(encName, "IANA", &error))!=NULL) {
-            ret = ((*env)->NewStringUTF(env, canonicalName));
+            ret = (env->NewStringUTF(canonicalName));
         }else if((canonicalName = ucnv_getCanonicalName(encName, "", &error))!=NULL) {
-            ret = ((*env)->NewStringUTF(env, canonicalName));
+            ret = (env->NewStringUTF(canonicalName));
         }else if((canonicalName =  ucnv_getAlias(encName, 0, &error)) != NULL) {
             /* we have some aliases in the form x-blah .. match those first */
-            ret = ((*env)->NewStringUTF(env, canonicalName));
+            ret = (env->NewStringUTF(canonicalName));
         }else if( ret ==NULL && strstr(encName, "x-") == encName) {
             /* check if the converter can be opened with the encName given */
             UConverter* conv = NULL;
             error = U_ZERO_ERROR;
             conv = ucnv_open(encName+2, &error);
             if(conv!=NULL) {
-                ret = ((*env)->NewStringUTF(env, encName+2));
+                ret = (env->NewStringUTF(encName+2));
             }else{
                 /* unsupported encoding */
-                ret = ((*env)->NewStringUTF(env, ""));
+                ret = (env->NewStringUTF(""));
             }
             ucnv_close(conv);
         }else{
             /* unsupported encoding */
-           ret = ((*env)->NewStringUTF(env, ""));
+           ret = (env->NewStringUTF(""));
         }
     }
-    (*env)->ReleaseStringUTFChars(env,enc,encName);
+    env->ReleaseStringUTFChars(enc,encName);
     return ret;
 }
 
@@ -969,26 +968,26 @@ static jstring getJavaCanonicalName2(JNIEnv *env, jclass jClass, jstring icuCano
  registry then its canonical name must begin with one of the strings "X-" or "x-".
  */
     UErrorCode error = U_ZERO_ERROR;
-    const char* icuCanonicalName = (*env)->GetStringUTFChars(env,icuCanonName,NULL);
+    const char* icuCanonicalName = env->GetStringUTFChars(icuCanonName,NULL);
     char cName[UCNV_MAX_CONVERTER_NAME_LENGTH] = {0};
     jstring ret;
     if(icuCanonicalName && icuCanonicalName[0] != 0) {
         getJavaCanonicalName1(icuCanonicalName, cName, UCNV_MAX_CONVERTER_NAME_LENGTH, &error);
     }
-    ret = ((*env)->NewStringUTF(env, cName));
-    (*env)->ReleaseStringUTFChars(env,icuCanonName,icuCanonicalName);
+    ret = (env->NewStringUTF(cName));
+    env->ReleaseStringUTFChars(icuCanonName,icuCanonicalName);
     return ret;
 }
 
 #define SUBS_ARRAY_CAPACITY 256
-typedef struct{
+struct EncoderCallbackContext {
     int length;
     char subChars[SUBS_ARRAY_CAPACITY];
     UConverterFromUCallback onUnmappableInput;
     UConverterFromUCallback onMalformedInput;
-}EncoderCallbackContext;
+};
 
-void CHARSET_ENCODER_CALLBACK(const void *context,
+static void CHARSET_ENCODER_CALLBACK(const void *context,
                   UConverterFromUnicodeArgs *fromArgs,
                   const UChar* codeUnits,
                   int32_t length,
@@ -1030,7 +1029,7 @@ void CHARSET_ENCODER_CALLBACK(const void *context,
     }      
 }
 
-void JNI_FROM_U_CALLBACK_SUBSTITUTE_ENCODER(const void *context,
+static void JNI_FROM_U_CALLBACK_SUBSTITUTE_ENCODER(const void *context,
                                         UConverterFromUnicodeArgs *fromArgs,
                                         const UChar* codeUnits,
                                         int32_t length,
@@ -1045,7 +1044,7 @@ void JNI_FROM_U_CALLBACK_SUBSTITUTE_ENCODER(const void *context,
     return;
 }
 
-UConverterFromUCallback getFromUCallback(int32_t mode) {
+static UConverterFromUCallback getFromUCallback(int32_t mode) {
     switch(mode) {
         default: /* falls through */
         case com_ibm_icu4jni_converters_NativeConverter_STOP_CALLBACK:
@@ -1068,8 +1067,8 @@ static jint setCallbackEncode(JNIEnv *env, jclass jClass, jlong handle, jint onM
         void* fromUOldContext = NULL;
         EncoderCallbackContext* fromUNewContext=NULL;
         UConverterFromUCallback fromUNewAction=NULL;
-        jbyte* sub = (jbyte*) (*env)->GetPrimitiveArrayCritical(env,subChars, NULL);
-        ucnv_getFromUCallBack(conv, &fromUOldAction, &fromUOldContext);
+        jbyte* sub = (jbyte*) env->GetPrimitiveArrayCritical(subChars, NULL);
+        ucnv_getFromUCallBack(conv, &fromUOldAction, const_cast<const void**>(&fromUOldContext));
 
         /* fromUOldContext can only be DecodeCallbackContext since
            the converter created is private data for the decoder
@@ -1079,7 +1078,7 @@ static jint setCallbackEncode(JNIEnv *env, jclass jClass, jlong handle, jint onM
             fromUNewContext = (EncoderCallbackContext*) malloc(sizeof(EncoderCallbackContext));
             fromUNewAction = CHARSET_ENCODER_CALLBACK;
         }else{
-            fromUNewContext = fromUOldContext;
+            fromUNewContext = (EncoderCallbackContext*) fromUOldContext;
             fromUNewAction = fromUOldAction;
             fromUOldAction = NULL;
             fromUOldContext = NULL;
@@ -1089,8 +1088,9 @@ static jint setCallbackEncode(JNIEnv *env, jclass jClass, jlong handle, jint onM
         // BEGIN android-changed
         if(sub!=NULL) {
             fromUNewContext->length = length;
-            strncpy(fromUNewContext->subChars, sub, length);
-            (*env)->ReleasePrimitiveArrayCritical(env,subChars, sub, 0);
+            const char* src = const_cast<const char*>(reinterpret_cast<char*>(sub));
+            strncpy(fromUNewContext->subChars, src, length);
+            env->ReleasePrimitiveArrayCritical(subChars, sub, 0);
         }else{
             errorCode = U_ILLEGAL_ARGUMENT_ERROR;
         }
@@ -1109,14 +1109,14 @@ static jint setCallbackEncode(JNIEnv *env, jclass jClass, jlong handle, jint onM
     return U_ILLEGAL_ARGUMENT_ERROR;
 }
                                                                   
-typedef struct{
+struct DecoderCallbackContext {
     int length;
     UChar subUChars[256];
     UConverterToUCallback onUnmappableInput;
     UConverterToUCallback onMalformedInput;
-}DecoderCallbackContext;
+};
 
-void JNI_TO_U_CALLBACK_SUBSTITUTE_DECODER(const void *context,
+static void JNI_TO_U_CALLBACK_SUBSTITUTE_DECODER(const void *context,
                                     UConverterToUnicodeArgs *toArgs,
                                     const char* codeUnits,
                                     int32_t length,
@@ -1130,7 +1130,7 @@ void JNI_TO_U_CALLBACK_SUBSTITUTE_DECODER(const void *context,
     return;
 }
 
-UConverterToUCallback getToUCallback(int32_t mode) {
+static UConverterToUCallback getToUCallback(int32_t mode) {
     switch(mode) {
         default: /* falls through */
         case com_ibm_icu4jni_converters_NativeConverter_STOP_CALLBACK:
@@ -1142,7 +1142,7 @@ UConverterToUCallback getToUCallback(int32_t mode) {
     }
 }
 
-void  CHARSET_DECODER_CALLBACK(const void *context,
+static void CHARSET_DECODER_CALLBACK(const void *context,
                                UConverterToUnicodeArgs *args, 
                                const char* codeUnits, 
                                int32_t length,
@@ -1194,9 +1194,9 @@ static jint setCallbackDecode(JNIEnv *env, jclass jClass, jlong handle, jint onM
         void* toUOldContext;
         DecoderCallbackContext* toUNewContext = NULL;
         UConverterToUCallback toUNewAction = NULL;
-        jchar* sub = (jchar*) (*env)->GetPrimitiveArrayCritical(env,subChars, NULL);
+        jchar* sub = (jchar*) env->GetPrimitiveArrayCritical(subChars, NULL);
     
-        ucnv_getToUCallBack(conv, &toUOldAction, &toUOldContext);
+        ucnv_getToUCallBack(conv, &toUOldAction, const_cast<const void**>(&toUOldContext));
 
         /* toUOldContext can only be DecodeCallbackContext since
            the converter created is private data for the decoder
@@ -1206,7 +1206,7 @@ static jint setCallbackDecode(JNIEnv *env, jclass jClass, jlong handle, jint onM
             toUNewContext = (DecoderCallbackContext*) malloc(sizeof(DecoderCallbackContext));
             toUNewAction = CHARSET_DECODER_CALLBACK;
         }else{
-            toUNewContext = toUOldContext;
+            toUNewContext = reinterpret_cast<DecoderCallbackContext*>(toUOldContext);
             toUNewAction = toUOldAction;
             toUOldAction = NULL;
             toUOldContext = NULL;
@@ -1217,7 +1217,7 @@ static jint setCallbackDecode(JNIEnv *env, jclass jClass, jlong handle, jint onM
         if(sub!=NULL) {
             toUNewContext->length = length;
             u_strncpy(toUNewContext->subUChars, sub, length);
-            (*env)->ReleasePrimitiveArrayCritical(env,subChars, sub, 0);
+            env->ReleasePrimitiveArrayCritical(subChars, sub, 0);
         }else{
             errorCode =  U_ILLEGAL_ARGUMENT_ERROR;
         }
@@ -1234,25 +1234,16 @@ static jint setCallbackDecode(JNIEnv *env, jclass jClass, jlong handle, jint onM
     return U_ILLEGAL_ARGUMENT_ERROR;
 }
 
-static jlong safeClone(JNIEnv *env, jclass jClass, jlong src) {
-
-    UErrorCode status = U_ZERO_ERROR;
-
-    jint buffersize = U_CNV_SAFECLONE_BUFFERSIZE;
-
-    UConverter* conv=NULL;
-    UErrorCode errorCode = U_ZERO_ERROR;
-    UConverter* source = (UConverter*) src;
-
-    if(source) {
-        conv = ucnv_safeClone(source, NULL, &buffersize, &errorCode);
-    }
-
-    if (icu4jni_error(env, errorCode) != FALSE) {
+static jlong safeClone(JNIEnv *env, jclass, jlong address) {
+    UConverter* source = reinterpret_cast<UConverter*>(static_cast<uintptr_t>(address));
+    if (!source) {
         return NULL;
     }
-
-    return conv;
+    UErrorCode status = U_ZERO_ERROR;
+    jint bufferSize = U_CNV_SAFECLONE_BUFFERSIZE;
+    UConverter* conv = ucnv_safeClone(source, NULL, &bufferSize, &status);
+    icu4jni_error(env, status);
+    return reinterpret_cast<uintptr_t>(conv);
 }
 
 static jint getMaxCharsPerByte(JNIEnv *env, jclass jClass, jlong handle) {
@@ -1268,7 +1259,7 @@ static jfloat getAveCharsPerByte(JNIEnv *env, jclass jClass, jlong handle) {
     return ret;
 }
 
-void toUChars(const char* cs, UChar* us, int32_t length) {
+static void toUChars(const char* cs, UChar* us, int32_t length) {
     char c;
     while(length>0) {
         c=*cs++;
@@ -1287,14 +1278,14 @@ static jbyteArray getSubstitutionBytes(JNIEnv *env, jclass jClass, jlong handle)
     if(cnv) {
         ucnv_getSubstChars(cnv,subBytes,&len,&status);
         if(U_SUCCESS(status)) {
-            arr = ((*env)->NewByteArray(env, len));
+            arr = (env->NewByteArray(len));
             if(arr) {
-                (*env)->SetByteArrayRegion(env,arr,0,len,(jbyte*)subBytes);
+                env->SetByteArrayRegion(arr,0,len,(jbyte*)subBytes);
             }
             return arr;
         }
     }
-    return ((*env)->NewByteArray(env, 0));
+    return (env->NewByteArray(0));
 }
 
 static jboolean contains( JNIEnv *env, jclass jClass, jlong handle1, jlong handle2) {
