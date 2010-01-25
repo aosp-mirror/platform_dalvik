@@ -305,10 +305,12 @@ format("%6.0E", 123.456f);</td>
  * </table>
  * <p>
  * It's also possible to format dates and times with {@code Formatter}, though you should seriously
- * consider using {@link SimpleDateFormat} via the factory methods in {@link DateFormat} instead.
+ * consider using {@link java.text.SimpleDateFormat} via the factory methods in
+ * {@link java.text.DateFormat} instead.
  * The facilities offered by {@code Formatter} are low-level and place the burden of localization
- * on the developer. Using {@link DateFormat#getDateInstance}, {@link DateFormat#getTimeInstance},
- * and {@link DateFormat#getDateTimeInstance} is preferable for dates and times that will be
+ * on the developer. Using {@link java.text.DateFormat#getDateInstance},
+ * {@link java.text.DateFormat#getTimeInstance}, and
+ * {@link java.text.DateFormat#getDateTimeInstance} is preferable for dates and times that will be
  * presented to a human. Those methods will select the best format strings for the user's locale.
  * <p>
  * The best non-localized form is <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a>,
@@ -354,7 +356,7 @@ format("%6.0E", 123.456f);</td>
  * </tr>
  * <tr>
  * <td width="5%">{@code tc}</td>
- * <td width="25%">Locale-preferred date and time representation. (See {@link DateFormat} for more variations.)</td>
+ * <td width="25%">Locale-preferred date and time representation. (See {@link java.text.DateFormat} for more variations.)</td>
  * <td width="30%">{@code format("%tc", cal);}</td>
  * <td width="30%">{@code Tue Apr 01 16:19:17 CEST 2008}</td>
  * </tr>
@@ -519,9 +521,9 @@ format("%6.0E", 123.456f);</td>
  * Formatter is not thread-safe.
  *
  * @since 1.5
- * @see DateFormat
+ * @see java.text.DateFormat
  * @see Formattable
- * @see SimpleDateFormat
+ * @see java.text.SimpleDateFormat
  */
 public final class Formatter implements Closeable, Flushable {
 
