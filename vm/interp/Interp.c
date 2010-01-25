@@ -1248,6 +1248,8 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         dvmJitToBackwardBranch,
 #endif
     };
+
+    assert(self->inJitCodeCache == NULL);
 #endif
 
 

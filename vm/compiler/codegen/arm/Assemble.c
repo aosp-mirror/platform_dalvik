@@ -1464,6 +1464,7 @@ bool dvmJitPatchInlineCache(void *cellPtr, void *contentPtr)
     /* Stop the world */
     dvmSuspendAllThreads(SUSPEND_FOR_IC_PATCH);
 
+
     COMPILER_TRACE_CHAINING(
         LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) patched",
              cellDest, cellDest->clazz ? cellDest->clazz->descriptor : "NULL",
@@ -1542,11 +1543,14 @@ u4* dvmJitUnchain(void* codeAddr)
                 case kChainingCellInvokePredicted:
                     targetOffset = 0;
                     predChainCell = (PredictedChainingCell *) pChainCells;
-                    /* Reset the cell to the init state */
-                    predChainCell->branch = PREDICTED_CHAIN_BX_PAIR_INIT;
+                    /*
+                     * There could be a race on another mutator thread to use
+                     * this particular predicted cell and the check has passed
+                     * the clazz comparison. So we cannot safely wipe the
+                     * method and branch but it is safe to clear the clazz,
+                     * which serves as the key.
+                     */
                     predChainCell->clazz = PREDICTED_CHAIN_CLAZZ_INIT;
-                    predChainCell->method = PREDICTED_CHAIN_METHOD_INIT;
-                    predChainCell->counter = PREDICTED_CHAIN_COUNTER_INIT;
                     break;
 #if defined(WITH_SELF_VERIFICATION)
                 case kChainingCellBackwardBranch:
@@ -1611,6 +1615,7 @@ void dvmJitUnchainAll()
         }
         cacheflush((long)lowAddress, (long)highAddress, 0);
         dvmUnlockMutex(&gDvmJit.tableLock);
+        gDvmJit.translationChains = 0;
     }
 }
 

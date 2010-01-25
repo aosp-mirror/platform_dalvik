@@ -262,10 +262,16 @@ loop:
 #endif
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
         } else if (rcvd == SIGUSR2) {
-            gDvmJit.printMe ^= true;
-            dvmCompilerDumpStats();
-            /* Stress-test unchain all */
-            dvmJitUnchainAll();
+            static int codeCacheResetCount = 0;
+            if ((--codeCacheResetCount & 7) == 0) {
+                gDvmJit.codeCacheFull = true;
+            } else {
+                dvmCompilerDumpStats();
+                /* Stress-test unchain all */
+                dvmJitUnchainAll();
+                LOGD("Send %d more signals to rest the code cache",
+                     codeCacheResetCount & 7);
+            }
 #endif
         } else {
             LOGE("unexpected signal %d\n", rcvd);

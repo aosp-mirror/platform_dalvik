@@ -214,12 +214,24 @@ MTERP_OFFSET(offInlineOperation_func,   InlineOperation, func, 0)
 MTERP_OFFSET(offThread_stackOverflowed, Thread, stackOverflowed, 40)
 MTERP_OFFSET(offThread_curFrame,        Thread, curFrame, 44)
 MTERP_OFFSET(offThread_exception,       Thread, exception, 48)
+
+#if defined(WITH_JIT)
+MTERP_OFFSET(offThread_inJitCodeCache,  Thread, inJitCodeCache, 76)
+#ifdef USE_INDIRECT_REF
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.segmentState.all, 80)
+#else
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.nextEntry, 80)
+#endif
+#else
 #ifdef USE_INDIRECT_REF
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.segmentState.all, 76)
 #else
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.nextEntry, 76)
+#endif
 #endif
 
 /* Object fields */
