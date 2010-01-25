@@ -670,14 +670,15 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     lockMonitor(self, mon);
 
 done:
-    waitSetRemove(mon, self);
-
     /*
-     * Put everything back.  Again, we hold the pthread mutex, so the order
-     * here isn't significant.
+     * We remove our thread from wait set after restoring the count
+     * and owner fields so the subroutine can check that the calling
+     * thread owns the monitor. Aside from that, the order of member
+     * updates is not order sensitive as we hold the pthread mutex.
      */
     mon->owner = self;
     mon->lockCount = prevLockCount;
+    waitSetRemove(mon, self);
 
     /* set self->status back to THREAD_RUNNING, and self-suspend if needed */
     dvmChangeStatus(self, THREAD_RUNNING);
