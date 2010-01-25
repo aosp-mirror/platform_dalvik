@@ -598,12 +598,13 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
      * release our hold.  We need to let it go even if we're a few levels
      * deep in a recursive lock, and we need to restore that later.
      *
-     * The order of operations here isn't significant, because we still
-     * hold the pthread mutex.
+     * We append to the wait set ahead of clearing the count and owner
+     * fields so the subroutine can check that the calling thread owns
+     * the monitor.  Aside from that, the order of member updates is
+     * not order sensitive as we hold the pthread mutex.
      */
-    int prevLockCount;
-
-    prevLockCount = mon->lockCount;
+    waitSetAppend(mon, self);
+    int prevLockCount = mon->lockCount;
     mon->lockCount = 0;
     mon->owner = NULL;
 
@@ -639,8 +640,6 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
         goto done;
     }
 
-    waitSetAppend(mon, self);
-
     /*
      * Release the monitor lock and wait for a notification or
      * a timeout to occur.
@@ -670,9 +669,9 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     /* Reacquire the monitor lock. */
     lockMonitor(self, mon);
 
+done:
     waitSetRemove(mon, self);
 
-done:
     /*
      * Put everything back.  Again, we hold the pthread mutex, so the order
      * here isn't significant.
