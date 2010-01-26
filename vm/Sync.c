@@ -938,43 +938,62 @@ void dvmLockObject(Thread* self, Object *obj)
  */
 bool dvmUnlockObject(Thread* self, Object *obj)
 {
-    volatile u4 *thinp = &obj->lock;
-    u4 threadId = self->threadId;
+    volatile u4 *thinp;
     u4 thin;
 
-    /* Check the common case, where 'self' has locked 'obj' once, first.
+    assert(self != NULL);
+    assert(self->status == THREAD_RUNNING);
+    assert(obj != NULL);
+
+    thinp = &obj->lock;
+    /*
+     * Cache the lock word as its value can change while we are
+     * examining its state.
      */
     thin = *thinp;
-    if (LW_LOCK_OWNER(thin) == threadId && LW_LOCK_COUNT(thin) == 0) {
-        /* Unlock 'obj' by clearing our threadId from 'thin'.
-         * The lock protects the lock field itself, so it's
-         * safe to update non-atomically.
+    if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
+        /*
+         * The lock is thin.  We must ensure that the lock is owned
+         * by the given thread before unlocking it.
          */
-        *thinp &= (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
-    } else if (LW_SHAPE(*thinp) == LW_SHAPE_THIN) {
-        /* If the object is locked, it had better be locked by us.
-         */
-        if (LW_LOCK_OWNER(*thinp) != threadId) {
-            /* The JNI spec says that we should throw an exception
-             * in this case.
+        if (LW_LOCK_OWNER(thin) == self->threadId) {
+            /*
+             * We are the lock owner.  It is safe to update the lock
+             * without CAS as lock ownership guards the lock itself.
              */
-            //LOGW("Unlock thin %p: id %d vs %d\n",
-            //    obj, (*thinp & 0xfff), threadId);
+            if (LW_LOCK_COUNT(thin) == 0) {
+                /*
+                 * The lock was not recursively acquired, the common
+                 * case.  Unlock by clearing all bits except for the
+                 * hash state.
+                 */
+                *thinp &= (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
+            } else {
+                /*
+                 * The object was recursively acquired.  Decrement the
+                 * lock recursion count field.
+                 */
+                *thinp -= 1 << LW_LOCK_COUNT_SHIFT;
+            }
+        } else {
+            /*
+             * We do not own the lock.  The JVM spec requires that we
+             * throw an exception in this case.
+             */
             dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
-                "unlock of unowned monitor");
+                              "unlock of unowned monitor");
             return false;
         }
-
-        /* It's a thin lock, but 'self' has locked 'obj'
-         * more than once.  Decrement the count.
-         */
-        *thinp -= 1 << LW_LOCK_COUNT_SHIFT;
     } else {
-        /* It's a fat lock.
+        /*
+         * The lock is fat.  We must check to see if unlockMonitor has
+         * raised any exceptions before continuing.
          */
         assert(LW_MONITOR(obj->lock) != NULL);
         if (!unlockMonitor(self, LW_MONITOR(obj->lock))) {
-            /* exception has been raised */
+            /*
+             * An exception has been raised.  Do not fall through.
+             */
             return false;
         }
     }
