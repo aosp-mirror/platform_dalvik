@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "Resources"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
+#include "cutils/log.h"
 #include "unicode/numfmt.h"
 #include "unicode/locid.h"
 #include "unicode/ucal.h"
@@ -36,9 +38,6 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
-
-#define LOG_TAG "Resources"
-#include "cutils/log.h"
 
 static jclass string_class;
 

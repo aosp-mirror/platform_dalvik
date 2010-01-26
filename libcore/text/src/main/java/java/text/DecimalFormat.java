@@ -552,29 +552,17 @@ public class DecimalFormat extends NumberFormat {
 
     private transient com.ibm.icu4jni.text.DecimalFormat dform;
 
-    private transient com.ibm.icu4jni.text.DecimalFormatSymbols icuSymbols;
-
-    private static final int CURRENT_SERIAL_VERTION = 3;
-
-    private transient int serialVersionOnStream = 3;
-
     /**
      * Constructs a new {@code DecimalFormat} for formatting and parsing numbers
      * for the default locale.
      */
     public DecimalFormat() {
+        // BEGIN android-changed: reduce duplication.
         Locale locale = Locale.getDefault();
-        // BEGIN android-changed
-        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
-        symbols = new DecimalFormatSymbols(locale);
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(Locale.getDefault());
-        dform = new com.ibm.icu4jni.text.DecimalFormat(localeData.numberPattern, icuSymbols);
+        this.symbols = new DecimalFormatSymbols(locale);
+        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        initNative(localeData.numberPattern, locale);
         // END android-changed
-
-        super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
-        super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
-        super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
-        super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
 
     /**
@@ -587,17 +575,9 @@ public class DecimalFormat extends NumberFormat {
      *            if the pattern cannot be parsed.
      */
     public DecimalFormat(String pattern) {
-        Locale locale = Locale.getDefault();
-        // BEGIN android-changed
-        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale);
+        // BEGIN android-changed: reduce duplication.
+        this(pattern, Locale.getDefault());
         // END android-changed
-        symbols = new DecimalFormatSymbols(locale);
-        dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, icuSymbols);
-
-        super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
-        super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
-        super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
-        super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
 
     /**
@@ -612,44 +592,32 @@ public class DecimalFormat extends NumberFormat {
      *            if the pattern cannot be parsed.
      */
     public DecimalFormat(String pattern, DecimalFormatSymbols value) {
-        symbols = (DecimalFormatSymbols) value.clone();
-        Locale locale = symbols.getLocale();
-        // BEGIN android-changed
-        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale, symbols);
+        // BEGIN android-changed: reduce duplication.
+        this.symbols = (DecimalFormatSymbols) value.clone();
+        initNative(pattern, symbols.getLocale());
         // END android-changed
-        dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, icuSymbols);
-
-        super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
-        super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
-        super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
-        super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
 
     // BEGIN android-added: used by NumberFormat.getInstance because cloning DecimalFormatSymbols is slow.
     DecimalFormat(String pattern, Locale locale) {
         this.symbols = new DecimalFormatSymbols(locale);
-        this.icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale, symbols);
-        this.dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, icuSymbols);
+        initNative(pattern, locale);
+    }
+    // END android-added
 
+    // BEGIN android-changed: reduce duplication.
+    private void initNative(String pattern, Locale locale) {
+        try {
+            this.dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, locale, symbols);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(pattern);
+        }
         super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
         super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
         super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
         super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
     // END android-added
-
-    // BEGIN android-removed
-    // DecimalFormat(String pattern, DecimalFormatSymbols value, com.ibm.icu4jni.text.DecimalFormat icuFormat) {
-    //     symbols = value;
-    //     icuSymbols = value.getIcuSymbols();
-    //     dform = icuFormat;
-    //
-    //     super.setMaximumFractionDigits(dform.getMaximumFractionDigits());
-    //     super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
-    //     super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
-    //     super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
-    // }
-    // END android-removed
 
     /**
      * Changes the pattern of this decimal format to the specified pattern which
@@ -674,7 +642,6 @@ public class DecimalFormat extends NumberFormat {
      *            if the pattern cannot be parsed.
      */
     public void applyPattern(String pattern) {
-
         dform.applyPattern(pattern);
     }
 
@@ -712,9 +679,9 @@ public class DecimalFormat extends NumberFormat {
         if (!(object instanceof DecimalFormat)) {
             return false;
         }
-        DecimalFormat format = (DecimalFormat) object;
-        return (this.dform == null ? format.dform == null : this.dform
-                .equals(format.dform));
+        DecimalFormat other = (DecimalFormat) object;
+        return (this.dform == null ? other.dform == null : this.dform.equals(other.dform)) &&
+                getDecimalFormatSymbols().equals(other.getDecimalFormatSymbols());
     }
 
     /**
@@ -1058,10 +1025,10 @@ public class DecimalFormat extends NumberFormat {
      */
     public void setDecimalFormatSymbols(DecimalFormatSymbols value) {
         if (value != null) {
-            symbols = (DecimalFormatSymbols) value.clone();
-            icuSymbols = dform.getDecimalFormatSymbols();
-            icuSymbols.copySymbols(symbols); // android-changed
-            dform.setDecimalFormatSymbols(icuSymbols);
+            // BEGIN android-changed: the Java object is canonical, and we copy down to native code.
+            this.symbols = (DecimalFormatSymbols) value.clone();
+            dform.setDecimalFormatSymbols(this.symbols);
+            // END android-changed
         }
     }
 
@@ -1076,8 +1043,7 @@ public class DecimalFormat extends NumberFormat {
     @Override
     public void setCurrency(Currency currency) {
         // BEGIN android-changed
-        dform.setCurrency(Currency.getInstance(currency
-                .getCurrencyCode()));
+        dform.setCurrency(Currency.getInstance(currency.getCurrencyCode()));
         // END android-changed
         symbols.setCurrency(currency);
     }
@@ -1129,67 +1095,55 @@ public class DecimalFormat extends NumberFormat {
     }
 
     /**
-     * Sets the maximum number of fraction digits that are printed when
-     * formatting numbers other than {@code BigDecimal} and {@code BigInteger}.
-     * If the maximum is less than the number of fraction digits, the least
-     * significant digits are truncated. If the value passed is bigger than 340
-     * then it is replaced by 340. If the value passed is negative then it is
-     * replaced by 0.
+     * Sets the maximum number of digits after the decimal point.
+     * If the value passed is negative then it is replaced by 0.
+     * Regardless of this setting, no more than 340 digits will be used.
      * 
-     * @param value
-     *            the maximum number of fraction digits.
+     * @param value the maximum number of fraction digits.
      */
     @Override
     public void setMaximumFractionDigits(int value) {
         super.setMaximumFractionDigits(value);
-        dform.setMaximumFractionDigits(value);
+        dform.setMaximumFractionDigits(getMaximumFractionDigits());
     }
 
     /**
-     * Sets the maximum number of integer digits that are printed when
-     * formatting numbers other than {@code BigDecimal} and {@code BigInteger}.
-     * If the maximum is less than the number of integer digits, the most
-     * significant digits are truncated. If the value passed is bigger than 309
-     * then it is replaced by 309. If the value passed is negative then it is
-     * replaced by 0.
+     * Sets the maximum number of digits before the decimal point.
+     * If the value passed is negative then it is replaced by 0.
+     * Regardless of this setting, no more than 309 digits will be used.
      * 
-     * @param value
-     *            the maximum number of integer digits.
+     * @param value the maximum number of integer digits.
      */
     @Override
     public void setMaximumIntegerDigits(int value) {
         super.setMaximumIntegerDigits(value);
-        dform.setMaximumIntegerDigits(value);
+        dform.setMaximumIntegerDigits(getMaximumIntegerDigits());
     }
 
     /**
-     * Sets the minimum number of fraction digits that are printed when
-     * formatting numbers other than {@code BigDecimal} and {@code BigInteger}.
-     * If the value passed is bigger than 340 then it is replaced by 340. If the
-     * value passed is negative then it is replaced by 0.
+     * Sets the minimum number of digits after the decimal point.
+     * If the value passed is negative then it is replaced by 0.
+     * Regardless of this setting, no more than 340 digits will be used.
      * 
-     * @param value
-     *            the minimum number of fraction digits.
+     * @param value the minimum number of fraction digits.
      */
     @Override
     public void setMinimumFractionDigits(int value) {
         super.setMinimumFractionDigits(value);
-        dform.setMinimumFractionDigits(value);
+        dform.setMinimumFractionDigits(getMinimumFractionDigits());
     }
 
     /**
-     * Sets the minimum number of integer digits that are printed when
-     * formatting numbers other than {@code BigDecimal} and {@code BigInteger}.
-     * If the value passed is bigger than 309 then it is replaced by 309. If the
-     * value passed is negative then it is replaced by 0.
+     * Sets the minimum number of digits before the decimal point.
+     * If the value passed is negative then it is replaced by 0.
+     * Regardless of this setting, no more than 309 digits will be used.
      * 
-     * @param value
-     *            the minimum number of integer digits.
+     * @param value the minimum number of integer digits.
      */
     @Override
     public void setMinimumIntegerDigits(int value) {
         super.setMinimumIntegerDigits(value);
-        dform.setMinimumIntegerDigits(value);
+        dform.setMinimumIntegerDigits(getMinimumIntegerDigits());
     }
 
     /**
@@ -1340,17 +1294,13 @@ public class DecimalFormat extends NumberFormat {
                 .isDecimalSeparatorAlwaysShown());
         fields.put("parseBigDecimal", parseBigDecimal);
         fields.put("symbols", symbols);
-        boolean useExponentialNotation = ((Boolean) Format.getInternalField(
-                "useExponentialNotation", dform)).booleanValue();
-        fields.put("useExponentialNotation", useExponentialNotation);
-        byte minExponentDigits = ((Byte) Format.getInternalField(
-                "minExponentDigits", dform)).byteValue();
-        fields.put("minExponentDigits", minExponentDigits);
+        fields.put("useExponentialNotation", false);
+        fields.put("minExponentDigits", 0);
         fields.put("maximumIntegerDigits", dform.getMaximumIntegerDigits());
         fields.put("minimumIntegerDigits", dform.getMinimumIntegerDigits());
         fields.put("maximumFractionDigits", dform.getMaximumFractionDigits());
         fields.put("minimumFractionDigits", dform.getMinimumFractionDigits());
-        fields.put("serialVersionOnStream", CURRENT_SERIAL_VERTION);
+        fields.put("serialVersionOnStream", 3);
         stream.writeFields();
     }
 
@@ -1390,26 +1340,17 @@ public class DecimalFormat extends NumberFormat {
         boolean parseBigDecimal = fields.get("parseBigDecimal", false);
         symbols = (DecimalFormatSymbols) fields.get("symbols", null);
 
-        boolean useExponentialNotation = fields.get("useExponentialNotation",
-                false);
-        byte minExponentDigits = fields.get("minExponentDigits", (byte) 0);
-
         int maximumIntegerDigits = fields.get("maximumIntegerDigits", 309);
         int minimumIntegerDigits = fields.get("minimumIntegerDigits", 309);
         int maximumFractionDigits = fields.get("maximumFractionDigits", 340);
         int minimumFractionDigits = fields.get("minimumFractionDigits", 340);
-        this.serialVersionOnStream = fields.get("serialVersionOnStream", 0);
+        int serialVersionOnStream = fields.get("serialVersionOnStream", 0);
 
         Locale locale = (Locale) Format.getInternalField("locale", symbols);
         // BEGIN android-changed
-        icuSymbols = new com.ibm.icu4jni.text.DecimalFormatSymbols(locale, symbols);
-        dform = new com.ibm.icu4jni.text.DecimalFormat("", //$NON-NLS-1$
-                icuSymbols);
+        //this.dform = new com.ibm.icu4jni.text.DecimalFormat("", locale, symbols);
+        initNative("", locale);
         // END android-changed
-        setInternalField("useExponentialNotation", dform, Boolean
-                .valueOf(useExponentialNotation));
-        setInternalField("minExponentDigits", dform,
-                new Byte(minExponentDigits));
         dform.setPositivePrefix(positivePrefix);
         dform.setPositiveSuffix(positiveSuffix);
         dform.setNegativePrefix(negativePrefix);
@@ -1424,11 +1365,18 @@ public class DecimalFormat extends NumberFormat {
         dform.setGroupingUsed(groupingUsed);
         // END android-added
         dform.setDecimalSeparatorAlwaysShown(decimalSeparatorAlwaysShown);
-        dform.setMinimumIntegerDigits(minimumIntegerDigits);
+        setMinimumIntegerDigits(minimumIntegerDigits);
+        // BEGIN android-changed: tell ICU what we want, then ask it what we can have, and then
+        // set that in our Java object. This isn't RI-compatible, but then very little of our
+        // behavior in this area is, and it's not obvious how we can second-guess ICU (or tell
+        // it to just do exactly what we ask). We only need to do this with maximumIntegerDigits
+        // because ICU doesn't seem to have its own ideas about the other options.
         dform.setMaximumIntegerDigits(maximumIntegerDigits);
-        dform.setMinimumFractionDigits(minimumFractionDigits);
-        dform.setMaximumFractionDigits(maximumFractionDigits);
-        this.setParseBigDecimal(parseBigDecimal);
+        super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
+        // END android-changed
+        setMinimumFractionDigits(minimumFractionDigits);
+        setMaximumFractionDigits(maximumFractionDigits);
+        setParseBigDecimal(parseBigDecimal);
 
         if (serialVersionOnStream < 3) {
             setMaximumIntegerDigits(super.getMaximumIntegerDigits());
@@ -1436,11 +1384,6 @@ public class DecimalFormat extends NumberFormat {
             setMaximumFractionDigits(super.getMaximumFractionDigits());
             setMinimumFractionDigits(super.getMinimumFractionDigits());
         }
-        if (serialVersionOnStream < 1) {
-            this.setInternalField("useExponentialNotation", dform,
-                    Boolean.FALSE);
-        }
-        serialVersionOnStream = 3;
     }
 
     /*

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "NativeDecimalFormat"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
+#include "cutils/log.h"
 #include "unicode/unum.h"
 #include "unicode/numfmt.h"
 #include "unicode/decimfmt.h"
@@ -26,14 +28,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LOG_TAG "NativeDecimalFormat"
-#include "cutils/log.h"
+// FIXME: move to JNIHelp.h
+static void jniThrowNullPointerException(JNIEnv* env) {
+    jniThrowException(env, "java/lang/NullPointerException", NULL);
+}
 
-static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
-        jstring pattern) {
+DecimalFormat* toDecimalFormat(jint addr) {
+    return reinterpret_cast<DecimalFormat*>(static_cast<uintptr_t>(addr));
+}
 
-    // the errorcode returned by unum_open
-    UErrorCode status = U_ZERO_ERROR;
+static jint openDecimalFormatImpl(JNIEnv* env, jclass clazz, jstring locale, jstring pattern) {
+    if (pattern == NULL) {
+        jniThrowNullPointerException(env);
+        return 0;
+    }
 
     // prepare the pattern string for the call to unum_open
     const UChar *pattChars = env->GetStringChars(pattern, NULL);
@@ -43,6 +51,7 @@ static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
     const char *localeChars = env->GetStringUTFChars(locale, NULL);
 
     // open a default type number format
+    UErrorCode status = U_ZERO_ERROR;
     UNumberFormat *fmt = unum_open(UNUM_PATTERN_DECIMAL, pattChars, pattLen,
             localeChars, NULL, &status);
 
@@ -50,13 +59,8 @@ static jint openDecimalFormatImpl(JNIEnv *env, jclass clazz, jstring locale,
     env->ReleaseStringChars(pattern, pattChars);
     env->ReleaseStringUTFChars(locale, localeChars);
 
-    // check for an error
-    if (icu4jni_error(env, status) != FALSE) {
-        return 0;
-    }
-
-    // return the handle to the number format
-    return (long) fmt;
+    icu4jni_error(env, status);
+    return static_cast<jint>(reinterpret_cast<uintptr_t>(fmt));
 }
 
 static void closeDecimalFormatImpl(JNIEnv *env, jclass clazz, jint addr) {
@@ -71,7 +75,7 @@ static void closeDecimalFormatImpl(JNIEnv *env, jclass clazz, jint addr) {
 static void setSymbol(JNIEnv *env, uintptr_t addr, jint symbol,
         const UChar* chars, int32_t charCount) {
     UErrorCode status = U_ZERO_ERROR;
-    UNumberFormat* fmt = reinterpret_cast<UNumberFormat*>(addr);
+    UNumberFormat* fmt = reinterpret_cast<UNumberFormat*>(static_cast<uintptr_t>(addr));
     unum_setSymbol(fmt, static_cast<UNumberFormatSymbol>(symbol),
             chars, charCount, &status);
     icu4jni_error(env, status);
@@ -199,59 +203,29 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
     return res;
 }
 
-static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr,
-        jboolean localized, jstring pattern) {
-
-    // the errorcode returned by unum_applyPattern
+static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr, jboolean localized, jstring pattern) {
+    if (pattern == NULL) {
+        jniThrowNullPointerException(env);
+        return;
+    }
+    UNumberFormat* fmt = reinterpret_cast<UNumberFormat*>(static_cast<uintptr_t>(addr));
+    const UChar* chars = env->GetStringChars(pattern, NULL);
+    jsize charCount = env->GetStringLength(pattern);
     UErrorCode status = U_ZERO_ERROR;
-
-    // get the pointer to the number format
-    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
-
-    const UChar *pattChars = env->GetStringChars(pattern, NULL);
-    int pattLen = env->GetStringLength(pattern);
-
-    unum_applyPattern(fmt, localized, pattChars, pattLen, NULL, &status);
-
-    env->ReleaseStringChars(pattern, pattChars);
-
+    unum_applyPattern(fmt, localized, chars, charCount, NULL, &status);
+    env->ReleaseStringChars(pattern, chars);
     icu4jni_error(env, status);
 }
 
-static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
-        jboolean localized) {
-
-    uint32_t resultlength, reslenneeded;
-
-    // the errorcode returned by unum_toPattern
-    UErrorCode status = U_ZERO_ERROR;
-
-    // get the pointer to the number format
-    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
-
-    UChar* result = NULL;
-    resultlength=0;
-
-    // find out how long the result will be
-    reslenneeded=unum_toPattern(fmt, localized, result, resultlength, &status);
-
-    result = NULL;
-    if(status==U_BUFFER_OVERFLOW_ERROR) {
-        status=U_ZERO_ERROR;
-        resultlength=reslenneeded+1;
-        result=(UChar*)malloc(sizeof(UChar) * resultlength);
-        reslenneeded=unum_toPattern(fmt, localized, result, resultlength,
-                &status);
+static jstring toPatternImpl(JNIEnv *env, jclass, jint addr, jboolean localized) {
+    DecimalFormat* fmt = toDecimalFormat(addr);
+    UnicodeString pattern;
+    if (localized) {
+        fmt->toLocalizedPattern(pattern);
+    } else {
+        fmt->toPattern(pattern);
     }
-    if (icu4jni_error(env, status) != FALSE) {
-        return NULL;
-    }
-
-    jstring res = env->NewString(result, reslenneeded);
-
-    free(result);
-
-    return res;
+    return env->NewString(pattern.getBuffer(), pattern.length());
 }
 
 template <typename T>
@@ -274,7 +248,7 @@ static jstring format(JNIEnv *env, jint addr, jobject field, jstring fieldType, 
     fp.setField(FieldPosition::DONT_CARE);
 
     UnicodeString str;
-    DecimalFormat* fmt = reinterpret_cast<DecimalFormat*>(static_cast<uintptr_t>(addr));
+    DecimalFormat* fmt = toDecimalFormat(addr);
     fmt->format(val, str, fp, attrBufferPtr);
 
     if (attrBufferPtr && strlen(attrBuffer.buffer) > 0) {
@@ -314,8 +288,7 @@ static jstring format(JNIEnv *env, jint addr, jobject field, jstring fieldType, 
         }
     }
 
-    const UChar* chars = str.getBuffer();
-    jstring result = env->NewString(chars, str.length());
+    jstring result = env->NewString(str.getBuffer(), str.length());
     delete[] attrBuffer.buffer;
     return result;
 }
@@ -362,7 +335,7 @@ static jstring formatDigitList(JNIEnv *env, jclass clazz, jint addr, jstring val
     const char *digits = (isPositive ? valueChars : valueChars + 1);
     int length = strlen(digits);
 
-    DecimalFormat* fmt = reinterpret_cast<DecimalFormat*>(static_cast<uintptr_t>(addr));
+    DecimalFormat* fmt = toDecimalFormat(addr);
 
     // The length of our digit list buffer must be the actual string length + 3,
     // because ICU will append some additional characters at the head and at the
@@ -609,20 +582,9 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
     }
 }
 
-static jint cloneImpl(JNIEnv *env, jclass clazz, jint addr) {
-
-    UErrorCode status = U_ZERO_ERROR;
-
-    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
-
-    UNumberFormat *result = unum_clone(fmt, &status);
-
-    if(icu4jni_error(env, status) != FALSE) {
-        return 0;
-    }
-
-    return (long) result;
-
+static jint cloneDecimalFormatImpl(JNIEnv *env, jclass, jint addr) {
+    DecimalFormat* fmt = toDecimalFormat(addr);
+    return static_cast<jint>(reinterpret_cast<uintptr_t>(fmt->clone()));
 }
 
 static JNINativeMethod gMethods[] = {
@@ -651,7 +613,7 @@ static JNINativeMethod gMethods[] = {
     {"parse",
             "(ILjava/lang/String;Ljava/text/ParsePosition;)Ljava/lang/Number;",
             (void*) parse},
-    {"cloneImpl", "(I)I", (void*) cloneImpl}
+    {"cloneDecimalFormatImpl", "(I)I", (void*) cloneDecimalFormatImpl}
 };
 int register_com_ibm_icu4jni_text_NativeDecimalFormat(JNIEnv* env) {
     return jniRegisterNativeMethods(env,

@@ -1270,7 +1270,7 @@ public class DecimalFormatTest extends TestCase {
         
         try {
             new DecimalFormat(null);
-            fail("NullPointerException was thrown.");
+            fail("NullPointerException wasn't thrown.");
         } catch(NullPointerException npe){
             //expected
         }
@@ -1279,7 +1279,7 @@ public class DecimalFormatTest extends TestCase {
         for(String str:incPatterns) {
             try {
                 new DecimalFormat(str);
-                fail("NullPointerException was thrown for pattern: " + str);
+                fail("IllegalArgumentException wasn't thrown for pattern: " + str);
             } catch(IllegalArgumentException iae){
                 //expected
             }

@@ -15,10 +15,6 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// changed from ICU to resource bundles
-// END android-note
-
 package java.text;
 
 import java.io.IOException;
@@ -29,9 +25,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Locale;
-// BEGIN android-added
-import java.util.ResourceBundle;
-// END android-added
 
 import com.ibm.icu4jni.util.LocaleData;
 
@@ -557,10 +550,4 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
     Locale getLocale(){
         return locale;
     }
-
-    // BEGIN android-removed
-    // com.ibm.icu4jni.text.DecimalFormatSymbols getIcuSymbols() {
-    //     return icuSymbols;
-    // }
-    // END android-removed
 }

@@ -55,15 +55,26 @@ final class NativeDecimalFormat {
         UNUM_PUBLIC_RULESETS
     }
     
-    static native int openDecimalFormatImpl(String locale, String pattern);
+    static int openDecimalFormat(String locale, String pattern) {
+        try {
+            // FIXME: if we're about to override everything, should we just ask for the cheapest locale (presumably the root locale)?
+            return NativeDecimalFormat.openDecimalFormatImpl(locale, pattern);
+        } catch (NullPointerException npe) {
+            throw npe;
+        } catch (RuntimeException re) {
+            throw new IllegalArgumentException("syntax error: " + re.getMessage() + ": " + pattern);
+        }
+    }
+    private static native int openDecimalFormatImpl(String locale, String pattern);
 
     static native void closeDecimalFormatImpl(int addr);
     
-    static native int cloneImpl(int addr);
+    static native int cloneDecimalFormatImpl(int addr);
     
     static native void setSymbol(int addr, int symbol, String str);
     static native void setSymbol(int addr, int symbol, char ch);
     
+    // FIXME: do we need this any more? the Java-side object should be the canonical source.
     static native String getSymbol(int addr, int symbol);
     
     static native void setAttribute(int addr, int symbol, int i);
@@ -74,7 +85,16 @@ final class NativeDecimalFormat {
 
     static native String getTextAttribute(int addr, int symbol);
 
-    static native void applyPatternImpl(int addr, boolean localized, String pattern);
+    static void applyPattern(int addr, boolean localized, String pattern) {
+        try {
+            NativeDecimalFormat.applyPatternImpl(addr, localized, pattern);
+        } catch (NullPointerException npe) {
+            throw npe;
+        } catch (RuntimeException re) {
+            throw new IllegalArgumentException("syntax error: " + re.getMessage() + ": " + pattern);
+        }
+    }
+    private static native void applyPatternImpl(int addr, boolean localized, String pattern);
 
     static native String toPatternImpl(int addr, boolean localized);
     
