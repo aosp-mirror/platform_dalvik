@@ -16,16 +16,16 @@
 
 package org.apache.harmony.xml.dom;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.TypeInfo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Provides a straightforward implementation of the corresponding W3C DOM
@@ -442,5 +442,22 @@ public class ElementImpl extends InnerNodeImpl implements Element {
             return ElementImpl.this.setAttributeNodeNS((Attr)arg);
         }
     }
-    
+
+    public TypeInfo getSchemaTypeInfo() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setIdAttribute(String name, boolean isId) throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setIdAttributeNS(String namespaceURI, String localName,
+            boolean isId) throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setIdAttributeNode(Attr idAttr, boolean isId)
+            throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
 }

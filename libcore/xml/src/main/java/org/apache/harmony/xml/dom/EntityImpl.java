@@ -16,7 +16,6 @@
 
 package org.apache.harmony.xml.dom;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Entity;
 import org.w3c.dom.Node;
 
@@ -68,4 +67,15 @@ public class EntityImpl extends NodeImpl implements Entity {
         return systemID;
     }
 
+    public String getInputEncoding() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String getXmlEncoding() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String getXmlVersion() {
+        throw new UnsupportedOperationException(); // TODO
+    }
 }

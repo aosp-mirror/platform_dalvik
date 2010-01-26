@@ -18,7 +18,6 @@ package org.apache.harmony.xml.dom;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
 
 /**
  * Provides a straightforward implementation of the corresponding W3C DOM

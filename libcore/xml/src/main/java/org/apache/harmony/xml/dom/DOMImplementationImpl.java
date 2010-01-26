@@ -52,6 +52,8 @@ public class DOMImplementationImpl implements DOMImplementation {
     public boolean hasFeature(String feature, String version) {
         // We claim to support DOM Core Level 1 & 2, nothing else.
 
+        // TODO
+
         if ("Core".equalsIgnoreCase(feature) || "XML".equalsIgnoreCase(feature)) {
             if (version == null || "".equals(version) || "1.0".equals(version) || "2.0".equals(version)) {
                 return true;
@@ -75,4 +77,7 @@ public class DOMImplementationImpl implements DOMImplementation {
         return instance;
     }
 
+    public Object getFeature(String feature, String version) {
+        throw new UnsupportedOperationException(); // TODO
+    }
 }

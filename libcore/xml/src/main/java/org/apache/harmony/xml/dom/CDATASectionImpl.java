@@ -17,7 +17,6 @@
 package org.apache.harmony.xml.dom;
 
 import org.w3c.dom.CDATASection;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**

@@ -16,7 +16,6 @@
 
 package org.apache.harmony.xml.dom;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.EntityReference;
 import org.w3c.dom.Node;
 

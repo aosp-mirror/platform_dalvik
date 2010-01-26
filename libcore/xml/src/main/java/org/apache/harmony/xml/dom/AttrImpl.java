@@ -20,6 +20,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.TypeInfo;
 
 /**
  * Provides a straightforward implementation of the corresponding W3C DOM
@@ -100,7 +101,7 @@ public class AttrImpl extends NodeImpl implements Attr {
         
         this.localName = name;
     }
-    
+
     @Override
     public String getLocalName() {
         return namespaceAware ? localName : null;
@@ -173,5 +174,12 @@ public class AttrImpl extends NodeImpl implements Attr {
     public void setValue(String value) throws DOMException {
         this.value = value;
     }
-    
+
+    public TypeInfo getSchemaTypeInfo() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public boolean isId() {
+        throw new UnsupportedOperationException(); // TODO
+    }
 }

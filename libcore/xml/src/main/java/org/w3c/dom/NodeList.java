@@ -1,26 +1,16 @@
 /*
- * Copyright (c) 2000 World Wide Web Consortium,
- * (Massachusetts Institute of Technology, Institut National de
- * Recherche en Informatique et en Automatique, Keio University). All
- * Rights Reserved. This program is distributed under the W3C's Software
- * Intellectual Property License. This program is distributed in the
- * hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.
- * See W3C License http://www.w3.org/Consortium/Legal/ for more details.
+ * Copyright (c) 2004 World Wide Web Consortium,
+ *
+ * (Massachusetts Institute of Technology, European Research Consortium for
+ * Informatics and Mathematics, Keio University). All Rights Reserved. This
+ * work is distributed under the W3C(r) Software License [1] in the hope that
+ * it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
  */
 
 package org.w3c.dom;
-
-// BEGIN android-note
-// Cleaned up @param tags that seemed to be missing spaces between
-// the parameter name and the start of the description.
-// END android-note
-
-//BEGIN android-note
-//Filled some gaps in the documentation and refactored parts of the existing
-//documentation to make the Doclet happy.
-//END android-note
 
 /**
  * The <code>NodeList</code> interface provides the abstraction of an ordered 
@@ -28,7 +18,7 @@ package org.w3c.dom;
  * is implemented. <code>NodeList</code> objects in the DOM are live.
  * <p>The items in the <code>NodeList</code> are accessible via an integral 
  * index, starting from 0.
- * <p>See also the <a href='http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113'>Document Object Model (DOM) Level 2 Core Specification</a>.
+ * <p>See also the <a href='http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407'>Document Object Model (DOM) Level 3 Core Specification</a>.
  */
 public interface NodeList {
     /**
@@ -45,8 +35,6 @@ public interface NodeList {
     /**
      * The number of nodes in the list. The range of valid child node indices 
      * is 0 to <code>length-1</code> inclusive.
-     * 
-     * @return the length of the list. 
      */
     public int getLength();
 

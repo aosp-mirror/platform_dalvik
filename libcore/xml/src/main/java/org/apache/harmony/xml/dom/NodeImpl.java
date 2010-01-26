@@ -21,6 +21,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.UserDataHandler;
 
 /**
  * Provides a straightforward implementation of the corresponding W3C DOM
@@ -187,5 +188,54 @@ public abstract class NodeImpl implements Node {
     public boolean matchesNameNS(String namespaceURI, String localName, boolean wildcard) {
         return matchesName(namespaceURI, getNamespaceURI(), wildcard) && matchesName(localName, getLocalName(), wildcard);
     }
-    
+
+    public String getBaseURI() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public short compareDocumentPosition(Node other)
+            throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String getTextContent() throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setTextContent(String textContent) throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public boolean isSameNode(Node other) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String lookupPrefix(String namespaceURI) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public boolean isDefaultNamespace(String namespaceURI) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String lookupNamespaceURI(String prefix) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public boolean isEqualNode(Node arg) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public Object getFeature(String feature, String version) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public Object setUserData(String key, Object data,
+            UserDataHandler handler) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public Object getUserData(String key) {
+        throw new UnsupportedOperationException(); // TODO
+    }
 }
