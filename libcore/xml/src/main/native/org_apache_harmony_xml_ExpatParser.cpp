@@ -313,23 +313,6 @@ static jstring internString(JNIEnv* env, ParsingContext* parsingContext,
     }
 }
 
-/**
- * Returns an interned string for the given UTF-8 string.
- *
- * @param s string to intern
- * @param length of s
- * @returns interned Java string equivelent of s
- */
-static jstring internStringOfLength(JNIEnv* env, ParsingContext* parsingContext,
-        const char* s, int length) {
-    // Create a null-terminated version.
-    char nullTerminated[length + 1];
-    memcpy(nullTerminated, s, length);
-    nullTerminated[length] = 0;
-
-    return internString(env, parsingContext, nullTerminated);
-}
-
 static void jniThrowExpatException(JNIEnv* env, XML_Error error) {
     const char* message = XML_ErrorString(error);
     jniThrowException(env, "org/apache/harmony/xml/ExpatException", message);
@@ -461,42 +444,119 @@ static void bufferAndInvoke(jmethodID method, void* data, const char* text,
 }
 
 /**
- * Finds the '|' in a null-terminated string. Returns -1 if none is found.
- *
- * @param s string to search
- * @returns index of the separator
+ * The component parts of an attribute or element name.
  */
-static int findSeparator(const char* s) {
-    const char* pointer = strchr(s, '|');
-    return pointer == NULL ? -1 : pointer - s;
-}
+class ExpatElementName {
+public:
+    ExpatElementName(JNIEnv* env, ParsingContext* parsingContext, jint attributePointer, jint index) {
+        const char** attributes = (const char**) attributePointer;
+        const char* name = attributes[index * 2];
+        init(env, parsingContext, name);
+    }
 
-/**
- * Parses the URI out of an Expat element name and turns it into a Java string.
- * Expat element names follow the format: "uri|localName".
- *
- * @param s string to parse from
- * @param separatorIndex index of separator in s
- * @returns interned Java string containing the URI
- */
-static jstring parseUri(JNIEnv* env, ParsingContext* parsingContext, const char* s,
-        int separatorIndex) {
-    return separatorIndex == -1 ? emptyString
-        : internStringOfLength(env, parsingContext, s, separatorIndex);
-}
+    ExpatElementName(JNIEnv* env, ParsingContext* parsingContext, const char* s) {
+        init(env, parsingContext, s);
+    }
 
-/**
- * Parses the local name out of an Expat element name and turns it into a Java
- * string. Expat element names follow the format: "uri|localName".
- *
- * @param s string to parse from
- * @param separatorIndex index of separator in s
- * @returns interned Java string containing the local name
- */
-static jstring parseLocalName(JNIEnv* env, ParsingContext* parsingContext,
-        const char* s, int separatorIndex) {
-    return internString(env, parsingContext, s + separatorIndex + 1);
-}
+    ~ExpatElementName() {
+        free(mCopy);
+    }
+
+    /**
+     * Returns the namespace URI, like "http://www.w3.org/1999/xhtml".
+     * Possibly empty.
+     */
+    jstring uri() {
+        return internString(mEnv, mParsingContext, mUri);
+    }
+
+    /**
+     * Returns the element or attribute local name, like "h1". Never empty.
+     */
+    jstring localName() {
+        return internString(mEnv, mParsingContext, mLocalName);
+    }
+
+    /**
+     * Returns the namespace prefix, like "html". Possibly empty.
+     */
+    jstring qName() {
+        if (*mPrefix == 0) {
+            return localName();
+        }
+
+        // return prefix + ":" + localName
+        LocalArray<1024> qName(strlen(mPrefix) + 1 + strlen(mLocalName) + 1);
+        snprintf(&qName[0], qName.size(), "%s:%s", mPrefix, mLocalName);
+        return internString(mEnv, mParsingContext, &qName[0]);
+    }
+
+    /**
+     * Returns true if this expat name has the same URI and local name.
+     */
+    bool matches(const char* uri, const char* localName) {
+        return strcmp(uri, mUri) == 0 && strcmp(localName, mLocalName) == 0;
+    }
+
+    /**
+     * Returns true if this expat name has the same qualified name.
+     */
+    bool matchesQName(const char* qName) {
+        char* lastColon = strrchr(qName, ':');
+
+        // if the input doesn't have a colon, there's no namespace prefix. Our
+        // prefix must be empty and the qName must equal our localName
+        if (lastColon == NULL) {
+            return strlen(mPrefix) == 0 && strcmp(qName, mLocalName) == 0;
+        }
+
+        // otherwise the prefixes must be equal and our localName must equal qName
+        size_t prefixLength = lastColon - qName;
+        return strlen(mPrefix) == prefixLength
+            && strncmp(qName, mPrefix, prefixLength) == 0
+            && strcmp(lastColon + 1, mLocalName) == 0;
+    }
+
+private:
+    JNIEnv* mEnv;
+    ParsingContext* mParsingContext;
+    char* mCopy;
+    const char* mUri;
+    const char* mLocalName;
+    const char* mPrefix;
+
+    /**
+     * Decodes an Expat-encoded name of one of these three forms:
+     *     "uri|localName|prefix" (example: "http://www.w3.org/1999/xhtml|h1|html")
+     *     "uri|localName" (example: "http://www.w3.org/1999/xhtml|h1")
+     *     "localName" (example: "h1")
+     */
+    void init(JNIEnv* env, ParsingContext* parsingContext, const char* s) {
+        mEnv = env;
+        mParsingContext = parsingContext;
+        mCopy = strdup(s);
+
+        // split the input into up to 3 parts: a|b|c
+        char* context = NULL;
+        char* a = strtok_r(mCopy, "|", &context);
+        char* b = strtok_r(NULL, "|", &context);
+        char* c = strtok_r(NULL, "|", &context);
+
+        if (c != NULL) { // input of the form "uri|localName|prefix"
+            mUri = a;
+            mLocalName = b;
+            mPrefix = c;
+        } else if (b != NULL) { // input of the form "uri|localName"
+            mUri = a;
+            mLocalName = b;
+            mPrefix = "";
+        } else { // input of the form "localName"
+            mLocalName = a;
+            mUri = "";
+            mPrefix = "";
+        }
+    }
+};
 
 /**
  * Pushes a string onto the stack.
@@ -561,27 +621,17 @@ static void startElement(void* data, const char* elementName,
 
     jobject javaParser = parsingContext->object;
 
-    if (parsingContext->processNamespaces) {
-        // Break down Expat's element name into two Java strings.
-        int separatorIndex = findSeparator(elementName);
-        jstring uri = parseUri(
-                env, parsingContext, elementName, separatorIndex);
-        jstring localName = parseLocalName(
-                env, parsingContext, elementName, separatorIndex);
+    ExpatElementName e(env, parsingContext, elementName);
+    jstring uri = e.uri();
+    jstring localName = e.localName();
+    jstring qName = e.qName();
 
-        stringStackPush(parsingContext, uri);
-        stringStackPush(parsingContext, localName);
+    stringStackPush(parsingContext, qName);
+    stringStackPush(parsingContext, uri);
+    stringStackPush(parsingContext, localName);
 
-        env->CallVoidMethod(javaParser, startElementMethod, uri, localName,
-                emptyString, attributes, count);
-    } else {
-        jstring qName = internString(env, parsingContext, elementName);
-
-        stringStackPush(parsingContext, qName);
-
-        env->CallVoidMethod(javaParser, startElementMethod,
-                emptyString, emptyString, qName, attributes, count);
-    }
+    env->CallVoidMethod(javaParser, startElementMethod, uri, localName,
+            qName, attributes, count);
 
     parsingContext->attributes = NULL;
     parsingContext->attributeCount = -1;
@@ -603,18 +653,11 @@ static void endElement(void* data, const char* elementName) {
 
     jobject javaParser = parsingContext->object;
 
-    if (parsingContext->processNamespaces) {
-        jstring localName = stringStackPop(parsingContext);
-        jstring uri = stringStackPop(parsingContext);
+    jstring localName = stringStackPop(parsingContext);
+    jstring uri = stringStackPop(parsingContext);
+    jstring qName = stringStackPop(parsingContext);
 
-        env->CallVoidMethod(javaParser, endElementMethod, uri, localName,
-                emptyString);
-    } else {
-        jstring qName = stringStackPop(parsingContext);
-
-        env->CallVoidMethod(javaParser, endElementMethod,
-                emptyString, emptyString, qName);
-    }
+    env->CallVoidMethod(javaParser, endElementMethod, uri, localName, qName);
 }
 
 /**
@@ -992,6 +1035,7 @@ static jint initialize(JNIEnv* env, jobject object, jstring javaEncoding,
     if (parser != NULL) {
         if (processNamespaces) {
             XML_SetNamespaceDeclHandler(parser, startNamespace, endNamespace);
+            XML_SetReturnNSTriplet(parser, 1);
         }
 
         XML_SetCdataSectionHandler(parser, startCdata, endCdata);
@@ -1169,11 +1213,7 @@ static jstring getAttributeURI(JNIEnv* env, jobject clazz, jint pointer,
         return emptyString;
     }
 
-    const char** attributes = (const char**) attributePointer;
-
-    const char* name = attributes[index << 1];
-    int separatorIndex = findSeparator(name);
-    return parseUri(env, context, name, separatorIndex);
+    return ExpatElementName(env, context, attributePointer, index).uri();
 }
 
 /**
@@ -1194,11 +1234,7 @@ static jstring getAttributeLocalName(JNIEnv* env, jobject clazz, jint pointer,
         return emptyString;
     }
 
-    const char** attributes = (const char**) attributePointer;
-    const char* name = attributes[index << 1];
-
-    int separatorIndex = findSeparator(name);
-    return parseLocalName(env, context, name, separatorIndex);
+    return ExpatElementName(env, context, attributePointer, index).localName();
 }
 
 /**
@@ -1219,10 +1255,7 @@ static jstring getAttributeQName(JNIEnv* env, jobject clazz, jint pointer,
         return emptyString;
     }
 
-    const char** attributes = (const char**) attributePointer;
-
-    const char* name = attributes[index << 1];
-    return internString(env, context, name);
+    return ExpatElementName(env, context, attributePointer, index).qName();
 }
 
 /**
@@ -1241,26 +1274,6 @@ static jstring getAttributeValueByIndex(JNIEnv* env, jobject clazz,
 }
 
 /**
- * Searches the attributes for the given name and returns the attribute's
- * index or -1 if not found.
- *
- * @param attributes alternating name/value pairs
- * @param name of attribute to look for
- * @returns index of found attribute or -1 if not found
- */
-static jint findAttributeByName(const char** attributes,
-        const char* name) {
-    int index;
-    for (index = 0; attributes[index]; index += 2) {
-        if (strcmp(attributes[index], name) == 0)
-            return index >> 1;
-    }
-
-    // Not found.
-    return -1;
-}
-
-/**
  * Gets the index of the attribute with the given qualified name.
  *
  * @param attributePointer to the attribute array
@@ -1271,11 +1284,20 @@ static jint findAttributeByName(const char** attributes,
 static jint getAttributeIndexForQName(JNIEnv* env, jobject clazz,
         jint attributePointer, jstring qName) {
     const char** attributes = (const char**) attributePointer;
-    int length = env->GetStringUTFLength(qName);
 
     const char* qNameBytes = env->GetStringUTFChars(qName, NULL);
-    if (qNameBytes == NULL) return -1;
-    int found = findAttributeByName(attributes, qNameBytes);
+    if (qNameBytes == NULL) {
+        return -1;
+    }
+
+    int found = -1;
+    for (int index = 0; attributes[index * 2]; ++index) {
+        if (ExpatElementName(NULL, NULL, attributePointer, index).matchesQName(qNameBytes)) {
+            found = index;
+            break;
+        }
+    }
+
     env->ReleaseStringUTFChars(qName, qNameBytes);
     return found;
 }
@@ -1292,24 +1314,30 @@ static jint getAttributeIndexForQName(JNIEnv* env, jobject clazz,
 static jint getAttributeIndex(JNIEnv* env, jobject clazz,
         jint attributePointer, jstring uri, jstring localName) {
     const char** attributes = (const char**) attributePointer;
-    int uriByteCount = env->GetStringUTFLength(uri);
-    if (uriByteCount == 0) {
-        // If there's no URI, then a local name works just like a qName.
-        return getAttributeIndexForQName(
-                env, clazz, attributePointer, localName);
+
+    const char* uriBytes = env->GetStringUTFChars(uri, NULL);
+    if (uriBytes == NULL) {
+        return -1;
     }
 
-    // Create string in the same format used by Expat: "uri|localName\0".
-    // Note that we need byte counts to size the array but Unicode char counts
-    // for GetStringUTFRegion indexes and counts.
-    int localNameByteCount = env->GetStringUTFLength(localName);
-    LocalArray<1024> concatenated(uriByteCount + 1 + localNameByteCount + 1);
-    env->GetStringUTFRegion(uri, 0, env->GetStringLength(uri), &concatenated[0]);
-    concatenated[uriByteCount] = '|';
-    env->GetStringUTFRegion(localName, 0, env->GetStringLength(localName),
-            &concatenated[uriByteCount + 1]);
+    const char* localNameBytes = env->GetStringUTFChars(localName, NULL);
+    if (localNameBytes == NULL) {
+        env->ReleaseStringUTFChars(uri, uriBytes);
+        return -1;
+    }
 
-    return findAttributeByName(attributes, &concatenated[0]);
+    int found = -1;
+    for (int index = 0; attributes[index * 2]; ++index) {
+        if (ExpatElementName(NULL, NULL, attributePointer, index)
+                .matches(uriBytes, localNameBytes)) {
+            found = index;
+            break;
+        }
+    }
+
+    env->ReleaseStringUTFChars(uri, uriBytes);
+    env->ReleaseStringUTFChars(localName, localNameBytes);
+    return found;
 }
 
 /**
