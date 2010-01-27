@@ -45,7 +45,7 @@ public class AttCertIssuer
         ASN1TaggedObject obj,
         boolean          explicit)
     {
-        return getInstance(obj.getObject()); // must be explictly tagged
+        return getInstance(obj.getObject()); // must be explicitly tagged
     }
 
     /**
