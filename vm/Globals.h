@@ -706,13 +706,14 @@ struct DvmJitGlobals {
     bool               blockingMode;
     pthread_t          compilerHandle;
     pthread_mutex_t    compilerLock;
+    pthread_mutex_t    compilerICPatchLock;
     pthread_cond_t     compilerQueueActivity;
     pthread_cond_t     compilerQueueEmpty;
     int                compilerQueueLength;
     int                compilerHighWater;
     int                compilerWorkEnqueueIndex;
     int                compilerWorkDequeueIndex;
-    CompilerWorkOrder  compilerWorkQueue[COMPILER_WORK_QUEUE_SIZE];
+    int                compilerICPatchIndex;
 
     /* JIT internal stats */
     int                compilerMaxQueued;
@@ -742,11 +743,11 @@ struct DvmJitGlobals {
     /* Flag to indicate that the code cache is full */
     bool codeCacheFull;
 
-    /* Delay count for the next code cache reset request */
-    int delayCodeCacheReset;
-
     /* Number of times that the code cache has been reset */
     int numCodeCacheReset;
+
+    /* Number of times that the code cache reset request has been delayed */
+    int numCodeCacheResetDelayed;
 
     /* true/false: compile/reject opcodes specified in the -Xjitop list */
     bool includeSelectedOp;
@@ -778,10 +779,21 @@ struct DvmJitGlobals {
     /* Filter method compilation blacklist with call-graph information */
     bool checkCallGraph;
 
+    /* New translation chain has been set up */
+    volatile bool hasNewChain;
+
 #if defined(WITH_SELF_VERIFICATION)
     /* Spin when error is detected, volatile so GDB can reset it */
     volatile bool selfVerificationSpin;
 #endif
+
+    /* Place arrays at the end to ease the display in gdb sessions */
+
+    /* Work order queue for compilations */
+    CompilerWorkOrder compilerWorkQueue[COMPILER_WORK_QUEUE_SIZE];
+
+    /* Work order queue for predicted chain patching */
+    ICPatchWorkOrder compilerICPatchQueue[COMPILER_IC_PATCH_QUEUE_SIZE];
 };
 
 extern struct DvmJitGlobals gDvmJit;

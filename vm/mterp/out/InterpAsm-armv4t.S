@@ -9803,6 +9803,9 @@ dvmJitSelfVerificationStart:
  * before jumping back to the interpreter.
  */
 dvmJitSelfVerificationEnd:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    mov    r1, #0
+    str    r1, [r10, #offThread_inJitCodeCache] @ Back to the interp land
     mov    r1,rFP                        @ pass ending fp
     bl     dvmSelfVerificationRestoreState @ restore pc and fp values
     ldr    rPC,[r0,#offShadowSpace_startPC] @ restore PC

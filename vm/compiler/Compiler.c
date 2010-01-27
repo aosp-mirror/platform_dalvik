@@ -66,11 +66,10 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     }
 
     /*
-     * Return if queue is full.
-     * If the code cache is full, we will allow the work order to be added and
-     * we use that to trigger code cache reset.
+     * Return if queue or code cache is full.
      */
-    if (gDvmJit.compilerQueueLength == COMPILER_WORK_QUEUE_SIZE) {
+    if (gDvmJit.compilerQueueLength == COMPILER_WORK_QUEUE_SIZE ||
+        gDvmJit.codeCacheFull == true) {
         result = false;
         goto unlockAndExit;
     }
@@ -94,8 +93,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->info = info;
     newOrder->result.codeAddress = NULL;
     newOrder->result.discardResult =
-        (kind == kWorkOrderTraceDebug || kind == kWorkOrderICPatch) ?
-        true : false;
+        (kind == kWorkOrderTraceDebug) ?  true : false;
     newOrder->result.requestingThread = dvmThreadSelf();
 
     gDvmJit.compilerWorkEnqueueIndex++;
@@ -136,8 +134,8 @@ bool dvmCompilerSetupCodeCache(void)
         return false;
     }
 
-    // For debugging only
-    // LOGD("Code cache starts at %p", gDvmJit.codeCache);
+    // STOPSHIP - for debugging only
+    LOGD("Code cache starts at %p", gDvmJit.codeCache);
 
     /* Copy the template code into the beginning of the code cache */
     int templateSize = (intptr_t) dmvCompilerTemplateEnd -
@@ -201,41 +199,36 @@ static void resetCodeCache(void)
     Thread* thread;
     u8 startTime = dvmGetRelativeTimeUsec();
     int inJit = 0;
-
-    LOGD("Reset the JIT code cache (%d bytes used / %d time(s))",
-         gDvmJit.codeCacheByteUsed, ++gDvmJit.numCodeCacheReset);
-
-    /* Stop the world */
-    dvmSuspendAllThreads(SUSPEND_FOR_CC_RESET);
+    int byteUsed = gDvmJit.codeCacheByteUsed;
 
     /* If any thread is found stuck in the JIT state, don't reset the cache */
     for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        /*
+         * Crawl the stack to wipe out the returnAddr field so that
+         * 1) the soon-to-be-deleted code in the JIT cache won't be used
+         * 2) or the thread stuck in the JIT land will soon return
+         *    to the interpreter land
+         */
+        crawlDalvikStack(thread, false);
         if (thread->inJitCodeCache) {
             inJit++;
-            /*
-             * STOPSHIP
-             * Change the verbose mode to false after the new code receives
-             * more QA love.
-             */
-            crawlDalvikStack(thread, true);
         }
     }
 
     if (inJit) {
-        /* Wait a while for the busy threads to rest and try again */
-        gDvmJit.delayCodeCacheReset = 256;
-        goto done;
+        LOGD("JIT code cache reset delayed (%d bytes %d/%d)",
+             gDvmJit.codeCacheByteUsed, gDvmJit.numCodeCacheReset,
+             ++gDvmJit.numCodeCacheResetDelayed);
+        return;
     }
 
-    /* Drain the work queue to free the work order */
+    /* Lock the mutex to clean up the work queue */
+    dvmLockMutex(&gDvmJit.compilerLock);
+
+    /* Drain the work queue to free the work orders */
     while (workQueueLength()) {
         CompilerWorkOrder work = workDequeue();
         free(work.info);
-    }
-
-    /* Wipe out the returnAddr field that soon will point to stale code */
-    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
-        crawlDalvikStack(thread, false);
     }
 
     /* Reset the JitEntry table contents to the initial unpopulated state */
@@ -261,15 +254,35 @@ static void resetCodeCache(void)
     gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
     gDvmJit.compilerQueueLength = 0;
 
+    /* Reset the IC patch work queue */
+    dvmLockMutex(&gDvmJit.compilerICPatchLock);
+    gDvmJit.compilerICPatchIndex = 0;
+    dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
+
     /* All clear now */
     gDvmJit.codeCacheFull = false;
 
-    LOGD("Code cache reset takes %lld usec",
-         dvmGetRelativeTimeUsec() - startTime);
+    dvmUnlockMutex(&gDvmJit.compilerLock);
 
-done:
-    /* Resume all threads */
-    dvmResumeAllThreads(SUSPEND_FOR_CC_RESET);
+    LOGD("JIT code cache reset in %lld ms (%d bytes %d/%d)",
+         (dvmGetRelativeTimeUsec() - startTime) / 1000,
+         byteUsed, ++gDvmJit.numCodeCacheReset,
+         gDvmJit.numCodeCacheResetDelayed);
+}
+
+/*
+ * Perform actions that are only safe when all threads are suspended. Currently
+ * we do:
+ * 1) Check if the code cache is full. If so reset it and restart populating it
+ *    from scratch.
+ * 2) Patch predicted chaining cells by consuming recorded work orders.
+ */
+void dvmCompilerPerformSafePointChecks(void)
+{
+    if (gDvmJit.codeCacheFull) {
+        resetCodeCache();
+    }
+    dvmCompilerPatchInlineCache();
 }
 
 bool compilerThreadStartup(void)
@@ -410,7 +423,6 @@ static void *compilerThreadStart(void *arg)
             continue;
         } else {
             do {
-                bool resizeFail = false;
                 CompilerWorkOrder work = workDequeue();
                 dvmUnlockMutex(&gDvmJit.compilerLock);
                 /*
@@ -421,11 +433,17 @@ static void *compilerThreadStart(void *arg)
                 /* Is JitTable filling up? */
                 if (gDvmJit.jitTableEntriesUsed >
                     (gDvmJit.jitTableSize - gDvmJit.jitTableSize/4)) {
-                    resizeFail = dvmJitResizeJitTable(gDvmJit.jitTableSize * 2);
+                    bool resizeFail =
+                        dvmJitResizeJitTable(gDvmJit.jitTableSize * 2);
+                    /*
+                     * If the jit table is full, consider it's time to reset
+                     * the code cache too.
+                     */
+                    gDvmJit.codeCacheFull |= resizeFail;
                 }
                 if (gDvmJit.haltCompilerThread) {
                     LOGD("Compiler shutdown in progress - discarding request");
-                } else if (!resizeFail) {
+                } else if (!gDvmJit.codeCacheFull) {
                     /* If compilation failed, use interpret-template */
                     if (!dvmCompilerDoWork(&work)) {
                         work.result.codeAddress = gDvmJit.interpretTemplate;
@@ -437,24 +455,6 @@ static void *compilerThreadStart(void *arg)
                 }
                 free(work.info);
                 dvmLockMutex(&gDvmJit.compilerLock);
-
-                /*
-                 * FIXME - temporarily disable code cache reset until
-                 * stale code stops leaking.
-                 */
-#if 0
-                if (gDvmJit.codeCacheFull == true || resizeFail) {
-                    if (gDvmJit.delayCodeCacheReset == 0) {
-                        resetCodeCache();
-                        assert(workQueueLength() == 0 ||
-                               gDvmJit.delayCodeCacheReset != 0);
-                    } else {
-                        LOGD("Delay the next %d tries to reset code cache",
-                             gDvmJit.delayCodeCacheReset);
-                        gDvmJit.delayCodeCacheReset--;
-                    }
-                }
-#endif
             } while (workQueueLength() != 0);
         }
     }
@@ -477,6 +477,7 @@ bool dvmCompilerStartup(void)
 {
 
     dvmInitMutex(&gDvmJit.compilerLock);
+    dvmInitMutex(&gDvmJit.compilerICPatchLock);
     dvmLockMutex(&gDvmJit.compilerLock);
     pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
     pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);

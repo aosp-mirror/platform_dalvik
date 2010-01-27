@@ -41,6 +41,7 @@ void dvmCompilerCodegenDump(CompilationUnit *cUnit);
 void* dvmJitChain(void *tgtAddr, u4* branchAddr);
 u4* dvmJitUnchain(void *codeAddr);
 void dvmJitUnchainAll(void);
+void dvmCompilerPatchInlineCache(void);
 
 /* Implemented in codegen/<target>/Ralloc.c */
 void dvmCompilerRegAlloc(CompilationUnit *cUnit);
