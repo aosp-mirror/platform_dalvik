@@ -26,11 +26,9 @@ import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
+import java.math.BigInteger;
 import java.util.Currency;
 import java.util.Locale;
-// BEGIN android-added
-import java.util.ResourceBundle;
-// END android-added
 
 import com.ibm.icu4jni.util.LocaleData;
 import org.apache.harmony.text.internal.nls.Messages;
@@ -242,8 +240,7 @@ public abstract class NumberFormat extends Format {
      *            of the alignment field in the formatted text.
      * @return the string buffer.
      */
-    public abstract StringBuffer format(double value, StringBuffer buffer,
-            FieldPosition field);
+    public abstract StringBuffer format(double value, StringBuffer buffer, FieldPosition field);
 
     /**
      * Formats the specified long using the rules of this number format.
@@ -276,12 +273,15 @@ public abstract class NumberFormat extends Format {
      *            of the alignment field in the formatted text.
      * @return the string buffer.
      */
-    public abstract StringBuffer format(long value, StringBuffer buffer,
-            FieldPosition field);
+    public abstract StringBuffer format(long value, StringBuffer buffer, FieldPosition field);
 
     /**
-     * Formats the specified object as a string using the pattern of this number
-     * format and appends the string to the specified string buffer.
+     * Formats a number into a supplied buffer.
+     * <p>
+     * The number must be a subclass of {@code Number}. Instances of {@code Byte}, {@code Short},
+     * {@code Integer}, and {@code Long} have {@code Number.longValue} invoked, as do instances of
+     * {@code BigInteger} where {@code BigInteger.bitLength} returns <i>less than</i> 64. All other
+     * values have {@code Number.doubleValue} invoked instead.
      * <p>
      * If the {@code field} member of {@code field} contains a value specifying
      * a format field, then its {@code beginIndex} and {@code endIndex} members
@@ -300,14 +300,15 @@ public abstract class NumberFormat extends Format {
      *             if {@code object} is not an instance of {@code Number}.
      */
     @Override
-    public StringBuffer format(Object object, StringBuffer buffer,
-            FieldPosition field) {
-        if (object instanceof Double || object instanceof Float) {
-            double dv = ((Number) object).doubleValue();
-            return format(dv, buffer, field);
-        } else if (object instanceof Number) {
+    public StringBuffer format(Object object, StringBuffer buffer, FieldPosition field) {
+        if (object instanceof Byte || object instanceof Short || object instanceof Integer ||
+                object instanceof Long ||
+                (object instanceof BigInteger && ((BigInteger) object).bitLength() < 64)) {
             long lv = ((Number) object).longValue();
             return format(lv, buffer, field);
+        } else if (object instanceof Number) {
+            double dv = ((Number) object).doubleValue();
+            return format(dv, buffer, field);
         }
         throw new IllegalArgumentException();
     }

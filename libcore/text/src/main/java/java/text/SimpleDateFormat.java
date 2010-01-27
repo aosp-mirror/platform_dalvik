@@ -1040,7 +1040,6 @@ public class SimpleDateFormat extends DateFormat {
      * @return the {@code DateFormatSymbols} object.
      */
     public DateFormatSymbols getDateFormatSymbols() {
-        // Return a clone so the arrays in the ResourceBundle are not modified
         return (DateFormatSymbols) formatData.clone();
     }
 

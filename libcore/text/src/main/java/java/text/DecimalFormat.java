@@ -707,89 +707,27 @@ public class DecimalFormat extends NumberFormat {
         return dform.formatToCharacterIterator(object);
     }
 
-    /**
-     * Formats the specified double value as a string using the pattern of this
-     * decimal format and appends the string to the specified string buffer.
-     * <p>
-     * If the {@code field} member of {@code position} contains a value
-     * specifying a format field, then its {@code beginIndex} and
-     * {@code endIndex} members will be updated with the position of the first
-     * occurrence of this field in the formatted text.
-     *
-     * @param value
-     *            the double to format.
-     * @param buffer
-     *            the target string buffer to append the formatted double value
-     *            to.
-     * @param position
-     *            on input: an optional alignment field; on output: the offsets
-     *            of the alignment field in the formatted text.
-     * @return the string buffer.
-     */
     @Override
-    public StringBuffer format(double value, StringBuffer buffer,
-            FieldPosition position) {
+    public StringBuffer format(double value, StringBuffer buffer, FieldPosition position) {
         return dform.format(value, buffer, position);
     }
 
-    /**
-     * Formats the specified long value as a string using the pattern of this
-     * decimal format and appends the string to the specified string buffer.
-     * <p>
-     * If the {@code field} member of {@code position} contains a value
-     * specifying a format field, then its {@code beginIndex} and
-     * {@code endIndex} members will be updated with the position of the first
-     * occurrence of this field in the formatted text.
-     *
-     * @param value
-     *            the long to format.
-     * @param buffer
-     *            the target string buffer to append the formatted long value
-     *            to.
-     * @param position
-     *            on input: an optional alignment field; on output: the offsets
-     *            of the alignment field in the formatted text.
-     * @return the string buffer.
-     */
     @Override
-    public StringBuffer format(long value, StringBuffer buffer,
-            FieldPosition position) {
+    public StringBuffer format(long value, StringBuffer buffer, FieldPosition position) {
         return dform.format(value, buffer, position);
     }
 
-    /**
-     * Formats the specified object as a string using the pattern of this
-     * decimal format and appends the string to the specified string buffer.
-     * <p>
-     * If the {@code field} member of {@code position} contains a value
-     * specifying a format field, then its {@code beginIndex} and
-     * {@code endIndex} members will be updated with the position of the first
-     * occurrence of this field in the formatted text.
-     *
-     * @param number
-     *            the object to format.
-     * @param toAppendTo
-     *            the target string buffer to append the formatted number to.
-     * @param pos
-     *            on input: an optional alignment field; on output: the offsets
-     *            of the alignment field in the formatted text.
-     * @return the string buffer.
-     * @throws IllegalArgumentException
-     *             if {@code number} is not an instance of {@code Number}.
-     * @throws NullPointerException
-     *             if {@code toAppendTo} or {@code pos} is {@code null}.
-     */
     @Override
-    public final StringBuffer format(Object number, StringBuffer toAppendTo,
-            FieldPosition pos) {
-        if (!(number instanceof Number)) {
-            throw new IllegalArgumentException();
-        }
-        if (toAppendTo == null || pos == null) {
-            throw new NullPointerException();
-        }
-        if (number instanceof BigInteger || number instanceof BigDecimal) {
-            return dform.format(number, toAppendTo, pos);
+    public final StringBuffer format(Object number, StringBuffer toAppendTo, FieldPosition pos) {
+        if (number instanceof BigInteger) {
+            BigInteger bigInteger = (BigInteger) number;
+            if (bigInteger.bitLength() < 64) {
+                return dform.format(bigInteger.longValue(), toAppendTo, pos);
+            } else {
+                return dform.formatBigInteger(bigInteger, toAppendTo, pos);
+            }
+        } else if (number instanceof BigDecimal) {
+            return dform.formatBigDecimal((BigDecimal) number, toAppendTo, pos);
         }
         return super.format(number, toAppendTo, pos);
     }

@@ -26,9 +26,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
-// BEGIN android-added
-import java.util.ResourceBundle;
-// BEGIN android-added
 import java.util.TimeZone;
 
 import com.ibm.icu4jni.util.LocaleData;
