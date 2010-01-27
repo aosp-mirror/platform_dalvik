@@ -224,8 +224,8 @@ Some other concerns with flinging signals around:
    use printf on stdout to print GC debug messages)
 */
 
-#define kMaxThreadId        ((1<<15) - 1)
-#define kMainThreadId       ((1<<1) | 1)
+#define kMaxThreadId        ((1 << 16) - 1)
+#define kMainThreadId       1
 
 
 static Thread* allocThread(int interpStackSize);
@@ -1192,12 +1192,10 @@ static void threadExitCheck(void* arg)
  */
 static void assignThreadId(Thread* thread)
 {
-    /* Find a small unique integer.  threadIdMap is a vector of
+    /*
+     * Find a small unique integer.  threadIdMap is a vector of
      * kMaxThreadId bits;  dvmAllocBit() returns the index of a
      * bit, meaning that it will always be < kMaxThreadId.
-     *
-     * The thin locking magic requires that the low bit is always
-     * set, so we do it once, here.
      */
     int num = dvmAllocBit(gDvm.threadIdMap);
     if (num < 0) {
@@ -1205,7 +1203,7 @@ static void assignThreadId(Thread* thread)
         dvmAbort();     // TODO: make this a non-fatal error result
     }
 
-    thread->threadId = ((num + 1) << 1) | 1;
+    thread->threadId = num + 1;
 
     assert(thread->threadId != 0);
     assert(thread->threadId != DVM_LOCK_INITIAL_THIN_VALUE);
