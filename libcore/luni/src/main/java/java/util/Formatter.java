@@ -1313,21 +1313,16 @@ public final class Formatter implements Closeable, Flushable {
      * information contained in the format token.
      */
     private static class Transformer {
-
         private Formatter formatter;
-
         private FormatToken formatToken;
-
         private Object arg;
-
         private Locale locale;
-
+        private DecimalFormatSymbols decimalFormatSymbols;
         private static String lineSeparator;
 
         // BEGIN android-changed
-        // These objects are mutated during use, so can't be cached safely.
+        // This object is mutated during use, so can't be cached safely.
         // private NumberFormat numberFormat;
-        // private DecimalFormatSymbols decimalFormatSymbols;
         // END android-changed
 
         private DateTimeUtil dateTimeUtil;
@@ -1343,11 +1338,14 @@ public final class Formatter implements Closeable, Flushable {
             // END android-changed
         }
 
-        private DecimalFormatSymbols getDecimalFormatSymbols() {
-            // BEGIN android-changed
-            return LocaleCache.getDecimalFormatSymbols(locale);
-            // END android-changed
+        // BEGIN android-changed
+        DecimalFormatSymbols getDecimalFormatSymbols() {
+            if (decimalFormatSymbols == null) {
+                decimalFormatSymbols = new DecimalFormatSymbols(locale);
+            }
+            return decimalFormatSymbols;
         }
+        // END android-changed
 
         /*
          * Gets the formatted string according to the format token and the
@@ -1900,21 +1898,17 @@ public final class Formatter implements Closeable, Flushable {
                 throw new IllegalFormatFlagsException(formatToken.getStrFlags());
             }
 
-            if ('e' == Character.toLowerCase(currentConversionType)) {
+            if (currentConversionType == 'e' || currentConversionType == 'E') {
                 if (formatToken.flagComma) {
                     throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
                             currentConversionType);
                 }
-            }
-
-            if ('g' == Character.toLowerCase(currentConversionType)) {
+            } else if (currentConversionType == 'g' || currentConversionType == 'G') {
                 if (formatToken.flagSharp) {
                     throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
                             currentConversionType);
                 }
-            }
-
-            if ('a' == Character.toLowerCase(currentConversionType)) {
+            } else if (currentConversionType == 'a' || currentConversionType == 'A') {
                 if (formatToken.flagComma || formatToken.flagParenthesis) {
                     throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
                             currentConversionType);
@@ -1934,19 +1928,20 @@ public final class Formatter implements Closeable, Flushable {
                 return specialNumberResult;
             }
 
-            if (Character.toLowerCase(currentConversionType) != 'a' &&
+            if (currentConversionType != 'a' && currentConversionType != 'A' &&
                     !formatToken.isPrecisionSet()) {
                 formatToken.setPrecision(FormatToken.DEFAULT_PRECISION);
             }
 
             // output result
+            DecimalFormatSymbols decimalFormatSymbols = getDecimalFormatSymbols();
             FloatUtil floatUtil = new FloatUtil(result, formatToken,
-                    (DecimalFormat) getNumberFormat(), arg);
-            floatUtil.transform();
+                    (DecimalFormat) getNumberFormat(), decimalFormatSymbols, arg);
+            floatUtil.transform(currentConversionType);
 
             formatToken.setPrecision(FormatToken.UNSET);
 
-            if (getDecimalFormatSymbols().getMinusSign() == result.charAt(0)) {
+            if (decimalFormatSymbols.getMinusSign() == result.charAt(0)) {
                 if (formatToken.flagParenthesis) {
                     return wrapParentheses(result);
                 }
@@ -1963,11 +1958,11 @@ public final class Formatter implements Closeable, Flushable {
 
             char firstChar = result.charAt(0);
             if (formatToken.flagZero
-                    && (firstChar == floatUtil.getAddSign() || firstChar == floatUtil.getMinusSign())) {
+                    && (firstChar == floatUtil.getAddSign() || firstChar == decimalFormatSymbols.getMinusSign())) {
                 startIndex = 1;
             }
 
-            if ('a' == Character.toLowerCase(currentConversionType)) {
+            if (currentConversionType == 'a' || currentConversionType == 'A') {
                 startIndex += 2;
             }
             return padding(result, startIndex);
@@ -2023,26 +2018,22 @@ public final class Formatter implements Closeable, Flushable {
 
     private static class FloatUtil {
         private final StringBuilder result;
-
         private final DecimalFormat decimalFormat;
-
+        private final DecimalFormatSymbols decimalFormatSymbols;
         private final FormatToken formatToken;
-
         private final Object argument;
 
-        private final char minusSign;
-
-        FloatUtil(StringBuilder result, FormatToken formatToken,
-                DecimalFormat decimalFormat, Object argument) {
+        FloatUtil(StringBuilder result, FormatToken formatToken, DecimalFormat decimalFormat,
+                DecimalFormatSymbols decimalFormatSymbols, Object argument) {
             this.result = result;
             this.formatToken = formatToken;
             this.decimalFormat = decimalFormat;
+            this.decimalFormatSymbols = decimalFormatSymbols;
             this.argument = argument;
-            this.minusSign = decimalFormat.getDecimalFormatSymbols().getMinusSign();
         }
 
-        void transform() {
-            switch (formatToken.getConversionType()) {
+        void transform(char conversionType) {
+            switch (conversionType) {
                 case 'e':
                 case 'E': {
                     transform_e();
@@ -2063,14 +2054,9 @@ public final class Formatter implements Closeable, Flushable {
                     break;
                 }
                 default: {
-                    throw new UnknownFormatConversionException(String
-                            .valueOf(formatToken.getConversionType()));
+                    throw new UnknownFormatConversionException(String.valueOf(conversionType));
                 }
             }
-        }
-
-        char getMinusSign() {
-            return minusSign;
         }
 
         char getAddSign() {
@@ -2096,9 +2082,7 @@ public final class Formatter implements Closeable, Flushable {
             // out.
             if (formatToken.flagSharp && formatToken.getPrecision() == 0) {
                 int indexOfE = result.indexOf("e"); //$NON-NLS-1$
-                char dot = decimalFormat.getDecimalFormatSymbols()
-                        .getDecimalSeparator();
-                result.insert(indexOfE, dot);
+                result.insert(indexOfE, decimalFormatSymbols.getDecimalSeparator());
             }
         }
 
@@ -2165,42 +2149,42 @@ public final class Formatter implements Closeable, Flushable {
             } else {
                 transform_f();
             }
-
         }
 
         void transform_f() {
-            StringBuilder pattern = new StringBuilder();
-            if (formatToken.flagComma) {
-                pattern.append(',');
-                int groupingSize = decimalFormat.getGroupingSize();
-                if (groupingSize > 1) {
-                    char[] sharps = new char[groupingSize - 1];
-                    Arrays.fill(sharps, '#');
-                    pattern.append(sharps);
+            // TODO: store a default DecimalFormat we can clone?
+            String pattern = "0.000000";
+            if (formatToken.flagComma || formatToken.getPrecision() != 6) {
+                StringBuilder patternBuilder = new StringBuilder();
+                if (formatToken.flagComma) {
+                    patternBuilder.append(',');
+                    int groupingSize = decimalFormat.getGroupingSize();
+                    if (groupingSize > 1) {
+                        char[] sharps = new char[groupingSize - 1];
+                        Arrays.fill(sharps, '#');
+                        patternBuilder.append(sharps);
+                    }
                 }
+                patternBuilder.append(0);
+                if (formatToken.getPrecision() > 0) {
+                    patternBuilder.append('.');
+                    char[] zeros = new char[formatToken.getPrecision()];
+                    Arrays.fill(zeros, '0');
+                    patternBuilder.append(zeros);
+                }
+                pattern = patternBuilder.toString();
             }
-
-            pattern.append(0);
-
-            if (formatToken.getPrecision() > 0) {
-                pattern.append('.');
-                char[] zeros = new char[formatToken.getPrecision()];
-                Arrays.fill(zeros, '0');
-                pattern.append(zeros);
-            }
-            decimalFormat.applyPattern(pattern.toString());
+            // TODO: if DecimalFormat.toPattern was cheap, we could make this cheap (preferably *in* DecimalFormat).
+            decimalFormat.applyPattern(pattern);
             result.append(decimalFormat.format(argument));
             // if the flag is sharp and decimal separator is always given
             // out.
             if (formatToken.flagSharp && formatToken.getPrecision() == 0) {
-                char dot = decimalFormat.getDecimalFormatSymbols().getDecimalSeparator();
-                result.append(dot);
+                result.append(decimalFormatSymbols.getDecimalSeparator());
             }
         }
 
         void transform_a() {
-            char currentConversionType = formatToken.getConversionType();
-
             if (argument instanceof Float) {
                 Float F = (Float) argument;
                 result.append(Float.toHexString(F.floatValue()));
@@ -2211,7 +2195,7 @@ public final class Formatter implements Closeable, Flushable {
             } else {
                 // BigInteger is not supported.
                 throw new IllegalFormatConversionException(
-                        currentConversionType, argument.getClass());
+                        formatToken.getConversionType(), argument.getClass());
             }
 
             if (!formatToken.isPrecisionSet()) {
