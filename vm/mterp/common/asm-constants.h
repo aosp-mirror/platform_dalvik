@@ -118,7 +118,7 @@ MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 56)
 MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 60)
 MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 64)
 MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 68)
-MTERP_OFFSET(offGlue_jitppJitProfTable, MterpGlue, ppJitProfTable, 72)
+MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 72)
 #endif
 #elif defined(WITH_PROFILER)
 MTERP_OFFSET(offGlue_pActiveProfilers,  MterpGlue, pActiveProfilers, 40)
@@ -129,7 +129,7 @@ MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 56)
 MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 60)
 MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 64)
 MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 68)
-MTERP_OFFSET(offGlue_jitppJitProfTable, MterpGlue, ppJitProfTable, 72)
+MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 72)
 #endif
 #else
 MTERP_OFFSET(offGlue_entryPoint,        MterpGlue, entryPoint, 40)
@@ -139,7 +139,7 @@ MTERP_OFFSET(offGlue_jitState,          MterpGlue, jitState, 52)
 MTERP_OFFSET(offGlue_jitResume,         MterpGlue, jitResume, 56)
 MTERP_OFFSET(offGlue_jitResumePC,       MterpGlue, jitResumePC, 60)
 MTERP_OFFSET(offGlue_jitThreshold,      MterpGlue, jitThreshold, 64)
-MTERP_OFFSET(offGlue_jitppJitProfTable, MterpGlue, ppJitProfTable, 68)
+MTERP_OFFSET(offGlue_ppJitProfTable,    MterpGlue, ppJitProfTable, 68)
 #endif
 #endif
 /* make sure all JValue union members are stored at the same offset */

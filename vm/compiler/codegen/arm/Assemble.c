@@ -1328,7 +1328,12 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
     u4 newInst;
     bool thumbTarget;
 
-    if ((gDvmJit.pProfTable != NULL) && gDvm.sumThreadSuspendCount == 0) {
+    /*
+     * Only chain translations when there is no urge to ask all threads to
+     * suspend themselves via the interpreter.
+     */
+    if ((gDvmJit.pProfTable != NULL) && (gDvm.sumThreadSuspendCount == 0) &&
+        (gDvmJit.codeCacheFull == false)) {
         assert((branchOffset >= -(1<<22)) && (branchOffset <= ((1<<22)-2)));
 
         gDvmJit.translationChains++;
@@ -1350,9 +1355,45 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
 
         *branchAddr = newInst;
         cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
+        gDvmJit.hasNewChain = true;
     }
 
     return tgtAddr;
+}
+
+/*
+ * Attempt to enqueue a work order to patch an inline cache for a predicted
+ * chaining cell for virtual/interface calls.
+ */
+bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
+                             PredictedChainingCell *newContent)
+{
+    bool result = true;
+
+    dvmLockMutex(&gDvmJit.compilerICPatchLock);
+
+    if (cellAddr->clazz == NULL &&
+        cellAddr->branch == PREDICTED_CHAIN_BX_PAIR_INIT) {
+        /*
+         * The update order matters - make sure clazz is updated last since it
+         * will bring the uninitialized chaining cell to life.
+         */
+        cellAddr->method = newContent->method;
+        cellAddr->branch = newContent->branch;
+        cellAddr->counter = newContent->counter;
+        cellAddr->clazz = newContent->clazz;
+        cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
+    }
+    else if (gDvmJit.compilerICPatchIndex < COMPILER_IC_PATCH_QUEUE_SIZE)  {
+        int index = gDvmJit.compilerICPatchIndex++;
+        gDvmJit.compilerICPatchQueue[index].cellAddr = cellAddr;
+        gDvmJit.compilerICPatchQueue[index].cellContent = *newContent;
+    } else {
+        result = false;
+    }
+
+    dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
+    return result;
 }
 
 /*
@@ -1412,41 +1453,29 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
         goto done;
     }
 
-    /*
-     * Bump up the counter first just in case other mutator threads are in
-     * nearby territory to also attempt to rechain this cell. This is not
-     * done in a thread-safe way and doesn't need to be since the consequence
-     * of the race condition [rare] is two back-to-back suspend-all attempts,
-     * which will be handled correctly.
-     */
-    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
+    PredictedChainingCell newCell;
 
-    PredictedChainingCell *newCell =
-        (PredictedChainingCell *) malloc(sizeof(PredictedChainingCell));
+    /* Avoid back-to-back orders to the same cell */
+    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
 
     int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
     int branchOffset = tgtAddr - baseAddr;
 
-    newCell->branch = assembleChainingBranch(branchOffset, true);
-    newCell->clazz = clazz;
-    newCell->method = method;
+    newCell.branch = assembleChainingBranch(branchOffset, true);
+    newCell.clazz = clazz;
+    newCell.method = method;
+    newCell.counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
 
     /*
-     * Reset the counter again in case other mutator threads got invoked
-     * between the previous rest and dvmSuspendAllThreads call.
-     */
-    newCell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
-
-    /*
-     * Enter the work order to the queue for the compiler thread to patch the
-     * chaining cell.
+     * Enter the work order to the queue and the chaining cell will be patched
+     * the next time a safe point is entered.
      *
-     * No blocking call is added here because the patched result is not
-     * intended to be immediately consumed by the requesting thread. Its
-     * execution is simply resumed by chasing the class pointer to resolve the
-     * callsite.
+     * If the enqueuing fails reset the rechain count to a normal value so that
+     * it won't get indefinitely delayed.
      */
-    dvmCompilerWorkEnqueue((const u2 *) cell, kWorkOrderICPatch, newCell);
+    if (!inlineCachePatchEnqueue(cell, &newCell)) {
+        cell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
+    }
 #endif
 done:
     return method;
@@ -1456,31 +1485,61 @@ done:
  * Patch the inline cache content based on the content passed from the work
  * order.
  */
-bool dvmJitPatchInlineCache(void *cellPtr, void *contentPtr)
+void dvmCompilerPatchInlineCache(void)
 {
-    PredictedChainingCell *cellDest = (PredictedChainingCell *) cellPtr;
-    PredictedChainingCell *newContent = (PredictedChainingCell *) contentPtr;
+    int i;
+    PredictedChainingCell *minAddr, *maxAddr;
 
-    /* Stop the world */
-    dvmSuspendAllThreads(SUSPEND_FOR_IC_PATCH);
+    /* Nothing to be done */
+    if (gDvmJit.compilerICPatchIndex == 0) return;
 
+    /*
+     * Since all threads are already stopped we don't really need to acquire
+     * the lock. But race condition can be easily introduced in the future w/o
+     * paying attention so we still acquire the lock here.
+     */
+    dvmLockMutex(&gDvmJit.compilerICPatchLock);
 
-    COMPILER_TRACE_CHAINING(
-        LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) patched",
-             cellDest, cellDest->clazz ? cellDest->clazz->descriptor : "NULL",
-             newContent->clazz->descriptor,
-             newContent->method->name));
+    //LOGD("Number of IC patch work orders: %d", gDvmJit.compilerICPatchIndex);
 
-    /* Install the new cell content */
-    *cellDest = *newContent;
+    /* Initialize the min/max address range */
+    minAddr = (PredictedChainingCell *)
+        ((char *) gDvmJit.codeCache + CODE_CACHE_SIZE);
+    maxAddr = (PredictedChainingCell *) gDvmJit.codeCache;
 
-    /* Then synchronize the I/D$ */
-    cacheflush((long) cellDest, (long) (cellDest+1), 0);
+    for (i = 0; i < gDvmJit.compilerICPatchIndex; i++) {
+        PredictedChainingCell *cellAddr =
+            gDvmJit.compilerICPatchQueue[i].cellAddr;
+        PredictedChainingCell *cellContent =
+            &gDvmJit.compilerICPatchQueue[i].cellContent;
 
-    /* All done - resume all other threads */
-    dvmResumeAllThreads(SUSPEND_FOR_IC_PATCH);
+        if (cellAddr->clazz == NULL) {
+            COMPILER_TRACE_CHAINING(
+                LOGD("Jit Runtime: predicted chain %p to %s (%s) initialized",
+                     cellAddr,
+                     cellContent->clazz->descriptor,
+                     cellContent->method->name));
+        } else {
+            COMPILER_TRACE_CHAINING(
+                LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
+                     "patched",
+                     cellAddr,
+                     cellAddr->clazz->descriptor,
+                     cellContent->clazz->descriptor,
+                     cellContent->method->name));
+        }
 
-    return true;
+        /* Patch the chaining cell */
+        *cellAddr = *cellContent;
+        minAddr = (cellAddr < minAddr) ? cellAddr : minAddr;
+        maxAddr = (cellAddr > maxAddr) ? cellAddr : maxAddr;
+    }
+
+    /* Then synchronize the I/D cache */
+    cacheflush((long) minAddr, (long) (maxAddr+1), 0);
+
+    gDvmJit.compilerICPatchIndex = 0;
+    dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
 }
 
 /*
@@ -1617,6 +1676,7 @@ void dvmJitUnchainAll()
         dvmUnlockMutex(&gDvmJit.tableLock);
         gDvmJit.translationChains = 0;
     }
+    gDvmJit.hasNewChain = false;
 }
 
 typedef struct jitProfileAddrToLine {

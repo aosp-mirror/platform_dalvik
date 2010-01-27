@@ -644,7 +644,7 @@ alloc_succeeded:
             dvmAddTrackedAlloc(ptr, NULL);
         }
     } else {
-        /* 
+        /*
          * The allocation failed; throw an OutOfMemoryError.
          */
         throwOOME();
@@ -1031,6 +1031,20 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
 
     dvmUnlockMutex(&gDvm.heapWorkerListLock);
     dvmUnlockMutex(&gDvm.heapWorkerLock);
+
+#if defined(WITH_JIT)
+    extern void dvmCompilerPerformSafePointChecks(void);
+
+    /*
+     * Patching a chaining cell is very cheap as it only updates 4 words. It's
+     * the overhead of stopping all threads and synchronizing the I/D cache
+     * that makes it expensive.
+     *
+     * Therefore we batch those work orders in a queue and go through them
+     * when threads are suspended for GC.
+     */
+    dvmCompilerPerformSafePointChecks();
+#endif
 
     dvmResumeAllThreads(SUSPEND_FOR_GC);
     if (oldThreadPriority != kInvalidPriority) {

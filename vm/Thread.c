@@ -2581,11 +2581,14 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
 
 #if defined (WITH_JIT)
         /*
-         * If we're still waiting after the first timeout,
-         * unchain all translations.
+         * If we're still waiting after the first timeout, unchain all
+         * translations iff:
+         *   1) There are new chains formed since the last unchain
+         *   2) The top VM frame of the running thread is running JIT'ed code
          */
-        if (gDvmJit.pJitEntryTable && retryCount > 0) {
-            LOGD("JIT unchain all attempt #%d",retryCount);
+        if (gDvmJit.pJitEntryTable && retryCount > 0 &&
+            gDvmJit.hasNewChain && thread->inJitCodeCache) {
+            LOGD("JIT unchain all for tid %d", thread->threadId);
             dvmJitUnchainAll();
         }
 #endif

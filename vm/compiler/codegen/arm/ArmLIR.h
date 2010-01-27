@@ -730,16 +730,9 @@ typedef struct ArmLIR {
     u8 defMask;         // Resource mask for def
 } ArmLIR;
 
-/* Chain cell for predicted method invocation */
-typedef struct PredictedChainingCell {
-    u4 branch;                  /* Branch to chained destination */
-    const ClassObject *clazz;   /* key #1 for prediction */
-    const Method *method;       /* key #2 to lookup native PC from dalvik PC */
-    u4 counter;                 /* counter to patch the chaining cell */
-} PredictedChainingCell;
-
 /* Init values when a predicted chain is initially assembled */
-#define PREDICTED_CHAIN_BX_PAIR_INIT     0
+/* E7FE is branch to self */
+#define PREDICTED_CHAIN_BX_PAIR_INIT     0xe7fe
 #define PREDICTED_CHAIN_CLAZZ_INIT       0
 #define PREDICTED_CHAIN_METHOD_INIT      0
 #define PREDICTED_CHAIN_COUNTER_INIT     0
@@ -748,7 +741,7 @@ typedef struct PredictedChainingCell {
 #define PREDICTED_CHAIN_COUNTER_DELAY    512
 
 /* Rechain after this many mis-predictions have happened */
-#define PREDICTED_CHAIN_COUNTER_RECHAIN  8192
+#define PREDICTED_CHAIN_COUNTER_RECHAIN  1024
 
 /* Used if the resolved callee is a native method */
 #define PREDICTED_CHAIN_COUNTER_AVOID    0x7fffffff

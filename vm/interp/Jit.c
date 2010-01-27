@@ -765,8 +765,11 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                  * Reset "trace in progress" flag whether or not we
                  * successfully entered a work order.
                  */
-                setTraceConstruction(
-                     lookupAndAdd(interpState->currTraceHead, false), false);
+                JitEntry *jitEntry =
+                    lookupAndAdd(interpState->currTraceHead, false);
+                if (jitEntry) {
+                    setTraceConstruction(jitEntry, false);
+                }
                 switchInterp = !debugOrProfile;
             }
             break;
@@ -835,16 +838,18 @@ JitEntry *dvmFindJitEntry(const u2* pc)
 void* dvmJitGetCodeAddr(const u2* dPC)
 {
     int idx = dvmJitHash(dPC);
-    const u2* npc = (gDvmJit.pProfTable == NULL) ? NULL :
-                     gDvmJit.pJitEntryTable[idx].dPC;
-
+    const u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
     if (npc != NULL) {
+        bool hideTranslation = (gDvm.sumThreadSuspendCount != 0) ||
+                               (gDvmJit.codeCacheFull == true) ||
+                               (gDvmJit.pProfTable == NULL);
+
         if (npc == dPC) {
 #if defined(EXIT_STATS)
             gDvmJit.addrLookupsFound++;
 #endif
-            return gDvm.sumThreadSuspendCount ? NULL :
-                gDvmJit.pJitEntryTable[idx].codeAddress;
+            return hideTranslation ?
+                NULL : gDvmJit.pJitEntryTable[idx].codeAddress;
         } else {
             int chainEndMarker = gDvmJit.jitTableSize;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
@@ -853,8 +858,8 @@ void* dvmJitGetCodeAddr(const u2* dPC)
 #if defined(EXIT_STATS)
                     gDvmJit.addrLookupsFound++;
 #endif
-                    return gDvm.sumThreadSuspendCount ? NULL :
-                        gDvmJit.pJitEntryTable[idx].codeAddress;
+                    return hideTranslation ?
+                        NULL : gDvmJit.pJitEntryTable[idx].codeAddress;
                 }
             }
         }
