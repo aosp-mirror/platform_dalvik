@@ -32,8 +32,6 @@ public class LocaleCache {
 
     private NumberFormat numberFormat = null;
 
-    private DecimalFormatSymbols decimalFormatSymbols = null;
-
     private final Locale locale;
 
     private LocaleCache(Locale locale) {
@@ -66,18 +64,4 @@ public class LocaleCache {
         // NumberFormat is mutable, so return a new clone each time.
         return (NumberFormat) lc.numberFormat.clone();
     }
-
-    /**
-     * Returns a DecimalFormatSymbols object for the specified Locale.
-     */
-    public static DecimalFormatSymbols getDecimalFormatSymbols(Locale locale) {
-        LocaleCache lc = getLocaleCache(locale);
-        if (lc.decimalFormatSymbols == null) {
-            lc.decimalFormatSymbols = new DecimalFormatSymbols(locale);
-        }
-
-        // DecimalFormatSymbols is mutable, so return a new clone each time.
-        return (DecimalFormatSymbols) lc.decimalFormatSymbols.clone();
-    }
-
 }

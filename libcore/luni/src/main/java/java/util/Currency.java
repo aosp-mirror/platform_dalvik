@@ -37,6 +37,7 @@ public final class Currency implements Serializable {
     private static final long serialVersionUID = -158308464356906721L;
 
     private static final Hashtable<String, Currency> codesToCurrencies = new Hashtable<String, Currency>();
+    private static final Hashtable<Locale, Currency> localesToCurrencies = new Hashtable<Locale, Currency>();
 
     private final String currencyCode;
 
@@ -99,9 +100,14 @@ public final class Currency implements Serializable {
      */
     public static Currency getInstance(Locale locale) {
         // BEGIN android-changed
+        Currency currency = localesToCurrencies.get(locale);
+        if (currency != null) {
+            return currency;
+        }
         String country = locale.getCountry();
         String variant = locale.getVariant();
-        if (variant.length() > 0 && "EURO, HK, PREEURO".indexOf(variant) != -1) {
+        if (variant.length() > 0 && (variant.equals("EURO") || variant.equals("HK") ||
+                variant.equals("PREEURO"))) {
             country = country + "_" + variant;
         }
 
@@ -111,7 +117,9 @@ public final class Currency implements Serializable {
         } else if (currencyCode.equals("None")) {
             return null;
         }
-        return getInstance(currencyCode);
+        Currency result = getInstance(currencyCode);
+        localesToCurrencies.put(locale, result);
+        return result;
         // END android-changed
     }
 
