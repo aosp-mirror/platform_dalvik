@@ -617,6 +617,6 @@ static JNINativeMethod gMethods[] = {
 };
 int register_com_ibm_icu4jni_text_NativeDecimalFormat(JNIEnv* env) {
     return jniRegisterNativeMethods(env,
-            "com/ibm/icu4jni/text/NativeDecimalFormat", gMethods,
+            "com/ibm/icu4jni/text/DecimalFormat", gMethods,
             NELEM(gMethods));
 }

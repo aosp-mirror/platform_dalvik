@@ -16,8 +16,6 @@
 
 package com.ibm.icu4jni.text;
 
-import com.ibm.icu4jni.text.NativeDecimalFormat.UNumberFormatAttribute;
-import com.ibm.icu4jni.text.NativeDecimalFormat.UNumberFormatTextAttribute;
 import com.ibm.icu4jni.util.LocaleData;
 
 import java.math.BigDecimal;
@@ -33,7 +31,9 @@ import java.util.Currency;
 import java.util.Locale;
 
 public class DecimalFormat {
-    // Constants corresponding to the native type UNumberFormatSymbol, for use with getSymbol/setSymbol.
+    /**
+     * Constants corresponding to the native type UNumberFormatSymbol, for getSymbol/setSymbol.
+     */
     private static final int UNUM_DECIMAL_SEPARATOR_SYMBOL = 0;
     private static final int UNUM_GROUPING_SEPARATOR_SYMBOL = 1;
     private static final int UNUM_PATTERN_SEPARATOR_SYMBOL = 2;
@@ -53,9 +53,56 @@ public class DecimalFormat {
     private static final int UNUM_SIGNIFICANT_DIGIT_SYMBOL = 16;
     private static final int UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL = 17;
     private static final int UNUM_FORMAT_SYMBOL_COUNT = 18;
+    
+    /**
+     * Constants corresponding to the native type UNumberFormatAttribute, for
+     * getAttribute/setAttribute.
+     */
+    private static final int UNUM_PARSE_INT_ONLY = 0;
+    private static final int UNUM_GROUPING_USED = 1;
+    private static final int UNUM_DECIMAL_ALWAYS_SHOWN = 2;
+    private static final int UNUM_MAX_INTEGER_DIGITS = 3;
+    private static final int UNUM_MIN_INTEGER_DIGITS = 4;
+    private static final int UNUM_INTEGER_DIGITS = 5;
+    private static final int UNUM_MAX_FRACTION_DIGITS = 6;
+    private static final int UNUM_MIN_FRACTION_DIGITS = 7;
+    private static final int UNUM_FRACTION_DIGITS = 8;
+    private static final int UNUM_MULTIPLIER = 9;
+    private static final int UNUM_GROUPING_SIZE = 10;
+    private static final int UNUM_ROUNDING_MODE = 11;
+    private static final int UNUM_ROUNDING_INCREMENT = 12;
+    private static final int UNUM_FORMAT_WIDTH = 13;
+    private static final int UNUM_PADDING_POSITION = 14;
+    private static final int UNUM_SECONDARY_GROUPING_SIZE = 15;
+    private static final int UNUM_SIGNIFICANT_DIGITS_USED = 16;
+    private static final int UNUM_MIN_SIGNIFICANT_DIGITS = 17;
+    private static final int UNUM_MAX_SIGNIFICANT_DIGITS = 18;
+    private static final int UNUM_LENIENT_PARSE = 19;
+    
+    /**
+     * Constants corresponding to the native type UNumberFormatTextAttribute, for
+     * getTextAttribute/setTextAttribute.
+     */
+    private static final int UNUM_POSITIVE_PREFIX = 0;
+    private static final int UNUM_POSITIVE_SUFFIX = 1;
+    private static final int UNUM_NEGATIVE_PREFIX = 2;
+    private static final int UNUM_NEGATIVE_SUFFIX = 3;
+    private static final int UNUM_PADDING_CHARACTER = 4;
+    private static final int UNUM_CURRENCY_CODE = 5;
+    private static final int UNUM_DEFAULT_RULESET = 6;
+    private static final int UNUM_PUBLIC_RULESETS = 7;
 
-    // The address of the ICU DecimalFormat* on the native heap.
+    /**
+     * The address of the ICU DecimalFormat* on the native heap.
+     */
     private final int addr;
+
+    /**
+     * The last pattern we gave to ICU, so we can make repeated applications cheap.
+     * This helps in cases like String.format("%.2f,%.2f\n", x, y) where the DecimalFormat is
+     * reused.
+     */ 
+    private String lastPattern;
 
     // TODO: store all these in java.text.DecimalFormat instead!
     private boolean negPrefNull;
@@ -68,16 +115,18 @@ public class DecimalFormat {
      * formatted a BigDecimal (with a multiplier that is not 1), or the user has
      * explicitly called {@link #setMultiplier(int)} with any multiplier.
      */
-    private transient BigDecimal multiplierBigDecimal = null;
+    private BigDecimal multiplierBigDecimal = null;
 
     public DecimalFormat(String pattern, Locale locale, DecimalFormatSymbols symbols) {
-        this.addr = NativeDecimalFormat.openDecimalFormat(locale.toString(), pattern);
+        this.addr = openDecimalFormat(locale.toString(), pattern);
+        this.lastPattern = pattern;
         setDecimalFormatSymbols(symbols);
     }
 
     // Used to implement clone.
     private DecimalFormat(DecimalFormat other) {
-        this.addr = NativeDecimalFormat.cloneDecimalFormatImpl(other.addr);
+        this.addr = cloneDecimalFormatImpl(other.addr);
+        this.lastPattern = other.lastPattern;
         this.negPrefNull = other.negPrefNull;
         this.negSuffNull = other.negSuffNull;
         this.posPrefNull = other.posPrefNull;
@@ -97,7 +146,7 @@ public class DecimalFormat {
 
     @Override
     protected void finalize() {
-        NativeDecimalFormat.closeDecimalFormatImpl(this.addr);
+        closeDecimalFormatImpl(this.addr);
     }
 
     /**
@@ -142,24 +191,24 @@ public class DecimalFormat {
      * Copies the java.text.DecimalFormatSymbols' settings into our native peer.
      */
     public void setDecimalFormatSymbols(final java.text.DecimalFormatSymbols dfs) {
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_CURRENCY_SYMBOL, dfs.getCurrencySymbol());
+        setSymbol(this.addr, UNUM_CURRENCY_SYMBOL, dfs.getCurrencySymbol());
 
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_DECIMAL_SEPARATOR_SYMBOL, dfs.getDecimalSeparator());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_DIGIT_SYMBOL, dfs.getDigit());
+        setSymbol(this.addr, UNUM_DECIMAL_SEPARATOR_SYMBOL, dfs.getDecimalSeparator());
+        setSymbol(this.addr, UNUM_DIGIT_SYMBOL, dfs.getDigit());
 
         char groupingSeparator = dfs.getGroupingSeparator();
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_GROUPING_SEPARATOR_SYMBOL, groupingSeparator);
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL, groupingSeparator);
+        setSymbol(this.addr, UNUM_GROUPING_SEPARATOR_SYMBOL, groupingSeparator);
+        setSymbol(this.addr, UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL, groupingSeparator);
 
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_INFINITY_SYMBOL, dfs.getInfinity());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL, dfs.getInternationalCurrencySymbol());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_MINUS_SIGN_SYMBOL, dfs.getMinusSign());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_MONETARY_SEPARATOR_SYMBOL, dfs.getMonetaryDecimalSeparator());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_NAN_SYMBOL, dfs.getNaN());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_PATTERN_SEPARATOR_SYMBOL, dfs.getPatternSeparator());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_PERCENT_SYMBOL, dfs.getPercent());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_PERMILL_SYMBOL, dfs.getPerMill());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_ZERO_DIGIT_SYMBOL, dfs.getZeroDigit());
+        setSymbol(this.addr, UNUM_INFINITY_SYMBOL, dfs.getInfinity());
+        setSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL, dfs.getInternationalCurrencySymbol());
+        setSymbol(this.addr, UNUM_MINUS_SIGN_SYMBOL, dfs.getMinusSign());
+        setSymbol(this.addr, UNUM_MONETARY_SEPARATOR_SYMBOL, dfs.getMonetaryDecimalSeparator());
+        setSymbol(this.addr, UNUM_NAN_SYMBOL, dfs.getNaN());
+        setSymbol(this.addr, UNUM_PATTERN_SEPARATOR_SYMBOL, dfs.getPatternSeparator());
+        setSymbol(this.addr, UNUM_PERCENT_SYMBOL, dfs.getPercent());
+        setSymbol(this.addr, UNUM_PERMILL_SYMBOL, dfs.getPerMill());
+        setSymbol(this.addr, UNUM_ZERO_DIGIT_SYMBOL, dfs.getZeroDigit());
     }
 
     private BigDecimal applyMultiplier(BigDecimal valBigDecimal) {
@@ -181,8 +230,7 @@ public class DecimalFormat {
         Number number = (Number) value;
         if (number instanceof BigInteger) {
             BigInteger valBigInteger = (BigInteger) number;
-            String result = NativeDecimalFormat.format(this.addr, valBigInteger.toString(10),
-                    field, fieldType, null, 0);
+            String result = format(this.addr, valBigInteger.toString(10), field, fieldType, null, 0);
             return buffer.append(result);
         } else if (number instanceof BigDecimal) {
             BigDecimal valBigDecimal = (BigDecimal) number;
@@ -193,16 +241,15 @@ public class DecimalFormat {
             val.append(valBigDecimal.unscaledValue().toString(10));
             int scale = valBigDecimal.scale();
             scale = makeScalePositive(scale, val);
-            String result = NativeDecimalFormat.format(this.addr, val.toString(),
-                    field, fieldType, null, scale);
+            String result = format(this.addr, val.toString(), field, fieldType, null, scale);
             return buffer.append(result);
         } else if (number instanceof Double || number instanceof Float) {
             double dv = number.doubleValue();
-            String result = NativeDecimalFormat.format(this.addr, dv, field, fieldType, null);
+            String result = format(this.addr, dv, field, fieldType, null);
             return buffer.append(result);
         } else {
             long lv = number.longValue();
-            String result = NativeDecimalFormat.format(this.addr, lv, field, fieldType, null);
+            String result = format(this.addr, lv, field, fieldType, null);
             return buffer.append(result);
         }
     }
@@ -212,7 +259,7 @@ public class DecimalFormat {
             throw new NullPointerException();
         }
         String fieldType = getFieldType(field.getFieldAttribute());
-        buffer.append(NativeDecimalFormat.format(this.addr, value, field, fieldType, null));
+        buffer.append(format(this.addr, value, field, fieldType, null));
         return buffer;
     }
 
@@ -221,16 +268,21 @@ public class DecimalFormat {
             throw new NullPointerException();
         }
         String fieldType = getFieldType(field.getFieldAttribute());
-        buffer.append(NativeDecimalFormat.format(this.addr, value, field, fieldType, null));
+        buffer.append(format(this.addr, value, field, fieldType, null));
         return buffer;
     }
 
     public void applyLocalizedPattern(String pattern) {
-        NativeDecimalFormat.applyPattern(this.addr, true, pattern);
+        applyPattern(this.addr, true, pattern);
+        lastPattern = null;
     }
 
     public void applyPattern(String pattern) {
-        NativeDecimalFormat.applyPattern(this.addr, false, pattern);
+        if (lastPattern != null && pattern.equals(lastPattern)) {
+            return;
+        }
+        applyPattern(this.addr, false, pattern);
+        lastPattern = pattern;
     }
 
     public AttributedCharacterIterator formatToCharacterIterator(Object object) {
@@ -243,8 +295,7 @@ public class DecimalFormat {
 
         if(number instanceof BigInteger) {
             BigInteger valBigInteger = (BigInteger) number;
-            text = NativeDecimalFormat.format(this.addr,
-                    valBigInteger.toString(10), null, null, attributes, 0);
+            text = format(this.addr, valBigInteger.toString(10), null, null, attributes, 0);
         } else if(number instanceof BigDecimal) {
             BigDecimal valBigDecimal = (BigDecimal) number;
             if (getMultiplier() != 1) {
@@ -254,14 +305,13 @@ public class DecimalFormat {
             val.append(valBigDecimal.unscaledValue().toString(10));
             int scale = valBigDecimal.scale();
             scale = makeScalePositive(scale, val);
-            text = NativeDecimalFormat.format(this.addr, val.toString(), null,
-                    null, attributes, scale);
+            text = format(this.addr, val.toString(), null, null, attributes, scale);
         } else if (number instanceof Double || number instanceof Float) {
             double dv = number.doubleValue();
-            text = NativeDecimalFormat.format(this.addr, dv, null, null, attributes);
+            text = format(this.addr, dv, null, null, attributes);
         } else {
             long lv = number.longValue();
-            text = NativeDecimalFormat.format(this.addr, lv, null, null, attributes);
+            text = format(this.addr, lv, null, null, attributes);
         }
 
         AttributedString as = new AttributedString(text);
@@ -294,41 +344,37 @@ public class DecimalFormat {
     }
 
     public String toLocalizedPattern() {
-        return NativeDecimalFormat.toPatternImpl(this.addr, true);
+        return toPatternImpl(this.addr, true);
     }
 
     public String toPattern() {
-        return NativeDecimalFormat.toPatternImpl(this.addr, false);
+        return toPatternImpl(this.addr, false);
     }
 
     public Number parse(String string, ParsePosition position) {
-        return NativeDecimalFormat.parse(addr, string, position);
+        return parse(addr, string, position);
     }
 
     // start getter and setter
 
     public int getMaximumFractionDigits() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MAX_FRACTION_DIGITS.ordinal());
+        return getAttribute(this.addr, UNUM_MAX_FRACTION_DIGITS);
     }
 
     public int getMaximumIntegerDigits() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MAX_INTEGER_DIGITS.ordinal());
+        return getAttribute(this.addr, UNUM_MAX_INTEGER_DIGITS);
     }
 
     public int getMinimumFractionDigits() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MIN_FRACTION_DIGITS.ordinal());
+        return getAttribute(this.addr, UNUM_MIN_FRACTION_DIGITS);
     }
 
     public int getMinimumIntegerDigits() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MIN_INTEGER_DIGITS.ordinal());
+        return getAttribute(this.addr, UNUM_MIN_INTEGER_DIGITS);
     }
 
     public Currency getCurrency() {
-        String curr = NativeDecimalFormat.getSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL);
+        String curr = getSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL);
         if (curr.equals("") || curr.equals("\u00a4\u00a4")) {
             return null;
         }
@@ -336,107 +382,90 @@ public class DecimalFormat {
     }
 
     public int getGroupingSize() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_GROUPING_SIZE.ordinal());
+        return getAttribute(this.addr, UNUM_GROUPING_SIZE);
     }
 
     public int getMultiplier() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MULTIPLIER.ordinal());
+        return getAttribute(this.addr, UNUM_MULTIPLIER);
     }
 
     public String getNegativePrefix() {
         if (negPrefNull) {
             return null;
         }
-        return NativeDecimalFormat.getTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_NEGATIVE_PREFIX.ordinal());
+        return getTextAttribute(this.addr, UNUM_NEGATIVE_PREFIX);
     }
 
     public String getNegativeSuffix() {
         if (negSuffNull) {
             return null;
         }
-        return NativeDecimalFormat.getTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_NEGATIVE_SUFFIX.ordinal());
+        return getTextAttribute(this.addr, UNUM_NEGATIVE_SUFFIX);
     }
 
     public String getPositivePrefix() {
         if (posPrefNull) {
             return null;
         }
-        return NativeDecimalFormat.getTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_POSITIVE_PREFIX.ordinal());
+        return getTextAttribute(this.addr, UNUM_POSITIVE_PREFIX);
     }
 
     public String getPositiveSuffix() {
         if (posSuffNull) {
             return null;
         }
-        return NativeDecimalFormat.getTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_POSITIVE_SUFFIX.ordinal());
+        return getTextAttribute(this.addr, UNUM_POSITIVE_SUFFIX);
     }
 
     public boolean isDecimalSeparatorAlwaysShown() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_DECIMAL_ALWAYS_SHOWN.ordinal()) != 0;
+        return getAttribute(this.addr, UNUM_DECIMAL_ALWAYS_SHOWN) != 0;
     }
 
     public boolean isParseIntegerOnly() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_PARSE_INT_ONLY.ordinal()) != 0;
+        return getAttribute(this.addr, UNUM_PARSE_INT_ONLY) != 0;
     }
 
     public boolean isGroupingUsed() {
-        return NativeDecimalFormat.getAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_GROUPING_USED.ordinal()) != 0;
+        return getAttribute(this.addr, UNUM_GROUPING_USED) != 0;
     }
 
     public void setDecimalSeparatorAlwaysShown(boolean value) {
         int i = value ? -1 : 0;
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_DECIMAL_ALWAYS_SHOWN.ordinal(), i);
+        setAttribute(this.addr, UNUM_DECIMAL_ALWAYS_SHOWN, i);
     }
 
     public void setCurrency(Currency currency) {
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_CURRENCY_SYMBOL, currency.getSymbol());
-        NativeDecimalFormat.setSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL, currency.getCurrencyCode());
+        setSymbol(this.addr, UNUM_CURRENCY_SYMBOL, currency.getSymbol());
+        setSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL, currency.getCurrencyCode());
     }
 
     public void setGroupingSize(int value) {
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_GROUPING_SIZE.ordinal(), value);
+        setAttribute(this.addr, UNUM_GROUPING_SIZE, value);
     }
 
     public void setGroupingUsed(boolean value) {
         int i = value ? -1 : 0;
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_GROUPING_USED.ordinal(), i);
+        setAttribute(this.addr, UNUM_GROUPING_USED, i);
     }
 
     public void setMaximumFractionDigits(int value) {
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MAX_FRACTION_DIGITS.ordinal(), value);
+        setAttribute(this.addr, UNUM_MAX_FRACTION_DIGITS, value);
     }
 
     public void setMaximumIntegerDigits(int value) {
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MAX_INTEGER_DIGITS.ordinal(), value);
+        setAttribute(this.addr, UNUM_MAX_INTEGER_DIGITS, value);
     }
 
     public void setMinimumFractionDigits(int value) {
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MIN_FRACTION_DIGITS.ordinal(), value);
+        setAttribute(this.addr, UNUM_MIN_FRACTION_DIGITS, value);
     }
 
     public void setMinimumIntegerDigits(int value) {
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MIN_INTEGER_DIGITS.ordinal(), value);
+        setAttribute(this.addr, UNUM_MIN_INTEGER_DIGITS, value);
     }
 
     public void setMultiplier(int value) {
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_MULTIPLIER.ordinal(), value);
+        setAttribute(this.addr, UNUM_MULTIPLIER, value);
         // Update the cached BigDecimal for multiplier.
         multiplierBigDecimal = BigDecimal.valueOf(value);
     }
@@ -444,43 +473,34 @@ public class DecimalFormat {
     public void setNegativePrefix(String value) {
         negPrefNull = value == null;
         if (!negPrefNull) {
-            NativeDecimalFormat.setTextAttribute(this.addr,
-                    UNumberFormatTextAttribute.UNUM_NEGATIVE_PREFIX.ordinal(),
-                    value);
+            setTextAttribute(this.addr, UNUM_NEGATIVE_PREFIX, value);
         }
     }
 
     public void setNegativeSuffix(String value) {
         negSuffNull = value == null;
         if (!negSuffNull) {
-            NativeDecimalFormat.setTextAttribute(this.addr,
-                    UNumberFormatTextAttribute.UNUM_NEGATIVE_SUFFIX.ordinal(),
-                    value);
+            setTextAttribute(this.addr, UNUM_NEGATIVE_SUFFIX, value);
         }
     }
 
     public void setPositivePrefix(String value) {
         posPrefNull = value == null;
         if (!posPrefNull) {
-            NativeDecimalFormat.setTextAttribute(this.addr,
-                    UNumberFormatTextAttribute.UNUM_POSITIVE_PREFIX.ordinal(),
-                    value);
+            setTextAttribute(this.addr, UNUM_POSITIVE_PREFIX, value);
         }
     }
 
     public void setPositiveSuffix(String value) {
         posSuffNull = value == null;
         if (!posSuffNull) {
-            NativeDecimalFormat.setTextAttribute(this.addr,
-                    UNumberFormatTextAttribute.UNUM_POSITIVE_SUFFIX.ordinal(),
-                    value);
+            setTextAttribute(this.addr, UNUM_POSITIVE_SUFFIX, value);
         }
     }
 
     public void setParseIntegerOnly(boolean value) {
         int i = value ? -1 : 0;
-        NativeDecimalFormat.setAttribute(this.addr,
-                UNumberFormatAttribute.UNUM_PARSE_INT_ONLY.ordinal(), i);
+        setAttribute(this.addr, UNUM_PARSE_INT_ONLY, i);
     }
 
     static protected String getFieldType(Format.Field field) {
@@ -562,4 +582,43 @@ public class DecimalFormat {
         }
         return null;
     }
+
+    private static int openDecimalFormat(String locale, String pattern) {
+        try {
+            // FIXME: if we're about to override everything, should we just ask for the cheapest locale (presumably the root locale)?
+            return openDecimalFormatImpl(locale, pattern);
+        } catch (NullPointerException npe) {
+            throw npe;
+        } catch (RuntimeException re) {
+            throw new IllegalArgumentException("syntax error: " + re.getMessage() + ": " + pattern);
+        }
+    }
+
+    private static void applyPattern(int addr, boolean localized, String pattern) {
+        try {
+            applyPatternImpl(addr, localized, pattern);
+        } catch (NullPointerException npe) {
+            throw npe;
+        } catch (RuntimeException re) {
+            throw new IllegalArgumentException("syntax error: " + re.getMessage() + ": " + pattern);
+        }
+    }
+
+    private static native void applyPatternImpl(int addr, boolean localized, String pattern);
+    private static native int cloneDecimalFormatImpl(int addr);
+    private static native void closeDecimalFormatImpl(int addr);
+    private static native String format(int addr, long value, FieldPosition position, String fieldType, StringBuffer attributes);
+    private static native String format(int addr, double value, FieldPosition position, String fieldType, StringBuffer attributes);
+    private static native String format(int addr, String value, FieldPosition position, String fieldType, StringBuffer attributes, int scale);
+    private static native int getAttribute(int addr, int symbol);
+    // FIXME: do we need getSymbol any more? the Java-side object should be the canonical source.
+    private static native String getSymbol(int addr, int symbol);
+    private static native String getTextAttribute(int addr, int symbol);
+    private static native int openDecimalFormatImpl(String locale, String pattern);
+    private static native Number parse(int addr, String string, ParsePosition position);
+    private static native void setSymbol(int addr, int symbol, String str);
+    private static native void setSymbol(int addr, int symbol, char ch);
+    private static native void setAttribute(int addr, int symbol, int i);
+    private static native void setTextAttribute(int addr, int symbol, String str);
+    private static native String toPatternImpl(int addr, boolean localized);
 }
