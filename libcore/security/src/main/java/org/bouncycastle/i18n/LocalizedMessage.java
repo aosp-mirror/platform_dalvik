@@ -63,7 +63,7 @@ public class LocalizedMessage
     
     /**
      * Reads the entry <code>id + "." + key</code> from the resource file and returns a 
-     * formated message for the given Locale and TimeZone.
+     * formatted message for the given Locale and TimeZone.
      * @param key second part of the entry id
      * @param loc the used {@link Locale}
      * @param timezone the used {@link TimeZone}

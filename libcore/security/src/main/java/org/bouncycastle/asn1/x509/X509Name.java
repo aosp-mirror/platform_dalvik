@@ -642,7 +642,7 @@ public class X509Name
 
             if (index == -1)
             {
-                throw new IllegalArgumentException("badly formated directory string");
+                throw new IllegalArgumentException("badly formatted directory string");
             }
 
             String              name = token.substring(0, index);
