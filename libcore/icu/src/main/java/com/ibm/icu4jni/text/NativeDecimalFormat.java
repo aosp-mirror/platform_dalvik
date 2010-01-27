@@ -30,7 +30,7 @@ import java.text.ParsePosition;
 import java.util.Currency;
 import java.util.Locale;
 
-public class DecimalFormat {
+public class NativeDecimalFormat {
     /**
      * Constants corresponding to the native type UNumberFormatSymbol, for getSymbol/setSymbol.
      */
@@ -53,7 +53,7 @@ public class DecimalFormat {
     private static final int UNUM_SIGNIFICANT_DIGIT_SYMBOL = 16;
     private static final int UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL = 17;
     private static final int UNUM_FORMAT_SYMBOL_COUNT = 18;
-    
+
     /**
      * Constants corresponding to the native type UNumberFormatAttribute, for
      * getAttribute/setAttribute.
@@ -78,7 +78,7 @@ public class DecimalFormat {
     private static final int UNUM_MIN_SIGNIFICANT_DIGITS = 17;
     private static final int UNUM_MAX_SIGNIFICANT_DIGITS = 18;
     private static final int UNUM_LENIENT_PARSE = 19;
-    
+
     /**
      * Constants corresponding to the native type UNumberFormatTextAttribute, for
      * getTextAttribute/setTextAttribute.
@@ -101,10 +101,10 @@ public class DecimalFormat {
      * The last pattern we gave to ICU, so we can make repeated applications cheap.
      * This helps in cases like String.format("%.2f,%.2f\n", x, y) where the DecimalFormat is
      * reused.
-     */ 
+     */
     private String lastPattern;
 
-    // TODO: store all these in java.text.DecimalFormat instead!
+    // TODO: store all these in DecimalFormat instead!
     private boolean negPrefNull;
     private boolean negSuffNull;
     private boolean posPrefNull;
@@ -117,14 +117,14 @@ public class DecimalFormat {
      */
     private BigDecimal multiplierBigDecimal = null;
 
-    public DecimalFormat(String pattern, Locale locale, DecimalFormatSymbols symbols) {
+    public NativeDecimalFormat(String pattern, Locale locale, DecimalFormatSymbols symbols) {
         this.addr = openDecimalFormat(locale.toString(), pattern);
         this.lastPattern = pattern;
         setDecimalFormatSymbols(symbols);
     }
 
     // Used to implement clone.
-    private DecimalFormat(DecimalFormat other) {
+    private NativeDecimalFormat(NativeDecimalFormat other) {
         this.addr = cloneDecimalFormatImpl(other.addr);
         this.lastPattern = other.lastPattern;
         this.negPrefNull = other.negPrefNull;
@@ -133,7 +133,7 @@ public class DecimalFormat {
         this.posSuffNull = other.posSuffNull;
     }
 
-    // TODO: remove this and just have java.text.DecimalFormat.hashCode do the right thing itself.
+    // TODO: remove this and just have DecimalFormat.hashCode do the right thing itself.
     @Override
     public int hashCode() {
         return this.getPositivePrefix().hashCode();
@@ -141,7 +141,7 @@ public class DecimalFormat {
 
     @Override
     public Object clone() {
-        return new DecimalFormat(this);
+        return new NativeDecimalFormat(this);
     }
 
     @Override
@@ -152,22 +152,22 @@ public class DecimalFormat {
     /**
      * Note: this doesn't check that the underlying native DecimalFormat objects' configured
      * native DecimalFormatSymbols objects are equal. It is assumed that the
-     * caller (java.text.DecimalFormat) will check the java.text.DecimalFormatSymbols objects
+     * caller (DecimalFormat) will check the DecimalFormatSymbols objects
      * instead, for performance.
      * 
      * This is also unreasonably expensive, calling down to JNI multiple times.
      * 
-     * TODO: remove this and just have java.text.DecimalFormat.equals do the right thing itself.
+     * TODO: remove this and just have DecimalFormat.equals do the right thing itself.
      */
     @Override
     public boolean equals(Object object) {
         if (object == this) {
             return true;
         }
-        if (!(object instanceof DecimalFormat)) {
+        if (!(object instanceof NativeDecimalFormat)) {
             return false;
         }
-        DecimalFormat obj = (DecimalFormat) object;
+        NativeDecimalFormat obj = (NativeDecimalFormat) object;
         if (obj.addr == this.addr) {
             return true;
         }
@@ -188,9 +188,9 @@ public class DecimalFormat {
     }
 
     /**
-     * Copies the java.text.DecimalFormatSymbols' settings into our native peer.
+     * Copies the DecimalFormatSymbols settings into our native peer.
      */
-    public void setDecimalFormatSymbols(final java.text.DecimalFormatSymbols dfs) {
+    public void setDecimalFormatSymbols(final DecimalFormatSymbols dfs) {
         setSymbol(this.addr, UNUM_CURRENCY_SYMBOL, dfs.getCurrencySymbol());
 
         setSymbol(this.addr, UNUM_DECIMAL_SEPARATOR_SYMBOL, dfs.getDecimalSeparator());

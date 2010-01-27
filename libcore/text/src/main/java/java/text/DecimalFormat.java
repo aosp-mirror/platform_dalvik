@@ -32,6 +32,7 @@ import java.security.PrivilegedAction;
 import java.util.Currency;
 import java.util.Locale;
 
+import com.ibm.icu4jni.text.NativeDecimalFormat;
 import com.ibm.icu4jni.util.LocaleData;
 
 /**
@@ -550,7 +551,7 @@ public class DecimalFormat extends NumberFormat {
 
     private transient DecimalFormatSymbols symbols;
 
-    private transient com.ibm.icu4jni.text.DecimalFormat dform;
+    private transient NativeDecimalFormat dform;
 
     /**
      * Constructs a new {@code DecimalFormat} for formatting and parsing numbers
@@ -608,7 +609,7 @@ public class DecimalFormat extends NumberFormat {
     // BEGIN android-changed: reduce duplication.
     private void initNative(String pattern, Locale locale) {
         try {
-            this.dform = new com.ibm.icu4jni.text.DecimalFormat(pattern, locale, symbols);
+            this.dform = new NativeDecimalFormat(pattern, locale, symbols);
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(pattern);
         }
@@ -655,7 +656,7 @@ public class DecimalFormat extends NumberFormat {
     @Override
     public Object clone() {
         DecimalFormat clone = (DecimalFormat) super.clone();
-        clone.dform = (com.ibm.icu4jni.text.DecimalFormat) dform.clone();
+        clone.dform = (NativeDecimalFormat) dform.clone();
         clone.symbols = (DecimalFormatSymbols) symbols.clone();
         return clone;
     }
@@ -917,10 +918,9 @@ public class DecimalFormat extends NumberFormat {
      */
     @Override
     public void setParseIntegerOnly(boolean value) {
-        // In this implementation, com.ibm.icu.text.DecimalFormat is wrapped to
+        // In this implementation, NativeDecimalFormat is wrapped to
         // fulfill most of the format and parse feature. And this method is
-        // delegated to the wrapped instance of com.ibm.icu.text.DecimalFormat.
-
+        // delegated to the wrapped instance of NativeDecimalFormat.
         dform.setParseIntegerOnly(value);
     }
 
@@ -1348,7 +1348,6 @@ public class DecimalFormat extends NumberFormat {
 
         Locale locale = (Locale) Format.getInternalField("locale", symbols);
         // BEGIN android-changed
-        //this.dform = new com.ibm.icu4jni.text.DecimalFormat("", locale, symbols);
         initNative("", locale);
         // END android-changed
         dform.setPositivePrefix(positivePrefix);
