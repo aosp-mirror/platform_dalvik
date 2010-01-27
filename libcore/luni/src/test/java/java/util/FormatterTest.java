@@ -28,9 +28,18 @@ public class FormatterTest extends junit.framework.TestCase {
         assertEquals("JAKOB ARJOUN\u0130", String.format(new Locale("tr", "TR"), "%S", "jakob arjouni"));
     }
 
+    // Creating a NumberFormat is expensive, so we like to reuse them, but we need to be careful
+    // because they're mutable.
+    public void test_NumberFormat_reuse() throws Exception {
+        assertEquals("7.000000 7", String.format("%.6f %d", 7, 7));
+    }
+
     public void test_formatNull() throws Exception {
+        // We fast-path %s and %d (with no configuration) but need to make sure we handle the
+        // special case of the null argument...
         assertEquals("null", String.format(Locale.US, "%s", null));
         assertEquals("null", String.format(Locale.US, "%d", null));
+        // ...without screwing up conversions that don't take an argument.
         assertEquals("%", String.format(Locale.US, "%%"));
     }
 }
