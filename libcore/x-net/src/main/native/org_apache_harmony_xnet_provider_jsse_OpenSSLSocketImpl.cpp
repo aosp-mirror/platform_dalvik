@@ -64,24 +64,6 @@ static BIO *stringToMemBuf(JNIEnv* env, jstring string) {
 }
 
 /**
- * Throws a NullPointerException without any message.
- */
-static void throwNullPointerException(JNIEnv* env) {
-    if (jniThrowException(env, "java/lang/NullPointerException", NULL)) {
-        LOGE("Unable to throw");
-    }
-}
-
-/**
- * Throws a RuntimeException with a human-readable error message.
- */
-static void throwRuntimeException(JNIEnv* env, const char* message) {
-    if (jniThrowException(env, "java/lang/RuntimeException", message)) {
-        LOGE("Unable to throw");
-    }
-}
-
-/**
  * Throws an SocketTimeoutException with the given string as a message.
  */
 static void throwSocketTimeoutException(JNIEnv* env, const char* message) {
@@ -1770,7 +1752,7 @@ static int org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_verifysignatu
     // LOGD("Entering verifysignature()");
 
     if (msg == NULL || sig == NULL || algorithm == NULL || mod == NULL || exp == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return -1;
     }
 
@@ -1809,9 +1791,9 @@ static int org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_verifysignatu
         if (error != 0) {
             char message[50];
             ERR_error_string_n(error, message, sizeof(message));
-            throwRuntimeException(env, message);
+            jniThrowRuntimeException(env, message);
         } else {
-            throwRuntimeException(env, "Internal error during verification");
+            jniThrowRuntimeException(env, "Internal error during verification");
         }
         freeSslErrorState();
     }

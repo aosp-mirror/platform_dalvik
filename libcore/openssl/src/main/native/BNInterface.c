@@ -31,20 +31,12 @@
 #define TRUE 1
 #endif
 
-
-static void
-throwNewNullPointerException (JNIEnv* env, const char* message)
-{
-    jniThrowException(env, "java/lang/NullPointerException", message);
-}
-
-static int isValidHandle (JNIEnv* env, void* handle, const char *message)
-{
+static int isValidHandle (JNIEnv* env, void* handle, const char *message) {
     if (handle == NULL) {
-        throwNewNullPointerException(env, message);
+        jniThrowNullPointerException(env, message);
         return FALSE;
     }
-    else return TRUE;
+    return TRUE;
 }
 
 static int oneValidHandle (JNIEnv* env, void* a)

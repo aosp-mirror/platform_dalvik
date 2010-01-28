@@ -54,9 +54,8 @@ static void throwPatternSyntaxException(JNIEnv* env, UErrorCode status,
     env->Throw(except);
 }
 
-static void throwRuntimeException(JNIEnv* env, UErrorCode status)
-{
-    jniThrowException(env, "java/lang/RuntimeException", u_errorName(status));
+static void throwRuntimeException(JNIEnv* env, UErrorCode status) {
+    jniThrowRuntimeException(env, u_errorName(status));
 }
 
 static void _close(JNIEnv* env, jclass clazz, RegExData* data)

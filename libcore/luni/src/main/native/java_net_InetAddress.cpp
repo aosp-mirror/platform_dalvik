@@ -143,8 +143,7 @@ static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
         }
     } else if (result == EAI_SYSTEM && errno == EACCES) {
         /* No permission to use network */
-        jniThrowException(
-            env, "java/lang/SecurityException",
+        jniThrowException(env, "java/lang/SecurityException",
             "Permission denied (maybe missing INTERNET permission)");
     } else {
         jniThrowException(env, "java/net/UnknownHostException",
@@ -160,7 +159,7 @@ static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
 
 jobjectArray InetAddress_getaddrinfo(JNIEnv* env, jobject obj, jstring javaName) {
     if (javaName == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
+        jniThrowNullPointerException(env, NULL);
         return NULL;
     }
     const char* name = env->GetStringUTFChars(javaName, NULL);
@@ -182,7 +181,7 @@ static jstring InetAddress_getnameinfo(JNIEnv* env, jobject obj,
                                          jbyteArray javaAddress)
 {
     if (javaAddress == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
+        jniThrowNullPointerException(env, NULL);
         return NULL;
     }
 

@@ -40,20 +40,6 @@ static void freeSslErrorState(void) {
     ERR_remove_state(0);
 }
 
-/**
- * Throws a NullPointerException without any message.
- */
-static void throwNullPointerException(JNIEnv* env) {
-    jniThrowException(env, "java/lang/NullPointerException", NULL);
-}
-
-/**
- * Throws a RuntimeException with a human-readable error message.
- */
-static void throwRuntimeException(JNIEnv* env, const char* message) {
-    jniThrowException(env, "java/lang/RuntimeException", message);
-}
-
 /*
  * Checks this thread's OpenSSL error queue and throws a RuntimeException if
  * necessary.
@@ -68,7 +54,7 @@ static int throwExceptionIfNecessary(JNIEnv* env) {
         char message[50];
         ERR_error_string_n(error, message, sizeof(message));
         LOGD("OpenSSL error %d: %s", error, message);
-        throwRuntimeException(env, message);
+        jniThrowRuntimeException(env, message);
         result = 1;
     }
 
@@ -105,7 +91,7 @@ static RSA* rsaCreatePublicKey(JNIEnv* env, jclass clazz, jbyteArray n, jbyteArr
     
     if (rsa->n == NULL || rsa->e == NULL) {
         rsaDestroyKey(env, clazz, rsa);
-        throwRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
+        jniThrowRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
         return NULL;
     }
     
@@ -131,7 +117,7 @@ static RSA* rsaCreatePrivateKey(JNIEnv* env, jclass clazz, jbyteArray n, jbyteAr
     
     if (rsa->n == NULL || rsa->e == NULL || rsa->d == NULL || rsa->p == NULL || rsa->q == NULL) {
         rsaDestroyKey(env, clazz, rsa);
-        throwRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
+        jniThrowRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
         return NULL;
     }
     
@@ -168,7 +154,7 @@ static EVP_PKEY* NativeCrypto_EVP_PKEY_new_DSA(JNIEnv* env, jclass clazz, jbyteA
 
     if (dsa->p == NULL || dsa->q == NULL || dsa->g == NULL || dsa->pub_key == NULL) {
         DSA_free(dsa);
-        throwRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
+        jniThrowRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
         return NULL;
     }
     
@@ -206,7 +192,7 @@ static EVP_PKEY* NativeCrypto_EVP_PKEY_new_RSA(JNIEnv* env, jclass clazz, jbyteA
     
     if (rsa->n == NULL || rsa->e == NULL) {
         RSA_free(rsa);
-        throwRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
+        jniThrowRuntimeException(env, "Unable to convert BigInteger to BIGNUM");
         return NULL;
     }
     
@@ -254,7 +240,7 @@ static jint NativeCrypto_EVP_DigestFinal(JNIEnv* env, jclass clazz, EVP_MD_CTX* 
     // LOGI("NativeCrypto_EVP_DigestFinal%x, %x, %d, %d", ctx, hash, offset);
     
     if (ctx == NULL || hash == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return -1;
     }
 
@@ -276,7 +262,7 @@ static void NativeCrypto_EVP_DigestInit(JNIEnv* env, jclass clazz, EVP_MD_CTX* c
     // LOGI("NativeCrypto_EVP_DigestInit");
     
     if (ctx == NULL || algorithm == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return;
     }
     
@@ -286,7 +272,7 @@ static void NativeCrypto_EVP_DigestInit(JNIEnv* env, jclass clazz, EVP_MD_CTX* c
     env->ReleaseStringUTFChars(algorithm, algorithmChars);
     
     if (digest == NULL) {
-        throwRuntimeException(env, "Hash algorithm not found");
+        jniThrowRuntimeException(env, "Hash algorithm not found");
         return;
     }
     
@@ -302,7 +288,7 @@ static jint NativeCrypto_EVP_DigestSize(JNIEnv* env, jclass clazz, EVP_MD_CTX* c
     // LOGI("NativeCrypto_EVP_DigestSize");
     
     if (ctx == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return -1;
     }
     
@@ -320,7 +306,7 @@ static jint NativeCrypto_EVP_DigestBlockSize(JNIEnv* env, jclass clazz, EVP_MD_C
     // LOGI("NativeCrypto_EVP_DigestBlockSize");
     
     if (ctx == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return -1;
     }
     
@@ -338,7 +324,7 @@ static void NativeCrypto_EVP_DigestUpdate(JNIEnv* env, jclass clazz, EVP_MD_CTX*
     // LOGI("NativeCrypto_EVP_DigestUpdate %x, %x, %d, %d", ctx, buffer, offset, length);
     
     if (ctx == NULL || buffer == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return;
     }
   
@@ -356,7 +342,7 @@ static void NativeCrypto_EVP_VerifyInit(JNIEnv* env, jclass clazz, EVP_MD_CTX* c
     // LOGI("NativeCrypto_EVP_VerifyInit");
     
     if (ctx == NULL || algorithm == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return;
     }
     
@@ -366,7 +352,7 @@ static void NativeCrypto_EVP_VerifyInit(JNIEnv* env, jclass clazz, EVP_MD_CTX* c
     env->ReleaseStringUTFChars(algorithm, algorithmChars);
     
     if (digest == NULL) {
-        throwRuntimeException(env, "Hash algorithm not found");
+        jniThrowRuntimeException(env, "Hash algorithm not found");
         return;
     }
     
@@ -382,7 +368,7 @@ static void NativeCrypto_EVP_VerifyUpdate(JNIEnv* env, jclass clazz, EVP_MD_CTX*
     // LOGI("NativeCrypto_EVP_VerifyUpdate %x, %x, %d, %d", ctx, buffer, offset, length);
     
     if (ctx == NULL || buffer == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return;
     }
   
@@ -400,7 +386,7 @@ static int NativeCrypto_EVP_VerifyFinal(JNIEnv* env, jclass clazz, EVP_MD_CTX* c
     // LOGI("NativeCrypto_EVP_VerifyFinal %x, %x, %d, %d %x", ctx, buffer, offset, length, pkey);
     
     if (ctx == NULL || buffer == NULL || pkey == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return -1;
     }
   

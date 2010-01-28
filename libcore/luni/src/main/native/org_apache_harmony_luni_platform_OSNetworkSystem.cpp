@@ -227,11 +227,6 @@ static void jniThrowSocketTimeoutException(JNIEnv* env, int error) {
     jniThrowExceptionWithErrno(env, "java/net/SocketTimeoutException", error);
 }
 
-// TODO(enh): move to JNIHelp.h
-static void throwNullPointerException(JNIEnv *env) {
-    jniThrowException(env, "java/lang/NullPointerException", NULL);
-}
-
 // Used by functions that shouldn't throw SocketException. (These functions
 // aren't meant to see bad addresses, so seeing one really does imply an
 // internal error.)
@@ -377,7 +372,7 @@ static const sockaddr* convertIpv4ToMapped(int fd,
 static bool byteArrayToSocketAddress(JNIEnv *env,
         jbyteArray addressBytes, int port, sockaddr_storage *sockaddress) {
     if (addressBytes == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return false;
     }
 
@@ -412,7 +407,7 @@ static bool inetAddressToSocketAddress(JNIEnv *env, jobject inetaddress,
         int port, sockaddr_storage *sockaddress) {
     // Get the byte array that stores the IP address bytes in the InetAddress.
     if (inetaddress == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return false;
     }
     jbyteArray addressBytes =
@@ -432,7 +427,7 @@ static bool inetAddressToSocketAddress(JNIEnv *env, jobject inetaddress,
 static jstring osNetworkSystem_byteArrayToIpString(JNIEnv* env, jclass,
         jbyteArray byteArray) {
     if (byteArray == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return NULL;
     }
     sockaddr_storage ss;
@@ -486,7 +481,7 @@ static jstring osNetworkSystem_byteArrayToIpString(JNIEnv* env, jclass,
 static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv* env, jclass,
         jstring javaString) {
     if (javaString == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return NULL;
     }
 
@@ -1442,7 +1437,7 @@ static bool initCachedFields(JNIEnv* env) {
 static int createSocketFileDescriptor(JNIEnv* env, jobject fileDescriptor,
                                       int type) {
     if (fileDescriptor == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         errno = EBADF;
         return -1;
     }
@@ -1843,7 +1838,7 @@ static void osNetworkSystem_acceptSocketImpl(JNIEnv* env, jclass,
     // LOGD("ENTER acceptSocketImpl");
 
     if (newSocket == NULL) {
-        throwNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return;
     }
 
