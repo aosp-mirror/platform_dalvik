@@ -26,9 +26,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Locale;
-// BEGIN android-added
-import java.util.ResourceBundle;
-// END android-added
 
 // BEGIN android-added
 import com.ibm.icu4jni.util.LocaleData;

@@ -22,7 +22,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 // BEGIN android-added
 import java.util.Locale;
-import java.util.ResourceBundle;
 // END android-added
 
 import org.apache.harmony.text.internal.nls.Messages;

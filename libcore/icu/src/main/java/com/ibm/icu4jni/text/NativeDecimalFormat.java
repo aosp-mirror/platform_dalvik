@@ -218,7 +218,32 @@ public class NativeDecimalFormat {
        // Get new value by multiplying multiplier.
        return valBigDecimal.multiply(multiplierBigDecimal);
     }
-
+    
+    public StringBuffer formatBigDecimal(BigDecimal value, StringBuffer buffer, FieldPosition field) {
+        if (buffer == null || field == null) {
+            throw new NullPointerException();
+        }
+        if (getMultiplier() != 1) {
+            value = applyMultiplier(value);
+        }
+        StringBuilder val = new StringBuilder();
+        val.append(value.unscaledValue().toString(10));
+        int scale = value.scale();
+        scale = makeScalePositive(scale, val);
+        String fieldType = getFieldType(field.getFieldAttribute());
+        String result = format(this.addr, val.toString(), field, fieldType, null, scale);
+        return buffer.append(result);
+    }
+    
+    public StringBuffer formatBigInteger(BigInteger value, StringBuffer buffer, FieldPosition field) {
+        if (buffer == null || field == null) {
+            throw new NullPointerException();
+        }
+        String fieldType = getFieldType(field.getFieldAttribute());
+        String result = format(this.addr, value.toString(10), field, fieldType, null, 0);
+        return buffer.append(result);
+    }
+    /*
     public StringBuffer format(Object value, StringBuffer buffer, FieldPosition field) {
         if (!(value instanceof Number)) {
             throw new IllegalArgumentException();
@@ -228,21 +253,6 @@ public class NativeDecimalFormat {
         }
         String fieldType = getFieldType(field.getFieldAttribute());
         Number number = (Number) value;
-        if (number instanceof BigInteger) {
-            BigInteger valBigInteger = (BigInteger) number;
-            String result = format(this.addr, valBigInteger.toString(10), field, fieldType, null, 0);
-            return buffer.append(result);
-        } else if (number instanceof BigDecimal) {
-            BigDecimal valBigDecimal = (BigDecimal) number;
-            if (getMultiplier() != 1) {
-                valBigDecimal = applyMultiplier(valBigDecimal);
-            }
-            StringBuilder val = new StringBuilder();
-            val.append(valBigDecimal.unscaledValue().toString(10));
-            int scale = valBigDecimal.scale();
-            scale = makeScalePositive(scale, val);
-            String result = format(this.addr, val.toString(), field, fieldType, null, scale);
-            return buffer.append(result);
         } else if (number instanceof Double || number instanceof Float) {
             double dv = number.doubleValue();
             String result = format(this.addr, dv, field, fieldType, null);
@@ -253,7 +263,7 @@ public class NativeDecimalFormat {
             return buffer.append(result);
         }
     }
-
+*/
     public StringBuffer format(long value, StringBuffer buffer, FieldPosition field) {
         if (buffer == null || field == null) {
             throw new NullPointerException();
