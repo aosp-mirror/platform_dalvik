@@ -33,11 +33,7 @@ public class XSLMessages extends XPATHMessages
 {
 
   /** The language specific resource object for Xalan messages.  */
-  private static ListResourceBundle XSLTBundle = null;
-
-  /** The class name of the Xalan error message string table.    */
-  private static final String XSLT_ERROR_RESOURCES =
-    "org.apache.xalan.res.XSLTErrorResources";
+  private static ListResourceBundle XSLTBundle = new XSLTErrorResources(); // android-changed
 
   /**
    * Creates a message from the specified key and replacement
@@ -51,15 +47,10 @@ public class XSLMessages extends XPATHMessages
    */
   public static final String createMessage(String msgKey, Object args[])  //throws Exception
   {
-    if (XSLTBundle == null)
-      XSLTBundle = loadResourceBundle(XSLT_ERROR_RESOURCES);
-    
-    if (XSLTBundle != null)
-    {
+      // BEGIN android-changed
+      //     don't localize resources
       return createMsg(XSLTBundle, msgKey, args);
-    }
-    else
-      return "Could not load any resource bundles.";
+      // END android-changed
   }
   
   /**
@@ -74,14 +65,9 @@ public class XSLMessages extends XPATHMessages
    */
   public static final String createWarning(String msgKey, Object args[])  //throws Exception
   {
-    if (XSLTBundle == null)
-      XSLTBundle = loadResourceBundle(XSLT_ERROR_RESOURCES);
-
-    if (XSLTBundle != null)
-    {
+      // BEGIN android-changed
+      //     don't localize exception messages
       return createMsg(XSLTBundle, msgKey, args);
-    }
-    else
-      return "Could not load any resource bundles.";
+      // END android-changed
   }
 }

@@ -102,9 +102,6 @@ public class ElemCopy extends ElemUse
       {
         SerializationHandler rthandler = transformer.getSerializationHandler();
 
-        if (transformer.getDebug())
-          transformer.getTraceManager().fireTraceEvent(this);
-            
         // TODO: Process the use-attribute-sets stuff
         ClonerToResultTree.cloneToResultTree(sourceNode, nodeType, dtm, 
                                              rthandler, false);
@@ -120,19 +117,11 @@ public class ElemCopy extends ElemUse
           transformer.getResultTreeHandler().endElement(ns, localName,
                                                         dtm.getNodeName(sourceNode));
         }
-        if (transformer.getDebug())
-		  transformer.getTraceManager().fireTraceEndEvent(this);         
       }
       else
       {
-        if (transformer.getDebug())
-          transformer.getTraceManager().fireTraceEvent(this);
-
         super.execute(transformer);
         transformer.executeChildTemplates(this, true);
-
-        if (transformer.getDebug())
-          transformer.getTraceManager().fireTraceEndEvent(this);
       }
     }
     catch(org.xml.sax.SAXException se)

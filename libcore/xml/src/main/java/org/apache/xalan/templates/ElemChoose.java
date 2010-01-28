@@ -78,9 +78,6 @@ public class ElemChoose extends ElemTemplateElement
   public void execute(TransformerImpl transformer) throws TransformerException
   {
 
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-
     boolean found = false;
 
     for (ElemTemplateElement childElem = getFirstChildElem();
@@ -103,45 +100,19 @@ public class ElemChoose extends ElemTemplateElement
         // if(when.getTest().getPatternString().equals("COLLECTION/icuser/ictimezone/LITERAL='GMT +13:00 Pacific/Tongatapu'"))
         // 	System.err.println("Found COLLECTION/icuser/ictimezone/LITERAL");
 
-        if (transformer.getDebug())
-        {
-          XObject test = when.getTest().execute(xctxt, sourceNode, when);
+          if (when.getTest().bool(xctxt, sourceNode, when)) {
+              transformer.executeChildTemplates(when, true);
 
-          if (transformer.getDebug())
-            transformer.getTraceManager().fireSelectedEvent(sourceNode, when,
-                    "test", when.getTest(), test);
-
-          if (test.bool())
-          {
-            transformer.getTraceManager().fireTraceEvent(when);
-            
-            transformer.executeChildTemplates(when, true);
-
-	        transformer.getTraceManager().fireTraceEndEvent(when); 
-	                  
-            return;
+              return;
           }
-
-        }
-        else if (when.getTest().bool(xctxt, sourceNode, when))
-        {
-          transformer.executeChildTemplates(when, true);
-
-          return;
-        }
       }
       else if (Constants.ELEMNAME_OTHERWISE == type)
       {
         found = true;
 
-        if (transformer.getDebug())
-          transformer.getTraceManager().fireTraceEvent(childElem);
-
-        // xsl:otherwise                
+        // xsl:otherwise
         transformer.executeChildTemplates(childElem, true);
 
-        if (transformer.getDebug())
-	      transformer.getTraceManager().fireTraceEndEvent(childElem); 
         return;
       }
     }
@@ -149,9 +120,6 @@ public class ElemChoose extends ElemTemplateElement
     if (!found)
       transformer.getMsgMgr().error(
         this, XSLTErrorResources.ER_CHOOSE_REQUIRES_WHEN);
-        
-    if (transformer.getDebug())
-	  transformer.getTraceManager().fireTraceEndEvent(this);         
   }
 
   /**

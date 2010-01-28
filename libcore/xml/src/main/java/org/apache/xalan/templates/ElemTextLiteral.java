@@ -204,13 +204,8 @@ public class ElemTextLiteral extends ElemTemplateElement
     try
     {
       SerializationHandler rth = transformer.getResultTreeHandler();
-      if (transformer.getDebug()) {
-        // flush any pending cached processing before the trace event.
-        rth.flushPending();
-        transformer.getTraceManager().fireTraceEvent(this);
-      }
 
-      if (m_disableOutputEscaping)
+        if (m_disableOutputEscaping)
       {
         rth.processingInstruction(javax.xml.transform.Result.PI_DISABLE_OUTPUT_ESCAPING, "");
       }
@@ -225,21 +220,6 @@ public class ElemTextLiteral extends ElemTemplateElement
     catch(SAXException se)
     {
       throw new TransformerException(se);
-    }
-    finally
-    {
-      if (transformer.getDebug()) {
-        try
-        {
-            // flush any pending cached processing before sending the trace event
-            transformer.getResultTreeHandler().flushPending();
-            transformer.getTraceManager().fireTraceEndEvent(this);
-        }
-        catch (SAXException se)
-        {
-            throw new TransformerException(se);
-        } 
-      }
     }
   }
 }

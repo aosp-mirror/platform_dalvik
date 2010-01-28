@@ -71,8 +71,6 @@ public class ElemComment extends ElemTemplateElement
           TransformerImpl transformer)
             throws TransformerException
   {
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
     try
     {
       // Note the content model is:
@@ -90,11 +88,6 @@ public class ElemComment extends ElemTemplateElement
     catch(org.xml.sax.SAXException se)
     {
       throw new TransformerException(se);
-    }
-    finally
-    {
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireTraceEndEvent(this);
     }
   }
 

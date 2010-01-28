@@ -24,7 +24,6 @@ import java.util.Vector;
 
 import javax.xml.transform.TransformerException;
 
-import org.apache.xalan.transformer.StackGuard;
 import org.apache.xalan.transformer.TransformerImpl;
 import org.apache.xml.dtm.DTM;
 import org.apache.xml.dtm.DTMIterator;
@@ -172,16 +171,11 @@ public class ElemApplyTemplates extends ElemCallTemplate
           transformer.pushMode(m_mode);
         }
       }
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireTraceEvent(this);
 
       transformSelectedNodes(transformer);
     }
     finally
     {
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireTraceEndEvent(this);
-
       if (pushMode)
         transformer.popMode();
 
@@ -208,9 +202,7 @@ public class ElemApplyTemplates extends ElemCallTemplate
     VariableStack vars = xctxt.getVarStack();
     int nParams = getParamElemCount();
     int thisframe = vars.getStackFrame();
-    StackGuard guard = transformer.getStackGuard();
-    boolean check = (guard.getRecursionLimit() > -1) ? true : false;
-    
+
     boolean pushContextNodeListFlag = false;
       
     try
@@ -228,13 +220,6 @@ public class ElemApplyTemplates extends ElemCallTemplate
       if (null != keys)
         sourceNodes = sortNodes(xctxt, keys, sourceNodes);
             
-      if (transformer.getDebug())
-      {
-        transformer.getTraceManager().fireSelectedEvent(sourceNode, this,
-                "select", new XPath(m_selectExpression),
-                new org.apache.xpath.objects.XNodeSet(sourceNodes));
-      }
-
       final SerializationHandler rth = transformer.getSerializationHandler();
 //      ContentHandler chandler = rth.getContentHandler();
       final StylesheetRoot sroot = transformer.getStylesheet();
@@ -256,12 +241,8 @@ public class ElemApplyTemplates extends ElemCallTemplate
         for (int i = 0; i < nParams; i++) 
         {
           ElemWithParam ewp = m_paramElems[i];
-          if (transformer.getDebug())
-            transformer.getTraceManager().fireTraceEvent(ewp);
           XObject obj = ewp.getValue(transformer, sourceNode);
-          if (transformer.getDebug())
-            transformer.getTraceManager().fireTraceEndEvent(ewp);
-          
+
           vars.setLocalVariable(i, obj, argsFrame);
         }
         vars.setStackFrame(argsFrame);
@@ -333,8 +314,6 @@ public class ElemApplyTemplates extends ElemCallTemplate
         }
                 
         transformer.pushPairCurrentMatched(template, child);
-        if (check)
-	        guard.checkForInfinateLoop();
 
         int currentFrameBottom;  // See comment with unlink, below
         if(template.m_frameSize > 0)
@@ -378,10 +357,6 @@ public class ElemApplyTemplates extends ElemCallTemplate
         else
         	currentFrameBottom = 0;
 
-        // Fire a trace event for the template.
-        if (transformer.getDebug())
-          transformer.getTraceManager().fireTraceEvent(template);
-
         // And execute the child templates.
         // Loop through the children of the template, calling execute on 
         // each of them.
@@ -400,9 +375,6 @@ public class ElemApplyTemplates extends ElemCallTemplate
           }
         }
         
-        if (transformer.getDebug())
-	      transformer.getTraceManager().fireTraceEndEvent(template); 
-	    
         if(template.m_frameSize > 0)
         {
           // See Frank Weiss bug around 03/19/2002 (no Bugzilla report yet).
@@ -434,12 +406,7 @@ public class ElemApplyTemplates extends ElemCallTemplate
     }
     finally
     {
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireSelectedEndEvent(sourceNode, this,
-                "select", new XPath(m_selectExpression),
-                new org.apache.xpath.objects.XNodeSet(sourceNodes));
-      
-      // Unlink to the original stack frame  
+      // Unlink to the original stack frame
       if(nParams > 0)
         vars.unlink(thisframe);
       xctxt.popSAXLocator();

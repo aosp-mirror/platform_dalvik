@@ -21,10 +21,8 @@
 package org.apache.xalan.templates;
 
 import javax.xml.transform.TransformerException;
-import org.apache.xalan.res.XSLMessages;
-import org.apache.xalan.res.XSLTErrorResources;
+
 import org.apache.xalan.transformer.TransformerImpl;
-import org.apache.xpath.XPathContext;
 
 
 /**
@@ -107,9 +105,6 @@ public class ElemUnknown extends ElemLiteralResult
   {
 
 
-    if (transformer.getDebug())
-		transformer.getTraceManager().fireTraceEvent(this);
-
 	try {
 
 		if (hasFallbackChildren()) {
@@ -121,8 +116,6 @@ public class ElemUnknown extends ElemLiteralResult
 	} catch (TransformerException e) {
 		transformer.getErrorListener().fatalError(e);
 	}
-    if (transformer.getDebug())
-		transformer.getTraceManager().fireTraceEndEvent(this);
   }
 
 }

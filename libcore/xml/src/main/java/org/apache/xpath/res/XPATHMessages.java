@@ -31,7 +31,7 @@ import org.apache.xml.res.XMLMessages;
 public class XPATHMessages extends XMLMessages
 {
   /** The language specific resource object for XPath messages.  */
-  private static ListResourceBundle XPATHBundle = null;
+  private static ListResourceBundle XPATHBundle = new XPATHErrorResources();
 
   /** The class name of the XPath error message string table.     */
   private static final String XPATH_ERROR_RESOURCES =
@@ -49,15 +49,10 @@ public class XPATHMessages extends XMLMessages
    */
   public static final String createXPATHMessage(String msgKey, Object args[])  //throws Exception 
   {
-    if (XPATHBundle == null)
-      XPATHBundle = loadResourceBundle(XPATH_ERROR_RESOURCES);
-    
-    if (XPATHBundle != null)
-    {
+      // BEGIN android-changed
+      //     don't localize exception messages
       return createXPATHMsg(XPATHBundle, msgKey, args);
-    }
-    else
-      return "Could not load any resource bundles.";
+      // END android-changed
   }
 
   /**
@@ -72,15 +67,10 @@ public class XPATHMessages extends XMLMessages
    */
   public static final String createXPATHWarning(String msgKey, Object args[])  //throws Exception
   {
-    if (XPATHBundle == null)
-      XPATHBundle = loadResourceBundle(XPATH_ERROR_RESOURCES);
-
-    if (XPATHBundle != null)
-    {
+      // BEGIN android-changed
+      //     don't localize exception messages
       return createXPATHMsg(XPATHBundle, msgKey, args);
-    }
-    else
-      return "Could not load any resource bundles.";
+      // END android-changed
   }
 
   /**

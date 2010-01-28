@@ -108,9 +108,6 @@ public class ElemParam extends ElemVariable
    */
   public void execute(TransformerImpl transformer) throws TransformerException
   {
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-      
     VariableStack vars = transformer.getXPathContext().getVarStack();
     
     if(!vars.isLocalSet(m_index))
@@ -122,9 +119,6 @@ public class ElemParam extends ElemVariable
       // transformer.getXPathContext().getVarStack().pushVariable(m_qname, var);
       transformer.getXPathContext().getVarStack().setLocalVariable(m_index, var);
     }
-    
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEndEvent(this);
   }
   
 }

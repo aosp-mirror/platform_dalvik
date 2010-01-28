@@ -193,9 +193,6 @@ public class ElemCallTemplate extends ElemForEach
             throws TransformerException
   {
 
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-
     if (null != m_template)
     {
       XPathContext xctxt = transformer.getXPathContext();
@@ -221,13 +218,9 @@ public class ElemCallTemplate extends ElemForEach
             ElemWithParam ewp = m_paramElems[i];
             if(ewp.m_index >= 0)
             {
-              if (transformer.getDebug())
-                transformer.getTraceManager().fireTraceEvent(ewp);
               XObject obj = ewp.getValue(transformer, currentNode);
-              if (transformer.getDebug())
-                transformer.getTraceManager().fireTraceEndEvent(ewp);
-              
-              // Note here that the index for ElemWithParam must have been 
+
+              // Note here that the index for ElemWithParam must have been
               // statically made relative to the xsl:template being called, 
               // NOT this xsl:template.
               vars.setLocalVariable(ewp.m_index, obj, nextFrame);
@@ -269,9 +262,6 @@ public class ElemCallTemplate extends ElemForEach
                                     new Object[]{ m_templateName });  //"Could not find template named: '"+templateName+"'");
     }
     
-    if (transformer.getDebug())
-	  transformer.getTraceManager().fireTraceEndEvent(this); 
-
   }
   
   /** Vector of xsl:param elements associated with this element. 

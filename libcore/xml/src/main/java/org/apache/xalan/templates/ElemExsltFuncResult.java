@@ -54,9 +54,6 @@ public class ElemExsltFuncResult extends ElemVariable
   {    
     XPathContext context = transformer.getXPathContext();
 
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-    
     // Verify that result has not already been set by another result
     // element. Recursion is allowed: intermediate results are cleared 
     // in the owner ElemExsltFunction execute().
@@ -70,9 +67,6 @@ public class ElemExsltFuncResult extends ElemVariable
     XObject var = getValue(transformer, sourceNode);
     transformer.popCurrentFuncResult();
     transformer.pushCurrentFuncResult(var);
-
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEndEvent(this);    
   }
 
   /**
