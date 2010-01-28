@@ -225,6 +225,15 @@ are C-style pointers to primitive data rather than local references.  They
 are guaranteed valid until Release is called, which means they are not
 released when the native method returns.
 </p><p>
+<strong>Data passed to NewStringUTF must be in "modified" UTF-8 format</strong>.  A
+common mistake is reading character data from a file or network stream
+and handing it to <code>NewStringUTF</code> without filtering it.
+Unless you know the data is 7-bit ASCII, you need to strip out high-ASCII
+characters or convert them to proper "modified" UTF-8 form.  If you don't,
+the UTF-16 conversion will likely not be what you expect.  The extended
+JNI checks will scan strings and warn you about invalid data, but they
+won't catch everything.
+</p><p>
 </p><p>
 
 
@@ -416,7 +425,7 @@ jfieldID points to field data, jstring is a java.lang.String).
 </li>
 <li> Make sure local references aren't used outside their allowed lifespan.
 </li>
-<li> UTF-8 strings contain valid "modified UTF-8" data.
+<li> UTF-8 strings contain only valid "modified UTF-8" data.
 </li>
 </ul>
 <p>Accessibility of methods and fields (i.e. public vs. private) is not
