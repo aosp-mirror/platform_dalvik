@@ -130,38 +130,10 @@ public class ElemIf extends ElemTemplateElement
     XPathContext xctxt = transformer.getXPathContext();
     int sourceNode = xctxt.getCurrentNode();
 
-    if (transformer.getDebug())
-    {
-      XObject test = m_test.execute(xctxt, sourceNode, this);
-
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireSelectedEvent(sourceNode, this,
-                "test", m_test, test);
-    
-      // xsl:for-each now fires one trace event + one for every
-      // iteration; changing xsl:if to fire one regardless of true/false
-
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireTraceEvent(this);
-
-      if (test.bool())
-      {
-        transformer.executeChildTemplates(this, true);        
+      if (m_test.bool(xctxt, sourceNode, this)) {
+          transformer.executeChildTemplates(this, true);
       }
 
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireTraceEndEvent(this);
-
-      // I don't think we want this.  -sb
-      //  if (transformer.getDebug())
-      //    transformer.getTraceManager().fireSelectedEvent(sourceNode, this,
-      //            "endTest", m_test, test);
-    }
-    else if (m_test.bool(xctxt, sourceNode, this))
-    {
-      transformer.executeChildTemplates(this, true);
-    }
-    
   }
   
   /**

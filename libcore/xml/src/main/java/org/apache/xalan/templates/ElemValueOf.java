@@ -215,38 +215,9 @@ public class ElemValueOf extends ElemTemplateElement
     XPathContext xctxt = transformer.getXPathContext();
     SerializationHandler rth = transformer.getResultTreeHandler();
 
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-
     try
     {
       // Optimize for "."
-      if (false && m_isDot && !transformer.getDebug())
-      {
-        int child = xctxt.getCurrentNode();
-        DTM dtm = xctxt.getDTM(child);
-
-        xctxt.pushCurrentNode(child);
-
-        if (m_disableOutputEscaping)
-          rth.processingInstruction(
-            javax.xml.transform.Result.PI_DISABLE_OUTPUT_ESCAPING, "");
-
-        try
-        {
-          dtm.dispatchCharactersEvents(child, rth, false);
-        }
-        finally
-        {
-          if (m_disableOutputEscaping)
-            rth.processingInstruction(
-              javax.xml.transform.Result.PI_ENABLE_OUTPUT_ESCAPING, "");
-
-          xctxt.popCurrentNode();
-        }
-      }
-      else
-      {
         xctxt.pushNamespaceContext(this);
 
         int current = xctxt.getCurrentNode();
@@ -261,18 +232,7 @@ public class ElemValueOf extends ElemTemplateElement
         {
           Expression expr = m_selectExpression.getExpression();
 
-          if (transformer.getDebug())
-          {
-            XObject obj = expr.execute(xctxt);
-
-            transformer.getTraceManager().fireSelectedEvent(current, this,
-                    "select", m_selectExpression, obj);
-            obj.dispatchCharactersEvents(rth);
-          }
-          else
-          {
             expr.executeCharsToContentHandler(xctxt, rth);
-          }
         }
         finally
         {
@@ -283,7 +243,6 @@ public class ElemValueOf extends ElemTemplateElement
           xctxt.popNamespaceContext();
           xctxt.popCurrentNodeAndExpression();
         }
-      }
     }
     catch (SAXException se)
     {
@@ -293,11 +252,6 @@ public class ElemValueOf extends ElemTemplateElement
     	TransformerException te = new TransformerException(re);
     	te.setLocator(this);
     	throw te;
-    }
-    finally
-    {
-      if (transformer.getDebug())
-	    transformer.getTraceManager().fireTraceEndEvent(this); 
     }
   }
 

@@ -203,10 +203,6 @@ public class ElemWithParam extends ElemTemplateElement
         var = m_selectPattern.execute(xctxt, sourceNode, this);
 
         var.allowDetachToRelease(false);
-
-        if (transformer.getDebug())
-          transformer.getTraceManager().fireSelectedEvent(sourceNode, this,
-                  "select", m_selectPattern, var);
       }
       else if (null == getFirstChildElem())
       {

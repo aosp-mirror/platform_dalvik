@@ -557,9 +557,6 @@ public class ElemNumber extends ElemTemplateElement
             throws TransformerException
   {
 
-     if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-
     int sourceNode = transformer.getXPathContext().getCurrentNode();
     String countString = getCountString(transformer, sourceNode);
 
@@ -571,11 +568,6 @@ public class ElemNumber extends ElemTemplateElement
     catch(SAXException se)
     {
       throw new TransformerException(se);
-    }
-    finally
-    {
-      if (transformer.getDebug())
-	    transformer.getTraceManager().fireTraceEndEvent(this); 
     }
   }
 

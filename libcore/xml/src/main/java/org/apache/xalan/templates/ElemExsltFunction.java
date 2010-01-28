@@ -104,17 +104,11 @@ public class ElemExsltFunction extends ElemTemplate
     //  the function.
     //  xctxt.pushRTFContext();
     
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-    
     vars.setStackFrame(nextFrame);
     transformer.executeChildTemplates(this, true);
     
     // Reset the stack frame after the function call
     vars.unlink(thisFrame);
-
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEndEvent(this);
 
     // Following ElemTemplate 'pop' removed -- see above.
     // xctxt.popRTFContext(); 

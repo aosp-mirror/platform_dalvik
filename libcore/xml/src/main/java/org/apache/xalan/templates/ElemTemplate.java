@@ -381,12 +381,7 @@ public class ElemTemplate extends ElemTemplateElement
   {
     XPathContext xctxt = transformer.getXPathContext();
     
-    transformer.getStackGuard().checkForInfinateLoop();
-    
     xctxt.pushRTFContext();
-
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
 
       // %REVIEW% commenting out of the code below.
 //    if (null != sourceNode)
@@ -402,10 +397,7 @@ public class ElemTemplate extends ElemTemplateElement
 //      //"sourceNode is null in handleApplyTemplatesInstruction!");
 //    }
 
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEndEvent(this);
-
-    xctxt.popRTFContext();  
+    xctxt.popRTFContext();
     }
 
   /**

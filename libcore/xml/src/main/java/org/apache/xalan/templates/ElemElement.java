@@ -202,9 +202,6 @@ public class ElemElement extends ElemUse
             throws TransformerException
   {
 
-       if (transformer.getDebug())
-         transformer.getTraceManager().fireTraceEvent(this);
-
  	SerializationHandler rhandler = transformer.getSerializationHandler();
     XPathContext xctxt = transformer.getXPathContext();
     int sourceNode = xctxt.getCurrentNode();
@@ -288,9 +285,6 @@ public class ElemElement extends ElemUse
     }
 
     constructNode(nodeName, prefix, nodeNamespace, transformer);
-
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEndEvent(this);
   }
   
   /**

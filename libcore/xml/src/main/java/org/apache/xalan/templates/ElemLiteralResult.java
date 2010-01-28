@@ -1304,12 +1304,6 @@ public class ElemLiteralResult extends ElemUse
 
         try
         {
-            if (transformer.getDebug()) {
-                // flush any buffered pending processing before
-                // the trace event.
-                rhandler.flushPending();
-                transformer.getTraceManager().fireTraceEvent(this);
-            }
 
             // JJK Bugzilla 3464, test namespace85 -- make sure LRE's
             // namespace is asserted even if default, since xsl:element
@@ -1392,12 +1386,6 @@ public class ElemLiteralResult extends ElemUse
              * there was an exception in the middle.
              * Otherwise an exception in the middle could cause a system to hang.
              */
-            if (transformer.getDebug()) {
-                // flush any buffered pending processing before
-                // the trace event.
-                //rhandler.flushPending();
-                transformer.getTraceManager().fireTraceEndEvent(this);
-            }
             rhandler.endElement(getNamespace(), getLocalName(), getRawName());
         }
         catch (SAXException se)

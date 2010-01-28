@@ -257,17 +257,12 @@ public class ElemForEach extends ElemTemplateElement implements ExpressionOwner
   {
 
     transformer.pushCurrentTemplateRuleIsNull(true);    
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);//trigger for-each element event
-
     try
     {
       transformSelectedNodes(transformer);
     }
     finally
     {
-      if (transformer.getDebug())
-	    transformer.getTraceManager().fireTraceEndEvent(this); 
       transformer.popCurrentTemplateRuleIsNull();
     }
   }
@@ -346,36 +341,6 @@ public class ElemForEach extends ElemTemplateElement implements ExpressionOwner
       if (null != keys)
         sourceNodes = sortNodes(xctxt, keys, sourceNodes);
 
-    if (transformer.getDebug())
-    {
-
-        // The original code, which is broken for bug#16889,
-        // which fails to get the original select expression in the select event. 
-        /*  transformer.getTraceManager().fireSelectedEvent(
-         *    sourceNode,
-         *            this,
-         *            "select",
-         *            new XPath(m_selectExpression),
-         *            new org.apache.xpath.objects.XNodeSet(sourceNodes));
-         */ 
-
-        // The following code fixes bug#16889
-        // Solution: Store away XPath in setSelect(Xath), and use it here.
-        // Pass m_xath, which the current node is associated with, onto the TraceManager.
-        
-        Expression expr = m_xpath.getExpression();
-        org.apache.xpath.objects.XObject xObject = expr.execute(xctxt);
-        int current = xctxt.getCurrentNode();
-        transformer.getTraceManager().fireSelectedEvent(
-            current,
-            this,
-            "select",
-            m_xpath,
-            xObject);
-    }
-
-
-
       xctxt.pushCurrentNode(DTM.NULL);
 
       IntStack currentNodes = xctxt.getCurrentNodeStack();
@@ -408,12 +373,6 @@ public class ElemForEach extends ElemTemplateElement implements ExpressionOwner
         //final int exNodeType = dtm.getExpandedTypeID(child);
         final int nodeType = dtm.getNodeType(child); 
 
-        // Fire a trace event for the template.
-        if (transformer.getDebug())
-        {
-           transformer.getTraceManager().fireTraceEvent(this);
-        }
-
         // And execute the child templates.
         // Loop through the children of the template, calling execute on 
         // each of them.
@@ -424,17 +383,8 @@ public class ElemForEach extends ElemTemplateElement implements ExpressionOwner
           transformer.setCurrentElement(t);
           t.execute(transformer);
         }
-        
-        if (transformer.getDebug())
-        {
-         // We need to make sure an old current element is not 
-          // on the stack.  See TransformerImpl#getElementCallstack.
-          transformer.setCurrentElement(null);
-          transformer.getTraceManager().fireTraceEndEvent(this);
-        }
 
-
-	 	// KLUGE: Implement <?xalan:doc_cache_off?> 
+        // KLUGE: Implement <?xalan:doc_cache_off?>
 	 	// ASSUMPTION: This will be set only when the XPath was indeed
 	 	// a call to the Document() function. Calling it in other
 	 	// situations is likely to fry Xalan.
@@ -459,11 +409,6 @@ public class ElemForEach extends ElemTemplateElement implements ExpressionOwner
     }
     finally
     {
-      if (transformer.getDebug())
-        transformer.getTraceManager().fireSelectedEndEvent(sourceNode, this,
-                "select", new XPath(m_selectExpression),
-                new org.apache.xpath.objects.XNodeSet(sourceNodes));
-
       xctxt.popSAXLocator();
       xctxt.popContextNodeList();
       transformer.popElemTemplateElement();

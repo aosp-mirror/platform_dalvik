@@ -66,8 +66,6 @@ import org.apache.xalan.templates.Stylesheet;
 import org.apache.xalan.templates.StylesheetComposed;
 import org.apache.xalan.templates.StylesheetRoot;
 import org.apache.xalan.templates.XUnresolvedVariable;
-import org.apache.xalan.trace.GenerateEvent;
-import org.apache.xalan.trace.TraceManager;
 import org.apache.xml.dtm.DTM;
 import org.apache.xml.dtm.DTMIterator;
 import org.apache.xml.dtm.DTMManager;
@@ -95,7 +93,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.ext.DeclHandler;
 import org.xml.sax.ext.LexicalHandler;
 
 /**
@@ -118,12 +115,6 @@ public class TransformerImpl extends Transformer
    * This is null unless we own the stream.
    */
   private java.io.FileOutputStream m_outputStream = null;
-
-  /**
-   * True if the parser events should be on the main thread,
-   * false if not.  Experemental.  Can not be set right now.
-   */
-  private boolean m_parserEventsOnMain = true;
 
   /** The thread that the transformer is running on. */
   private Thread m_transformThread;
@@ -156,9 +147,6 @@ public class TransformerImpl extends Transformer
   //   * have to create a new vector every time.
   //   */
   //  private Vector m_newVars = new Vector();
-
-  /** The JAXP Document Builder, mainly to create Result Tree Fragments. */
-  DocumentBuilder m_docBuilder = null;
 
   /**
    * A pool of ResultTreeHandlers, for serialization of a subtree to text.
@@ -244,12 +232,6 @@ public class TransformerImpl extends Transformer
   private XPathContext m_xcontext;
 
   /**
-   * Object to guard agains infinite recursion when
-   * doing queries.
-   */
-  private StackGuard m_stackGuard;
-
-  /**
    * Output handler to bottleneck SAX events.
    */
   private SerializationHandler m_serializationHandler;  
@@ -265,7 +247,6 @@ public class TransformerImpl extends Transformer
 
   /**
    * The table of counters for xsl:number support.
-   * @see ElemNumber
    */
   CountersTable m_countersTable = null;
 
@@ -312,21 +293,10 @@ public class TransformerImpl extends Transformer
   private boolean m_source_location = false;
     
   /**
-   * This is a compile-time flag to turn off calling
-   * of trace listeners. Set this to false for optimization purposes.
-   */
-  private boolean m_debug = false;
-
-  /**
    * The SAX error handler, where errors and warnings are sent.
    */
   private ErrorListener m_errorHandler =
     new org.apache.xml.utils.DefaultErrorHandler(false);
-
-  /**
-   * The trace manager.
-   */
-  private TraceManager m_traceManager = new TraceManager(this);
 
   /**
    * If the transform thread throws an exception, the exception needs to
@@ -336,42 +306,17 @@ public class TransformerImpl extends Transformer
   private Exception m_exceptionThrown = null;
 
   /**
-   * The InputSource for the source tree, which is needed if the
-   * parse thread is not the main thread, in order for the parse
-   * thread's run method to get to the input source.
-   * (Delete this if reversing threads is outlawed. -sb)    
-   */
-  private Source m_xmlSource;
-
-  /**
    * This is needed for support of setSourceTreeDocForThread(Node doc),
    * which must be called in order for the transform thread's run
    * method to obtain the root of the source tree to be transformed.     
    */
   private int m_doc;
 
-  /**
-   * If the the transform is on the secondary thread, we
-   * need to know when it is done, so we can return.
-   */
-  private boolean m_isTransformDone = false;
-
   /** Flag to to tell if the tranformer needs to be reset. */
   private boolean m_hasBeenReset = false;
 
   /** NEEDSDOC Field m_shouldReset          */
   private boolean m_shouldReset = true;
-
-  /**
-   * NEEDSDOC Method setShouldReset 
-   *
-   *
-   * NEEDSDOC @param shouldReset
-   */
-  public void setShouldReset(boolean shouldReset)
-  {
-    m_shouldReset = shouldReset;
-  }
 
   /**
    * A stack of current template modes.
@@ -405,7 +350,6 @@ public class TransformerImpl extends Transformer
     
     setXPathContext(xPath);
     getXPathContext().setNamespaceContext(stylesheet);
-    m_stackGuard = new StackGuard(this);    
   }
   
   // ================ ExtensionsTable ===================
@@ -518,9 +462,9 @@ public class TransformerImpl extends Transformer
       m_attrSetStack = null;
       m_countersTable = null;
       m_currentTemplateRuleIsNull = new BoolStack();
-      m_xmlSource = null;
+      // m_xmlSource = null; // android-removed
       m_doc = DTM.NULL;
-      m_isTransformDone = false;
+      // m_isTransformDone = false; // android-removed
       m_transformThread = null;
 
       // m_inputContentHandler = null;
@@ -531,46 +475,7 @@ public class TransformerImpl extends Transformer
     //    m_reportInPostExceptionFromThread = false;
   }
 
-  /**
-   * <code>getProperty</code> returns the current setting of the
-   * property described by the <code>property</code> argument.
-   *
-   * %REVIEW% Obsolete now that source_location is handled in the TransformerFactory?
-   *
-   * @param property a <code>String</code> value
-   * @return a <code>boolean</code> value
-   */
-  public boolean getProperty(String property)
-  {
-    return false;
-  }
-
-  /**
-   * Set a runtime property for this <code>TransformerImpl</code>.
-   *
-   * %REVIEW% Obsolete now that source_location is handled in the TransformerFactory?
-   *
-   * @param property a <code>String</code> value
-   * @param value an <code>Object</code> value
-   */
-  public void setProperty(String property, Object value)
-  {
-  }
-
   // ========= Transformer Interface Implementation ==========
-
-  /**
-   * Get true if the parser events should be on the main thread,
-   * false if not.  Experimental.  Can not be set right now.
-   *
-   * @return true if the parser events should be on the main thread,
-   * false if not.
-   * @xsl.usage experimental
-   */
-  public boolean isParserEventsOnMain()
-  {
-    return m_parserEventsOnMain;
-  }
 
   /**
    * Get the thread that the transform process is on.
@@ -786,16 +691,6 @@ public class TransformerImpl extends Transformer
   /**
    * Get the base URL of the source.
    *
-   * @return The base URL of the source tree, or null.
-   */
-  public String getBaseURLOfSource()
-  {
-    return m_urlOfSource;
-  }
-
-  /**
-   * Get the base URL of the source.
-   *
    *
    * NEEDSDOC @param base
    * @return The base URL of the source tree, or null.
@@ -803,29 +698,6 @@ public class TransformerImpl extends Transformer
   public void setBaseURLOfSource(String base)
   {
     m_urlOfSource = base;
-  }
-
-  /**
-   * Get the original output target.
-   *
-   * @return The Result object used to kick of the transform or null.
-   */
-  public Result getOutputTarget()
-  {
-    return m_outputTarget;
-  }
-
-  /**
-   * Set the original output target.  This is useful when using a SAX transform and
-   * supplying a ContentHandler or when the URI of the output target should
-   * not be the same as the systemID of the original output target.
-   *
-   *
-   * NEEDSDOC @param outputTarget
-   */
-  public void setOutputTarget(Result outputTarget)
-  {
-    m_outputTarget = outputTarget;
   }
 
   /**
@@ -1465,36 +1337,6 @@ public class TransformerImpl extends Transformer
   }
 
   /**
-   * Get a SAX2 DeclHandler for the input.
-   * @return A valid DeclHandler, which should never be null, as
-   * long as getFeature("http://xml.org/trax/features/sax/input")
-   * returns true.
-   */
-  public DeclHandler getInputDeclHandler()
-  {
-
-    if (m_inputContentHandler instanceof DeclHandler)
-      return (DeclHandler) m_inputContentHandler;
-    else
-      return null;
-  }
-
-  /**
-   * Get a SAX2 LexicalHandler for the input.
-   * @return A valid LexicalHandler, which should never be null, as
-   * long as getFeature("http://xml.org/trax/features/sax/input")
-   * returns true.
-   */
-  public LexicalHandler getInputLexicalHandler()
-  {
-
-    if (m_inputContentHandler instanceof LexicalHandler)
-      return (LexicalHandler) m_inputContentHandler;
-    else
-      return null;
-  }
-
-  /**
    * Set the output properties for the transformation.  These
    * properties will override properties set in the templates
    * with xsl:output.
@@ -2016,18 +1858,6 @@ public class TransformerImpl extends Transformer
   }
 
   /**
-   * Get the StringWriter pool, so that StringWriter
-   * objects may be reused.
-   *
-   * @return The string writer pool, not null.
-   * @xsl.usage internal
-   */
-  public ObjectPool getStringWriterPool()
-  {
-    return m_stringWriterObjectPool;
-  }
-
-  /**
    * Take the contents of a template element, process it, and
    * convert it to a string.
    *
@@ -2251,10 +2081,6 @@ public class TransformerImpl extends Transformer
       else
       {
 
-        // Fire a trace event for the template.
-         
-        if (m_debug)
-          getTraceManager().fireTraceEvent(template);
         // And execute the child templates.
         // 9/11/00: If template has been compiled, hand off to it
         // since much (most? all?) of the processing has been inlined.
@@ -2268,9 +2094,6 @@ public class TransformerImpl extends Transformer
         // m_xcontext.getVarStack().link();
         m_xcontext.getVarStack().link(template.m_frameSize);
         executeChildTemplates(template, true);
-        
-        if (m_debug)
-          getTraceManager().fireTraceEndEvent(template);
       }
     }
     catch (org.xml.sax.SAXException se)
@@ -2494,9 +2317,6 @@ public class TransformerImpl extends Transformer
     {
       ElemSort sort = foreach.getSortElem(i);
       
-      if (m_debug)
-        getTraceManager().fireTraceEvent(sort);
-     
       String langString =
         (null != sort.getLang())
         ? sort.getLang().evaluate(xctxt, sourceNodeContext, foreach) : null;
@@ -2556,8 +2376,6 @@ public class TransformerImpl extends Transformer
       keys.addElement(new NodeSortKey(this, sort.getSelect(), treatAsNumbers,
                                       descending, langString, caseOrderUpper,
                                       foreach));
-      if (m_debug)
-        getTraceManager().fireTraceEndEvent(sort);
      }
 
     return keys;
@@ -2566,27 +2384,6 @@ public class TransformerImpl extends Transformer
   //==========================================================
   // SECTION: TransformState implementation
   //==========================================================
-  
-  /**
-   * Get the stack of ElemTemplateElements.
-   * 
-   * @return A copy of stack that contains the xsl element instructions, 
-   * the earliest called in index zero, and the latest called in index size()-1.
-   */
-  public Vector getElementCallstack()
-  {
-  	Vector elems = new Vector();
-  	int nStackSize = m_currentTemplateElements.size();
-  	for(int i = 0; i < nStackSize; i++)
-  	{
-  		ElemTemplateElement elem = (ElemTemplateElement) m_currentTemplateElements.elementAt(i);
-  		if(null != elem)
-  		{
-  			elems.addElement(elem);
-  		}
-  	}
-  	return elems;
-  }
   
   /**
    * Get the count of how many elements are 
@@ -2666,29 +2463,6 @@ public class TransformerImpl extends Transformer
     return m_xcontext.getCurrentNode();
   }
   
-  /**
-   * Get the call stack of xsl:template elements.
-   * 
-   * @return A copy of stack that contains the xsl:template 
-   * (ElemTemplate) instructions, the earliest called in index 
-   * zero, and the latest called in index size()-1.
-   */
-  public Vector getTemplateCallstack()
-  {
-  	Vector elems = new Vector();
-  	int nStackSize = m_currentTemplateElements.size();
-  	for(int i = 0; i < nStackSize; i++)
-  	{
-  		ElemTemplateElement elem = (ElemTemplateElement) m_currentTemplateElements.elementAt(i);
-  		if(null != elem && (elem.getXSLToken() != Constants.ELEMNAME_TEMPLATE))
-  		{
-  			elems.addElement(elem);
-  		}
-  	}
-  	return elems;
-  }
-
-
   /**
    * This method retrieves the xsl:template
    * that is in effect, which may be a matched template
@@ -2839,20 +2613,6 @@ public class TransformerImpl extends Transformer
   }
 
   /**
-   * If the quietConflictWarnings property is set to
-   * true, warnings about pattern conflicts won't be
-   * printed to the diagnostics stream.
-   * False by default.
-   * (Currently setting this property will have no effect.)
-   *
-   * @param b true if conflict warnings should be suppressed.
-   */
-  public void setQuietConflictWarnings(boolean b)
-  {
-    m_quietConflictWarnings = b;
-  }
-
-  /**
    * Set the execution context for XPath.
    *
    * @param xcontext A non-null reference to the XPathContext
@@ -2872,53 +2632,6 @@ public class TransformerImpl extends Transformer
   public final XPathContext getXPathContext()
   {
     return m_xcontext;
-  }
-
-  /**
-   * Get the object used to guard the stack from
-   * recursion.
-   *
-   * @return The StackGuard object, which should never be null.
-   * @xsl.usage internal
-   */
-  public StackGuard getStackGuard()
-  {
-    return m_stackGuard;
-  }
-
-  /**
-   * Get the recursion limit.
-   * Used for infinite loop check. If the value is -1, do not
-   * check for infinite loops. Anyone who wants to enable that
-   * check should change the value of this variable to be the
-   * level of recursion that they want to check. Be careful setting
-   * this variable, if the number is too low, it may report an
-   * infinite loop situation, when there is none.
-   * Post version 1.0.0, we'll make this a runtime feature.
-   *
-   * @return The limit on recursion, or -1 if no check is to be made.
-   */
-  public int getRecursionLimit()
-  {
-    return m_stackGuard.getRecursionLimit();
-  }
-
-  /**
-   * Set the recursion limit.
-   * Used for infinite loop check. If the value is -1, do not
-   * check for infinite loops. Anyone who wants to enable that
-   * check should change the value of this variable to be the
-   * level of recursion that they want to check. Be careful setting
-   * this variable, if the number is too low, it may report an
-   * infinite loop situation, when there is none.
-   * Post version 1.0.0, we'll make this a runtime feature.
-   *
-   * @param limit A number that represents the limit of recursion,
-   * or -1 if no checking is to be done.
-   */
-  public void setRecursionLimit(int limit)
-  {
-    m_stackGuard.setRecursionLimit(limit);
   }
 
   /**
@@ -3125,18 +2838,6 @@ public class TransformerImpl extends Transformer
   }
 
   /**
-   * Get an instance of the trace manager for this transformation.
-   * This object can be used to set trace listeners on various
-   * events during the transformation.
-   *
-   * @return A reference to the TraceManager, never null.
-   */
-  public TraceManager getTraceManager()
-  {
-    return m_traceManager;
-  }
-
-  /**
    * Look up the value of a feature.
    *
    * <p>The feature name is any fully-qualified URI.  It is
@@ -3327,48 +3028,6 @@ public class TransformerImpl extends Transformer
   }
 
   /**
-   * Set the input source for the source tree, which is needed if the
-   * parse thread is not the main thread, in order for the parse
-   * thread's run method to get to the input source.
-   *
-   * @param source The input source for the source tree.
-   */
-  public void setXMLSource(Source source)
-  {
-    m_xmlSource = source;
-  }
-
-  /**
-   * Tell if the transform method is completed.
-   *
-   * @return True if transformNode has completed, or
-   * an exception was thrown.
-   */
-  public boolean isTransformDone()
-  {
-
-    synchronized (this)
-    {
-      return m_isTransformDone;
-    }
-  }
-
-  /**
-   * Set if the transform method is completed.
-   *
-   * @param done True if transformNode has completed, or
-   * an exception was thrown.
-   */
-  public void setIsTransformDone(boolean done)
-  {
-
-    synchronized (this)
-    {
-      m_isTransformDone = done;
-    }
-  }
-
-  /**
    * From a secondary thread, post the exception, so that
    * it can be picked up from the main thread.
    *
@@ -3397,7 +3056,7 @@ public class TransformerImpl extends Transformer
     //      SourceTreeHandler sth = (SourceTreeHandler) ch;
     //      ((TransformerImpl)(sth.getTransformer())).postExceptionFromThread(e);
     //    }
-    m_isTransformDone = true;
+    // m_isTransformDone = true; // android-removed
     m_exceptionThrown = e;
     ;  // should have already been reported via the error handler?
 
@@ -3435,7 +3094,7 @@ public class TransformerImpl extends Transformer
       // transformNode(n);
       try
       {
-        m_isTransformDone = false;
+        // m_isTransformDone = false; // android-removed
         
         // Should no longer be needed...
 //          if(m_inputContentHandler instanceof TransformerHandlerImpl)
@@ -3459,7 +3118,7 @@ public class TransformerImpl extends Transformer
       }
       finally
       {
-        m_isTransformDone = true;
+        // m_isTransformDone = true; // android-removed
 
         if (m_inputContentHandler instanceof TransformerHandlerImpl)
         {
@@ -3484,58 +3143,6 @@ public class TransformerImpl extends Transformer
   }
 
   // Fragment re-execution interfaces for a tool.
-
-  /**
-   * This will get a snapshot of the current executing context 
-   *
-   *
-   * @return TransformSnapshot object, snapshot of executing context
-   * @deprecated This is an internal tooling API that nobody seems to be using
-   */
-  public TransformSnapshot getSnapshot()
-  {
-    return new TransformSnapshotImpl(this);
-  }
-
-  /**
-   * This will execute the following XSLT instructions
-   * from the snapshot point, after the stylesheet execution
-   * context has been reset from the snapshot point. 
-   *
-   * @param ts The snapshot of where to start execution
-   *
-   * @throws TransformerException
-   * @deprecated This is an internal tooling API that nobody seems to be using
-   */
-  public void executeFromSnapshot(TransformSnapshot ts)
-          throws TransformerException
-  {
-
-    ElemTemplateElement template = getMatchedTemplate();
-    int child = getMatchedNode();
-
-    pushElemTemplateElement(template);  //needed??
-    m_xcontext.pushCurrentNode(child);  //needed??
-    this.executeChildTemplates(template, true);  // getResultTreeHandler());
-  }
-
-  /**
-   * This will reset the stylesheet execution context
-   * from the snapshot point.
-   *
-   * @param ts The snapshot of where to start execution
-   * @deprecated This is an internal tooling API that nobody seems to be using
-   */
-  public void resetToStylesheet(TransformSnapshot ts)
-  {
-    ((TransformSnapshotImpl) ts).apply(this);
-  }
-
-  /**
-   * NEEDSDOC Method stopTransformation 
-   *
-   */
-  public void stopTransformation(){}
 
   /**
    * Test whether whitespace-only text nodes are visible in the logical
@@ -3600,9 +3207,6 @@ public class TransformerImpl extends Transformer
 		char[] ch,
 		int start,
 		int length) {
-			
-		GenerateEvent ge = new GenerateEvent(this, eventType, ch, start, length);
-		m_traceManager.fireGenerateEvent(ge);					
 	}
 
 	/**
@@ -3613,18 +3217,12 @@ public class TransformerImpl extends Transformer
 		int eventType,
 		String name,
 		Attributes atts) {
-			
-		GenerateEvent ge = new GenerateEvent(this, eventType, name, atts);
-		m_traceManager.fireGenerateEvent(ge);					
 	}
 
 	/**
 	 * Fire off processingInstruction events.
-	 * @see org.apache.xml.serializer.SerializerTrace#fireGenerateEvent(int, String, String)
 	 */
 	public void fireGenerateEvent(int eventType, String name, String data) {
-		GenerateEvent ge = new GenerateEvent(this, eventType, name,data);
-		m_traceManager.fireGenerateEvent(ge);				
 	}
 
 	/**
@@ -3632,8 +3230,6 @@ public class TransformerImpl extends Transformer
 	 * @see org.apache.xml.serializer.SerializerTrace#fireGenerateEvent(int, String)
 	 */
 	public void fireGenerateEvent(int eventType, String data) {
-		GenerateEvent ge = new GenerateEvent(this, eventType, data);
-		m_traceManager.fireGenerateEvent(ge);		
 	}
 
 	/**
@@ -3641,23 +3237,13 @@ public class TransformerImpl extends Transformer
 	 * @see org.apache.xml.serializer.SerializerTrace#fireGenerateEvent(int)
 	 */
 	public void fireGenerateEvent(int eventType) {
-		GenerateEvent ge = new GenerateEvent(this, eventType);
-		m_traceManager.fireGenerateEvent(ge);
 	}
 
     /**
      * @see org.apache.xml.serializer.SerializerTrace#hasTraceListeners()
      */
     public boolean hasTraceListeners() {
-        return m_traceManager.hasTraceListeners();
-    }
-
-    public boolean getDebug() {
-        return m_debug;
-    }
-
-    public void setDebug(boolean b) {
-        m_debug = b;
+        return false;
     }
 
     /**

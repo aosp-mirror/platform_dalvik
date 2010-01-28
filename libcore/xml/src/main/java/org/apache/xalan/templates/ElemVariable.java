@@ -240,18 +240,12 @@ public class ElemVariable extends ElemTemplateElement
   public void execute(TransformerImpl transformer) throws TransformerException
   {
 
-    if (transformer.getDebug())
-      transformer.getTraceManager().fireTraceEvent(this);
-
     int sourceNode = transformer.getXPathContext().getCurrentNode();
   
     XObject var = getValue(transformer, sourceNode);
 
     // transformer.getXPathContext().getVarStack().pushVariable(m_qname, var);
     transformer.getXPathContext().getVarStack().setLocalVariable(m_index, var);
-    
-    if (transformer.getDebug())
-	  transformer.getTraceManager().fireTraceEndEvent(this);         
   }
 
   /**
@@ -280,10 +274,6 @@ public class ElemVariable extends ElemTemplateElement
         var = m_selectPattern.execute(xctxt, sourceNode, this);
 
         var.allowDetachToRelease(false);
-
-        if (transformer.getDebug())
-          transformer.getTraceManager().fireSelectedEvent(sourceNode, this,
-                  "select", m_selectPattern, var);
       }
       else if (null == getFirstChildElem())
       {

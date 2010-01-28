@@ -204,8 +204,6 @@ public class ElemExtensionCall extends ElemLiteralResult
           XSLTErrorResources.ER_EXTENSION_ELEMENT_NOT_ALLOWED_IN_SECURE_PROCESSING,
           new Object[] {getRawName()}));
           
-    if (transformer.getDebug())
-		transformer.getTraceManager().fireTraceEvent(this);
     try
     {
       transformer.getResultTreeHandler().flushPending();
@@ -267,8 +265,6 @@ public class ElemExtensionCall extends ElemLiteralResult
     catch(SAXException se) {
       throw new TransformerException(se);
     }
-    if (transformer.getDebug())
-		transformer.getTraceManager().fireTraceEndEvent(this);
   }
 
   /**
