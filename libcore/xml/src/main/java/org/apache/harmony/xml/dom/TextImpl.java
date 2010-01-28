@@ -17,7 +17,6 @@
 package org.apache.harmony.xml.dom;
 
 import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 
@@ -67,4 +66,15 @@ public class TextImpl extends CharacterDataImpl implements Text {
         return this;
     }
 
+    public boolean isElementContentWhitespace() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String getWholeText() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public Text replaceWholeText(String content) throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
 }

@@ -20,6 +20,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Comment;
+import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -295,4 +296,60 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
         return super.insertChildAt(newChild, index);
     }
 
+    public String getInputEncoding() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String getXmlEncoding() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public boolean getXmlStandalone() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setXmlStandalone(boolean xmlStandalone) throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String getXmlVersion() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setXmlVersion(String xmlVersion) throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public boolean getStrictErrorChecking() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setStrictErrorChecking(boolean strictErrorChecking) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public String getDocumentURI() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void setDocumentURI(String documentURI) {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public Node adoptNode(Node source) throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public DOMConfiguration getDomConfig() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public void normalizeDocument() {
+        throw new UnsupportedOperationException(); // TODO
+    }
+
+    public Node renameNode(Node n, String namespaceURI, String qualifiedName)
+            throws DOMException {
+        throw new UnsupportedOperationException(); // TODO
+    }
 }

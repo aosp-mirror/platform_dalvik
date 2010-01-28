@@ -1,26 +1,16 @@
 /*
- * Copyright (c) 2000 World Wide Web Consortium,
- * (Massachusetts Institute of Technology, Institut National de
- * Recherche en Informatique et en Automatique, Keio University). All
- * Rights Reserved. This program is distributed under the W3C's Software
- * Intellectual Property License. This program is distributed in the
- * hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.
- * See W3C License http://www.w3.org/Consortium/Legal/ for more details.
+ * Copyright (c) 2004 World Wide Web Consortium,
+ *
+ * (Massachusetts Institute of Technology, European Research Consortium for
+ * Informatics and Mathematics, Keio University). All Rights Reserved. This
+ * work is distributed under the W3C(r) Software License [1] in the hope that
+ * it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
  */
 
 package org.w3c.dom;
-
-// BEGIN android-note
-// Cleaned up @param tags that seemed to be missing spaces between
-// the parameter name and the start of the description.
-// END android-note
-
-//BEGIN android-note
-//Filled some gaps in the documentation and refactored parts of the existing
-//documentation to make the Doclet happy.
-//END android-note
 
 /**
  * The <code>CharacterData</code> interface extends Node with a set of 
@@ -34,20 +24,17 @@ package org.w3c.dom;
  * the DOM are represented in UTF-16, i.e. as a sequence of 16-bit units. In 
  * the following, the term 16-bit units is used whenever necessary to 
  * indicate that indexing on CharacterData is done in 16-bit units.
- * <p>See also the <a href='http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113'>Document Object Model (DOM) Level 2 Core Specification</a>.
+ * <p>See also the <a href='http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407'>Document Object Model (DOM) Level 3 Core Specification</a>.
  */
 public interface CharacterData extends Node {
     /**
-     * Returns the character data of the node that implements this interface.
-     * The DOM implementation may not put arbitrary limits on the amount of data 
+     * The character data of the node that implements this interface. The DOM 
+     * implementation may not put arbitrary limits on the amount of data 
      * that may be stored in a <code>CharacterData</code> node. However, 
      * implementation limits may mean that the entirety of a node's data may 
      * not fit into a single <code>DOMString</code>. In such cases, the user 
      * may call <code>substringData</code> to retrieve the data in 
      * appropriately sized pieces.
-     * 
-     * @return the character data as a string.
-     * 
      * @exception DOMException
      *   DOMSTRING_SIZE_ERR: Raised when it would return more characters than 
      *   fit in a <code>DOMString</code> variable on the implementation 
@@ -56,16 +43,13 @@ public interface CharacterData extends Node {
     public String getData()
                             throws DOMException;
     /**
-     * Sets the character data of the node that implements this interface. The
-     * DOM implementation may not put arbitrary limits on the amount of data 
+     * The character data of the node that implements this interface. The DOM 
+     * implementation may not put arbitrary limits on the amount of data 
      * that may be stored in a <code>CharacterData</code> node. However, 
      * implementation limits may mean that the entirety of a node's data may 
      * not fit into a single <code>DOMString</code>. In such cases, the user 
      * may call <code>substringData</code> to retrieve the data in 
      * appropriately sized pieces.
-     * 
-     * @param data the new character data.
-     * 
      * @exception DOMException
      *   NO_MODIFICATION_ALLOWED_ERR: Raised when the node is readonly.
      */
@@ -76,8 +60,6 @@ public interface CharacterData extends Node {
      * The number of 16-bit units that are available through <code>data</code> 
      * and the <code>substringData</code> method below. This may have the 
      * value zero, i.e., <code>CharacterData</code> nodes may be empty.
-     * 
-     * @return the length in characters.
      */
     public int getLength();
 

@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,392 +15,487 @@
  * limitations under the License.
  */
 
+// $Id: DocumentBuilderFactory.java 884950 2009-11-27 18:46:18Z mrglavas $
+
 package javax.xml.parsers;
 
 import org.apache.harmony.xml.parsers.DocumentBuilderFactoryImpl;
 
+import javax.xml.validation.Schema;
+
 /**
- * Provides a factory for {@link DocumentBuilder} instances. The class first
- * needs to be instantiated using the {@link #newInstance()} method. The
- * instance can be configured as desired. A call to
- * {@link #newDocumentBuilder()} then provides a {@code DocumentBuilder}
- * instance matching this configuration (if possible).
- * 
- * @since Android 1.0
+ * Defines a factory API that enables applications to obtain a
+ * parser that produces DOM object trees from XML documents.
+ *
+ * @author <a href="Jeff.Suttor@Sun.com">Jeff Suttor</a>
+ * @version $Revision: 884950 $, $Date: 2009-11-27 10:46:18 -0800 (Fri, 27 Nov 2009) $
  */
-public abstract class DocumentBuilderFactory extends Object {
 
-    private boolean coalesce = true;
+public abstract class DocumentBuilderFactory {
 
-    private boolean expandEntityReferences;
-
-    private boolean ignoreComments;
-
-    private boolean ignoreElementContentWhitespace;
-
-    private boolean namespaceAware;
-
-    private boolean validate;
-
-    /**
-     * Do-nothing constructor. To be overridden by concrete document builders.
-     * 
-     * @since Android 1.0
-     */
-    protected DocumentBuilderFactory() {
-        // Does nothing.
+    private boolean validating = false;
+    private boolean namespaceAware = false;
+    private boolean whitespace = false;
+    private boolean expandEntityRef = true;
+    private boolean ignoreComments = false;
+    private boolean coalescing = false;
+    
+    protected DocumentBuilderFactory () {
     }
 
     /**
-     * Queries an attribute from the underlying implementation.
-     * 
-     * @param name the name of the attribute.
-     * @return the value of the attribute.
-     * 
-     * @throws IllegalArgumentException if the argument is unknown to the
-     *         underlying implementation.
-     * 
-     * @since Android 1.0
+     * Returns Android's implementation of {@code DocumentBuilderFactory}.
+     * Unlike other Java implementations, this method does not consult system
+     * properties, property files, or the services API.
+     *
+     * @return a new DocumentBuilderFactory.
      */
-    public abstract Object getAttribute(String name)
-            throws IllegalArgumentException;
+    public static DocumentBuilderFactory newInstance() {
+        // BEGIN android-changed
+        //     instantiate the class directly rather than using reflection
+        return new DocumentBuilderFactoryImpl();
+        // END android-changed
+    }
+
+    // BEGIN android-only
+    //     omit this method which wasn't included in Java 5
+    // /**
+    //  * @return New instance of a <code>DocumentBuilderFactory</code>
+    //  *
+    //  * @exception FactoryConfigurationError if the implementation is not
+    //  * available or cannot be instantiated.
+    //  * @since 1.6
+    //  */
+    // public static DocumentBuilderFactory newInstance(String factoryClassName,
+    //         ClassLoader classLoader) {
+    //     if (factoryClassName == null) {
+    //         throw new FactoryConfigurationError("factoryClassName cannot be null.");
+    //     }
+    //     if (classLoader == null) {
+    //         classLoader = SecuritySupport.getContextClassLoader();
+    //     }
+    //     try {
+    //         return (DocumentBuilderFactory) FactoryFinder.newInstance(factoryClassName, classLoader, false);
+    //     }
+    //     catch (FactoryFinder.ConfigurationError e) {
+    //         throw new FactoryConfigurationError(e.getException(), e.getMessage());
+    //     }
+    // }
+    // END android-only
 
     /**
-     * Queries a feature from the underlying implementation.
-     * 
-     * @param name The name of the feature. The default Android implementation
-     *             of {@link DocumentBuilder} supports only the following three
-     *             features:
-     *             
-     *             <dl>
-     *               <dt>{@code http://xml.org/sax/features/namespaces}</dt>
-     *               <dd>Queries the state of namespace-awareness.</dd>
-     *               
-     *               <dt>
-     *                 {@code http://xml.org/sax/features/namespace-prefixes}
-     *               </dt>
-     *               <dd>Queries the state of namespace prefix processing</dd>
+     * Creates a new instance of a {@link javax.xml.parsers.DocumentBuilder}
+     * using the currently configured parameters.
      *
-     *               <dt>
-     *                 {@code http://xml.org/sax/features/validation}
-     *               </dt>
-     *               <dd>Queries the state of validation.</dd>
-     *             </dl>
-     *             
-     *             Note that despite the ability to query the validation
-     *             feature, there is currently no validating parser available.
-     *             Also note that currently either namespaces or 
-     *             namespace prefixes can be enabled, but not both at the same 
-     *             time.
-     * 
-     * @return the status of the feature.
-     * 
-     * @throws IllegalArgumentException if the feature is unknown to
-     *         the underlying implementation.
-     * @throws ParserConfigurationException if the feature is
-     *         known, but not supported.
-     * 
-     * @since Android 1.0
+     * @exception ParserConfigurationException if a DocumentBuilder
+     * cannot be created which satisfies the configuration requested.
+     * @return A new instance of a DocumentBuilder.
      */
-    public abstract boolean getFeature(String name)
-            throws ParserConfigurationException;
-
-// TODO No XSchema support in Android 1.0. Maybe later.
-//    /**
-//     * Queries the desired XML Schema object.
-//     * 
-//     * @return The XML Schema object, if it has been set by a call to setSchema,
-//     *         or null otherwise.
-//     */
-//    public javax.xml.validation.Schema getSchema() {
-//        return schema;
-//    }
+    
+    public abstract DocumentBuilder newDocumentBuilder()
+        throws ParserConfigurationException;
+    
     
     /**
-     * Queries whether the factory is configured to deliver parsers that convert
-     * CDATA nodes to text nodes and melt them with neighboring nodes. This is
-     * called "coalescing".
-     * 
-     * @return {@code true} if coalescing is desired, {@code false} otherwise.
-     * 
-     * @since Android 1.0
+     * Specifies that the parser produced by this code will
+     * provide support for XML namespaces. By default the value of this is set
+     * to <code>false</code>
+     *
+     * @param awareness true if the parser produced will provide support
+     *                  for XML namespaces; false otherwise.
      */
-    public boolean isCoalescing() {
-        return coalesce;
+    
+    public void setNamespaceAware(boolean awareness) {
+        this.namespaceAware = awareness;
     }
 
     /**
-     * Queries whether the factory is configured to deliver parsers that expand
-     * entity references.
+     * Specifies that the parser produced by this code will
+     * validate documents as they are parsed. By default the value of this
+     * is set to <code>false</code>.
      * 
-     * @return {@code true} if entity expansion is desired, {@code false}
-     * otherwise.
+     * <p>
+     * Note that "the validation" here means
+     * <a href="http://www.w3.org/TR/REC-xml#proc-types">a validating
+     * parser</a> as defined in the XML recommendation.
+     * In other words, it essentially just controls the DTD validation.
+     * (except the legacy two properties defined in JAXP 1.2.
+     * See <a href="#validationCompatibility">here</a> for more details.)
+     * </p>
      * 
-     * @since Android 1.0
+     * <p>
+     * To use modern schema languages such as W3C XML Schema or
+     * RELAX NG instead of DTD, you can configure your parser to be
+     * a non-validating parser by leaving the {@link #setValidating(boolean)}
+     * method <tt>false</tt>, then use the {@link #setSchema(Schema)}
+     * method to associate a schema to a parser.
+     * </p>
+     * 
+     * @param validating true if the parser produced will validate documents
+     *                   as they are parsed; false otherwise.
      */
-    public boolean isExpandEntityReferences() {
-        return expandEntityReferences;
+    
+    public void setValidating(boolean validating) {
+        this.validating = validating;
     }
 
     /**
-     * Queries whether the factory is configured to deliver parsers that ignore
-     * comments.
-     * 
-     * @return {@code true} if comment ignorance is desired, {@code false}
-     * otherwise.
-     * 
-     * @since Android 1.0
+     * Specifies that the parsers created by this  factory must eliminate
+     * whitespace in element content (sometimes known loosely as
+     * 'ignorable whitespace') when parsing XML documents (see XML Rec
+     * 2.10). Note that only whitespace which is directly contained within
+     * element content that has an element only content model (see XML
+     * Rec 3.2.1) will be eliminated. Due to reliance on the content model
+     * this setting requires the parser to be in validating mode. By default
+     * the value of this is set to <code>false</code>.
+     *
+     * @param whitespace true if the parser created must eliminate whitespace
+     *                   in the element content when parsing XML documents;
+     *                   false otherwise.
      */
-    public boolean isIgnoringComments() {
-        return ignoreComments;
+
+    public void setIgnoringElementContentWhitespace(boolean whitespace) {
+        this.whitespace = whitespace;
     }
 
     /**
-     * Queries whether the factory is configured to deliver parsers that ignore
-     * whitespace in elements.
-     * 
-     * @return {@code true} if whitespace ignorance is desired, {@code false}
-     * otherwise.
-     * 
-     * @since Android 1.0
+     * Specifies that the parser produced by this code will
+     * expand entity reference nodes. By default the value of this is set to
+     * <code>true</code>
+     *
+     * @param expandEntityRef true if the parser produced will expand entity
+     *                        reference nodes; false otherwise.
      */
-    public boolean isIgnoringElementContentWhitespace() {
-        return ignoreElementContentWhitespace;
+    
+    public void setExpandEntityReferences(boolean expandEntityRef) {
+        this.expandEntityRef = expandEntityRef;
     }
 
     /**
-     * Queries whether the factory is configured to deliver parsers that are
-     * namespace-aware.
+     * <p>Specifies that the parser produced by this code will
+     * ignore comments. By default the value of this is set to <code>false
+     * </code>.</p>
      * 
-     * @return {@code true} if namespace-awareness is desired, {@code false}
-     * otherwise.
-     * 
-     * @since Android 1.0
+     * @param ignoreComments <code>boolean</code> value to ignore comments during processing
      */
+    
+    public void setIgnoringComments(boolean ignoreComments) {
+        this.ignoreComments = ignoreComments;
+    }
+
+    /**
+     * Specifies that the parser produced by this code will
+     * convert CDATA nodes to Text nodes and append it to the
+     * adjacent (if any) text node. By default the value of this is set to
+     * <code>false</code>
+     *
+     * @param coalescing  true if the parser produced will convert CDATA nodes
+     *                    to Text nodes and append it to the adjacent (if any)
+     *                    text node; false otherwise.
+     */
+    
+    public void setCoalescing(boolean coalescing) {
+        this.coalescing = coalescing;
+    }
+
+    /**
+     * Indicates whether or not the factory is configured to produce
+     * parsers which are namespace aware.
+     *
+     * @return  true if the factory is configured to produce parsers which
+     *          are namespace aware; false otherwise.
+     */
+    
     public boolean isNamespaceAware() {
         return namespaceAware;
     }
 
     /**
-     * Queries whether the factory is configured to deliver parsers that are
-     * validating.
-     * 
-     * @return {@code true} if validating is desired, {@code false} otherwise.
-     * 
-     * @since Android 1.0
+     * Indicates whether or not the factory is configured to produce
+     * parsers which validate the XML content during parse.
+     *
+     * @return  true if the factory is configured to produce parsers
+     *          which validate the XML content during parse; false otherwise.
      */
+    
     public boolean isValidating() {
-        return validate;
+        return validating;
     }
 
     /**
-     * Queries whether the factory is configured to deliver parsers that are
-     * XInclude-aware.
-     * 
-     * @return {@code true} if XInclude-awareness is desired, {@code false}
-     * otherwise.
-     * 
-     * @since Android 1.0
+     * Indicates whether or not the factory is configured to produce
+     * parsers which ignore ignorable whitespace in element content.
+     *
+     * @return  true if the factory is configured to produce parsers
+     *          which ignore ignorable whitespace in element content;
+     *          false otherwise.
      */
-    public boolean isXIncludeAware() {
-        throw new UnsupportedOperationException();
+    
+    public boolean isIgnoringElementContentWhitespace() {
+        return whitespace;
     }
 
     /**
-     * Creates a new {@link DocumentBuilder} that matches the current
-     * configuration of the factory.
-     * 
-     * @return the DocumentBuilder.
-     * @throws ParserConfigurationException if no matching
-     *         {@code DocumentBuilder} could be found.
-     * 
-     * @since Android 1.0
+     * Indicates whether or not the factory is configured to produce
+     * parsers which expand entity reference nodes.
+     *
+     * @return  true if the factory is configured to produce parsers
+     *          which expand entity reference nodes; false otherwise.
      */
-    public abstract DocumentBuilder newDocumentBuilder()
-            throws ParserConfigurationException;
-
-    /**
-     * Creates a new DocumentBuilderFactory that can be configured and then be
-     * used for creating DocumentBuilder objects. The method first checks the
-     * value of the {@code DocumentBuilderFactory} property.
-     * If this is non-{@code null}, it is assumed to be the name of a class
-     * that serves as the factory. The class is instantiated, and the instance
-     * is returned. If the property value is {@code null}, the system's default
-     * factory implementation is returned.
-     * 
-     * @return the DocumentBuilderFactory.
-     * @throws FactoryConfigurationError if no {@code DocumentBuilderFactory}
-     *         can be created.
-     * 
-     * @since Android 1.0
-     */
-    public static DocumentBuilderFactory newInstance()
-            throws FactoryConfigurationError {
-        // TODO Properties file and META-INF case missing here. See spec.
-        String factory = System
-                .getProperty("javax.xml.parsers.DocumentBuilderFactory");
-        if (factory != null) {
-            try {
-                return (DocumentBuilderFactory) Class.forName(factory)
-                        .newInstance();
-            } catch (Exception ex) {
-                // Ignore.
-            }
-        }
-
-        try {
-            return new DocumentBuilderFactoryImpl();
-        } catch (Exception ex) {
-            // Ignore.
-        }
-
-        throw new FactoryConfigurationError(
-                "Cannot create DocumentBuilderFactory");
+    
+    public boolean isExpandEntityReferences() {
+        return expandEntityRef;
     }
 
     /**
-     * Sets an attribute in the underlying implementation.
-     * 
-     * @param name the name of the attribute.
-     * @param value the value of the attribute.
-     * 
-     * @throws IllegalArgumentException if the argument is unknown to the
-     *         underlying implementation.
-     * 
-     * @since Android 1.0
+     * Indicates whether or not the factory is configured to produce
+     * parsers which ignores comments.
+     *
+     * @return  true if the factory is configured to produce parsers
+     *          which ignores comments; false otherwise.
+     */
+    
+    public boolean isIgnoringComments() {
+        return ignoreComments;
+    }
+
+    /**
+     * Indicates whether or not the factory is configured to produce
+     * parsers which converts CDATA nodes to Text nodes and appends it to
+     * the adjacent (if any) Text node.
+     *
+     * @return  true if the factory is configured to produce parsers
+     *          which converts CDATA nodes to Text nodes and appends it to
+     *          the adjacent (if any) Text node; false otherwise.
+     */
+    
+    public boolean isCoalescing() {
+        return coalescing;
+    }
+
+    /**
+     * Allows the user to set specific attributes on the underlying
+     * implementation.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     * @exception IllegalArgumentException thrown if the underlying
+     * implementation doesn't recognize the attribute.
      */
     public abstract void setAttribute(String name, Object value)
-            throws IllegalArgumentException;
+                throws IllegalArgumentException;
 
     /**
-     * Determines whether the factory is configured to deliver parsers that
-     * convert CDATA nodes to text nodes and melt them with neighboring nodes.
-     * This is called "coalescing".
-     * 
-     * @param value turns coalescing on or off.
-     * 
-     * @since Android 1.0
+     * Allows the user to retrieve specific attributes on the underlying
+     * implementation.
+     * @param name The name of the attribute.
+     * @return value The value of the attribute.
+     * @exception IllegalArgumentException thrown if the underlying
+     * implementation doesn't recognize the attribute.
      */
-    public void setCoalescing(boolean value) {
-        coalesce = value;
-    }
+    public abstract Object getAttribute(String name)
+                throws IllegalArgumentException;
+                
+	/**
+	 * <p>Set a feature for this <code>DocumentBuilderFactory</code> and <code>DocumentBuilder</code>s created by this factory.</p>
+	 * 
+	 * <p>
+	 * Feature names are fully qualified {@link java.net.URI}s.
+	 * Implementations may define their own features.
+	 * An {@link ParserConfigurationException} is thrown if this <code>DocumentBuilderFactory</code> or the
+	 * <code>DocumentBuilder</code>s it creates cannot support the feature.
+	 * It is possible for an <code>DocumentBuilderFactory</code> to expose a feature value but be unable to change its state.
+	 * </p>
+	 * 
+	 * <p>
+	 * All implementations are required to support the {@link javax.xml.XMLConstants#FEATURE_SECURE_PROCESSING} feature.
+	 * When the feature is:</p>
+	 * <ul>
+	 *   <li>
+	 *     <code>true</code>: the implementation will limit XML processing to conform to implementation limits.
+	 *     Examples include entity expansion limits and XML Schema constructs that would consume large amounts of resources.
+	 *     If XML processing is limited for security reasons, it will be reported via a call to the registered
+	 *    {@link org.xml.sax.ErrorHandler#fatalError(SAXParseException exception)}.
+	 *     See {@link  DocumentBuilder#setErrorHandler(org.xml.sax.ErrorHandler errorHandler)}.
+	 *   </li>
+	 *   <li>
+	 *     <code>false</code>: the implementation will processing XML according to the XML specifications without
+	 *     regard to possible implementation limits.
+	 *   </li>
+	 * </ul>
+	 * 
+	 * @param name Feature name.
+	 * @param value Is feature state <code>true</code> or <code>false</code>.
+	 *  
+	 * @throws ParserConfigurationException if this <code>DocumentBuilderFactory</code> or the <code>DocumentBuilder</code>s
+	 *   it creates cannot support this feature.
+     * @throws NullPointerException If the <code>name</code> parameter is null.
+	 */
+	public abstract void setFeature(String name, boolean value)
+		throws ParserConfigurationException;
 
-    /**
-     * Determines whether the factory is configured to deliver parsers that
-     * expands entity references.
-     * 
-     * @param value turns entity reference expansion on or off.
-     * 
-     * @since Android 1.0
-     */
-    public void setExpandEntityReferences(boolean value) {
-        expandEntityReferences = value;
-    }
-
-    /**
-     * Sets a feature in the underlying implementation.
-     * 
-     * @param name the name of the feature. The default Android implementation
-     *             of {@link DocumentBuilder} supports only the following three
-     *             features:
-     *             
-     *             <dl>
-     *               <dt>{@code http://xml.org/sax/features/namespaces}</dt>
-     *               <dd>Sets the state of namespace-awareness.</dd>
-     *               
-     *               <dt>
-     *                 {@code http://xml.org/sax/features/namespace-prefixes}
-     *               </dt>
-     *               <dd>Sets the state of namespace prefix processing</dd>
-     *
-     *               <dt>{@code http://xml.org/sax/features/validation}</dt>
-     *               <dd>Sets the state of validation.</dd>
-     *             </dl>
-     *             
-     *             Note that despite the ability to set the validation
-     *             feature, there is currently no validating parser available.
-     *             Also note that currently either namespaces or
-     *             namespace prefixes can be enabled, but not both at the same
-     *             time.
-     * 
-     * @param value the value of the feature.
-     * 
-     * @throws ParserConfigurationException if the feature is unknown to the
-     *         underlying implementation.
-     * 
-     * @since Android 1.0
-     */
-    public abstract void setFeature(String name, boolean value)
-            throws ParserConfigurationException;
-
-    /**
-     * Determines whether the factory is configured to deliver parsers that
-     * ignore comments.
-     * 
-     * @param value turns comment ignorance on or off.
-     * 
-     * @since Android 1.0
-     */
-    public void setIgnoringComments(boolean value) {
-        ignoreComments = value;
-    }
-
-    /**
-     * Determines whether the factory is configured to deliver parsers that
-     * ignores element whitespace.
-     * 
-     * @param value turns element whitespace ignorance on or off.
-     * 
-     * @since Android 1.0
-     */
-    public void setIgnoringElementContentWhitespace(boolean value) {
-        ignoreElementContentWhitespace = value;
-    }
-
-    /**
-     * Determines whether the factory is configured to deliver parsers that are
-     * namespace-aware.
-     * 
-     * @param value turns namespace-awareness on or off.
-     * 
-     * @since Android 1.0
-     */
-    public void setNamespaceAware(boolean value) {
-        namespaceAware = value;
-    }
-
-// TODO No XSchema support in Android 1.0. Maybe later.
-//    /**
-//     * Sets the desired XML Schema object.
-//     * 
-//     * @param schema The XML Schema object.
-//     */
-//    public void setSchema(Schema schema) {
-//        this.schema = schema;
-//    }
+	/**
+	 * <p>Get the state of the named feature.</p>
+	 * 
+	 * <p>
+	 * Feature names are fully qualified {@link java.net.URI}s.
+	 * Implementations may define their own features.
+	 * An {@link ParserConfigurationException} is thrown if this <code>DocumentBuilderFactory</code> or the
+	 * <code>DocumentBuilder</code>s it creates cannot support the feature.
+	 * It is possible for an <code>DocumentBuilderFactory</code> to expose a feature value but be unable to change its state.
+	 * </p>
+	 * 
+	 * @param name Feature name.
+	 * 
+	 * @return State of the named feature.
+	 * 
+	 * @throws ParserConfigurationException if this <code>DocumentBuilderFactory</code>
+	 *   or the <code>DocumentBuilder</code>s it creates cannot support this feature.
+	 */
+	public abstract boolean getFeature(String name)
+		throws ParserConfigurationException;
     
     /**
-     * Determines whether the factory is configured to deliver parsers that are
-     * validating.
+     * Gets the {@link Schema} object specified through
+     * the {@link #setSchema(Schema schema)} method.
      * 
-     * @param value turns validation on or off.
      * 
-     * @since Android 1.0
+     * @throws UnsupportedOperationException
+     *      For backward compatibility, when implementations for
+     *      earlier versions of JAXP is used, this exception will be
+     *      thrown.
+     * 
+     * @return
+     *      the {@link Schema} object that was last set through
+     *      the {@link #setSchema(Schema)} method, or null
+     *      if the method was not invoked since a {@link DocumentBuilderFactory}
+     *      is created.
+     * 
+     * @since 1.5
      */
-    public void setValidating(boolean value) {
-        validate = value;
+    public Schema getSchema() {
+        throw new UnsupportedOperationException(
+            "This parser does not support specification \""
+            + this.getClass().getPackage().getSpecificationTitle()
+            + "\" version \""
+            + this.getClass().getPackage().getSpecificationVersion()
+            + "\""
+            );
+
+    }
+    
+    /**
+     * <p>Set the {@link Schema} to be used by parsers created
+     * from this factory.
+     * 
+     * <p>
+     * When a {@link Schema} is non-null, a parser will use a validator
+     * created from it to validate documents before it passes information
+     * down to the application.
+     * 
+     * <p>When errors are found by the validator, the parser is responsible
+     * to report them to the user-specified {@link org.xml.sax.ErrorHandler}
+     * (or if the error handler is not set, ignore them or throw them), just
+     * like any other errors found by the parser itself.
+     * In other words, if the user-specified {@link org.xml.sax.ErrorHandler}
+     * is set, it must receive those errors, and if not, they must be
+     * treated according to the implementation specific
+     * default error handling rules.
+     * 
+     * <p>
+     * A validator may modify the outcome of a parse (for example by
+     * adding default values that were missing in documents), and a parser
+     * is responsible to make sure that the application will receive
+     * modified DOM trees.  
+     * 
+     * <p>
+     * Initially, null is set as the {@link Schema}. 
+     * 
+     * <p>
+     * This processing will take effect even if
+     * the {@link #isValidating()} method returns <tt>false</tt>.
+     * 
+     * <p>It is an error to use
+     * the <code>http://java.sun.com/xml/jaxp/properties/schemaSource</code>
+     * property and/or the <code>http://java.sun.com/xml/jaxp/properties/schemaLanguage</code>
+     * property in conjunction with a {@link Schema} object.
+     * Such configuration will cause a {@link ParserConfigurationException}
+     * exception when the {@link #newDocumentBuilder()} is invoked.</p>
+     *
+     *  
+     * <h4>Note for implementors</h4>
+     * <p>
+     * A parser must be able to work with any {@link Schema}
+     * implementation. However, parsers and schemas are allowed
+     * to use implementation-specific custom mechanisms
+     * as long as they yield the result described in the specification.
+     * 
+     * @param schema <code>Schema</code> to use or <code>null</code> to remove a schema.
+     * 
+     * @throws UnsupportedOperationException
+     *      For backward compatibility, when implementations for
+     *      earlier versions of JAXP is used, this exception will be
+     *      thrown.
+     * 
+     * @since 1.5
+     */
+    public void setSchema(Schema schema) {
+        throw new UnsupportedOperationException(
+            "This parser does not support specification \""
+            + this.getClass().getPackage().getSpecificationTitle()
+            + "\" version \""
+            + this.getClass().getPackage().getSpecificationVersion()
+            + "\""
+            );
+    }
+    
+    /**
+     * <p>Set state of XInclude processing.</p>
+     * 
+     * <p>If XInclude markup is found in the document instance, should it be
+     * processed as specified in <a href="http://www.w3.org/TR/xinclude/">
+     * XML Inclusions (XInclude) Version 1.0</a>.</p>
+     * 
+     * <p>XInclude processing defaults to <code>false</code>.</p>
+     * 
+     * @param state Set XInclude processing to <code>true</code> or
+     *   <code>false</code>
+     * 
+     * @throws UnsupportedOperationException
+     *      For backward compatibility, when implementations for
+     *      earlier versions of JAXP is used, this exception will be
+     *      thrown.
+     * 
+     * @since 1.5
+     */
+    public void setXIncludeAware(final boolean state) {
+        throw new UnsupportedOperationException(
+            "This parser does not support specification \""
+            + this.getClass().getPackage().getSpecificationTitle()
+            + "\" version \""
+            + this.getClass().getPackage().getSpecificationVersion()
+            + "\""
+            );
     }
 
     /**
-     * Determines whether the factory is configured to deliver parsers that are
-     * XInclude-aware.
+     * <p>Get state of XInclude processing.</p>
      * 
-     * @param value turns XInclude-awareness on or off.
+     * @return current state of XInclude processing
      * 
-     * @since Android 1.0
+     * @throws UnsupportedOperationException
+     *      For backward compatibility, when implementations for
+     *      earlier versions of JAXP is used, this exception will be
+     *      thrown.
+     * 
+     * @since 1.5
      */
-    public void setXIncludeAware(boolean value) {
-        throw new UnsupportedOperationException();
+    public boolean isXIncludeAware() {
+        throw new UnsupportedOperationException(
+            "This parser does not support specification \""
+            + this.getClass().getPackage().getSpecificationTitle()
+            + "\" version \""
+            + this.getClass().getPackage().getSpecificationVersion()
+            + "\""
+            );
     }
-
 }

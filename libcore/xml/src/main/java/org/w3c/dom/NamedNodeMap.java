@@ -1,26 +1,16 @@
 /*
- * Copyright (c) 2000 World Wide Web Consortium,
- * (Massachusetts Institute of Technology, Institut National de
- * Recherche en Informatique et en Automatique, Keio University). All
- * Rights Reserved. This program is distributed under the W3C's Software
- * Intellectual Property License. This program is distributed in the
- * hope that it will be useful, but WITHOUT ANY WARRANTY; without even
- * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.
- * See W3C License http://www.w3.org/Consortium/Legal/ for more details.
+ * Copyright (c) 2004 World Wide Web Consortium,
+ *
+ * (Massachusetts Institute of Technology, European Research Consortium for
+ * Informatics and Mathematics, Keio University). All Rights Reserved. This
+ * work is distributed under the W3C(r) Software License [1] in the hope that
+ * it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
  */
 
 package org.w3c.dom;
-
-// BEGIN android-note
-// Cleaned up @param tags that seemed to be missing spaces between
-// the parameter name and the start of the description.
-// END android-note
-
-//BEGIN android-note
-//Filled some gaps in the documentation and refactored parts of the existing
-//documentation to make the Doclet happy.
-//END android-note
 
 /**
  * Objects implementing the <code>NamedNodeMap</code> interface are used to 
@@ -32,7 +22,7 @@ package org.w3c.dom;
  * convenient enumeration of the contents of a <code>NamedNodeMap</code>, 
  * and does not imply that the DOM specifies an order to these Nodes. 
  * <p><code>NamedNodeMap</code> objects in the DOM are live.
- * <p>See also the <a href='http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113'>Document Object Model (DOM) Level 2 Core Specification</a>.
+ * <p>See also the <a href='http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407'>Document Object Model (DOM) Level 3 Core Specification</a>.
  */
 public interface NamedNodeMap {
     /**
@@ -47,7 +37,7 @@ public interface NamedNodeMap {
     /**
      * Adds a node using its <code>nodeName</code> attribute. If a node with 
      * that name is already present in this map, it is replaced by the new 
-     * one.
+     * one. Replacing a node by itself has no effect.
      * <br>As the <code>nodeName</code> attribute is used to derive the name 
      * which the node must be stored under, multiple nodes of certain types 
      * (those that have a "special" string value) cannot be stored as the 
@@ -66,6 +56,11 @@ public interface NamedNodeMap {
      *   <code>Attr</code> that is already an attribute of another 
      *   <code>Element</code> object. The DOM user must explicitly clone 
      *   <code>Attr</code> nodes to re-use them in other elements.
+     *   <br>HIERARCHY_REQUEST_ERR: Raised if an attempt is made to add a node 
+     *   doesn't belong in this NamedNodeMap. Examples would include trying 
+     *   to insert something other than an Attr node into an Element's map 
+     *   of attributes, or a non-Entity node into the DocumentType's map of 
+     *   Entities.
      */
     public Node setNamedItem(Node arg)
                              throws DOMException;
@@ -100,30 +95,37 @@ public interface NamedNodeMap {
     /**
      * The number of nodes in this map. The range of valid child node indices 
      * is <code>0</code> to <code>length-1</code> inclusive.
-     * 
-     * @return the length of the map.
      */
     public int getLength();
 
     /**
-     * Retrieves a node specified by local name and namespace URI. HTML-only 
-     * DOM implementations do not need to implement this method.
+     * Retrieves a node specified by local name and namespace URI.
+     * <br>Per [<a href='http://www.w3.org/TR/1999/REC-xml-names-19990114/'>XML Namespaces</a>]
+     * , applications must use the value null as the namespaceURI parameter 
+     * for methods if they wish to have no namespace.
      * @param namespaceURI The namespace URI of the node to retrieve.
      * @param localName The local name of the node to retrieve.
      * @return A <code>Node</code> (of any type) with the specified local 
      *   name and namespace URI, or <code>null</code> if they do not 
      *   identify any node in this map.
+     * @exception DOMException
+     *   NOT_SUPPORTED_ERR: May be raised if the implementation does not 
+     *   support the feature "XML" and the language exposed through the 
+     *   Document does not support XML Namespaces (such as [<a href='http://www.w3.org/TR/1999/REC-html401-19991224/'>HTML 4.01</a>]). 
      * @since DOM Level 2
      */
     public Node getNamedItemNS(String namespaceURI, 
-                               String localName);
+                               String localName)
+                               throws DOMException;
 
     /**
      * Adds a node using its <code>namespaceURI</code> and 
      * <code>localName</code>. If a node with that namespace URI and that 
      * local name is already present in this map, it is replaced by the new 
-     * one.
-     * <br>HTML-only DOM implementations do not need to implement this method.
+     * one. Replacing a node by itself has no effect.
+     * <br>Per [<a href='http://www.w3.org/TR/1999/REC-xml-names-19990114/'>XML Namespaces</a>]
+     * , applications must use the value null as the namespaceURI parameter 
+     * for methods if they wish to have no namespace.
      * @param arg A node to store in this map. The node will later be 
      *   accessible using the value of its <code>namespaceURI</code> and 
      *   <code>localName</code> attributes.
@@ -138,6 +140,14 @@ public interface NamedNodeMap {
      *   <code>Attr</code> that is already an attribute of another 
      *   <code>Element</code> object. The DOM user must explicitly clone 
      *   <code>Attr</code> nodes to re-use them in other elements.
+     *   <br>HIERARCHY_REQUEST_ERR: Raised if an attempt is made to add a node 
+     *   doesn't belong in this NamedNodeMap. Examples would include trying 
+     *   to insert something other than an Attr node into an Element's map 
+     *   of attributes, or a non-Entity node into the DocumentType's map of 
+     *   Entities.
+     *   <br>NOT_SUPPORTED_ERR: May be raised if the implementation does not 
+     *   support the feature "XML" and the language exposed through the 
+     *   Document does not support XML Namespaces (such as [<a href='http://www.w3.org/TR/1999/REC-html401-19991224/'>HTML 4.01</a>]). 
      * @since DOM Level 2
      */
     public Node setNamedItemNS(Node arg)
@@ -150,7 +160,9 @@ public interface NamedNodeMap {
      * attribute of the <code>Node</code> interface. If so, an attribute 
      * immediately appears containing the default value as well as the 
      * corresponding namespace URI, local name, and prefix when applicable.
-     * <br>HTML-only DOM implementations do not need to implement this method.
+     * <br>Per [<a href='http://www.w3.org/TR/1999/REC-xml-names-19990114/'>XML Namespaces</a>]
+     * , applications must use the value null as the namespaceURI parameter 
+     * for methods if they wish to have no namespace.
      * @param namespaceURI The namespace URI of the node to remove.
      * @param localName The local name of the node to remove.
      * @return The node removed from this map if a node with such a local 
@@ -159,6 +171,9 @@ public interface NamedNodeMap {
      *   NOT_FOUND_ERR: Raised if there is no node with the specified 
      *   <code>namespaceURI</code> and <code>localName</code> in this map.
      *   <br>NO_MODIFICATION_ALLOWED_ERR: Raised if this map is readonly.
+     *   <br>NOT_SUPPORTED_ERR: May be raised if the implementation does not 
+     *   support the feature "XML" and the language exposed through the 
+     *   Document does not support XML Namespaces (such as [<a href='http://www.w3.org/TR/1999/REC-html401-19991224/'>HTML 4.01</a>]). 
      * @since DOM Level 2
      */
     public Node removeNamedItemNS(String namespaceURI, 

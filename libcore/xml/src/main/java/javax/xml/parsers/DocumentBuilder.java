@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,239 +15,305 @@
  * limitations under the License.
  */
 
+// $Id: DocumentBuilder.java 584483 2007-10-14 02:54:48Z mrglavas $
+
 package javax.xml.parsers;
 
-import org.w3c.dom.DOMImplementation;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.xml.validation.Schema;
+
 import org.w3c.dom.Document;
+import org.w3c.dom.DOMImplementation;
+
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
- * Defines a bridge from XML sources (files, stream etc.) to DOM trees. Can be
- * used for easily obtaining a {@link org.w3c.dom.Document} for the input. The
- * class itself is abstract. The class {@link DocumentBuilderFactory} is able to
- * provide instances (of concrete subclasses known to the system).
- * 
- * @since Android 1.0
+ * Defines the API to obtain DOM Document instances from an XML
+ * document. Using this class, an application programmer can obtain a
+ * {@link Document} from XML.<p>
+ *
+ * An instance of this class can be obtained from the
+ * {@link DocumentBuilderFactory#newDocumentBuilder()} method. Once
+ * an instance of this class is obtained, XML can be parsed from a
+ * variety of input sources. These input sources are InputStreams,
+ * Files, URLs, and SAX InputSources.<p>
+ *
+ * Note that this class reuses several classes from the SAX API. This
+ * does not require that the implementor of the underlying DOM
+ * implementation use a SAX parser to parse XML document into a
+ * <code>Document</code>. It merely requires that the implementation
+ * communicate with the application using these existing APIs.
+ *
+ * @author <a href="mailto:Jeff.Suttor@Sun.com">Jeff Suttor</a>
+ * @version $Revision: 584483 $, $Date: 2007-10-13 19:54:48 -0700 (Sat, 13 Oct 2007) $
  */
+
 public abstract class DocumentBuilder {
+    
+    private static final boolean DEBUG = false;
+    
+    /** Protected constructor */
+    protected DocumentBuilder () {
+    }
+
+	/**
+	  * <p>Reset this <code>DocumentBuilder</code> to its original configuration.</p>
+	  * 
+	  * <p><code>DocumentBuilder</code> is reset to the same state as when it was created with
+	  * {@link DocumentBuilderFactory#newDocumentBuilder()}.
+	  * <code>reset()</code> is designed to allow the reuse of existing <code>DocumentBuilder</code>s
+	  * thus saving resources associated with the creation of new <code>DocumentBuilder</code>s.</p>
+	  * 
+	  * <p>The reset <code>DocumentBuilder</code> is not guaranteed to have the same {@link EntityResolver} or {@link ErrorHandler}
+	  * <code>Object</code>s, e.g. {@link Object#equals(Object obj)}.  It is guaranteed to have a functionally equal
+	  * <code>EntityResolver</code> and <code>ErrorHandler</code>.</p>
+	  * 
+	  * @since 1.5
+	  */
+	public void reset() {
+	
+		// implementors should override this method
+		throw new UnsupportedOperationException(
+			"This DocumentBuilder, \"" + this.getClass().getName() + "\", does not support the reset functionality."
+			+ "  Specification \"" + this.getClass().getPackage().getSpecificationTitle() + "\""
+			+ " version \"" + this.getClass().getPackage().getSpecificationVersion() + "\""
+			);
+	}
 
     /**
-     * Do-nothing constructor. Prevents instantiation. To be overridden by
-     * concrete subclasses.
-     * 
-     * @since Android 1.0
+     * Parse the content of the given <code>InputStream</code> as an XML
+     * document and return a new DOM {@link Document} object.
+     * An <code>IllegalArgumentException</code> is thrown if the
+     * <code>InputStream</code> is null.
+     *
+     * @param is InputStream containing the content to be parsed.
+     * @return <code>Document</code> result of parsing the
+     *  <code>InputStream</code>
+     * @exception IOException If any IO errors occur.
+     * @exception SAXException If any parse errors occur.
+     * @see org.xml.sax.DocumentHandler
      */
-    protected DocumentBuilder() {
-        // Does nothing.
+    
+    public Document parse(InputStream is)
+        throws SAXException, IOException {
+        if (is == null) {
+            throw new IllegalArgumentException("InputStream cannot be null");
+        }
+        
+        InputSource in = new InputSource(is);
+        return parse(in);
     }
 
     /**
-     * Queries the DOM implementation this {@code DocumentBuilder} is working
-     * on.
-     * 
-     * @return the DOM implementation
-     * 
-     * @since Android 1.0
+     * Parse the content of the given <code>InputStream</code> as an
+     * XML document and return a new DOM {@link Document} object.
+     * An <code>IllegalArgumentException</code> is thrown if the
+     * <code>InputStream</code> is null.
+     *
+     * @param is InputStream containing the content to be parsed.
+     * @param systemId Provide a base for resolving relative URIs.
+     * @return A new DOM Document object.
+     * @exception IOException If any IO errors occur.
+     * @exception SAXException If any parse errors occur.
+     * @see org.xml.sax.DocumentHandler
      */
-    public abstract DOMImplementation getDOMImplementation();
+    
+    public Document parse(InputStream is, String systemId)
+        throws SAXException, IOException {
+        if (is == null) {
+            throw new IllegalArgumentException("InputStream cannot be null");
+        }
+        
+        InputSource in = new InputSource(is);
+        in.setSystemId(systemId);
+        return parse(in);
+    }
 
-// TODO No XSchema support in Android 1.0. Maybe later.
-//    /**
-//     * Queries the XML schema used by the DocumentBuilder.
-//     * 
-//     * @return The XML schema
-//     * 
-//     * @throws UnsupportedOperationException when the underlying implementation
-//     *         doesn't support XML schemas.
-//     */
-//    public javax.xml.validation.Schema getSchema() throws
-//            UnsupportedOperationException {
-//        throw new UnsupportedOperationException();
-//    }
-     
     /**
-     * Queries whether the {@code DocumentBuilder} has namespace support
-     * enabled.
-     * 
-     * @return {@code true} if namespaces are turned on, {@code false}
-     *         otherwise.
-     * 
-     * @since Android 1.0
+     * Parse the content of the given URI as an XML document
+     * and return a new DOM {@link Document} object.
+     * An <code>IllegalArgumentException</code> is thrown if the
+     * URI is <code>null</code> null.
+     *
+     * @param uri The location of the content to be parsed.
+     * @return A new DOM Document object.
+     * @exception IOException If any IO errors occur.
+     * @exception SAXException If any parse errors occur.
+     * @see org.xml.sax.DocumentHandler
      */
+    
+    public Document parse(String uri)
+        throws SAXException, IOException {
+        if (uri == null) {
+            throw new IllegalArgumentException("URI cannot be null");
+        }
+        
+        InputSource in = new InputSource(uri);
+        return parse(in);
+    }
+
+    /**
+     * Parse the content of the given file as an XML document
+     * and return a new DOM {@link Document} object.
+     * An <code>IllegalArgumentException</code> is thrown if the
+     * <code>File</code> is <code>null</code> null.
+     *
+     * @param f The file containing the XML to parse.
+     * @exception IOException If any IO errors occur.
+     * @exception SAXException If any parse errors occur.
+     * @see org.xml.sax.DocumentHandler
+     * @return A new DOM Document object.
+     */
+    
+    public Document parse(File f) throws SAXException, IOException {
+        if (f == null) {
+            throw new IllegalArgumentException("File cannot be null");
+        }
+        
+        String escapedURI = FilePathToURI.filepath2URI(f.getAbsolutePath());
+        
+        if (DEBUG) {
+            System.out.println("Escaped URI = " + escapedURI);
+        }
+
+        InputSource in = new InputSource(escapedURI);
+        return parse(in);
+    }
+
+    /**
+     * Parse the content of the given input source as an XML document
+     * and return a new DOM {@link Document} object.
+     * An <code>IllegalArgumentException</code> is thrown if the
+     * <code>InputSource</code> is <code>null</code> null.
+     *
+     * @param is InputSource containing the content to be parsed.
+     * @exception IOException If any IO errors occur.
+     * @exception SAXException If any parse errors occur.
+     * @see org.xml.sax.DocumentHandler
+     * @return A new DOM Document object.
+     */
+    
+    public abstract Document parse(InputSource is)
+        throws  SAXException, IOException;
+
+    
+    /**
+     * Indicates whether or not this parser is configured to
+     * understand namespaces.
+     *
+     * @return true if this parser is configured to understand
+     *         namespaces; false otherwise.
+     */
+
     public abstract boolean isNamespaceAware();
 
     /**
-     * Queries whether the {@code DocumentBuilder} has validation support
-     * enabled.
-     * 
-     * @return {@code true} if validation is turned on, {@code false} otherwise.
-     * 
-     * @since Android 1.0
+     * Indicates whether or not this parser is configured to
+     * validate XML documents.
+     *
+     * @return true if this parser is configured to validate
+     *         XML documents; false otherwise.
      */
+    
     public abstract boolean isValidating();
 
     /**
-     * Queries whether the {@code DocumentBuilder} has XInclude support enabled.
-     * 
-     * @return {@code true} if XInclude support is turned on, {@code false}
-     *         otherwise.
-     * 
-     * @throws UnsupportedOperationException if the underlying implementation
-     *         doesn't support XInclude.
-     * 
-     * @since Android 1.0
+     * Specify the {@link EntityResolver} to be used to resolve
+     * entities present in the XML document to be parsed. Setting
+     * this to <code>null</code> will result in the underlying
+     * implementation using it's own default implementation and
+     * behavior.
+     *
+     * @param er The <code>EntityResolver</code> to be used to resolve entities
+     *           present in the XML document to be parsed.
      */
-    public boolean isXIncludeAware() throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
-    }
+
+    public abstract void setEntityResolver(EntityResolver er);
 
     /**
-     * Creates a new, empty document, serving as the starting point for a DOM
-     * tree.
-     * 
-     * @return the document.
-     * 
-     * @since Android 1.0
+     * Specify the {@link ErrorHandler} to be used by the parser.
+     * Setting this to <code>null</code> will result in the underlying
+     * implementation using it's own default implementation and
+     * behavior.
+     *
+     * @param eh The <code>ErrorHandler</code> to be used by the parser.
      */
+
+    public abstract void setErrorHandler(ErrorHandler eh);
+
+    /**
+     * Obtain a new instance of a DOM {@link Document} object
+     * to build a DOM tree with.
+     *
+     * @return A new instance of a DOM Document object.
+     */
+    
     public abstract Document newDocument();
 
     /**
-     * Parses a given XML file and builds a DOM tree from it.
-     * 
-     * @param file the file to be parsed.
-     * @return the document element that represents the root of the DOM tree.
-     * 
-     * @throws SAXException if the XML parsing fails.
-     * @throws IOException if an input/output error occurs.
-     * 
-     * @since Android 1.0
+     * Obtain an instance of a {@link DOMImplementation} object.
+     *
+     * @return A new instance of a <code>DOMImplementation</code>.
      */
-    public Document parse(File file) throws SAXException, IOException {
-        if (file == null) {
-            throw new IllegalArgumentException();
-        }
-        
-        return parse(new BufferedInputStream(new FileInputStream(file), 8192));
+
+    public abstract DOMImplementation getDOMImplementation();
+    
+    /** <p>Get a reference to the the {@link Schema} being used by
+     * the XML processor.</p>
+     *
+     * <p>If no schema is being used, <code>null</code> is returned.</p>
+     *
+     * @return {@link Schema} being used or <code>null</code>
+     *  if none in use
+     * 
+     * @throws UnsupportedOperationException
+     *      For backward compatibility, when implementations for
+     *      earlier versions of JAXP is used, this exception will be
+     *      thrown.
+     * 
+     * @since 1.5
+     */
+    public Schema getSchema() {
+        throw new UnsupportedOperationException(
+            "This parser does not support specification \""
+            + this.getClass().getPackage().getSpecificationTitle()
+            + "\" version \""
+            + this.getClass().getPackage().getSpecificationVersion()
+            + "\""
+            );
     }
-
+    
+    
     /**
-     * Parses a given XML input stream and builds a DOM tree from it.
+     * <p>Get the XInclude processing mode for this parser.</p>
      * 
-     * @param stream the stream to be parsed.
-     * @return the document element that represents the root of the DOM tree.
+     * @return
+     *      the return value of
+     *      the {@link DocumentBuilderFactory#isXIncludeAware()}
+     *      when this parser was created from factory.
      * 
-     * @throws SAXException if the XML parsing fails.
-     * @throws IOException if an input/output error occurs.
+     * @throws UnsupportedOperationException
+     *      For backward compatibility, when implementations for
+     *      earlier versions of JAXP is used, this exception will be
+     *      thrown.
      * 
-     * @since Android 1.0
+     * @since 1.5
+     * 
+     * @see DocumentBuilderFactory#setXIncludeAware(boolean)
      */
-    public Document parse(InputStream stream) throws SAXException, IOException {
-        if (stream == null) {
-            throw new IllegalArgumentException();
-        }
-        
-        return parse(new InputSource(stream));
+    public boolean isXIncludeAware() {
+        throw new UnsupportedOperationException(
+            "This parser does not support specification \""
+            + this.getClass().getPackage().getSpecificationTitle()
+            + "\" version \""
+            + this.getClass().getPackage().getSpecificationVersion()
+            + "\""
+            );
     }
-
-    /**
-     * Parses a given XML input stream and builds a DOM tree from it.
-     * 
-     * @param stream the stream to be parsed.
-     * @param systemId the base for resolving relative URIs.
-     * @return the document element that represents the root of the DOM tree.
-     * 
-     * @throws SAXException if the XML parsing fails.
-     * @throws IOException if an input/output error occurs.
-     * 
-     * @since Android 1.0
-     */
-    public org.w3c.dom.Document parse(InputStream stream, String systemId)
-            throws SAXException, IOException {
-        if (stream == null) {
-            throw new IllegalArgumentException();
-        }
-        
-        InputSource source = new InputSource(stream);
-        source.setSystemId(systemId);
-        return parse(source);
-    }
-
-    /**
-     * Parses an XML input stream from a given URI and builds a DOM tree from
-     * it.
-     * 
-     * @param uri the URI to fetch the XML stream from.
-     * @return the document element that represents the root of the DOM tree.
-     * 
-     * @throws SAXException if the XML parsing fails.
-     * @throws IOException if an input/output error occurs.
-     * 
-     * @since Android 1.0
-     */
-    public org.w3c.dom.Document parse(String uri) throws SAXException,
-            IOException {
-        if (uri == null) {
-            throw new IllegalArgumentException();
-        }
-        
-        return parse(new InputSource(uri));
-    }
-
-    /**
-     * Parses an XML input source and builds a DOM tree from it.
-     * 
-     * @param source the input source to parse.
-     * @return the document element that represents the root of the DOM tree.
-     * 
-     * @throws SAXException if the XML parsing fails.
-     * @throws IOException if an input/output error occurs.
-     * 
-     * @since Android 1.0
-     */
-    public abstract org.w3c.dom.Document parse(InputSource source)
-            throws SAXException, IOException;
-
-    /**
-     * Resets the DocumentBuilder to the same state is was in after its
-     * creation.
-     * 
-     * @since Android 1.0
-     */
-    public void reset() {
-        // Do nothing.
-    }
-
-    /**
-     * Sets the {@link EntityResolver} used for resolving entities encountered
-     * during the parse process. Passing {@code null} results in the
-     * {@code DocumentBuilder}'s own {@code EntityResolver} being used.
-     * 
-     * @param resolver the {@code EntityResolver} to use, or null for the
-     *        built-in one.
-     * 
-     * @since Android 1.0
-     */
-    public abstract void setEntityResolver(EntityResolver resolver);
-
-    /**
-     * Sets the {@link ErrorHandler} used for dealing with errors encountered
-     * during the parse process. Passing {@code null} results in the
-     * {@code DocumentBuilder}'s own {@code ErrorHandler} being used.
-     * 
-     * @param handler the {@code ErrorHandler} to use, or {@code null} for the
-     *        built-in one.
-     * 
-     * @since Android 1.0
-     */
-    public abstract void setErrorHandler(ErrorHandler handler);
-
 }
