@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
- * List all methods in all concrete classes in a DEX file.
+ * List all methods in all concrete classes in one or more DEX files.
  */
 #include "libdex/DexFile.h"
 #include "libdex/DexClass.h"
@@ -33,6 +34,14 @@
 #include <assert.h>
 
 static const char* gProgName = "dexlist";
+
+/* command-line args */
+static struct {
+    char*       argCopy;
+    const char* classToFind;
+    const char* methodToFind;
+} gParms;
+
 
 /*
  * Return a newly-allocated string for the "dot version" of the class
@@ -80,7 +89,7 @@ static int positionsCallback(void* cnxt, u4 address, u4 lineNum)
  * Dump a method.
  */
 void dumpMethod(DexFile* pDexFile, const char* fileName,
-        const DexMethod* pDexMethod, int i)
+    const DexMethod* pDexMethod, int i)
 {
     const DexMethodId* pMethodId;
     const DexCode* pCode;
@@ -120,11 +129,19 @@ void dumpMethod(DexFile* pDexFile, const char* fileName,
     char* desc = dexCopyDescriptorFromMethodId(pDexFile, pMethodId);
     u4 insnsOff = pDexMethod->codeOff + offsetof(DexCode, insns);
 
+    if (gParms.methodToFind != NULL &&
+        (strcmp(gParms.classToFind, className) != 0 ||
+         strcmp(gParms.methodToFind, methodName) != 0))
+    {
+        goto skip;
+    }
+
     printf("0x%08x %d %s %s %s %s %d\n",
         insnsOff, pCode->insnsSize * 2,
         className, methodName, desc,
         fileName, firstLine);
 
+skip:
     free(desc);
     free(className);
 }
@@ -239,6 +256,25 @@ int main(int argc, char* const argv[])
     int result = 0;
     int i;
 
+    /*
+     * Find all instances of the fully-qualified method name.  This isn't
+     * really what dexlist is for, but it's easy to do it here.
+     */
+    if (argc > 3 && strcmp(argv[1], "--method") == 0) {
+        gParms.argCopy = strdup(argv[2]);
+        char* meth = strrchr(gParms.argCopy, '.');
+        if (meth == NULL) {
+            fprintf(stderr, "Expected package.Class.method\n");
+            free(gParms.argCopy);
+            return 2;
+        }
+        *meth = '\0';
+        gParms.classToFind = gParms.argCopy;
+        gParms.methodToFind = meth+1;
+        argv += 2;
+        argc -= 2;
+    }
+
     if (argc < 2) {
         fprintf(stderr, "%s: no file specified\n", gProgName);
         usage();
@@ -252,6 +288,7 @@ int main(int argc, char* const argv[])
     for (i = 1; i < argc; i++)
         result |= process(argv[i]);
 
+    free(gParms.argCopy);
     return result;
 }
 
