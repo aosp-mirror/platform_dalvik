@@ -54,9 +54,14 @@ int jniRegisterNativeMethods(C_JNIEnv* env, const char* className,
 int jniThrowException(C_JNIEnv* env, const char* className, const char* msg);
 
 /*
+ * Throw a java.lang.NullPointerException, with an optional message.
+ */
+int jniThrowNullPointerException(C_JNIEnv* env, const char* msg);
+
+/*
  * Throw a java.lang.RuntimeException, with an optional message.
  */
-int jniThrowRuntimeException(JNIEnv* env, const char* msg);
+int jniThrowRuntimeException(C_JNIEnv* env, const char* msg);
 
 /*
  * Throw a java.io.IOException, generating the message from errno.
@@ -106,6 +111,14 @@ inline int jniThrowException(JNIEnv* env, const char* className,
     const char* msg)
 {
     return jniThrowException(&env->functions, className, msg);
+}
+inline int jniThrowNullPointerException(JNIEnv* env, const char* msg)
+{
+    return jniThrowNullPointerException(&env->functions, msg);
+}
+inline int jniThrowRuntimeException(JNIEnv* env, const char* msg)
+{
+    return jniThrowRuntimeException(&env->functions, msg);
 }
 inline int jniThrowIOException(JNIEnv* env, int errnum)
 {

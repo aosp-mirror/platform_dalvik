@@ -133,6 +133,14 @@ int jniThrowException(JNIEnv* env, const char* className, const char* msg)
 }
 
 /*
+ * Throw a java.lang.NullPointerException, with an optional message.
+ */
+int jniThrowNullPointerException(JNIEnv* env, const char* msg)
+{
+    return jniThrowException(env, "java/lang/NullPointerException", msg);
+}
+
+/*
  * Throw a java.lang.RuntimeException, with an optional message.
  */
 int jniThrowRuntimeException(JNIEnv* env, const char* msg)

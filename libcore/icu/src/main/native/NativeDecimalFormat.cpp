@@ -29,18 +29,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-// FIXME: move to JNIHelp.h
-static void jniThrowNullPointerException(JNIEnv* env) {
-    jniThrowException(env, "java/lang/NullPointerException", NULL);
-}
-
 static DecimalFormat* toDecimalFormat(jint addr) {
     return reinterpret_cast<DecimalFormat*>(static_cast<uintptr_t>(addr));
 }
 
 static jint openDecimalFormatImpl(JNIEnv* env, jclass clazz, jstring pattern0) {
     if (pattern0 == NULL) {
-        jniThrowNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return 0;
     }
 
@@ -218,7 +213,7 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
 
 static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr, jboolean localized, jstring pattern0) {
     if (pattern0 == NULL) {
-        jniThrowNullPointerException(env);
+        jniThrowNullPointerException(env, NULL);
         return;
     }
     ScopedJavaUnicodeString pattern(env, pattern0);

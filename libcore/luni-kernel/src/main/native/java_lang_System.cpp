@@ -38,7 +38,7 @@ static jstring java_getEnvByName(JNIEnv* env, jclass, jstring nameStr) {
         }
         env->ReleaseStringUTFChars(nameStr, name);
     } else {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
+        jniThrowNullPointerException(env, NULL);
     }
 
     return valueStr;

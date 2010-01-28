@@ -34,6 +34,6 @@ UBool icu4jni_error(JNIEnv *env, UErrorCode errorCode)
     case U_UNSUPPORTED_ERROR:
         return jniThrowException(env, "java/lang/UnsupportedOperationException", message);
     default:
-        return jniThrowException(env, "java/lang/RuntimeException", message);
+        return jniThrowRuntimeException(env, message);
     }
 }

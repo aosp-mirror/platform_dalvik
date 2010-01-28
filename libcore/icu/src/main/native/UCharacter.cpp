@@ -138,7 +138,7 @@ static jboolean isLowerCaseImpl(JNIEnv*, jclass, jint codePoint) {
 
 static int forNameImpl(JNIEnv* env, jclass, jstring blockName) {
     if (blockName == NULL) {
-        jniThrowException(env, "java/lang/NullPointerException", NULL);
+        jniThrowNullPointerException(env, NULL);
         return -1;
     }
     const char* bName = env->GetStringUTFChars(blockName, NULL);
