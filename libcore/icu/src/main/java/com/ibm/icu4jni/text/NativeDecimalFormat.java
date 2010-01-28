@@ -118,7 +118,7 @@ public class NativeDecimalFormat {
     private BigDecimal multiplierBigDecimal = null;
 
     public NativeDecimalFormat(String pattern, Locale locale, DecimalFormatSymbols symbols) {
-        this.addr = openDecimalFormat(locale.toString(), pattern);
+        this.addr = openDecimalFormat(pattern);
         this.lastPattern = pattern;
         setDecimalFormatSymbols(symbols);
     }
@@ -188,27 +188,14 @@ public class NativeDecimalFormat {
     }
 
     /**
-     * Copies the DecimalFormatSymbols settings into our native peer.
+     * Copies the DecimalFormatSymbols settings into our native peer in bulk.
      */
     public void setDecimalFormatSymbols(final DecimalFormatSymbols dfs) {
-        setSymbol(this.addr, UNUM_CURRENCY_SYMBOL, dfs.getCurrencySymbol());
-
-        setSymbol(this.addr, UNUM_DECIMAL_SEPARATOR_SYMBOL, dfs.getDecimalSeparator());
-        setSymbol(this.addr, UNUM_DIGIT_SYMBOL, dfs.getDigit());
-
-        char groupingSeparator = dfs.getGroupingSeparator();
-        setSymbol(this.addr, UNUM_GROUPING_SEPARATOR_SYMBOL, groupingSeparator);
-        setSymbol(this.addr, UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL, groupingSeparator);
-
-        setSymbol(this.addr, UNUM_INFINITY_SYMBOL, dfs.getInfinity());
-        setSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL, dfs.getInternationalCurrencySymbol());
-        setSymbol(this.addr, UNUM_MINUS_SIGN_SYMBOL, dfs.getMinusSign());
-        setSymbol(this.addr, UNUM_MONETARY_SEPARATOR_SYMBOL, dfs.getMonetaryDecimalSeparator());
-        setSymbol(this.addr, UNUM_NAN_SYMBOL, dfs.getNaN());
-        setSymbol(this.addr, UNUM_PATTERN_SEPARATOR_SYMBOL, dfs.getPatternSeparator());
-        setSymbol(this.addr, UNUM_PERCENT_SYMBOL, dfs.getPercent());
-        setSymbol(this.addr, UNUM_PERMILL_SYMBOL, dfs.getPerMill());
-        setSymbol(this.addr, UNUM_ZERO_DIGIT_SYMBOL, dfs.getZeroDigit());
+        setDecimalFormatSymbols(this.addr, dfs.getCurrencySymbol(), dfs.getDecimalSeparator(),
+                dfs.getDigit(), dfs.getGroupingSeparator(), dfs.getInfinity(),
+                dfs.getInternationalCurrencySymbol(), dfs.getMinusSign(),
+                dfs.getMonetaryDecimalSeparator(), dfs.getNaN(), dfs.getPatternSeparator(),
+                dfs.getPercent(), dfs.getPerMill(), dfs.getZeroDigit());
     }
 
     private BigDecimal applyMultiplier(BigDecimal valBigDecimal) {
@@ -573,10 +560,10 @@ public class NativeDecimalFormat {
         return null;
     }
 
-    private static int openDecimalFormat(String locale, String pattern) {
+    private static int openDecimalFormat(String pattern) {
         try {
             // FIXME: if we're about to override everything, should we just ask for the cheapest locale (presumably the root locale)?
-            return openDecimalFormatImpl(locale, pattern);
+            return openDecimalFormatImpl(pattern);
         } catch (NullPointerException npe) {
             throw npe;
         } catch (RuntimeException re) {
@@ -604,8 +591,12 @@ public class NativeDecimalFormat {
     // FIXME: do we need getSymbol any more? the Java-side object should be the canonical source.
     private static native String getSymbol(int addr, int symbol);
     private static native String getTextAttribute(int addr, int symbol);
-    private static native int openDecimalFormatImpl(String locale, String pattern);
+    private static native int openDecimalFormatImpl(String pattern);
     private static native Number parse(int addr, String string, ParsePosition position);
+    private static native void setDecimalFormatSymbols(int addr, String currencySymbol,
+            char decimalSeparator, char digit, char groupingSeparator, String infinity,
+            String internationalCurrencySymbol, char minusSign, char monetaryDecimalSeparator,
+            String nan, char patternSeparator, char percent, char perMill, char zeroDigit);
     private static native void setSymbol(int addr, int symbol, String str);
     private static native void setSymbol(int addr, int symbol, char ch);
     private static native void setAttribute(int addr, int symbol, int i);
