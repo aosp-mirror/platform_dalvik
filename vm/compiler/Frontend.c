@@ -299,6 +299,11 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     CompilationUnit cUnit;
     CompilerMethodStats *methodStats;
 
+    /* If we've already compiled this trace, just return success */
+    if (dvmJitGetCodeAddr(startCodePtr)) {
+        return true;
+    }
+
     compilationId++;
     memset(&cUnit, 0, sizeof(CompilationUnit));
 

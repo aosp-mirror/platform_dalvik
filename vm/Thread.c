@@ -525,6 +525,7 @@ static const char* getSuspendCauseStr(SuspendCause why)
     case SUSPEND_FOR_TBL_RESIZE:    return "table-resize";
     case SUSPEND_FOR_IC_PATCH:      return "inline-cache-patch";
     case SUSPEND_FOR_CC_RESET:      return "reset-code-cache";
+    case SUSPEND_FOR_REFRESH:       return "refresh jit status";
 #endif
     default:                        return "UNKNOWN";
     }

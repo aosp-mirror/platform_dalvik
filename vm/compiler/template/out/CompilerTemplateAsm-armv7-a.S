@@ -243,7 +243,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     sub     r1, r1, r7, lsl #2          @ r1<- newFp (old savearea - regsSize)
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
-    ldr     r8, [r8]                    @ r3<- suspendCount (int)
+    ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
     bxlt    lr                          @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
@@ -306,7 +306,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
     add     r12, lr, #2                 @ setup the punt-to-interp address
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
-    ldr     r8, [r8]                    @ r3<- suspendCount (int)
+    ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
     bxlt    r12                         @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
@@ -1417,15 +1417,20 @@ dvmCompiler_TEMPLATE_INTERPRET:
 
     LDR_PC_LR "[r2, #offMethod_nativeFunc]"
 
+    @ Refresh Jit's on/off status
+    ldr     r3, [rGLUE, #offGlue_ppJitProfTable]
+
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r2, [r10, #offStackSaveArea_returnAddr] @ r2 = chaining cell ret
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved->top
     ldr     r1, [r9, #offThread_exception] @ check for exception
+    ldr     r3, [r3]    @ r1 <- pointer to Jit profile table
     str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
     ldr     r0, [r10, #offStackSaveArea_savedPc] @ reload rPC
+    str     r3, [rGLUE, #offGlue_pJitProfTable]  @ cache current JitProfTable
 
     @ r0 = dalvikCallsitePC
     bne     .LhandleException           @ no, handle exception

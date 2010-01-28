@@ -123,7 +123,5 @@ s8 dvmJitd2l(double d);
 s8 dvmJitf2l(float f);
 void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set);
 void dvmJitAbortTraceSelect(InterpState* interpState);
-JitEntry *dvmJitLookupAndAdd(const u2* dPC);
-
 
 #endif /*_DALVIK_INTERP_JIT*/

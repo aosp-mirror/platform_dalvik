@@ -300,6 +300,7 @@ typedef enum SuspendCause {
     SUSPEND_FOR_TBL_RESIZE,  // jit-table resize
     SUSPEND_FOR_IC_PATCH,    // polymorphic callsite inline-cache patch
     SUSPEND_FOR_CC_RESET,    // code-cache reset
+    SUSPEND_FOR_REFRESH,     // Reload data cached in interpState
 #endif
 } SuspendCause;
 void dvmSuspendThread(Thread* thread);
@@ -375,6 +376,14 @@ INLINE void dvmLockMutex(pthread_mutex_t* pMutex)
 {
     int cc = pthread_mutex_lock(pMutex);
     assert(cc == 0);
+}
+
+/*
+ * Try grabbing a plain mutex.  Returns 0 if successful.
+ */
+INLINE int dvmTryLockMutex(pthread_mutex_t* pMutex)
+{
+    return pthread_mutex_trylock(pMutex);
 }
 
 /*

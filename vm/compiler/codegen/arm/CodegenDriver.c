@@ -1709,6 +1709,14 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     /* Do the call */
     opReg(cUnit, kOpBlx, r2);
+    /*
+     * Refresh Jit's on/off status, which may have changed if we were
+     * sent to VM_MONITOR state above.
+     * TUNING: pointer chase, but must reload following call
+     */
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, ppJitProfTable), r0);
+    loadWordDisp(cUnit, r0, 0, r0);
+    storeWordDisp(cUnit, rGLUE, offsetof(InterpState, pJitProfTable), r0);
 #if defined(WITH_DEADLOCK_PREDICTION)
     if (isEnter) {
         loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0);
@@ -1786,6 +1794,7 @@ static bool handleFmt11n_Fmt31i(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_CONST_WIDE_32: {
             //TUNING: single routine to load constant pair for support doubles
+            //TUNING: load 0/-1 separately to avoid load dependency
             rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
             loadConstantValue(cUnit, rlResult.lowReg, mir->dalvikInsn.vB);
             opRegRegImm(cUnit, kOpAsr, rlResult.highReg,
@@ -2165,6 +2174,7 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
         case OP_INT_TO_LONG:
             rlSrc = updateLoc(cUnit, rlSrc);
             rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            //TUNING: shouldn't loadValueDirect already check for phys reg?
             if (rlSrc.location == kLocPhysReg) {
                 genRegCopy(cUnit, rlResult.lowReg, rlSrc.lowReg);
             } else {
@@ -2227,6 +2237,7 @@ static bool handleFmt21s(CompilationUnit *cUnit, MIR *mir)
         rlDest = getDestLocWide(cUnit, mir, 0, 1);
         rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
         loadConstantValue(cUnit, rlResult.lowReg, BBBB);
+        //TUNING: do high separately to avoid load dependency
         opRegRegImm(cUnit, kOpAsr, rlResult.highReg, rlResult.lowReg, 31);
         storeValueWide(cUnit, rlDest, rlResult);
     } else if (dalvikOpCode == OP_CONST_16) {
