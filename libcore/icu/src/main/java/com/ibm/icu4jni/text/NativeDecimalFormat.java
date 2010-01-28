@@ -243,27 +243,7 @@ public class NativeDecimalFormat {
         String result = format(this.addr, value.toString(10), field, fieldType, null, 0);
         return buffer.append(result);
     }
-    /*
-    public StringBuffer format(Object value, StringBuffer buffer, FieldPosition field) {
-        if (!(value instanceof Number)) {
-            throw new IllegalArgumentException();
-        }
-        if (buffer == null || field == null) {
-            throw new NullPointerException();
-        }
-        String fieldType = getFieldType(field.getFieldAttribute());
-        Number number = (Number) value;
-        } else if (number instanceof Double || number instanceof Float) {
-            double dv = number.doubleValue();
-            String result = format(this.addr, dv, field, fieldType, null);
-            return buffer.append(result);
-        } else {
-            long lv = number.longValue();
-            String result = format(this.addr, lv, field, fieldType, null);
-            return buffer.append(result);
-        }
-    }
-*/
+
     public StringBuffer format(long value, StringBuffer buffer, FieldPosition field) {
         if (buffer == null || field == null) {
             throw new NullPointerException();
