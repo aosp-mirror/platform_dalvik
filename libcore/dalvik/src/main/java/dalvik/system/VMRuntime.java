@@ -186,4 +186,13 @@ public final class VMRuntime {
      * @return the number of bytes
      */
     public native long getExternalBytesAllocated();
+
+    /**
+     * Tells the VM to enable the JIT compiler. If the VM does not have a JIT
+     * implementation, calling this method should have no effect.
+     *
+     * {@hide}
+     */
+    public native void startJITCompilation();
+
 }
