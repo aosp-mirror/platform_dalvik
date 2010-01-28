@@ -964,7 +964,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
                 opCode = kThumbStrbRRI5;
             } else if (thumb2Form) {
                 shortForm = true;
-                opCode = kThumb2StrhRRI12;
+                opCode = kThumb2StrbRRI12;
             }
             break;
         default:

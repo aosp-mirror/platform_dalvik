@@ -241,6 +241,14 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
     }
     genExportPC(cUnit, mir);
     opReg(cUnit, kOpBlx, r7);
+    /*
+     * Refresh Jit's on/off status, which may have changed if we were
+     * sent to VM_MONITOR state above.
+     * TUNING: pointer chase, but must refresh following return from call
+     */
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, ppJitProfTable), r0);
+    loadWordDisp(cUnit, r0, 0, r0);
+    storeWordDisp(cUnit, rGLUE, offsetof(InterpState, pJitProfTable), r0);
 
     clobberCallRegs(cUnit);
 

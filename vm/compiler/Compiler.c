@@ -49,15 +49,21 @@ static CompilerWorkOrder workDequeue(void)
     return work;
 }
 
+/*
+ * Attempt to enqueue a work order, returning true if successful.
+ * This routine will not block, but simply return if it couldn't
+ * aquire the lock or if the queue is full.
+ */
 bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
 {
     int cc;
     int i;
     int numWork;
-    int oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
     bool result = true;
 
-    dvmLockMutex(&gDvmJit.compilerLock);
+    if (dvmTryLockMutex(&gDvmJit.compilerLock)) {
+        return false;  // Couldn't aquire the lock
+    }
 
     /*
      * Return if queue is full.
@@ -66,7 +72,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
      */
     if (gDvmJit.compilerQueueLength == COMPILER_WORK_QUEUE_SIZE) {
         result = false;
-        goto done;
+        goto unlockAndExit;
     }
 
     for (numWork = gDvmJit.compilerQueueLength,
@@ -75,7 +81,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
          numWork--) {
         /* Already enqueued */
         if (gDvmJit.compilerWorkQueue[i++].pc == pc)
-            goto done;
+            goto unlockAndExit;
         /* Wrap around */
         if (i == COMPILER_WORK_QUEUE_SIZE)
             i = 0;
@@ -99,9 +105,8 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     cc = pthread_cond_signal(&gDvmJit.compilerQueueActivity);
     assert(cc == 0);
 
-done:
+unlockAndExit:
     dvmUnlockMutex(&gDvmJit.compilerLock);
-    dvmChangeStatus(NULL, oldStatus);
     return result;
 }
 
@@ -267,21 +272,112 @@ done:
     dvmResumeAllThreads(SUSPEND_FOR_CC_RESET);
 }
 
+bool compilerThreadStartup(void)
+{
+    JitEntry *pJitTable = NULL;
+    unsigned char *pJitProfTable = NULL;
+    unsigned int i;
+
+    if (!dvmCompilerArchInit())
+        goto fail;
+
+    /*
+     * Setup the code cache if we have not inherited a valid code cache
+     * from the zygote.
+     */
+    if (gDvmJit.codeCache == NULL) {
+        if (!dvmCompilerSetupCodeCache())
+            goto fail;
+    }
+
+    /* Allocate the initial arena block */
+    if (dvmCompilerHeapInit() == false) {
+        goto fail;
+    }
+
+    dvmInitMutex(&gDvmJit.compilerLock);
+    pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
+    pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);
+
+    dvmLockMutex(&gDvmJit.compilerLock);
+
+    gDvmJit.haltCompilerThread = false;
+
+    /* Reset the work queue */
+    memset(gDvmJit.compilerWorkQueue, 0,
+           sizeof(CompilerWorkOrder) * COMPILER_WORK_QUEUE_SIZE);
+    gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
+    gDvmJit.compilerQueueLength = 0;
+
+    /* Track method-level compilation statistics */
+    gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
+
+    dvmUnlockMutex(&gDvmJit.compilerLock);
+
+    /* Set up the JitTable */
+
+    /* Power of 2? */
+    assert(gDvmJit.jitTableSize &&
+           !(gDvmJit.jitTableSize & (gDvmJit.jitTableSize - 1)));
+
+    dvmInitMutex(&gDvmJit.tableLock);
+    dvmLockMutex(&gDvmJit.tableLock);
+    pJitTable = (JitEntry*)
+                calloc(gDvmJit.jitTableSize, sizeof(*pJitTable));
+    if (!pJitTable) {
+        LOGE("jit table allocation failed\n");
+        dvmUnlockMutex(&gDvmJit.tableLock);
+        goto fail;
+    }
+    /*
+     * NOTE: the profile table must only be allocated once, globally.
+     * Profiling is turned on and off by nulling out gDvm.pJitProfTable
+     * and then restoring its original value.  However, this action
+     * is not syncronized for speed so threads may continue to hold
+     * and update the profile table after profiling has been turned
+     * off by null'ng the global pointer.  Be aware.
+     */
+    pJitProfTable = (unsigned char *)malloc(JIT_PROF_SIZE);
+    if (!pJitProfTable) {
+        LOGE("jit prof table allocation failed\n");
+        dvmUnlockMutex(&gDvmJit.tableLock);
+        goto fail;
+    }
+    memset(pJitProfTable, gDvmJit.threshold, JIT_PROF_SIZE);
+    for (i=0; i < gDvmJit.jitTableSize; i++) {
+       pJitTable[i].u.info.chain = gDvmJit.jitTableSize;
+    }
+    /* Is chain field wide enough for termination pattern? */
+    assert(pJitTable[0].u.info.chain == gDvmJit.jitTableSize);
+
+    gDvmJit.pJitEntryTable = pJitTable;
+    gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
+    gDvmJit.jitTableEntriesUsed = 0;
+    gDvmJit.compilerHighWater =
+        COMPILER_WORK_QUEUE_SIZE - (COMPILER_WORK_QUEUE_SIZE/4);
+    gDvmJit.pProfTable = pJitProfTable;
+    dvmUnlockMutex(&gDvmJit.tableLock);
+
+    /* Signal running threads to refresh their cached pJitTable pointers */
+    dvmSuspendAllThreads(SUSPEND_FOR_REFRESH);
+    dvmResumeAllThreads(SUSPEND_FOR_REFRESH);
+    return true;
+
+fail:
+    return false;
+
+}
+
 static void *compilerThreadStart(void *arg)
 {
     dvmChangeStatus(NULL, THREAD_VMWAIT);
 
     /*
      * Wait a little before recieving translation requests on the assumption
-     * that process start-up code isn't worth compiling.  The trace
-     * selector won't attempt to request a translation if the queue is
-     * filled, so we'll prevent by keeping the high water mark at zero
-     * for a shore time.
+     * that process start-up code isn't worth compiling.
      */
-    assert(gDvmJit.compilerHighWater == 0);
-    usleep(1000);
-    gDvmJit.compilerHighWater =
-        COMPILER_WORK_QUEUE_SIZE - (COMPILER_WORK_QUEUE_SIZE/4);
+    usleep(1 * 1000 * 1000);
+    compilerThreadStartup();
 
     dvmLockMutex(&gDvmJit.compilerLock);
     /*
@@ -299,18 +395,22 @@ static void *compilerThreadStart(void *arg)
             continue;
         } else {
             do {
+                bool resizeFail = false;
                 CompilerWorkOrder work = workDequeue();
                 dvmUnlockMutex(&gDvmJit.compilerLock);
-                /* Check whether there is a suspend request on me */
+                /*
+                 * Check whether there is a suspend request on me.  This
+                 * is necessary to allow a clean shutdown.
+                 */
                 dvmCheckSuspendPending(NULL);
                 /* Is JitTable filling up? */
                 if (gDvmJit.jitTableEntriesUsed >
                     (gDvmJit.jitTableSize - gDvmJit.jitTableSize/4)) {
-                    dvmJitResizeJitTable(gDvmJit.jitTableSize * 2);
+                    resizeFail = dvmJitResizeJitTable(gDvmJit.jitTableSize * 2);
                 }
                 if (gDvmJit.haltCompilerThread) {
                     LOGD("Compiler shutdown in progress - discarding request");
-                } else {
+                } else if (!resizeFail) {
                     /* If compilation failed, use interpret-template */
                     if (!dvmCompilerDoWork(&work)) {
                         work.result.codeAddress = gDvmJit.interpretTemplate;
@@ -328,7 +428,7 @@ static void *compilerThreadStart(void *arg)
                  * stale code stops leaking.
                  */
 #if 0
-                if (gDvmJit.codeCacheFull == true) {
+                if (gDvmJit.codeCacheFull == true || resizeFail) {
                     if (gDvmJit.delayCodeCacheReset == 0) {
                         resetCodeCache();
                         assert(workQueueLength() == 0 ||
@@ -359,60 +459,13 @@ static void *compilerThreadStart(void *arg)
 
 bool dvmCompilerStartup(void)
 {
-    /* Make sure the BBType enum is in sane state */
-    assert(kChainingCellNormal == 0);
-
-    /* Architecture-specific chores to initialize */
-    if (!dvmCompilerArchInit())
-        goto fail;
-
     /*
-     * Setup the code cache if it is not done so already. For apps it should be
-     * done by the Zygote already, but for command-line dalvikvm invocation we
-     * need to do it here.
+     * Defer initialization until we're sure JIT'ng makes sense.  Launch
+     * the compiler thread, which will do the real initialization if and
+     * when it is signalled to do so.
      */
-    if (gDvmJit.codeCache == NULL) {
-        if (!dvmCompilerSetupCodeCache())
-            goto fail;
-    }
-
-    /* Allocate the initial arena block */
-    if (dvmCompilerHeapInit() == false) {
-        goto fail;
-    }
-
-    dvmInitMutex(&gDvmJit.compilerLock);
-    pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
-    pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);
-
-    dvmLockMutex(&gDvmJit.compilerLock);
-
-    gDvmJit.haltCompilerThread = false;
-
-    /* Reset the work queue */
-    memset(gDvmJit.compilerWorkQueue, 0,
-           sizeof(CompilerWorkOrder) * COMPILER_WORK_QUEUE_SIZE);
-    gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
-    gDvmJit.compilerQueueLength = 0;
-    /* Block new entries via HighWater until compiler thread is ready */
-    gDvmJit.compilerHighWater = 0;
-
-    assert(gDvmJit.compilerHighWater < COMPILER_WORK_QUEUE_SIZE);
-    if (!dvmCreateInternalThread(&gDvmJit.compilerHandle, "Compiler",
-                                 compilerThreadStart, NULL)) {
-        dvmUnlockMutex(&gDvmJit.compilerLock);
-        goto fail;
-    }
-
-    /* Track method-level compilation statistics */
-    gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
-
-    dvmUnlockMutex(&gDvmJit.compilerLock);
-
-    return true;
-
-fail:
-    return false;
+    return dvmCreateInternalThread(&gDvmJit.compilerHandle, "Compiler",
+                                   compilerThreadStart, NULL);
 }
 
 void dvmCompilerShutdown(void)

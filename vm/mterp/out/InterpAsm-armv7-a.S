@@ -9358,8 +9358,20 @@ common_periodicChecks:
     bx      lr                          @ nothing to do, return
 
 2:  @ check suspend
+#if defined(WITH_JIT)
+    /*
+     * Refresh the Jit's cached copy of profile table pointer.  This pointer
+     * doubles as the Jit's on/off switch.
+     */
+    ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ r10<-&gDvmJit.pJitProfTable
+    ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
+    ldr     r3, [r3] @ r10 <- pJitProfTable
+    EXPORT_PC()                         @ need for precise GC
+    str     r3, [rGLUE, #offGlue_pJitProfTable] @ refresh Jit's on/off switch
+#else
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
     EXPORT_PC()                         @ need for precise GC
+#endif
     b       dvmCheckSuspendPending      @ suspend if necessary, then return
 
 3:  @ debugger/profiler enabled, bail out
@@ -9555,13 +9567,23 @@ dalvik_mterp:
     @ldr     pc, [r2, #offMethod_nativeFunc] @ pc<- methodToCall->nativeFunc
     LDR_PC_LR "[r2, #offMethod_nativeFunc]"
 
+#if defined(WITH_JIT)
+    ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ Refresh Jit's on/off status
+#endif
+
     @ native return; r9=self, r10=newSaveArea
     @ equivalent to dvmPopJniLocals
     ldr     r0, [r10, #offStackSaveArea_localRefCookie] @ r0<- saved top
     ldr     r1, [r9, #offThread_exception] @ check for exception
+#if defined(WITH_JIT)
+    ldr     r3, [r3]                    @ r3 <- gDvmJit.pProfTable
+#endif
     str     rFP, [r9, #offThread_curFrame]  @ self->curFrame = fp
     cmp     r1, #0                      @ null?
     str     r0, [r9, #offThread_jniLocal_topCookie] @ new top <- old top
+#if defined(WITH_JIT)
+    str     r3, [rGLUE, #offGlue_pJitProfTable] @ refresh cached on/off switch
+#endif
     bne     common_exceptionThrown      @ no, handle exception
 
     FETCH_ADVANCE_INST(3)               @ advance rPC, load rINST

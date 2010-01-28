@@ -159,6 +159,14 @@ typedef struct InterpState {
     void*              jitResume;
     u2*                jitResumePC;
     int                jitThreshold;
+    /*
+     * ppJitProfTable holds the address of gDvmJit.pJitProfTable, which
+     * doubles as an on/off switch for the Jit.  Because a change in
+     * the value of gDvmJit.pJitProfTable isn't reflected in the cached
+     * copy above (pJitProfTable), we need to periodically refresh it.
+     * ppJitProfTable is used for that purpose.
+     */
+    unsigned char**    ppJitProfTable; // Used to refresh pJitProfTable
 #endif
 
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)
