@@ -22,11 +22,10 @@
 
 package tests.security.cert;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
-
-import junit.framework.TestCase;
 
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 import org.apache.harmony.security.tests.support.cert.MyCertPathBuilderSpi;
@@ -44,6 +43,8 @@ import java.security.cert.CertPathBuilderResult;
 import java.security.cert.CertPathBuilderSpi;
 import java.security.cert.CertPathParameters;
 import java.security.cert.CertificateException;
+
+import junit.framework.TestCase;
 
 /**
  * Tests for <code>CertPathBuilder</code> class constructors and
@@ -392,6 +393,7 @@ public class CertPathBuilder1Test extends TestCase {
             args={CertPathParameters.class}
     )
     // Test passed on RI
+    @KnownFailure(value="expired certificate bug 2322662")
     public void testBuild() throws Exception {
         TestUtils.initCertPathSSCertChain();
         CertPathParameters params = TestUtils.getCertPathParameters();

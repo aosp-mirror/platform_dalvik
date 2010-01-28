@@ -22,6 +22,7 @@
 
 package tests.security.cert;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestTargetNew;
@@ -342,6 +343,7 @@ public class CertPathTest extends TestCase {
         )
     })
     // Test passed on RI
+    @KnownFailure(value="expired certificate bug 2322662")
     public void testSerializationSelf() throws Exception {
         TestUtils.initCertPathSSCertChain();
         CertPath certPath = TestUtils.buildCertPathSSCertChain();
@@ -373,6 +375,7 @@ public class CertPathTest extends TestCase {
         )
     })
     // Test passed on RI
+    @KnownFailure(value="expired certificate bug 2322662")
     public void testSerializationCompatibility() throws Exception {
         TestUtils.initCertPathSSCertChain();
         CertPath certPath = TestUtils.buildCertPathSSCertChain();
