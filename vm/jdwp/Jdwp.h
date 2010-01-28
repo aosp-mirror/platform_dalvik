@@ -232,6 +232,7 @@ bool dvmJdwpPostVMDeath(JdwpState* state);
 /*
  * Send up a chunk of DDM data.
  */
-void dvmJdwpDdmSendChunk(JdwpState* state, int type, int len, const u1* buf);
+void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
+    int iovcnt);
 
 #endif /*_DALVIK_JDWP_JDWP*/

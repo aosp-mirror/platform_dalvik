@@ -181,6 +181,18 @@ void dvmExceptionShutdown(void)
 
 
 /*
+ * Format the message into a small buffer and pass it along.
+ */
+void dvmThrowExceptionFmtV(const char* exceptionDescriptor, const char* fmt,
+    va_list args)
+{
+    char msgBuf[512];
+
+    vsnprintf(msgBuf, sizeof(msgBuf), fmt, args);
+    dvmThrowChainedException(exceptionDescriptor, msgBuf, NULL);
+}
+
+/*
  * Create a Throwable and throw an exception in the current thread (where
  * "throwing" just means "set the thread's exception pointer").
  *

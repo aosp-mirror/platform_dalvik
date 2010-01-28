@@ -39,7 +39,6 @@ void dvmProfilingShutdown(void);
 /*
  * Method trace state.  This is currently global.  In theory we could make
  * most of this per-thread.
- *
  */
 typedef struct MethodTraceState {
     /* these are set during VM init */
@@ -50,6 +49,7 @@ typedef struct MethodTraceState {
     pthread_mutex_t startStopLock;
     pthread_cond_t  threadExitCond;
     FILE*   traceFile;
+    bool    directToDdms;
     int     bufferSize;
     int     flags;
 
@@ -97,7 +97,7 @@ typedef struct AllocProfState {
  * Start/stop method tracing.
  */
 void dvmMethodTraceStart(const char* traceFileName, int traceFd, int bufferSize,
-        int flags);
+        int flags, bool directToDdms);
 bool dvmIsMethodTraceActive(void);
 void dvmMethodTraceStop(void);
 
