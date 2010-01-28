@@ -178,6 +178,25 @@ static void Dalvik_dalvik_system_VMRuntime_getExternalBytesAllocated(
     RETURN_LONG((s8)dvmGetExternalBytesAllocated());
 }
 
+/*
+ * public native void startJITCompilation()
+ *
+ * Callback function from the framework to indicate that an app has gone
+ * through the startup phase and it is time to enable the JIT compiler.
+ */
+static void Dalvik_dalvik_system_VMRuntime_startJITCompilation(const u4* args,
+    JValue* pResult)
+{
+#if defined(WITH_JIT)
+    /*
+     * TODO - experiment the timing and put code here to start JIT'ing
+     * The tentative plan is onResume() will invoke the callback.
+     */
+#endif
+
+    RETURN_VOID();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
     { "getTargetHeapUtilization", "()F",
         Dalvik_dalvik_system_VMRuntime_getTargetHeapUtilization },
@@ -195,6 +214,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_trackExternalFree },
     { "getExternalBytesAllocated", "()J",
         Dalvik_dalvik_system_VMRuntime_getExternalBytesAllocated },
+    { "startJITCompilation", "()V",
+        Dalvik_dalvik_system_VMRuntime_startJITCompilation },
     { NULL, NULL, NULL },
 };
-
