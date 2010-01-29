@@ -1216,7 +1216,7 @@ static void assignThreadId(Thread* thread)
 static void releaseThreadId(Thread* thread)
 {
     assert(thread->threadId > 0);
-    dvmClearBit(gDvm.threadIdMap, (thread->threadId >> 1) - 1);
+    dvmClearBit(gDvm.threadIdMap, thread->threadId - 1);
     thread->threadId = 0;
 }
 
