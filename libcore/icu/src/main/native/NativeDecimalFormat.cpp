@@ -33,16 +33,68 @@ static DecimalFormat* toDecimalFormat(jint addr) {
     return reinterpret_cast<DecimalFormat*>(static_cast<uintptr_t>(addr));
 }
 
-static jint openDecimalFormatImpl(JNIEnv* env, jclass clazz, jstring pattern0) {
+static DecimalFormatSymbols* makeDecimalFormatSymbols(JNIEnv* env,
+        jstring currencySymbol0, jchar decimalSeparator, jchar digit,
+        jchar groupingSeparator0, jstring infinity0,
+        jstring internationalCurrencySymbol0, jchar minusSign,
+        jchar monetaryDecimalSeparator, jstring nan0, jchar patternSeparator,
+        jchar percent, jchar perMill, jchar zeroDigit) {
+    ScopedJavaUnicodeString currencySymbol(env, currencySymbol0);
+    ScopedJavaUnicodeString infinity(env, infinity0);
+    ScopedJavaUnicodeString internationalCurrencySymbol(env, internationalCurrencySymbol0);
+    ScopedJavaUnicodeString nan(env, nan0);
+    UnicodeString groupingSeparator(groupingSeparator0);
+
+    DecimalFormatSymbols* result = new DecimalFormatSymbols;
+    result->setSymbol(DecimalFormatSymbols::kCurrencySymbol, currencySymbol.unicodeString());
+    result->setSymbol(DecimalFormatSymbols::kDecimalSeparatorSymbol, UnicodeString(decimalSeparator));
+    result->setSymbol(DecimalFormatSymbols::kDigitSymbol, UnicodeString(digit));
+    result->setSymbol(DecimalFormatSymbols::kGroupingSeparatorSymbol, groupingSeparator);
+    result->setSymbol(DecimalFormatSymbols::kMonetaryGroupingSeparatorSymbol, groupingSeparator);
+    result->setSymbol(DecimalFormatSymbols::kInfinitySymbol, infinity.unicodeString());
+    result->setSymbol(DecimalFormatSymbols::kIntlCurrencySymbol, internationalCurrencySymbol.unicodeString());
+    result->setSymbol(DecimalFormatSymbols::kMinusSignSymbol, UnicodeString(minusSign));
+    result->setSymbol(DecimalFormatSymbols::kMonetarySeparatorSymbol, UnicodeString(monetaryDecimalSeparator));
+    result->setSymbol(DecimalFormatSymbols::kNaNSymbol, nan.unicodeString());
+    result->setSymbol(DecimalFormatSymbols::kPatternSeparatorSymbol, UnicodeString(patternSeparator));
+    result->setSymbol(DecimalFormatSymbols::kPercentSymbol, UnicodeString(percent));
+    result->setSymbol(DecimalFormatSymbols::kPerMillSymbol, UnicodeString(perMill));
+    result->setSymbol(DecimalFormatSymbols::kZeroDigitSymbol, UnicodeString(zeroDigit));
+    return result;
+}
+
+static void setDecimalFormatSymbols(JNIEnv* env, jclass, jint addr,
+        jstring currencySymbol, jchar decimalSeparator, jchar digit,
+        jchar groupingSeparator, jstring infinity,
+        jstring internationalCurrencySymbol, jchar minusSign,
+        jchar monetaryDecimalSeparator, jstring nan, jchar patternSeparator,
+        jchar percent, jchar perMill, jchar zeroDigit) {
+    DecimalFormatSymbols* symbols = makeDecimalFormatSymbols(env,
+            currencySymbol, decimalSeparator, digit, groupingSeparator,
+            infinity, internationalCurrencySymbol, minusSign,
+            monetaryDecimalSeparator, nan, patternSeparator, percent, perMill,
+            zeroDigit);
+    toDecimalFormat(addr)->adoptDecimalFormatSymbols(symbols);
+}
+
+static jint openDecimalFormatImpl(JNIEnv* env, jclass clazz, jstring pattern0,
+        jstring currencySymbol, jchar decimalSeparator, jchar digit,
+        jchar groupingSeparator, jstring infinity,
+        jstring internationalCurrencySymbol, jchar minusSign,
+        jchar monetaryDecimalSeparator, jstring nan, jchar patternSeparator,
+        jchar percent, jchar perMill, jchar zeroDigit) {
     if (pattern0 == NULL) {
         jniThrowNullPointerException(env, NULL);
         return 0;
     }
-
     UErrorCode status = U_ZERO_ERROR;
     UParseError parseError;
     ScopedJavaUnicodeString pattern(env, pattern0);
-    DecimalFormatSymbols* symbols = new DecimalFormatSymbols(status);
+    DecimalFormatSymbols* symbols = makeDecimalFormatSymbols(env,
+            currencySymbol, decimalSeparator, digit, groupingSeparator,
+            infinity, internationalCurrencySymbol, minusSign,
+            monetaryDecimalSeparator, nan, patternSeparator, percent, perMill,
+            zeroDigit);
     DecimalFormat* fmt = new DecimalFormat(pattern.unicodeString(), symbols, parseError, status);
     if (fmt == NULL) {
         delete symbols;
@@ -55,85 +107,14 @@ static void closeDecimalFormatImpl(JNIEnv *env, jclass clazz, jint addr) {
     delete toDecimalFormat(addr);
 }
 
-static void setSymbol(JNIEnv *env, uintptr_t addr, jint symbol, const UChar* chars, int32_t charCount) {
-    UErrorCode status = U_ZERO_ERROR;
-    UNumberFormat* fmt = reinterpret_cast<UNumberFormat*>(static_cast<uintptr_t>(addr));
-    unum_setSymbol(fmt, static_cast<UNumberFormatSymbol>(symbol),
-            chars, charCount, &status);
-    icu4jni_error(env, status);
-}
-
-static void setSymbol_String(JNIEnv *env, jclass, jint addr, jint symbol, jstring s) {
+static void setSymbol(JNIEnv* env, jclass, jint addr, jint symbol, jstring s) {
     const UChar* chars = env->GetStringChars(s, NULL);
     const int32_t charCount = env->GetStringLength(s);
-    setSymbol(env, addr, symbol, chars, charCount);
-    env->ReleaseStringChars(s, chars);
-}
-
-static void setSymbol_char(JNIEnv *env, jclass, jint addr, jint symbol, jchar ch) {
-    setSymbol(env, addr, symbol, &ch, 1);
-}
-
-static void setDecimalFormatSymbols(JNIEnv* env, jclass, jint addr, jstring currencySymbol0, jchar decimalSeparator, jchar digit, jchar groupingSeparator0, jstring infinity0, jstring internationalCurrencySymbol0, jchar minusSign, jchar monetaryDecimalSeparator, jstring nan0, jchar patternSeparator, jchar percent, jchar perMill, jchar zeroDigit) {
-    ScopedJavaUnicodeString currencySymbol(env, currencySymbol0);
-    ScopedJavaUnicodeString infinity(env, infinity0);
-    ScopedJavaUnicodeString internationalCurrencySymbol(env, internationalCurrencySymbol0);
-    ScopedJavaUnicodeString nan(env, nan0);
-    UnicodeString groupingSeparator(groupingSeparator0);
-
-    DecimalFormat* fmt = toDecimalFormat(addr);
-    DecimalFormatSymbols newSymbols(*fmt->getDecimalFormatSymbols());
-    newSymbols.setSymbol(DecimalFormatSymbols::kCurrencySymbol, currencySymbol.unicodeString());
-    newSymbols.setSymbol(DecimalFormatSymbols::kDecimalSeparatorSymbol, UnicodeString(decimalSeparator));
-    newSymbols.setSymbol(DecimalFormatSymbols::kDigitSymbol, UnicodeString(digit));
-    newSymbols.setSymbol(DecimalFormatSymbols::kGroupingSeparatorSymbol, groupingSeparator);
-    newSymbols.setSymbol(DecimalFormatSymbols::kMonetaryGroupingSeparatorSymbol, groupingSeparator);
-    newSymbols.setSymbol(DecimalFormatSymbols::kInfinitySymbol, infinity.unicodeString());
-    newSymbols.setSymbol(DecimalFormatSymbols::kIntlCurrencySymbol, internationalCurrencySymbol.unicodeString());
-    newSymbols.setSymbol(DecimalFormatSymbols::kMinusSignSymbol, UnicodeString(minusSign));
-    newSymbols.setSymbol(DecimalFormatSymbols::kMonetarySeparatorSymbol, UnicodeString(monetaryDecimalSeparator));
-    newSymbols.setSymbol(DecimalFormatSymbols::kNaNSymbol, nan.unicodeString());
-    newSymbols.setSymbol(DecimalFormatSymbols::kPatternSeparatorSymbol, UnicodeString(patternSeparator));
-    newSymbols.setSymbol(DecimalFormatSymbols::kPercentSymbol, UnicodeString(percent));
-    newSymbols.setSymbol(DecimalFormatSymbols::kPerMillSymbol, UnicodeString(perMill));
-    newSymbols.setSymbol(DecimalFormatSymbols::kZeroDigitSymbol, UnicodeString(zeroDigit));
-    fmt->setDecimalFormatSymbols(newSymbols);
-}
-
-static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
-
-    uint32_t resultlength, reslenneeded;
-
-    // the errorcode returned by unum_getSymbol
     UErrorCode status = U_ZERO_ERROR;
-
-    // get the pointer to the number format
-    UNumberFormat *fmt = (UNumberFormat *)(int)addr;
-
-    UChar* result = NULL;
-    resultlength=0;
-
-    // find out how long the result will be
-    reslenneeded=unum_getSymbol(fmt, (UNumberFormatSymbol) symbol, result,
-            resultlength, &status);
-
-    result = NULL;
-    if(status==U_BUFFER_OVERFLOW_ERROR) {
-        status=U_ZERO_ERROR;
-        resultlength=reslenneeded+1;
-        result=(UChar*)malloc(sizeof(UChar) * resultlength);
-        reslenneeded=unum_getSymbol(fmt, (UNumberFormatSymbol) symbol, result,
-                resultlength, &status);
-    }
-    if (icu4jni_error(env, status) != FALSE) {
-        return NULL;
-    }
-
-    jstring res = env->NewString(result, reslenneeded);
-
-    free(result);
-
-    return res;
+    UNumberFormat* fmt = reinterpret_cast<UNumberFormat*>(static_cast<uintptr_t>(addr));
+    unum_setSymbol(fmt, static_cast<UNumberFormatSymbol>(symbol), chars, charCount, &status);
+    icu4jni_error(env, status);
+    env->ReleaseStringChars(s, chars);
 }
 
 static void setAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol,
@@ -606,14 +587,12 @@ static JNINativeMethod gMethods[] = {
     {"format", "(IJLjava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;)Ljava/lang/String;", (void*) formatLong},
     {"format", "(ILjava/lang/String;Ljava/text/FieldPosition;Ljava/lang/String;Ljava/lang/StringBuffer;I)Ljava/lang/String;", (void*) formatDigitList},
     {"getAttribute", "(II)I", (void*) getAttribute},
-    {"getSymbol", "(II)Ljava/lang/String;", (void*) getSymbol},
     {"getTextAttribute", "(II)Ljava/lang/String;", (void*) getTextAttribute},
-    {"openDecimalFormatImpl", "(Ljava/lang/String;)I", (void*) openDecimalFormatImpl},
+    {"openDecimalFormatImpl", "(Ljava/lang/String;Ljava/lang/String;CCCLjava/lang/String;Ljava/lang/String;CCLjava/lang/String;CCCC)I", (void*) openDecimalFormatImpl},
     {"parse", "(ILjava/lang/String;Ljava/text/ParsePosition;)Ljava/lang/Number;", (void*) parse},
     {"setAttribute", "(III)V", (void*) setAttribute},
     {"setDecimalFormatSymbols", "(ILjava/lang/String;CCCLjava/lang/String;Ljava/lang/String;CCLjava/lang/String;CCCC)V", (void*) setDecimalFormatSymbols},
-    {"setSymbol", "(IIC)V", (void*) setSymbol_char},
-    {"setSymbol", "(IILjava/lang/String;)V", (void*) setSymbol_String},
+    {"setSymbol", "(IILjava/lang/String;)V", (void*) setSymbol},
     {"setTextAttribute", "(IILjava/lang/String;)V", (void*) setTextAttribute},
     {"toPatternImpl", "(IZ)Ljava/lang/String;", (void*) toPatternImpl},
 };

@@ -48,7 +48,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
             PerMill = 6, Exponent = 7, MonetaryDecimalSeparator = 8,
             MinusSign = 9;
 
-    transient char[] patternChars;
+    private transient char[] patternChars;
 
     private transient Currency currency;
 
@@ -545,9 +545,5 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
         } catch (IllegalArgumentException e) {
             currency = null;
         }
-    }
-    
-    Locale getLocale(){
-        return locale;
     }
 }

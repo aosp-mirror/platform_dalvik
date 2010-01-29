@@ -32,7 +32,7 @@ import java.util.Locale;
 
 public class NativeDecimalFormat {
     /**
-     * Constants corresponding to the native type UNumberFormatSymbol, for getSymbol/setSymbol.
+     * Constants corresponding to the native type UNumberFormatSymbol, for setSymbol.
      */
     private static final int UNUM_DECIMAL_SEPARATOR_SYMBOL = 0;
     private static final int UNUM_GROUPING_SEPARATOR_SYMBOL = 1;
@@ -117,10 +117,19 @@ public class NativeDecimalFormat {
      */
     private BigDecimal multiplierBigDecimal = null;
 
-    public NativeDecimalFormat(String pattern, Locale locale, DecimalFormatSymbols symbols) {
-        this.addr = openDecimalFormat(pattern);
-        this.lastPattern = pattern;
-        setDecimalFormatSymbols(symbols);
+    public NativeDecimalFormat(String pattern, DecimalFormatSymbols dfs) {
+        try {
+            this.addr = openDecimalFormatImpl(pattern, dfs.getCurrencySymbol(),
+                    dfs.getDecimalSeparator(), dfs.getDigit(), dfs.getGroupingSeparator(),
+                    dfs.getInfinity(), dfs.getInternationalCurrencySymbol(), dfs.getMinusSign(),
+                    dfs.getMonetaryDecimalSeparator(), dfs.getNaN(), dfs.getPatternSeparator(),
+                    dfs.getPercent(), dfs.getPerMill(), dfs.getZeroDigit());
+            this.lastPattern = pattern;
+        } catch (NullPointerException npe) {
+            throw npe;
+        } catch (RuntimeException re) {
+            throw new IllegalArgumentException("syntax error: " + re.getMessage() + ": " + pattern);
+        }
     }
 
     // Used to implement clone.
@@ -183,8 +192,7 @@ public class NativeDecimalFormat {
                 obj.getMaximumFractionDigits() == this.getMaximumFractionDigits() &&
                 obj.getMinimumIntegerDigits() == this.getMinimumIntegerDigits() &&
                 obj.getMinimumFractionDigits() == this.getMinimumFractionDigits() &&
-                obj.isGroupingUsed() == this.isGroupingUsed() &&
-                obj.getCurrency() == this.getCurrency();
+                obj.isGroupingUsed() == this.isGroupingUsed();
     }
 
     /**
@@ -348,14 +356,6 @@ public class NativeDecimalFormat {
 
     public int getMinimumIntegerDigits() {
         return getAttribute(this.addr, UNUM_MIN_INTEGER_DIGITS);
-    }
-
-    public Currency getCurrency() {
-        String curr = getSymbol(this.addr, UNUM_INTL_CURRENCY_SYMBOL);
-        if (curr.equals("") || curr.equals("\u00a4\u00a4")) {
-            return null;
-        }
-        return Currency.getInstance(curr);
     }
 
     public int getGroupingSize() {
@@ -560,17 +560,6 @@ public class NativeDecimalFormat {
         return null;
     }
 
-    private static int openDecimalFormat(String pattern) {
-        try {
-            // FIXME: if we're about to override everything, should we just ask for the cheapest locale (presumably the root locale)?
-            return openDecimalFormatImpl(pattern);
-        } catch (NullPointerException npe) {
-            throw npe;
-        } catch (RuntimeException re) {
-            throw new IllegalArgumentException("syntax error: " + re.getMessage() + ": " + pattern);
-        }
-    }
-
     private static void applyPattern(int addr, boolean localized, String pattern) {
         try {
             applyPatternImpl(addr, localized, pattern);
@@ -588,17 +577,17 @@ public class NativeDecimalFormat {
     private static native String format(int addr, double value, FieldPosition position, String fieldType, StringBuffer attributes);
     private static native String format(int addr, String value, FieldPosition position, String fieldType, StringBuffer attributes, int scale);
     private static native int getAttribute(int addr, int symbol);
-    // FIXME: do we need getSymbol any more? the Java-side object should be the canonical source.
-    private static native String getSymbol(int addr, int symbol);
     private static native String getTextAttribute(int addr, int symbol);
-    private static native int openDecimalFormatImpl(String pattern);
+    private static native int openDecimalFormatImpl(String pattern, String currencySymbol,
+            char decimalSeparator, char digit, char groupingSeparator, String infinity,
+            String internationalCurrencySymbol, char minusSign, char monetaryDecimalSeparator,
+            String nan, char patternSeparator, char percent, char perMill, char zeroDigit);
     private static native Number parse(int addr, String string, ParsePosition position);
     private static native void setDecimalFormatSymbols(int addr, String currencySymbol,
             char decimalSeparator, char digit, char groupingSeparator, String infinity,
             String internationalCurrencySymbol, char minusSign, char monetaryDecimalSeparator,
             String nan, char patternSeparator, char percent, char perMill, char zeroDigit);
     private static native void setSymbol(int addr, int symbol, String str);
-    private static native void setSymbol(int addr, int symbol, char ch);
     private static native void setAttribute(int addr, int symbol, int i);
     private static native void setTextAttribute(int addr, int symbol, String str);
     private static native String toPatternImpl(int addr, boolean localized);
