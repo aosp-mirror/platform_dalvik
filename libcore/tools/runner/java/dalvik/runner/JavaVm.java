@@ -24,18 +24,19 @@ import java.util.List;
  */
 final class JavaVm extends Vm {
 
-    private final String javaHome;
+    private final File javaHome;
 
     JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
-            String javaHome, List<String> additionalVmArgs, boolean clean) {
+            File javaHome, List<String> additionalVmArgs, boolean clean) {
         super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
         this.javaHome = javaHome;
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder(
             File workingDirectory) {
+        String java = javaHome == null ? "java" : new File(javaHome, "bin/java").getPath();
         return new VmCommandBuilder()
-                .vmCommand(javaHome + "/bin/java")
+                .vmCommand(java)
                 .workingDir(workingDirectory);
     }
 }

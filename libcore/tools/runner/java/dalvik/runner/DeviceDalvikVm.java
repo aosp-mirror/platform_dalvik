@@ -38,10 +38,10 @@ final class DeviceDalvikVm extends Vm {
     private final Adb adb = new Adb();
 
     DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar,
-            File localTemp, List<String> additionalVmArgs, boolean clean, String runnerDir) {
+            File localTemp, List<String> additionalVmArgs, boolean clean, File runnerDir) {
         super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
 
-        this.runnerDir = new File(runnerDir);
+        this.runnerDir = runnerDir;
         this.testTemp = new File(this.runnerDir, "/tests.tmp");
     }
 

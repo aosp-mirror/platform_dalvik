@@ -32,6 +32,8 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/MainFinder.java \
         java/dalvik/runner/MainRunner.java \
         java/dalvik/runner/NamingPatternCodeFinder.java \
+        java/dalvik/runner/Option.java \
+        java/dalvik/runner/OptionParser.java \
         java/dalvik/runner/Result.java \
         java/dalvik/runner/Strings.java \
         java/dalvik/runner/TestRun.java \
