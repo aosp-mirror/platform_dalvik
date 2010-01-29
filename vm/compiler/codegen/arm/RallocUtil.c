@@ -466,6 +466,7 @@ extern void clobberHandlerRegs(CompilationUnit *cUnit)
 {
     //TUNING: reduce the set of regs used by handlers.  Only a few need lots.
     clobberCallRegs(cUnit);
+    clobberReg(cUnit, r4PC);
     clobberReg(cUnit, r9);
     clobberReg(cUnit, r10);
 }
