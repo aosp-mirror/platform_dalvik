@@ -31,7 +31,7 @@ public class FormatterTest extends junit.framework.TestCase {
     // Creating a NumberFormat is expensive, so we like to reuse them, but we need to be careful
     // because they're mutable.
     public void test_NumberFormat_reuse() throws Exception {
-        assertEquals("7.000000 7", String.format("%.6f %d", 7, 7));
+        assertEquals("7.000000 7", String.format("%.6f %d", 7.0, 7));
     }
 
     public void test_formatNull() throws Exception {
