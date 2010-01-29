@@ -562,7 +562,7 @@ public class DecimalFormat extends NumberFormat {
         Locale locale = Locale.getDefault();
         this.symbols = new DecimalFormatSymbols(locale);
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        initNative(localeData.numberPattern, locale);
+        initNative(localeData.numberPattern);
         // END android-changed
     }
 
@@ -595,21 +595,21 @@ public class DecimalFormat extends NumberFormat {
     public DecimalFormat(String pattern, DecimalFormatSymbols value) {
         // BEGIN android-changed: reduce duplication.
         this.symbols = (DecimalFormatSymbols) value.clone();
-        initNative(pattern, symbols.getLocale());
+        initNative(pattern);
         // END android-changed
     }
 
     // BEGIN android-added: used by NumberFormat.getInstance because cloning DecimalFormatSymbols is slow.
     DecimalFormat(String pattern, Locale locale) {
         this.symbols = new DecimalFormatSymbols(locale);
-        initNative(pattern, locale);
+        initNative(pattern);
     }
     // END android-added
 
     // BEGIN android-changed: reduce duplication.
-    private void initNative(String pattern, Locale locale) {
+    private void initNative(String pattern) {
         try {
-            this.dform = new NativeDecimalFormat(pattern, locale, symbols);
+            this.dform = new NativeDecimalFormat(pattern, symbols);
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(pattern);
         }
@@ -750,10 +750,7 @@ public class DecimalFormat extends NumberFormat {
      */
     @Override
     public Currency getCurrency() {
-        final Currency cur = dform.getCurrency();
-        final String code = (cur == null) ? "XXX" : cur.getCurrencyCode(); //$NON-NLS-1$
-
-        return Currency.getInstance(code);
+        return symbols.getCurrency();
     }
 
     /**
@@ -1286,7 +1283,7 @@ public class DecimalFormat extends NumberFormat {
 
         Locale locale = (Locale) Format.getInternalField("locale", symbols);
         // BEGIN android-changed
-        initNative("", locale);
+        initNative("");
         // END android-changed
         dform.setPositivePrefix(positivePrefix);
         dform.setPositiveSuffix(positiveSuffix);
