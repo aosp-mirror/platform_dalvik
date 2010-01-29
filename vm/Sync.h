@@ -146,6 +146,11 @@ struct Object* dvmGetMonitorObject(Monitor* mon);
 bool dvmHoldsLock(struct Thread* thread, struct Object* obj);
 
 /*
+ * Converts the given relative time into an absolute time
+ */
+void dvmAbsoluteTime(s8 msec, s4 nsec, struct timespec *ts);
+
+/*
  * Debug.
  */
 void dvmDumpMonitorInfo(const char* msg);
