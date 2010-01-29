@@ -1230,7 +1230,7 @@ public class DecimalFormat extends NumberFormat {
         fields.put("parseBigDecimal", parseBigDecimal);
         fields.put("symbols", symbols);
         fields.put("useExponentialNotation", false);
-        fields.put("minExponentDigits", 0);
+        fields.put("minExponentDigits", (byte) 0);
         fields.put("maximumIntegerDigits", dform.getMaximumIntegerDigits());
         fields.put("minimumIntegerDigits", dform.getMinimumIntegerDigits());
         fields.put("maximumFractionDigits", dform.getMaximumFractionDigits());

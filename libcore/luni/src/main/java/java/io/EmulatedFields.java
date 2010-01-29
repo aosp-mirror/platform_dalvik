@@ -119,7 +119,7 @@ class EmulatedFields {
     public boolean defaulted(String name) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, null);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no field '" + name + "'");
         }
         return slot.defaulted;
     }
@@ -207,7 +207,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Byte.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no byte field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Byte) slot.fieldValue)
                 .byteValue();
@@ -233,7 +233,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Character.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no char field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Character) slot.fieldValue)
                 .charValue();
@@ -259,7 +259,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Double.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no double field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Double) slot.fieldValue)
                 .doubleValue();
@@ -285,7 +285,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Float.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no float field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Float) slot.fieldValue)
                 .floatValue();
@@ -311,7 +311,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Integer.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no int field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Integer) slot.fieldValue)
                 .intValue();
@@ -337,7 +337,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Long.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no long field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Long) slot.fieldValue)
                 .longValue();
@@ -363,7 +363,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, null);
         // if not initialized yet, we give the default value
         if (slot == null || slot.field.getType().isPrimitive()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no Object field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : slot.fieldValue;
     }
@@ -388,7 +388,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Short.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no short field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Short) slot.fieldValue)
                 .shortValue();
@@ -414,7 +414,7 @@ class EmulatedFields {
         ObjectSlot slot = findSlot(name, Boolean.TYPE);
         // if not initialized yet, we give the default value
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no boolean field '" + name + "'");
         }
         return slot.defaulted ? defaultValue : ((Boolean) slot.fieldValue)
                 .booleanValue();
@@ -435,7 +435,7 @@ class EmulatedFields {
     public void put(String name, byte value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Byte.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no byte field '" + name + "'");
         }
         slot.fieldValue = Byte.valueOf(value);
         slot.defaulted = false; // No longer default value
@@ -456,7 +456,7 @@ class EmulatedFields {
     public void put(String name, char value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Character.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no char field '" + name + "'");
         }
         slot.fieldValue = Character.valueOf(value);
         slot.defaulted = false; // No longer default value
@@ -477,7 +477,7 @@ class EmulatedFields {
     public void put(String name, double value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Double.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no double field '" + name + "'");
         }
         slot.fieldValue = Double.valueOf(value);
         slot.defaulted = false; // No longer default value
@@ -498,7 +498,7 @@ class EmulatedFields {
     public void put(String name, float value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Float.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no float field '" + name + "'");
         }
         slot.fieldValue = Float.valueOf(value);
         slot.defaulted = false; // No longer default value
@@ -519,7 +519,7 @@ class EmulatedFields {
     public void put(String name, int value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Integer.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no integer field '" + name + "'");
         }
         slot.fieldValue = Integer.valueOf(value);
         slot.defaulted = false; // No longer default value
@@ -540,7 +540,7 @@ class EmulatedFields {
     public void put(String name, long value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Long.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no long field '" + name + "'");
         }
         slot.fieldValue = Long.valueOf(value);
         slot.defaulted = false; // No longer default value
@@ -565,7 +565,7 @@ class EmulatedFields {
         }
         ObjectSlot slot = findSlot(name, valueClass);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no Object field '" + name + "'");
         }
         slot.fieldValue = value;
         slot.defaulted = false; // No longer default value
@@ -586,7 +586,7 @@ class EmulatedFields {
     public void put(String name, short value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Short.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no short field '" + name + "'");
         }
         slot.fieldValue = Short.valueOf(value);
         slot.defaulted = false; // No longer default value
@@ -607,7 +607,7 @@ class EmulatedFields {
     public void put(String name, boolean value) throws IllegalArgumentException {
         ObjectSlot slot = findSlot(name, Boolean.TYPE);
         if (slot == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("no boolean field '" + name + "'");
         }
         slot.fieldValue = Boolean.valueOf(value);
         slot.defaulted = false; // No longer default value
