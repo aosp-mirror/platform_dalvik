@@ -504,7 +504,7 @@ static void waitSetRemove(Monitor *mon, Thread *thread)
 /*
  * Converts the given relative waiting time into an absolute time.
  */
-static void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
+void dvmAbsoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 {
     s8 endSec;
 
@@ -589,7 +589,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     if (msec == 0 && nsec == 0) {
         timed = false;
     } else {
-        absoluteTime(msec, nsec, &ts);
+        dvmAbsoluteTime(msec, nsec, &ts);
         timed = true;
     }
 
@@ -1987,4 +1987,3 @@ static void removeCollectedObject(Object* obj)
 }
 
 #endif /*WITH_DEADLOCK_PREDICTION*/
-

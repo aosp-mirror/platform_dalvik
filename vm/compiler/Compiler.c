@@ -295,19 +295,7 @@ bool compilerThreadStartup(void)
         goto fail;
     }
 
-    dvmInitMutex(&gDvmJit.compilerLock);
-    pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
-    pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);
-
     dvmLockMutex(&gDvmJit.compilerLock);
-
-    gDvmJit.haltCompilerThread = false;
-
-    /* Reset the work queue */
-    memset(gDvmJit.compilerWorkQueue, 0,
-           sizeof(CompilerWorkOrder) * COMPILER_WORK_QUEUE_SIZE);
-    gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
-    gDvmJit.compilerQueueLength = 0;
 
     /* Track method-level compilation statistics */
     gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
@@ -370,13 +358,39 @@ fail:
 
 static void *compilerThreadStart(void *arg)
 {
+    int ret;
+    struct timespec ts;
+
     dvmChangeStatus(NULL, THREAD_VMWAIT);
 
     /*
      * Wait a little before recieving translation requests on the assumption
      * that process start-up code isn't worth compiling.
      */
-    usleep(1 * 1000 * 1000);
+
+    dvmLockMutex(&gDvmJit.compilerLock);
+    /*
+     * TUNING: once framework is calling VMRuntime.startJitCompilation,
+     * experiment with the delay time (and perhaps have target-dependent
+     * values?
+     */
+    dvmAbsoluteTime(1000, 0, &ts);
+#if defined(HAVE_TIMEDWAIT_MONOTONIC)
+    ret = pthread_cond_timedwait_monotonic(&gDvmJit.compilerQueueActivity,
+                                           &gDvmJit.compilerLock, &ts);
+#else
+    ret = pthread_cond_timedwait(&gDvmJit.compilerQueueActivity,
+                                 &gDvmJit.compilerLock, &ts);
+#endif
+    assert(ret == 0 || ret == ETIMEDOUT);
+
+    if (gDvmJit.haltCompilerThread) {
+        dvmUnlockMutex(&gDvmJit.compilerLock);
+        return NULL;
+    }
+
+    dvmUnlockMutex(&gDvmJit.compilerLock);
+
     compilerThreadStartup();
 
     dvmLockMutex(&gDvmJit.compilerLock);
@@ -459,8 +473,19 @@ static void *compilerThreadStart(void *arg)
 
 bool dvmCompilerStartup(void)
 {
+
+    dvmInitMutex(&gDvmJit.compilerLock);
+    dvmLockMutex(&gDvmJit.compilerLock);
+    pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
+    pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);
+
+    /* Reset the work queue */
+    gDvmJit.compilerWorkEnqueueIndex = gDvmJit.compilerWorkDequeueIndex = 0;
+    gDvmJit.compilerQueueLength = 0;
+    dvmUnlockMutex(&gDvmJit.compilerLock);
+
     /*
-     * Defer initialization until we're sure JIT'ng makes sense.  Launch
+     * Defer rest of initialization until we're sure JIT'ng makes sense. Launch
      * the compiler thread, which will do the real initialization if and
      * when it is signalled to do so.
      */
