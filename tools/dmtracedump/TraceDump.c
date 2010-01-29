@@ -49,6 +49,7 @@ int versionNumber;
 
 /* Size of methodId->method cache */
 #define METHOD_CACHE_SIZE 2048
+#define METHOD_CACHE_SIZE_MASK (METHOD_CACHE_SIZE - 1)
 
 /* Some filter constants */
 #define FILTER_TAG '*'
@@ -1176,7 +1177,8 @@ MethodEntry* lookupMethod(DataKeys* pKeys, unsigned int methodId)
         pKeys->methodCache = (int*) malloc(sizeof(int) * METHOD_CACHE_SIZE);
     }
 
-    hashedId = (methodId >> 2) % METHOD_CACHE_SIZE; // ids are multiples of 4, so shift
+    // ids are multiples of 4, so shift
+    hashedId = (methodId >> 2) & METHOD_CACHE_SIZE_MASK;
     if (pKeys->methodCache[hashedId]) /* cache hit */
         if (pKeys->methods[pKeys->methodCache[hashedId]].methodId == methodId)
 	    return &pKeys->methods[pKeys->methodCache[hashedId]];
@@ -1189,7 +1191,7 @@ MethodEntry* lookupMethod(DataKeys* pKeys, unsigned int methodId)
 
         id = pKeys->methods[mid].methodId;
         if (id == methodId) {         /* match, put in cache */
-	    hashedId = (methodId >> 2) % METHOD_CACHE_SIZE;
+	    hashedId = (methodId >> 2) & METHOD_CACHE_SIZE_MASK;
 	    pKeys->methodCache[hashedId] = mid;
 	    return &pKeys->methods[mid];
 	} else if (id < methodId)       /* too low */
@@ -3546,6 +3548,7 @@ int parseOptions(int argc, char **argv)
                 break;
             case 'f':
 	        gOptions.filterFileName = optarg;
+                break;
             case 'k':
                 gOptions.keepDotFile = 1;
                 break;
