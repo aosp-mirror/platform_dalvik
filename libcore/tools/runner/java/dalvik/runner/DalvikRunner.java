@@ -17,6 +17,7 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -34,24 +35,202 @@ import java.util.logging.Logger;
  */
 public final class DalvikRunner {
 
-    private final File localTemp;
-    private File sdkJar;
-    private Integer debugPort;
-    private long timeoutSeconds;
-    private Set<File> expectationFiles = new LinkedHashSet<File>();
-    private File xmlReportsDirectory;
-    private String javaHome;
-    private List<String> vmArgs = new ArrayList<String>();
-    private boolean clean = true;
-    private String deviceRunnerDir = "/sdcard/dalvikrunner";
-    private List<File> testFiles = new ArrayList<File>();
+    private static class Options {
 
-    private DalvikRunner() {
-        localTemp = new File("/tmp/" + UUID.randomUUID());
-        timeoutSeconds = 10 * 60; // default is ten minutes
-        sdkJar = new File("/home/dalvik-prebuild/android-sdk-linux/platforms/android-2.0/android.jar");
-        expectationFiles.add(new File("dalvik/libcore/tools/runner/expectations.txt"));
+        private final List<File> testFiles = new ArrayList<File>();
+
+        @Option(names = { "--expectations" })
+        private Set<File> expectationFiles = new LinkedHashSet<File>();
+        {
+            expectationFiles.add(new File("dalvik/libcore/tools/runner/expectations.txt"));
+        }
+
+        private static String MODE_DEVICE = "device";
+        private static String MODE_HOST = "host";
+        private static String MODE_ACTIVITY = "activity";
+        @Option(names = { "--mode" })
+        private String mode = MODE_DEVICE;
+
+        @Option(names = { "--timeout" })
+        private long timeoutSeconds = 10 * 60; // default is ten minutes;
+
+        @Option(names = { "--clean" })
+        private boolean clean = true;
+
+        @Option(names = { "--xml-reports-directory" })
+        private File xmlReportsDirectory;
+
+        @Option(names = { "--verbose" })
+        private boolean verbose;
+
+        @Option(names = { "--debug" })
+        private Integer debugPort;
+
+        @Option(names = { "--device-runner-dir" })
+        private File deviceRunnerDir = new File("/sdcard/dalvikrunner");
+
+        @Option(names = { "--vm-arg" })
+        private List<String> vmArgs = new ArrayList<String>();
+
+        @Option(names = { "--java-home" })
+        private File javaHome;
+
+        @Option(names = { "--sdk" })
+        private File sdkJar = new File("/home/dalvik-prebuild/android-sdk-linux/platforms/android-2.0/android.jar");
+
+        private void printUsage() {
+            System.out.println("Usage: DalvikRunner [options]... <tests>...");
+            System.out.println();
+            System.out.println("  <tests>: a .java file containing a jtreg test, JUnit test,");
+            System.out.println("      Caliper benchmark, or a directory of such tests.");
+            System.out.println();
+            System.out.println("GENERAL OPTIONS");
+            System.out.println();
+            System.out.println("  --expectations <file>: include the specified file when looking for");
+            System.out.println("      test expectations. The file should include qualified test names");
+            System.out.println("      and the corresponding expected output.");
+            System.out.println("      Default is: " + expectationFiles);
+            System.out.println();
+            System.out.println("  --mode <device|host|activity>: specify which environment to run the");
+            System.out.println("      tests in. Options are on the device VM, on the host VM, and on");
+            System.out.println("      device within an android.app.Activity.");
+            System.out.println("      Default is: " + mode);
+            System.out.println();
+            System.out.println("  --clean: remove temporary files (default). Disable with --no-clean");
+            System.out.println("      and use with --verbose if you'd like to manually re-run");
+            System.out.println("      commands afterwards.");
+            System.out.println();
+            System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
+            System.out.println("      test before the runner aborts it.");
+            System.out.println("      Default is: " + timeoutSeconds);
+            System.out.println();
+            System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
+            System.out.println("      XML test results.");
+            System.out.println();
+            System.out.println("  --verbose: turn on verbose output");
+            System.out.println();
+            System.out.println("DEVICE OPTIONS");
+            System.out.println();
+            System.out.println("  --debug <port>: enable Java debugging on the specified port.");
+            System.out.println("      This port must be free both on the device and on the local");
+            System.out.println("      system.");
+            System.out.println();
+            System.out.println("  --device-runner-dir <directory>: use the specified directory for");
+            System.out.println("      on-device temporary files and code.");
+            System.out.println("      Default is: " + deviceRunnerDir);
+            System.out.println();
+            System.out.println("GENERAL VM OPTIONS");
+            System.out.println();
+            System.out.println("  --vm-arg <argument>: include the specified argument when spawning a");
+            System.out.println("      virtual machine. Examples: -Xint:fast, -ea, -Xmx16M");
+            System.out.println();
+            System.out.println("HOST VM OPTIONS");
+            System.out.println();
+            System.out.println("  --java-home <java_home>: execute the tests on the local workstation");
+            System.out.println("      using the specified java home directory. This does not impact");
+            System.out.println("      which javac gets used. When unset, java is used from the PATH.");
+            System.out.println();
+            System.out.println("COMPILE OPTIONS");
+            System.out.println();
+            System.out.println("  --sdk <android jar>: the API jar file to compile against.");
+            System.out.println("      Usually this is <SDK>/platforms/android-<X.X>/android.jar");
+            System.out.println("      where <SDK> is the path to an Android SDK path and <X.X> is");
+            System.out.println("      a release version like 1.5.");
+            System.out.println("      Default is: " + sdkJar);
+            System.out.println();
+        }
+
+        private boolean parseArgs(String[] args) {
+            final List<String> testFilenames;
+            try {
+                testFilenames = new OptionParser(this).parse(args);
+            } catch (RuntimeException e) {
+                System.out.println(e.getMessage());
+                return false;
+            }
+
+            //
+            // Semantic error validation
+            //
+
+            boolean device;
+            boolean vm;
+            if (mode.equals(MODE_DEVICE)) {
+                device = true;
+                vm = true;
+            } else if (mode.equals(MODE_HOST)) {
+                device = false;
+                vm = true;
+            } else if (mode.equals(MODE_ACTIVITY)) {
+                device = true;
+                vm = false;
+            } else {
+                System.out.println("Unknown mode: " + mode);
+                return false;
+            }
+
+
+            if (device) { // check device option consistency
+                if (javaHome != null) {
+                    System.out.println("java home " + javaHome + " should not be specified for mode " + mode);
+                    return false;
+                }
+
+            } else { // check host (!device) option consistency
+                if (javaHome != null && !new File(javaHome, "/bin/java").exists()) {
+                    System.out.println("Invalid java home: " + javaHome);
+                    return false;
+                }
+                if (debugPort != null) {
+                    System.out.println("debug port " + debugPort + " should not be specified for mode " + mode);
+                    return false;
+                }
+            }
+
+            // check vm option consistency
+            if (!vm) {
+                if (!vmArgs.isEmpty()) {
+                    System.out.println("vm args " + vmArgs + " should not be specified for mode " + mode);
+                    return false;
+                }
+            }
+
+            if (!sdkJar.exists()) {
+                System.out.println("Could not find SDK jar: " + sdkJar);
+                return false;
+            }
+
+            if (xmlReportsDirectory != null && !xmlReportsDirectory.isDirectory()) {
+                System.out.println("Invalid XML reports directory: " + xmlReportsDirectory);
+                return false;
+            }
+
+            if (testFilenames.isEmpty()) {
+                System.out.println("No tests provided.");
+                return false;
+            }
+
+            //
+            // Post-processing arguments
+            //
+
+            for (String testFilename : testFilenames) {
+                testFiles.add(new File(testFilename));
+            }
+
+            if (verbose) {
+                Logger.getLogger("dalvik.runner").setLevel(Level.FINE);
+            }
+
+            return true;
+        }
+
     }
+
+    private final Options options = new Options();
+    private final File localTemp = new File("/tmp/" + UUID.randomUUID());
+
+    private DalvikRunner() {}
 
     private void prepareLogging() {
         ConsoleHandler handler = new ConsoleHandler();
@@ -66,139 +245,61 @@ public final class DalvikRunner {
         logger.setUseParentHandlers(false);
     }
 
-    private boolean parseArgs(String[] args) throws Exception {
-        for (int i = 0; i < args.length; i++) {
-            if ("--debug".equals(args[i])) {
-                debugPort = Integer.valueOf(args[++i]);
-
-            } else if ("--device-runner-dir".equals(args[i])) {
-                deviceRunnerDir = args[++i];
-
-            } else if ("--expectations".equals(args[i])) {
-                expectationFiles.add(new File(args[++i]));
-
-            } else if ("--java-home".equals(args[i])) {
-                javaHome = args[++i];
-                if (!new File(javaHome, "/bin/java").exists()) {
-                    System.out.println("Invalid java home: " + javaHome);
-                    return false;
-                }
-
-            } else if ("--timeout-seconds".equals(args[i])) {
-                timeoutSeconds = Long.valueOf(args[++i]);
-
-            } else if ("--sdk".equals(args[i])) {
-                sdkJar = new File(args[++i]);
-                if (!sdkJar.exists()) {
-                    System.out.println("Could not find SDK jar: " + sdkJar);
-                    return false;
-                }
-
-            } else if ("--skip-clean".equals(args[i])) {
-                clean = false;
-
-            } else if ("--verbose".equals(args[i])) {
-                Logger.getLogger("dalvik.runner").setLevel(Level.FINE);
-
-            } else if ("--vm-arg".equals(args[i])) {
-                vmArgs.add(args[++i]);
-
-            } else if ("--xml-reports-directory".equals(args[i])) {
-                xmlReportsDirectory = new File(args[++i]);
-                if (!xmlReportsDirectory.isDirectory()) {
-                    System.out.println("Invalid XML reports directory: " + xmlReportsDirectory);
-                    return false;
-                }
-
-            } else if (args[i].startsWith("-")) {
-                System.out.println("Unrecognized option: " + args[i]);
-                return false;
-
-            } else {
-                testFiles.add(new File(args[i]));
-            }
+    private void run() {
+        Vm vm;
+        if (options.mode.equals(Options.MODE_DEVICE)) {
+            vm = new DeviceDalvikVm(
+                    options.debugPort,
+                    options.timeoutSeconds,
+                    options.sdkJar,
+                    localTemp,
+                    options.vmArgs,
+                    options.clean,
+                    options.deviceRunnerDir);
+        } else if (options.mode.equals(Options.MODE_HOST)) {
+            vm = new JavaVm(
+                    options.debugPort,
+                    options.timeoutSeconds,
+                    options.sdkJar,
+                    localTemp,
+                    options.javaHome,
+                    options.vmArgs,
+                    options.clean);
+        } else if (options.mode.equals(Options.MODE_ACTIVITY)) {
+            vm = null;
+            System.out.println("Mode " + options.mode + " not currently supported.");
+            return;
+        } else {
+            System.out.println("Unknown mode mode " + options.mode + ".");
+            return;
         }
 
-        if (testFiles.isEmpty()) {
-            System.out.println("No tests provided.");
-            return false;
-        }
-
-        return true;
-    }
-
-    private void printUsage() {
-        System.out.println("Usage: DalvikRunner [options]... <tests>...");
-        System.out.println();
-        System.out.println("  <tests>: a .java file containing a jtreg test, JUnit test,");
-        System.out.println("      Caliper benchmark, or a directory of such tests.");
-        System.out.println();
-        System.out.println("OPTIONS");
-        System.out.println();
-        System.out.println("  --debug <port>: enable Java debugging on the specified port.");
-        System.out.println("      This port must be free both on the device and on the local");
-        System.out.println("      system.");
-        System.out.println();
-        System.out.println("  ----device-runner-dir <directory>: use the specified directory for");
-        System.out.println("      on-device temporary files and code.");
-        System.out.println("      Default is: " + deviceRunnerDir);
-        System.out.println();
-        System.out.println("  --expectations <file>: include the specified file when looking for");
-        System.out.println("      test expectations. The file should include qualified test names");
-        System.out.println("      and the corresponding expected output.");
-        System.out.println("      Default is: " + expectationFiles);
-        System.out.println();
-        System.out.println("  --java-home <java_home>: execute the tests on the local workstation");
-        System.out.println("      using the specified java home directory. This does not impact");
-        System.out.println("      which javac gets used. When unset, tests are run on a device");
-        System.out.println("      using adb.");
-        System.out.println();
-        System.out.println("  --sdk <android jar>: the API jar file to compile against.");
-        System.out.println("      Usually this is <SDK>/platforms/android-<X.X>/android.jar");
-        System.out.println("      where <SDK> is the path to an Android SDK path and <X.X> is");
-        System.out.println("      a release version like 1.5.");
-        System.out.println("      Default is: " + sdkJar);
-        System.out.println();
-        System.out.println("  --skip-clean: leave temporary files in their place. Useful when");
-        System.out.println("      coupled with --verbose if you'd like to manually re-run");
-        System.out.println("      commands afterwards.");
-        System.out.println();
-        System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
-        System.out.println("      test before the runner aborts it.");
-        System.out.println("      Default is: " + timeoutSeconds);
-        System.out.println();
-        System.out.println("  --vm-arg <argument>: include the specified argument when spawning a");
-        System.out.println("      virtual machine. Examples: -Xint:fast, -ea, -Xmx16M");
-        System.out.println();
-        System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
-        System.out.println("      XML test results.");
-        System.out.println();
-        System.out.println("  --verbose: turn on verbose output");
-        System.out.println();
-    }
-
-    private void run() throws Exception {
-        Vm vm = javaHome != null
-                ? new JavaVm(debugPort, timeoutSeconds, sdkJar, localTemp,
-                        javaHome, vmArgs, clean)
-                : new DeviceDalvikVm(debugPort, timeoutSeconds, sdkJar,
-                        localTemp, vmArgs, clean, deviceRunnerDir);
         List<CodeFinder> codeFinders = Arrays.asList(
                 new JtregFinder(localTemp),
                 new JUnitFinder(),
                 new CaliperFinder(),
                 new MainFinder());
-        Driver driver = new Driver(localTemp,
-                vm, expectationFiles, xmlReportsDirectory, codeFinders);
-        driver.loadExpectations();
-        driver.buildAndRunAllTests(testFiles);
+        Driver driver = new Driver(
+                localTemp,
+                vm,
+                options.expectationFiles,
+                options.xmlReportsDirectory,
+                codeFinders);
+        try {
+            driver.loadExpectations();
+        } catch (IOException e) {
+            System.out.println("Problem loading expectations: " + e);
+            return;
+        }
+
+        driver.buildAndRunAllTests(options.testFiles);
         vm.shutdown();
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         DalvikRunner dalvikRunner = new DalvikRunner();
-        if (!dalvikRunner.parseArgs(args)) {
-            dalvikRunner.printUsage();
+        if (!dalvikRunner.options.parseArgs(args)) {
+            dalvikRunner.options.printUsage();
             return;
         }
         dalvikRunner.prepareLogging();

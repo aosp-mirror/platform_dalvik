@@ -72,7 +72,7 @@ final class Driver {
     /**
      * Builds and executes all tests in the test directory.
      */
-    public void buildAndRunAllTests(Collection<File> testFiles) throws Exception {
+    public void buildAndRunAllTests(Collection<File> testFiles) {
         localTemp.mkdirs();
 
         final BlockingQueue<TestRun> readyToRun = new ArrayBlockingQueue<TestRun>(4);
@@ -136,10 +136,15 @@ final class Driver {
                     + readyToRun.size() + " are ready to run");
 
             // if it takes 5 minutes for build and install, something is broken
-            TestRun testRun = readyToRun.poll(300, TimeUnit.SECONDS);
+            TestRun testRun;
+            try {
+                testRun = readyToRun.poll(5 * 60, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Unexpected interruption waiting for build and install", e);
+            }
+
             if (testRun == null) {
-                throw new IllegalStateException(
-                        "Expected " + tests.size() + " tests but found only " + i);
+                throw new IllegalStateException("Expected " + tests.size() + " tests but found only " + i);
             }
 
             runs.add(testRun);

@@ -51,11 +51,11 @@ public abstract class Vm {
 
     private final Pattern JAVA_TEST_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
     static final Classpath COMPILATION_CLASSPATH = Classpath.of(
-            new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar"),
-            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar"),
-            new File("out/target/common/obj/JAVA_LIBRARIES/jsr305_intermediates/classes.jar"),
-            new File("out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/classes.jar"),
-            new File("out/target/common/obj/JAVA_LIBRARIES/caliper_intermediates/classes.jar"));
+            new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar").getAbsoluteFile(),
+            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar").getAbsoluteFile(),
+            new File("out/target/common/obj/JAVA_LIBRARIES/jsr305_intermediates/classes.jar").getAbsoluteFile(),
+            new File("out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/classes.jar").getAbsoluteFile(),
+            new File("out/target/common/obj/JAVA_LIBRARIES/caliper_intermediates/classes.jar").getAbsoluteFile());
 
     private static final Logger logger = Logger.getLogger(Vm.class.getName());
 
