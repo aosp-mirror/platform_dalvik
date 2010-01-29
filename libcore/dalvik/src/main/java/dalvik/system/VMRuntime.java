@@ -193,6 +193,6 @@ public final class VMRuntime {
      *
      * {@hide}
      */
-    public native void startJITCompilation();
+    public native void startJitCompilation();
 
 }
