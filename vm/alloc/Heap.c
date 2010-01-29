@@ -856,7 +856,8 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
                 (int) time(NULL), (int) getpid());
             gcHeap->hprofFileName = nameBuf;
         }
-        gcHeap->hprofContext = hprofStartup(gcHeap->hprofFileName);
+        gcHeap->hprofContext = hprofStartup(gcHeap->hprofFileName,
+                gcHeap->hprofDirectToDdms);
         if (gcHeap->hprofContext != NULL) {
             hprofStartHeapDump(gcHeap->hprofContext);
         }
@@ -1071,7 +1072,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
  *
  * Returns 0 on success, or an error code on failure.
  */
-int hprofDumpHeap(const char* fileName)
+int hprofDumpHeap(const char* fileName, bool directToDdms)
 {
     int result;
 
@@ -1079,6 +1080,7 @@ int hprofDumpHeap(const char* fileName)
 
     gDvm.gcHeap->hprofDumpOnGc = true;
     gDvm.gcHeap->hprofFileName = fileName;
+    gDvm.gcHeap->hprofDirectToDdms = directToDdms;
     dvmCollectGarbageInternal(false, GC_HPROF_DUMP_HEAP);
     result = gDvm.gcHeap->hprofResult;
 
