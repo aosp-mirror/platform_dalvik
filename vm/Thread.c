@@ -1285,8 +1285,6 @@ static bool createFakeRunFrame(Thread* thread)
     ClassObject* nativeStart;
     Method* runMeth;
 
-    assert(thread->threadId != 1);      // not for main thread
-
     nativeStart =
         dvmFindSystemClassNoInit("Ldalvik/system/NativeStart;");
     if (nativeStart == NULL) {
