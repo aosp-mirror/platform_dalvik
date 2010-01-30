@@ -174,7 +174,9 @@ public final class Currency implements Serializable {
             return localeData.currencySymbol;
         }
 
-        return Resources.getCurrencySymbolNative(locale.toString(), currencyCode);
+        // Try ICU, and fall back to the currency code if ICU has nothing.
+        String symbol = Resources.getCurrencySymbolNative(locale.toString(), currencyCode);
+        return symbol != null ? symbol : currencyCode;
         // END android-changed
     }
 

@@ -22,6 +22,7 @@ import junit.framework.TestSuite;
 public class AllTests {
     public static final Test suite() {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite();
+        suite.addTestSuite(java.util.CurrencyTest.class);
         suite.addTestSuite(java.util.DateTest.class);
         suite.addTestSuite(java.util.FormatterTest.class);
         return suite;
