@@ -315,7 +315,8 @@ public class TimeZoneTest extends junit.framework.TestCase {
         }
         TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
         assertEquals("Pacific Standard Time", tz.getDisplayName(new Locale("US")));
-        assertEquals("Heure normale du Pacifique", tz.getDisplayName(Locale.FRANCE));
+        // BEGIN android-note: RI has "Heure", CLDR/ICU has "heure".
+        assertEquals("heure normale du Pacifique", tz.getDisplayName(Locale.FRANCE));
     }
     
     @TestTargetNew(
@@ -349,9 +350,10 @@ public class TimeZoneTest extends junit.framework.TestCase {
         assertEquals("Pacific Daylight Time", tz.getDisplayName(true,  1, Locale.US));
         assertEquals("Pacific Standard Time", tz.getDisplayName(false, 1, Locale.UK));
         //RI fails on following line. RI always returns short time zone name as "PST" 
-        assertEquals("HMG-08:00",             tz.getDisplayName(false, 0, Locale.FRANCE));
-        assertEquals("Heure avanc\u00e9e du Pacifique", tz.getDisplayName(true,  1, Locale.FRANCE));
-        assertEquals("Heure normale du Pacifique", tz.getDisplayName(false, 1, Locale.FRANCE));
+        assertEquals("UTC-08:00",             tz.getDisplayName(false, 0, Locale.FRANCE));
+        // BEGIN android-note: RI has "Heure", CLDR/ICU has "heure".
+        assertEquals("heure avanc\u00e9e du Pacifique", tz.getDisplayName(true,  1, Locale.FRANCE));
+        assertEquals("heure normale du Pacifique", tz.getDisplayName(false, 1, Locale.FRANCE));
     }
     
     @TestTargetNew(

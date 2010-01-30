@@ -2209,13 +2209,13 @@ public class FormatterTest extends TestCase {
                 {new Date(1147327147578L),  'b', "mai"}, //$NON-NLS-2$
                 {paris,                     'b', "mai"}, //$NON-NLS-2$
                 {china,                     'b', "mai"}, //$NON-NLS-2$
-                {0L,                        'c', "jeu. janv. 01 08:00:00 HMG+08:00 1970"}, //$NON-NLS-2$
-                // {Long.MAX_VALUE,            'c', "dim. ao\u00fbt 17 15:12:55 HMG+08:00 292278994"}, //$NON-NLS-2$
-                {Long.MAX_VALUE,            'c', "dim. ao\u00fbt 17 15:18:47 HMG+08:00 292278994"}, //$NON-NLS-2$
-                {-1000L,                    'c', "jeu. janv. 01 07:59:59 HMG+08:00 1970"}, //$NON-NLS-2$
-                {new Date(1147327147578L),  'c', "jeu. mai 11 13:59:07 HMG+08:00 2006"}, //$NON-NLS-2$
+                {0L,                        'c', "jeu. janv. 01 08:00:00 UTC+08:00 1970"}, //$NON-NLS-2$
+                // {Long.MAX_VALUE,            'c', "dim. ao\u00fbt 17 15:12:55 UTC+08:00 292278994"}, //$NON-NLS-2$
+                {Long.MAX_VALUE,            'c', "dim. ao\u00fbt 17 15:18:47 UTC+08:00 292278994"}, //$NON-NLS-2$
+                {-1000L,                    'c', "jeu. janv. 01 07:59:59 UTC+08:00 1970"}, //$NON-NLS-2$
+                {new Date(1147327147578L),  'c', "jeu. mai 11 13:59:07 UTC+08:00 2006"}, //$NON-NLS-2$
                 {paris,                     'c', "lun. mai 08 12:00:00 HAEC 2006"}, //$NON-NLS-2$
-                {china,                     'c', "lun. mai 08 12:00:00 HMG-08:00 2006"}, //$NON-NLS-2$
+                {china,                     'c', "lun. mai 08 12:00:00 UTC-08:00 2006"}, //$NON-NLS-2$
                 {0L,                        'd', "01"}, //$NON-NLS-2$
                 {Long.MAX_VALUE,            'd', "17"}, //$NON-NLS-2$
                 {-1000L,                    'd', "01"}, //$NON-NLS-2$
@@ -2401,7 +2401,7 @@ public class FormatterTest extends TestCase {
             f = new Formatter(Locale.GERMAN);
             f.format(formatSpecifier, lowerCaseGermanTriple[i][input]);
             assertEquals("Format pattern: " + formatSpecifier //$NON-NLS-2$
-                            + " Argument: " + lowerCaseGermanTriple[i][pattern], //$NON-NLS-2$
+                            + " Argument: " + lowerCaseGermanTriple[i][input], //$NON-NLS-2$
                             lowerCaseGermanTriple[i][output], f.toString());
 
             f = new Formatter(Locale.GERMAN);
@@ -2638,12 +2638,12 @@ public class FormatterTest extends TestCase {
                 {new Date(1147327147578L),  'Y', "2006"}, //$NON-NLS-2$
                 {paris,                     'Y', "2006"}, //$NON-NLS-2$
                 {china,                     'Y', "2006"}, //$NON-NLS-2$
-                {0L,                        'Z', "HMG+08:00"}, //$NON-NLS-2$
-                {Long.MAX_VALUE,            'Z', "HMG+08:00"}, //$NON-NLS-2$
-                {-1000L,                    'Z', "HMG+08:00"}, //$NON-NLS-2$
-                {new Date(1147327147578L),  'Z', "HMG+08:00"}, //$NON-NLS-2$
+                {0L,                        'Z', "UTC+08:00"}, //$NON-NLS-2$
+                {Long.MAX_VALUE,            'Z', "UTC+08:00"}, //$NON-NLS-2$
+                {-1000L,                    'Z', "UTC+08:00"}, //$NON-NLS-2$
+                {new Date(1147327147578L),  'Z', "UTC+08:00"}, //$NON-NLS-2$
                 {paris,                     'Z', "HAEC"}, //$NON-NLS-2$
-                {china,                     'Z', "HMG-08:00"}, //$NON-NLS-2$
+                {china,                     'Z', "UTC-08:00"}, //$NON-NLS-2$
                 
         };
 
