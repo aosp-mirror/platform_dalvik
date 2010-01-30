@@ -471,7 +471,9 @@ public:
     }
 
     /**
-     * Returns the element or attribute local name, like "h1". Never empty.
+     * Returns the element or attribute local name, like "h1". Never empty. When
+     * namespace processing is disabled, this may contain a prefix, yielding a
+     * local name like "html:h1". In such cases, the qName will always be empty.
      */
     jstring localName() {
         return internString(mEnv, mParsingContext, mLocalName);
@@ -504,13 +506,17 @@ public:
     bool matchesQName(const char* qName) {
         char* lastColon = strrchr(qName, ':');
 
-        // if the input doesn't have a colon, there's no namespace prefix. Our
-        // prefix must be empty and the qName must equal our localName
-        if (lastColon == NULL) {
-            return strlen(mPrefix) == 0 && strcmp(qName, mLocalName) == 0;
+        // Compare local names only if either:
+        //  - the input qualified name doesn't have a colon (like "h1")
+        //  - this element doesn't have a prefix. Such is the case when it
+        //    doesn't belong to a namespace, or when this parser's namespace
+        //    processing is disabled. In the latter case, this element's local
+        //    name may still contain a colon (like "html:h1").
+        if (lastColon == NULL || *mPrefix == 0) {
+            return strcmp(qName, mLocalName) == 0;
         }
 
-        // otherwise the prefixes must be equal and our localName must equal qName
+        // Otherwise compare both prefix and local name
         size_t prefixLength = lastColon - qName;
         return strlen(mPrefix) == prefixLength
             && strncmp(qName, mPrefix, prefixLength) == 0
@@ -1004,7 +1010,7 @@ static void releaseParsingContext(JNIEnv* env, ParsingContext* context) {
 }
 
 /**
- * Creates a new Expat parser. Called from the Java ExpatParser contructor.
+ * Creates a new Expat parser. Called from the Java ExpatParser constructor.
  *
  * @param object the Java ExpatParser instance
  * @param javaEncoding the character encoding name
@@ -1208,11 +1214,6 @@ static jstring getAttributeURI(JNIEnv* env, jobject clazz, jint pointer,
         jint attributePointer, jint index) {
     XML_Parser parser = (XML_Parser) pointer;
     ParsingContext* context = (ParsingContext*) XML_GetUserData(parser);
-
-    if (!context->processNamespaces) {
-        return emptyString;
-    }
-
     return ExpatElementName(env, context, attributePointer, index).uri();
 }
 
@@ -1229,11 +1230,6 @@ static jstring getAttributeLocalName(JNIEnv* env, jobject clazz, jint pointer,
         jint attributePointer, jint index) {
     XML_Parser parser = (XML_Parser) pointer;
     ParsingContext* context = (ParsingContext*) XML_GetUserData(parser);
-
-    if (!context->processNamespaces) {
-        return emptyString;
-    }
-
     return ExpatElementName(env, context, attributePointer, index).localName();
 }
 
@@ -1250,11 +1246,6 @@ static jstring getAttributeQName(JNIEnv* env, jobject clazz, jint pointer,
         jint attributePointer, jint index) {
     XML_Parser parser = (XML_Parser) pointer;
     ParsingContext* context = (ParsingContext*) XML_GetUserData(parser);
-
-    if (context->processNamespaces) {
-        return emptyString;
-    }
-
     return ExpatElementName(env, context, attributePointer, index).qName();
 }
 
