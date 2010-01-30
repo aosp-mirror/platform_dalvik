@@ -73,12 +73,21 @@ public final class TestEnvironment {
         TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"));
     }
 
-    private static void resetSystemProperties() {
-        String tmpDir = System.getProperty("java.io.tmpdir");
-        if (tmpDir == null) {
-            throw new IllegalStateException("Test execution requires the"
-                    + " system property java.io.tmpdir to be set.");
+    private static String getExistingSystemProperty(String name) {
+        String result = System.getProperty(name);
+        if (result == null) {
+            throw new AssertionError("Tests require the '" + name + "' system property");
         }
+        return result;
+    }
+
+    private static void resetSystemProperties() {
+        // There are two system properties we can't live without.
+        // 1. We need somewhere writable to stash our stuff.
+        String tmpDir = getExistingSystemProperty("java.io.tmpdir");
+        // 2. We need to know who we are, specifically "am I root?" because that affects what
+        // the OS lets us do, and that affects test expectations.
+        String userName = getExistingSystemProperty("user.name");
 
         Properties p = new Properties();
 
@@ -129,7 +138,7 @@ public final class TestEnvironment {
         p.put("line.separator", "\n");
         p.put("path.separator", ":");
         p.put("user.language", "en");
-        p.put("user.name", "");
+        p.put("user.name", userName);
         p.put("user.region", "US");
 
         System.setProperties(p);
