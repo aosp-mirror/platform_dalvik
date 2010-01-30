@@ -983,11 +983,12 @@ public class CalendarTest extends junit.framework.TestCase {
             // locale dependent test, bug 1943269
             return;
         }
+        Locale.setDefault(Locale.US);
         Calendar cal = Calendar.getInstance();
-        assertTrue(cal.getMinimalDaysInFirstWeek()==1);
+        assertEquals(1, cal.getMinimalDaysInFirstWeek());
         Locale.setDefault(Locale.FRANCE);
         cal = Calendar.getInstance();
-        assertTrue(cal.getMinimalDaysInFirstWeek()==4);
+        assertEquals(4, cal.getMinimalDaysInFirstWeek());
         Locale.setDefault(Locale.US);
     }
 

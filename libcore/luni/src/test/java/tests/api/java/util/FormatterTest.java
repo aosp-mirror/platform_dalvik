@@ -2101,25 +2101,25 @@ public class FormatterTest extends TestCase {
         china.set(Calendar.MILLISECOND, 609);
 
         final Object[][] lowerCaseGermanTriple = {
-                {0L,                        'a', "Do"},  //$NON-NLS-2$
-                {Long.MAX_VALUE,            'a', "So"},  //$NON-NLS-2$
-                {-1000L,                    'a', "Do"},  //$NON-NLS-2$
-                {new Date(1147327147578L),  'a', "Do"},  //$NON-NLS-2$
-                {paris,                     'a', "Mo"},  //$NON-NLS-2$
-                {china,                     'a', "Mo"},  //$NON-NLS-2$
+                {0L,                        'a', "Do."},  //$NON-NLS-2$
+                {Long.MAX_VALUE,            'a', "So."},  //$NON-NLS-2$
+                {-1000L,                    'a', "Do."},  //$NON-NLS-2$
+                {new Date(1147327147578L),  'a', "Do."},  //$NON-NLS-2$
+                {paris,                     'a', "Mo."},  //$NON-NLS-2$
+                {china,                     'a', "Mo."},  //$NON-NLS-2$
                 {0L,                        'b', "Jan"},  //$NON-NLS-2$
                 {Long.MAX_VALUE,            'b', "Aug"},  //$NON-NLS-2$
                 {-1000L,                    'b', "Jan"},  //$NON-NLS-2$
                 {new Date(1147327147578L),  'b', "Mai"},  //$NON-NLS-2$
                 {paris,                     'b', "Mai"},  //$NON-NLS-2$
                 {china,                     'b', "Mai"},  //$NON-NLS-2$
-                {0L,                        'c', "Do Jan 01 08:00:00 GMT+08:00 1970"},  //$NON-NLS-2$
-                // {Long.MAX_VALUE,            'c', "So Aug 17 15:12:55 GMT+08:00 292278994"},  //$NON-NLS-2$
-                {Long.MAX_VALUE,            'c', "So Aug 17 15:18:47 GMT+08:00 292278994"},  //$NON-NLS-2$
-                {-1000L,                    'c', "Do Jan 01 07:59:59 GMT+08:00 1970"},  //$NON-NLS-2$
-                {new Date(1147327147578L),  'c', "Do Mai 11 13:59:07 GMT+08:00 2006"},  //$NON-NLS-2$
-                {paris,                     'c', "Mo Mai 08 12:00:00 MESZ 2006"},  //$NON-NLS-2$
-                {china,                     'c', "Mo Mai 08 12:00:00 GMT-08:00 2006"},  //$NON-NLS-2$
+                {0L,                        'c', "Do. Jan 01 08:00:00 GMT+08:00 1970"},  //$NON-NLS-2$
+                // {Long.MAX_VALUE,            'c', "So. Aug 17 15:12:55 GMT+08:00 292278994"},  //$NON-NLS-2$
+                {Long.MAX_VALUE,            'c', "So. Aug 17 15:18:47 GMT+08:00 292278994"},  //$NON-NLS-2$
+                {-1000L,                    'c', "Do. Jan 01 07:59:59 GMT+08:00 1970"},  //$NON-NLS-2$
+                {new Date(1147327147578L),  'c', "Do. Mai 11 13:59:07 GMT+08:00 2006"},  //$NON-NLS-2$
+                {paris,                     'c', "Mo. Mai 08 12:00:00 MESZ 2006"},  //$NON-NLS-2$
+                {china,                     'c', "Mo. Mai 08 12:00:00 GMT-08:00 2006"},  //$NON-NLS-2$
                 {0L,                        'd', "01"},  //$NON-NLS-2$
                 {Long.MAX_VALUE,            'd', "17"},  //$NON-NLS-2$
                 {-1000L,                    'd', "01"},  //$NON-NLS-2$
