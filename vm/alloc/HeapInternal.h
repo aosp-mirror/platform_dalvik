@@ -170,6 +170,7 @@ struct GcHeap {
     const char*     hprofFileName;
     hprof_context_t *hprofContext;
     int             hprofResult;
+    bool            hprofDirectToDdms;
 #endif
 };
 

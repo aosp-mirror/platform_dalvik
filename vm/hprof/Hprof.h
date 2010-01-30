@@ -125,13 +125,23 @@ typedef struct hprof_context_t {
      * can cast from a context to a record.
      */
     hprof_record_t curRec;
-    char *fileName;
-    FILE *fp;
+
     u4 gcThreadSerialNumber;
     u1 gcScanState;
     HprofHeapId currentHeap;    // which heap we're currently emitting
     u4 stackTraceSerialNumber;
     size_t objectsInSegment;
+
+    /*
+     * If "directToDdms" is not set, "fileName" is valid, and "fileDataPtr"
+     * and "fileDataSize" are not used.  If "directToDdms" is not set,
+     * it's the other way around.
+     */
+    bool directToDdms;
+    char *fileName;
+    char *fileDataPtr;          // for open_memstream
+    size_t fileDataSize;        // for open_memstream
+    FILE *fp;
 } hprof_context_t;
 
 
@@ -178,7 +188,7 @@ int hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj);
  */
 
 void hprofContextInit(hprof_context_t *ctx, char *fileName, FILE *fp,
-                      bool writeHeader);
+                      bool writeHeader, bool directToDdms);
 
 int hprofFlushRecord(hprof_record_t *rec, FILE *fp);
 int hprofFlushCurrentRecord(hprof_context_t *ctx);
@@ -234,8 +244,9 @@ int hprofShutdown_StackFrame(void);
  * Hprof.c functions
  */
 
-hprof_context_t *hprofStartup(const char *outputFileName);
+hprof_context_t* hprofStartup(const char *outputFileName, bool directToDdms);
 bool hprofShutdown(hprof_context_t *ctx);
+void hprofFreeContext(hprof_context_t *ctx);
 
 /*
  * Heap.c functions
@@ -244,7 +255,7 @@ bool hprofShutdown(hprof_context_t *ctx);
  * the heap implementation; these functions require heap knowledge,
  * so they are implemented in Heap.c.
  */
-int hprofDumpHeap(const char* fileName);
+int hprofDumpHeap(const char* fileName, bool directToDdms);
 void dvmHeapSetHprofGcScanState(hprof_heap_tag_t state, u4 threadSerialNumber);
 
 #endif  // _DALVIK_HPROF_HPROF

@@ -93,6 +93,7 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
 #ifdef WITH_HPROF
     /* VM responds to DDMS heap dump requests */
     features[idx++] = "hprof-heap-dump";
+    features[idx++] = "hprof-heap-dump-streaming";
 #endif
 
     assert(idx <= MAX_FEATURE_COUNT);
@@ -664,8 +665,34 @@ static void Dalvik_dalvik_system_VMDebug_dumpHprofData(const u4* args,
         RETURN_VOID();
     }
 
-    result = hprofDumpHeap(fileName);
+    result = hprofDumpHeap(fileName, false);
     free(fileName);
+
+    if (result != 0) {
+        /* ideally we'd throw something more specific based on actual failure */
+        dvmThrowException("Ljava/lang/RuntimeException;",
+            "Failure during heap dump -- check log output for details");
+        RETURN_VOID();
+    }
+#else
+    dvmThrowException("Ljava/lang/UnsupportedOperationException;", NULL);
+#endif
+
+    RETURN_VOID();
+}
+
+/*
+ * static void dumpHprofDataDdms()
+ *
+ * Cause "hprof" data to be computed and sent directly to DDMS.
+ */
+static void Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms(const u4* args,
+    JValue* pResult)
+{
+#ifdef WITH_HPROF
+    int result;
+
+    result = hprofDumpHeap("[DDMS]", true);
 
     if (result != 0) {
         /* ideally we'd throw something more specific based on actual failure */
@@ -876,6 +903,8 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_threadCpuTimeNanos },
     { "dumpHprofData",              "(Ljava/lang/String;)V",
         Dalvik_dalvik_system_VMDebug_dumpHprofData },
+    { "dumpHprofDataDdms",          "()V",
+        Dalvik_dalvik_system_VMDebug_dumpHprofDataDdms },
     { "cacheRegisterMap",           "(Ljava/lang/String;)Z",
         Dalvik_dalvik_system_VMDebug_cacheRegisterMap },
     { "dumpReferenceTables",        "()V",

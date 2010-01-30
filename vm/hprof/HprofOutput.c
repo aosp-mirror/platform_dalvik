@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 #include <sys/time.h>
+#include <cutils/open_memstream.h>
 #include <time.h>
+#include <errno.h>
 #include "Hprof.h"
 
 #define HPROF_MAGIC_STRING  "JAVA PROFILE 1.0.3"
@@ -54,11 +56,33 @@
         buf_[offset_ + 7] = (unsigned char)(value_      ); \
     } while (0)
 
+/*
+ * Initialize an hprof context struct.
+ *
+ * This will take ownership of "fileName" and "fp".
+ */
 void
 hprofContextInit(hprof_context_t *ctx, char *fileName, FILE *fp,
-    bool writeHeader)
+    bool writeHeader, bool directToDdms)
 {
     memset(ctx, 0, sizeof (*ctx));
+
+    if (directToDdms) {
+        /*
+         * Have to do this here, because it must happen after we
+         * memset the struct (want to treat fileDataPtr/fileDataSize
+         * as read-only while the file is open).
+         */
+        assert(fp == NULL);
+        fp = open_memstream(&ctx->fileDataPtr, &ctx->fileDataSize);
+        if (fp == NULL) {
+            /* not expected */
+            LOGE("hprof: open_memstream failed: %s\n", strerror(errno));
+            dvmAbort();
+        }
+    }
+
+    ctx->directToDdms = directToDdms;
     ctx->fileName = fileName;
     ctx->fp = fp;
 

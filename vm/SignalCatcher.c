@@ -255,7 +255,7 @@ loop:
         } else if (rcvd == SIGUSR1) {
 #if WITH_HPROF
             LOGI("SIGUSR1 forcing GC and HPROF dump\n");
-            hprofDumpHeap(NULL);
+            hprofDumpHeap(NULL, false);
 #else
             LOGI("SIGUSR1 forcing GC (no HPROF)\n");
             dvmCollectGarbage(false);

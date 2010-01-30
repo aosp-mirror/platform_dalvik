@@ -311,6 +311,16 @@ public final class VMDebug {
     public static native void dumpHprofData(String fileName) throws IOException;
 
     /**
+     * Collect "hprof" and send it to DDMS.  This will cause a GC.
+     *
+     * @throws UnsupportedOperationException if the VM was built without
+     *         HPROF support.
+     *
+     * @hide
+     */
+    public static native void dumpHprofDataDdms();
+
+    /**
      * Primes the register map cache.
      *
      * @hide
