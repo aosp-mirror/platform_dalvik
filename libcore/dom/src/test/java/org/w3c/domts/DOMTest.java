@@ -165,8 +165,8 @@ public abstract class DOMTest /* wBM: implements EventListener */ {
           //
           //   if available use JDK 1.4's File.toURI().toString()
           //
-          Method method = File.class.getMethod("toURI", null);
-          Object uri = method.invoke(tempFile, null);
+          Method method = File.class.getMethod("toURI", (Class<?>) null);
+          Object uri = method.invoke(tempFile, (Class<?>) null);
           return uri.toString();
         }
         catch (NoSuchMethodException ex) {

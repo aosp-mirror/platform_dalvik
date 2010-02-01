@@ -272,8 +272,8 @@ public class LSDocumentBuilderFactory
     try {
       Class domImplRegistryClass = Class.forName(
           "org.w3c.dom.bootstrap.DOMImplementationRegistry");
-      Method newInstanceMethod = domImplRegistryClass.getMethod("newInstance", null);
-      Object domRegistry = newInstanceMethod.invoke(null, null);
+      Method newInstanceMethod = domImplRegistryClass.getMethod("newInstance", (Class<?>) null);
+      Object domRegistry = newInstanceMethod.invoke(null, (Class<?>) null);
       Method getDOMImplementationMethod = domImplRegistryClass.getMethod(
           "getDOMImplementation", new Class[] {String.class});
       impl = (DOMImplementation) getDOMImplementationMethod.invoke(domRegistry,

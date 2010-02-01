@@ -37,8 +37,8 @@ public class FormatterTest extends junit.framework.TestCase {
     public void test_formatNull() throws Exception {
         // We fast-path %s and %d (with no configuration) but need to make sure we handle the
         // special case of the null argument...
-        assertEquals("null", String.format(Locale.US, "%s", null));
-        assertEquals("null", String.format(Locale.US, "%d", null));
+        assertEquals("null", String.format(Locale.US, "%s", (String) null));
+        assertEquals("null", String.format(Locale.US, "%d", (Integer) null));
         // ...without screwing up conversions that don't take an argument.
         assertEquals("%", String.format(Locale.US, "%%"));
     }
