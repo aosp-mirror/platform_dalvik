@@ -75,7 +75,7 @@ public final class hc_namednodemapinuseattributeerr extends DOMTestCase {
       elementList = doc.getElementsByTagName("acronym");
       firstNode = (Element) elementList.item(0);
       domesticAttr = doc.createAttribute("title");
-      domesticAttr.setValue("Yα");
+      domesticAttr.setValue("Y\u03b1"); // android-changed: GREEK LOWER CASE ALPHA
       setAttr = firstNode.setAttributeNode(domesticAttr);
       elementList = doc.getElementsByTagName("acronym");
       testNode = elementList.item(2);

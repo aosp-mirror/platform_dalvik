@@ -71,7 +71,7 @@ public final class hc_attrspecifiedvaluechanged extends DOMTestCase {
       doc = (Document) load("hc_staff", true);
       addressList = doc.getElementsByTagName("acronym");
       testNode = addressList.item(2);
-      ((Element) /*Node */testNode).setAttribute("class", "Yα");
+      ((Element) /*Node */testNode).setAttribute("class", "Y\u03b1"); // android-changed: GREEK LOWER CASE ALPHA
       attributes = testNode.getAttributes();
       streetAttr = (Attr) attributes.getNamedItem("class");
       state = streetAttr.getSpecified();

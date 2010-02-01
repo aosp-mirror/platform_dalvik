@@ -69,7 +69,7 @@ public final class hc_attrgetvalue1 extends DOMTestCase {
       attributes = testNode.getAttributes();
       titleAttr = (Attr) attributes.getNamedItem("class");
       value = titleAttr.getValue();
-      assertEquals("attrValue1", "Yα", value);
+      assertEquals("attrValue1", "Y\u03b1", value); // android-changed: GREEK LOWER CASE ALPHA
       }
    /**
     *  Gets URI that identifies the test.

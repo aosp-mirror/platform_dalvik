@@ -776,17 +776,17 @@ public class DecimalFormatSymbolsTest extends TestCase {
         // Values based on Java 1.5 RI DecimalFormatSymbols for Locale.FRANCE
         /*
          * currency = [EUR]
-         * currencySymbol = [€][U+20ac]
+         * currencySymbol = [U+20ac] // EURO SIGN
          * decimalSeparator = [,][U+002c]
          * digit = [#][U+0023]
-         * groupingSeparator = [ ][U+00a0]
-         * infinity = [∞][U+221e]
+         * groupingSeparator = [U+00a0] // NON-BREAKING SPACE
+         * infinity = [U+221e] // INFINITY
          * internationalCurrencySymbol = [EUR]
          * minusSign = [-][U+002d]
          * monetaryDecimalSeparator = [,][U+002c]
-         * naN = [�][U+fffd]
+         * naN = [U+fffd] // REPLACEMENT CHARACTER
          * patternSeparator = [;][U+003b]
-         * perMill = [‰][U+2030]
+         * perMill = [U+2030] // PER MILLE
          * percent = [%][U+0025]
          * zeroDigit = [0][U+0030]
          */
@@ -800,6 +800,8 @@ public class DecimalFormatSymbolsTest extends TestCase {
         assertEquals('-', dfs.getMinusSign());
         assertEquals(',', dfs.getMonetaryDecimalSeparator());
         // RI's default NaN is U+FFFD, Harmony's is based on ICU
+        // This suggests an RI bug, assuming that non-UTF8 bytes are UTF8 and
+        // getting a conversion failure.
         assertEquals("\uFFFD", dfs.getNaN());
         assertEquals('\u003b', dfs.getPatternSeparator());
         assertEquals('\u2030', dfs.getPerMill());
