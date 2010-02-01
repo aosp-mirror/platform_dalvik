@@ -8,7 +8,7 @@
 <h1>Controlling the Embedded VM</h1>
 
 <ul>
-    <li><a href="#overview">Overview</a>
+    <li><a href="#introduction">Introduction</a> (read this first!)
     <li><a href="#checkjni">Extended JNI Checks</a>
     <li><a href="#assertions">Assertions</a>
     <li><a href="#verifier">Bytecode Verification and Optimization</a>
@@ -18,7 +18,7 @@
     <li><a href="#dexcheck">DEX File Checksums</a>
 </ul>
 
-<h2><a name="overview">Overview</a></h2>
+<h2><a name="introduction">Introduction (read this first!)</a></h2>
 
 <p>The Dalvik VM supports a variety of command-line arguments
 (use <code>adb shell dalvikvm -help</code> to get a summary), but
@@ -31,12 +31,13 @@ with <code>setprop</code>,
 issuing a shell command on the device like this:
 <pre>adb shell setprop &lt;name&gt; &lt;value&gt;</pre>
 
-<p>The Android runtime must be restarted before the changes will take
-effect (<code>adb shell stop; adb shell start</code>).  This is because the
+<p><strong>The Android runtime must be restarted before the changes will take
+effect</strong> (<code>adb shell stop; adb shell start</code>).  This is because the
 settings are processed in the "zygote" process, which starts early and stays
 around "forever".
 
-<p>You may not be able to set this as an unprivileged user.  You can use
+<p>You may not be able to set <code>dalvik.*</code> properties or restart
+the system as an unprivileged user.  You can use
 <code>adb root</code> or run the <code>su</code> command from the device
 shell on "userdebug" builds to become root first.  When in doubt,
 <pre>adb shell getprop &lt;name&gt;</pre>
@@ -48,7 +49,7 @@ add a line to <code>/data/local.prop</code> that looks like:
 
 <p>Such changes will survive reboots, but will be lost if the data
 partition is wiped.  (Hint: create a <code>local.prop</code>
-on your workstation, then <code>adb push local.prop /data</code> .  Or,
+on your workstation, then <code>adb push local.prop /data</code>.  Or,
 use one-liners like
 <code>adb shell "echo name = value &gt;&gt; /data/local.prop"</code> -- note
 the quotes are important.)
