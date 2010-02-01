@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Allocation tracking and reporting.  We maintain a circular buffer with
  * the most recent allocations.  The data can be viewed through DDMS.
@@ -37,10 +38,12 @@
  *
  * TODO: consider making the parameters configurable, so DDMS can decide
  * how many allocations it wants to see and what the stack depth should be.
+ * Changing the window size is easy, changing the max stack depth is harder
+ * because we go from an array of fixed-size structs to variable-sized data.
  */
 #include "Dalvik.h"
 
-#define kMaxAllocRecordStackDepth   8       /* max 255 */
+#define kMaxAllocRecordStackDepth   16      /* max 255 */
 #define kNumAllocRecords            512     /* MUST be power of 2 */
 
 /*
@@ -108,8 +111,9 @@ bool dvmEnableAllocTracker(void)
     dvmLockMutex(&gDvm.allocTrackerLock);
 
     if (gDvm.allocRecords == NULL) {
-        LOGI("Enabling alloc tracker (%d entries / %d bytes)\n",
-            kNumAllocRecords, sizeof(AllocRecord) * kNumAllocRecords);
+        LOGI("Enabling alloc tracker (%d entries, %d frames --> %d bytes)\n",
+            kNumAllocRecords, kMaxAllocRecordStackDepth,
+            sizeof(AllocRecord) * kNumAllocRecords);
         gDvm.allocRecordHead = gDvm.allocRecordCount = 0;
         gDvm.allocRecords =
             (AllocRecord*) malloc(sizeof(AllocRecord) * kNumAllocRecords);
