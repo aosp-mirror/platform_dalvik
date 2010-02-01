@@ -1328,7 +1328,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
     u4 newInst;
     bool thumbTarget;
 
-    if (gDvm.sumThreadSuspendCount == 0) {
+    if ((gDvmJit.pProfTable != NULL) && gDvm.sumThreadSuspendCount == 0) {
         assert((branchOffset >= -(1<<22)) && (branchOffset <= ((1<<22)-2)));
 
         gDvmJit.translationChains++;
