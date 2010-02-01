@@ -11,6 +11,10 @@ The Dalvik virtual machine can produce a complete dump of the contents
 of the virtual heap.  This is very useful for debugging memory usage
 and looking for memory leaks.  Getting at the information can be tricky,
 but has become easier in recent releases.
+</p><p>
+In what follows, the version number refers to the software release
+running on the phone.  To take advantage of the DDMS integration, you will
+also need a sufficiently recent version of DDMS.
 
 
 <h2>Getting the data</h2>
@@ -148,6 +152,7 @@ However, 1.6 introduced the <code>WRITE_EXTERNAL_STORAGE</code>
 permission, which is required to write data to the SD card.  If you're
 accustomed to writing profile data to <code>/sdcard</code>, you will
 need to enable the permission in your application's manifest.
+</p>
 
 
 <h3>Android 2.0 ("Eclair")</h3>
@@ -157,7 +162,14 @@ demand, and automatically pull the result across.  Select your application
 and click the "dump HPROF file" button in the top left.  This always
 writes files to the SD card, so
 you must have a card inserted and the permission enabled in your application.
+</p>
 
+
+<h3>Android 2.x ("Froyo")</h3>
+<p>
+DDMS heap dump requests are now streamed directly out of the VM, removing
+the external storage requirement.
+</p>
 
 <h2>Examining the data</h2>
 <p>
