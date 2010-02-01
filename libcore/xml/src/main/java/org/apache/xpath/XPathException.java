@@ -267,7 +267,7 @@ public class XPathException extends TransformerException
     
     boolean isJdk14OrHigher = false;
     try {
-        Throwable.class.getMethod("getCause",null);
+        Throwable.class.getMethod("getCause", (Class<?>) null);
         isJdk14OrHigher = true;
     } catch (NoSuchMethodException nsme) {
         // do nothing
