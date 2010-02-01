@@ -347,8 +347,6 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.io.File.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    @KnownFailure("The default handler doesn't get the qName value supplied. " +
-            "We either need to change the test, or fix the parser.")
     public void test_parseLjava_io_FileLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -456,8 +454,6 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {org.xml.sax.InputSource.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    @KnownFailure("The default handler doesn't get the qName value supplied. " +
-            "We either need to change the test, or fix the parser.")
     public void test_parseLorg_xml_sax_InputSourceLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -623,8 +619,6 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    @KnownFailure("The default handler doesn't get the qName value supplied. " +
-            "We either need to change the test, or fix the parser.")
     public void test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -675,8 +669,6 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class, java.lang.String.class}
     )
-    @KnownFailure("The default handler doesn't get the qName value supplied. " +
-            "We either need to change the test, or fix the parser.")
     public void test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String() {
         for(int i = 0; i < list_wf.length; i++) {
             try {
@@ -952,8 +944,6 @@ public class SAXParserTest extends TestCase {
         method = "parse",
         args = {java.lang.String.class, org.xml.sax.helpers.DefaultHandler.class}
     )
-    @KnownFailure("The default handler doesn't get the qName value supplied. " +
-            "We either need to change the test, or fix the parser.")
     public void test_parseLjava_lang_StringLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
@@ -1174,4 +1164,3 @@ public class SAXParserTest extends TestCase {
     }
     
 }
-
