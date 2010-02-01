@@ -509,11 +509,6 @@ public class SimpleDateFormat extends DateFormat {
 
     // BEGIN android-removed
     // SimpleDateFormat(Locale locale, com.ibm.icu.text.SimpleDateFormat icuFormat){
-    //     this(locale);
-    //     this.icuFormat = icuFormat;
-    //     this.icuFormat.setTimeZone(com.ibm.icu.util.TimeZone.getTimeZone(tzId));
-    //     pattern = (String)Format.getInternalField("pattern", icuFormat); //$NON-NLS-1$
-    //     formatData = new DateFormatSymbols(locale);
     // }
     // END android-removed
     

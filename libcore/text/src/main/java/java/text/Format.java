@@ -216,32 +216,6 @@ public abstract class Format implements Serializable, Cloneable {
      */
     public abstract Object parseObject(String string, ParsePosition position);
 
-    /*
-     * Gets private field value by reflection.
-     * 
-     * @param fieldName the field name to be set @param target the object which
-     * field to be gotten
-     */
-    static Object getInternalField(final String fieldName, final Object target) {
-        Object value = AccessController
-                .doPrivileged(new PrivilegedAction<Object>() {
-                    public Object run() {
-                        Object result = null;
-                        java.lang.reflect.Field field = null;
-                        try {
-                            field = target.getClass().getDeclaredField(
-                                    fieldName);
-                            field.setAccessible(true);
-                            result = field.get(target);
-                        } catch (Exception e1) {
-                            return null;
-                        }
-                        return result;
-                    }
-                });
-        return value;
-    }
-
     static boolean upTo(String string, ParsePosition position,
             StringBuffer buffer, char stop) {
         int index = position.getIndex(), length = string.length();

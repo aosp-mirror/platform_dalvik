@@ -946,7 +946,7 @@ public class DecimalFormat extends NumberFormat {
         // END android-added
 
         if (this.isParseIntegerOnly() && number.equals(NEGATIVE_ZERO_DOUBLE)) {
-            return new Long(0);
+            return Long.valueOf(0); // android-changed
         }
         return number;
 
@@ -1208,18 +1208,10 @@ public class DecimalFormat extends NumberFormat {
         fields.put("positiveSuffix", dform.getPositiveSuffix());
         fields.put("negativePrefix", dform.getNegativePrefix());
         fields.put("negativeSuffix", dform.getNegativeSuffix());
-        String posPrefixPattern = (String) Format.getInternalField(
-                "posPrefixPattern", dform);
-        fields.put("posPrefixPattern", posPrefixPattern);
-        String posSuffixPattern = (String) Format.getInternalField(
-                "posSuffixPattern", dform);
-        fields.put("posSuffixPattern", posSuffixPattern);
-        String negPrefixPattern = (String) Format.getInternalField(
-                "negPrefixPattern", dform);
-        fields.put("negPrefixPattern", negPrefixPattern);
-        String negSuffixPattern = (String) Format.getInternalField(
-                "negSuffixPattern", dform);
-        fields.put("negSuffixPattern", negSuffixPattern);
+        fields.put("posPrefixPattern", (String) null);
+        fields.put("posSuffixPattern", (String) null);
+        fields.put("negPrefixPattern", (String) null);
+        fields.put("negSuffixPattern", (String) null);
         fields.put("multiplier", dform.getMultiplier());
         fields.put("groupingSize", (byte) dform.getGroupingSize());
         // BEGIN android-added
@@ -1254,52 +1246,24 @@ public class DecimalFormat extends NumberFormat {
     private void readObject(ObjectInputStream stream) throws IOException,
             ClassNotFoundException {
 
-        ObjectInputStream.GetField fields = stream.readFields();
-        String positivePrefix = (String) fields.get("positivePrefix", "");
-        String positiveSuffix = (String) fields.get("positiveSuffix", "");
-        String negativePrefix = (String) fields.get("negativePrefix", "-");
-        String negativeSuffix = (String) fields.get("negativeSuffix", "");
-
-        String posPrefixPattern = (String) fields.get("posPrefixPattern", "");
-        String posSuffixPattern = (String) fields.get("posSuffixPattern", "");
-        String negPrefixPattern = (String) fields.get("negPrefixPattern", "-");
-        String negSuffixPattern = (String) fields.get("negSuffixPattern", "");
-
-        int multiplier = fields.get("multiplier", 1);
-        byte groupingSize = fields.get("groupingSize", (byte) 3);
-        // BEGIN android-added
-        boolean groupingUsed = fields.get("groupingUsed", true);
-        // END android-added
-        boolean decimalSeparatorAlwaysShown = fields.get(
-                "decimalSeparatorAlwaysShown", false);
-        boolean parseBigDecimal = fields.get("parseBigDecimal", false);
-        symbols = (DecimalFormatSymbols) fields.get("symbols", null);
-
-        int maximumIntegerDigits = fields.get("maximumIntegerDigits", 309);
-        int minimumIntegerDigits = fields.get("minimumIntegerDigits", 309);
-        int maximumFractionDigits = fields.get("maximumFractionDigits", 340);
-        int minimumFractionDigits = fields.get("minimumFractionDigits", 340);
-        int serialVersionOnStream = fields.get("serialVersionOnStream", 0);
-
-        Locale locale = (Locale) Format.getInternalField("locale", symbols);
         // BEGIN android-changed
+        ObjectInputStream.GetField fields = stream.readFields();
+        this.symbols = (DecimalFormatSymbols) fields.get("symbols", null);
+
         initNative("");
-        // END android-changed
-        dform.setPositivePrefix(positivePrefix);
-        dform.setPositiveSuffix(positiveSuffix);
-        dform.setNegativePrefix(negativePrefix);
-        dform.setNegativeSuffix(negativeSuffix);
-        setInternalField("posPrefixPattern", dform, posPrefixPattern);
-        setInternalField("posSuffixPattern", dform, posSuffixPattern);
-        setInternalField("negPrefixPattern", dform, negPrefixPattern);
-        setInternalField("negSuffixPattern", dform, negSuffixPattern);
-        dform.setMultiplier(multiplier);
-        dform.setGroupingSize(groupingSize);
-        // BEGIN android-added
-        dform.setGroupingUsed(groupingUsed);
-        // END android-added
-        dform.setDecimalSeparatorAlwaysShown(decimalSeparatorAlwaysShown);
-        setMinimumIntegerDigits(minimumIntegerDigits);
+        dform.setPositivePrefix((String) fields.get("positivePrefix", ""));
+        dform.setPositiveSuffix((String) fields.get("positiveSuffix", ""));
+        dform.setNegativePrefix((String) fields.get("negativePrefix", "-"));
+        dform.setNegativeSuffix((String) fields.get("negativeSuffix", ""));
+        dform.setMultiplier(fields.get("multiplier", 1));
+        dform.setGroupingSize(fields.get("groupingSize", (byte) 3));
+        dform.setGroupingUsed(fields.get("groupingUsed", true));
+        dform.setDecimalSeparatorAlwaysShown(fields.get("decimalSeparatorAlwaysShown", false));
+
+        final int maximumIntegerDigits = fields.get("maximumIntegerDigits", 309);
+        final int minimumIntegerDigits = fields.get("minimumIntegerDigits", 309);
+        final int maximumFractionDigits = fields.get("maximumFractionDigits", 340);
+        final int minimumFractionDigits = fields.get("minimumFractionDigits", 340);
         // BEGIN android-changed: tell ICU what we want, then ask it what we can have, and then
         // set that in our Java object. This isn't RI-compatible, but then very little of our
         // behavior in this area is, and it's not obvious how we can second-guess ICU (or tell
@@ -1307,41 +1271,18 @@ public class DecimalFormat extends NumberFormat {
         // because ICU doesn't seem to have its own ideas about the other options.
         dform.setMaximumIntegerDigits(maximumIntegerDigits);
         super.setMaximumIntegerDigits(dform.getMaximumIntegerDigits());
-        // END android-changed
+
+        setMinimumIntegerDigits(minimumIntegerDigits);
         setMinimumFractionDigits(minimumFractionDigits);
         setMaximumFractionDigits(maximumFractionDigits);
-        setParseBigDecimal(parseBigDecimal);
+        setParseBigDecimal(fields.get("parseBigDecimal", false));
 
-        if (serialVersionOnStream < 3) {
+        if (fields.get("serialVersionOnStream", 0) < 3) {
             setMaximumIntegerDigits(super.getMaximumIntegerDigits());
             setMinimumIntegerDigits(super.getMinimumIntegerDigits());
             setMaximumFractionDigits(super.getMaximumFractionDigits());
             setMinimumFractionDigits(super.getMinimumFractionDigits());
         }
-    }
-
-    /*
-     * Sets private field value by reflection.
-     * 
-     * @param fieldName the field name to be set @param target the object which
-     * field to be set @param value the value to be set
-     */
-    private void setInternalField(final String fieldName, final Object target,
-            final Object value) {
-        AccessController
-                .doPrivileged(new PrivilegedAction<java.lang.reflect.Field>() {
-                    public java.lang.reflect.Field run() {
-                        java.lang.reflect.Field field = null;
-                        try {
-                            field = target.getClass().getDeclaredField(
-                                    fieldName);
-                            field.setAccessible(true);
-                            field.set(target, value);
-                        } catch (Exception e) {
-                            return null;
-                        }
-                        return field;
-                    }
-                });
+        // END android-changed
     }
 }
