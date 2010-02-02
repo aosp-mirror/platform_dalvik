@@ -16,6 +16,28 @@
 
 package tests.api.javax.xml.parsers;
 
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import junit.framework.TestCase;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.EntityReference;
+import org.w3c.dom.Text;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import tests.api.org.xml.sax.support.MethodLogger;
+import tests.api.org.xml.sax.support.MockHandler;
+import tests.api.org.xml.sax.support.MockResolver;
+import tests.util.TestEnvironment;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,33 +45,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Logger;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.EntityReference;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-import tests.api.org.xml.sax.support.MethodLogger;
-import tests.api.org.xml.sax.support.MockHandler;
-import tests.api.org.xml.sax.support.MockResolver;
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(DocumentBuilder.class) 
 public class DocumentBuilderTest extends TestCase {
@@ -133,6 +128,8 @@ public class DocumentBuilderTest extends TestCase {
     DocumentBuilder db;
 
     protected void setUp() throws Exception {
+        TestEnvironment.reset();
+
         dbf = DocumentBuilderFactory.newInstance();
         
         dbf.setIgnoringElementContentWhitespace(true);
@@ -263,6 +260,21 @@ public class DocumentBuilderTest extends TestCase {
         } catch (Exception e) {
             throw new RuntimeException("Unexpected exception", e);
         }
+    }
+
+    /**
+     * Tests that the Base URI for the document is populated with the file URI.
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.io.File.class}
+    )
+    public void testGetBaseURI() throws IOException, SAXException {
+        File f = resourceToTmpFile("/simple.xml");
+        Document d = db.parse(f);
+        assertTrue(d.getDocumentElement().getBaseURI().startsWith("file://"));
     }
 
     /**
@@ -567,7 +579,6 @@ public class DocumentBuilderTest extends TestCase {
         method = "parse",
         args = {java.lang.String.class}
     )
-    @KnownFailure("Android DocumentBuilder should support File sources")
     public void test_parseLjava_lang_String() {
         // case 1: Trivial use.
         File f = new File(getClass().getResource("/simple.xml").getFile());

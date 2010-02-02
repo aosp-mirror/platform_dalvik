@@ -17,6 +17,8 @@
 package org.apache.harmony.xml.parsers;
 
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.StringTokenizer;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -122,10 +124,16 @@ class DocumentBuilderImpl extends DocumentBuilder {
                 parser.setInput(source.getByteStream(), source.getEncoding());
             } else if (source.getCharacterStream() != null) {
                 parser.setInput(source.getCharacterStream());
+            } else if (source.getSystemId() != null) {
+                URL url = new URL(source.getSystemId());
+                URLConnection urlConnection = url.openConnection();
+                urlConnection.connect();
+                String encoding = source.getEncoding();
+                // TODO: if null, extract the encoding from the Content-Type header?
+                parser.setInput(urlConnection.getInputStream(), encoding);
             } else {
-                // TODO Accept other sources as well?
                 throw new SAXParseException(
-                        "InputSource needs either stream or reader", null);
+                        "InputSource needs a stream, reader or URI", null);
             }
 
             if(parser.nextToken() == XmlPullParser.END_DOCUMENT) {
