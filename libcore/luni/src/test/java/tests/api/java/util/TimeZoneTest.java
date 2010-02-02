@@ -394,19 +394,6 @@ public class TimeZoneTest extends junit.framework.TestCase {
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",
-        method = "useDaylightTime",
-        args = {}
-    )
-    public void test_useDaylightTime() {
-        // http://code.google.com/p/android/issues/detail?id=877
-        
-        TimeZone asiaTaipei = TimeZone.getTimeZone("Asia/Taipei");
-        assertFalse("Taiwan doesn't use DST", asiaTaipei.useDaylightTime());
-    }
-    
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
         method = "setID",
         args = {java.lang.String.class}
     )
