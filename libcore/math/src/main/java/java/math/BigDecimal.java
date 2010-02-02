@@ -2148,7 +2148,10 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         long newScale = scale;
 
         if (isZero()) {
+            // BEGIN android-changed: preserve RI compatibility, so BigDecimal.equals (which checks
+            // value *and* scale) continues to work.
             return this;
+            // END android-changed
         }
         BigInteger strippedBI = getUnscaledValue();
         BigInteger[] quotAndRem;

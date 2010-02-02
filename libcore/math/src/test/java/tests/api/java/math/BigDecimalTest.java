@@ -1293,7 +1293,6 @@ public class BigDecimalTest extends junit.framework.TestCase {
         method = "stripTrailingZeros",
         args = {}
     )
-    @AndroidOnly("Stripping trailing zeroes from 0.000 value doesn't work on RI. See below")
     public void test_stripTrailingZero() {
         BigDecimal sixhundredtest = new BigDecimal("600.0");
         assertTrue("stripTrailingZero failed for 600.0",
@@ -1306,11 +1305,13 @@ public class BigDecimalTest extends junit.framework.TestCase {
                 ((notrailingzerotest.stripTrailingZeros()).scale() == 0)
                 );
         
+        // BEGIN android-changed: preserve RI compatibility, so BigDecimal.equals (which checks
+        // value *and* scale) continues to work. https://issues.apache.org/jira/browse/HARMONY-4623
         /* Zero */
-        //regression for HARMONY-4623, NON-BUG DIFF with RI
         BigDecimal zerotest = new BigDecimal("0.0000");
         assertEquals("stripTrailingZero failed for 0.0000",
-                0, (zerotest.stripTrailingZeros()).scale() );        
+                4, (zerotest.stripTrailingZeros()).scale() );
+        // END android-changed
     }
 
     @TestTargetNew(
