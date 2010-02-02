@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,10 @@ package java.util;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-public class AllTests {
-    public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
-        suite.addTestSuite(java.util.CurrencyTest.class);
-        suite.addTestSuite(java.util.DateTest.class);
-        suite.addTestSuite(java.util.FormatterTest.class);
-        suite.addTestSuite(java.util.TimeZoneTest.class);
-        return suite;
+public class TimeZoneTest extends junit.framework.TestCase {
+    // http://code.google.com/p/android/issues/detail?id=877
+    public void test_useDaylightTime() {
+        TimeZone asiaTaipei = TimeZone.getTimeZone("Asia/Taipei");
+        assertFalse("Taiwan doesn't use DST", asiaTaipei.useDaylightTime());
     }
 }
