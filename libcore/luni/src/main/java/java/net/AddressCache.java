@@ -47,7 +47,7 @@ class AddressCache {
     // The actual cache.
     private final Map<String, AddressCacheEntry> map;
     
-    class AddressCacheEntry {
+    static class AddressCacheEntry {
         // The addresses. May be the empty array for a negative cache entry.
         InetAddress[] addresses;
         
