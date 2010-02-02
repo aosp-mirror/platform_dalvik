@@ -457,7 +457,8 @@ void dvmJitShutdown(void)
 
     dvmCompilerShutdown();
 
-    dvmCompilerDumpStats();
+    if (gDvm.verboseShutdown)
+        dvmCompilerDumpStats();
 
     dvmDestroyMutex(&gDvmJit.tableLock);
 

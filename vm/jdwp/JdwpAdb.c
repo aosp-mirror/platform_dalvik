@@ -174,7 +174,7 @@ static int  receiveClientFd(JdwpNetState*  netState)
             LOGW("receiving file descriptor from ADB failed (socket %d): %s\n",
                  netState->controlSock, strerror(errno));
         } else {
-            LOGI("adbd disconnected\n");
+            LOGD("adbd disconnected\n");
         }
         close(netState->controlSock);
         netState->controlSock = -1;

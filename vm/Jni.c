@@ -3874,7 +3874,8 @@ static jint DestroyJavaVM(JavaVM* vm)
     if (ext == NULL)
         return JNI_ERR;
 
-    LOGD("DestroyJavaVM waiting for non-daemon threads to exit\n");
+    if (gDvm.verboseShutdown)
+        LOGD("DestroyJavaVM waiting for non-daemon threads to exit\n");
 
     /*
      * Sleep on a condition variable until it's okay to exit.
@@ -3906,7 +3907,8 @@ shutdown:
     // TODO: call System.exit() to run any registered shutdown hooks
     // (this may not return -- figure out how this should work)
 
-    LOGD("DestroyJavaVM shutting VM down\n");
+    if (gDvm.verboseShutdown)
+        LOGD("DestroyJavaVM shutting VM down\n");
     dvmShutdown();
 
     // TODO - free resources associated with JNI-attached daemon threads

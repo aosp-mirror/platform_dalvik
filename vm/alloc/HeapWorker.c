@@ -104,7 +104,7 @@ void dvmHeapWorkerShutdown(void)
          */
         if (pthread_join(gDvm.heapWorkerHandle, &threadReturn) != 0)
             LOGW("HeapWorker thread join failed\n");
-        else
+        else if (gDvm.verboseShutdown)
             LOGD("HeapWorker thread has shut down\n");
 
         gDvm.heapWorkerReady = false;
@@ -373,7 +373,8 @@ static void* heapWorkerThreadStart(void* arg)
     }
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 
-    LOGD("HeapWorker thread shutting down\n");
+    if (gDvm.verboseShutdown)
+        LOGD("HeapWorker thread shutting down\n");
     return NULL;
 }
 

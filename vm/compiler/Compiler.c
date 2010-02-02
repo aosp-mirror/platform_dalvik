@@ -468,7 +468,8 @@ static void *compilerThreadStart(void *arg)
      */
     dvmChangeStatus(NULL, THREAD_RUNNING);
 
-    LOGD("Compiler thread shutting down\n");
+    if (gDvm.verboseShutdown)
+        LOGD("Compiler thread shutting down\n");
     return NULL;
 }
 
@@ -508,7 +509,7 @@ void dvmCompilerShutdown(void)
 
         if (pthread_join(gDvmJit.compilerHandle, &threadReturn) != 0)
             LOGW("Compiler thread join failed\n");
-        else
+        else if (gDvm.verboseShutdown)
             LOGD("Compiler thread has shut down\n");
     }
 }

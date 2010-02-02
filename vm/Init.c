@@ -795,6 +795,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             gDvm.verboseJni = true;
         } else if (strcmp(argv[i], "-verbose:gc") == 0) {
             gDvm.verboseGc = true;
+        } else if (strcmp(argv[i], "-verbose:shutdown") == 0) {
+            gDvm.verboseShutdown = true;
 
         } else if (strncmp(argv[i], "-enableassertions", 17) == 0) {
             enableAssertions(argv[i] + 17, true);
@@ -954,7 +956,7 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;
             }
-            LOGD("Precise GC configured %s\n", gDvm.preciseGc ? "ON" : "OFF");
+            LOGV("Precise GC configured %s\n", gDvm.preciseGc ? "ON" : "OFF");
 
         } else if (strcmp(argv[i], "-Xcheckdexsum") == 0) {
             gDvm.verifyDexChecksum = true;
@@ -1577,7 +1579,8 @@ void dvmShutdown(void)
      */
     dvmSlayDaemons();
 
-    LOGD("VM cleaning up\n");
+    if (gDvm.verboseShutdown)
+        LOGD("VM cleaning up\n");
 
     dvmDebuggerShutdown();
     dvmReflectShutdown();

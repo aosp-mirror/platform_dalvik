@@ -236,10 +236,12 @@ void dvmLinearAllocDestroy(Object* classLoader)
 
     //dvmLinearAllocDump(classLoader);
 
-    LOGV("Unmapping linear allocator base=%p\n", pHdr->mapAddr);
-    LOGD("LinearAlloc %p used %d of %d (%d%%)\n",
-        classLoader, pHdr->curOffset, pHdr->mapLength,
-        (pHdr->curOffset * 100) / pHdr->mapLength);
+    if (gDvm.verboseShutdown) {
+        LOGV("Unmapping linear allocator base=%p\n", pHdr->mapAddr);
+        LOGD("LinearAlloc %p used %d of %d (%d%%)\n",
+            classLoader, pHdr->curOffset, pHdr->mapLength,
+            (pHdr->curOffset * 100) / pHdr->mapLength);
+    }
 
     if (munmap(pHdr->mapAddr, pHdr->mapLength) != 0) {
         LOGW("LinearAlloc munmap(%p, %d) failed: %s\n",

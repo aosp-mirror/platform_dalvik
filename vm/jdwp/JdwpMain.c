@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * JDWP initialization.
  */
@@ -185,7 +186,8 @@ void dvmJdwpShutdown(JdwpState* state)
         /*
          * Close down the network to inspire the thread to halt.
          */
-        LOGD("JDWP shutting down net...\n");
+        if (gDvm.verboseShutdown)
+            LOGD("JDWP shutting down net...\n");
         dvmJdwpNetShutdown(state);
 
         if (state->debugThreadStarted) {
@@ -195,7 +197,8 @@ void dvmJdwpShutdown(JdwpState* state)
             }
         }
 
-        LOGV("JDWP freeing netstate...\n");
+        if (gDvm.verboseShutdown)
+            LOGD("JDWP freeing netstate...\n");
         dvmJdwpNetFree(state);
         state->netState = NULL;
     }
