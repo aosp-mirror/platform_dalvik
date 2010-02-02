@@ -344,6 +344,7 @@ bool compilerThreadStartup(void)
     gDvmJit.compilerHighWater =
         COMPILER_WORK_QUEUE_SIZE - (COMPILER_WORK_QUEUE_SIZE/4);
     gDvmJit.pProfTable = pJitProfTable;
+    gDvmJit.pProfTableCopy = pJitProfTable;
     dvmUnlockMutex(&gDvmJit.tableLock);
 
     /* Signal running threads to refresh their cached pJitTable pointers */
@@ -509,5 +510,25 @@ void dvmCompilerShutdown(void)
             LOGW("Compiler thread join failed\n");
         else
             LOGD("Compiler thread has shut down\n");
+    }
+}
+
+
+void dvmCompilerStateRefresh()
+{
+    bool jitActive;
+    bool jitActivate;
+
+    dvmLockMutex(&gDvmJit.tableLock);
+    jitActive = gDvmJit.pProfTable != NULL;
+    jitActivate = !(gDvm.debuggerActive || (gDvm.activeProfilers > 0));
+
+    if (jitActivate && !jitActive) {
+        gDvmJit.pProfTable = gDvmJit.pProfTableCopy;
+        dvmUnlockMutex(&gDvmJit.tableLock);
+    } else if (!jitActivate && jitActive) {
+        gDvmJit.pProfTable = NULL;
+        dvmUnlockMutex(&gDvmJit.tableLock);
+        dvmJitUnchainAll();
     }
 }

@@ -776,6 +776,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             interpState->entryPoint = kInterpEntryResume;
             switchInterp = !debugOrProfile;
             break;
+        case kJitTSelectRequest:
         case kJitTSelectAbort:
 #if defined(SHOW_TRACE)
             LOGD("TraceGen:  trace abort");
@@ -833,7 +834,8 @@ JitEntry *dvmFindJitEntry(const u2* pc)
 void* dvmJitGetCodeAddr(const u2* dPC)
 {
     int idx = dvmJitHash(dPC);
-    const u2* npc = gDvmJit.pJitEntryTable[idx].dPC;
+    const u2* npc = (gDvmJit.pProfTable == NULL) ? NULL :
+                     gDvmJit.pJitEntryTable[idx].dPC;
 
     if (npc != NULL) {
         if (npc == dPC) {
@@ -1129,6 +1131,5 @@ s8 dvmJitf2l(float f)
     else
         return (s8)f;
 }
-
 
 #endif /* WITH_JIT */

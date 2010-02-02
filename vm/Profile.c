@@ -230,6 +230,9 @@ static void updateActiveProfilers(int count)
     } while (!ATOMIC_CMP_SWAP(&gDvm.activeProfilers, oldValue, newValue));
 
     LOGD("+++ active profiler count now %d\n", newValue);
+#if defined(WITH_JIT)
+    dvmCompilerStateRefresh();
+#endif
 }
 
 

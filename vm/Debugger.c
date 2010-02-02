@@ -418,6 +418,9 @@ void dvmDbgActive(void)
     LOGI("Debugger is active\n");
     dvmInitBreakpoints();
     gDvm.debuggerActive = true;
+#if defined(WITH_JIT)
+    dvmCompilerStateRefresh();
+#endif
 }
 
 /*
@@ -445,6 +448,9 @@ void dvmDbgDisconnected(void)
 
     dvmHashTableClear(gDvm.dbgRegistry);
     dvmHashTableUnlock(gDvm.dbgRegistry);
+#if defined(WITH_JIT)
+    dvmCompilerStateRefresh();
+#endif
 }
 
 /*
@@ -3045,4 +3051,3 @@ void dvmDbgDdmSendChunkV(int type, const struct iovec* iov, int iovcnt)
 
     dvmJdwpDdmSendChunkV(gDvm.jdwpState, type, iov, iovcnt);
 }
-

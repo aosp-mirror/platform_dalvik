@@ -165,6 +165,7 @@ char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
                               struct SSARepresentation *ssaRep);
 void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
                 void (*func)(struct CompilationUnit *, struct BasicBlock *));
+void dvmCompilerStateRefresh(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc);
 
 #endif /* _DALVIK_VM_COMPILER */

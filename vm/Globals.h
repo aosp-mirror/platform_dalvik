@@ -685,6 +685,9 @@ struct DvmJitGlobals {
     /* Array of profile threshold counters */
     unsigned char *pProfTable;
 
+    /* Copy of pProfTable used for temporarily disabling the Jit */
+    unsigned char *pProfTableCopy;
+
     /* Size of JIT hash table in entries.  Must be a power of 2 */
     unsigned int jitTableSize;
 
