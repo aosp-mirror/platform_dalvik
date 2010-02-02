@@ -78,7 +78,7 @@ public class XsltXPathConformanceTestSuite {
     /** Orders element attributes by optional URI and name. */
     private static final Comparator<Attr> orderByName = new Comparator<Attr>() {
         public int compare(Attr a, Attr b) {
-            int result = compareNullsFirst(a.getBaseURI(), b.getBaseURI());
+            int result = compareNullsFirst(a.getNamespaceURI(), b.getNamespaceURI());
             return result == 0 ? result
                     : compareNullsFirst(a.getName(), b.getName());
         }
@@ -322,6 +322,11 @@ public class XsltXPathConformanceTestSuite {
             this.compareAs = compareAs;
         }
 
+        XsltTest(File principalData, File principalStylesheet, File principal) {
+            this("standalone", "test", "", "",
+                    principalData, principalStylesheet, principal, "standard", "XML");
+        }
+
         public void test() throws Exception {
             if (purpose != null) {
                 System.out.println("Purpose: " + purpose);
@@ -336,8 +341,8 @@ public class XsltXPathConformanceTestSuite {
             Transformer transformer;
             try {
                 transformer = transformerFactory.newTransformer(xslt);
-                assertEquals("Expected transformer creation to fail",
-                        "standard", operation);
+                assertEquals("Transformer creation completed normally.",
+                        operation, "standard");
             } catch (TransformerConfigurationException e) {
                 if (operation.equals("execution-error")) {
                     return; // expected, such as in XSLT-Result-Tree.Attributes__78369
@@ -396,14 +401,17 @@ public class XsltXPathConformanceTestSuite {
     }
 
     private void emitNode(XmlSerializer serializer, Node node) throws IOException {
-        if (node instanceof Element) {
+        if (node == null) {
+            throw new UnsupportedOperationException("Cannot emit null nodes");
+
+        } else if (node.getNodeType() == Node.ELEMENT_NODE) {
             Element element = (Element) node;
-            serializer.startTag(element.getBaseURI(), element.getLocalName());
+            serializer.startTag(element.getNamespaceURI(), element.getLocalName());
             emitAttributes(serializer, element);
             emitChildren(serializer, element);
-            serializer.endTag(element.getBaseURI(), element.getLocalName());
+            serializer.endTag(element.getNamespaceURI(), element.getLocalName());
 
-        } else if (node instanceof Text) {
+        } else if (node.getNodeType() == Node.TEXT_NODE) {
             // TODO: is it okay to trim whitespace in general? This may cause
             //     false positives for elements like HTML's <pre> tag
             String trimmed = node.getTextContent().trim();
@@ -411,25 +419,24 @@ public class XsltXPathConformanceTestSuite {
                 serializer.text(trimmed);
             }
 
-        } else if (node instanceof Document) {
+        } else if (node.getNodeType() == Node.DOCUMENT_NODE) {
             Document document = (Document) node;
             serializer.startDocument("UTF-8", true);
             emitNode(serializer, document.getDocumentElement());
             serializer.endDocument();
 
-        } else if (node instanceof ProcessingInstruction) {
+        } else if (node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {
             ProcessingInstruction processingInstruction = (ProcessingInstruction) node;
             String data = processingInstruction.getData();
             String target = processingInstruction.getTarget();
             serializer.processingInstruction(target + " " + data);
 
-        } else if (node instanceof Comment) {
+        } else if (node.getNodeType() == Node.COMMENT_NODE) {
             // ignore!
 
         } else {
-            Object nodeClass = node != null ? node.getClass() : null;
             throw new UnsupportedOperationException(
-                    "Cannot serialize nodes of type " + nodeClass);
+                    "Cannot emit " + node + " of type " + node.getNodeType());
         }
     }
 
@@ -458,7 +465,7 @@ public class XsltXPathConformanceTestSuite {
                  * generate one for us, using a predictable pattern.
                  */
             } else {
-                serializer.attribute(attr.getBaseURI(), attr.getLocalName(), attr.getValue());
+                serializer.attribute(attr.getNamespaceURI(), attr.getLocalName(), attr.getValue());
             }
         }
     }

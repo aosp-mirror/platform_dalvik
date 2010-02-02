@@ -85,16 +85,23 @@ public class DOMHelper
       DocumentBuilderFactory dfactory = DocumentBuilderFactory.newInstance();
 
       dfactory.setNamespaceAware(true);
-      dfactory.setValidating(true);
-      
-      if (isSecureProcessing)
-      {
-        try
-        {
-          dfactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        }
-        catch (ParserConfigurationException pce) {}
-      }
+      // BEGIN android-removed
+      //     If set, DocumentBuilderFactoryImpl.newDocumentBuilder() fails
+      //     because we haven't implemented validation
+      // dfactory.setValidating(true);
+      // BEGIN android-removed
+
+      // BEGIN android-removed
+      //     We haven't implemented secure processing
+      // if (isSecureProcessing)
+      // {
+      //   try
+      //   {
+      //     dfactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+      //   }
+      //   catch (ParserConfigurationException pce) {}
+      // }
+      // END android-removed
       
       DocumentBuilder docBuilder = dfactory.newDocumentBuilder();
       Document outNode = docBuilder.newDocument();
