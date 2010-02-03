@@ -77,6 +77,8 @@
     .word   dvmMterpStdBail
 .LdvmMterpCommonExceptionThrown:
     .word   dvmMterpCommonExceptionThrown
+.LdvmLockObject:
+    .word   dvmLockObject
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:
