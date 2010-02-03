@@ -256,12 +256,12 @@ class BigInt
     // n > 0: shift left (multiply)
     public static BigInt shift(BigInt a, int n) {
         BigInt r = newBigInt();
-        Check(NativeBN.BN_lshift(r.bignum, a.bignum, n));
+        Check(NativeBN.BN_shift(r.bignum, a.bignum, n));
         return r;
     }
 
     public void shift(int n) {
-        Check(NativeBN.BN_lshift(this.bignum, this.bignum, n));
+        Check(NativeBN.BN_shift(this.bignum, this.bignum, n));
     }
 
     public void addPositiveInt(int w) {

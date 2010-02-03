@@ -96,11 +96,8 @@ public class NativeBN {
     // op: 0 = reset; 1 = set; -1 = flip
     // uses BN_set_bit(), BN_clear_bit() and BN_is_bit_set()
 
-    public static native boolean BN_lshift(int r, int a, int n);
-    // int BN_lshift(BIGNUM *r, const BIGNUM *a, int n);
-//    public static native int BN_rshift(BigInteger r, BigInteger a, int n);
-    // int BN_rshift(BIGNUM *r, const BIGNUM *a, int n);
-
+    public static native boolean BN_shift(int r, int a, int n);
+    // int BN_shift(BIGNUM *r, const BIGNUM *a, int n);
 
     public static native boolean BN_add_word(int a, int w);
     // ATTENTION: w is treated as unsigned.

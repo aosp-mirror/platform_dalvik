@@ -509,71 +509,12 @@ static jboolean NativeBN_modifyBit(JNIEnv* env, jclass cls, BIGNUM* a, int n, in
 }
 
 /**
- * public static native int BN_lshift(int, int, int)
+ * public static native int BN_shift(int, int, int)
  */
-static jboolean NativeBN_BN_lshift(JNIEnv* env, jclass cls, BIGNUM* r, BIGNUM* a, int n) {
-// LOGD("NativeBN_BN_lshift %p %p %d", r, a, n);
+static jboolean NativeBN_BN_shift(JNIEnv* env, jclass cls, BIGNUM* r, BIGNUM* a, int n) {
     if (!twoValidHandles(env, r, a)) return FALSE;
-    if (n >= 0) return BN_lshift(r, a, n);
-
-    n = -n;
-//    return BN_rshift(r, a, n);
-// Following code insourced from bn_shift.c in order to have bug fixed:
-// FIXME: Should report to openssl team!!!
-
-	int i,j,nw,lb,rb;
-	BN_ULONG *t,*f;
-	BN_ULONG l,tmp;
-
-	bn_check_top(r);
-	bn_check_top(a);
-
-	nw=n/BN_BITS2;
-	rb=n%BN_BITS2;
-	lb=BN_BITS2-rb;
-// Changed "nw > a->top || a->top == 0" to nw >= a->top" as considering this a bug:
-	if (nw >= a->top)
-		{
-		BN_zero(r);
-		return(1);
-		}
-	if (r != a)
-		{
-		r->neg=a->neg;
-		if (bn_wexpand(r,a->top-nw+1) == NULL) return(0);
-		}
-	else
-		{
-		if (n == 0)
-			return 1; /* or the copying loop will go berserk */
-		}
-
-	f= &(a->d[nw]);
-	t=r->d;
-	j=a->top-nw;
-	r->top=j;
-
-	if (rb == 0)
-		{
-		for (i=j; i != 0; i--)
-			*(t++)= *(f++);
-		}
-	else
-		{
-		l= *(f++);
-		for (i=j-1; i != 0; i--)
-			{
-			tmp =(l>>rb)&BN_MASK2;
-			l= *(f++);
-			*(t++) =(tmp|(l<<lb))&BN_MASK2;
-			}
-		*(t++) =(l>>rb)&BN_MASK2;
-		}
-	bn_correct_top(r);
-	bn_check_top(r);
-	return(1);
+    return (n >= 0) ? BN_lshift(r, a, n) : BN_rshift(r, a, -n);
 }
-
 
 /**
  * public static native boolean BN_add_word(int, int)
@@ -698,7 +639,7 @@ static jboolean NativeBN_BN_mod_inverse(JNIEnv* env, jclass cls, BIGNUM* ret, BI
 static jboolean NativeBN_BN_generate_prime_ex(JNIEnv* env, jclass cls, BIGNUM* ret, int bits, jboolean safe,
         BIGNUM* add, BIGNUM* rem, jint cb) {
     if (!oneValidHandle(env, ret)) return FALSE;
-    return BN_generate_prime_ex(ret, bits, safe, add, rem, cb);
+    return BN_generate_prime_ex(ret, bits, safe, add, rem, (BN_GENCB*) cb);
 }
 
 /**
@@ -706,7 +647,7 @@ static jboolean NativeBN_BN_generate_prime_ex(JNIEnv* env, jclass cls, BIGNUM* r
  */
 static jboolean NativeBN_BN_is_prime_ex(JNIEnv* env, jclass cls, BIGNUM* p, int nchecks, BN_CTX* ctx, jint cb) {
     if (!oneValidHandle(env, p)) return FALSE;
-    return BN_is_prime_ex(p, nchecks, ctx, cb);
+    return BN_is_prime_ex(p, nchecks, ctx, (BN_GENCB*) cb);
 }
 
 
@@ -740,7 +681,7 @@ static JNINativeMethod METHODS[] = {
    { "bitLength", "(I)I", (void*)NativeBN_bitLength },
    { "BN_is_bit_set", "(II)Z", (void*)NativeBN_BN_is_bit_set },
    { "modifyBit", "(III)Z", (void*)NativeBN_modifyBit },
-   { "BN_lshift", "(III)Z", (void*)NativeBN_BN_lshift },
+   { "BN_shift", "(III)Z", (void*)NativeBN_BN_shift },
    { "BN_add_word", "(II)Z", (void*)NativeBN_BN_add_word },
    { "BN_sub_word", "(II)Z", (void*)NativeBN_BN_sub_word },
    { "BN_mul_word", "(II)Z", (void*)NativeBN_BN_mul_word },
