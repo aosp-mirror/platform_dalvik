@@ -300,7 +300,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     CompilerMethodStats *methodStats;
 
     /* If we've already compiled this trace, just return success */
-    if (dvmJitGetCodeAddr(startCodePtr)) {
+    if (dvmJitGetCodeAddr(startCodePtr) && !info->discardResult) {
         return true;
     }
 

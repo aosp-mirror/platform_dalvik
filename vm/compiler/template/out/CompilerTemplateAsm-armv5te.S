@@ -786,44 +786,26 @@ dvmCompiler_TEMPLATE_THROW_EXCEPTION_COMMON:
 
 /* ------------------------------ */
     .balign 4
-    .global dvmCompiler_TEMPLATE_SAVE_STATE
-dvmCompiler_TEMPLATE_SAVE_STATE:
-/* File: armv5te/TEMPLATE_SAVE_STATE.S */
+    .global dvmCompiler_TEMPLATE_MEM_OP_DECODE
+dvmCompiler_TEMPLATE_MEM_OP_DECODE:
+/* File: armv5te/TEMPLATE_MEM_OP_DECODE.S */
+#if defined(WITH_SELF_VERIFICATION)
     /*
-     * This handler performs a register save for selfVerification mode.
-     * On entry:
-     *    Top of stack + 4: r7 value to save
-     *    Top of stack + 0: r0 value to save
-     *    r0 - offset from rGLUE to the beginning of the heapArgSpace record
-     *    r7 - the value of regMap
+     * This handler encapsulates heap memory ops for selfVerification mode.
      *
-     * The handler must save regMap, r0-r12 and then return with r0-r12
-     * with their original values (note that this means r0 and r7 must take
-     * the values on the stack - not the ones in those registers on entry.
-     * Finally, the two registers previously pushed must be popped.
+     * The call to the handler is inserted prior to a heap memory operation.
+     * This handler then calls a function to decode the memory op, and process
+     * it accordingly. Afterwards, the handler changes the return address to
+     * skip the memory op so it never gets executed.
      */
-    add     r0, r0, rGLUE               @ pointer to heapArgSpace
-    stmia   r0!, {r7}                   @ save regMap
-    ldr     r7, [r13, #0]               @ recover r0 value
-    stmia   r0!, {r7}                   @ save r0
-    ldr     r7, [r13, #4]               @ recover r7 value
-    stmia   r0!, {r1-r12}
-    pop     {r0, r7}                    @ recover r0, r7
-    bx      lr
-
-/* ------------------------------ */
-    .balign 4
-    .global dvmCompiler_TEMPLATE_RESTORE_STATE
-dvmCompiler_TEMPLATE_RESTORE_STATE:
-/* File: armv5te/TEMPLATE_RESTORE_STATE.S */
-    /*
-     * This handler restores state following a selfVerification memory access.
-     * On entry:
-     *    r0 - offset from rGLUE to the 1st element of the coreRegs save array.
-     */
-    add     r0, r0, rGLUE               @ pointer to heapArgSpace.coreRegs[0]
-    ldmia   r0, {r0-r12}
-    bx      lr
+    push    {r0-r12,lr}                 @ save out all registers
+    mov     r0, lr                      @ arg0 <- link register
+    mov     r1, sp                      @ arg1 <- stack pointer
+    ldr     r2, .LdvmSelfVerificationMemOpDecode @ defined in footer.S
+    blx     r2                          @ decode and handle the mem op
+    pop     {r0-r12,lr}                 @ restore all registers
+    bx      lr                          @ return to compiled code
+#endif
 
 /* ------------------------------ */
     .balign 4
@@ -1260,6 +1242,10 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     .word   dvmMterpCommonExceptionThrown
 .LdvmLockObject:
     .word   dvmLockObject
+#if defined(WITH_SELF_VERIFICATION)
+.LdvmSelfVerificationMemOpDecode:
+    .word   dvmSelfVerificationMemOpDecode
+#endif
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:

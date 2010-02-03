@@ -79,6 +79,10 @@
     .word   dvmMterpCommonExceptionThrown
 .LdvmLockObject:
     .word   dvmLockObject
+#if defined(WITH_SELF_VERIFICATION)
+.LdvmSelfVerificationMemOpDecode:
+    .word   dvmSelfVerificationMemOpDecode
+#endif
 .L__aeabi_cdcmple:
     .word   __aeabi_cdcmple
 .L__aeabi_cfcmple:
