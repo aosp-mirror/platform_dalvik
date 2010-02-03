@@ -56,10 +56,10 @@ void dvmHeapSourceShutdown(GcHeap *gcHeap);
 
 /*
  * Writes shallow copies of the currently-used bitmaps into outBitmaps,
- * returning the number of bitmaps written.  Returns <0 if the array
- * was not long enough.
+ * returning the number of bitmaps written.  Returns 0 if the array was
+ * not long enough or if there are no heaps, either of which is an error.
  */
-ssize_t dvmHeapSourceGetObjectBitmaps(HeapBitmap outBitmaps[],
+size_t dvmHeapSourceGetObjectBitmaps(HeapBitmap outBitmaps[],
         size_t maxBitmaps);
 
 /*
