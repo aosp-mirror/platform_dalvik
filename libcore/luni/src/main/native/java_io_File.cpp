@@ -128,7 +128,7 @@ static jbyteArray java_io_File_getLinkImpl(JNIEnv* env, jobject, jbyteArray path
             // An error occurred.
             return pathBytes;
         }
-        if (len < buf.size() - 1) {
+        if (static_cast<size_t>(len) < buf.size() - 1) {
             // The buffer was big enough.
             // TODO: why do we bother with the NUL termination? (if you change this, remove the "- 1"s above.)
             buf[len] = '\0'; // readlink(2) doesn't NUL-terminate.

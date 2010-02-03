@@ -1327,12 +1327,12 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_accept(JNIEn
          */
         int sslErrorCode = SSL_get_error(ssl, ret);
         if (sslErrorCode == SSL_ERROR_NONE ||
-                sslErrorCode == SSL_ERROR_SYSCALL && errno == 0) {
-          throwIOExceptionStr(env, "Connection closed by peer");
+                (sslErrorCode == SSL_ERROR_SYSCALL && errno == 0)) {
+            throwIOExceptionStr(env, "Connection closed by peer");
         } else {
-          throwIOExceptionWithSslErrors(env, ret, sslErrorCode,
-              "Trouble accepting connection");
-    	}
+            throwIOExceptionWithSslErrors(env, ret, sslErrorCode,
+                    "Trouble accepting connection");
+        }
         free_ssl(env, object);
         return;
     } else if (ret < 0) {
