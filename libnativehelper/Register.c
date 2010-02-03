@@ -99,8 +99,6 @@ int jniRegisterSystemMethods(JNIEnv* env)
         goto bail;
     if (register_com_ibm_icu4jni_util_Resources(env) != 0)
         goto bail;
-    if (register_com_ibm_icu4jni_text_NativeRBNF(env) != 0)
-        goto bail;
 
     if (register_SQLite_Database(env) != 0)
         goto bail;

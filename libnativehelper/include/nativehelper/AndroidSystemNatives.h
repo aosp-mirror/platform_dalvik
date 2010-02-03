@@ -86,7 +86,6 @@ int register_com_ibm_icu4jni_text_NativeBreakIterator(JNIEnv* env);
 int register_com_ibm_icu4jni_text_NativeDecimalFormat(JNIEnv* env);
 int register_com_ibm_icu4jni_regex_NativeRegEx(JNIEnv* env);
 int register_com_ibm_icu4jni_util_Resources(JNIEnv* env);
-int register_com_ibm_icu4jni_text_NativeRBNF(JNIEnv* env);
 
 int register_sun_misc_Unsafe(JNIEnv* env);
 

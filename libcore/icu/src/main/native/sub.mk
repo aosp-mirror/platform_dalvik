@@ -10,7 +10,6 @@ LOCAL_SRC_FILES := \
 	NativeConverter.cpp \
 	NativeDecimalFormat.cpp \
 	NativeRegEx.cpp \
-	RuleBasedNumberFormat.cpp \
 	Resources.cpp \
 	UCharacter.cpp
 
