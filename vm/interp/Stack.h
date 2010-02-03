@@ -277,7 +277,7 @@ bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
  * Common handling for stack overflow.
  */
 void dvmHandleStackOverflow(Thread* self, const Method* method);
-void dvmCleanupStackOverflow(Thread* self);
+void dvmCleanupStackOverflow(Thread* self, const Object* exception);
 
 /* debugging; dvmDumpThread() is probably a better starting point */
 void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread);

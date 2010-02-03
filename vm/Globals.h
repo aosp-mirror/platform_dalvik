@@ -176,6 +176,7 @@ struct DvmGlobals {
     ClassObject* classJavaLangVMThread;
     ClassObject* classJavaLangThreadGroup;
     ClassObject* classJavaLangThrowable;
+    ClassObject* classJavaLangStackOverflowError;
     ClassObject* classJavaLangStackTraceElement;
     ClassObject* classJavaLangStackTraceElementArray;
     ClassObject* classJavaLangAnnotationAnnotationArray;

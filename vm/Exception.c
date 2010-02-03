@@ -112,6 +112,8 @@ bool dvmExceptionStartup(void)
         dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
     gDvm.classJavaLangRuntimeException =
         dvmFindSystemClassNoInit("Ljava/lang/RuntimeException;");
+    gDvm.classJavaLangStackOverflowError =
+        dvmFindSystemClassNoInit("Ljava/lang/StackOverflowError;");
     gDvm.classJavaLangError =
         dvmFindSystemClassNoInit("Ljava/lang/Error;");
     gDvm.classJavaLangStackTraceElement =
