@@ -1841,3 +1841,519 @@ done:
     dvmUnlockMutex(&gDvmJit.tableLock);
     return;
 }
+
+#if defined(WITH_SELF_VERIFICATION)
+/*
+ * The following are used to keep compiled loads and stores from modifying
+ * memory during self verification mode.
+ *
+ * Stores do not modify memory. Instead, the address and value pair are stored
+ * into heapSpace. Addresses within heapSpace are unique. For accesses smaller
+ * than a word, the word containing the address is loaded first before being
+ * updated.
+ *
+ * Loads check heapSpace first and return data from there if an entry exists.
+ * Otherwise, data is loaded from memory as usual.
+ */
+
+/* Used to specify sizes of memory operations */
+enum {
+    kSVByte,
+    kSVSignedByte,
+    kSVHalfword,
+    kSVSignedHalfword,
+    kSVWord,
+    kSVDoubleword,
+};
+
+/* Load the value of a decoded register from the stack */
+static int selfVerificationMemRegLoad(int* sp, int reg)
+{
+    return *(sp + reg);
+}
+
+/* Load the value of a decoded doubleword register from the stack */
+static s8 selfVerificationMemRegLoadDouble(int* sp, int reg)
+{
+    return *((s8*)(sp + reg));
+}
+
+/* Store the value of a decoded register out to the stack */
+static void selfVerificationMemRegStore(int* sp, int data, int reg)
+{
+    *(sp + reg) = data;
+}
+
+/* Store the value of a decoded doubleword register out to the stack */
+static void selfVerificationMemRegStoreDouble(int* sp, s8 data, int reg)
+{
+    *((s8*)(sp + reg)) = data;
+}
+
+/*
+ * Load the specified size of data from the specified address, checking
+ * heapSpace first if Self Verification mode wrote to it previously, and
+ * falling back to actual memory otherwise.
+ */
+static int selfVerificationLoad(int addr, int size)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    ShadowHeap *heapSpacePtr;
+
+    int data;
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x3;
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) {
+            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+            break;
+        }
+    }
+
+    switch (size) {
+        case kSVByte:
+            data = *((u1*) addr);
+            break;
+        case kSVSignedByte:
+            data = *((s1*) addr);
+            break;
+        case kSVHalfword:
+            data = *((u2*) addr);
+            break;
+        case kSVSignedHalfword:
+            data = *((s2*) addr);
+            break;
+        case kSVWord:
+            data = *((u4*) addr);
+    }
+
+    //LOGD("*** HEAP LOAD: Addr: 0x%x Data: 0x%x Size: %d", addr, data, size);
+    return data;
+}
+
+/* Like selfVerificationLoad, but specifically for doublewords */
+static s8 selfVerificationLoadDoubleword(int addr)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowSpace* shadowSpace = self->shadowSpace;
+    ShadowHeap* heapSpacePtr;
+
+    int addr2 = addr+4;
+    unsigned int data = *((unsigned int*) addr);
+    unsigned int data2 = *((unsigned int*) addr2);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            data = heapSpacePtr->data;
+        } else if (heapSpacePtr->addr == addr2) {
+            data2 = heapSpacePtr->data;
+        }
+    }
+
+    //LOGD("*** HEAP LOAD DOUBLEWORD: Addr: 0x%x Data: 0x%x Data2: 0x%x",
+    //    addr, data, data2);
+    return (((s8) data2) << 32) | data;
+}
+
+/*
+ * Handles a store of a specified size of data to a specified address.
+ * This gets logged as an addr/data pair in heapSpace instead of modifying
+ * memory.  Addresses in heapSpace are unique, and accesses smaller than a
+ * word pull the entire word from memory first before updating.
+ */
+static void selfVerificationStore(int addr, int data, int size)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    ShadowHeap *heapSpacePtr;
+
+    int maskedAddr = addr & 0xFFFFFFFC;
+    int alignment = addr & 0x3;
+
+    //LOGD("*** HEAP STORE: Addr: 0x%x Data: 0x%x Size: %d", addr, data, size);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == maskedAddr) break;
+    }
+
+    if (heapSpacePtr == shadowSpace->heapSpaceTail) {
+        heapSpacePtr->addr = maskedAddr;
+        heapSpacePtr->data = *((unsigned int*) maskedAddr);
+        shadowSpace->heapSpaceTail++;
+    }
+
+    addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
+    switch (size) {
+        case kSVByte:
+            *((u1*) addr) = data;
+            break;
+        case kSVSignedByte:
+            *((s1*) addr) = data;
+            break;
+        case kSVHalfword:
+            *((u2*) addr) = data;
+            break;
+        case kSVSignedHalfword:
+            *((s2*) addr) = data;
+            break;
+        case kSVWord:
+            *((u4*) addr) = data;
+    }
+}
+
+/* Like selfVerificationStore, but specifically for doublewords */
+static void selfVerificationStoreDoubleword(int addr, s8 double_data)
+{
+    Thread *self = dvmThreadSelf();
+    ShadowSpace *shadowSpace = self->shadowSpace;
+    ShadowHeap *heapSpacePtr;
+
+    int addr2 = addr+4;
+    int data = double_data;
+    int data2 = double_data >> 32;
+    bool store1 = false, store2 = false;
+
+    //LOGD("*** HEAP STORE DOUBLEWORD: Addr: 0x%x Data: 0x%x, Data2: 0x%x",
+    //    addr, data, data2);
+
+    for (heapSpacePtr = shadowSpace->heapSpace;
+         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
+        if (heapSpacePtr->addr == addr) {
+            heapSpacePtr->data = data;
+            store1 = true;
+        } else if (heapSpacePtr->addr == addr2) {
+            heapSpacePtr->data = data2;
+            store2 = true;
+        }
+    }
+
+    if (!store1) {
+        shadowSpace->heapSpaceTail->addr = addr;
+        shadowSpace->heapSpaceTail->data = data;
+        shadowSpace->heapSpaceTail++;
+    }
+    if (!store2) {
+        shadowSpace->heapSpaceTail->addr = addr2;
+        shadowSpace->heapSpaceTail->data = data2;
+        shadowSpace->heapSpaceTail++;
+    }
+}
+
+/*
+ * Decodes the memory instruction at the address specified in the link
+ * register. All registers (r0-r12,lr) and fp registers (d0-d15) are stored
+ * consecutively on the stack beginning at the specified stack pointer.
+ * Calls the proper Self Verification handler for the memory instruction and
+ * updates the link register to point past the decoded memory instruction.
+ */
+void dvmSelfVerificationMemOpDecode(int lr, int* sp)
+{
+    enum {
+        kMemOpLdrPcRel = 0x09, // ldr(3)  [01001] rd[10..8] imm_8[7..0]
+        kMemOpRRR      = 0x0A, // Full opcode is 7 bits
+        kMemOp2Single  = 0x0A, // Used for Vstrs and Vldrs
+        kMemOpRRR2     = 0x0B, // Full opcode is 7 bits
+        kMemOp2Double  = 0x0B, // Used for Vstrd and Vldrd
+        kMemOpStrRRI5  = 0x0C, // str(1)  [01100] imm_5[10..6] rn[5..3] rd[2..0]
+        kMemOpLdrRRI5  = 0x0D, // ldr(1)  [01101] imm_5[10..6] rn[5..3] rd[2..0]
+        kMemOpStrbRRI5 = 0x0E, // strb(1) [01110] imm_5[10..6] rn[5..3] rd[2..0]
+        kMemOpLdrbRRI5 = 0x0F, // ldrb(1) [01111] imm_5[10..6] rn[5..3] rd[2..0]
+        kMemOpStrhRRI5 = 0x10, // strh(1) [10000] imm_5[10..6] rn[5..3] rd[2..0]
+        kMemOpLdrhRRI5 = 0x11, // ldrh(1) [10001] imm_5[10..6] rn[5..3] rd[2..0]
+        kMemOpLdrSpRel = 0x13, // ldr(4)  [10011] rd[10..8] imm_8[7..0]
+        kMemOpStrRRR   = 0x28, // str(2)  [0101000] rm[8..6] rn[5..3] rd[2..0]
+        kMemOpStrhRRR  = 0x29, // strh(2) [0101001] rm[8..6] rn[5..3] rd[2..0]
+        kMemOpStrbRRR  = 0x2A, // strb(2) [0101010] rm[8..6] rn[5..3] rd[2..0]
+        kMemOpLdrsbRRR = 0x2B, // ldrsb   [0101011] rm[8..6] rn[5..3] rd[2..0]
+        kMemOpLdrRRR   = 0x2C, // ldr(2)  [0101100] rm[8..6] rn[5..3] rd[2..0]
+        kMemOpLdrhRRR  = 0x2D, // ldrh(2) [0101101] rm[8..6] rn[5..3] rd[2..0]
+        kMemOpLdrbRRR  = 0x2E, // ldrb(2) [0101110] rm[8..6] rn[5..3] rd[2..0]
+        kMemOpLdrshRRR = 0x2F, // ldrsh   [0101111] rm[8..6] rn[5..3] rd[2..0]
+        kMemOp2Vstr    = 0xED8, // Used for Vstrs and Vstrd
+        kMemOp2Vldr    = 0xED9, // Used for Vldrs and Vldrd
+        kMemOp2Vstr2   = 0xEDC, // Used for Vstrs and Vstrd
+        kMemOp2Vldr2   = 0xEDD, // Used for Vstrs and Vstrd
+        kMemOp2StrbRRR = 0xF80, /* str rt,[rn,rm,LSL #imm] [111110000000]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2LdrbRRR = 0xF81, /* ldrb rt,[rn,rm,LSL #imm] [111110000001]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2StrhRRR = 0xF82, /* str rt,[rn,rm,LSL #imm] [111110000010]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2LdrhRRR = 0xF83, /* ldrh rt,[rn,rm,LSL #imm] [111110000011]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2StrRRR  = 0xF84, /* str rt,[rn,rm,LSL #imm] [111110000100]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2LdrRRR  = 0xF85, /* ldr rt,[rn,rm,LSL #imm] [111110000101]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2StrbRRI12 = 0xF88, /* strb rt,[rn,#imm12] [111110001000]
+                                       rt[15..12] rn[19..16] imm12[11..0] */
+        kMemOp2LdrbRRI12 = 0xF89, /* ldrb rt,[rn,#imm12] [111110001001]
+                                       rt[15..12] rn[19..16] imm12[11..0] */
+        kMemOp2StrhRRI12 = 0xF8A, /* strh rt,[rn,#imm12] [111110001010]
+                                       rt[15..12] rn[19..16] imm12[11..0] */
+        kMemOp2LdrhRRI12 = 0xF8B, /* ldrh rt,[rn,#imm12] [111110001011]
+                                       rt[15..12] rn[19..16] imm12[11..0] */
+        kMemOp2StrRRI12 = 0xF8C, /* str(Imm,T3) rd,[rn,#imm12] [111110001100]
+                                       rn[19..16] rt[15..12] imm12[11..0] */
+        kMemOp2LdrRRI12 = 0xF8D, /* ldr(Imm,T3) rd,[rn,#imm12] [111110001101]
+                                       rn[19..16] rt[15..12] imm12[11..0] */
+        kMemOp2LdrsbRRR = 0xF91, /* ldrsb rt,[rn,rm,LSL #imm] [111110010001]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2LdrshRRR = 0xF93, /* ldrsh rt,[rn,rm,LSL #imm] [111110010011]
+                                rn[19-16] rt[15-12] [000000] imm[5-4] rm[3-0] */
+        kMemOp2LdrsbRRI12 = 0xF99, /* ldrsb rt,[rn,#imm12] [111110011001]
+                                       rt[15..12] rn[19..16] imm12[11..0] */
+        kMemOp2LdrshRRI12 = 0xF9B, /* ldrsh rt,[rn,#imm12] [111110011011]
+                                       rt[15..12] rn[19..16] imm12[11..0] */
+        kMemOp2        = 0xE000, // top 3 bits set indicates Thumb2
+    };
+
+    int addr, offset, data;
+    long long double_data;
+    int size = kSVWord;
+    bool store = false;
+    unsigned int *lr_masked = (unsigned int *) (lr & 0xFFFFFFFE);
+    unsigned int insn = *lr_masked;
+
+    int old_lr;
+    old_lr = selfVerificationMemRegLoad(sp, 13);
+
+    if ((insn & kMemOp2) == kMemOp2) {
+        insn = (insn << 16) | (insn >> 16);
+        //LOGD("*** THUMB2 - Addr: 0x%x Insn: 0x%x", lr, insn);
+
+        int opcode12 = (insn >> 20) & 0xFFF;
+        int opcode6 = (insn >> 6) & 0x3F;
+        int opcode4 = (insn >> 8) & 0xF;
+        int imm2 = (insn >> 4) & 0x3;
+        int imm8 = insn & 0xFF;
+        int imm12 = insn & 0xFFF;
+        int rd = (insn >> 12) & 0xF;
+        int rm = insn & 0xF;
+        int rn = (insn >> 16) & 0xF;
+        int rt = (insn >> 12) & 0xF;
+
+        // Update the link register
+        selfVerificationMemRegStore(sp, old_lr+4, 13);
+
+        // Determine whether the mem op is a store or load
+        switch (opcode12) {
+            case kMemOp2Vstr:
+            case kMemOp2Vstr2:
+            case kMemOp2StrbRRR:
+            case kMemOp2StrhRRR:
+            case kMemOp2StrRRR:
+            case kMemOp2StrbRRI12:
+            case kMemOp2StrhRRI12:
+            case kMemOp2StrRRI12:
+                store = true;
+        }
+
+        // Determine the size of the mem access
+        switch (opcode12) {
+            case kMemOp2StrbRRR:
+            case kMemOp2LdrbRRR:
+            case kMemOp2StrbRRI12:
+            case kMemOp2LdrbRRI12:
+                size = kSVByte;
+                break;
+            case kMemOp2LdrsbRRR:
+            case kMemOp2LdrsbRRI12:
+                size = kSVSignedByte;
+                break;
+            case kMemOp2StrhRRR:
+            case kMemOp2LdrhRRR:
+            case kMemOp2StrhRRI12:
+            case kMemOp2LdrhRRI12:
+                size = kSVHalfword;
+                break;
+            case kMemOp2LdrshRRR:
+            case kMemOp2LdrshRRI12:
+                size = kSVSignedHalfword;
+                break;
+            case kMemOp2Vstr:
+            case kMemOp2Vstr2:
+            case kMemOp2Vldr:
+            case kMemOp2Vldr2:
+                if (opcode4 == kMemOp2Double) size = kSVDoubleword;
+                break;
+        }
+
+        // Load the value of the address
+        addr = selfVerificationMemRegLoad(sp, rn);
+
+        // Figure out the offset
+        switch (opcode12) {
+            case kMemOp2Vstr:
+            case kMemOp2Vstr2:
+            case kMemOp2Vldr:
+            case kMemOp2Vldr2:
+                offset = imm8 << 2;
+                if (opcode4 == kMemOp2Single) {
+                    rt = rd << 1;
+                    if (insn & 0x400000) rt |= 0x1;
+                } else if (opcode4 == kMemOp2Double) {
+                    if (insn & 0x400000) rt |= 0x10;
+                    rt = rt << 1;
+                } else {
+                    LOGD("*** ERROR: UNRECOGNIZED VECTOR MEM OP");
+                    assert(0);
+                    dvmAbort();
+                }
+                rt += 14;
+                break;
+            case kMemOp2StrbRRR:
+            case kMemOp2LdrbRRR:
+            case kMemOp2StrhRRR:
+            case kMemOp2LdrhRRR:
+            case kMemOp2StrRRR:
+            case kMemOp2LdrRRR:
+            case kMemOp2LdrsbRRR:
+            case kMemOp2LdrshRRR:
+                offset = selfVerificationMemRegLoad(sp, rm) << imm2;
+                break;
+            case kMemOp2StrbRRI12:
+            case kMemOp2LdrbRRI12:
+            case kMemOp2StrhRRI12:
+            case kMemOp2LdrhRRI12:
+            case kMemOp2StrRRI12:
+            case kMemOp2LdrRRI12:
+            case kMemOp2LdrsbRRI12:
+            case kMemOp2LdrshRRI12:
+                offset = imm12;
+                break;
+            default:
+                LOGD("*** ERROR: UNRECOGNIZED MEM OP");
+                assert(0);
+                dvmAbort();
+        }
+
+        // Handle the decoded mem op accordingly
+        if (store) {
+            if (size == kSVDoubleword) {
+                double_data = selfVerificationMemRegLoadDouble(sp, rt);
+                selfVerificationStoreDoubleword(addr+offset, double_data);
+            } else {
+                data = selfVerificationMemRegLoad(sp, rt);
+                selfVerificationStore(addr+offset, data, size);
+            }
+        } else {
+            if (size == kSVDoubleword) {
+                double_data = selfVerificationLoadDoubleword(addr+offset);
+                selfVerificationMemRegStoreDouble(sp, double_data, rt);
+            } else {
+                data = selfVerificationLoad(addr+offset, size);
+                selfVerificationMemRegStore(sp, data, rt);
+            }
+        }
+    } else {
+        //LOGD("*** THUMB - Addr: 0x%x Insn: 0x%x", lr, insn);
+
+        // Update the link register
+        selfVerificationMemRegStore(sp, old_lr+2, 13);
+
+        int opcode5 = (insn >> 11) & 0x1F;
+        int opcode7 = (insn >> 9) & 0x7F;
+        int imm = (insn >> 6) & 0x1F;
+        int rd = (insn >> 8) & 0x7;
+        int rm = (insn >> 6) & 0x7;
+        int rn = (insn >> 3) & 0x7;
+        int rt = insn & 0x7;
+
+        // Determine whether the mem op is a store or load
+        switch (opcode5) {
+            case kMemOpRRR:
+                switch (opcode7) {
+                    case kMemOpStrRRR:
+                    case kMemOpStrhRRR:
+                    case kMemOpStrbRRR:
+                        store = true;
+                }
+                break;
+            case kMemOpStrRRI5:
+            case kMemOpStrbRRI5:
+            case kMemOpStrhRRI5:
+                store = true;
+        }
+
+        // Determine the size of the mem access
+        switch (opcode5) {
+            case kMemOpRRR:
+            case kMemOpRRR2:
+                switch (opcode7) {
+                    case kMemOpStrbRRR:
+                    case kMemOpLdrbRRR:
+                        size = kSVByte;
+                        break;
+                    case kMemOpLdrsbRRR:
+                        size = kSVSignedByte;
+                        break;
+                    case kMemOpStrhRRR:
+                    case kMemOpLdrhRRR:
+                        size = kSVHalfword;
+                        break;
+                    case kMemOpLdrshRRR:
+                        size = kSVSignedHalfword;
+                        break;
+                }
+                break;
+            case kMemOpStrbRRI5:
+            case kMemOpLdrbRRI5:
+                size = kSVByte;
+                break;
+            case kMemOpStrhRRI5:
+            case kMemOpLdrhRRI5:
+                size = kSVHalfword;
+                break;
+        }
+
+        // Load the value of the address
+        if (opcode5 == kMemOpLdrPcRel)
+            addr = selfVerificationMemRegLoad(sp, 4);
+        else
+            addr = selfVerificationMemRegLoad(sp, rn);
+
+        // Figure out the offset
+        switch (opcode5) {
+            case kMemOpLdrPcRel:
+                offset = (insn & 0xFF) << 2;
+                rt = rd;
+                break;
+            case kMemOpRRR:
+            case kMemOpRRR2:
+                offset = selfVerificationMemRegLoad(sp, rm);
+                break;
+            case kMemOpStrRRI5:
+            case kMemOpLdrRRI5:
+                offset = imm << 2;
+                break;
+            case kMemOpStrhRRI5:
+            case kMemOpLdrhRRI5:
+                offset = imm << 1;
+                break;
+            case kMemOpStrbRRI5:
+            case kMemOpLdrbRRI5:
+                offset = imm;
+                break;
+            default:
+                LOGD("*** ERROR: UNRECOGNIZED MEM OP");
+                assert(0);
+                dvmAbort();
+        }
+
+        // Handle the decoded mem op accordingly
+        if (store) {
+            data = selfVerificationMemRegLoad(sp, rt);
+            selfVerificationStore(addr+offset, data, size);
+        } else {
+            data = selfVerificationLoad(addr+offset, size);
+            selfVerificationMemRegStore(sp, data, rt);
+        }
+    }
+}
+#endif

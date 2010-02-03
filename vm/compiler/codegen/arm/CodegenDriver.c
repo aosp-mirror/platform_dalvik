@@ -208,411 +208,37 @@ static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir)
 }
 
 #if defined(WITH_SELF_VERIFICATION)
-/*
- * The following are used to keep compiled loads and stores from modifying
- * memory during self verification mode.
- *
- * Stores do not modify memory. Instead, the address and value pair are stored
- * into heapSpace. Addresses within heapSpace are unique. For accesses smaller
- * than a word, the word containing the address is loaded first before being
- * updated.
- *
- * Loads check heapSpace first and return data from there if an entry exists.
- * Otherwise, data is loaded from memory as usual.
- */
-
-/* Decode contents of heapArgSpace to determine addr to load from */
-static void selfVerificationLoadDecode(HeapArgSpace* heapArgSpace, int* addr)
+static void selfVerificationBranchInsert(LIR *currentLIR, ArmOpCode opCode,
+                          int dest, int src1)
 {
-    int reg = heapArgSpace->regMap & 0xFF;
-    if (!FPREG(reg)) {
-        assert(reg < 16);
-        *addr = heapArgSpace->coreRegs[reg];
-    } else {
-        assert(!DOUBLEREG(reg));
-        *addr = heapArgSpace->fpRegs[(reg & FP_REG_MASK)];
-    }
+     ArmLIR *insn = dvmCompilerNew(sizeof(ArmLIR), true);
+     insn->opCode = opCode;
+     insn->operands[0] = dest;
+     insn->operands[1] = src1;
+     setupResourceMasks(insn);
+     dvmCompilerInsertLIRBefore(currentLIR, (LIR *) insn);
 }
 
-/* Decode contents of heapArgSpace to determine reg to load into */
-static void selfVerificationLoadDecodeData(HeapArgSpace* heapArgSpace,
-                                           int data, int reg)
+static void selfVerificationBranchInsertPass(CompilationUnit *cUnit)
 {
-    if (!FPREG(reg)) {
-        assert(reg < 16);
-        heapArgSpace->coreRegs[reg] = data;
-    } else {
-        assert(!DOUBLEREG(reg));
-        heapArgSpace->fpRegs[(reg & FP_REG_MASK)] = data;
-    }
-}
+    ArmLIR *thisLIR;
+    ArmLIR *branchLIR = dvmCompilerNew(sizeof(ArmLIR), true);
+    TemplateOpCode opCode = TEMPLATE_MEM_OP_DECODE;
 
-static void selfVerificationLoad(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap *heapSpacePtr;
-    ShadowSpace *shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    selfVerificationLoadDecode(heapArgSpace, &addr);
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == addr) {
-            data = heapSpacePtr->data;
-            break;
+    for (thisLIR = (ArmLIR *) cUnit->firstLIRInsn;
+         thisLIR != (ArmLIR *) cUnit->lastLIRInsn;
+         thisLIR = NEXT_LIR(thisLIR)) {
+        if (thisLIR->branchInsertSV) {
+            /* Branch to mem op decode template */
+            selfVerificationBranchInsert((LIR *) thisLIR, kThumbBlx1,
+                       (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
+                       (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
+            selfVerificationBranchInsert((LIR *) thisLIR, kThumbBlx2,
+                       (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
+                       (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
         }
     }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail)
-        data = *((unsigned int*) addr);
-
-    int reg = (heapArgSpace->regMap >> 8) & 0xFF;
-
-    // LOGD("*** HEAP LOAD: Reg:%d Addr: 0x%x Data: 0x%x", reg, addr, data);
-
-    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
 }
-
-static void selfVerificationLoadByte(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap *heapSpacePtr;
-    ShadowSpace *shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    selfVerificationLoadDecode(heapArgSpace, &addr);
-
-    int maskedAddr = addr & 0xFFFFFFFC;
-    int alignment = addr & 0x3;
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == maskedAddr) {
-            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
-            data = *((unsigned char*) addr);
-            break;
-        }
-    }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail)
-        data = *((unsigned char*) addr);
-
-    //LOGD("*** HEAP LOAD BYTE: Addr: 0x%x Data: 0x%x", addr, data);
-
-    int reg = (heapArgSpace->regMap >> 8) & 0xFF;
-    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
-}
-
-static void selfVerificationLoadHalfword(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap *heapSpacePtr;
-    ShadowSpace *shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    selfVerificationLoadDecode(heapArgSpace, &addr);
-
-    int maskedAddr = addr & 0xFFFFFFFC;
-    int alignment = addr & 0x2;
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == maskedAddr) {
-            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
-            data = *((unsigned short*) addr);
-            break;
-        }
-    }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail)
-        data = *((unsigned short*) addr);
-
-    //LOGD("*** HEAP LOAD kHalfWord: Addr: 0x%x Data: 0x%x", addr, data);
-
-    int reg = (heapArgSpace->regMap >> 8) & 0xFF;
-    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
-}
-
-static void selfVerificationLoadSignedByte(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap* heapSpacePtr;
-    ShadowSpace* shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    selfVerificationLoadDecode(heapArgSpace, &addr);
-
-    int maskedAddr = addr & 0xFFFFFFFC;
-    int alignment = addr & 0x3;
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == maskedAddr) {
-            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
-            data = *((signed char*) addr);
-            break;
-        }
-    }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail)
-        data = *((signed char*) addr);
-
-    //LOGD("*** HEAP LOAD SIGNED BYTE: Addr: 0x%x Data: 0x%x", addr, data);
-
-    int reg = (heapArgSpace->regMap >> 8) & 0xFF;
-    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
-}
-
-static void selfVerificationLoadSignedHalfword(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap* heapSpacePtr;
-    ShadowSpace* shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    selfVerificationLoadDecode(heapArgSpace, &addr);
-
-    int maskedAddr = addr & 0xFFFFFFFC;
-    int alignment = addr & 0x2;
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == maskedAddr) {
-            addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
-            data = *((signed short*) addr);
-            break;
-        }
-    }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail)
-        data = *((signed short*) addr);
-
-    //LOGD("*** HEAP LOAD SIGNED kHalfWord: Addr: 0x%x Data: 0x%x", addr, data);
-
-    int reg = (heapArgSpace->regMap >> 8) & 0xFF;
-    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
-}
-
-static void selfVerificationLoadDoubleword(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap* heapSpacePtr;
-    ShadowSpace* shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr;
-    selfVerificationLoadDecode(heapArgSpace, &addr);
-
-    int addr2 = addr+4;
-    unsigned int data = *((unsigned int*) addr);
-    unsigned int data2 = *((unsigned int*) addr2);
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == addr) {
-            data = heapSpacePtr->data;
-        } else if (heapSpacePtr->addr == addr2) {
-            data2 = heapSpacePtr->data;
-        }
-    }
-
-    // LOGD("*** HEAP LOAD DOUBLEWORD: Addr: 0x%x Data: 0x%x Data2: 0x%x",
-    //    addr, data, data2);
-
-    int reg = (heapArgSpace->regMap >> 8) & 0xFF;
-    int reg2 = (heapArgSpace->regMap >> 16) & 0xFF;
-    selfVerificationLoadDecodeData(heapArgSpace, data, reg);
-    selfVerificationLoadDecodeData(heapArgSpace, data2, reg2);
-}
-
-/* Decode contents of heapArgSpace to determine arguments to store. */
-static void selfVerificationStoreDecode(HeapArgSpace* heapArgSpace,
-                                        int* value, int reg)
-{
-    if (!FPREG(reg)) {
-        assert(reg < 16);
-        *value = heapArgSpace->coreRegs[reg];
-    } else {
-        assert(!DOUBLEREG(reg));
-        *value = heapArgSpace->fpRegs[(reg & FP_REG_MASK)];
-    }
-}
-
-static void selfVerificationStore(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap *heapSpacePtr;
-    ShadowSpace *shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    int reg0 = heapArgSpace->regMap & 0xFF;
-    int reg1 = (heapArgSpace->regMap >> 8) & 0xFF;
-    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
-    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
-
-    //LOGD("*** HEAP STORE: Addr: 0x%x Data: 0x%x", addr, data);
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == addr) break;
-    }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail) {
-        heapSpacePtr->addr = addr;
-        shadowSpace->heapSpaceTail++;
-    }
-
-    heapSpacePtr->data = data;
-}
-
-static void selfVerificationStoreByte(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap *heapSpacePtr;
-    ShadowSpace *shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    int reg0 = heapArgSpace->regMap & 0xFF;
-    int reg1 = (heapArgSpace->regMap >> 8) & 0xFF;
-    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
-    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
-
-    int maskedAddr = addr & 0xFFFFFFFC;
-    int alignment = addr & 0x3;
-
-    //LOGD("*** HEAP STORE BYTE: Addr: 0x%x Data: 0x%x", addr, data);
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == maskedAddr) break;
-    }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail)  {
-        heapSpacePtr->addr = maskedAddr;
-        heapSpacePtr->data = *((unsigned int*) maskedAddr);
-        shadowSpace->heapSpaceTail++;
-    }
-
-    addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
-    *((unsigned char*) addr) = (char) data;
-
-    //LOGD("*** HEAP STORE BYTE: Addr: 0x%x Final Data: 0x%x",
-    //    addr, heapSpacePtr->data);
-}
-
-static void selfVerificationStoreHalfword(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap *heapSpacePtr;
-    ShadowSpace *shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data;
-    int reg0 = heapArgSpace->regMap & 0xFF;
-    int reg1 = (heapArgSpace->regMap >> 8) & 0xFF;
-    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
-    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
-
-    int maskedAddr = addr & 0xFFFFFFFC;
-    int alignment = addr & 0x2;
-
-    //LOGD("*** HEAP STORE kHalfWord: Addr: 0x%x Data: 0x%x", addr, data);
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == maskedAddr) break;
-    }
-
-    if (heapSpacePtr == shadowSpace->heapSpaceTail)  {
-        heapSpacePtr->addr = maskedAddr;
-        heapSpacePtr->data = *((unsigned int*) maskedAddr);
-        shadowSpace->heapSpaceTail++;
-    }
-
-    addr = ((unsigned int) &(heapSpacePtr->data)) | alignment;
-    *((unsigned short*) addr) = (short) data;
-
-    //LOGD("*** HEAP STORE kHalfWord: Addr: 0x%x Final Data: 0x%x",
-    //    addr, heapSpacePtr->data);
-}
-
-static void selfVerificationStoreDoubleword(InterpState* interpState)
-{
-    Thread *self = dvmThreadSelf();
-    ShadowHeap *heapSpacePtr;
-    ShadowSpace *shadowSpace = self->shadowSpace;
-    HeapArgSpace *heapArgSpace = &(interpState->heapArgSpace);
-
-    int addr, data, data2;
-    int reg0 = heapArgSpace->regMap & 0xFF;
-    int reg1 = (heapArgSpace->regMap >> 8) & 0xFF;
-    int reg2 = (heapArgSpace->regMap >> 16) & 0xFF;
-    selfVerificationStoreDecode(heapArgSpace, &addr, reg0);
-    selfVerificationStoreDecode(heapArgSpace, &data, reg1);
-    selfVerificationStoreDecode(heapArgSpace, &data2, reg2);
-
-    int addr2 = addr+4;
-    bool store1 = false, store2 = false;
-
-    //LOGD("*** HEAP STORE DOUBLEWORD: Addr: 0x%x Data: 0x%x, Data2: 0x%x",
-    //    addr, data, data2);
-
-    for (heapSpacePtr = shadowSpace->heapSpace;
-         heapSpacePtr != shadowSpace->heapSpaceTail; heapSpacePtr++) {
-        if (heapSpacePtr->addr == addr) {
-            heapSpacePtr->data = data;
-            store1 = true;
-        } else if (heapSpacePtr->addr == addr2) {
-            heapSpacePtr->data = data2;
-            store2 = true;
-        }
-    }
-
-    if (!store1) {
-        shadowSpace->heapSpaceTail->addr = addr;
-        shadowSpace->heapSpaceTail->data = data;
-        shadowSpace->heapSpaceTail++;
-    }
-    if (!store2) {
-        shadowSpace->heapSpaceTail->addr = addr2;
-        shadowSpace->heapSpaceTail->data = data2;
-        shadowSpace->heapSpaceTail++;
-    }
-}
-
-/* Common wrapper function for all memory operations */
-static void selfVerificationMemOpWrapper(CompilationUnit *cUnit, int regMap,
-                                         void* funct)
-{
-    /* push r0 and r7 to give us a foothold */
-    newLIR1(cUnit, kThumbPush, (1 << r0) | (1 << r7));
-
-    /* Let the save handler know where the save record is */
-    loadConstant(cUnit, r0, offsetof(InterpState, heapArgSpace));
-
-    /* Load the regMap and call the save handler [note: handler pops r0/r7] */
-    loadConstant(cUnit, r7, regMap);
-    genDispatchToHandler(cUnit, TEMPLATE_SAVE_STATE);
-
-    /* Set function pointer, pass rGLUE and branch */
-    loadConstant(cUnit, r1, (int) funct);
-    newLIR2(cUnit, kThumbMovRR, r0, rGLUE);
-    newLIR1(cUnit, kThumbBlxR, r1);
-
-    /* Let the recover handler know where coreRegs[0] and restore regs */
-    loadConstant(cUnit, r0, offsetof(InterpState, heapArgSpace) +
-                            offsetof(HeapArgSpace, coreRegs));
-    genDispatchToHandler(cUnit, TEMPLATE_RESTORE_STATE);
-}
-
 #endif
 
 /* Generate a unconditional branch to go to the interpreter */
@@ -639,12 +265,12 @@ static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
                  NULL);/* null object? */
     opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
     rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = true;
+#endif
     loadPair(cUnit, regPtr, rlResult.lowReg, rlResult.highReg);
-#else
-    int regMap = rlResult.highReg << 16 | rlResult.lowReg << 8 | regPtr;
-    selfVerificationMemOpWrapper(cUnit, regMap,
-        &selfVerificationLoadDoubleword);
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = false;
 #endif
     freeTemp(cUnit, regPtr);
     storeValueWide(cUnit, rlDest, rlResult);
@@ -663,12 +289,12 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
                  NULL);/* null object? */
     regPtr = allocTemp(cUnit);
     opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = true;
+#endif
     storePair(cUnit, regPtr, rlSrc.lowReg, rlSrc.highReg);
-#else
-    int regMap = rlSrc.highReg << 16 | rlSrc.lowReg << 8 | regPtr;
-    selfVerificationMemOpWrapper(cUnit, regMap,
-        &selfVerificationStoreDoubleword);
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = false;
 #endif
     freeTemp(cUnit, regPtr);
 }
@@ -689,17 +315,13 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
     rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = true;
+#endif
     loadBaseDisp(cUnit, mir, rlObj.lowReg, fieldOffset, rlResult.lowReg,
                  size, rlObj.sRegLow);
-#else
-    /* Combine address and offset */
-    regPtr = allocTemp(cUnit);
-    opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
-
-    int regMap = rlResult.lowReg << 8 | regPtr;
-    selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationLoad);
-    freeTemp(cUnit, regPtr);
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = false;
 #endif
     storeValue(cUnit, rlDest, rlResult);
 }
@@ -719,15 +341,12 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     int regPtr;
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = true;
+#endif
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
-#else
-    /* Combine address and offset */
-    regPtr = allocTemp(cUnit);
-    opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
-
-    int regMap = rlSrc.lowReg << 8 | regPtr;
-    selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationStore);
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = false;
 #endif
 }
 
@@ -769,7 +388,6 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
         /* regPtr -> array data */
         opRegRegImm(cUnit, kOpAdd, regPtr, rlArray.lowReg, dataOffset);
     }
-#if !defined(WITH_SELF_VERIFICATION)
     if ((size == kLong) || (size == kDouble)) {
         if (scale) {
             int rNewIndex = allocTemp(cUnit);
@@ -780,63 +398,28 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
         rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = true;
+#endif
         loadPair(cUnit, regPtr, rlResult.lowReg, rlResult.highReg);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = false;
+#endif
         freeTemp(cUnit, regPtr);
         storeValueWide(cUnit, rlDest, rlResult);
     } else {
         rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = true;
+#endif
         loadBaseIndexed(cUnit, regPtr, rlIndex.lowReg, rlResult.lowReg,
                         scale, size);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = false;
+#endif
         freeTemp(cUnit, regPtr);
         storeValue(cUnit, rlDest, rlResult);
     }
-#else
-    //TODO: probably want to move this into loadBaseIndexed
-    void *funct = NULL;
-    switch(size) {
-        case kLong:
-        case kDouble:
-            funct = (void*) &selfVerificationLoadDoubleword;
-            break;
-        case kWord:
-            funct = (void*) &selfVerificationLoad;
-            break;
-        case kUnsignedHalf:
-            funct = (void*) &selfVerificationLoadHalfword;
-            break;
-        case kSignedHalf:
-            funct = (void*) &selfVerificationLoadSignedHalfword;
-            break;
-        case kUnsignedByte:
-            funct = (void*) &selfVerificationLoadByte;
-            break;
-        case kSignedByte:
-            funct = (void*) &selfVerificationLoadSignedByte;
-            break;
-        default:
-            assert(0);
-            dvmAbort();
-    }
-    /* Combine address and index */
-    if (scale) {
-        int regTmp = allocTemp(cUnit);
-        opRegRegImm(cUnit, kOpLsl, regTmp, rlIndex.lowReg, scale);
-        opRegReg(cUnit, kOpAdd, regPtr, regTmp);
-        freeTemp(cUnit, regTmp);
-    } else {
-        opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
-    }
-
-    rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
-    int regMap = rlResult.highReg << 16 | rlResult.lowReg << 8 | regPtr;
-    selfVerificationMemOpWrapper(cUnit, regMap, funct);
-
-    freeTemp(cUnit, regPtr);
-    if ((size == kLong) || (size == kDouble))
-        storeValueWide(cUnit, rlDest, rlResult);
-    else
-        storeValue(cUnit, rlDest, rlResult);
-#endif
 }
 
 /*
@@ -885,7 +468,6 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
         opRegImm(cUnit, kOpAdd, regPtr, dataOffset);
     }
     /* at this point, regPtr points to array, 2 live temps */
-#if !defined(WITH_SELF_VERIFICATION)
     if ((size == kLong) || (size == kDouble)) {
         //TODO: need specific wide routine that can handle fp regs
         if (scale) {
@@ -897,57 +479,25 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
         rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = true;
+#endif
         storePair(cUnit, regPtr, rlSrc.lowReg, rlSrc.highReg);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = false;
+#endif
         freeTemp(cUnit, regPtr);
     } else {
         rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = true;
+#endif
         storeBaseIndexed(cUnit, regPtr, rlIndex.lowReg, rlSrc.lowReg,
                          scale, size);
-    }
-#else
-    //TODO: probably want to move this into storeBaseIndexed
-    void *funct = NULL;
-    switch(size) {
-        case kLong:
-        case kDouble:
-            funct = (void*) &selfVerificationStoreDoubleword;
-            break;
-        case kWord:
-            funct = (void*) &selfVerificationStore;
-            break;
-        case kSignedHalf:
-        case kUnsignedHalf:
-            funct = (void*) &selfVerificationStoreHalfword;
-            break;
-        case kSignedByte:
-        case kUnsignedByte:
-            funct = (void*) &selfVerificationStoreByte;
-            break;
-        default:
-            assert(0);
-            dvmAbort();
-    }
-
-    if (scale) {
-        int regTmpIndex = allocTemp(cUnit);
-        // 3 live temps
-        opRegRegImm(cUnit, kOpLsl, regTmpIndex, rlIndex.lowReg, scale);
-        opRegReg(cUnit, kOpAdd, regPtr, regTmpIndex);
-        freeTemp(cUnit, regTmpIndex);
-    } else {
-        opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
-    }
-    /* Combine address and index */
-    if ((size == kLong) || (size == kDouble)) {
-        rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
-    } else {
-        rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
-    }
-
-    int regMap = rlSrc.highReg << 16 | rlSrc.lowReg << 8 | regPtr;
-    selfVerificationMemOpWrapper(cUnit, regMap, funct);
-
+#if defined(WITH_SELF_VERIFICATION)
+        cUnit->heapMemOp = false;
 #endif
+    }
 }
 
 static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir,
@@ -1881,12 +1431,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlDest = getDestLoc(cUnit, mir, 0);
             rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = true;
+#endif
             loadWordDisp(cUnit, tReg, 0, rlResult.lowReg);
-#else
-            int regMap = rlResult.lowReg << 8 | tReg;
-            selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationLoad);
-
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = false;
 #endif
             storeValue(cUnit, rlDest, rlResult);
             break;
@@ -1900,14 +1450,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlDest = getDestLocWide(cUnit, mir, 0, 1);
             rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = true;
+#endif
             loadPair(cUnit, tReg, rlResult.lowReg, rlResult.highReg);
-#else
-            int regMap = rlResult.highReg << 16 |
-                         rlResult.lowReg << 8 | tReg;
-            selfVerificationMemOpWrapper(cUnit, regMap,
-                &selfVerificationLoadDoubleword);
-
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = false;
 #endif
             storeValueWide(cUnit, rlDest, rlResult);
             break;
@@ -1927,11 +1475,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlSrc = getSrcLoc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = true;
+#endif
             storeWordDisp(cUnit, tReg, 0 ,rlSrc.lowReg);
-#else
-            int regMap = rlSrc.lowReg << 8 | tReg;
-            selfVerificationMemOpWrapper(cUnit, regMap, &selfVerificationStore);
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = false;
 #endif
             break;
         }
@@ -1945,12 +1494,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
             rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if !defined(WITH_SELF_VERIFICATION)
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = true;
+#endif
             storePair(cUnit, tReg, rlSrc.lowReg, rlSrc.highReg);
-#else
-            int regMap = rlSrc.highReg << 16 | rlSrc.lowReg << 8 | tReg;
-            selfVerificationMemOpWrapper(cUnit, regMap,
-                &selfVerificationStoreDoubleword);
+#if defined(WITH_SELF_VERIFICATION)
+            cUnit->heapMemOp = false;
 #endif
             break;
         }
@@ -4114,6 +3663,10 @@ gen_fallthrough:
     }
 
     dvmCompilerApplyGlobalOptimizations(cUnit);
+
+#if defined(WITH_SELF_VERIFICATION)
+    selfVerificationBranchInsertPass(cUnit);
+#endif
 }
 
 /* Accept the work and start compiling */

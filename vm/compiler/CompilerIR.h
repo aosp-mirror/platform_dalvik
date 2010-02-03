@@ -151,6 +151,7 @@ typedef struct CompilationUnit {
     bool halveInstCount;
     bool executionCount;                // Add code to count trace executions
     bool hasLoop;
+    bool heapMemOp;                     // Mark mem ops for self verification
     int numChainingCells[kChainingCellGap];
     LIR *firstChainingLIR[kChainingCellGap];
     LIR *chainingCellBottom;
