@@ -85,6 +85,11 @@ core_static_libraries := $(sort $(LOCAL_STATIC_LIBRARIES))
 
 include $(CLEAR_VARS)
 
+ifeq ($(TARGET_ARCH),arm)
+# Ignore "note: the mangling of 'va_list' has changed in GCC 4.4"
+LOCAL_CFLAGS += -Wno-psabi
+endif
+
 # Define the rules.
 LOCAL_SRC_FILES := $(core_src_files)
 LOCAL_C_INCLUDES := $(core_c_includes)
