@@ -167,7 +167,7 @@ struct StackSaveArea {
     ((u4*) ((u1*)SAVEAREA_FROM_FP(_fp) - sizeof(u4) * (_argCount)))
 
 /* reserve this many bytes for handling StackOverflowError */
-#define STACK_OVERFLOW_RESERVE  512
+#define STACK_OVERFLOW_RESERVE  768
 
 /*
  * Determine if the frame pointer points to a "break frame".
