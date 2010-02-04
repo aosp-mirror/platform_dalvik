@@ -723,6 +723,8 @@ typedef struct ArmLIR {
     ArmOpCode opCode;
     int operands[4];    // [0..3] = [dest, src1, src2, extra]
     bool isNop;         // LIR is optimized away
+    bool branchInsertSV;// mark for insertion of branch before this instruction,
+                        // used to identify mem ops for self verification mode
     int age;            // default is 0, set lazily by the optimizer
     int size;           // 16-bit unit size (1 for thumb, 1 or 2 for thumb2)
     int aliasInfo;      // For Dalvik register access disambiguation

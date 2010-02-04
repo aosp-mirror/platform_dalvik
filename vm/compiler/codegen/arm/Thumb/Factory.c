@@ -457,6 +457,10 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
             assert(0);
     }
     res = newLIR3(cUnit, opCode, rDest, rBase, rNewIndex);
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        res->branchInsertSV = true;
+#endif
     if (scale)
         freeTemp(cUnit, rNewIndex);
     return (first) ? first : res;
@@ -490,6 +494,10 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
             assert(0);
     }
     res = newLIR3(cUnit, opCode, rSrc, rBase, rNewIndex);
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        res->branchInsertSV = true;
+#endif
     if (scale)
         freeTemp(cUnit, rNewIndex);
     return (first) ? first : res;
@@ -625,7 +633,12 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
                 freeTemp(cUnit, rTmp);
         }
     }
-
+#if defined(WITH_SELF_VERIFICATION)
+    if (load != NULL && cUnit->heapMemOp)
+        load->branchInsertSV = true;
+    if (load2 != NULL && cUnit->heapMemOp)
+        load2->branchInsertSV = true;
+#endif
     return res;
 }
 
@@ -726,6 +739,12 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
         }
         freeTemp(cUnit, rScratch);
     }
+#if defined(WITH_SELF_VERIFICATION)
+    if (store != NULL && cUnit->heapMemOp)
+        store->branchInsertSV = true;
+    if (store2 != NULL && cUnit->heapMemOp)
+        store2->branchInsertSV = true;
+#endif
     return res;
 }
 

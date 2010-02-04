@@ -38,19 +38,6 @@ typedef enum InterpEntry {
 } InterpEntry;
 
 #if defined(WITH_JIT)
-#if defined(WITH_SELF_VERIFICATION)
-/*
- * Note: layout is important.  This record hold saved state information
- * and is used by both C, generated code in the cache, and assembler handlers.
- */
-typedef struct HeapArgSpace {
-//FIXME: This is arm-specific.  Need to be able to redefine this by target
-    int regMap;
-    int coreRegs[16];
-    int fpRegs[32];
-} HeapArgSpace;
-#endif
-
 /*
  * There are six entry points from the compiled code to the interpreter:
  * 1) dvmJitToInterpNormal: find if there is a corresponding compilation for
@@ -186,9 +173,6 @@ typedef struct InterpState {
     int currRunLen;           // Length of run in 16-bit words
     int lastThreshFilter;
     const u2* lastPC;         // Stage the PC first for the threaded interpreter
-#if defined(WITH_SELF_VERIFICATION)
-    struct HeapArgSpace heapArgSpace;
-#endif
     const u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
     JitTraceRun trace[MAX_JIT_RUN_LEN];
     double calleeSave[JIT_CALLEE_SAVE_DOUBLE_COUNT];

@@ -660,6 +660,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
                                int rIndex, int rDest, int scale, OpSize size)
 {
     bool allLowRegs = LOWREG(rBase) && LOWREG(rIndex) && LOWREG(rDest);
+    ArmLIR *load;
     ArmOpCode opCode = kThumbBkpt;
     bool thumbForm = (allLowRegs && (scale == 0));
     int regPtr;
@@ -683,7 +684,12 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
             } else {
                 opRegRegReg(cUnit, kOpAdd, regPtr, rBase, rIndex);
             }
-            return newLIR3(cUnit, opCode, rDest, regPtr, 0);
+            load = newLIR3(cUnit, opCode, rDest, regPtr, 0);
+#if defined(WITH_SELF_VERIFICATION)
+            if (cUnit->heapMemOp)
+                load->branchInsertSV = true;
+#endif
+            return load;
         case kWord:
             opCode = (thumbForm) ? kThumbLdrRRR : kThumb2LdrRRR;
             break;
@@ -703,15 +709,22 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
             assert(0);
     }
     if (thumbForm)
-        return newLIR3(cUnit, opCode, rDest, rBase, rIndex);
+        load = newLIR3(cUnit, opCode, rDest, rBase, rIndex);
     else
-        return newLIR4(cUnit, opCode, rDest, rBase, rIndex, scale);
+        load = newLIR4(cUnit, opCode, rDest, rBase, rIndex, scale);
+
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        load->branchInsertSV = true;
+#endif
+    return load;
 }
 
 static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
                                 int rIndex, int rSrc, int scale, OpSize size)
 {
     bool allLowRegs = LOWREG(rBase) && LOWREG(rIndex) && LOWREG(rSrc);
+    ArmLIR *store;
     ArmOpCode opCode = kThumbBkpt;
     bool thumbForm = (allLowRegs && (scale == 0));
     int regPtr;
@@ -735,7 +748,12 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
             } else {
                 opRegRegReg(cUnit, kOpAdd, regPtr, rBase, rIndex);
             }
-            return newLIR3(cUnit, opCode, rSrc, regPtr, 0);
+            store = newLIR3(cUnit, opCode, rSrc, regPtr, 0);
+#if defined(WITH_SELF_VERIFICATION)
+            if (cUnit->heapMemOp)
+                store->branchInsertSV = true;
+#endif
+            return store;
         case kWord:
             opCode = (thumbForm) ? kThumbStrRRR : kThumb2StrRRR;
             break;
@@ -751,9 +769,15 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
             assert(0);
     }
     if (thumbForm)
-        return newLIR3(cUnit, opCode, rSrc, rBase, rIndex);
+        store = newLIR3(cUnit, opCode, rSrc, rBase, rIndex);
     else
-        return newLIR4(cUnit, opCode, rSrc, rBase, rIndex, scale);
+        store = newLIR4(cUnit, opCode, rSrc, rBase, rIndex, scale);
+
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        store->branchInsertSV = true;
+#endif
+    return store;
 }
 
 /*
@@ -872,6 +896,10 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     if (rBase == rFP) {
         annotateDalvikRegAccess(load, displacement >> 2, true /* isLoad */);
     }
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        load->branchInsertSV = true;
+#endif
     return res;
 }
 
@@ -982,6 +1010,10 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     if (rBase == rFP) {
         annotateDalvikRegAccess(store, displacement >> 2, false /* isLoad */);
     }
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        store->branchInsertSV = true;
+#endif
     return res;
 }
 
