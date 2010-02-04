@@ -520,6 +520,7 @@ void dvmCompilerStateRefresh()
 {
     bool jitActive;
     bool jitActivate;
+    bool needUnchain = false;
 
     dvmLockMutex(&gDvmJit.tableLock);
     jitActive = gDvmJit.pProfTable != NULL;
@@ -527,10 +528,11 @@ void dvmCompilerStateRefresh()
 
     if (jitActivate && !jitActive) {
         gDvmJit.pProfTable = gDvmJit.pProfTableCopy;
-        dvmUnlockMutex(&gDvmJit.tableLock);
     } else if (!jitActivate && jitActive) {
         gDvmJit.pProfTable = NULL;
-        dvmUnlockMutex(&gDvmJit.tableLock);
-        dvmJitUnchainAll();
+        needUnchain = true;
     }
+    dvmUnlockMutex(&gDvmJit.tableLock);
+    if (needUnchain)
+        dvmJitUnchainAll();
 }
