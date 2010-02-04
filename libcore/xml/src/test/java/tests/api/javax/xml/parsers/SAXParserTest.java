@@ -327,7 +327,6 @@ public class SAXParserTest extends TestCase {
         method = "isXIncludeAware",
         args = {}
     )
-    @KnownFailure("Should handle XIncludeAware flag more gracefully")
     public void testIsXIncludeAware() {
         try {
             spf.setXIncludeAware(false);
@@ -1047,7 +1046,6 @@ public class SAXParserTest extends TestCase {
         method = "reset",
         args = { }
     )
-    @KnownFailure("Android DocumentBuilder should implement reset() properly")
     public void testReset() {
         try {
             spf = SAXParserFactory.newInstance();
@@ -1103,7 +1101,6 @@ public class SAXParserTest extends TestCase {
             args = { String.class, Object.class }
         )
     })
-    @KnownFailure("ExpatParser should allow to clear properties")
     public void testSetGetProperty() {
         // Ordinary case
         String validName = "http://xml.org/sax/properties/lexical-handler";

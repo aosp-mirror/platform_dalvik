@@ -1872,7 +1872,6 @@ public class ScannerTest extends TestCase {
         method = "nextBigInteger",
         args = {int.class}
     )
-    @KnownFailure("nextBigInteger method doesn't work properly if input string has Arabic-Indic digits")
     public void test_nextBigIntegerI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(new BigInteger("123"), s.nextBigInteger(10));
@@ -2021,7 +2020,6 @@ public class ScannerTest extends TestCase {
         method = "nextBigInteger",
         args = {}
     )
-    @KnownFailure("nextBigInteger method doesn't work properly if input string has Arabic-Indic digits")
     public void test_nextBigInteger() throws IOException {
         s = new Scanner("123 456");
         assertEquals(new BigInteger("123"), s.nextBigInteger());
@@ -3380,7 +3378,6 @@ public class ScannerTest extends TestCase {
         method = "hasNextBigInteger",
         args = {int.class}
     )
-    @KnownFailure("hasNextBigInteger method doesn't work properly if input string has Arabic-Indic digits")    
     public void test_hasNextBigIntegerI() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextBigInteger(10));
@@ -3586,7 +3583,6 @@ public class ScannerTest extends TestCase {
         method = "hasNextBigInteger",
         args = {}
     )
-    @KnownFailure("nextBigInteger method doesn't work properly if input string has Arabic-Indic digits")
     public void test_hasNextBigInteger() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextBigInteger());
@@ -5452,7 +5448,6 @@ public class ScannerTest extends TestCase {
         method = "findWithinHorizon",
         args = {java.util.regex.Pattern.class, int.class}
     )
-    @KnownFailure("findWithinHorizon method doesn't work properly")
     public void test_findWithinHorizon_LPatternI(){
 
         // This method searches through the input up to the specified search

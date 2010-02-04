@@ -192,7 +192,6 @@ public class Charset_MultiByte_GB2312 extends Charset_AbstractTest {
         method = "functionalCoDec_REPR",
         args = {}
     )
-    @KnownFailure("This Characterset is not properly supported in Android!")
     @Override
     public void test_Decode() throws CharacterCodingException {
         super.test_Decode();
@@ -203,7 +202,6 @@ public class Charset_MultiByte_GB2312 extends Charset_AbstractTest {
         method = "functionalCoDec_REPR",
         args = {}
     )
-    @KnownFailure("This Characterset is not properly supported in Android!")
     @Override
     public void test_Encode() throws CharacterCodingException {
         super.test_Encode();
@@ -214,7 +212,6 @@ public class Charset_MultiByte_GB2312 extends Charset_AbstractTest {
         method = "functionalCoDec_REPR",
         args = {}
     )
-    @KnownFailure("This Characterset is mapped to GBK Android!")
     @Override
     public void test_nameMatch() {
         super.test_nameMatch();

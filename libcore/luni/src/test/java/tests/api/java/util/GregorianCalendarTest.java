@@ -770,8 +770,6 @@ public class GregorianCalendarTest extends junit.framework.TestCase {
         method = "getMinimalDaysInFirstWeek",
         args = {}
     )
-    @KnownFailure("Some difference in timezones and/or locales data"
-            + "Who is right, the CLDR or the RI?")
     public void test_getMinimalDaysInFirstWeek() {
         // Regression for Harmony-1037
         GregorianCalendar g = new GregorianCalendar(TimeZone

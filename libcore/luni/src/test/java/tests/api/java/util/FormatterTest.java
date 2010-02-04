@@ -3165,8 +3165,6 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Formatting of Double.MIN_VALUE works improperly")
-    @AndroidOnly("last case fails on RI. See comment below")
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionE() {
         Formatter f = null;
         final Object[][] tripleE = {
@@ -3400,8 +3398,6 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Formatting of Double.MIN_VALUE works improperly")
-    @AndroidOnly("last case fails on RI. See comment below")
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionG() {
         Formatter f = null;
         final Object[][] tripleG = {
@@ -3652,7 +3648,6 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Formatting of Float.MAX_VALUE works improperly")
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionF() {
         Formatter f = null;
 
@@ -4157,8 +4152,6 @@ public class FormatterTest extends TestCase {
         method = "format",
         args = {java.lang.String.class, java.lang.Object[].class}
     )
-    @KnownFailure("Formatting of BigDecimal lost precission sometimes")
-    @AndroidOnly("last case fails on RI. See comment below")
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigDecimalConversionG() {
         Formatter f = null;
         final Object[][] tripleG = {

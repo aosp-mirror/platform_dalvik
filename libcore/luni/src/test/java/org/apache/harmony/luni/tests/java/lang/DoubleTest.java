@@ -541,8 +541,6 @@ public class DoubleTest extends TestCase {
         method = "parseDouble",
         args = {java.lang.String.class}
     )
-    @KnownFailure("parseDouble returns different value on Android " +
-            "for 0x44b52d02c7e14af6L, it returns 1.0e23.")
     public void test_parseDoubleLjava_lang_String() {
         assertEquals("Incorrect double returned, expected zero.", 0.0, Double
                 .parseDouble("2.4703282292062327208828439643411e-324"), 0.0);

@@ -1419,7 +1419,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("Executed replacement when it should not: class java.lang.String")
     public void test_18_57_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1457,7 +1456,6 @@ public class SerializationStressTest2 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("Executed replacement when it should not: class java.lang.String")
     public void test_18_58_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)

@@ -554,7 +554,6 @@ public class DecimalFormatSymbolsTest extends TestCase {
         method = "setInternationalCurrencySymbol",
         args = {java.lang.String.class}
     )
-    @KnownFailure("getCurrency() doesn't return null for bogus currency code.")
     public void test_setInternationalCurrencySymbolLjava_lang_String() {
         Locale locale = Locale.CANADA;
         DecimalFormatSymbols dfs = ((DecimalFormat) NumberFormat
@@ -743,8 +742,6 @@ public class DecimalFormatSymbolsTest extends TestCase {
         method = "!SerializationGolden",
         args = {}
     )
-    @KnownFailure("Deserialized object is not equal to the original object." +
-            "Test passes on RI.")
     public void test_RIHarmony_compatible() throws Exception {
         ObjectInputStream i = null;
         try {

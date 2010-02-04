@@ -163,7 +163,6 @@ public class SAXParserFactoryTest extends TestCase {
             args = {boolean.class}
         )
     })
-    @KnownFailure("Should handle XIncludeAware flag more gracefully")
     public void test_setIsXIncludeAware() {
         spf.setXIncludeAware(true);
         assertTrue(spf.isXIncludeAware());
@@ -316,7 +315,6 @@ public class SAXParserFactoryTest extends TestCase {
         method = "setNamespaceAware",
         args = {boolean.class}
     )
-    @KnownFailure("Error in namespace feature handling (for ExpatParser)")
     public void test_setNamespaceAwareZ() {
 
         spf.setNamespaceAware(true);

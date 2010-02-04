@@ -418,7 +418,6 @@ public class ManifestTest extends TestCase {
             method = "Manifest",
             args = {InputStream.class}
     )
-    @KnownFailure("CharsetDecoder fails with an IllegalStateException")
     public void testDecoding() throws IOException {
         Manifest m = getManifest(attJarName);
         final byte[] bVendor = new byte[] { (byte) 0xd0, (byte) 0x9C,
