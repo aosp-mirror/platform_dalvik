@@ -1693,46 +1693,41 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     opReg(cUnit, kOpBlx, r2);
 }
 
+/*
+ * To prevent a thread in a monitor wait from blocking the Jit from
+ * resetting the code cache, heavyweight monitor lock will not
+ * be allowed to return to an existing translation.  Instead, we will
+ * handle them by branching to a handler, which will in turn call the
+ * runtime lock routine and then branch directly back to the
+ * interpreter main loop.  Given the high cost of the heavyweight
+ * lock operation, this additional cost should be slight (especially when
+ * considering that we expect the vast majority of lock operations to
+ * use the fast-path thin lock bypass).
+ */
 static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 {
     bool isEnter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
-    flushAllRegs(cUnit);   /* Send everything to home location */
     genExportPC(cUnit, mir);
+    flushAllRegs(cUnit);   /* Send everything to home location */
     RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0);
+    genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     if (isEnter) {
-        loadConstant(cUnit, r2, (int)dvmLockObject);
+        /* Get dPC of next insn */
+        loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
+                 dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_ENTER)));
+#if defined(WITH_DEADLOCK_PREDICTION)
+        genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER_DEBUG);
+#else
+        genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER);
+#endif
     } else {
         loadConstant(cUnit, r2, (int)dvmUnlockObject);
+        /* Do the call */
+        opReg(cUnit, kOpBlx, r2);
+        clobberCallRegs(cUnit);
     }
-    genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
-    /* Do the call */
-    opReg(cUnit, kOpBlx, r2);
-    /*
-     * Refresh Jit's on/off status, which may have changed if we were
-     * sent to VM_MONITOR state above.
-     * TUNING: pointer chase, but must reload following call
-     */
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, ppJitProfTable), r0);
-    loadWordDisp(cUnit, r0, 0, r0);
-    storeWordDisp(cUnit, rGLUE, offsetof(InterpState, pJitProfTable), r0);
-#if defined(WITH_DEADLOCK_PREDICTION)
-    if (isEnter) {
-        loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0);
-        loadWordDisp(cUnit, r0, offsetof(Thread, exception), r1);
-        opRegImm(cUnit, kOpCmp, r1, 0);
-        ArmLIR *branchOver = opCondBranch(cUnit, kArmCondEq);
-        loadConstant(cUnit, r0,
-                     (int) (cUnit->method->insns + mir->offset));
-        genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
-        /* noreturn */
-        ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
-        target->defMask = ENCODE_ALL;
-        branchOver->generic.target = (LIR *) target;
-    }
-#endif
-    clobberCallRegs(cUnit);
 }
 
 /*

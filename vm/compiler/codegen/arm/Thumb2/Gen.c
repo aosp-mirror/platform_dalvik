@@ -231,26 +231,30 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
                 offsetof(Object, lock) >> 2);
     }
     // Note: end of IT block
-
     branch = newLIR2(cUnit, kThumb2Cbz, r2, 0);
 
+    // Export PC (part 1)
+    loadConstant(cUnit, r3, (int) (cUnit->method->insns + mir->offset));
+
     if (enter) {
-        loadConstant(cUnit, r7, (int)dvmLockObject);
+        /* Get dPC of next insn */
+        loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
+                 dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_ENTER)));
+        // Export PC (part 2)
+        newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
+                sizeof(StackSaveArea) -
+                offsetof(StackSaveArea, xtra.currentPc));
+        /* Call template, and don't return */
+        genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER);
     } else {
         loadConstant(cUnit, r7, (int)dvmUnlockObject);
+        // Export PC (part 2)
+        newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
+                sizeof(StackSaveArea) -
+                offsetof(StackSaveArea, xtra.currentPc));
+        opReg(cUnit, kOpBlx, r7);
+        clobberCallRegs(cUnit);
     }
-    genExportPC(cUnit, mir);
-    opReg(cUnit, kOpBlx, r7);
-    /*
-     * Refresh Jit's on/off status, which may have changed if we were
-     * sent to VM_MONITOR state above.
-     * TUNING: pointer chase, but must refresh following return from call
-     */
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, ppJitProfTable), r0);
-    loadWordDisp(cUnit, r0, 0, r0);
-    storeWordDisp(cUnit, rGLUE, offsetof(InterpState, pJitProfTable), r0);
-
-    clobberCallRegs(cUnit);
 
     // Resume here
     target = newLIR0(cUnit, kArmPseudoTargetLabel);
