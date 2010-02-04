@@ -252,7 +252,6 @@ public class DocumentBuilderTest extends TestCase {
         method = "isXIncludeAware",
         args = {}
     )
-    @KnownFailure("Should handle XIncludeAware flag more gracefully")
     public void testIsXIncludeAware() {
         try {
             dbf.setXIncludeAware(false);
@@ -637,7 +636,6 @@ public class DocumentBuilderTest extends TestCase {
         method = "reset",
         args = { }
     )
-    @KnownFailure("Android DocumentBuilder should implement reset() properly")
     public void testReset() {
         // Make sure EntityResolver gets reset
         InputStream source = new ByteArrayInputStream("<a>&foo;</a>".getBytes());
@@ -724,7 +722,6 @@ public class DocumentBuilderTest extends TestCase {
         method = "setEntityResolver",
         args = { EntityResolver.class }
     )
-    @KnownFailure("Android DocumentBuilder should support entity resolving")
     public void testSetEntityResolver() {
         // Ordinary case
         InputStream source = new ByteArrayInputStream("<a>&foo;</a>".getBytes());

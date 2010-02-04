@@ -2849,7 +2849,6 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("deserialization of a date fomat field seems to fail")
     public void test_writeObject_DateFormat_Field() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.text.DateFormat.Field)
@@ -2894,7 +2893,6 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("deserialization of a number fomat field seems to fail")
     public void test_writeObject_NumberFormat_Field() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.text.NumberFormat.Field)

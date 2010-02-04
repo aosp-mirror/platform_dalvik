@@ -280,7 +280,6 @@ public class RuleBasedCollatorTest extends TestCase {
         method = "getCollationElementIterator",
         args = {java.text.CharacterIterator.class}
     )
-    @KnownFailure("ICU seems to miss collation data")
     public void testGetCollationElementIteratorCharacterIterator() throws Exception {
         {
             Locale locale = new Locale("cs", "CZ", "");

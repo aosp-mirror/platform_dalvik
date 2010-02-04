@@ -251,7 +251,6 @@ public class Charset_MultiByte_x_windows_950 extends Charset_AbstractTest {
         method = "functionalCoDec_REPR",
         args = {}
     )
-    @KnownFailure("This Characterset is not properly supported in Android!")
     @Override
     public void test_Encode() throws CharacterCodingException {
         super.test_Encode();
@@ -262,7 +261,6 @@ public class Charset_MultiByte_x_windows_950 extends Charset_AbstractTest {
         method = "functionalCoDec_REPR",
         args = {}
     )
-    @KnownFailure("This Characterset is mapped to Big5 Android!")
     @Override
     public void test_nameMatch() {
         super.test_nameMatch();

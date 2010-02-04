@@ -456,7 +456,6 @@ public class ZipFileTest extends junit.framework.TestCase {
             method = "getInputStream",
             args = {java.util.zip.ZipEntry.class}
     )
-    @KnownFailure("ZipEntry.getInputStream().reset() fails with an IOException")
     public void test_reset() throws IOException {
         // read an uncompressed entry
         ZipEntry zentry = zfile.getEntry("File1.txt");
@@ -503,7 +502,6 @@ public class ZipFileTest extends junit.framework.TestCase {
             method = "getInputStream",
             args = {java.util.zip.ZipEntry.class}
     )
-    @KnownFailure("ZipEntry.getInputStream().reset() fails with an IOException")
     public void test_reset_subtest0() throws IOException {
         // read an uncompressed entry
         ZipEntry zentry = zfile.getEntry("File1.txt");

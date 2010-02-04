@@ -213,7 +213,6 @@ public class PreferencesTest extends TestCase {
             method = "importPreferences",
             args = {java.io.InputStream.class}
         )
-    @KnownFailure("xml validation does not work")
     public void testImportPreferences2() throws Exception {
         InputStream in = PreferencesTest.class
                 .getResourceAsStream("/prefs/java/util/prefs/userprefs-badtype.xml");

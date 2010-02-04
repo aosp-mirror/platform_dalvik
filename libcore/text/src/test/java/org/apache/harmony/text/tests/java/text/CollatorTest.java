@@ -353,7 +353,6 @@ public class CollatorTest extends junit.framework.TestCase {
         method = "setDecomposition",
         args = {int.class}
     )
-    @KnownFailure("uses decomposition even if set to NO_DECOMPOSITION")
     public void test_setDecompositionI() {
         Collator c = Collator.getInstance(Locale.FRENCH);
         c.setStrength(Collator.IDENTICAL);

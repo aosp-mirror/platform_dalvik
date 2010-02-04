@@ -2154,9 +2154,6 @@ public class FileTest extends junit.framework.TestCase {
                 args = {}
         )
     })
-    @KnownFailure("canWrite() returns true even when a file is marked " +
-            "read-only (Test 2). It is also possible to open this file " +
-            "for writing (Test 3).")
     public void test_setReadOnly() {
         // Test for method java.io.File.setReadOnly()
 

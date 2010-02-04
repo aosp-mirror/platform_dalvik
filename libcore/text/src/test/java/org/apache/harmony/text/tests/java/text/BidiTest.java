@@ -1778,7 +1778,6 @@ public class BidiTest extends TestCase {
         method = "createLineBidi",
         args = {int.class, int.class}
     )
-    @KnownFailure("Is this a failure or just a different behaviour of ICU?")
     public void testCreateLineBidi_AndroidFailure() {
         Bidi bidi = new Bidi("str", Bidi.DIRECTION_RIGHT_TO_LEFT);
         bidi.createLineBidi(2, 2);
@@ -1983,7 +1982,6 @@ public class BidiTest extends TestCase {
         method = "getRunLimit",
         args = {int.class}
     )
-    @KnownFailure("Doesn't verify any int value between 0 and getRunCount().")
     public void testGetRunLimit() {
         bd = new Bidi("text", Bidi.DIRECTION_LEFT_TO_RIGHT);
         try {
@@ -2061,7 +2059,6 @@ public class BidiTest extends TestCase {
         method = "Bidi",
         args = {java.text.AttributedCharacterIterator.class}
     )
-    @KnownFailure("Doesn't verify any int value between 0 and getRunCount().")
     public void testBidiConstructor_Iterator() {
         AttributedString paragraph = new AttributedString("text");
         bd = new Bidi(paragraph.getIterator());

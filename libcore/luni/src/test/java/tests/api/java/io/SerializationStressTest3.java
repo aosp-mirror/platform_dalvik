@@ -1483,7 +1483,6 @@ public class SerializationStressTest3 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("Serialization of SimpleDateFormat object fails")
     public void test_18_113_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1552,7 +1551,6 @@ public class SerializationStressTest3 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("Serialization of NumberFormat object fails")
     public void test_18_115_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)

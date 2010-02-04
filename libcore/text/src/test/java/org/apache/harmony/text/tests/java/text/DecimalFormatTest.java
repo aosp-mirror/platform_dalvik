@@ -70,8 +70,6 @@ public class DecimalFormatTest extends TestCase {
         method = "formatToCharacterIterator",
         args = {java.lang.Object.class}
     )
-    @KnownFailure("formatting numbers with more than ~300 digits doesn't work."
-            + " Also the third test doesn't round the string like the RI does")
     public void test_formatToCharacterIterator() throws Exception {
         AttributedCharacterIterator iterator;
         int[] runStarts;
@@ -277,7 +275,6 @@ public class DecimalFormatTest extends TestCase {
         method = "parse",
         args = {java.lang.String.class, java.text.ParsePosition.class}
     )
-    @KnownFailure("Something seems wrong with Android implementation, here!")
     public void test_parseLjava_lang_String_Ljava_text_ParsePosition() {
         DecimalFormat form = (DecimalFormat) DecimalFormat
                 .getInstance(Locale.US);
@@ -1514,7 +1511,6 @@ public class DecimalFormatTest extends TestCase {
         method = "format",
         args = {double.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
     )
-    @KnownFailure("Something seems wrong with Android implementation, here!")
     public void test_formatDLjava_lang_StringBufferLjava_text_FieldPosition() {
         new Support_DecimalFormat(
                 "test_formatDLjava_lang_StringBufferLjava_text_FieldPosition")
@@ -1752,7 +1748,6 @@ public class DecimalFormatTest extends TestCase {
         method = "format",
         args = {long.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
     )
-    @KnownFailure("Something seems wrong with Android implementation, here!")
     public void test_formatJLjava_lang_StringBufferLjava_text_FieldPosition() {
         int failCount = 0;
         BitSet failures = new BitSet();
@@ -1853,10 +1848,6 @@ public class DecimalFormatTest extends TestCase {
         method = "format",
         args = {double.class}
     )
-    @KnownFailure("This test should take into account (inexact) double " +
-            "representation. Fails on Both RI and Android at different places." +
-            "There is ticket for this failure because of parseDouble method " +
-            "returns different values on Android and RI.")
     public void test_formatD() {
         DecimalFormat format = (DecimalFormat) NumberFormat
                 .getInstance(Locale.ENGLISH);
@@ -2144,7 +2135,6 @@ public class DecimalFormatTest extends TestCase {
         method = "parse",
         args = {java.lang.String.class, java.text.ParsePosition.class}
     )
-    @KnownFailure("Something seems wrong with Android implementation, here!")
     public void test_parseLjava_lang_StringLjava_text_ParsePosition() {
         DecimalFormat format = (DecimalFormat) NumberFormat
                 .getNumberInstance(Locale.ENGLISH);

@@ -157,7 +157,6 @@ public class CookieHandlerTest extends TestCase {
             args = {java.net.URI.class, java.util.Map.class}
         )
     })
-    @KnownFailure("Cache is not used")
     public void test_get_put() {
         MockCookieHandler mch = new MockCookieHandler();
         CookieHandler defaultHandler = CookieHandler.getDefault();

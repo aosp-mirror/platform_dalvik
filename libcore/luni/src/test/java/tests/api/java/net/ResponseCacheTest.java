@@ -185,9 +185,6 @@ public class ResponseCacheTest extends TestCase {
         method = "put",
         args = {URI.class, URLConnection.class}
     )
-    @KnownFailure("the call to put is made with a wrong uri."
-            + " The RI calls with http://localhost:<port>/test1,"
-            + " but android only calls with http://localhost:<port>")
     public void test_put() throws Exception {
         // Create test ResponseCache
         TestResponseCache cache = new TestResponseCache(

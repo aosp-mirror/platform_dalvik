@@ -468,10 +468,6 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
         method = "format",
         args = {java.util.Date.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
     )
-    @KnownFailure("SimpleDateFormat.format(Date date, " +
-            "StringBuffer toAppendTo, FieldPosition pos) " +
-            "return incorrect week number for \" W\" pattern. " + 
-            "Also Android doesn't support formatting of PST, EST, ...")
     public void test_formatLjava_util_DateLjava_lang_StringBufferLjava_text_FieldPosition() {
         // Test for method java.lang.StringBuffer
         // java.text.SimpleDateFormat.format(java.util.Date,
@@ -672,7 +668,6 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
             args = {java.lang.String.class}
         )
     })
-    @KnownFailure("Android doesn't support formatting of PST, EST, ...")
     public void test_timeZoneFormatting() {
         // tests specific to formatting of timezones
         Date summerDate = new GregorianCalendar(1999, Calendar.JUNE, 2, 15, 3,

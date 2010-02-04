@@ -319,7 +319,6 @@ public class DocumentBuilderFactoryTest extends TestCase {
             args = {boolean.class}
         )
     })
-    @KnownFailure("Should handle XIncludeAware flag more gracefully")
     public void test_isSetXIncludeAware() {
         dbf.setXIncludeAware(true);
         assertTrue(dbf.isXIncludeAware());

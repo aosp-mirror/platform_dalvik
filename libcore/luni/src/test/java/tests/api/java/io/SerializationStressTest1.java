@@ -1354,7 +1354,6 @@ public class SerializationStressTest1 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
-    @KnownFailure("nested writeReplace is not handled")
     public void test_18_28_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
