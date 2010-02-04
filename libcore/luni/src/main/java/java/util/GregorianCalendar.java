@@ -591,15 +591,14 @@ public class GregorianCalendar extends Calendar {
 
     @Override
     protected void computeFields() {
-        int zoneOffset = getTimeZone().getRawOffset();
-
-        if(!isSet[ZONE_OFFSET]) {
-            fields[ZONE_OFFSET] = zoneOffset;
-        }
+        TimeZone timeZone = getTimeZone();
+        int dstOffset = timeZone.inDaylightTime(new Date(time)) ? timeZone.getDSTSavings() : 0;
+        int zoneOffset = timeZone.getRawOffset();
+        fields[DST_OFFSET] = dstOffset;
+        fields[ZONE_OFFSET] = zoneOffset;
 
         int millis = (int) (time % 86400000);
         int savedMillis = millis;
-        int dstOffset = fields[DST_OFFSET];
         // compute without a change in daylight saving time
         int offset = zoneOffset + dstOffset;
         long newTime = time + offset;
@@ -610,6 +609,8 @@ public class GregorianCalendar extends Calendar {
             newTime = 0x8000000000000000L;
         }
 
+        // FIXME: I don't think this caching ever really gets used, because it requires that the
+        // time zone doesn't use daylight savings (ever). So unless you're somewhere like Taiwan...
         if (isCached) {
             if (millis < 0) {
                 millis += 86400000;
@@ -636,11 +637,11 @@ public class GregorianCalendar extends Calendar {
             fields[AM_PM] = fields[HOUR_OF_DAY] > 11 ? 1 : 0;
             fields[HOUR] = fields[HOUR_OF_DAY] % 12;
 
+            // FIXME: this has to be wrong; useDaylightTime doesn't mean what they think it means!
             long newTimeAdjusted = newTime;
-            if (getTimeZone().useDaylightTime()) {
+            if (timeZone.useDaylightTime()) {
                 // BEGIN android-changed: removed unnecessary cast
-                int dstSavings = (/* (SimpleTimeZone) */ getTimeZone())
-                        .getDSTSavings();
+                int dstSavings = timeZone.getDSTSavings();
                 // END android-changed
                 newTimeAdjusted += (dstOffset == 0) ? dstSavings : -dstSavings;
             }
@@ -665,7 +666,7 @@ public class GregorianCalendar extends Calendar {
         if (!isCached
                 && newTime != 0x7fffffffffffffffL
                 && newTime != 0x8000000000000000L
-                && (!getTimeZone().useDaylightTime() || getTimeZone() instanceof SimpleTimeZone)) {
+                && (!timeZone.useDaylightTime() || timeZone instanceof SimpleTimeZone)) {
             int cacheMillis = 0;
 
             cachedFields[0] = fields[YEAR];
