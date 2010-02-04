@@ -285,36 +285,48 @@ import com.ibm.icu4jni.util.LocaleData;
  * @see GregorianCalendar
  * @see TimeZone
  */
-public abstract class Calendar implements Serializable, Cloneable,
-        Comparable<Calendar> {
+public abstract class Calendar implements Serializable, Cloneable, Comparable<Calendar> {
 
     private static final long serialVersionUID = -1807547505821590642L;
 
     /**
-     * Set to {@code true} when the calendar fields have been set from the time, set to
-     * {@code false} when a field is changed and the fields must be recomputed.
+     * True iff the values in {@code fields[]} correspond to {@code time}. Despite the name, this
+     * is effectively "are the values in fields[] up-to-date?" --- {@code fields[]} may contain
+     * non-zero values and {@code isSet[]} may contain {@code true} values even when
+     * {@code areFieldsSet} is false.
+     * Accessing the fields via {@code get} will ensure the fields are up-to-date.
      */
     protected boolean areFieldsSet;
 
     /**
-     * An integer array of calendar fields. The length is {@code FIELD_COUNT}.
+     * Contains broken-down field values for the current value of {@code time} if
+     * {@code areFieldsSet} is true, or stale data corresponding to some previous value otherwise.
+     * Accessing the fields via {@code get} will ensure the fields are up-to-date.
+     * The array length is always {@code FIELD_COUNT}.
      */
     protected int[] fields;
 
     /**
-     * A boolean array. Each element indicates if the corresponding field has
-     * been set. The length is {@code FIELD_COUNT}.
+     * Whether the corresponding element in {@code field[]} has been set. Initially, these are all
+     * false. The first time the fields are computed, these are set to true and remain set even if
+     * the data becomes stale: you <i>must</i> check {@code areFieldsSet} if you want to know
+     * whether the value is up-to-date.
+     * Note that {@code isSet} is <i>not</i> a safe alternative to accessing this array directly,
+     * and will likewise return stale data!
+     * The array length is always {@code FIELD_COUNT}.
      */
     protected boolean[] isSet;
 
     /**
-     * Set to {@code true} when the time has been set, set to {@code false} when a field is
-     * changed and the time must be recomputed.
+     * Whether {@code time} corresponds to the values in {@code fields[]}. If false, {@code time}
+     * is out-of-date with respect to changes {@code fields[]}.
+     * Accessing the time via {@code getTimeInMillis} will always return the correct value.
      */
     protected boolean isTimeSet;
 
     /**
-     * The time in milliseconds since January 1, 1970.
+     * A time in milliseconds since January 1, 1970. See {@code isTimeSet}.
+     * Accessing the time via {@code getTimeInMillis} will always return the correct value.
      */
     protected long time;
 
@@ -1116,7 +1128,16 @@ public abstract class Calendar implements Serializable, Cloneable,
     }
 
     /**
-     * Returns whether the specified field is set.
+     * Returns whether the specified field is set. Note that the interpretation of "is set" is
+     * somewhat technical. In particular, it does <i>not</i> mean that the field's value is up
+     * to date. If you want to know whether a field contains an up-to-date value, you must also
+     * check {@code areFieldsSet}, making this method somewhat useless unless you're a subclass,
+     * in which case you can access the {@code isSet} array directly.
+     * <p>
+     * A field remains "set" from the first time its value is computed until it's cleared by one
+     * of the {@code clear} methods. Thus "set" does not mean "valid". You probably want to call
+     * {@code get} -- which will update fields as necessary -- rather than try to make use of
+     * this method.
      *
      * @param field
      *            a {@code Calendar} field number.
