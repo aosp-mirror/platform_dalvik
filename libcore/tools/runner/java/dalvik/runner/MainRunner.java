@@ -25,10 +25,10 @@ public final class MainRunner extends TestRunner {
 
     @Override public boolean test() {
         try {
-            Method mainMethod = Class.forName(className)
+            Method mainMethod = Class.forName(testClass)
                     .getDeclaredMethod("main", String[].class);
             mainMethod.invoke(null, new Object[] { new String[0] });
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             ex.printStackTrace();
         }
         return false; // always print main method output

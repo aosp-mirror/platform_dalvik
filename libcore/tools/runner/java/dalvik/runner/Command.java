@@ -129,6 +129,13 @@ final class Command {
         private File workingDirectory;
         private boolean permitNonZeroExitStatus = false;
 
+        public Builder args(Object... objects) {
+            for (Object object : objects) {
+                args(object.toString());
+            }
+            return this;
+        }
+
         public Builder args(String... args) {
             return args(Arrays.asList(args));
         }

@@ -31,7 +31,15 @@ class MainFinder extends NamingPatternCodeFinder {
         return "main";
     }
 
-    @Override protected Class<? extends TestRunner> runnerClass() {
+    public Class<? extends TestRunner> getRunnerClass() {
         return MainRunner.class;
+    }
+
+    public File getRunnerJava() {
+        return new File(DalvikRunner.HOME_JAVA, "dalvik/runner/MainRunner.java");
+    }
+
+    public Classpath getRunnerClasspath() {
+        return new Classpath();
     }
 }

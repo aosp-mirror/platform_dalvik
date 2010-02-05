@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,16 @@
 
 package dalvik.runner;
 
-import com.google.caliper.Runner;
+import java.io.File;
 
 /**
- * Runs a <a href="http://code.google.com/p/caliper/">Caliper</a> benchmark.
+ * A mkdir command.
  */
-public final class CaliperRunner extends TestRunner {
+final class Mkdir {
 
-    @Override public boolean test() {
-        try {
-            Runner.main(testClass);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+    public void mkdirs(File directory) {
+        if (!directory.mkdirs()) {
+            throw new RuntimeException("Could not create directory " + directory);
         }
-        return false; // always print benchmarking results
-    }
-
-    public static void main(String[] args) throws Exception {
-        new CaliperRunner().run();
     }
 }

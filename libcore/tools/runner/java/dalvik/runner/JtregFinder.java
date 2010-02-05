@@ -65,7 +65,7 @@ class JtregFinder implements CodeFinder {
         try {
             logger.fine("scanning " + directoryToScan + " for jtreg tests");
             File workDirectory = new File(localTemp, "JTwork");
-            workDirectory.mkdirs();
+            new Mkdir().mkdirs(workDirectory);
 
             /*
              * This code is capable of extracting test descriptions using jtreg 4.0
@@ -87,7 +87,8 @@ class JtregFinder implements CodeFinder {
                 String testClass = description.getName();
                 result.add(new TestRun(description.getDir(), description.getFile(),
                         testClass, suiteName, testName, qualifiedName,
-                        description.getTitle(), JtregRunner.class));
+                        description.getTitle(),
+                        getRunnerClass(), getRunnerJava(), getRunnerClasspath()));
             }
             return result;
         } catch (Exception jtregFailure) {
@@ -122,5 +123,17 @@ class JtregFinder implements CodeFinder {
      */
     private String escape(String s) {
         return s.replace('/', '.');
+    }
+
+    public Class<? extends TestRunner> getRunnerClass() {
+        return JtregRunner.class;
+    }
+
+    public File getRunnerJava() {
+        return new File(DalvikRunner.HOME_JAVA, "dalvik/runner/JtregRunner.java");
+    }
+
+    public Classpath getRunnerClasspath() {
+        return new Classpath();
     }
 }

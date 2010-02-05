@@ -22,13 +22,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -42,7 +47,7 @@ final class Driver {
     private final File localTemp;
     private final Set<File> expectationFiles;
     private final List<CodeFinder> codeFinders;
-    private final Vm vm;
+    private final Mode mode;
     private final File xmlReportsDirectory;
     private final Map<String, ExpectedResult> expectedResults = new HashMap<String, ExpectedResult>();
 
@@ -52,11 +57,11 @@ final class Driver {
      */
     private int unsupportedTests = 0;
 
-    public Driver(File localTemp, Vm vm, Set<File> expectationFiles,
+    public Driver(File localTemp, Mode mode, Set<File> expectationFiles,
             File xmlReportsDirectory, List<CodeFinder> codeFinders) {
         this.localTemp = localTemp;
         this.expectationFiles = expectationFiles;
-        this.vm = vm;
+        this.mode = mode;
         this.xmlReportsDirectory = xmlReportsDirectory;
         this.codeFinders = codeFinders;
     }
@@ -73,10 +78,7 @@ final class Driver {
      * Builds and executes all tests in the test directory.
      */
     public void buildAndRunAllTests(Collection<File> testFiles) {
-        localTemp.mkdirs();
-
-        final BlockingQueue<TestRun> readyToRun = new ArrayBlockingQueue<TestRun>(4);
-
+        new Mkdir().mkdirs(localTemp);
         Set<TestRun> tests = new LinkedHashSet<TestRun>();
         for (File testFile : testFiles) {
             Set<TestRun> testsForFile = Collections.emptySet();
@@ -94,16 +96,34 @@ final class Driver {
             tests.addAll(testsForFile);
         }
 
+        // compute TestRunner java and classpath to pass to mode.prepare
+        Set<File> testRunnerJava = new HashSet<File>();
+        Classpath testRunnerClasspath = new Classpath();
+        for (final TestRun testRun : tests) {
+            testRunnerJava.add(testRun.getRunnerJava());
+            testRunnerClasspath.addAll(testRun.getRunnerClasspath());
+        }
+
+        // mode.prepare before mode.buildAndInstall to ensure test
+        // runner is built. packaging of activity APK files needs the
+        // test runner along with the test specific files.
+        mode.prepare(testRunnerJava, testRunnerClasspath);
+
         logger.info("Running " + tests.size() + " tests.");
 
         // build and install tests in a background thread. Using lots of
         // threads helps for packages that contain many unsupported tests
-        ExecutorService builders = Threads.threadPerCpuExecutor();
+        final BlockingQueue<Future<TestRun>> readyToRun = new ArrayBlockingQueue<Future<TestRun>>(4);
+
+        ExecutorService executor = Threads.threadPerCpuExecutor();
+        ExecutorCompletionService<TestRun> builders = new ExecutorCompletionService<TestRun>(
+                executor,
+                readyToRun);
         int t = 0;
         for (final TestRun testRun : tests) {
             final int runIndex = t++;
-            builders.submit(new Runnable() {
-                public void run() {
+            builders.submit(new Callable<TestRun>() {
+                public TestRun call() {
                     try {
                         ExpectedResult expectedResult = lookupExpectedResult(testRun);
                         testRun.setExpectedResult(expectedResult);
@@ -114,21 +134,18 @@ final class Driver {
                                     + " because the expectations file says it is unsupported.");
 
                         } else {
-                            vm.buildAndInstall(testRun);
+                            mode.buildAndInstall(testRun);
                             logger.fine("installed test " + runIndex + "; "
                                     + readyToRun.size() + " are ready to run");
                         }
-
-                        readyToRun.put(testRun);
                     } catch (Throwable throwable) {
                         testRun.setResult(Result.ERROR, throwable);
                     }
+                    return testRun;
                 }
             });
         }
-        builders.shutdown();
-
-        vm.prepare();
+        executor.shutdown();
 
         List<TestRun> runs = new ArrayList<TestRun>(tests.size());
         for (int i = 0; i < tests.size(); i++) {
@@ -138,7 +155,10 @@ final class Driver {
             // if it takes 5 minutes for build and install, something is broken
             TestRun testRun;
             try {
-                testRun = readyToRun.poll(5 * 60, TimeUnit.SECONDS);
+                Future<TestRun> future = builders.poll(5 * 60, TimeUnit.SECONDS);
+                testRun = future.get();
+            } catch (ExecutionException e) {
+                throw new RuntimeException("Unexpected exception building test", e);
             } catch (InterruptedException e) {
                 throw new RuntimeException("Unexpected interruption waiting for build and install", e);
             }
@@ -149,7 +169,7 @@ final class Driver {
 
             runs.add(testRun);
             execute(testRun);
-            vm.cleanup(testRun);
+            mode.cleanup(testRun);
         }
 
         if (unsupportedTests > 0) {
@@ -197,7 +217,7 @@ final class Driver {
         }
 
         if (testRun.isRunnable()) {
-            vm.runTest(testRun);
+            mode.runTest(testRun);
         }
 
         printResult(testRun);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,26 @@
 
 package dalvik.runner;
 
-import com.google.caliper.Runner;
+import java.io.File;
 
 /**
- * Runs a <a href="http://code.google.com/p/caliper/">Caliper</a> benchmark.
+ * A rm command.
  */
-public final class CaliperRunner extends TestRunner {
+final class Rm {
 
-    @Override public boolean test() {
-        try {
-            Runner.main(testClass);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return false; // always print benchmarking results
+    public void file(File file) {
+        new Command.Builder()
+                .args("rm")
+                .args("-f")
+                .args(file)
+                .execute();
     }
 
-    public static void main(String[] args) throws Exception {
-        new CaliperRunner().run();
+    public void directoryTree(File directory) {
+        new Command.Builder()
+                .args("rm")
+                .args("-rf")
+                .args(directory)
+                .execute();
     }
 }

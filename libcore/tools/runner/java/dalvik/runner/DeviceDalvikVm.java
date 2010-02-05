@@ -25,6 +25,8 @@ import java.util.logging.Logger;
  */
 final class DeviceDalvikVm extends Vm {
 
+    // TODO: Don't assume we can put files in /system/framework,
+    // so we can run on production devices.
     private static final Classpath RUNTIME_SUPPORT_CLASSPATH = Classpath.of(
             new File("/system/framework/core-tests.jar"),
             new File("/system/framework/caliper.jar"),
@@ -32,67 +34,38 @@ final class DeviceDalvikVm extends Vm {
             new File("/system/framework/jsr305.jar"));
 
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
-    private final File runnerDir;
-    private final File testTemp;
-
-    private final Adb adb = new Adb();
 
     DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar,
-            File localTemp, List<String> additionalVmArgs, boolean clean, File runnerDir) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
-
-        this.runnerDir = runnerDir;
-        this.testTemp = new File(this.runnerDir, "/tests.tmp");
+            File localTemp, List<String> additionalVmArgs,
+            boolean cleanBefore, boolean cleanAfter, File runnerDir) {
+        super(new EnvironmentDevice(cleanBefore, cleanAfter, debugPort, localTemp, runnerDir),
+                timeoutSeconds, sdkJar, additionalVmArgs);
     }
 
-    @Override public void prepare() {
-        adb.rm(runnerDir);
-        adb.mkdir(testTemp);
-        if (debugPort != null) {
-            adb.forwardTcp(debugPort, debugPort);
-        }
-        super.prepare();
+    private EnvironmentDevice getEnvironmentDevice() {
+        return (EnvironmentDevice) environment;
     }
 
-    @Override protected Classpath postCompile(String name, Classpath targetClasses) {
+    @Override protected void postCompileTestRunner() {
+        postCompile("testrunner", environment.testRunnerClassesDir());
+    }
+
+    @Override protected Classpath postCompileTest(TestRun testRun) {
+        return postCompile(testRun.getQualifiedName(), environment.testClassesDir(testRun));
+    }
+
+    private Classpath postCompile(String name, File dir) {
         logger.fine("dex and push " + name);
 
-        // make the local dex
-        File localDex = new File(localTemp, name + ".jar");
-        new Dx().dex(localDex.toString(), targetClasses);
+        // make the local dex (inside a jar)
+        File localDex = new File(dir.getPath() + ".jar");
+        new Dx().dex(localDex, Classpath.of(dir));
 
         // post the local dex to the device
-        File deviceDex = new File(runnerDir, localDex.getName());
-        adb.push(localDex, deviceDex);
+        File deviceDex = new File(getEnvironmentDevice().runnerDir, name + ".jar");
+        getEnvironmentDevice().adb.push(localDex, deviceDex);
 
         return Classpath.of(deviceDex);
-    }
-
-    @Override public void shutdown() {
-        super.shutdown();
-
-        if (clean) {
-            adb.rm(runnerDir);
-        }
-    }
-
-    @Override protected void prepareUserDir(TestRun testRun) {
-        File testClassesDirOnDevice = testClassesDirOnDevice(testRun);
-        adb.mkdir(testClassesDirOnDevice);
-        adb.push(testRun.getTestDirectory(), testClassesDirOnDevice);
-        testRun.setUserDir(testClassesDirOnDevice);
-    }
-
-    @Override public void cleanup(TestRun testRun) {
-        super.cleanup(testRun);
-
-        if (clean) {
-            adb.rm(testClassesDirOnDevice(testRun));
-        }
-    }
-
-    private File testClassesDirOnDevice(TestRun testRun) {
-        return new File(runnerDir, testRun.getQualifiedName());
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder(
@@ -105,7 +78,7 @@ final class DeviceDalvikVm extends Vm {
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US")
                 .vmArgs("-Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks")
-                .temp(testTemp);
+                .temp(getEnvironmentDevice().testTemp);
     }
 
     @Override protected Classpath getRuntimeSupportClasspath() {

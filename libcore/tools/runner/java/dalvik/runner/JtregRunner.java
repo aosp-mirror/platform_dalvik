@@ -27,8 +27,8 @@ public final class JtregRunner extends TestRunner {
 
     @Override public void prepareTest() {
         try {
-            Class<?> testClass = Class.forName(className);
-            main = testClass.getMethod("main", String[].class);
+            Class<?> test = Class.forName(testClass);
+            main = test.getMethod("main", String[].class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
