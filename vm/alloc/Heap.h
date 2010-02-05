@@ -31,7 +31,7 @@ bool dvmHeapStartup(void);
  * This needs to be called before the first allocation or GC that
  * happens after forking.
  */
-bool dvmHeapStartupAfterZygote(void);
+void dvmHeapStartupAfterZygote(void);
 
 /*
  * Tear down the GC heap.

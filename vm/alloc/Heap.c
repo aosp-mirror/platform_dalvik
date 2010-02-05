@@ -111,14 +111,12 @@ fail:
     return false;
 }
 
-bool dvmHeapStartupAfterZygote()
+void dvmHeapStartupAfterZygote()
 {
     /* Update our idea of the last GC start time so that we
      * don't use the last time that Zygote happened to GC.
      */
     gDvm.gcHeap->gcStartTime = dvmGetRelativeTimeUsec();
-
-    return dvmHeapSourceStartupAfterZygote();
 }
 
 void dvmHeapShutdown()

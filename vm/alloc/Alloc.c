@@ -47,7 +47,8 @@ bool dvmGcStartupAfterZygote(void)
     if (!dvmHeapWorkerStartup()) {
         return false;
     }
-    return dvmHeapStartupAfterZygote();
+    dvmHeapStartupAfterZygote();
+    return true;
 }
 
 /*

@@ -453,29 +453,6 @@ fail:
 }
 
 /*
- * If the HeapSource was created while in zygote mode, this
- * will create a new heap for post-zygote allocations.
- * Having a separate heap should maximize the number of pages
- * that a given app_process shares with the zygote process.
- */
-bool
-dvmHeapSourceStartupAfterZygote()
-{
-    HeapSource *hs = gHs; // use a local to avoid the implicit "volatile"
-
-    HS_BOILERPLATE();
-
-    assert(!gDvm.zygote);
-
-    if (hs->sawZygote) {
-        /* Create a new heap for post-zygote allocations.
-         */
-        return addNewHeap(hs, NULL, 0);
-    }
-    return true;
-}
-
-/*
  * This is called while in zygote mode, right before we fork() for the
  * first time.  We create a heap for all future zygote process allocations,
  * in an attempt to avoid touching pages in the zygote heap.  (This would

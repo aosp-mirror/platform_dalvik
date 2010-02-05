@@ -25,21 +25,13 @@
 
 /* The largest number of separate heaps we can handle.
  */
-#define HEAP_SOURCE_MAX_HEAP_COUNT 3
+#define HEAP_SOURCE_MAX_HEAP_COUNT 2
 
 /*
  * Initializes the heap source; must be called before any other
  * dvmHeapSource*() functions.
  */
 GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize);
-
-/*
- * If the HeapSource was created while in zygote mode, this
- * will create a new heap for post-zygote allocations.
- * Having a separate heap should maximize the number of pages
- * that a given app_process shares with the zygote process.
- */
-bool dvmHeapSourceStartupAfterZygote(void);
 
 /*
  * If the HeapSource was created while in zygote mode, this
