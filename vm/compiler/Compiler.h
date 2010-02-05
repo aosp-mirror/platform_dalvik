@@ -19,7 +19,6 @@
 #ifndef _DALVIK_VM_COMPILER
 #define _DALVIK_VM_COMPILER
 
-#define CODE_CACHE_SIZE                 1024*1024
 #define MAX_JIT_RUN_LEN                 64
 #define COMPILER_WORK_QUEUE_SIZE        100
 #define COMPILER_IC_PATCH_QUEUE_SIZE    64

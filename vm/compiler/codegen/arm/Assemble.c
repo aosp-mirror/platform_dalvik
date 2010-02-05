@@ -1216,7 +1216,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
 
     cUnit->totalSize = offset;
 
-    if (gDvmJit.codeCacheByteUsed + cUnit->totalSize > CODE_CACHE_SIZE) {
+    if (gDvmJit.codeCacheByteUsed + cUnit->totalSize > gDvmJit.codeCacheSize) {
         gDvmJit.codeCacheFull = true;
         cUnit->baseAddr = NULL;
         return;
@@ -1504,7 +1504,7 @@ void dvmCompilerPatchInlineCache(void)
 
     /* Initialize the min/max address range */
     minAddr = (PredictedChainingCell *)
-        ((char *) gDvmJit.codeCache + CODE_CACHE_SIZE);
+        ((char *) gDvmJit.codeCache + gDvmJit.codeCacheSize);
     maxAddr = (PredictedChainingCell *) gDvmJit.codeCache;
 
     for (i = 0; i < gDvmJit.compilerICPatchIndex; i++) {

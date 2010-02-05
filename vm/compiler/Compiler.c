@@ -126,7 +126,7 @@ bool dvmCompilerSetupCodeCache(void)
     extern void dmvCompilerTemplateEnd(void);
 
     /* Allocate the code cache */
-    gDvmJit.codeCache = mmap(0, CODE_CACHE_SIZE,
+    gDvmJit.codeCache = mmap(0, gDvmJit.codeCacheSize,
                           PROT_READ | PROT_WRITE | PROT_EXEC,
                           MAP_PRIVATE | MAP_ANON, -1, 0);
     if (gDvmJit.codeCache == MAP_FAILED) {

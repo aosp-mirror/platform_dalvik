@@ -194,3 +194,6 @@ unspecified registers or condition codes.
  */
 #include "../common/asm-constants.h"
 
+#if defined(WITH_JIT)
+#include "../common/jit-config.h"
+#endif

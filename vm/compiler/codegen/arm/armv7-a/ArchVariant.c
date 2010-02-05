@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 /*
  * Determine the initial instruction set to be used for this trace.
  * Later components may decide to change this.
@@ -48,6 +47,7 @@ bool dvmCompilerArchVariantInit(void)
     gDvmJit.jitTableSize = 1 << 12; // 4096
     gDvmJit.jitTableMask = gDvmJit.jitTableSize - 1;
     gDvmJit.threshold = 40;
+    gDvmJit.codeCacheSize = 1024*1024;
 
 #if defined(WITH_SELF_VERIFICATION)
     /* Force into blocking */

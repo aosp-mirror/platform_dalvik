@@ -201,6 +201,9 @@ unspecified registers or condition codes.
  */
 #include "../common/asm-constants.h"
 
+#if defined(WITH_JIT)
+#include "../common/jit-config.h"
+#endif
 
 /* File: armv5te/platform.S */
 /*
@@ -9187,11 +9190,11 @@ common_testUpdateProfile:
 
 common_updateProfile:
     eor     r3,rPC,rPC,lsr #12 @ cheap, but fast hash function
-    lsl     r3,r3,#21          @ shift out excess 2047
-    ldrb    r1,[r0,r3,lsr #21] @ get counter
+    lsl     r3,r3,#(32 - JIT_PROF_SIZE_LOG_2)          @ shift out excess bits
+    ldrb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ get counter
     GET_INST_OPCODE(ip)
     subs    r1,r1,#1           @ decrement counter
-    strb    r1,[r0,r3,lsr #21] @ and store it
+    strb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ and store it
     GOTO_OPCODE_IFNE(ip)       @ if not threshold, fallthrough otherwise */
 
 /*
@@ -9202,7 +9205,7 @@ common_updateProfile:
  */
     GET_JIT_THRESHOLD(r1)
     ldr     r10, [rGLUE, #offGlue_self] @ callee saved r10 <- glue->self
-    strb    r1,[r0,r3,lsr #21] @ reset counter
+    strb    r1,[r0,r3,lsr #(32 - JIT_PROF_SIZE_LOG_2)] @ reset counter
     EXPORT_PC()
     mov     r0,rPC
     bl      dvmJitGetCodeAddr           @ r0<- dvmJitGetCodeAddr(rPC)
