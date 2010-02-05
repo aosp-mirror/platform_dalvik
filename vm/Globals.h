@@ -655,6 +655,7 @@ typedef enum NoChainExits {
     kInlineCacheMiss = 0,
     kCallsiteInterpreted,
     kSwitchOverflow,
+    kHeavyweightMonitor,
     kNoChainExitLast,
 } NoChainExits;
 
@@ -786,6 +787,9 @@ struct DvmJitGlobals {
     /* Spin when error is detected, volatile so GDB can reset it */
     volatile bool selfVerificationSpin;
 #endif
+
+    /* Framework or stand-alone? */
+    bool runningInAndroidFramework;
 
     /* Place arrays at the end to ease the display in gdb sessions */
 

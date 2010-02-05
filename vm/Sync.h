@@ -146,9 +146,10 @@ struct Object* dvmGetMonitorObject(Monitor* mon);
 bool dvmHoldsLock(struct Thread* thread, struct Object* obj);
 
 /*
- * Converts the given relative time into an absolute time
+ * Relative timed wait on condition
  */
-void dvmAbsoluteTime(s8 msec, s4 nsec, struct timespec *ts);
+int dvmRelativeCondWait(pthread_cond_t* cond, pthread_mutex_t* mutex,
+                         s8 msec, s4 nsec);
 
 /*
  * Debug.

@@ -844,6 +844,9 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             gDvm.noQuitHandler = true;
         } else if (strcmp(argv[i], "-Xzygote") == 0) {
             gDvm.zygote = true;
+#if defined(WITH_JIT)
+            gDvmJit.runningInAndroidFramework = true;
+#endif
         } else if (strncmp(argv[i], "-Xdexopt:", 9) == 0) {
             if (strcmp(argv[i] + 9, "none") == 0)
                 gDvm.dexOptMode = OPTIMIZE_MODE_NONE;

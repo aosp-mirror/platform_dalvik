@@ -1399,6 +1399,9 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER:
     ldr     r2, .LdvmJitToInterpNoChain
     str     r0, [rGLUE, #offGlue_pJitProfTable]
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
+#if defined(EXIT_STATS)
+    mov     r0, #kHeavyweightMonitor
+#endif
     bx      r2
 
 
@@ -1435,6 +1438,9 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     bx      r2
 1:
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
+#if defined(EXIT_STATS)
+    mov     r0, #kHeavyweightMonitor
+#endif
     ldr     pc, .LdvmJitToInterpNoChain
 
     .size   dvmCompilerTemplateStart, .-dvmCompilerTemplateStart

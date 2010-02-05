@@ -188,17 +188,10 @@ static void Dalvik_dalvik_system_VMRuntime_startJitCompilation(const u4* args,
     JValue* pResult)
 {
 #if defined(WITH_JIT)
-#if 0
-    /*
-     * TODO - experiment with the timing.
-     * The tentative plan is onResume() will invoke the callback.
-     */
     dvmLockMutex(&gDvmJit.compilerLock);
     pthread_cond_signal(&gDvmJit.compilerQueueActivity);
     dvmUnlockMutex(&gDvmJit.compilerLock);
 #endif
-#endif
-
     RETURN_VOID();
 }
 

@@ -504,7 +504,7 @@ static void waitSetRemove(Monitor *mon, Thread *thread)
 /*
  * Converts the given relative waiting time into an absolute time.
  */
-void dvmAbsoluteTime(s8 msec, s4 nsec, struct timespec *ts)
+void absoluteTime(s8 msec, s4 nsec, struct timespec *ts)
 {
     s8 endSec;
 
@@ -531,6 +531,21 @@ void dvmAbsoluteTime(s8 msec, s4 nsec, struct timespec *ts)
         ts->tv_sec++;
         ts->tv_nsec -= 1000000000L;
     }
+}
+
+int dvmRelativeCondWait(pthread_cond_t* cond, pthread_mutex_t* mutex,
+                        s8 msec, s4 nsec)
+{
+    int ret;
+    struct timespec ts;
+    absoluteTime(msec, nsec, &ts);
+#if defined(HAVE_TIMEDWAIT_MONOTONIC)
+    ret = pthread_cond_timedwait_monotonic(cond, mutex, &ts);
+#else
+    ret = pthread_cond_timedwait(cond, mutex, &ts);
+#endif
+    assert(ret == 0 || ret == ETIMEDOUT);
+    return ret;
 }
 
 /*
@@ -589,7 +604,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     if (msec == 0 && nsec == 0) {
         timed = false;
     } else {
-        dvmAbsoluteTime(msec, nsec, &ts);
+        absoluteTime(msec, nsec, &ts);
         timed = true;
     }
 

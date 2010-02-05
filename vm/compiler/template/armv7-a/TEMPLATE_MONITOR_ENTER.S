@@ -25,5 +25,8 @@
     ldr     r2, .LdvmJitToInterpNoChain
     str     r0, [rGLUE, #offGlue_pJitProfTable]
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
+#if defined(EXIT_STATS)
+    mov     r0, #kHeavyweightMonitor
+#endif
     bx      r2
 
