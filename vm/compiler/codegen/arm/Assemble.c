@@ -1928,6 +1928,10 @@ static int selfVerificationLoad(int addr, int size)
             break;
         case kSVWord:
             data = *((u4*) addr);
+        default:
+            LOGE("*** ERROR: BAD SIZE IN selfVerificationLoad");
+            data = 0;
+            dvmAbort();
     }
 
     //LOGD("*** HEAP LOAD: Addr: 0x%x Data: 0x%x Size: %d", addr, data, size);
@@ -2003,6 +2007,9 @@ static void selfVerificationStore(int addr, int data, int size)
             break;
         case kSVWord:
             *((u4*) addr) = data;
+        default:
+            LOGE("*** ERROR: BAD SIZE IN selfVerificationSave");
+            dvmAbort();
     }
 }
 
@@ -2201,8 +2208,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                     if (insn & 0x400000) rt |= 0x10;
                     rt = rt << 1;
                 } else {
-                    LOGD("*** ERROR: UNRECOGNIZED VECTOR MEM OP");
-                    assert(0);
+                    LOGE("*** ERROR: UNRECOGNIZED VECTOR MEM OP");
                     dvmAbort();
                 }
                 rt += 14;
@@ -2228,8 +2234,8 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                 offset = imm12;
                 break;
             default:
-                LOGD("*** ERROR: UNRECOGNIZED MEM OP");
-                assert(0);
+                LOGE("*** ERROR: UNRECOGNIZED MEM OP");
+                offset = 0;
                 dvmAbort();
         }
 
@@ -2341,8 +2347,8 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                 offset = imm;
                 break;
             default:
-                LOGD("*** ERROR: UNRECOGNIZED MEM OP");
-                assert(0);
+                LOGE("*** ERROR: UNRECOGNIZED MEM OP");
+                offset = 0;
                 dvmAbort();
         }
 
