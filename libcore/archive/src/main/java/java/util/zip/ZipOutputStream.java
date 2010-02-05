@@ -54,8 +54,6 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      */
     public static final int STORED = 0;
 
-    static final int ZIPDataDescriptorFlag = 8;
-
     static final int ZIPLocalHeaderVersionNeeded = 20;
 
     private String comment;
@@ -141,11 +139,12 @@ public class ZipOutputStream extends DeflaterOutputStream implements
             writeLong(out, currentEntry.size = def.getTotalIn());
         }
         // Update the CentralDirectory
+        // http://www.pkware.com/documents/casestudies/APPNOTE.TXT
+        int flags = currentEntry.getMethod() == STORED ? 0 : GPBF_DATA_DESCRIPTOR_FLAG;
         writeLong(cDir, CENSIG);
         writeShort(cDir, ZIPLocalHeaderVersionNeeded); // Version created
         writeShort(cDir, ZIPLocalHeaderVersionNeeded); // Version to extract
-        writeShort(cDir, currentEntry.getMethod() == STORED ? 0
-                : ZIPDataDescriptorFlag);
+        writeShort(cDir, flags);
         writeShort(cDir, currentEntry.getMethod());
         writeShort(cDir, currentEntry.time);
         writeShort(cDir, currentEntry.modDate);
@@ -283,16 +282,23 @@ public class ZipOutputStream extends DeflaterOutputStream implements
         if (currentEntry.getMethod() == -1) {
             currentEntry.setMethod(compressMethod);
         }
+        // BEGIN android-changed
+        // Local file header.
+        // http://www.pkware.com/documents/casestudies/APPNOTE.TXT
+        int flags = currentEntry.getMethod() == STORED ? 0 : GPBF_DATA_DESCRIPTOR_FLAG;
+        // Java always outputs UTF-8 filenames. (Before Java 7, the RI didn't set this flag and used
+        // modified UTF-8. From Java 7, it sets this flag and uses normal UTF-8.)
+        flags |= GPBF_UTF8_FLAG;
         writeLong(out, LOCSIG); // Entry header
         writeShort(out, ZIPLocalHeaderVersionNeeded); // Extraction version
-        writeShort(out, currentEntry.getMethod() == STORED ? 0
-                : ZIPDataDescriptorFlag);
+        writeShort(out, flags);
         writeShort(out, currentEntry.getMethod());
         if (currentEntry.getTime() == -1) {
             currentEntry.setTime(System.currentTimeMillis());
         }
         writeShort(out, currentEntry.time);
         writeShort(out, currentEntry.modDate);
+        // END android-changed
 
         if (currentEntry.getMethod() == STORED) {
             if (currentEntry.size == -1) {

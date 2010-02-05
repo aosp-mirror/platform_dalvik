@@ -49,8 +49,6 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     static final int STORED = 0;
 
-    static final int ZIPDataDescriptorFlag = 8;
-
     static final int ZIPLocalHeaderVersionNeeded = 20;
 
     private boolean entriesEnd = false;
@@ -236,7 +234,7 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
             throw new ZipException(Messages.getString("archive.22")); //$NON-NLS-1$
         }
         int flags = getShort(hdrBuf, LOCFLG - LOCVER);
-        hasDD = ((flags & ZIPDataDescriptorFlag) == ZIPDataDescriptorFlag);
+        hasDD = ((flags & GPBF_DATA_DESCRIPTOR_FLAG) == GPBF_DATA_DESCRIPTOR_FLAG);
         int cetime = getShort(hdrBuf, LOCTIM - LOCVER);
         int cemodDate = getShort(hdrBuf, LOCTIM - LOCVER + 2);
         int cecompressionMethod = getShort(hdrBuf, LOCHOW - LOCVER);
