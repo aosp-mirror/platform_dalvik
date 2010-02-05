@@ -341,66 +341,75 @@ public class DexData {
     }
 
     /**
-     * Returns an array with all of the field references that don't
-     * correspond to classes in the DEX file.
+     * Returns an array with all of the class references that don't
+     * correspond to classes in the DEX file.  Each class reference has
+     * a list of the referenced fields and methods associated with
+     * that class.
      */
-    public FieldRef[] getExternalFieldReferences() {
-        // get a count
+    public ClassRef[] getExternalReferences() {
+        // create a sparse array of ClassRef that parallels mTypeIds
+        ClassRef[] sparseRefs = new ClassRef[mTypeIds.length];
+
+        // create entries for all externally-referenced classes
         int count = 0;
-        for (int i = 0; i < mFieldIds.length; i++) {
-            if (!mTypeIds[mFieldIds[i].classIdx].internal)
+        for (int i = 0; i < mTypeIds.length; i++) {
+            if (!mTypeIds[i].internal) {
+                sparseRefs[i] =
+                    new ClassRef(mStrings[mTypeIds[i].descriptorIdx]);
                 count++;
-        }
-
-        //System.out.println("count is " + count + " of " + mFieldIds.length);
-
-        FieldRef[] fieldRefs = new FieldRef[count];
-        count = 0;
-        for (int i = 0; i < mFieldIds.length; i++) {
-            if (!mTypeIds[mFieldIds[i].classIdx].internal) {
-                FieldIdItem fieldId = mFieldIds[i];
-                fieldRefs[count++] =
-                    new FieldRef(classNameFromTypeIndex(fieldId.classIdx),
-                                 classNameFromTypeIndex(fieldId.typeIdx),
-                                 mStrings[fieldId.nameIdx]);
             }
         }
 
-        assert count == fieldRefs.length;
+        // add fields and methods to the appropriate class entry
+        addExternalFieldReferences(sparseRefs);
+        addExternalMethodReferences(sparseRefs);
 
-        return fieldRefs;
+        // crunch out the sparseness
+        ClassRef[] classRefs = new ClassRef[count];
+        int idx = 0;
+        for (int i = 0; i < mTypeIds.length; i++) {
+            if (sparseRefs[i] != null)
+                classRefs[idx++] = sparseRefs[i];
+        }
+
+        assert idx == count;
+
+        return classRefs;
     }
 
     /**
-     * Returns an array with all of the method references that don't
-     * correspond to classes in the DEX file.
+     * Runs through the list of field references, inserting external
+     * references into the appropriate ClassRef.
      */
-    public MethodRef[] getExternalMethodReferences() {
-        // get a count
-        int count = 0;
-        for (int i = 0; i < mMethodIds.length; i++) {
-            if (!mTypeIds[mMethodIds[i].classIdx].internal)
-                count++;
+    private void addExternalFieldReferences(ClassRef[] sparseRefs) {
+        for (int i = 0; i < mFieldIds.length; i++) {
+            if (!mTypeIds[mFieldIds[i].classIdx].internal) {
+                FieldIdItem fieldId = mFieldIds[i];
+                FieldRef newFieldRef = new FieldRef(
+                        classNameFromTypeIndex(fieldId.classIdx),
+                        classNameFromTypeIndex(fieldId.typeIdx),
+                        mStrings[fieldId.nameIdx]);
+                sparseRefs[mFieldIds[i].classIdx].addField(newFieldRef);
+            }
         }
+    }
 
-        //System.out.println("count is " + count + " of " + mMethodIds.length);
-
-        MethodRef[] methodRefs = new MethodRef[count];
-        count = 0;
+    /**
+     * Runs through the list of method references, inserting external
+     * references into the appropriate ClassRef.
+     */
+    private void addExternalMethodReferences(ClassRef[] sparseRefs) {
         for (int i = 0; i < mMethodIds.length; i++) {
             if (!mTypeIds[mMethodIds[i].classIdx].internal) {
                 MethodIdItem methodId = mMethodIds[i];
-                methodRefs[count++] =
-                    new MethodRef(classNameFromTypeIndex(methodId.classIdx),
-                                 argArrayFromProtoIndex(methodId.protoIdx),
-                                 returnTypeFromProtoIndex(methodId.protoIdx),
-                                 mStrings[methodId.nameIdx]);
+                MethodRef newMethodRef = new MethodRef(
+                        classNameFromTypeIndex(methodId.classIdx),
+                        argArrayFromProtoIndex(methodId.protoIdx),
+                        returnTypeFromProtoIndex(methodId.protoIdx),
+                        mStrings[methodId.nameIdx]);
+                sparseRefs[mMethodIds[i].classIdx].addMethod(newMethodRef);
             }
         }
-
-        assert count == methodRefs.length;
-
-        return methodRefs;
     }
 
 
