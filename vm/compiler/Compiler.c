@@ -378,32 +378,22 @@ static void *compilerThreadStart(void *arg)
     dvmChangeStatus(NULL, THREAD_VMWAIT);
 
     /*
-     * Wait a little before recieving translation requests on the assumption
-     * that process start-up code isn't worth compiling.
+     * If we're not running stand-alone, wait a little before
+     * recieving translation requests on the assumption that process start
+     * up code isn't worth compiling.  We'll resume when the framework
+     * signals us that the first screen draw has happened, or the timer
+     * below expires (to catch daemons).
      */
-
-    dvmLockMutex(&gDvmJit.compilerLock);
-    /*
-     * TUNING: once framework is calling VMRuntime.startJitCompilation,
-     * experiment with the delay time (and perhaps have target-dependent
-     * values?
-     */
-    dvmAbsoluteTime(1000, 0, &ts);
-#if defined(HAVE_TIMEDWAIT_MONOTONIC)
-    ret = pthread_cond_timedwait_monotonic(&gDvmJit.compilerQueueActivity,
-                                           &gDvmJit.compilerLock, &ts);
-#else
-    ret = pthread_cond_timedwait(&gDvmJit.compilerQueueActivity,
-                                 &gDvmJit.compilerLock, &ts);
-#endif
-    assert(ret == 0 || ret == ETIMEDOUT);
-
-    if (gDvmJit.haltCompilerThread) {
+    if (gDvmJit.runningInAndroidFramework) {
+        dvmLockMutex(&gDvmJit.compilerLock);
+        // TUNING: experiment with the delay & perhaps make it target-specific
+        dvmRelativeCondWait(&gDvmJit.compilerQueueActivity,
+                             &gDvmJit.compilerLock, 3000, 0);
         dvmUnlockMutex(&gDvmJit.compilerLock);
-        return NULL;
+        if (gDvmJit.haltCompilerThread) {
+             return NULL;
+        }
     }
-
-    dvmUnlockMutex(&gDvmJit.compilerLock);
 
     compilerThreadStartup();
 

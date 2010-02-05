@@ -268,6 +268,7 @@ MTERP_CONSTANT(STRING_FIELDOFF_COUNT,    20)
 MTERP_CONSTANT(kInlineCacheMiss,        0)
 MTERP_CONSTANT(kCallsiteInterpreted,    1)
 MTERP_CONSTANT(kSwitchOverflow,         2)
+MTERP_CONSTANT(kHeavyweightMonitor,     3)
 
 /* Size of callee save area */
 MTERP_CONSTANT(JIT_CALLEE_SAVE_DOUBLE_COUNT,   8)
