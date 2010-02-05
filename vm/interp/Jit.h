@@ -20,8 +20,7 @@
 #define _DALVIK_INTERP_JIT
 
 #include "InterpDefs.h"
-
-#define JIT_PROF_SIZE 2048
+#include "mterp/common/jit-config.h"
 
 #define JIT_MAX_TRACE_LEN 100
 

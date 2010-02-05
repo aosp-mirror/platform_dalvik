@@ -699,6 +699,9 @@ struct DvmJitGlobals {
     /* How many entries in the JitEntryTable are in use */
     unsigned int jitTableEntriesUsed;
 
+    /* Bytes allocated for the code cache */
+    unsigned int codeCacheSize;
+
     /* Trigger for trace selection */
     unsigned short threshold;
 
