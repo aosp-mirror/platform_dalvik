@@ -400,20 +400,16 @@ public class ZipEntry implements ZipConstants, Cloneable {
         }
 
         try {
-            /*
-             * The actual character set is "IBM Code Page 437".  As of
-             * Sep 2006, the Zip spec (APPNOTE.TXT) supports UTF-8.  When
-             * bit 11 of the GP flags field is set, the file name and
-             * comment fields are UTF-8.
-             *
-             * TODO: add correct UTF-8 support.
-             */
-            name = new String(nameBytes, "ISO-8859-1");
+            // BEGIN android-changed
+            // The RI has always assumed UTF-8. (If GPBF_UTF8_FLAG isn't set, the encoding is
+            // actually IBM-437.)
+            name = new String(nameBytes, "UTF-8");
             if (commentBytes != null) {
-                comment = new String(commentBytes, "ISO-8859-1");
+                comment = new String(commentBytes, "UTF-8");
             } else {
                 comment = null;
             }
+            // END android-changed
         } catch (UnsupportedEncodingException uee) {
             throw new InternalError(uee.getMessage());
         }
