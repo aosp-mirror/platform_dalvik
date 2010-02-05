@@ -468,9 +468,11 @@ public class ZipFileTest extends junit.framework.TestCase {
         r2 = is.read(rbuf2);
         assertEquals(rbuf2.length, r2);
 
-        is.reset();
-        r2 = is.read(rbuf2);
-        assertEquals(rbuf2.length, r2);
+        try {
+            is.reset();
+            fail();
+        } catch (IOException expected) {
+        }
         is.close();
 
         // read a compressed entry
@@ -479,18 +481,21 @@ public class ZipFileTest extends junit.framework.TestCase {
         is = zfile.getInputStream(zentry2);
         r1 = is.read(rbuf3);
         assertEquals(4183, r1);
-        is.reset();
-
-        r1 = is.read(rbuf3);
-        assertEquals(4183, r1);
+        try {
+            is.reset();
+            fail();
+        } catch (IOException expected) {
+        }
         is.close();
 
         is = zfile.getInputStream(zentry2);
         r1 = is.read(rbuf3, 0, 3000);
         assertEquals(3000, r1);
-        is.reset();
-        r1 = is.read(rbuf3, 0, 3000);
-        assertEquals(3000, r1);
+        try {
+            is.reset();
+            fail();
+        } catch (IOException expected) {
+        }
         is.close();
     }
 
@@ -515,10 +520,12 @@ public class ZipFileTest extends junit.framework.TestCase {
         assertEquals(8, r);
         assertEquals(-1, is.read());
 
-        is.reset();
-        r = is.read(rbuf2);
-        assertEquals(8, r);
-        assertEquals(-1, is.read());
+        try {
+            is.reset();
+            fail();
+        } catch (IOException expected) {
+        }
+
         is.close();
 
         // read a compressed entry
@@ -532,10 +539,12 @@ public class ZipFileTest extends junit.framework.TestCase {
         assertEquals(1183, r);
         assertEquals(-1, is.read());
 
-        is.reset();
-        r = is.read(rbuf3);
-        assertEquals(1183, r);
-        assertEquals(-1, is.read());
+        try {
+            is.reset();
+            fail();
+        } catch (IOException expected) {
+        }
+
         is.close();
     }
 
