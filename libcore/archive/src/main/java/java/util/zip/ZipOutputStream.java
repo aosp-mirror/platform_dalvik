@@ -140,7 +140,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
         }
         // Update the CentralDirectory
         // http://www.pkware.com/documents/casestudies/APPNOTE.TXT
-        int flags = currentEntry.getMethod() == STORED ? 0 : GPBF_DATA_DESCRIPTOR_FLAG;
+        int flags = currentEntry.getMethod() == STORED ? 0 : ZipFile.GPBF_DATA_DESCRIPTOR_FLAG;
         writeLong(cDir, CENSIG);
         writeShort(cDir, ZIPLocalHeaderVersionNeeded); // Version created
         writeShort(cDir, ZIPLocalHeaderVersionNeeded); // Version to extract
@@ -285,10 +285,10 @@ public class ZipOutputStream extends DeflaterOutputStream implements
         // BEGIN android-changed
         // Local file header.
         // http://www.pkware.com/documents/casestudies/APPNOTE.TXT
-        int flags = currentEntry.getMethod() == STORED ? 0 : GPBF_DATA_DESCRIPTOR_FLAG;
+        int flags = currentEntry.getMethod() == STORED ? 0 : ZipFile.GPBF_DATA_DESCRIPTOR_FLAG;
         // Java always outputs UTF-8 filenames. (Before Java 7, the RI didn't set this flag and used
         // modified UTF-8. From Java 7, it sets this flag and uses normal UTF-8.)
-        flags |= GPBF_UTF8_FLAG;
+        flags |= ZipFile.GPBF_UTF8_FLAG;
         writeLong(out, LOCSIG); // Entry header
         writeShort(out, ZIPLocalHeaderVersionNeeded); // Extraction version
         writeShort(out, flags);

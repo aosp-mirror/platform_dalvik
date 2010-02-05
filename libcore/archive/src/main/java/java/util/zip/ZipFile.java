@@ -43,6 +43,26 @@ import java.util.Iterator;
  * @see ZipOutputStream
  */
 public class ZipFile implements ZipConstants {
+    /**
+     * General Purpose Bit Flags, Bit 3.
+     * If this bit is set, the fields crc-32, compressed
+     * size and uncompressed size are set to zero in the
+     * local header.  The correct values are put in the
+     * data descriptor immediately following the compressed
+     * data.  (Note: PKZIP version 2.04g for DOS only
+     * recognizes this bit for method 8 compression, newer
+     * versions of PKZIP recognize this bit for any
+     * compression method.)
+     */
+    static final int GPBF_DATA_DESCRIPTOR_FLAG = 1 << 3; // android-added
+
+    /**
+     * General Purpose Bit Flags, Bit 11.
+     * Language encoding flag (EFS).  If this bit is set,
+     * the filename and comment fields for this file
+     * must be encoded using UTF-8.
+     */
+    static final int GPBF_UTF8_FLAG = 1 << 11; // android-added
 
     /**
      * Open ZIP file for read.

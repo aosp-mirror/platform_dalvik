@@ -17,6 +17,11 @@
 
 package java.util.zip;
 
+/**
+ * Do not add constants to this interface! It's implemented by the classes
+ * in this package whose names start "Zip", and the constants are thereby
+ * public API.
+ */
 interface ZipConstants {
 
     public static final long LOCSIG = 0x4034b50, EXTSIG = 0x8074b50,
@@ -30,25 +35,4 @@ interface ZipConstants {
             CENNAM = 28, CENEXT = 30, CENCOM = 32, CENDSK = 34, CENATT = 36,
             CENATX = 38, CENOFF = 42, ENDSUB = 8, ENDTOT = 10, ENDSIZ = 12,
             ENDOFF = 16, ENDCOM = 20;
-
-    /**
-     * General Purpose Bit Flags, Bit 3.
-     * If this bit is set, the fields crc-32, compressed
-     * size and uncompressed size are set to zero in the
-     * local header.  The correct values are put in the
-     * data descriptor immediately following the compressed
-     * data.  (Note: PKZIP version 2.04g for DOS only
-     * recognizes this bit for method 8 compression, newer
-     * versions of PKZIP recognize this bit for any
-     * compression method.)
-     */
-    public static final int GPBF_DATA_DESCRIPTOR_FLAG = 1 << 3; // android-added
-
-    /**
-     * General Purpose Bit Flags, Bit 11.
-     * Language encoding flag (EFS).  If this bit is set,
-     * the filename and comment fields for this file
-     * must be encoded using UTF-8.
-     */
-    public static final int GPBF_UTF8_FLAG = 1 << 11; // android-added
 }
