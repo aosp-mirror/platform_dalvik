@@ -1152,7 +1152,7 @@ public class GregorianCalendar extends Calendar {
         return minimums[field];
     }
 
-    int getOffset(long localTime) {
+    private int getOffset(long localTime) {
         TimeZone timeZone = getTimeZone();
         if (!timeZone.useDaylightTime()) {
             return timeZone.getRawOffset();

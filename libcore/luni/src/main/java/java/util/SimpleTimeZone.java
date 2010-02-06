@@ -94,8 +94,6 @@ public class SimpleTimeZone extends TimeZone {
 
     private boolean useDaylight;
 
-    private GregorianCalendar daylightSavings;
-
     private int dstSavings = 3600000;
 
     // BEGIN android-removed
@@ -349,9 +347,6 @@ public class SimpleTimeZone extends TimeZone {
     @Override
     public Object clone() {
         SimpleTimeZone zone = (SimpleTimeZone) super.clone();
-        if (daylightSavings != null) {
-            zone.daylightSavings = (GregorianCalendar) daylightSavings.clone();
-        }
         return zone;
     }
 
@@ -530,15 +525,13 @@ public class SimpleTimeZone extends TimeZone {
 
     @Override
     public int getOffset(long time) {
-        // BEGIN android-changed
-        // return icuTZ.getOffset(time);
+        // BEGIN android-changed: simplified variant of the ICU4J code.
         if (!useDaylightTime()) {
             return rawOffset;
         }
-        if (daylightSavings == null) {
-            daylightSavings = new GregorianCalendar(this);
-        }
-        return daylightSavings.getOffset(time + rawOffset);
+        int[] fields = Grego.timeToFields(time + rawOffset, null);
+        return getOffset(GregorianCalendar.AD, fields[0], fields[1], fields[2],
+                fields[3], fields[5]);
         // END android-changed
     }
 
@@ -588,17 +581,8 @@ public class SimpleTimeZone extends TimeZone {
 
     @Override
     public boolean inDaylightTime(Date time) {
-        // BEGIN android-changed
-        // return icuTZ.inDaylightTime(time);
-        // check for null pointer
-        long millis = time.getTime();
-        if (!useDaylightTime()) {
-            return false;
-        }
-        if (daylightSavings == null) {
-            daylightSavings = new GregorianCalendar(this);
-        }
-        return daylightSavings.getOffset(millis + rawOffset) != rawOffset;
+        // BEGIN android-changed: reuse getOffset.
+        return useDaylightTime() && getOffset(time.getTime()) != rawOffset;
         // END android-changed
     }
 
