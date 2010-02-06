@@ -8,7 +8,7 @@
      *    r0 - self pointer
      *    r1 - the object (which has already been null-checked by the caller
      *    r4 - the Dalvik PC of the following instruction.
-     *
+     */
     ldr     r2, .LdvmLockObject
     mov     r3, #0                       @ Record that we're not returning
     str     r3, [r0, #offThread_inJitCodeCache]
