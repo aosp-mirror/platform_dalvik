@@ -343,8 +343,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #if defined(WITH_JIT)
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
-        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
 #else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
@@ -423,6 +422,10 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define INTERP_TYPE INTERP_STD
 #define CHECK_DEBUG_AND_PROF() ((void)0)
 # define CHECK_TRACKED_REFS() ((void)0)
+#if defined(WITH_JIT)
+#define CHECK_JIT() (0)
+#define ABORT_JIT_TSELECT() ((void)0)
+#endif
 
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
@@ -540,7 +543,6 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
             GOTO_bail_switch();                                             \
         }                                                                   \
     }
-
 
 /* File: c/opcommon.c */
 /* forward declarations of goto targets */

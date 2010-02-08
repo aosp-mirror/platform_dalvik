@@ -336,8 +336,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #if defined(WITH_JIT)
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
-        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
 #else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \

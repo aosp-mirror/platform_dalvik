@@ -343,8 +343,7 @@ static inline void putDoubleToArray(u4* ptr, int idx, double dval)
 #if defined(WITH_JIT)
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
-        dvmJitDebuggerOrProfilerActive(interpState->jitState) :             \
-        !dvmJitDebuggerOrProfilerActive(interpState->jitState) )
+        dvmJitDebuggerOrProfilerActive() : !dvmJitDebuggerOrProfilerActive() )
 #else
 # define NEED_INTERP_SWITCH(_current) (                                     \
     (_current == INTERP_STD) ?                                              \
@@ -427,8 +426,10 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 
 #if defined(WITH_JIT)
 #define CHECK_JIT() (dvmCheckJit(pc, self, interpState))
+#define ABORT_JIT_TSELECT() (dvmJitAbortTraceSelect(interpState))
 #else
 #define CHECK_JIT() (0)
+#define ABORT_JIT_TSELECT(x) ((void)0)
 #endif
 
 /* File: portable/stubdefs.c */
@@ -3965,7 +3966,7 @@ GOTO_TARGET(exceptionThrown)
 
 #if defined(WITH_JIT)
         // Something threw during trace selection - abort the current trace
-        dvmJitAbortTraceSelect(interpState);
+        ABORT_JIT_TSELECT();
 #endif
         /*
          * We save off the exception and clear the exception status.  While

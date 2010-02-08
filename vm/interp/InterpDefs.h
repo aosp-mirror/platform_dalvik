@@ -240,9 +240,9 @@ static inline bool dvmDebuggerOrProfilerActive(void)
  * Determine if the jit, debugger or profiler is currently active.  Used when
  * selecting which interpreter to switch to.
  */
-static inline bool dvmJitDebuggerOrProfilerActive(int jitState)
+static inline bool dvmJitDebuggerOrProfilerActive()
 {
-    return jitState != kJitOff
+    return gDvmJit.pJitEntryTable != NULL
 #if defined(WITH_PROFILER)
         || gDvm.activeProfilers != 0
 #endif
