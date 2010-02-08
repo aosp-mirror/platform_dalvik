@@ -582,7 +582,7 @@ GOTO_TARGET(exceptionThrown)
 
 #if defined(WITH_JIT)
         // Something threw during trace selection - abort the current trace
-        dvmJitAbortTraceSelect(interpState);
+        ABORT_JIT_TSELECT();
 #endif
         /*
          * We save off the exception and clear the exception status.  While

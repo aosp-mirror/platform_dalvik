@@ -2,6 +2,10 @@
 #define INTERP_TYPE INTERP_STD
 #define CHECK_DEBUG_AND_PROF() ((void)0)
 # define CHECK_TRACKED_REFS() ((void)0)
+#if defined(WITH_JIT)
+#define CHECK_JIT() (0)
+#define ABORT_JIT_TSELECT() ((void)0)
+#endif
 
 /*
  * In the C mterp stubs, "goto" is a function call followed immediately
@@ -119,4 +123,3 @@
             GOTO_bail_switch();                                             \
         }                                                                   \
     }
-
