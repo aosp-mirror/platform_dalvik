@@ -32,7 +32,24 @@ class CaliperFinder extends NamingPatternCodeFinder {
         return "caliper";
     }
 
-    @Override protected Class<? extends TestRunner> runnerClass() {
+    public Class<? extends TestRunner> getRunnerClass() {
         return CaliperRunner.class;
+    }
+
+    public File getRunnerJava() {
+        return new File(DalvikRunner.HOME_JAVA, "dalvik/runner/CaliperRunner.java");
+    }
+
+    public Classpath getRunnerClasspath() {
+        return Classpath.of(
+            // TODO: we should be able to work with a shipping SDK, not depend on out/...
+            // TODO: have a pre-packaged caliper-all.jar in our lib directory, with the jtreg stuff.
+            // external/caliper
+            new File("out/target/common/obj/JAVA_LIBRARIES/caliper_intermediates/classes.jar").getAbsoluteFile(),
+            // external/guava for external/caliper
+            new File("out/target/common/obj/JAVA_LIBRARIES/guava_intermediates/classes.jar").getAbsoluteFile(),
+            // external/jsr305 for external/guava
+            new File("out/target/common/obj/JAVA_LIBRARIES/jsr305_intermediates/classes.jar").getAbsoluteFile());
+
     }
 }

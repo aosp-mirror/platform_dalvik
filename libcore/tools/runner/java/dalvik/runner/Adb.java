@@ -24,15 +24,25 @@ import java.io.File;
 final class Adb {
 
     public void mkdir(File name) {
-        new Command("adb", "shell", "mkdir", name.toString()).execute();
+        new Command("adb", "shell", "mkdir", name.getPath()).execute();
     }
 
     public void rm(File name) {
-        new Command("adb", "shell", "rm", "-r", name.toString()).execute();
+        new Command("adb", "shell", "rm", "-r", name.getPath()).execute();
     }
 
     public void push(File local, File remote) {
-        new Command("adb", "push", local.toString(), remote.toString())
+        new Command("adb", "push", local.getPath(), remote.getPath())
+                .execute();
+    }
+
+    public void install(File apk) {
+        new Command("adb", "install", "-r", apk.getPath())
+                .execute();
+    }
+
+    public void uninstall(String packageName) {
+        new Command("adb", "uninstall", packageName)
                 .execute();
     }
 

@@ -298,7 +298,8 @@ public class OptionParser {
         try {
             field.setAccessible(true);
             if (Collection.class.isAssignableFrom(field.getType())) {
-                Collection collection = (Collection)field.get(object);
+                @SuppressWarnings("unchecked")
+                Collection collection = (Collection) field.get(object);
                 collection.add(value);
             } else {
                 field.set(object, value);

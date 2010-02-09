@@ -27,9 +27,17 @@ final class JavaVm extends Vm {
     private final File javaHome;
 
     JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
-            File javaHome, List<String> additionalVmArgs, boolean clean) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
+            File javaHome, List<String> additionalVmArgs,
+            boolean cleanBefore, boolean cleanAfter) {
+        super(new EnvironmentHost(cleanBefore, cleanAfter, debugPort, localTemp),
+                timeoutSeconds, sdkJar, additionalVmArgs);
         this.javaHome = javaHome;
+    }
+
+    @Override protected void postCompileTestRunner() {}
+
+    @Override protected Classpath postCompileTest(TestRun testRun) {
+        return Classpath.of(environment.testClassesDir(testRun));
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder(
@@ -38,5 +46,8 @@ final class JavaVm extends Vm {
         return new VmCommandBuilder()
                 .vmCommand(java)
                 .workingDir(workingDirectory);
+    }
+    protected Classpath getRuntimeSupportClasspath() {
+        return testClasspath;
     }
 }

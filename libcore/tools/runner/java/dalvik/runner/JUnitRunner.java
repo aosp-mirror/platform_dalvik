@@ -47,7 +47,7 @@ public final class JUnitRunner extends TestRunner {
     }
 
     @Override public void prepareTest() {
-        junitTest = testRunner.getTest(className);
+        junitTest = testRunner.getTest(testClass);
     }
 
     @Override public boolean test() {

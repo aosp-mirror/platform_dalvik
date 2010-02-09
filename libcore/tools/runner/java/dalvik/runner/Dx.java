@@ -16,21 +16,32 @@
 
 package dalvik.runner;
 
+import java.io.File;
+
 /**
  * A dx command.
  */
 final class Dx {
 
-    public void dex(String output, Classpath classpath) {
-        // We pass --core-library so that we can write tests in the same package they're testing,
-        // even when that's a core library package. If you're actually just using this tool to
-        // execute arbitrary code, this has the unfortunate side-effect of preventing "dx" from
-        // protecting you from yourself.
+    public void dex(File output, Classpath classpath) {
+        /*
+         * We pass --core-library so that we can write tests in the
+         * same package they're testing, even when that's a core
+         * library package. If you're actually just using this tool to
+         * execute arbitrary code, this has the unfortunate
+         * side-effect of preventing "dx" from protecting you from
+         * yourself.
+         *
+         * Memory options pulled from build/core/definitions.mk to
+         * handle larged dx input when building dex for APK.
+         */
         new Command.Builder()
                 .args("dx")
-                .args("--core-library")
+                .args("-JXms16M")
+                .args("-JXmx1536M")
                 .args("--dex")
                 .args("--output=" + output)
+                .args("--core-library")
                 .args(Strings.objectsToStrings(classpath.getElements()))
                 .execute();
     }

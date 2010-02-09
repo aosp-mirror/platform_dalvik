@@ -11,7 +11,9 @@ ext_src_files := $(call all-java-files-under,$(ext_dirs))
 
 LOCAL_SRC_FILES := \
         $(ext_src_files) \
+        java/dalvik/runner/Aapt.java \
         java/dalvik/runner/Adb.java \
+        java/dalvik/runner/ActivityMode.java \
         java/dalvik/runner/CaliperFinder.java \
         java/dalvik/runner/CaliperRunner.java \
         java/dalvik/runner/Classpath.java \
@@ -22,6 +24,9 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/DeviceDalvikVm.java \
         java/dalvik/runner/Driver.java \
         java/dalvik/runner/Dx.java \
+        java/dalvik/runner/Environment.java \
+        java/dalvik/runner/EnvironmentDevice.java \
+        java/dalvik/runner/EnvironmentHost.java \
         java/dalvik/runner/ExpectedResult.java \
         java/dalvik/runner/JUnitFinder.java \
         java/dalvik/runner/JUnitRunner.java \
@@ -31,11 +36,15 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/JtregRunner.java \
         java/dalvik/runner/MainFinder.java \
         java/dalvik/runner/MainRunner.java \
+        java/dalvik/runner/Mkdir.java \
+        java/dalvik/runner/Mode.java \
         java/dalvik/runner/NamingPatternCodeFinder.java \
         java/dalvik/runner/Option.java \
         java/dalvik/runner/OptionParser.java \
         java/dalvik/runner/Result.java \
+        java/dalvik/runner/Rm.java \
         java/dalvik/runner/Strings.java \
+        java/dalvik/runner/TestProperties.java \
         java/dalvik/runner/TestRun.java \
         java/dalvik/runner/TestRunner.java \
         java/dalvik/runner/Threads.java \

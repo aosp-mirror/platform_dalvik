@@ -26,42 +26,38 @@ import java.util.Properties;
 public abstract class TestRunner {
 
     /**
-     * The name of the test properties file within the {@code .jar} file.
+     * A static field that allows TestActivity to access the
+     * underlying test result without depending on reading
+     * System.out. This is necessary because TestRunner subclasses are
+     * invoked via a tradtional static main method with a void return
+     * type.
      */
-    static final String TEST_PROPERTIES_FILE = "test.properties";
+    public static boolean success;
 
-    /**
-     * Property identifier for the test's main class name. This class should
-     * have a {@code public static void main(String[] args)} method.
-     */
-    static final String CLASS_NAME = "className";
+    protected final Properties properties;
 
-    /**
-     * Property identifier for the test's name, such as {@code
-     * java.math.BigDecimal.PowTests}.
-     */
-    static final String QUALIFIED_NAME = "qualifiedName";
+    protected final String testClass;
+    protected final String qualifiedName;
 
-    protected String className;
-    protected String qualifiedName;
+    protected TestRunner () {
+        properties = loadProperties();
+        testClass = properties.getProperty(TestProperties.TEST_CLASS);
+        qualifiedName = properties.getProperty(TestProperties.QUALIFIED_NAME);
+    }
 
-    protected Properties loadProperties() {
+    protected static Properties loadProperties() {
         Properties properties = new Properties();
         try {
             InputStream propertiesStream = TestRunner.class.getResourceAsStream(
-                    "/" + TEST_PROPERTIES_FILE);
+                    "/" + TestProperties.FILE);
             if (propertiesStream == null) {
-                throw new RuntimeException(TEST_PROPERTIES_FILE + " missing!");
+                throw new RuntimeException(TestProperties.FILE + " missing!");
             }
-
             properties.load(propertiesStream);
+            return properties;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        className = properties.getProperty(CLASS_NAME);
-        qualifiedName = properties.getProperty(QUALIFIED_NAME);
-        return properties;
     }
 
     public void prepareTest() {}
@@ -69,11 +65,10 @@ public abstract class TestRunner {
     public abstract boolean test();
 
     public void run() {
-        loadProperties();
         prepareTest();
 
         System.out.println("Executing " + qualifiedName);
-        boolean success = test();
-        System.out.println(success ? "SUCCESS" : "FAILURE");
+        success = test();
+        System.out.println(TestProperties.result(success));
     }
 }

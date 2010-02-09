@@ -37,14 +37,14 @@ import dalvik.system.DexFile;
  * of files and directories in the local file system, but does not attempt to
  * load classes from the network. Android uses this class for its system class
  * loader and for its application class loader(s).
- * 
+ *
  * @since Android 1.0
  */
 public class PathClassLoader extends ClassLoader {
 
     private final String path;
     private final String libPath;
-    
+
     private boolean initialized;
 
     private String[] mPaths;
@@ -58,17 +58,17 @@ public class PathClassLoader extends ClassLoader {
      * and directories. This method is equivalent to calling
      * {@link #PathClassLoader(String, String, ClassLoader)} with a
      * {@code null} value for the second argument (see description there).
-     * 
+     *
      * @param path
      *            the list of files and directories
-     * 
+     *
      * @param parent
      *            the parent class loader
      */
     public PathClassLoader(String path, ClassLoader parent) {
         this(path, null, parent);
     }
-    
+
     /**
      * Creates a {@code PathClassLoader} that operates on two given lists of
      * files and directories. The entries of the first list should be one of the
@@ -81,14 +81,14 @@ public class PathClassLoader extends ClassLoader {
      * The entries of the second list should be directories containing native
      * library files. Both lists are separated using the character specified by
      * the "path.separator" system property, which, on Android, defaults to ":".
-     * 
+     *
      * @param path
      *            the list of files and directories containing classes and
      *            resources
-     * 
+     *
      * @param libPath
      *            the list of directories containing native libraries
-     * 
+     *
      * @param parent
      *            the parent class loader
      */
@@ -101,23 +101,23 @@ public class PathClassLoader extends ClassLoader {
         this.path = path;
         this.libPath = libPath;
     }
-    
+
     private synchronized void ensureInit() {
         if (initialized) {
             return;
         }
-        
+
         initialized = true;
-        
+
         mPaths = path.split(":");
         int length = mPaths.length;
-        
+
         //System.out.println("PathClassLoader: " + mPaths);
         mFiles = new File[length];
         mZips = new ZipFile[length];
         mDexs = new DexFile[length];
 
-        boolean wantDex = 
+        boolean wantDex =
             System.getProperty("android.vm.dexfile", "").equals("true");
 
         /* open all Zip and DEX files up front */
@@ -132,7 +132,7 @@ public class PathClassLoader extends ClassLoader {
                 }
                 catch (IOException ioex) {
                     // expecting IOException and ZipException
-                    //System.out.println("Failed opening '" + archive + "': " + ioex);
+                    //System.out.println("Failed opening '" + pathFile + "': " + ioex);
                     //ioex.printStackTrace();
                 }
                 if (wantDex) {
@@ -151,7 +151,7 @@ public class PathClassLoader extends ClassLoader {
         String pathList = System.getProperty("java.library.path", ".");
         String pathSep = System.getProperty("path.separator", ":");
         String fileSep = System.getProperty("file.separator", "/");
-        
+
         if (libPath != null) {
             if (pathList.length() > 0) {
                 pathList += pathSep + libPath;
@@ -177,7 +177,7 @@ public class PathClassLoader extends ClassLoader {
     /**
      * Finds a class. This method is called by {@code loadClass()} after the
      * parent ClassLoader has failed to find a loaded class of the same name.
-     * 
+     *
      * @param name
      *            The "binary name" of the class to search for, in a
      *            human-readable form like "java.lang.String" or
@@ -190,7 +190,7 @@ public class PathClassLoader extends ClassLoader {
     protected Class<?> findClass(String name) throws ClassNotFoundException
     {
         ensureInit();
-        
+
         //System.out.println("PathClassLoader " + this + ": findClass '" + name + "'");
 
         byte[] data = null;
@@ -234,7 +234,7 @@ public class PathClassLoader extends ClassLoader {
                         }
                     }
                 }
-                
+
                 return defineClass(name, data, 0, data.length);
             }
             */
@@ -247,7 +247,7 @@ public class PathClassLoader extends ClassLoader {
      * Finds a resource. This method is called by {@code getResource()} after
      * the parent ClassLoader has failed to find a loaded resource of the same
      * name.
-     * 
+     *
      * @param name
      *            The name of the resource to find
      * @return the location of the resource as a URL, or {@code null} if the
@@ -260,7 +260,7 @@ public class PathClassLoader extends ClassLoader {
         //java.util.logging.Logger.global.severe("findResource: " + name);
 
         int length = mPaths.length;
-        
+
         for (int i = 0; i < length; i++) {
             URL result = findResource(name, i);
             if(result != null) {
@@ -273,7 +273,7 @@ public class PathClassLoader extends ClassLoader {
 
     /**
      * Finds an enumeration of URLs for the resource with the specified name.
-     * 
+     *
      * @param resName
      *            the name of the resource to find.
      * @return an enumeration of {@code URL} objects for the requested resource.
@@ -285,7 +285,7 @@ public class PathClassLoader extends ClassLoader {
 
         int length = mPaths.length;
         ArrayList<URL> results = new ArrayList<URL>();
-        
+
         for (int i = 0; i < length; i++) {
             URL result = findResource(resName, i);
             if(result != null) {
@@ -294,7 +294,7 @@ public class PathClassLoader extends ClassLoader {
         }
         return new EnumerateListArray<URL>(results);
     }
-    
+
     private URL findResource(String name, int i) {
         File pathFile = mFiles[i];
         ZipFile zip = mZips[i];
@@ -317,7 +317,7 @@ public class PathClassLoader extends ClassLoader {
             if (dataFile.exists()) {
                 //System.out.println("  found resource " + name);
                 try {
-                    // Same as archive case regarding URL construction. 
+                    // Same as archive case regarding URL construction.
                     return dataFile.toURL();
                 }
                 catch (MalformedURLException e) {
@@ -414,7 +414,7 @@ public class PathClassLoader extends ClassLoader {
     /**
      * Finds a native library. This method is called after the parent
      * ClassLoader has failed to find a native library of the same name.
-     * 
+     *
      * @param libname
      *            The name of the library to find
      * @return the complete path of the library, or {@code null} if the library
@@ -451,7 +451,7 @@ public class PathClassLoader extends ClassLoader {
      * scattered across different JAR files being loaded by different
      * ClassLoaders. Rather unlikely, and given that this whole thing is more or
      * less a workaround, probably not worth the effort.
-     * 
+     *
      * @param name
      *            the name of the class
      * @return the package information for the class, or {@code null} if there
@@ -462,15 +462,15 @@ public class PathClassLoader extends ClassLoader {
         if (name != null && !"".equals(name)) {
             synchronized(this) {
                 Package pack = super.getPackage(name);
-                
+
                 if (pack == null) {
                     pack = definePackage(name, "Unknown", "0.0", "Unknown", "Unknown", "0.0", "Unknown", null);
                 }
-                
+
                 return pack;
-            }            
+            }
         }
-        
+
         return null;
     }
 
@@ -495,4 +495,8 @@ public class PathClassLoader extends ClassLoader {
             return (T) mList.get(i++);
         }
     };
+
+    public String toString () {
+        return getClass().getName() + "[" + path + "]";
+    }
 }
