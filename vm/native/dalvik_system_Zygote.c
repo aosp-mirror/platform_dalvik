@@ -37,6 +37,7 @@ enum {
     DEBUG_ENABLE_DEBUGGER           = 1,
     DEBUG_ENABLE_CHECKJNI           = 1 << 1,
     DEBUG_ENABLE_ASSERT             = 1 << 2,
+    DEBUG_ENABLE_SAFEMODE           = 1 << 3,
 };
 
 /*
@@ -269,6 +270,11 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
  *   If set, make sure assertions are enabled.  This gets fairly weird,
  *   because it affects the result of a method called by class initializers,
  *   and hence can't affect pre-loaded/initialized classes.
+ * safemode
+ *   If set, operates the VM in the safe mode. The definition of "safe mode" is
+ *   implementation dependent and currently only the JIT compiler is disabled.
+ *   This is easy to handle because the compiler thread and associated resources
+ *   are not requested until we call dvmInitAfterZygote().
  */
 static void enableDebugFeatures(u4 debugFlags)
 {
@@ -284,6 +290,14 @@ static void enableDebugFeatures(u4 debugFlags)
     if ((debugFlags & DEBUG_ENABLE_ASSERT) != 0) {
         /* turn it on if it's not already enabled */
         dvmLateEnableAssertions();
+    }
+
+    if ((debugFlags & DEBUG_ENABLE_SAFEMODE) != 0) {
+#if defined(WITH_JIT)
+        /* turn off the jit if it is explicitly requested by the app */
+        if (gDvm.executionMode == kExecutionModeJit)
+            gDvm.executionMode = kExecutionModeInterpFast;
+#endif
     }
 }
 
@@ -429,4 +443,3 @@ const DalvikNativeMethod dvm_dalvik_system_Zygote[] = {
         Dalvik_dalvik_system_Zygote_forkSystemServer },
     { NULL, NULL, NULL },
 };
-
