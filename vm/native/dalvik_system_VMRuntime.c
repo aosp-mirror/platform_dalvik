@@ -188,9 +188,11 @@ static void Dalvik_dalvik_system_VMRuntime_startJitCompilation(const u4* args,
     JValue* pResult)
 {
 #if defined(WITH_JIT)
-    dvmLockMutex(&gDvmJit.compilerLock);
-    pthread_cond_signal(&gDvmJit.compilerQueueActivity);
-    dvmUnlockMutex(&gDvmJit.compilerLock);
+    if (gDvm.executionMode == kExecutionModeJit) {
+        dvmLockMutex(&gDvmJit.compilerLock);
+        pthread_cond_signal(&gDvmJit.compilerQueueActivity);
+        dvmUnlockMutex(&gDvmJit.compilerLock);
+    }
 #endif
     RETURN_VOID();
 }

@@ -503,8 +503,25 @@ void dvmCompilerShutdown(void)
         else if (gDvm.verboseShutdown)
             LOGD("Compiler thread has shut down\n");
     }
-}
 
+    if (gDvm.verboseShutdown)
+        dvmCompilerDumpStats();
+
+    dvmDestroyMutex(&gDvmJit.tableLock);
+    dvmDestroyMutex(&gDvmJit.compilerLock);
+    dvmDestroyMutex(&gDvmJit.compilerICPatchLock);
+
+    if (gDvmJit.pJitEntryTable) {
+        free(gDvmJit.pJitEntryTable);
+        gDvmJit.pJitEntryTable = NULL;
+    }
+
+    if (gDvmJit.pProfTable) {
+        free(gDvmJit.pProfTable);
+        gDvmJit.pProfTable = NULL;
+    }
+
+}
 
 void dvmCompilerStateRefresh()
 {

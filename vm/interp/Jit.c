@@ -343,18 +343,6 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
 }
 #endif
 
-int dvmJitStartup(void)
-{
-    unsigned int i;
-    bool res = true;  /* Assume success */
-
-    // Create the compiler thread, which will complete initialization
-    if (gDvm.executionMode == kExecutionModeJit) {
-        res = dvmCompilerStartup();
-    }
-    return res;
-}
-
 /*
  * If one of our fixed tables or the translation buffer fills up,
  * call this routine to avoid wasting cycles on future translation requests.
@@ -446,32 +434,6 @@ void dvmJitStats()
     }
 }
 
-
-/*
- * Final JIT shutdown.  Only do this once, and do not attempt to restart
- * the JIT later.
- */
-void dvmJitShutdown(void)
-{
-    /* Shutdown the compiler thread */
-
-    dvmCompilerShutdown();
-
-    if (gDvm.verboseShutdown)
-        dvmCompilerDumpStats();
-
-    dvmDestroyMutex(&gDvmJit.tableLock);
-
-    if (gDvmJit.pJitEntryTable) {
-        free(gDvmJit.pJitEntryTable);
-        gDvmJit.pJitEntryTable = NULL;
-    }
-
-    if (gDvmJit.pProfTable) {
-        free(gDvmJit.pProfTable);
-        gDvmJit.pProfTable = NULL;
-    }
-}
 
 void setTraceConstruction(JitEntry *slot, bool value)
 {

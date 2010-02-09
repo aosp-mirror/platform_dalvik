@@ -1378,7 +1378,7 @@ bool dvmInitAfterZygote(void)
 
 #ifdef WITH_JIT
     if (gDvm.executionMode == kExecutionModeJit) {
-        if (!dvmJitStartup())
+        if (!dvmCompilerStartup())
             return false;
     }
 #endif
@@ -1571,7 +1571,7 @@ void dvmShutdown(void)
 #ifdef WITH_JIT
     if (gDvm.executionMode == kExecutionModeJit) {
         /* shut down the compiler thread */
-        dvmJitShutdown();
+        dvmCompilerShutdown();
     }
 #endif
 
