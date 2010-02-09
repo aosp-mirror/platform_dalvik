@@ -32,13 +32,13 @@ int dvmCompilerAllocTypedTempPair(CompilationUnit *cUnit, bool fpHint,
     int highReg;
     int lowReg;
     int res = 0;
-    lowReg = allocTemp(cUnit);
-    highReg = allocTemp(cUnit);
+    lowReg = dvmCompilerAllocTemp(cUnit);
+    highReg = dvmCompilerAllocTemp(cUnit);
     res = (lowReg & 0xff) | ((highReg & 0xff) << 8);
     return res;
 }
 
 int dvmCompilerAllocTypedTemp(CompilationUnit *cUnit, bool fpHint, int regClass)
 {
-    return allocTemp(cUnit);
+    return dvmCompilerAllocTemp(cUnit);
 }

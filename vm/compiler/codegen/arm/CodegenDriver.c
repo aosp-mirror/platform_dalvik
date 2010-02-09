@@ -33,26 +33,26 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
      */
     RegLocation rlSrc;
     RegLocation rlDest;
-    flushAllRegs(cUnit);   /* Send everything to home location */
+    dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
     if (srcSize == 1) {
-        rlSrc = getSrcLoc(cUnit, mir, 0);
+        rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
         loadValueDirectFixed(cUnit, rlSrc, r0);
     } else {
-        rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+        rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
         loadValueDirectWideFixed(cUnit, rlSrc, r0, r1);
     }
     loadConstant(cUnit, r2, (int)funct);
     opReg(cUnit, kOpBlx, r2);
-    clobberCallRegs(cUnit);
+    dvmCompilerColbberCallRegs(cUnit);
     if (tgtSize == 1) {
         RegLocation rlResult;
-        rlDest = getDestLoc(cUnit, mir, 0);
-        rlResult = getReturnLoc(cUnit);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+        rlResult = dvmCompilerGetReturn(cUnit);
         storeValue(cUnit, rlDest, rlResult);
     } else {
         RegLocation rlResult;
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
-        rlResult = getReturnLocWide(cUnit);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
+        rlResult = dvmCompilerGetReturnWide(cUnit);
         storeValueWide(cUnit, rlDest, rlResult);
     }
     return false;
@@ -101,13 +101,13 @@ static bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
         default:
             return true;
     }
-    flushAllRegs(cUnit);   /* Send everything to home location */
+    dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
     loadValueDirectFixed(cUnit, rlSrc1, r0);
     loadValueDirectFixed(cUnit, rlSrc2, r1);
     loadConstant(cUnit, r2, (int)funct);
     opReg(cUnit, kOpBlx, r2);
-    clobberCallRegs(cUnit);
-    rlResult = getReturnLoc(cUnit);
+    dvmCompilerColbberCallRegs(cUnit);
+    rlResult = dvmCompilerGetReturn(cUnit);
     storeValue(cUnit, rlDest, rlResult);
     return false;
 }
@@ -154,13 +154,13 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
         default:
             return true;
     }
-    flushAllRegs(cUnit);   /* Send everything to home location */
+    dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
     loadConstant(cUnit, rlr, (int)funct);
     loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
     loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
     opReg(cUnit, kOpBlx, rlr);
-    clobberCallRegs(cUnit);
-    rlResult = getReturnLocWide(cUnit);
+    dvmCompilerColbberCallRegs(cUnit);
+    rlResult = dvmCompilerGetReturnWide(cUnit);
     storeValueWide(cUnit, rlDest, rlResult);
     return false;
 }
@@ -253,18 +253,18 @@ static inline ArmLIR *genTrap(CompilationUnit *cUnit, int dOffset,
 static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    RegLocation rlObj = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlDest = getDestLocWide(cUnit, mir, 0, 1);
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
     RegLocation rlResult;
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
-    int regPtr = allocTemp(cUnit);
+    int regPtr = dvmCompilerAllocTemp(cUnit);
 
     assert(rlDest.wide);
 
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
     opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
-    rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
 #if defined(WITH_SELF_VERIFICATION)
     cUnit->heapMemOp = true;
 #endif
@@ -272,7 +272,7 @@ static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
 #if defined(WITH_SELF_VERIFICATION)
     cUnit->heapMemOp = false;
 #endif
-    freeTemp(cUnit, regPtr);
+    dvmCompilerFreeTemp(cUnit, regPtr);
     storeValueWide(cUnit, rlDest, rlResult);
 }
 
@@ -280,14 +280,14 @@ static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
 static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
-    RegLocation rlObj = getSrcLoc(cUnit, mir, 2);
+    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 2);
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
     int regPtr;
     rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
-    regPtr = allocTemp(cUnit);
+    regPtr = dvmCompilerAllocTemp(cUnit);
     opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
 #if defined(WITH_SELF_VERIFICATION)
     cUnit->heapMemOp = true;
@@ -296,7 +296,7 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
 #if defined(WITH_SELF_VERIFICATION)
     cUnit->heapMemOp = false;
 #endif
-    freeTemp(cUnit, regPtr);
+    dvmCompilerFreeTemp(cUnit, regPtr);
 }
 
 /*
@@ -309,10 +309,10 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
     int regPtr;
     RegLocation rlResult;
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    RegLocation rlObj = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlDest = getDestLoc(cUnit, mir, 0);
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
-    rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
 #if defined(WITH_SELF_VERIFICATION)
@@ -334,8 +334,8 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
                     int fieldOffset)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlObj = getSrcLoc(cUnit, mir, 1);
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 1);
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
     rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
     int regPtr;
@@ -373,31 +373,31 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
                                 rlArray.lowReg, mir->offset, NULL);
     }
 
-    regPtr = allocTemp(cUnit);
+    regPtr = dvmCompilerAllocTemp(cUnit);
 
     if (!(mir->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
-        int regLen = allocTemp(cUnit);
+        int regLen = dvmCompilerAllocTemp(cUnit);
         /* Get len */
         loadWordDisp(cUnit, rlArray.lowReg, lenOffset, regLen);
         /* regPtr -> array data */
         opRegRegImm(cUnit, kOpAdd, regPtr, rlArray.lowReg, dataOffset);
         genBoundsCheck(cUnit, rlIndex.lowReg, regLen, mir->offset,
                        pcrLabel);
-        freeTemp(cUnit, regLen);
+        dvmCompilerFreeTemp(cUnit, regLen);
     } else {
         /* regPtr -> array data */
         opRegRegImm(cUnit, kOpAdd, regPtr, rlArray.lowReg, dataOffset);
     }
     if ((size == kLong) || (size == kDouble)) {
         if (scale) {
-            int rNewIndex = allocTemp(cUnit);
+            int rNewIndex = dvmCompilerAllocTemp(cUnit);
             opRegRegImm(cUnit, kOpLsl, rNewIndex, rlIndex.lowReg, scale);
             opRegReg(cUnit, kOpAdd, regPtr, rNewIndex);
-            freeTemp(cUnit, rNewIndex);
+            dvmCompilerFreeTemp(cUnit, rNewIndex);
         } else {
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
-        rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
 #if defined(WITH_SELF_VERIFICATION)
         cUnit->heapMemOp = true;
 #endif
@@ -405,10 +405,10 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
 #if defined(WITH_SELF_VERIFICATION)
         cUnit->heapMemOp = false;
 #endif
-        freeTemp(cUnit, regPtr);
+        dvmCompilerFreeTemp(cUnit, regPtr);
         storeValueWide(cUnit, rlDest, rlResult);
     } else {
-        rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
 #if defined(WITH_SELF_VERIFICATION)
         cUnit->heapMemOp = true;
 #endif
@@ -417,7 +417,7 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
 #if defined(WITH_SELF_VERIFICATION)
         cUnit->heapMemOp = false;
 #endif
-        freeTemp(cUnit, regPtr);
+        dvmCompilerFreeTemp(cUnit, regPtr);
         storeValue(cUnit, rlDest, rlResult);
     }
 }
@@ -437,11 +437,11 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     rlArray = loadValue(cUnit, rlArray, kCoreReg);
     rlIndex = loadValue(cUnit, rlIndex, kCoreReg);
 
-    if (isTemp(cUnit, rlArray.lowReg)) {
-        clobberReg(cUnit, rlArray.lowReg);
+    if (dvmCompilerIsTemp(cUnit, rlArray.lowReg)) {
+        dvmCompilerClobber(cUnit, rlArray.lowReg);
         regPtr = rlArray.lowReg;
     } else {
-        regPtr = allocTemp(cUnit);
+        regPtr = dvmCompilerAllocTemp(cUnit);
         genRegCopy(cUnit, regPtr, rlArray.lowReg);
     }
 
@@ -454,7 +454,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     }
 
     if (!(mir->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
-        int regLen = allocTemp(cUnit);
+        int regLen = dvmCompilerAllocTemp(cUnit);
         //NOTE: max live temps(4) here.
         /* Get len */
         loadWordDisp(cUnit, rlArray.lowReg, lenOffset, regLen);
@@ -462,7 +462,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
         opRegImm(cUnit, kOpAdd, regPtr, dataOffset);
         genBoundsCheck(cUnit, rlIndex.lowReg, regLen, mir->offset,
                        pcrLabel);
-        freeTemp(cUnit, regLen);
+        dvmCompilerFreeTemp(cUnit, regLen);
     } else {
         /* regPtr -> array data */
         opRegImm(cUnit, kOpAdd, regPtr, dataOffset);
@@ -471,10 +471,10 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     if ((size == kLong) || (size == kDouble)) {
         //TODO: need specific wide routine that can handle fp regs
         if (scale) {
-            int rNewIndex = allocTemp(cUnit);
+            int rNewIndex = dvmCompilerAllocTemp(cUnit);
             opRegRegImm(cUnit, kOpLsl, rNewIndex, rlIndex.lowReg, scale);
             opRegReg(cUnit, kOpAdd, regPtr, rNewIndex);
-            freeTemp(cUnit, rNewIndex);
+            dvmCompilerFreeTemp(cUnit, rNewIndex);
         } else {
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
@@ -486,7 +486,7 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
 #if defined(WITH_SELF_VERIFICATION)
         cUnit->heapMemOp = false;
 #endif
-        freeTemp(cUnit, regPtr);
+        dvmCompilerFreeTemp(cUnit, regPtr);
     } else {
         rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
 #if defined(WITH_SELF_VERIFICATION)
@@ -528,7 +528,7 @@ static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir,
         default:
             return true;
     }
-    rlResult = getReturnLocWide(cUnit);
+    rlResult = dvmCompilerGetReturnWide(cUnit);
     storeValueWide(cUnit, rlDest, rlResult);
     return false;
 }
@@ -549,7 +549,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
     switch (mir->dalvikInsn.opCode) {
         case OP_NOT_LONG:
             rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             opRegReg(cUnit, kOpMvn, rlResult.lowReg, rlSrc2.lowReg);
             opRegReg(cUnit, kOpMvn, rlResult.highReg, rlSrc2.highReg);
             storeValueWide(cUnit, rlDest, rlResult);
@@ -599,9 +599,9 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
             break;
         case OP_NEG_LONG: {
             //TUNING: can improve this using Thumb2 code
-            int tReg = allocTemp(cUnit);
+            int tReg = dvmCompilerAllocTemp(cUnit);
             rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadConstantValue(cUnit, tReg, 0);
             opRegRegReg(cUnit, kOpSub, rlResult.lowReg,
                         tReg, rlSrc2.lowReg);
@@ -618,16 +618,16 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         genLong3Addr(cUnit, firstOp, secondOp, rlDest, rlSrc1, rlSrc2);
     } else {
         // Adjust return regs in to handle case of rem returning r2/r3
-        flushAllRegs(cUnit);   /* Send everything to home location */
+        dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
         loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
         loadConstant(cUnit, rlr, (int) callTgt);
         loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
         opReg(cUnit, kOpBlx, rlr);
-        clobberCallRegs(cUnit);
+        dvmCompilerColbberCallRegs(cUnit);
         if (retReg == r0)
-            rlResult = getReturnLocWide(cUnit);
+            rlResult = dvmCompilerGetReturnWide(cUnit);
         else
-            rlResult = getReturnLocWideAlt(cUnit);
+            rlResult = dvmCompilerGetReturnWideAlt(cUnit);
         storeValueWide(cUnit, rlDest, rlResult);
     }
     return false;
@@ -721,20 +721,20 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
     if (!callOut) {
         rlSrc1 = loadValue(cUnit, rlSrc1, kCoreReg);
         if (unary) {
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             opRegReg(cUnit, op, rlResult.lowReg,
                      rlSrc1.lowReg);
         } else {
             rlSrc2 = loadValue(cUnit, rlSrc2, kCoreReg);
             if (shiftOp) {
-                int tReg = allocTemp(cUnit);
+                int tReg = dvmCompilerAllocTemp(cUnit);
                 opRegRegImm(cUnit, kOpAnd, tReg, rlSrc2.lowReg, 31);
-                rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+                rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
                 opRegRegReg(cUnit, op, rlResult.lowReg,
                             rlSrc1.lowReg, tReg);
-                freeTemp(cUnit, tReg);
+                dvmCompilerFreeTemp(cUnit, tReg);
             } else {
-                rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+                rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
                 opRegRegReg(cUnit, op, rlResult.lowReg,
                             rlSrc1.lowReg, rlSrc2.lowReg);
             }
@@ -742,7 +742,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
         storeValue(cUnit, rlDest, rlResult);
     } else {
         RegLocation rlResult;
-        flushAllRegs(cUnit);   /* Send everything to home location */
+        dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
         loadValueDirectFixed(cUnit, rlSrc2, r1);
         loadConstant(cUnit, r2, (int) callTgt);
         loadValueDirectFixed(cUnit, rlSrc1, r0);
@@ -750,11 +750,11 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
             genNullCheck(cUnit, rlSrc2.sRegLow, r1, mir->offset, NULL);
         }
         opReg(cUnit, kOpBlx, r2);
-        clobberCallRegs(cUnit);
+        dvmCompilerColbberCallRegs(cUnit);
         if (retReg == r0)
-            rlResult = getReturnLoc(cUnit);
+            rlResult = dvmCompilerGetReturn(cUnit);
         else
-            rlResult = getReturnLocAlt(cUnit);
+            rlResult = dvmCompilerGetReturnAlt(cUnit);
         storeValue(cUnit, rlDest, rlResult);
     }
     return false;
@@ -768,21 +768,21 @@ static bool genArithOp(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlSrc2;
     /* Deduce sizes of operands */
     if (mir->ssaRep->numUses == 2) {
-        rlSrc1 = getSrcLoc(cUnit, mir, 0);
-        rlSrc2 = getSrcLoc(cUnit, mir, 1);
+        rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
+        rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
     } else if (mir->ssaRep->numUses == 3) {
-        rlSrc1 = getSrcLocWide(cUnit, mir, 0, 1);
-        rlSrc2 = getSrcLoc(cUnit, mir, 2);
+        rlSrc1 = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
+        rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 2);
     } else {
-        rlSrc1 = getSrcLocWide(cUnit, mir, 0, 1);
-        rlSrc2 = getSrcLocWide(cUnit, mir, 2, 3);
+        rlSrc1 = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
+        rlSrc2 = dvmCompilerGetSrcWide(cUnit, mir, 2, 3);
         assert(mir->ssaRep->numUses == 4);
     }
     if (mir->ssaRep->numDefs == 1) {
-        rlDest = getDestLoc(cUnit, mir, 0);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     } else {
         assert(mir->ssaRep->numDefs == 2);
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
     }
 
     if ((opCode >= OP_ADD_LONG_2ADDR) && (opCode <= OP_XOR_LONG_2ADDR)) {
@@ -871,10 +871,10 @@ static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
      * live values, so we clobber them immediately after loading to prevent
      * them from being used as sources for subsequent loads.
      */
-    lockAllTemps(cUnit);
+    dvmCompilerLockAllTemps(cUnit);
     for (i = 0; i < dInsn->vA; i++) {
         regMask |= 1 << i;
-        rlArg = getSrcLoc(cUnit, mir, numDone++);
+        rlArg = dvmCompilerGetSrc(cUnit, mir, numDone++);
         loadValueDirectFixed(cUnit, rlArg, i);
     }
     if (regMask) {
@@ -883,7 +883,7 @@ static void genProcessArgsNoRange(CompilationUnit *cUnit, MIR *mir,
                     sizeof(StackSaveArea) + (dInsn->vA << 2));
         /* generate null check */
         if (pcrLabel) {
-            *pcrLabel = genNullCheck(cUnit, getSrcSSAName(mir, 0), r0,
+            *pcrLabel = genNullCheck(cUnit, dvmCompilerSSASrc(mir, 0), r0,
                                      mir->offset, NULL);
         }
         storeMultiple(cUnit, r7, regMask);
@@ -905,7 +905,7 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
      * region - even though some might conceivably have valid copies
      * cached in a preserved register.
      */
-    lockAllTemps(cUnit);
+    dvmCompilerLockAllTemps(cUnit);
 
     /*
      * r4PC     : &rFP[vC]
@@ -924,7 +924,7 @@ static void genProcessArgsRange(CompilationUnit *cUnit, MIR *mir,
                 sizeof(StackSaveArea) + (numArgs << 2));
     /* generate null check */
     if (pcrLabel) {
-        *pcrLabel = genNullCheck(cUnit, getSrcSSAName(mir, 0), r0,
+        *pcrLabel = genNullCheck(cUnit, dvmCompilerSSASrc(mir, 0), r0,
                                  mir->offset, NULL);
     }
 
@@ -993,11 +993,11 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
      * memory by the point, so register usage restrictions no
      * longer apply.  All temp & preserved registers may be used.
      */
-    lockAllTemps(cUnit);
+    dvmCompilerLockAllTemps(cUnit);
     ArmLIR *retChainingCell = &labelList[bb->fallThrough->id];
 
     /* r1 = &retChainingCell */
-    lockTemp(cUnit, r1);
+    dvmCompilerLockTemp(cUnit, r1);
     ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
     /* r4PC = dalvikCallsite */
     loadConstant(cUnit, r4PC,
@@ -1057,7 +1057,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      * longer apply.  Lock temps to prevent them from being
      * allocated by utility routines.
      */
-    lockAllTemps(cUnit);
+    dvmCompilerLockAllTemps(cUnit);
 
     /* "this" is already left in r0 by genProcessArgs* */
 
@@ -1163,7 +1163,7 @@ static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
      * memory by the point, so register usage restrictions no
      * longer apply.  All temp & preserved registers may be used.
      */
-    lockAllTemps(cUnit);
+    dvmCompilerLockAllTemps(cUnit);
 
     /* r3 now contains this->clazz */
     loadWordDisp(cUnit, r0, offsetof(Object, clazz), r3);
@@ -1208,7 +1208,7 @@ static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
 static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
 {
     /* r0 = dalvik pc */
-    flushAllRegs(cUnit);
+    dvmCompilerFlushAllRegs(cUnit);
     loadConstant(cUnit, r0, (int) (cUnit->method->insns + offset));
     loadWordDisp(cUnit, r0, offsetof(Object, clazz), r3);
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
@@ -1227,7 +1227,7 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
                        kInstrCanThrow;
 
     //Ugly, but necessary.  Flush all Dalvik regs so Interp can find them
-    flushAllRegs(cUnit);
+    dvmCompilerFlushAllRegs(cUnit);
 
     if ((mir->next == NULL) || (flags & flagsToCheck)) {
        genPuntToInterp(cUnit, mir->offset);
@@ -1258,8 +1258,8 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
 {
     bool isEnter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
     genExportPC(cUnit, mir);
-    flushAllRegs(cUnit);   /* Send everything to home location */
-    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0);
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
@@ -1276,7 +1276,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         loadConstant(cUnit, r2, (int)dvmUnlockObject);
         /* Do the call */
         opReg(cUnit, kOpBlx, r2);
-        clobberCallRegs(cUnit);
+        dvmCompilerColbberCallRegs(cUnit);
     }
 }
 
@@ -1324,15 +1324,15 @@ static bool handleFmt11n_Fmt31i(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlDest;
     RegLocation rlResult;
     if (mir->ssaRep->numDefs == 2) {
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
     } else {
-        rlDest = getDestLoc(cUnit, mir, 0);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     }
 
     switch (mir->dalvikInsn.opCode) {
         case OP_CONST:
         case OP_CONST_4: {
-            rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstantValue(cUnit, rlResult.lowReg, mir->dalvikInsn.vB);
             storeValue(cUnit, rlDest, rlResult);
             break;
@@ -1340,7 +1340,7 @@ static bool handleFmt11n_Fmt31i(CompilationUnit *cUnit, MIR *mir)
         case OP_CONST_WIDE_32: {
             //TUNING: single routine to load constant pair for support doubles
             //TUNING: load 0/-1 separately to avoid load dependency
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadConstantValue(cUnit, rlResult.lowReg, mir->dalvikInsn.vB);
             opRegRegImm(cUnit, kOpAsr, rlResult.highReg,
                         rlResult.lowReg, 31);
@@ -1358,11 +1358,11 @@ static bool handleFmt21h(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlDest;
     RegLocation rlResult;
     if (mir->ssaRep->numDefs == 2) {
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
     } else {
-        rlDest = getDestLoc(cUnit, mir, 0);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     }
-    rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
 
     switch (mir->dalvikInsn.opCode) {
         case OP_CONST_HIGH16: {
@@ -1401,8 +1401,8 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             void *strPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResStrings[mir->dalvikInsn.vB]);
             assert(strPtr != NULL);
-            rlDest = getDestLoc(cUnit, mir, 0);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadConstantValue(cUnit, rlResult.lowReg, (int) strPtr );
             storeValue(cUnit, rlDest, rlResult);
             break;
@@ -1411,8 +1411,8 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             void *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
             assert(classPtr != NULL);
-            rlDest = getDestLoc(cUnit, mir, 0);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadConstantValue(cUnit, rlResult.lowReg, (int) classPtr );
             storeValue(cUnit, rlDest, rlResult);
             break;
@@ -1424,12 +1424,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_SGET_SHORT:
         case OP_SGET: {
             int valOffset = offsetof(StaticField, value);
-            int tReg = allocTemp(cUnit);
+            int tReg = dvmCompilerAllocTemp(cUnit);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
             assert(fieldPtr != NULL);
-            rlDest = getDestLoc(cUnit, mir, 0);
-            rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+            rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
 #if defined(WITH_SELF_VERIFICATION)
             cUnit->heapMemOp = true;
@@ -1445,10 +1445,10 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             int valOffset = offsetof(StaticField, value);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
-            int tReg = allocTemp(cUnit);
+            int tReg = dvmCompilerAllocTemp(cUnit);
             assert(fieldPtr != NULL);
-            rlDest = getDestLocWide(cUnit, mir, 0, 1);
-            rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+            rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
 #if defined(WITH_SELF_VERIFICATION)
             cUnit->heapMemOp = true;
@@ -1467,12 +1467,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_SPUT_SHORT:
         case OP_SPUT: {
             int valOffset = offsetof(StaticField, value);
-            int tReg = allocTemp(cUnit);
+            int tReg = dvmCompilerAllocTemp(cUnit);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
             assert(fieldPtr != NULL);
-            rlSrc = getSrcLoc(cUnit, mir, 0);
+            rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
 #if defined(WITH_SELF_VERIFICATION)
@@ -1485,13 +1485,13 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             break;
         }
         case OP_SPUT_WIDE: {
-            int tReg = allocTemp(cUnit);
+            int tReg = dvmCompilerAllocTemp(cUnit);
             int valOffset = offsetof(StaticField, value);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
             assert(fieldPtr != NULL);
-            rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+            rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
             rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
 #if defined(WITH_SELF_VERIFICATION)
@@ -1517,13 +1517,13 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              * with.  However, Alloc might throw, so we need to genExportPC()
              */
             assert((classPtr->accessFlags & (ACC_INTERFACE|ACC_ABSTRACT)) == 0);
-            flushAllRegs(cUnit);   /* Send everything to home location */
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             genExportPC(cUnit, mir);
             loadConstant(cUnit, r2, (int)dvmAllocObject);
             loadConstant(cUnit, r0, (int) classPtr);
             loadConstant(cUnit, r1, ALLOC_DONT_TRACK);
             opReg(cUnit, kOpBlx, r2);
-            clobberCallRegs(cUnit);
+            dvmCompilerColbberCallRegs(cUnit);
             /* generate a branch over if allocation is successful */
             opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
             ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
@@ -1538,8 +1538,8 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
             target->defMask = ENCODE_ALL;
             branchOver->generic.target = (LIR *) target;
-            rlDest = getDestLoc(cUnit, mir, 0);
-            rlResult = getReturnLoc(cUnit);
+            rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+            rlResult = dvmCompilerGetReturn(cUnit);
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
@@ -1563,9 +1563,9 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
                  genInterpSingleStep(cUnit, mir);
                  return false;
             }
-            flushAllRegs(cUnit);   /* Send everything to home location */
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             loadConstant(cUnit, r1, (int) classPtr );
-            rlSrc = getSrcLoc(cUnit, mir, 0);
+            rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
             opRegImm(cUnit, kOpCmp, rlSrc.lowReg, 0);   /* Null? */
             ArmLIR *branch1 = opCondBranch(cUnit, kArmCondEq);
@@ -1581,7 +1581,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             opRegReg(cUnit, kOpCmp, r0, r1);
             ArmLIR *branch2 = opCondBranch(cUnit, kArmCondEq);
             opReg(cUnit, kOpBlx, r2);
-            clobberCallRegs(cUnit);
+            dvmCompilerColbberCallRegs(cUnit);
             /*
              * If null, check cast failed - punt to the interpreter.  Because
              * interpreter will be the one throwing, we don't need to
@@ -1609,10 +1609,10 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         case OP_MOVE_EXCEPTION: {
             int offset = offsetof(InterpState, self);
             int exOffset = offsetof(Thread, exception);
-            int selfReg = allocTemp(cUnit);
-            int resetReg = allocTemp(cUnit);
-            RegLocation rlDest = getDestLoc(cUnit, mir, 0);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            int selfReg = dvmCompilerAllocTemp(cUnit);
+            int resetReg = dvmCompilerAllocTemp(cUnit);
+            RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadWordDisp(cUnit, rGLUE, offset, selfReg);
             loadConstant(cUnit, resetReg, 0);
             loadWordDisp(cUnit, selfReg, exOffset, rlResult.lowReg);
@@ -1622,21 +1622,21 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_MOVE_RESULT:
         case OP_MOVE_RESULT_OBJECT: {
-            RegLocation rlDest = getDestLoc(cUnit, mir, 0);
+            RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             RegLocation rlSrc = LOC_DALVIK_RETURN_VAL;
             rlSrc.fp = rlDest.fp;
             storeValue(cUnit, rlDest, rlSrc);
             break;
         }
         case OP_MOVE_RESULT_WIDE: {
-            RegLocation rlDest = getDestLocWide(cUnit, mir, 0, 1);
+            RegLocation rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
             RegLocation rlSrc = LOC_DALVIK_RETURN_VAL_WIDE;
             rlSrc.fp = rlDest.fp;
             storeValueWide(cUnit, rlDest, rlSrc);
             break;
         }
         case OP_RETURN_WIDE: {
-            RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+            RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
             RegLocation rlDest = LOC_DALVIK_RETURN_VAL_WIDE;
             rlDest.fp = rlSrc.fp;
             storeValueWide(cUnit, rlDest, rlSrc);
@@ -1645,7 +1645,7 @@ static bool handleFmt11x(CompilationUnit *cUnit, MIR *mir)
         }
         case OP_RETURN:
         case OP_RETURN_OBJECT: {
-            RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+            RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             RegLocation rlDest = LOC_DALVIK_RETURN_VAL;
             rlDest.fp = rlSrc.fp;
             storeValue(cUnit, rlDest, rlSrc);
@@ -1682,13 +1682,13 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
     }
 
     if (mir->ssaRep->numUses == 2)
-        rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+        rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     else
-        rlSrc = getSrcLoc(cUnit, mir, 0);
+        rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     if (mir->ssaRep->numDefs == 2)
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
     else
-        rlDest = getDestLoc(cUnit, mir, 0);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
 
     switch (opCode) {
         case OP_DOUBLE_TO_INT:
@@ -1716,8 +1716,8 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             storeValueWide(cUnit, rlDest, rlSrc);
             break;
         case OP_INT_TO_LONG:
-            rlSrc = updateLoc(cUnit, rlSrc);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlSrc = dvmCompilerUpdateLoc(cUnit, rlSrc);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             //TUNING: shouldn't loadValueDirect already check for phys reg?
             if (rlSrc.location == kLocPhysReg) {
                 genRegCopy(cUnit, rlResult.lowReg, rlSrc.lowReg);
@@ -1729,8 +1729,8 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             storeValueWide(cUnit, rlDest, rlResult);
             break;
         case OP_LONG_TO_INT:
-            rlSrc = updateLocWide(cUnit, rlSrc);
-            rlSrc = wideToNarrowLoc(cUnit, rlSrc);
+            rlSrc = dvmCompilerUpdateLocWide(cUnit, rlSrc);
+            rlSrc = dvmCompilerWideToNarrow(cUnit, rlSrc);
             // Intentional fallthrough
         case OP_MOVE:
         case OP_MOVE_OBJECT:
@@ -1738,19 +1738,19 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             break;
         case OP_INT_TO_BYTE:
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             opRegReg(cUnit, kOp2Byte, rlResult.lowReg, rlSrc.lowReg);
             storeValue(cUnit, rlDest, rlResult);
             break;
         case OP_INT_TO_SHORT:
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             opRegReg(cUnit, kOp2Short, rlResult.lowReg, rlSrc.lowReg);
             storeValue(cUnit, rlDest, rlResult);
             break;
         case OP_INT_TO_CHAR:
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             opRegReg(cUnit, kOp2Char, rlResult.lowReg, rlSrc.lowReg);
             storeValue(cUnit, rlDest, rlResult);
             break;
@@ -1759,7 +1759,7 @@ static bool handleFmt12x(CompilationUnit *cUnit, MIR *mir)
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
             genNullCheck(cUnit, rlSrc.sRegLow, rlSrc.lowReg,
                          mir->offset, NULL);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadWordDisp(cUnit, rlSrc.lowReg, lenOffset,
                          rlResult.lowReg);
             storeValue(cUnit, rlDest, rlResult);
@@ -1778,15 +1778,15 @@ static bool handleFmt21s(CompilationUnit *cUnit, MIR *mir)
     RegLocation rlResult;
     int BBBB = mir->dalvikInsn.vB;
     if (dalvikOpCode == OP_CONST_WIDE_16) {
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
-        rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
         loadConstantValue(cUnit, rlResult.lowReg, BBBB);
         //TUNING: do high separately to avoid load dependency
         opRegRegImm(cUnit, kOpAsr, rlResult.highReg, rlResult.lowReg, 31);
         storeValueWide(cUnit, rlDest, rlResult);
     } else if (dalvikOpCode == OP_CONST_16) {
-        rlDest = getDestLoc(cUnit, mir, 0);
-        rlResult = evalLoc(cUnit, rlDest, kAnyReg, true);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
         loadConstantValue(cUnit, rlResult.lowReg, BBBB);
         storeValue(cUnit, rlDest, rlResult);
     } else
@@ -1800,7 +1800,7 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
     ArmConditionCode cond;
-    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
     opRegImm(cUnit, kOpCmp, rlSrc.lowReg, 0);
 
@@ -1838,8 +1838,8 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
-    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlDest = getDestLoc(cUnit, mir, 0);
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     RegLocation rlResult;
     int lit = mir->dalvikInsn.vC;
     OpKind op = 0;      /* Make gcc happy */
@@ -1855,9 +1855,9 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             int tReg;
             //TUNING: add support for use of Arm rsub op
             rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
-            tReg = allocTemp(cUnit);
+            tReg = dvmCompilerAllocTemp(cUnit);
             loadConstant(cUnit, tReg, lit);
-            rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+            rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             opRegRegReg(cUnit, kOpSub, rlResult.lowReg,
                         tReg, rlSrc.lowReg);
             storeValue(cUnit, rlDest, rlResult);
@@ -1910,9 +1910,9 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
                 genInterpSingleStep(cUnit, mir);
                 return false;
             }
-            flushAllRegs(cUnit);   /* Send everything to home location */
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r0);
-            clobberReg(cUnit, r0);
+            dvmCompilerClobber(cUnit, r0);
             if ((dalvikOpCode == OP_DIV_INT_LIT8) ||
                 (dalvikOpCode == OP_DIV_INT_LIT16)) {
                 loadConstant(cUnit, r2, (int)__aeabi_idiv);
@@ -1923,11 +1923,11 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             }
             loadConstant(cUnit, r1, lit);
             opReg(cUnit, kOpBlx, r2);
-            clobberCallRegs(cUnit);
+            dvmCompilerColbberCallRegs(cUnit);
             if (isDiv)
-                rlResult = getReturnLoc(cUnit);
+                rlResult = dvmCompilerGetReturn(cUnit);
             else
-                rlResult = getReturnLocAlt(cUnit);
+                rlResult = dvmCompilerGetReturnAlt(cUnit);
             storeValue(cUnit, rlDest, rlResult);
             return false;
             break;
@@ -1935,7 +1935,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             return true;
     }
     rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
-    rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
     // Avoid shifts by literal 0 - no support in Thumb.  Change to copy
     if (shiftOp && (lit == 0)) {
         genRegCopy(cUnit, rlResult.lowReg, rlSrc.lowReg);
@@ -1964,13 +1964,13 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
     switch (dalvikOpCode) {
         case OP_NEW_ARRAY: {
             // Generates a call - use explicit registers
-            RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
-            RegLocation rlDest = getDestLoc(cUnit, mir, 0);
+            RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+            RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             RegLocation rlResult;
             void *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
             assert(classPtr != NULL);
-            flushAllRegs(cUnit);   /* Send everything to home location */
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r1);   /* Len */
             loadConstant(cUnit, r0, (int) classPtr );
@@ -1983,7 +1983,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
                 genRegImmCheck(cUnit, kArmCondMi, r1, 0, mir->offset, NULL);
             loadConstant(cUnit, r2, ALLOC_DONT_TRACK);
             opReg(cUnit, kOpBlx, r3);
-            clobberCallRegs(cUnit);
+            dvmCompilerColbberCallRegs(cUnit);
             /* generate a branch over if allocation is successful */
             opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
             ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
@@ -1998,14 +1998,14 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
             target->defMask = ENCODE_ALL;
             branchOver->generic.target = (LIR *) target;
-            rlResult = getReturnLoc(cUnit);
+            rlResult = dvmCompilerGetReturn(cUnit);
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
         case OP_INSTANCE_OF: {
             // May generate a call - use explicit registers
-            RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
-            RegLocation rlDest = getDestLoc(cUnit, mir, 0);
+            RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+            RegLocation rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             RegLocation rlResult;
             ClassObject *classPtr =
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
@@ -2022,7 +2022,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
                 genInterpSingleStep(cUnit, mir);
                 break;
             }
-            flushAllRegs(cUnit);   /* Send everything to home location */
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r0);  /* Ref */
             loadConstant(cUnit, r2, (int) classPtr );
 //TUNING: compare to 0 primative to allow use of CB[N]Z
@@ -2039,11 +2039,11 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             genRegCopy(cUnit, r0, r1);
             genRegCopy(cUnit, r1, r2);
             opReg(cUnit, kOpBlx, r3);
-            clobberCallRegs(cUnit);
+            dvmCompilerColbberCallRegs(cUnit);
             /* branch target here */
             ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
             target->defMask = ENCODE_ALL;
-            rlResult = getReturnLoc(cUnit);
+            rlResult = dvmCompilerGetReturn(cUnit);
             storeValue(cUnit, rlDest, rlResult);
             branch1->generic.target = (LIR *)target;
             branch2->generic.target = (LIR *)target;
@@ -2121,8 +2121,8 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
     ArmConditionCode cond;
-    RegLocation rlSrc1 = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlSrc2 = getSrcLoc(cUnit, mir, 1);
+    RegLocation rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
 
     rlSrc1 = loadValue(cUnit, rlSrc1, kCoreReg);
     rlSrc2 = loadValue(cUnit, rlSrc2, kCoreReg);
@@ -2167,14 +2167,14 @@ static bool handleFmt22x_Fmt32x(CompilationUnit *cUnit, MIR *mir)
         case OP_MOVE_OBJECT_16:
         case OP_MOVE_FROM16:
         case OP_MOVE_OBJECT_FROM16: {
-            storeValue(cUnit, getDestLoc(cUnit, mir, 0),
-                       getSrcLoc(cUnit, mir, 0));
+            storeValue(cUnit, dvmCompilerGetDest(cUnit, mir, 0),
+                       dvmCompilerGetSrc(cUnit, mir, 0));
             break;
         }
         case OP_MOVE_WIDE_16:
         case OP_MOVE_WIDE_FROM16: {
-            storeValueWide(cUnit, getDestLocWide(cUnit, mir, 0, 1),
-                           getSrcLocWide(cUnit, mir, 0, 1));
+            storeValueWide(cUnit, dvmCompilerGetDestWide(cUnit, mir, 0, 1),
+                           dvmCompilerGetSrcWide(cUnit, mir, 0, 1));
             break;
         }
         default:
@@ -2197,30 +2197,30 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
     /* APUTs have 3 sources and no targets */
     if (mir->ssaRep->numDefs == 0) {
         if (mir->ssaRep->numUses == 3) {
-            rlDest = getSrcLoc(cUnit, mir, 0);
-            rlSrc1 = getSrcLoc(cUnit, mir, 1);
-            rlSrc2 = getSrcLoc(cUnit, mir, 2);
+            rlDest = dvmCompilerGetSrc(cUnit, mir, 0);
+            rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 1);
+            rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 2);
         } else {
             assert(mir->ssaRep->numUses == 4);
-            rlDest = getSrcLocWide(cUnit, mir, 0, 1);
-            rlSrc1 = getSrcLoc(cUnit, mir, 2);
-            rlSrc2 = getSrcLoc(cUnit, mir, 3);
+            rlDest = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
+            rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 2);
+            rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 3);
         }
     } else {
         /* Two sources and 1 dest.  Deduce the operand sizes */
         if (mir->ssaRep->numUses == 4) {
-            rlSrc1 = getSrcLocWide(cUnit, mir, 0, 1);
-            rlSrc2 = getSrcLocWide(cUnit, mir, 2, 3);
+            rlSrc1 = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
+            rlSrc2 = dvmCompilerGetSrcWide(cUnit, mir, 2, 3);
         } else {
             assert(mir->ssaRep->numUses == 2);
-            rlSrc1 = getSrcLoc(cUnit, mir, 0);
-            rlSrc2 = getSrcLoc(cUnit, mir, 1);
+            rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
+            rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
         }
         if (mir->ssaRep->numDefs == 2) {
-            rlDest = getDestLocWide(cUnit, mir, 0, 1);
+            rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
         } else {
             assert(mir->ssaRep->numDefs == 1);
-            rlDest = getDestLoc(cUnit, mir, 0);
+            rlDest = dvmCompilerGetDest(cUnit, mir, 0);
         }
     }
 
@@ -2408,16 +2408,16 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
     switch (dalvikOpCode) {
         case OP_FILL_ARRAY_DATA: {
-            RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+            RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             // Making a call - use explicit registers
-            flushAllRegs(cUnit);   /* Send everything to home location */
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r0);
             loadConstant(cUnit, r2, (int)dvmInterpHandleFillArrayData);
             loadConstant(cUnit, r1,
                (int) (cUnit->method->insns + mir->offset + mir->dalvikInsn.vB));
             opReg(cUnit, kOpBlx, r2);
-            clobberCallRegs(cUnit);
+            dvmCompilerColbberCallRegs(cUnit);
             /* generate a branch over if successful */
             opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
             ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
@@ -2436,10 +2436,10 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
          */
         case OP_PACKED_SWITCH:
         case OP_SPARSE_SWITCH: {
-            RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
-            flushAllRegs(cUnit);   /* Send everything to home location */
+            RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             loadValueDirectFixed(cUnit, rlSrc, r1);
-            lockAllTemps(cUnit);
+            dvmCompilerLockAllTemps(cUnit);
             const u2 *switchData =
                 cUnit->method->insns + mir->offset + mir->dalvikInsn.vB;
             u2 size = switchData[1];
@@ -2455,7 +2455,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             /* r2 <- pc of the instruction following the blx */
             opRegReg(cUnit, kOpMov, r2, rpc);
             opReg(cUnit, kOpBlx, r4PC);
-            clobberCallRegs(cUnit);
+            dvmCompilerColbberCallRegs(cUnit);
             /* pc <- computed goto target */
             opRegReg(cUnit, kOpMov, rpc, r0);
             break;
@@ -2632,7 +2632,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             int methodIndex = dInsn->vB;
 
             /* Ensure that nothing is both live and dirty */
-            flushAllRegs(cUnit);
+            dvmCompilerFlushAllRegs(cUnit);
 
             if (mir->dalvikInsn.opCode == OP_INVOKE_INTERFACE)
                 genProcessArgsNoRange(cUnit, mir, dInsn, &pcrLabel);
@@ -2830,8 +2830,8 @@ static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
     return false;
 #else
     ArmLIR *rollback;
-    RegLocation rlThis = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlComp = getSrcLoc(cUnit, mir, 1);
+    RegLocation rlThis = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlComp = dvmCompilerGetSrc(cUnit, mir, 1);
 
     loadValueDirectFixed(cUnit, rlThis, r0);
     loadValueDirectFixed(cUnit, rlComp, r1);
@@ -2844,7 +2844,8 @@ static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
      * expansion.
      */
     genDispatchToHandler(cUnit, TEMPLATE_STRING_COMPARETO);
-    storeValue(cUnit, inlinedTarget(cUnit, mir, false), getReturnLoc(cUnit));
+    storeValue(cUnit, inlinedTarget(cUnit, mir, false),
+               dvmCompilerGetReturn(cUnit));
     return true;
 #endif
 }
@@ -2854,13 +2855,13 @@ static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
 #if defined(USE_GLOBAL_STRING_DEFS)
     return false;
 #else
-    RegLocation rlThis = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlChar = getSrcLoc(cUnit, mir, 1);
+    RegLocation rlThis = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlChar = dvmCompilerGetSrc(cUnit, mir, 1);
 
     loadValueDirectFixed(cUnit, rlThis, r0);
     loadValueDirectFixed(cUnit, rlChar, r1);
     if (!singleI) {
-        RegLocation rlStart = getSrcLoc(cUnit, mir, 2);
+        RegLocation rlStart = dvmCompilerGetSrc(cUnit, mir, 2);
         loadValueDirectFixed(cUnit, rlStart, r2);
     } else {
         loadConstant(cUnit, r2, 0);
@@ -2868,7 +2869,8 @@ static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
     /* Test objects for NULL */
     genNullCheck(cUnit, rlThis.sRegLow, r0, mir->offset, NULL);
     genDispatchToHandler(cUnit, TEMPLATE_STRING_INDEXOF);
-    storeValue(cUnit, inlinedTarget(cUnit, mir, false), getReturnLoc(cUnit));
+    storeValue(cUnit, inlinedTarget(cUnit, mir, false),
+               dvmCompilerGetReturn(cUnit));
     return true;
 #endif
 }
@@ -2942,16 +2944,16 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
                 default:
                     dvmAbort();
             }
-            flushAllRegs(cUnit);   /* Send everything to home location */
-            clobberCallRegs(cUnit);
-            clobberReg(cUnit, r4PC);
-            clobberReg(cUnit, r7);
+            dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
+            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobber(cUnit, r4PC);
+            dvmCompilerClobber(cUnit, r7);
             opRegRegImm(cUnit, kOpAdd, r4PC, rGLUE, offset);
             opImm(cUnit, kOpPush, (1<<r4PC) | (1<<r7));
             loadConstant(cUnit, r4PC, (int)inLineTable[operation].func);
             genExportPC(cUnit, mir);
             for (i=0; i < dInsn->vA; i++) {
-                loadValueDirect(cUnit, getSrcLoc(cUnit, mir, i), i);
+                loadValueDirect(cUnit, dvmCompilerGetSrc(cUnit, mir, i), i);
             }
             opReg(cUnit, kOpBlx, r4PC);
             opRegImm(cUnit, kOpAdd, r13, 8);
@@ -2974,8 +2976,8 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
 static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
 {
     //TUNING: We're using core regs here - not optimal when target is a double
-    RegLocation rlDest = getDestLocWide(cUnit, mir, 0, 1);
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    RegLocation rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
     loadConstantValue(cUnit, rlResult.lowReg,
                       mir->dalvikInsn.vB_wide & 0xFFFFFFFFUL);
     loadConstantValue(cUnit, rlResult.highReg,
@@ -3112,7 +3114,7 @@ static void genHoistedChecksForCountUpLoop(CompilationUnit *cUnit, MIR *mir)
                    (ArmLIR *) cUnit->loopAnalysis->branchToPCR);
 
     /* regLength <- len(arrayRef) */
-    regLength = allocTemp(cUnit);
+    regLength = dvmCompilerAllocTemp(cUnit);
     loadWordDisp(cUnit, rlArray.lowReg, lenOffset, regLength);
 
     int delta = maxC;
@@ -3125,10 +3127,10 @@ static void genHoistedChecksForCountUpLoop(CompilationUnit *cUnit, MIR *mir)
     }
 
     if (delta) {
-        int tReg = allocTemp(cUnit);
+        int tReg = dvmCompilerAllocTemp(cUnit);
         opRegRegImm(cUnit, kOpAdd, tReg, rlIdxEnd.lowReg, delta);
         rlIdxEnd.lowReg = tReg;
-        freeTemp(cUnit, tReg);
+        dvmCompilerFreeTemp(cUnit, tReg);
     }
     /* Punt if "regIdxEnd < len(Array)" is false */
     genRegRegCheck(cUnit, kArmCondGe, rlIdxEnd.lowReg, regLength, 0,
@@ -3147,7 +3149,7 @@ static void genHoistedChecksForCountDownLoop(CompilationUnit *cUnit, MIR *mir)
 {
     DecodedInstruction *dInsn = &mir->dalvikInsn;
     const int lenOffset = offsetof(ArrayObject, length);
-    const int regLength = allocTemp(cUnit);
+    const int regLength = dvmCompilerAllocTemp(cUnit);
     const int maxC = dInsn->arg[0];
     const int minC = dInsn->arg[1];
     RegLocation rlArray = cUnit->regLocation[mir->dalvikInsn.vA];
@@ -3163,10 +3165,10 @@ static void genHoistedChecksForCountDownLoop(CompilationUnit *cUnit, MIR *mir)
     loadWordDisp(cUnit, rlArray.lowReg, lenOffset, regLength);
 
     if (maxC) {
-        int tReg = allocTemp(cUnit);
+        int tReg = dvmCompilerAllocTemp(cUnit);
         opRegRegImm(cUnit, kOpAdd, tReg, rlIdxInit.lowReg, maxC);
         rlIdxInit.lowReg = tReg;
-        freeTemp(cUnit, tReg);
+        dvmCompilerFreeTemp(cUnit, tReg);
     }
 
     /* Punt if "regIdxInit < len(Array)" is false */
@@ -3345,9 +3347,9 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         } else if (blockList[i]->blockType == kDalvikByteCode) {
             labelList[i].opCode = kArmPseudoNormalBlockLabel;
             /* Reset the register state */
-            resetRegPool(cUnit);
-            clobberAllRegs(cUnit);
-            resetNullCheckTracker(cUnit);
+            dvmCompilerResetRegPool(cUnit);
+            dvmCompilerClobberAllRegs(cUnit);
+            dvmCompilerResetNullCheck(cUnit);
         } else {
             switch (blockList[i]->blockType) {
                 case kChainingCellNormal:
@@ -3418,13 +3420,13 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 
         for (mir = blockList[i]->firstMIRInsn; mir; mir = mir->next) {
 
-            resetRegPool(cUnit);
+            dvmCompilerResetRegPool(cUnit);
             if (gDvmJit.disableOpt & (1 << kTrackLiveTemps)) {
-                clobberAllRegs(cUnit);
+                dvmCompilerClobberAllRegs(cUnit);
             }
 
             if (gDvmJit.disableOpt & (1 << kSuppressLoads)) {
-                resetDefTracking(cUnit);
+                dvmCompilerResetDefTracking(cUnit);
             }
 
             if (mir->dalvikInsn.opCode >= kMirOpFirst) {

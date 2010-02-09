@@ -250,7 +250,7 @@ static RegLocation inlinedTarget(CompilationUnit *cUnit, MIR *mir,
         ((mir->next->dalvikInsn.opCode == OP_MOVE_RESULT) ||
          (mir->next->dalvikInsn.opCode == OP_MOVE_RESULT_OBJECT))) {
         mir->next->dalvikInsn.opCode = OP_NOP;
-        return getDestLoc(cUnit, mir->next, 0);
+        return dvmCompilerGetDest(cUnit, mir->next, 0);
     } else {
         RegLocation res = LOC_DALVIK_RETURN_VAL;
         res.fp = fpHint;
@@ -304,7 +304,7 @@ static RegLocation inlinedTargetWide(CompilationUnit *cUnit, MIR *mir,
     if (mir->next &&
         (mir->next->dalvikInsn.opCode == OP_MOVE_RESULT_WIDE)) {
         mir->next->dalvikInsn.opCode = OP_NOP;
-        return getDestLocWide(cUnit, mir->next, 0, 1);
+        return dvmCompilerGetDestWide(cUnit, mir->next, 0, 1);
     } else {
         RegLocation res = LOC_DALVIK_RETURN_VAL_WIDE;
         res.fp = fpHint;
@@ -330,7 +330,7 @@ extern ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
                               ArmLIR *pcrLabel)
 {
     /* Forget all def info (because we might rollback here.  Bug #2367397 */
-    resetDefTracking(cUnit);
+    dvmCompilerResetDefTracking(cUnit);
 
     /* Set up the place holder to reconstruct this Dalvik PC */
     if (pcrLabel == NULL) {
