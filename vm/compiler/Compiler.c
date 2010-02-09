@@ -62,7 +62,12 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     bool result = true;
 
     if (dvmTryLockMutex(&gDvmJit.compilerLock)) {
-        return false;  // Couldn't aquire the lock
+        /*
+         * Make sure the memory associated with the info pointer is freed for
+         * dropped work orders.
+         */
+        free(info);
+        return false;  // Couldn't acquire the lock
     }
 
     /*
