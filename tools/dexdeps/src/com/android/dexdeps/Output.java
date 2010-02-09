@@ -64,7 +64,7 @@ public class Output {
      * Prints the list of fields in a simple human-readable format.
      */
     static void printFieldRefs(ClassRef[] classes) {
-        System.out.println("Fields:");
+        System.out.println("\nFields:");
         for (int i = 0; i < classes.length; i++) {
             FieldRef[] fields = classes[i].getFieldArray();
 
@@ -81,7 +81,7 @@ public class Output {
      * Prints the list of methods in a simple human-readable format.
      */
     static void printMethodRefs(ClassRef[] classes) {
-        System.out.println("Methods:");
+        System.out.println("\nMethods:");
         for (int i = 0; i < classes.length; i++) {
             MethodRef[] methods = classes[i].getMethodArray();
 

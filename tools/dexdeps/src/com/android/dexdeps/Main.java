@@ -30,7 +30,7 @@ public class Main {
     private static final String CLASSES_DEX = "classes.dex";
 
     private String mInputFileName;
-    private String mOutputFormat = "brief";
+    private String mOutputFormat = "xml";
 
     /**
      * Entry point.
@@ -193,9 +193,11 @@ public class Main {
      * Prints command-line usage info.
      */
     void usage() {
-        System.err.println("\nUsage: dexdeps [options] <file.{dex,apk,jar}>");
+        System.err.println("DEX dependency scanner v1.1");
+        System.err.println("Copyright (C) 2009 The Android Open Source Project\n");
+        System.err.println("Usage: dexdeps [options] <file.{dex,apk,jar}>");
         System.err.println("Options:");
-        System.err.println("  --format={brief,xml}");
+        System.err.println("  --format={xml,brief}");
     }
 }
 
