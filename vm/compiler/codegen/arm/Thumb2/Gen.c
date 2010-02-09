@@ -27,17 +27,17 @@ static void genNegFloat(CompilationUnit *cUnit, RegLocation rlDest,
 {
     RegLocation rlResult;
     rlSrc = loadValue(cUnit, rlSrc, kFPReg);
-    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     newLIR2(cUnit, kThumb2Vnegs, rlResult.lowReg, rlSrc.lowReg);
     storeValue(cUnit, rlDest, rlResult);
 }
 
 static void genNegDouble(CompilationUnit *cUnit, RegLocation rlDest,
-                        RegLocation rlSrc)
+                         RegLocation rlSrc)
 {
     RegLocation rlResult;
     rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
-    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     newLIR2(cUnit, kThumb2Vnegd, S2D(rlResult.lowReg, rlResult.highReg),
             S2D(rlSrc.lowReg, rlSrc.highReg));
     storeValueWide(cUnit, rlDest, rlResult);
@@ -52,9 +52,9 @@ static void genMulLong(CompilationUnit *cUnit, RegLocation rlDest,
                        RegLocation rlSrc1, RegLocation rlSrc2)
 {
     RegLocation rlResult;
-    int resLo = allocTemp(cUnit);
-    int resHi = allocTemp(cUnit);
-    int tmp1 = allocTemp(cUnit);
+    int resLo = dvmCompilerAllocTemp(cUnit);
+    int resHi = dvmCompilerAllocTemp(cUnit);
+    int tmp1 = dvmCompilerAllocTemp(cUnit);
 
     rlSrc1 = loadValueWide(cUnit, rlSrc1, kCoreReg);
     rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
@@ -63,9 +63,9 @@ static void genMulLong(CompilationUnit *cUnit, RegLocation rlDest,
     newLIR4(cUnit, kThumb2Umull, resLo, resHi, rlSrc2.lowReg, rlSrc1.lowReg);
     newLIR4(cUnit, kThumb2Mla, tmp1, rlSrc1.lowReg, rlSrc2.highReg, tmp1);
     newLIR4(cUnit, kThumb2AddRRR, resHi, tmp1, resHi, 0);
-    freeTemp(cUnit, tmp1);
+    dvmCompilerFreeTemp(cUnit, tmp1);
 
-    rlResult = getReturnLocWide(cUnit);  // Just as a template, will patch
+    rlResult = dvmCompilerGetReturnWide(cUnit);  // Just as a template, will patch
     rlResult.lowReg = resLo;
     rlResult.highReg = resHi;
     storeValueWide(cUnit, rlDest, rlResult);
@@ -78,7 +78,7 @@ static void genLong3Addr(CompilationUnit *cUnit, OpKind firstOp,
     RegLocation rlResult;
     rlSrc1 = loadValueWide(cUnit, rlSrc1, kCoreReg);
     rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
-    rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
     opRegRegReg(cUnit, firstOp, rlResult.lowReg, rlSrc1.lowReg, rlSrc2.lowReg);
     opRegRegReg(cUnit, secondOp, rlResult.highReg, rlSrc1.highReg,
                 rlSrc2.highReg);
@@ -102,10 +102,10 @@ void dvmCompilerInitializeRegAlloc(CompilationUnit *cUnit)
     pool->coreRegs = NULL;
     pool->numFPRegs = 0;
     pool->FPRegs = NULL;
-    initPool(pool->coreTemps, coreTemps, pool->numCoreTemps);
-    initPool(pool->FPTemps, fpTemps, pool->numFPTemps);
-    initPool(pool->coreRegs, NULL, 0);
-    initPool(pool->FPRegs, NULL, 0);
+    dvmCompilerInitPool(pool->coreTemps, coreTemps, pool->numCoreTemps);
+    dvmCompilerInitPool(pool->FPTemps, fpTemps, pool->numFPTemps);
+    dvmCompilerInitPool(pool->coreRegs, NULL, 0);
+    dvmCompilerInitPool(pool->FPRegs, NULL, 0);
     pool->nullCheckedRegs =
         dvmCompilerAllocBitVector(cUnit->numSSARegs, false);
 }
@@ -155,11 +155,11 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
 {
     ArmLIR *res;
     int offset = offsetof(StackSaveArea, xtra.currentPc);
-    int rDPC = allocTemp(cUnit);
+    int rDPC = dvmCompilerAllocTemp(cUnit);
     res = loadConstant(cUnit, rDPC, (int) (cUnit->method->insns + mir->offset));
     newLIR3(cUnit, kThumb2StrRRI8Predec, rDPC, rFP,
             sizeof(StackSaveArea) - offset);
-    freeTemp(cUnit, rDPC);
+    dvmCompilerFreeTemp(cUnit, rDPC);
     return res;
 }
 
@@ -192,15 +192,15 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
  */
 static void genMonitor(CompilationUnit *cUnit, MIR *mir)
 {
-    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     bool enter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
     ArmLIR *target;
     ArmLIR *branch;
 
     assert(LW_SHAPE_THIN == 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);  // Get obj
-    lockAllTemps(cUnit);  // Prepare for explicit register usage
-    freeTemp(cUnit, r4PC);  // Free up r4 for general use
+    dvmCompilerLockAllTemps(cUnit);  // Prepare for explicit register usage
+    dvmCompilerFreeTemp(cUnit, r4PC);  // Free up r4 for general use
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0); // Get self
     genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
     loadWordDisp(cUnit, r0, offsetof(Thread, threadId), r3); // Get threadId
@@ -253,7 +253,7 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
                 sizeof(StackSaveArea) -
                 offsetof(StackSaveArea, xtra.currentPc));
         opReg(cUnit, kOpBlx, r7);
-        clobberCallRegs(cUnit);
+        dvmCompilerColbberCallRegs(cUnit);
     }
 
     // Resume here
@@ -286,7 +286,7 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
     ArmLIR *target2;
     rlSrc1 = loadValueWide(cUnit, rlSrc1, kCoreReg);
     rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
-    rlTemp.lowReg = allocTemp(cUnit);
+    rlTemp.lowReg = dvmCompilerAllocTemp(cUnit);
     loadConstant(cUnit, rlTemp.lowReg, -1);
     opRegReg(cUnit, kOpCmp, rlSrc1.highReg, rlSrc2.highReg);
     ArmLIR *branch1 = opCondBranch(cUnit, kArmCondLt);
@@ -315,10 +315,10 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir,
 
 static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
 {
-    RegLocation rlObj = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlDest = inlinedTarget(cUnit, mir, false);
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset, NULL);
     loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_count,
                  rlResult.lowReg);
@@ -329,25 +329,25 @@ static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
 static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
 {
     int contents = offsetof(ArrayObject, contents);
-    RegLocation rlObj = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlIdx = getSrcLoc(cUnit, mir, 1);
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlIdx = dvmCompilerGetSrc(cUnit, mir, 1);
     RegLocation rlDest = inlinedTarget(cUnit, mir, false);
     RegLocation rlResult;
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
     rlIdx = loadValue(cUnit, rlIdx, kCoreReg);
-    int regMax = allocTemp(cUnit);
-    int regOff = allocTemp(cUnit);
-    int regPtr = allocTemp(cUnit);
+    int regMax = dvmCompilerAllocTemp(cUnit);
+    int regOff = dvmCompilerAllocTemp(cUnit);
+    int regPtr = dvmCompilerAllocTemp(cUnit);
     ArmLIR *pcrLabel = genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg,
                                     mir->offset, NULL);
     loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_count, regMax);
     loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_offset, regOff);
     loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_value, regPtr);
     genBoundsCheck(cUnit, rlIdx.lowReg, regMax, mir->offset, pcrLabel);
-    freeTemp(cUnit, regMax);
+    dvmCompilerFreeTemp(cUnit, regMax);
     opRegImm(cUnit, kOpAdd, regPtr, contents);
     opRegReg(cUnit, kOpAdd, regOff, rlIdx.lowReg);
-    rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
     loadBaseIndexed(cUnit, regPtr, regOff, rlResult.lowReg, 1, kUnsignedHalf);
     storeValue(cUnit, rlDest, rlResult);
     return false;
@@ -355,11 +355,11 @@ static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
 {
-    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
     RegLocation rlDest = inlinedTarget(cUnit, mir, false);;
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
-    int signReg = allocTemp(cUnit);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+    int signReg = dvmCompilerAllocTemp(cUnit);
     /*
      * abs(x) = y<=x>>31, (x+y)^y.
      * Thumb2's IT block also yields 3 instructions, but imposes
@@ -374,10 +374,10 @@ static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 {
-    RegLocation rlSrc = getSrcLoc(cUnit, mir, 0);
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlDest = inlinedTarget(cUnit, mir, true);
     rlSrc = loadValue(cUnit, rlSrc, kFPReg);
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     newLIR2(cUnit, kThumb2Vabss, rlResult.lowReg, rlSrc.lowReg);
     storeValue(cUnit, rlDest, rlResult);
     return true;
@@ -385,10 +385,10 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 {
-    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation rlDest = inlinedTargetWide(cUnit, mir, true);
     rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     newLIR2(cUnit, kThumb2Vabsd, S2D(rlResult.lowReg, rlResult.highReg),
             S2D(rlSrc.lowReg, rlSrc.highReg));
     storeValueWide(cUnit, rlDest, rlResult);
@@ -397,12 +397,12 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
 
 static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
 {
-    RegLocation rlSrc1 = getSrcLoc(cUnit, mir, 0);
-    RegLocation rlSrc2 = getSrcLoc(cUnit, mir, 1);
+    RegLocation rlSrc1 = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlSrc2 = dvmCompilerGetSrc(cUnit, mir, 1);
     rlSrc1 = loadValue(cUnit, rlSrc1, kCoreReg);
     rlSrc2 = loadValue(cUnit, rlSrc2, kCoreReg);
     RegLocation rlDest = inlinedTarget(cUnit, mir, false);
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
     opRegReg(cUnit, kOpCmp, rlSrc1.lowReg, rlSrc2.lowReg);
     genIT(cUnit, (isMin) ? kArmCondGt : kArmCondLt, "E");
     opRegReg(cUnit, kOpMov, rlResult.lowReg, rlSrc2.lowReg);
@@ -414,11 +414,11 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
 
 static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
 {
-    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation rlDest = inlinedTargetWide(cUnit, mir, false);
     rlSrc = loadValueWide(cUnit, rlSrc, kCoreReg);
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
-    int signReg = allocTemp(cUnit);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+    int signReg = dvmCompilerAllocTemp(cUnit);
     /*
      * abs(x) = y<=x>>31, (x+y)^y.
      * Thumb2 IT block allows slightly shorter sequence,

@@ -28,7 +28,8 @@ extern void dvmCompilerFlushRegForV5TEVFP(CompilationUnit *cUnit, int reg);
 static void loadValueAddress(CompilationUnit *cUnit, RegLocation rlSrc,
                              int rDest)
 {
-     rlSrc = rlSrc.wide ? updateLocWide(cUnit, rlSrc) : updateLoc(cUnit, rlSrc);
+     rlSrc = rlSrc.wide ? dvmCompilerUpdateLocWide(cUnit, rlSrc) :
+                          dvmCompilerUpdateLoc(cUnit, rlSrc);
      if (rlSrc.location == kLocPhysReg) {
          if (rlSrc.wide) {
              dvmCompilerFlushRegWideForV5TEVFP(cUnit, rlSrc.lowReg,
@@ -38,12 +39,12 @@ static void loadValueAddress(CompilationUnit *cUnit, RegLocation rlSrc,
          }
      }
      opRegRegImm(cUnit, kOpAdd, rDest, rFP,
-                 sReg2vReg(cUnit, rlSrc.sRegLow) << 2);
+                 dvmCompilerS2VReg(cUnit, rlSrc.sRegLow) << 2);
 }
 
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
-    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation rlResult = LOC_C_RETURN_WIDE;
     RegLocation rlDest = LOC_DALVIK_RETURN_VAL_WIDE;
     loadValueAddress(cUnit, rlSrc, r2);
@@ -96,14 +97,14 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,
             return true;
     }
     loadValueAddress(cUnit, rlDest, r0);
-    clobberReg(cUnit, r0);
+    dvmCompilerClobber(cUnit, r0);
     loadValueAddress(cUnit, rlSrc1, r1);
-    clobberReg(cUnit, r1);
+    dvmCompilerClobber(cUnit, r1);
     loadValueAddress(cUnit, rlSrc2, r2);
     genDispatchToHandler(cUnit, opCode);
-    rlDest = updateLoc(cUnit, rlDest);
+    rlDest = dvmCompilerUpdateLoc(cUnit, rlDest);
     if (rlDest.location == kLocPhysReg) {
-        clobberReg(cUnit, rlDest.lowReg);
+        dvmCompilerClobber(cUnit, rlDest.lowReg);
     }
     return false;
 }
@@ -141,15 +142,15 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
             return true;
     }
     loadValueAddress(cUnit, rlDest, r0);
-    clobberReg(cUnit, r0);
+    dvmCompilerClobber(cUnit, r0);
     loadValueAddress(cUnit, rlSrc1, r1);
-    clobberReg(cUnit, r1);
+    dvmCompilerClobber(cUnit, r1);
     loadValueAddress(cUnit, rlSrc2, r2);
     genDispatchToHandler(cUnit, opCode);
-    rlDest = updateLocWide(cUnit, rlDest);
+    rlDest = dvmCompilerUpdateLocWide(cUnit, rlDest);
     if (rlDest.location == kLocPhysReg) {
-        clobberReg(cUnit, rlDest.lowReg);
-        clobberReg(cUnit, rlDest.highReg);
+        dvmCompilerClobber(cUnit, rlDest.lowReg);
+        dvmCompilerClobber(cUnit, rlDest.highReg);
     }
     return false;
 }
@@ -203,35 +204,35 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
     }
 
     if (longSrc) {
-        rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+        rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     } else {
-        rlSrc = getSrcLoc(cUnit, mir, 0);
+        rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     }
 
     if (longDest) {
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
     } else {
-        rlDest = getDestLoc(cUnit, mir, 0);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
     }
     loadValueAddress(cUnit, rlDest, r0);
-    clobberReg(cUnit, r0);
+    dvmCompilerClobber(cUnit, r0);
     loadValueAddress(cUnit, rlSrc, r1);
     genDispatchToHandler(cUnit, template);
     if (rlDest.wide) {
-        rlDest = updateLocWide(cUnit, rlDest);
-        clobberReg(cUnit, rlDest.highReg);
+        rlDest = dvmCompilerUpdateLocWide(cUnit, rlDest);
+        dvmCompilerClobber(cUnit, rlDest.highReg);
     } else {
-        rlDest = updateLoc(cUnit, rlDest);
+        rlDest = dvmCompilerUpdateLoc(cUnit, rlDest);
     }
-    clobberReg(cUnit, rlDest.lowReg);
+    dvmCompilerClobber(cUnit, rlDest.lowReg);
     return false;
 }
 
 static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
-                        RegLocation rlSrc1, RegLocation rlSrc2)
+                     RegLocation rlSrc1, RegLocation rlSrc2)
 {
     TemplateOpCode template;
-    RegLocation rlResult = getReturnLoc(cUnit);
+    RegLocation rlResult = dvmCompilerGetReturn(cUnit);
     bool wide = true;
 
     switch(mir->dalvikInsn.opCode) {
@@ -253,7 +254,7 @@ static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
             return true;
     }
     loadValueAddress(cUnit, rlSrc1, r0);
-    clobberReg(cUnit, r0);
+    dvmCompilerClobber(cUnit, r0);
     loadValueAddress(cUnit, rlSrc2, r1);
     genDispatchToHandler(cUnit, template);
     storeValue(cUnit, rlDest, rlResult);

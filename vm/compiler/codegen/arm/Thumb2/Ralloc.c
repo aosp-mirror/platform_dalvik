@@ -33,11 +33,11 @@ int dvmCompilerAllocTypedTempPair(CompilationUnit *cUnit,
     int lowReg;
     int res = 0;
     if (((regClass == kAnyReg) && fpHint) || (regClass == kFPReg)) {
-        lowReg = allocTempDouble(cUnit);
+        lowReg = dvmCompilerAllocTempDouble(cUnit);
         highReg = lowReg + 1;
     } else {
-        lowReg = allocTemp(cUnit);
-        highReg = allocTemp(cUnit);
+        lowReg = dvmCompilerAllocTemp(cUnit);
+        highReg = dvmCompilerAllocTemp(cUnit);
     }
     res = (lowReg & 0xff) | ((highReg & 0xff) << 8);
     return res;
@@ -47,6 +47,6 @@ int dvmCompilerAllocTypedTemp(CompilationUnit *cUnit, bool fpHint,
                                      int regClass)
 {
     if (((regClass == kAnyReg) && fpHint) || (regClass == kFPReg))
-        return allocTempFloat(cUnit);
-    return allocTemp(cUnit);
+        return dvmCompilerAllocTempFloat(cUnit);
+    return dvmCompilerAllocTemp(cUnit);
 }

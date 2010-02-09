@@ -47,13 +47,13 @@ static ArmLIR *genRegRegCheck(CompilationUnit *cUnit,
 static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
 {
     ArmLIR *res;
-    int tDest = LOWREG(rDest) ? rDest : allocTemp(cUnit);
+    int tDest = LOWREG(rDest) ? rDest : dvmCompilerAllocTemp(cUnit);
     /* See if the value can be constructed cheaply */
     if ((value >= 0) && (value <= 255)) {
         res = newLIR2(cUnit, kThumbMovImm, tDest, value);
         if (rDest != tDest) {
            opRegReg(cUnit, kOpMov, rDest, tDest);
-           freeTemp(cUnit, tDest);
+           dvmCompilerFreeTemp(cUnit, tDest);
         }
         return res;
     } else if ((value & 0xFFFFFF00) == 0xFFFFFF00) {
@@ -61,7 +61,7 @@ static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
         newLIR2(cUnit, kThumbMvn, tDest, tDest);
         if (rDest != tDest) {
            opRegReg(cUnit, kOpMov, rDest, tDest);
-           freeTemp(cUnit, tDest);
+           dvmCompilerFreeTemp(cUnit, tDest);
         }
         return res;
     }
@@ -87,7 +87,7 @@ static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
     }
     if (rDest != tDest) {
        opRegReg(cUnit, kOpMov, rDest, tDest);
-       freeTemp(cUnit, tDest);
+       dvmCompilerFreeTemp(cUnit, tDest);
     }
     return res;
 }
@@ -98,9 +98,9 @@ static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
  */
 static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
 {
-    if (isTemp(cUnit, rDest)) {
-        clobberReg(cUnit, rDest);
-        markRegInUse(cUnit, rDest);
+    if (dvmCompilerIsTemp(cUnit, rDest)) {
+        dvmCompilerClobber(cUnit, rDest);
+        dvmcompilerMarkInUse(cUnit, rDest);
     }
     return loadConstantValue(cUnit, rDest, value);
 }
@@ -198,7 +198,7 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
     if (shortForm)
         res = newLIR2(cUnit, opCode, rDestSrc1, absValue);
     else {
-        int rScratch = allocTemp(cUnit);
+        int rScratch = dvmCompilerAllocTemp(cUnit);
         res = loadConstant(cUnit, rScratch, value);
         if (op == kOpCmp)
             newLIR2(cUnit, opCode, rDestSrc1, rScratch);
@@ -223,8 +223,8 @@ static ArmLIR *opRegRegReg(CompilationUnit *cUnit, OpKind op, int rDest,
             if (rDest == rSrc1) {
                 return opRegReg(cUnit, op, rDest, rSrc2);
             } else if (rDest == rSrc2) {
-                assert(isTemp(cUnit, rSrc1));
-                clobberReg(cUnit, rSrc1);
+                assert(dvmCompilerIsTemp(cUnit, rSrc1));
+                dvmCompilerClobber(cUnit, rSrc1);
                 opRegReg(cUnit, op, rSrc1, rSrc2);
                 return opRegReg(cUnit, kOpMov, rDest, rSrc1);
             } else {
@@ -303,7 +303,7 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
         case kOpOr:
         case kOpXor:
                 if (rDest == rSrc1) {
-                    int rScratch = allocTemp(cUnit);
+                    int rScratch = dvmCompilerAllocTemp(cUnit);
                     res = loadConstant(cUnit, rScratch, value);
                     opRegReg(cUnit, op, rDest, rScratch);
                 } else {
@@ -322,7 +322,7 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
             res = loadConstant(cUnit, rDest, value);
             newLIR3(cUnit, opCode, rDest, rSrc1, rDest);
         } else {
-            int rScratch = allocTemp(cUnit);
+            int rScratch = dvmCompilerAllocTemp(cUnit);
             res = loadConstant(cUnit, rScratch, value);
             newLIR3(cUnit, opCode, rDest, rSrc1, rScratch);
         }
@@ -434,7 +434,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
     int rNewIndex = rIndex;
     if (scale) {
         // Scale the index, but can't trash the original.
-        rNewIndex = allocTemp(cUnit);
+        rNewIndex = dvmCompilerAllocTemp(cUnit);
         first = opRegRegImm(cUnit, kOpLsl, rNewIndex, rIndex, scale);
     }
     switch (size) {
@@ -462,7 +462,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
         res->branchInsertSV = true;
 #endif
     if (scale)
-        freeTemp(cUnit, rNewIndex);
+        dvmCompilerFreeTemp(cUnit, rNewIndex);
     return (first) ? first : res;
 }
 
@@ -475,7 +475,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
     ArmOpCode opCode = kThumbBkpt;
     int rNewIndex = rIndex;
     if (scale) {
-        rNewIndex = allocTemp(cUnit);
+        rNewIndex = dvmCompilerAllocTemp(cUnit);
         first = opRegRegImm(cUnit, kOpLsl, rNewIndex, rIndex, scale);
     }
     switch (size) {
@@ -499,7 +499,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
         res->branchInsertSV = true;
 #endif
     if (scale)
-        freeTemp(cUnit, rNewIndex);
+        dvmCompilerFreeTemp(cUnit, rNewIndex);
     return (first) ? first : res;
 }
 
@@ -609,7 +609,7 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
         }
     } else {
         if (pair) {
-            int rTmp = allocFreeTemp(cUnit);
+            int rTmp = dvmCompilerAllocFreeTemp(cUnit);
             if (rTmp < 0) {
                 //UNIMP: need to spill if no temps.
                 assert(0);
@@ -617,9 +617,9 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
             res = opRegRegImm(cUnit, kOpAdd, rTmp, rBase, displacement);
             //TUNING: how to mark loadPair if Dalvik access?
             loadPair(cUnit, rTmp, rDest, rDestHi);
-            freeTemp(cUnit, rTmp);
+            dvmCompilerFreeTemp(cUnit, rTmp);
         } else {
-            int rTmp = (rBase == rDest) ? allocFreeTemp(cUnit) : rDest;
+            int rTmp = (rBase == rDest) ? dvmCompilerAllocFreeTemp(cUnit) : rDest;
             if (rTmp < 0) {
                 //UNIMP: need to spill if no temps.
                 assert(0);
@@ -630,7 +630,7 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
                 annotateDalvikRegAccess(load, displacement >> 2,
                                         true /* isLoad */);
             if (rTmp != rDest)
-                freeTemp(cUnit, rTmp);
+                dvmCompilerFreeTemp(cUnit, rTmp);
         }
     }
 #if defined(WITH_SELF_VERIFICATION)
@@ -724,7 +724,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
             store2 = newLIR3(cUnit, opCode, rSrcHi, rBase, encodedDisp + 1);
         }
     } else {
-        int rScratch = allocTemp(cUnit);
+        int rScratch = dvmCompilerAllocTemp(cUnit);
         if (pair) {
             //TUNING: how to mark storePair as Dalvik access if it is?
             res = opRegRegImm(cUnit, kOpAdd, rScratch, rBase, displacement);
@@ -737,7 +737,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
                                         false /* isLoad */);
             }
         }
-        freeTemp(cUnit, rScratch);
+        dvmCompilerFreeTemp(cUnit, rScratch);
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (store != NULL && cUnit->heapMemOp)
@@ -812,7 +812,7 @@ static ArmLIR* genRegCopy(CompilationUnit *cUnit, int rDest, int rSrc)
 }
 
 static void genRegCopyWide(CompilationUnit *cUnit, int destLo, int destHi,
-                    int srcLo, int srcHi)
+                           int srcLo, int srcHi)
 {
     // Handle overlap
     if (srcHi == destLo) {
@@ -825,17 +825,17 @@ static void genRegCopyWide(CompilationUnit *cUnit, int destLo, int destHi,
 }
 
 static inline ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
-                                         ArmConditionCode cond, int reg,
-                                         int checkValue, int dOffset,
-                                         ArmLIR *pcrLabel)
+                                     ArmConditionCode cond, int reg,
+                                     int checkValue, int dOffset,
+                                     ArmLIR *pcrLabel)
 {
     int tReg;
     ArmLIR *res;
     if ((checkValue & 0xff) != checkValue) {
-        tReg = allocTemp(cUnit);
+        tReg = dvmCompilerAllocTemp(cUnit);
         loadConstant(cUnit, tReg, checkValue);
         res = genRegRegCheck(cUnit, cond, reg, tReg, dOffset, pcrLabel);
-        freeTemp(cUnit, tReg);
+        dvmCompilerFreeTemp(cUnit, tReg);
         return res;
     }
     newLIR2(cUnit, kThumbCmpRI8, reg, checkValue);

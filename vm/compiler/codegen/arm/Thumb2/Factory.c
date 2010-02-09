@@ -25,7 +25,7 @@
 static int coreTemps[] = {r0, r1, r2, r3, r4PC, r7, r8, r9, r10, r11, r12};
 static int corePreserved[] = {};
 static int fpTemps[] = {fr16, fr17, fr18, fr19, fr20, fr21, fr22, fr23,
-                          fr24, fr25, fr26, fr27, fr28, fr29, fr30, fr31};
+                        fr24, fr25, fr26, fr27, fr28, fr29, fr30, fr31};
 static int fpPreserved[] = {};
 
 static int encodeImmSingle(int value)
@@ -187,9 +187,9 @@ static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
  */
 static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
 {
-    if (isTemp(cUnit, rDest)) {
-        clobberReg(cUnit, rDest);
-        markRegInUse(cUnit, rDest);
+    if (dvmCompilerIsTemp(cUnit, rDest)) {
+        dvmCompilerClobber(cUnit, rDest);
+        dvmcompilerMarkInUse(cUnit, rDest);
     }
     return loadConstantValue(cUnit, rDest, value);
 }
@@ -530,10 +530,10 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
             if (modImm >= 0) {
                 res = newLIR2(cUnit, kThumb2CmpRI8, rSrc1, modImm);
             } else {
-                int rTmp = allocTemp(cUnit);
+                int rTmp = dvmCompilerAllocTemp(cUnit);
                 res = loadConstant(cUnit, rTmp, value);
                 opRegReg(cUnit, kOpCmp, rSrc1, rTmp);
-                freeTemp(cUnit, rTmp);
+                dvmCompilerFreeTemp(cUnit, rTmp);
             }
             return res;
         }
@@ -544,13 +544,13 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
     if (modImm >= 0) {
         return newLIR3(cUnit, opCode, rDest, rSrc1, modImm);
     } else {
-        int rScratch = allocTemp(cUnit);
+        int rScratch = dvmCompilerAllocTemp(cUnit);
         loadConstant(cUnit, rScratch, value);
         if (EncodingMap[altOpCode].flags & IS_QUAD_OP)
             res = newLIR4(cUnit, altOpCode, rDest, rSrc1, rScratch, 0);
         else
             res = newLIR3(cUnit, altOpCode, rDest, rSrc1, rScratch);
-        freeTemp(cUnit, rScratch);
+        dvmCompilerFreeTemp(cUnit, rScratch);
         return res;
     }
 }
@@ -677,7 +677,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
 
     switch (size) {
         case kSingle:
-            regPtr = allocTemp(cUnit);
+            regPtr = dvmCompilerAllocTemp(cUnit);
             if (scale) {
                 newLIR4(cUnit, kThumb2AddRRR, regPtr, rBase, rIndex,
                         encodeShift(kArmLsl, scale));
@@ -741,7 +741,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
 
     switch (size) {
         case kSingle:
-            regPtr = allocTemp(cUnit);
+            regPtr = dvmCompilerAllocTemp(cUnit);
             if (scale) {
                 newLIR4(cUnit, kThumb2AddRRR, regPtr, rBase, rIndex,
                         encodeShift(kArmLsl, scale));
@@ -887,10 +887,10 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     if (shortForm) {
         load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
     } else {
-        int regOffset = allocTemp(cUnit);
+        int regOffset = dvmCompilerAllocTemp(cUnit);
         res = loadConstant(cUnit, regOffset, encodedDisp);
         load = loadBaseIndexed(cUnit, rBase, regOffset, rDest, 0, size);
-        freeTemp(cUnit, regOffset);
+        dvmCompilerFreeTemp(cUnit, regOffset);
     }
 
     if (rBase == rFP) {
@@ -912,8 +912,8 @@ static ArmLIR *loadBaseDisp(CompilationUnit *cUnit, MIR *mir, int rBase,
 }
 
 static  ArmLIR *loadBaseDispWide(CompilationUnit *cUnit, MIR *mir, int rBase,
-                                int displacement, int rDestLo, int rDestHi,
-                                int sReg)
+                                 int displacement, int rDestLo, int rDestHi,
+                                 int sReg)
 {
     return loadBaseDispBody(cUnit, mir, rBase, displacement, rDestLo, rDestHi,
                             kLong, sReg);
@@ -921,8 +921,8 @@ static  ArmLIR *loadBaseDispWide(CompilationUnit *cUnit, MIR *mir, int rBase,
 
 
 static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
-                             int displacement, int rSrc, int rSrcHi,
-                             OpSize size)
+                                 int displacement, int rSrc, int rSrcHi,
+                                 OpSize size)
 {
     ArmLIR *res, *store;
     ArmOpCode opCode = kThumbBkpt;
@@ -1001,10 +1001,10 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     if (shortForm) {
         store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);
     } else {
-        int rScratch = allocTemp(cUnit);
+        int rScratch = dvmCompilerAllocTemp(cUnit);
         res = loadConstant(cUnit, rScratch, encodedDisp);
         store = storeBaseIndexed(cUnit, rBase, rScratch, rSrc, 0, size);
-        freeTemp(cUnit, rScratch);
+        dvmCompilerFreeTemp(cUnit, rScratch);
     }
 
     if (rBase == rFP) {
@@ -1071,9 +1071,9 @@ static void loadPair(CompilationUnit *cUnit, int base, int lowReg, int highReg)
  * satisfies.
  */
 static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
-                                         ArmConditionCode cond, int reg,
-                                         int checkValue, int dOffset,
-                                         ArmLIR *pcrLabel)
+                              ArmConditionCode cond, int reg,
+                              int checkValue, int dOffset,
+                              ArmLIR *pcrLabel)
 {
     ArmLIR *branch;
     int modImm;
@@ -1097,7 +1097,7 @@ static ArmLIR *genRegImmCheck(CompilationUnit *cUnit,
         } else if (modImm >= 0) {
             newLIR2(cUnit, kThumb2CmpRI8, reg, modImm);
         } else {
-            int tReg = allocTemp(cUnit);
+            int tReg = dvmCompilerAllocTemp(cUnit);
             loadConstant(cUnit, tReg, checkValue);
             opRegReg(cUnit, kOpCmp, reg, tReg);
         }
