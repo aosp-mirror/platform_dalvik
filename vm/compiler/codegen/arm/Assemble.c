@@ -1928,8 +1928,9 @@ static int selfVerificationLoad(int addr, int size)
             break;
         case kSVWord:
             data = *((u4*) addr);
+            break;
         default:
-            LOGE("*** ERROR: BAD SIZE IN selfVerificationLoad");
+            LOGE("*** ERROR: BAD SIZE IN selfVerificationLoad: %d", size);
             data = 0;
             dvmAbort();
     }
@@ -2007,8 +2008,9 @@ static void selfVerificationStore(int addr, int data, int size)
             break;
         case kSVWord:
             *((u4*) addr) = data;
+            break;
         default:
-            LOGE("*** ERROR: BAD SIZE IN selfVerificationSave");
+            LOGE("*** ERROR: BAD SIZE IN selfVerificationSave: %d", size);
             dvmAbort();
     }
 }
@@ -2208,7 +2210,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                     if (insn & 0x400000) rt |= 0x10;
                     rt = rt << 1;
                 } else {
-                    LOGE("*** ERROR: UNRECOGNIZED VECTOR MEM OP");
+                    LOGE("*** ERROR: UNRECOGNIZED VECTOR MEM OP: %x", opcode4);
                     dvmAbort();
                 }
                 rt += 14;
@@ -2234,7 +2236,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                 offset = imm12;
                 break;
             default:
-                LOGE("*** ERROR: UNRECOGNIZED MEM OP");
+                LOGE("*** ERROR: UNRECOGNIZED THUMB2 MEM OP: %x", opcode12);
                 offset = 0;
                 dvmAbort();
         }
@@ -2347,7 +2349,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                 offset = imm;
                 break;
             default:
-                LOGE("*** ERROR: UNRECOGNIZED MEM OP");
+                LOGE("*** ERROR: UNRECOGNIZED THUMB MEM OP: %x", opcode5);
                 offset = 0;
                 dvmAbort();
         }
