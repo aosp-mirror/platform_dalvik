@@ -55,7 +55,7 @@ static bool genArithOpFloat(CompilationUnit *cUnit, MIR *mir,
     }
     rlSrc1 = loadValue(cUnit, rlSrc1, kFPReg);
     rlSrc2 = loadValue(cUnit, rlSrc2, kFPReg);
-    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     newLIR3(cUnit, op, rlResult.lowReg, rlSrc1.lowReg, rlSrc2.lowReg);
     storeValue(cUnit, rlDest, rlResult);
     return false;
@@ -99,7 +99,7 @@ static bool genArithOpDouble(CompilationUnit *cUnit, MIR *mir,
     assert(rlSrc1.wide);
     rlSrc2 = loadValueWide(cUnit, rlSrc2, kFPReg);
     assert(rlSrc2.wide);
-    rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     assert(rlDest.wide);
     assert(rlResult.wide);
     newLIR3(cUnit, op, S2D(rlResult.lowReg, rlResult.highReg),
@@ -160,22 +160,22 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
             return true;
     }
     if (longSrc) {
-        rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+        rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
         rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
         srcReg = S2D(rlSrc.lowReg, rlSrc.highReg);
     } else {
-        rlSrc = getSrcLoc(cUnit, mir, 0);
+        rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
         rlSrc = loadValue(cUnit, rlSrc, kFPReg);
         srcReg = rlSrc.lowReg;
     }
     if (longDest) {
-        rlDest = getDestLocWide(cUnit, mir, 0, 1);
-        rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+        rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
         newLIR2(cUnit, op, S2D(rlResult.lowReg, rlResult.highReg), srcReg);
         storeValueWide(cUnit, rlDest, rlResult);
     } else {
-        rlDest = getDestLoc(cUnit, mir, 0);
-        rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+        rlDest = dvmCompilerGetDest(cUnit, mir, 0);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
         newLIR2(cUnit, op, rlResult.lowReg, srcReg);
         storeValue(cUnit, rlDest, rlResult);
     }
@@ -186,17 +186,17 @@ static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     ArmLIR *branch;
     DecodedInstruction *dInsn = &mir->dalvikInsn;
-    RegLocation rlSrc = getSrcLocWide(cUnit, mir, 0, 1);
+    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation rlDest = inlinedTargetWide(cUnit, mir, true);
     rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
-    RegLocation rlResult = evalLoc(cUnit, rlDest, kFPReg, true);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kFPReg, true);
     newLIR2(cUnit, kThumb2Vsqrtd, S2D(rlResult.lowReg, rlResult.highReg),
             S2D(rlSrc.lowReg, rlSrc.highReg));
     newLIR2(cUnit, kThumb2Vcmpd, S2D(rlResult.lowReg, rlResult.highReg),
             S2D(rlResult.lowReg, rlResult.highReg));
     newLIR0(cUnit, kThumb2Fmstat);
     branch = newLIR2(cUnit, kThumbBCond, 0, kArmCondEq);
-    clobberCallRegs(cUnit);
+    dvmCompilerColbberCallRegs(cUnit);
     loadConstant(cUnit, r2, (int)sqrt);
     newLIR3(cUnit, kThumb2Fmrrd, r0, r1, S2D(rlSrc.lowReg, rlSrc.highReg));
     newLIR1(cUnit, kThumbBlxR, r2);
@@ -240,16 +240,16 @@ static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
     if (isDouble) {
         rlSrc1 = loadValueWide(cUnit, rlSrc1, kFPReg);
         rlSrc2 = loadValueWide(cUnit, rlSrc2, kFPReg);
-        clobberSReg(cUnit, rlDest.sRegLow);
-        rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+        dvmCompilerClobberSReg(cUnit, rlDest.sRegLow);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
         loadConstant(cUnit, rlResult.lowReg, defaultResult);
         newLIR2(cUnit, kThumb2Vcmpd, S2D(rlSrc1.lowReg, r1Src2.highReg),
                 S2D(rlSrc2.lowReg, rlSrc2.highReg));
     } else {
         rlSrc1 = loadValue(cUnit, rlSrc1, kFPReg);
         rlSrc2 = loadValue(cUnit, rlSrc2, kFPReg);
-        clobberSReg(cUnit, rlDest.sRegLow);
-        rlResult = evalLoc(cUnit, rlDest, kCoreReg, true);
+        dvmCompilerClobberSReg(cUnit, rlDest.sRegLow);
+        rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
         loadConstant(cUnit, rlResult.lowReg, defaultResult);
         newLIR2(cUnit, kThumb2Vcmps, rlSrc1.lowReg, rlSrc2.lowReg);
     }

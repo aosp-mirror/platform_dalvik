@@ -47,14 +47,14 @@ static ArmLIR *storeWordDisp(CompilationUnit *cUnit, int rBase,
 static void loadValueDirect(CompilationUnit *cUnit, RegLocation rlSrc,
                                 int reg1)
 {
-    rlSrc = updateLoc(cUnit, rlSrc);  /* Is our value hiding in a live temp? */
+    rlSrc = dvmCompilerUpdateLoc(cUnit, rlSrc);
     if (rlSrc.location == kLocPhysReg) {
         genRegCopy(cUnit, reg1, rlSrc.lowReg);
     } else  if (rlSrc.location == kLocRetval) {
         loadWordDisp(cUnit, rGLUE, offsetof(InterpState, retval), reg1);
     } else {
         assert(rlSrc.location == kLocDalvikFrame);
-        loadWordDisp(cUnit, rFP, sReg2vReg(cUnit, rlSrc.sRegLow) << 2,
+        loadWordDisp(cUnit, rFP, dvmCompilerS2VReg(cUnit, rlSrc.sRegLow) << 2,
                      reg1);
     }
 }
@@ -67,8 +67,8 @@ static void loadValueDirect(CompilationUnit *cUnit, RegLocation rlSrc,
 static void loadValueDirectFixed(CompilationUnit *cUnit, RegLocation rlSrc,
                                  int reg1)
 {
-    clobberReg(cUnit, reg1);
-    markRegInUse(cUnit, reg1);
+    dvmCompilerClobber(cUnit, reg1);
+    dvmcompilerMarkInUse(cUnit, reg1);
     loadValueDirect(cUnit, rlSrc, reg1);
 }
 
@@ -80,7 +80,7 @@ static void loadValueDirectFixed(CompilationUnit *cUnit, RegLocation rlSrc,
 static void loadValueDirectWide(CompilationUnit *cUnit, RegLocation rlSrc,
                                 int regLo, int regHi)
 {
-    rlSrc = updateLocWide(cUnit, rlSrc);
+    rlSrc = dvmCompilerUpdateLocWide(cUnit, rlSrc);
     if (rlSrc.location == kLocPhysReg) {
         genRegCopyWide(cUnit, regLo, regHi, rlSrc.lowReg, rlSrc.highReg);
     } else if (rlSrc.location == kLocRetval) {
@@ -89,7 +89,7 @@ static void loadValueDirectWide(CompilationUnit *cUnit, RegLocation rlSrc,
     } else {
         assert(rlSrc.location == kLocDalvikFrame);
             loadBaseDispWide(cUnit, NULL, rFP,
-                             sReg2vReg(cUnit, rlSrc.sRegLow) << 2,
+                             dvmCompilerS2VReg(cUnit, rlSrc.sRegLow) << 2,
                              regLo, regHi, INVALID_SREG);
     }
 }
@@ -102,10 +102,10 @@ static void loadValueDirectWide(CompilationUnit *cUnit, RegLocation rlSrc,
 static void loadValueDirectWideFixed(CompilationUnit *cUnit, RegLocation rlSrc,
                                      int regLo, int regHi)
 {
-    clobberReg(cUnit, regLo);
-    clobberReg(cUnit, regHi);
-    markRegInUse(cUnit, regLo);
-    markRegInUse(cUnit, regHi);
+    dvmCompilerClobber(cUnit, regLo);
+    dvmCompilerClobber(cUnit, regHi);
+    dvmcompilerMarkInUse(cUnit, regLo);
+    dvmcompilerMarkInUse(cUnit, regHi);
     loadValueDirectWide(cUnit, rlSrc, regLo, regHi);
 }
 
@@ -113,15 +113,15 @@ static RegLocation loadValue(CompilationUnit *cUnit, RegLocation rlSrc,
                              RegisterClass opKind)
 {
     RegisterInfo *pReg;
-    rlSrc = evalLoc(cUnit, rlSrc, opKind, false);
+    rlSrc = dvmCompilerEvalLoc(cUnit, rlSrc, opKind, false);
     if (rlSrc.location == kLocDalvikFrame) {
         loadValueDirect(cUnit, rlSrc, rlSrc.lowReg);
         rlSrc.location = kLocPhysReg;
-        markRegLive(cUnit, rlSrc.lowReg, rlSrc.sRegLow);
+        dvmCompilerMarkLive(cUnit, rlSrc.lowReg, rlSrc.sRegLow);
     } else if (rlSrc.location == kLocRetval) {
         loadWordDisp(cUnit, rGLUE, offsetof(InterpState, retval), rlSrc.lowReg);
         rlSrc.location = kLocPhysReg;
-        clobberReg(cUnit, rlSrc.lowReg);
+        dvmCompilerClobber(cUnit, rlSrc.lowReg);
     }
     return rlSrc;
 }
@@ -134,43 +134,44 @@ static void storeValue(CompilationUnit *cUnit, RegLocation rlDest,
     LIR *defEnd;
     assert(!rlDest.wide);
     assert(!rlSrc.wide);
-    killNullCheckedLocation(cUnit, rlDest);
-    rlSrc = updateLoc(cUnit, rlSrc);
-    rlDest = updateLoc(cUnit, rlDest);
+    dvmCompilerKillNullCheckedLoc(cUnit, rlDest);
+    rlSrc = dvmCompilerUpdateLoc(cUnit, rlSrc);
+    rlDest = dvmCompilerUpdateLoc(cUnit, rlDest);
     if (rlSrc.location == kLocPhysReg) {
-        if (isLive(cUnit, rlSrc.lowReg) || (rlDest.location == kLocPhysReg)) {
+        if (dvmCompilerIsLive(cUnit, rlSrc.lowReg) ||
+            (rlDest.location == kLocPhysReg)) {
             // Src is live or Dest has assigned reg.
-            rlDest = evalLoc(cUnit, rlDest, kAnyReg, false);
+            rlDest = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, false);
             genRegCopy(cUnit, rlDest.lowReg, rlSrc.lowReg);
         } else {
             // Just re-assign the registers.  Dest gets Src's regs
             rlDest.lowReg = rlSrc.lowReg;
-            clobberReg(cUnit, rlSrc.lowReg);
+            dvmCompilerClobber(cUnit, rlSrc.lowReg);
         }
     } else {
         // Load Src either into promoted Dest or temps allocated for Dest
-        rlDest = evalLoc(cUnit, rlDest, kAnyReg, false);
+        rlDest = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, false);
         loadValueDirect(cUnit, rlSrc, rlDest.lowReg);
     }
 
     // Dest is now live and dirty (until/if we flush it to home location)
-    markRegLive(cUnit, rlDest.lowReg, rlDest.sRegLow);
-    markRegDirty(cUnit, rlDest.lowReg);
+    dvmCompilerMarkLive(cUnit, rlDest.lowReg, rlDest.sRegLow);
+    dvmCompilerMarkDirty(cUnit, rlDest.lowReg);
 
 
     if (rlDest.location == kLocRetval) {
         storeBaseDisp(cUnit, rGLUE, offsetof(InterpState, retval),
                       rlDest.lowReg, kWord);
-        clobberReg(cUnit, rlDest.lowReg);
+        dvmCompilerClobber(cUnit, rlDest.lowReg);
     } else {
-        resetDefLoc(cUnit, rlDest);
-        if (liveOut(cUnit, rlDest.sRegLow)) {
+        dvmCompilerResetDefLoc(cUnit, rlDest);
+        if (dvmCompilerLiveOut(cUnit, rlDest.sRegLow)) {
             defStart = (LIR *)cUnit->lastLIRInsn;
-            int vReg = sReg2vReg(cUnit, rlDest.sRegLow);
+            int vReg = dvmCompilerS2VReg(cUnit, rlDest.sRegLow);
             storeBaseDisp(cUnit, rFP, vReg << 2, rlDest.lowReg, kWord);
-            markRegClean(cUnit, rlDest.lowReg);
+            dvmCompilerMarkClean(cUnit, rlDest.lowReg);
             defEnd = (LIR *)cUnit->lastLIRInsn;
-            markDef(cUnit, rlDest, defStart, defEnd);
+            dvmCompilerMarkDef(cUnit, rlDest, defStart, defEnd);
         }
     }
 }
@@ -181,18 +182,19 @@ static RegLocation loadValueWide(CompilationUnit *cUnit, RegLocation rlSrc,
     RegisterInfo *pRegLo;
     RegisterInfo *pRegHi;
     assert(rlSrc.wide);
-    rlSrc = evalLoc(cUnit, rlSrc, opKind, false);
+    rlSrc = dvmCompilerEvalLoc(cUnit, rlSrc, opKind, false);
     if (rlSrc.location == kLocDalvikFrame) {
         loadValueDirectWide(cUnit, rlSrc, rlSrc.lowReg, rlSrc.highReg);
         rlSrc.location = kLocPhysReg;
-        markRegLive(cUnit, rlSrc.lowReg, rlSrc.sRegLow);
-        markRegLive(cUnit, rlSrc.highReg, hiSReg(rlSrc.sRegLow));
+        dvmCompilerMarkLive(cUnit, rlSrc.lowReg, rlSrc.sRegLow);
+        dvmCompilerMarkLive(cUnit, rlSrc.highReg,
+                            dvmCompilerSRegHi(rlSrc.sRegLow));
     } else if (rlSrc.location == kLocRetval) {
         loadBaseDispWide(cUnit, NULL, rGLUE, offsetof(InterpState, retval),
                          rlSrc.lowReg, rlSrc.highReg, INVALID_SREG);
         rlSrc.location = kLocPhysReg;
-        clobberReg(cUnit, rlSrc.lowReg);
-        clobberReg(cUnit, rlSrc.highReg);
+        dvmCompilerClobber(cUnit, rlSrc.lowReg);
+        dvmCompilerClobber(cUnit, rlSrc.highReg);
     }
     return rlSrc;
 }
@@ -208,54 +210,57 @@ static void storeValueWide(CompilationUnit *cUnit, RegLocation rlDest,
     assert(FPREG(rlSrc.lowReg)==FPREG(rlSrc.highReg));
     assert(rlDest.wide);
     assert(rlSrc.wide);
-    killNullCheckedLocation(cUnit, rlDest);
+    dvmCompilerKillNullCheckedLoc(cUnit, rlDest);
     if (rlSrc.location == kLocPhysReg) {
-        if (isLive(cUnit, rlSrc.lowReg) || isLive(cUnit, rlSrc.highReg) ||
+        if (dvmCompilerIsLive(cUnit, rlSrc.lowReg) ||
+            dvmCompilerIsLive(cUnit, rlSrc.highReg) ||
             (rlDest.location == kLocPhysReg)) {
             // Src is live or Dest has assigned reg.
-            rlDest = evalLoc(cUnit, rlDest, kAnyReg, false);
+            rlDest = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, false);
             genRegCopyWide(cUnit, rlDest.lowReg, rlDest.highReg,
                            rlSrc.lowReg, rlSrc.highReg);
         } else {
             // Just re-assign the registers.  Dest gets Src's regs
             rlDest.lowReg = rlSrc.lowReg;
             rlDest.highReg = rlSrc.highReg;
-            clobberReg(cUnit, rlSrc.lowReg);
-            clobberReg(cUnit, rlSrc.highReg);
+            dvmCompilerClobber(cUnit, rlSrc.lowReg);
+            dvmCompilerClobber(cUnit, rlSrc.highReg);
         }
     } else {
         // Load Src either into promoted Dest or temps allocated for Dest
-        rlDest = evalLoc(cUnit, rlDest, kAnyReg, false);
+        rlDest = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, false);
         loadValueDirectWide(cUnit, rlSrc, rlDest.lowReg,
                             rlDest.highReg);
     }
 
     // Dest is now live and dirty (until/if we flush it to home location)
-    markRegLive(cUnit, rlDest.lowReg, rlDest.sRegLow);
-    markRegLive(cUnit, rlDest.highReg, hiSReg(rlDest.sRegLow));
-    markRegDirty(cUnit, rlDest.lowReg);
-    markRegDirty(cUnit, rlDest.highReg);
-    markRegPair(cUnit, rlDest.lowReg, rlDest.highReg);
+    dvmCompilerMarkLive(cUnit, rlDest.lowReg, rlDest.sRegLow);
+    dvmCompilerMarkLive(cUnit, rlDest.highReg,
+                        dvmCompilerSRegHi(rlDest.sRegLow));
+    dvmCompilerMarkDirty(cUnit, rlDest.lowReg);
+    dvmCompilerMarkDirty(cUnit, rlDest.highReg);
+    dvmCompilerMarkPair(cUnit, rlDest.lowReg, rlDest.highReg);
 
 
     if (rlDest.location == kLocRetval) {
         storeBaseDispWide(cUnit, rGLUE, offsetof(InterpState, retval),
                           rlDest.lowReg, rlDest.highReg);
-        clobberReg(cUnit, rlDest.lowReg);
-        clobberReg(cUnit, rlDest.highReg);
+        dvmCompilerClobber(cUnit, rlDest.lowReg);
+        dvmCompilerClobber(cUnit, rlDest.highReg);
     } else {
-        resetDefLocWide(cUnit, rlDest);
-        if (liveOut(cUnit, rlDest.sRegLow) ||
-            liveOut(cUnit, hiSReg(rlDest.sRegLow))) {
+        dvmCompilerResetDefLocWide(cUnit, rlDest);
+        if (dvmCompilerLiveOut(cUnit, rlDest.sRegLow) ||
+            dvmCompilerLiveOut(cUnit, dvmCompilerSRegHi(rlDest.sRegLow))) {
             defStart = (LIR *)cUnit->lastLIRInsn;
-            int vReg = sReg2vReg(cUnit, rlDest.sRegLow);
-            assert((vReg+1) == sReg2vReg(cUnit, hiSReg(rlDest.sRegLow)));
+            int vReg = dvmCompilerS2VReg(cUnit, rlDest.sRegLow);
+            assert((vReg+1) == dvmCompilerS2VReg(cUnit,
+                                     dvmCompilerSRegHi(rlDest.sRegLow)));
             storeBaseDispWide(cUnit, rFP, vReg << 2, rlDest.lowReg,
                               rlDest.highReg);
-            markRegClean(cUnit, rlDest.lowReg);
-            markRegClean(cUnit, rlDest.highReg);
+            dvmCompilerMarkClean(cUnit, rlDest.lowReg);
+            dvmCompilerMarkClean(cUnit, rlDest.highReg);
             defEnd = (LIR *)cUnit->lastLIRInsn;
-            markDefWide(cUnit, rlDest, defStart, defEnd);
+            dvmCompilerMarkDefWide(cUnit, rlDest, defStart, defEnd);
         }
     }
 }
@@ -325,7 +330,7 @@ static void genDispatchToHandler(CompilationUnit *cUnit, TemplateOpCode opCode)
      * we fake BLX_1 is a two operand instruction and the absolute target
      * address is stored in operand[1].
      */
-    clobberHandlerRegs(cUnit);
+    dvmCompilerClobberHandlerRegs(cUnit);
     newLIR2(cUnit, kThumbBlx1,
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode],
             (int) gDvmJit.codeCache + templateEntryOffsets[opCode]);
