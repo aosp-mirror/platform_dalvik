@@ -109,8 +109,6 @@ typedef struct JitEntry {
     void*               codeAddress;    /* Code address of native translation */
 } JitEntry;
 
-int dvmJitStartup(void);
-void dvmJitShutdown(void);
 int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState);
 void* dvmJitGetCodeAddr(const u2* dPC);
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState);
