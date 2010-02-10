@@ -32,7 +32,7 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
     private final String PACKAGE_PATTERN = "(?m)^\\s*package\\s+(\\S+)\\s*;";
 
     private final String TYPE_DECLARATION_PATTERN
-            = "(?m)\\b(?:public|private)\\s+(?:interface|class|enum)\\b";
+            = "(?m)\\b(?:public|private)\\s+(?:final\\s+)?(?:interface|class|enum)\\b";
 
     public Set<TestRun> findTests(File testDirectory) {
         Set<TestRun> result = new LinkedHashSet<TestRun>();
