@@ -1038,6 +1038,10 @@ static ArmLIR *loadMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     } else {
         res = newLIR2(cUnit, kThumb2Ldmia, rBase, rMask);
     }
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        res->branchInsertSV = true;
+#endif
     genBarrier(cUnit);
     return res;
 }
@@ -1051,6 +1055,10 @@ static ArmLIR *storeMultiple(CompilationUnit *cUnit, int rBase, int rMask)
     } else {
         res = newLIR2(cUnit, kThumb2Stmia, rBase, rMask);
     }
+#if defined(WITH_SELF_VERIFICATION)
+    if (cUnit->heapMemOp)
+        res->branchInsertSV = true;
+#endif
     genBarrier(cUnit);
     return res;
 }
