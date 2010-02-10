@@ -1864,6 +1864,7 @@ enum {
     kSVSignedHalfword,
     kSVWord,
     kSVDoubleword,
+    kSVVariable,
 };
 
 /* Load the value of a decoded register from the stack */
@@ -2075,6 +2076,8 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
         kMemOpStrhRRI5 = 0x10, // strh(1) [10000] imm_5[10..6] rn[5..3] rd[2..0]
         kMemOpLdrhRRI5 = 0x11, // ldrh(1) [10001] imm_5[10..6] rn[5..3] rd[2..0]
         kMemOpLdrSpRel = 0x13, // ldr(4)  [10011] rd[10..8] imm_8[7..0]
+        kMemOpStmia    = 0x18, // stmia   [11000] rn[10..8] reglist [7..0]
+        kMemOpLdmia    = 0x19, // ldmia   [11001] rn[10..8] reglist [7..0]
         kMemOpStrRRR   = 0x28, // str(2)  [0101000] rm[8..6] rn[5..3] rd[2..0]
         kMemOpStrhRRR  = 0x29, // strh(2) [0101001] rm[8..6] rn[5..3] rd[2..0]
         kMemOpStrbRRR  = 0x2A, // strb(2) [0101010] rm[8..6] rn[5..3] rd[2..0]
@@ -2083,6 +2086,10 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
         kMemOpLdrhRRR  = 0x2D, // ldrh(2) [0101101] rm[8..6] rn[5..3] rd[2..0]
         kMemOpLdrbRRR  = 0x2E, // ldrb(2) [0101110] rm[8..6] rn[5..3] rd[2..0]
         kMemOpLdrshRRR = 0x2F, // ldrsh   [0101111] rm[8..6] rn[5..3] rd[2..0]
+        kMemOp2Stmia   = 0xE88, // stmia  [111010001000[ rn[19..16] mask[15..0]
+        kMemOp2Ldmia   = 0xE89, // ldmia  [111010001001[ rn[19..16] mask[15..0]
+        kMemOp2Stmia2  = 0xE8A, // stmia  [111010001010[ rn[19..16] mask[15..0]
+        kMemOp2Ldmia2  = 0xE8B, // ldmia  [111010001011[ rn[19..16] mask[15..0]
         kMemOp2Vstr    = 0xED8, // Used for Vstrs and Vstrd
         kMemOp2Vldr    = 0xED9, // Used for Vldrs and Vldrd
         kMemOp2Vstr2   = 0xEDC, // Used for Vstrs and Vstrd
@@ -2146,12 +2153,15 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
         int rm = insn & 0xF;
         int rn = (insn >> 16) & 0xF;
         int rt = (insn >> 12) & 0xF;
+        bool wBack = true;
 
         // Update the link register
         selfVerificationMemRegStore(sp, old_lr+4, 13);
 
         // Determine whether the mem op is a store or load
         switch (opcode12) {
+            case kMemOp2Stmia:
+            case kMemOp2Stmia2:
             case kMemOp2Vstr:
             case kMemOp2Vstr2:
             case kMemOp2StrbRRR:
@@ -2190,6 +2200,12 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             case kMemOp2Vldr:
             case kMemOp2Vldr2:
                 if (opcode4 == kMemOp2Double) size = kSVDoubleword;
+                break;
+            case kMemOp2Stmia:
+            case kMemOp2Ldmia:
+            case kMemOp2Stmia2:
+            case kMemOp2Ldmia2:
+                size = kSVVariable;
                 break;
         }
 
@@ -2235,6 +2251,13 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             case kMemOp2LdrshRRI12:
                 offset = imm12;
                 break;
+            case kMemOp2Stmia:
+            case kMemOp2Ldmia:
+                wBack = false;
+            case kMemOp2Stmia2:
+            case kMemOp2Ldmia2:
+                offset = 0;
+                break;
             default:
                 LOGE("*** ERROR: UNRECOGNIZED THUMB2 MEM OP: %x", opcode12);
                 offset = 0;
@@ -2243,7 +2266,20 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
 
         // Handle the decoded mem op accordingly
         if (store) {
-            if (size == kSVDoubleword) {
+            if (size == kSVVariable) {
+                LOGD("*** THUMB2 STMIA CURRENTLY UNUSED (AND UNTESTED)");
+                int i;
+                int regList = insn & 0xFFFF;
+                for (i = 0; i < 16; i++) {
+                    if (regList & 0x1) {
+                        data = selfVerificationMemRegLoad(sp, i);
+                        selfVerificationStore(addr, data, kSVWord);
+                        addr += 4;
+                    }
+                    regList = regList >> 1;
+                }
+                if (wBack) selfVerificationMemRegStore(sp, addr, rn);
+            } else if (size == kSVDoubleword) {
                 double_data = selfVerificationMemRegLoadDouble(sp, rt);
                 selfVerificationStoreDoubleword(addr+offset, double_data);
             } else {
@@ -2251,7 +2287,20 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
                 selfVerificationStore(addr+offset, data, size);
             }
         } else {
-            if (size == kSVDoubleword) {
+            if (size == kSVVariable) {
+                LOGD("*** THUMB2 LDMIA CURRENTLY UNUSED (AND UNTESTED)");
+                int i;
+                int regList = insn & 0xFFFF;
+                for (i = 0; i < 16; i++) {
+                    if (regList & 0x1) {
+                        data = selfVerificationLoad(addr, kSVWord);
+                        selfVerificationMemRegStore(sp, data, i);
+                        addr += 4;
+                    }
+                    regList = regList >> 1;
+                }
+                if (wBack) selfVerificationMemRegStore(sp, addr, rn);
+            } else if (size == kSVDoubleword) {
                 double_data = selfVerificationLoadDoubleword(addr+offset);
                 selfVerificationMemRegStoreDouble(sp, double_data, rt);
             } else {
@@ -2286,6 +2335,7 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             case kMemOpStrRRI5:
             case kMemOpStrbRRI5:
             case kMemOpStrhRRI5:
+            case kMemOpStmia:
                 store = true;
         }
 
@@ -2318,11 +2368,17 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             case kMemOpLdrhRRI5:
                 size = kSVHalfword;
                 break;
+            case kMemOpStmia:
+            case kMemOpLdmia:
+                size = kSVVariable;
+                break;
         }
 
         // Load the value of the address
         if (opcode5 == kMemOpLdrPcRel)
             addr = selfVerificationMemRegLoad(sp, 4);
+        else if (opcode5 == kMemOpStmia || opcode5 == kMemOpLdmia)
+            addr = selfVerificationMemRegLoad(sp, rd);
         else
             addr = selfVerificationMemRegLoad(sp, rn);
 
@@ -2348,6 +2404,10 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
             case kMemOpLdrbRRI5:
                 offset = imm;
                 break;
+            case kMemOpStmia:
+            case kMemOpLdmia:
+                offset = 0;
+                break;
             default:
                 LOGE("*** ERROR: UNRECOGNIZED THUMB MEM OP: %x", opcode5);
                 offset = 0;
@@ -2356,11 +2416,41 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
 
         // Handle the decoded mem op accordingly
         if (store) {
-            data = selfVerificationMemRegLoad(sp, rt);
-            selfVerificationStore(addr+offset, data, size);
+            if (size == kSVVariable) {
+                int i;
+                int regList = insn & 0xFF;
+                for (i = 0; i < 8; i++) {
+                    if (regList & 0x1) {
+                        data = selfVerificationMemRegLoad(sp, i);
+                        selfVerificationStore(addr, data, kSVWord);
+                        addr += 4;
+                    }
+                    regList = regList >> 1;
+                }
+                selfVerificationMemRegStore(sp, addr, rd);
+            } else {
+                data = selfVerificationMemRegLoad(sp, rt);
+                selfVerificationStore(addr+offset, data, size);
+            }
         } else {
-            data = selfVerificationLoad(addr+offset, size);
-            selfVerificationMemRegStore(sp, data, rt);
+            if (size == kSVVariable) {
+                bool wBack = true;
+                int i;
+                int regList = insn & 0xFF;
+                for (i = 0; i < 8; i++) {
+                    if (regList & 0x1) {
+                        if (i == rd) wBack = false;
+                        data = selfVerificationLoad(addr, kSVWord);
+                        selfVerificationMemRegStore(sp, data, i);
+                        addr += 4;
+                    }
+                    regList = regList >> 1;
+                }
+                if (wBack) selfVerificationMemRegStore(sp, addr, rd);
+            } else {
+                data = selfVerificationLoad(addr+offset, size);
+                selfVerificationMemRegStore(sp, data, rt);
+            }
         }
     }
 }
