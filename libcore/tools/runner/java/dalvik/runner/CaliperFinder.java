@@ -32,7 +32,7 @@ class CaliperFinder extends NamingPatternCodeFinder {
         return "caliper";
     }
 
-    public Class<? extends TestRunner> getRunnerClass() {
+    public Class<? extends Runner> getRunnerClass() {
         return CaliperRunner.class;
     }
 

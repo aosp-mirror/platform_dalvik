@@ -48,14 +48,14 @@ final class ActivityMode extends Mode {
     }
 
     @Override protected void prepare(Set<File> testRunnerJava, Classpath testRunnerClasspath) {
-        super.prepare(testRunnerJava, testRunnerClasspath);
         testRunnerJava.add(new File(DalvikRunner.HOME_JAVA, "dalvik/runner/TestActivity.java"));
+        super.prepare(testRunnerJava, testRunnerClasspath);
     }
 
     @Override protected void postCompileTestRunner() {
     }
 
-    @Override protected Classpath postCompileTest(TestRun testRun) {
+    @Override protected void postCompileTest(TestRun testRun) {
         logger.fine("aapt and push " + testRun.getQualifiedName());
 
         // Some things of note:
@@ -88,7 +88,6 @@ final class ActivityMode extends Mode {
         File apkUnsigned = createApk(testRun, dex);
         File apkSigned = signApk(testRun, apkUnsigned);
         installApk(testRun, apkSigned);
-        return Classpath.of(apkSigned);
     }
 
     private File makePackagingDirectory(TestRun testRun) {
@@ -209,7 +208,6 @@ final class ActivityMode extends Mode {
 
     @Override protected void fillInProperties(Properties properties, TestRun testRun) {
         super.fillInProperties(properties, testRun);
-        properties.setProperty(TestProperties.RUNNER_CLASS, testRun.getRunnerClass().getName());
         properties.setProperty(TestProperties.DEVICE_RUNNER_DIR, getEnvironmentDevice().runnerDir.getPath());
     }
 

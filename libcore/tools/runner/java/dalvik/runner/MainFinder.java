@@ -31,7 +31,7 @@ class MainFinder extends NamingPatternCodeFinder {
         return "main";
     }
 
-    public Class<? extends TestRunner> getRunnerClass() {
+    public Class<? extends Runner> getRunnerClass() {
         return MainRunner.class;
     }
 

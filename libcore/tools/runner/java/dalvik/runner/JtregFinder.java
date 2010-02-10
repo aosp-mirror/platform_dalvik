@@ -125,7 +125,7 @@ class JtregFinder implements CodeFinder {
         return s.replace('/', '.');
     }
 
-    public Class<? extends TestRunner> getRunnerClass() {
+    public Class<? extends Runner> getRunnerClass() {
         return JtregRunner.class;
     }
 

@@ -41,9 +41,9 @@ final public class TestProperties {
     public static final String QUALIFIED_NAME = "qualifiedName";
 
     /**
-     * Name of the property used by TestActivity to determine which
-     * class to use as the TestRunner name. This class should be a
-     * subclass of TestRunner.
+     * Name of the property used by TestRunner to determine which
+     * class to use as the Runner name. This class should implement
+     * Runner.
      */
     public static final String RUNNER_CLASS = "runnerClass";
 

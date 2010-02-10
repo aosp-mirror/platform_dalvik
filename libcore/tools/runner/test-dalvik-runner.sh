@@ -33,15 +33,21 @@ tests="$test_jtreg $test_junit $test_caliper $test_main"
 
 cd $ANDROID_BUILD_TOP
 . ./build/envsetup.sh
-m core-tests junit caliper snod
+m core-tests junit caliper snod && adb reboot bootloader && fastboot flashall && adb wait-for-device
+# when the device first comes up /sdcard is not mounted
+while [ -z "`adb shell ls /sdcard | tr -d '\r\n'`" ] ; do sleep 1; done
 mmm dalvik/libcore/tools/runner
 
 #verbose=--verbose
-#clean=--no-clean
+#clean=--no-clean-after
+extras="$verbose $clean"
+
+dalvik_runner="java -cp out/host/linux-x86/framework/dalvik_runner.jar dalvik.runner.DalvikRunner"
 
 for mode in $modes; do
     for test in $tests; do
-        echo RUNNING $mode $test 
-        java -cp out/host/linux-x86/framework/dalvik_runner.jar dalvik.runner.DalvikRunner --mode $mode $verbose $clean $test
+        command="$dalvik_runner --mode $mode $extras $test"
+        echo RUNNING $command
+        $command
     done
 done

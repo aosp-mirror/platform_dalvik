@@ -23,7 +23,7 @@ import junit.runner.TestSuiteLoader;
 /**
  * Runs a JUnit test.
  */
-public final class JUnitRunner extends TestRunner {
+public final class JUnitRunner implements Runner {
 
     private final junit.textui.TestRunner testRunner;
     private Test junitTest;
@@ -46,16 +46,12 @@ public final class JUnitRunner extends TestRunner {
         };
     }
 
-    @Override public void prepareTest() {
-        junitTest = testRunner.getTest(testClass);
+    public void prepareTest(Class<?> testClass) {
+        junitTest = testRunner.getTest(testClass.getName());
     }
 
-    @Override public boolean test() {
+    public boolean test(Class<?> testClass) {
         TestResult result = testRunner.doRun(junitTest);
         return result.wasSuccessful();
-    }
-
-    public static void main(String[] args) throws Exception {
-        new JUnitRunner().run();
     }
 }

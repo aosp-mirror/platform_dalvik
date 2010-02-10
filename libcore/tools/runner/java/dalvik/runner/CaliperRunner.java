@@ -16,23 +16,22 @@
 
 package dalvik.runner;
 
+import com.google.caliper.Benchmark;
 import com.google.caliper.Runner;
 
 /**
  * Runs a <a href="http://code.google.com/p/caliper/">Caliper</a> benchmark.
  */
-public final class CaliperRunner extends TestRunner {
+public final class CaliperRunner implements dalvik.runner.Runner {
 
-    @Override public boolean test() {
+    public void prepareTest(Class<?> testClass) {}
+
+    public boolean test(Class<?> testClass) {
         try {
-            Runner.main(testClass);
+            Runner.main(testClass.asSubclass(Benchmark.class), new String[0]);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return false; // always print benchmarking results
-    }
-
-    public static void main(String[] args) throws Exception {
-        new CaliperRunner().run();
     }
 }
