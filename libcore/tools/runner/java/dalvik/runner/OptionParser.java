@@ -288,6 +288,7 @@ public class OptionParser {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static void setValue(Object object, Field field, String arg, Handler handler, String valueText) {
 
         Object value = handler.translate(valueText);
@@ -298,7 +299,6 @@ public class OptionParser {
         try {
             field.setAccessible(true);
             if (Collection.class.isAssignableFrom(field.getType())) {
-                @SuppressWarnings("unchecked")
                 Collection collection = (Collection) field.get(object);
                 collection.add(value);
             } else {

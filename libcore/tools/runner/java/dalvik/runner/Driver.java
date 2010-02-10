@@ -156,6 +156,9 @@ final class Driver {
             TestRun testRun;
             try {
                 Future<TestRun> future = builders.poll(5 * 60, TimeUnit.SECONDS);
+                if (future == null) {
+                    throw new RuntimeException("Timeout for build and install");
+                }
                 testRun = future.get();
             } catch (ExecutionException e) {
                 throw new RuntimeException("Unexpected exception building test", e);

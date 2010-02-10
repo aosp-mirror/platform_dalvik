@@ -49,14 +49,11 @@ public abstract class Vm extends Mode {
      */
     @Override protected List<Command> buildCommands(TestRun testRun) {
         return Collections.singletonList(newVmCommandBuilder(testRun.getUserDir())
-                .classpath(testRun.getTestClasspath())
-                .classpath(testRun.getRunnerClasspath())
-                .classpath(testRunnerClasspath)
-                .classpath(getRuntimeSupportClasspath())
+                .classpath(getRuntimeSupportClasspath(testRun))
                 .userDir(testRun.getUserDir())
                 .debugPort(environment.debugPort)
                 .vmArgs(additionalVmArgs)
-                .mainClass(testRun.getRunnerClass().getName())
+                .mainClass(TestRunner.class.getName())
                 .build());
     }
 
@@ -69,7 +66,7 @@ public abstract class Vm extends Mode {
      * Returns the classpath containing JUnit and the dalvik annotations
      * required for test execution.
      */
-    protected abstract Classpath getRuntimeSupportClasspath();
+    protected abstract Classpath getRuntimeSupportClasspath(TestRun testRun);
 
     /**
      * Builds a virtual machine command.

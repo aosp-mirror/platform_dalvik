@@ -23,26 +23,19 @@ import java.util.Properties;
 /**
  * Runs a test.
  */
-public abstract class TestRunner {
-
-    /**
-     * A static field that allows TestActivity to access the
-     * underlying test result without depending on reading
-     * System.out. This is necessary because TestRunner subclasses are
-     * invoked via a tradtional static main method with a void return
-     * type.
-     */
-    public static boolean success;
+public class TestRunner {
 
     protected final Properties properties;
 
-    protected final String testClass;
     protected final String qualifiedName;
+    protected final Class<?> testClass;
+    protected final Class<?> runnerClass;
 
     protected TestRunner () {
         properties = loadProperties();
-        testClass = properties.getProperty(TestProperties.TEST_CLASS);
         qualifiedName = properties.getProperty(TestProperties.QUALIFIED_NAME);
+        testClass = classProperty(TestProperties.TEST_CLASS, Object.class);
+        runnerClass = classProperty(TestProperties.RUNNER_CLASS, Runner.class);
     }
 
     protected static Properties loadProperties() {
@@ -60,15 +53,38 @@ public abstract class TestRunner {
         }
     }
 
-    public void prepareTest() {}
+    private Class<?> classProperty(String propertyName, Class<?> superClass) {
+        String className = properties.getProperty(propertyName);
+        if (className == null) {
+            throw new IllegalArgumentException("Could not find property for " +
+                                               propertyName);
+        }
+        try {
+            Class<?> klass = Class.forName(className);
+            if (!superClass.isAssignableFrom(klass)) {
+                throw new IllegalArgumentException(
+                        className + " can not be assigned to " + Runner.class);
+            }
+            return klass;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    public abstract boolean test();
+    public boolean run() {
+        Runner runner;
+        try {
+            runner = (Runner) runnerClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        runner.prepareTest(testClass);
+        return runner.test(testClass);
+    }
 
-    public void run() {
-        prepareTest();
-
-        System.out.println("Executing " + qualifiedName);
-        success = test();
-        System.out.println(TestProperties.result(success));
+    public static void main(String[] args) {
+        System.out.println(TestProperties.result(new TestRunner().run()));
     }
 }

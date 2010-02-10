@@ -16,14 +16,13 @@
 
 package dalvik.runner;
 
-import java.io.File;
-
 /**
- * A mkdir command.
+ * Interface between the generic TestRunner and the more specific
+ * backend implementations that know about specific types of tests.
  */
-final class Mkdir {
+public interface Runner {
 
-    public void mkdirs(File directory) {
-        new Command("mkdir", "-p", directory.getPath()).execute();
-    }
+    public void prepareTest(Class<?> testClass);
+
+    public boolean test(Class<?> testClass);
 }

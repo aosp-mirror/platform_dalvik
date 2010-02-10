@@ -48,7 +48,21 @@ abstract class Mode {
     protected final long timeoutSeconds;
     protected final File sdkJar;
 
+    /**
+     * Set of Java files needed to built to tun the currently selected
+     * set of tests. We build a subset rather than all the files all
+     * the time to reduce dex packaging costs in the activity mode
+     * case.
+     */
     protected final Set<File> testRunnerJava = new HashSet<File>();
+
+    /**
+     * Classpath of testRunner on the host side including any
+     * supporting libraries for testRunnerJava. Useful for compiling
+     * testRunnerJava as well as executing it on the host. Execution
+     * on the device requires further packaging typically done by
+     * postCompileTestRunner.
+     */
     protected final Classpath testRunnerClasspath = new Classpath();
 
     protected final Classpath testClasspath = Classpath.of(
@@ -73,6 +87,7 @@ abstract class Mode {
      * tests.
      */
     protected void prepare(Set<File> testRunnerJava, Classpath testRunnerClasspath) {
+        this.testRunnerJava.add(new File(DalvikRunner.HOME_JAVA, "dalvik/runner/TestRunner.java"));
         this.testRunnerJava.addAll(testRunnerJava);
         this.testRunnerClasspath.addAll(testRunnerClasspath);
         environment.prepare();
@@ -106,10 +121,10 @@ abstract class Mode {
     public void buildAndInstall(TestRun testRun) {
         logger.fine("build " + testRun.getQualifiedName());
 
-        Classpath testClasses;
+        boolean testCompiled;
         try {
-            testClasses = compileTest(testRun);
-            if (testClasses == null) {
+            testCompiled = compileTest(testRun);
+            if (!testCompiled) {
                 testRun.setResult(Result.UNSUPPORTED, Collections.<String>emptyList());
                 return;
             }
@@ -120,7 +135,7 @@ abstract class Mode {
             testRun.setResult(Result.ERROR, e);
             return;
         }
-        testRun.setTestClasspath(testClasses);
+        testRun.setTestCompiled(testCompiled);
         environment.prepareUserDir(testRun);
     }
 
@@ -131,9 +146,9 @@ abstract class Mode {
      *      null} if the test could not be compiled.
      * @throws CommandFailedException if javac fails
      */
-    private Classpath compileTest(TestRun testRun) throws IOException {
+    private boolean compileTest(TestRun testRun) throws IOException {
         if (!JAVA_TEST_PATTERN.matcher(testRun.getTestJava().toString()).find()) {
-            return null;
+            return false;
         }
 
         String qualifiedName = testRun.getQualifiedName();
@@ -157,16 +172,16 @@ abstract class Mode {
                 .sourcepath(testRun.getTestDirectory())
                 .destination(testClassesDir)
                 .compile(testRun.getTestJava());
-        return postCompileTest(testRun);
+        postCompileTest(testRun);
+        return true;
     }
 
     /**
      * Hook method called after test compilation.
      *
      * @param testRun The test being compiled
-     * @return the new result file.
      */
-    abstract protected Classpath postCompileTest(TestRun testRun);
+    abstract protected void postCompileTest(TestRun testRun);
 
 
     /**
@@ -175,6 +190,7 @@ abstract class Mode {
     protected void fillInProperties(Properties properties, TestRun testRun) {
         properties.setProperty(TestProperties.TEST_CLASS, testRun.getTestClass());
         properties.setProperty(TestProperties.QUALIFIED_NAME, testRun.getQualifiedName());
+        properties.setProperty(TestProperties.RUNNER_CLASS, testRun.getRunnerClass().getName());
     }
 
     /**

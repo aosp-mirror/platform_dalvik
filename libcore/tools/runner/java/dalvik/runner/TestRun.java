@@ -37,7 +37,7 @@ public final class TestRun {
     private final File testDirectory;
     private final File testJava;
     private final String testClass;
-    private final Class<? extends TestRunner> runnerClass;
+    private final Class<? extends Runner> runnerClass;
     private final File runnerJava;
     private final Classpath runnerClasspath;
 
@@ -46,7 +46,7 @@ public final class TestRun {
     private final String qualifiedName;
     private final String description;
 
-    private Classpath testClasspath;
+    private boolean testCompiled;
     private File userDir = new File(System.getProperty("user.dir"));
 
     private ExpectedResult expectedResult = ExpectedResult.SUCCESS;
@@ -55,7 +55,7 @@ public final class TestRun {
 
     public TestRun(File testDirectory, File testJava, String testClass,
             String suiteName, String testName, String qualifiedName,
-            String description, Class<? extends TestRunner> runnerClass,
+            String description, Class<? extends Runner> runnerClass,
             File runnerJava, Classpath runnerClasspath) {
         this.qualifiedName = qualifiedName;
         this.suiteName = suiteName;
@@ -123,15 +123,14 @@ public final class TestRun {
     }
 
     /**
-     * Initializes the path to the jar file or directory containing test
-     * classes.
+     * Set when the test is successfully compiled.
      */
-    public void setTestClasspath(Classpath classpath) {
-        this.testClasspath = classpath;
+    public void setTestCompiled(boolean testCompiled) {
+        this.testCompiled = testCompiled;
     }
 
-    public Classpath getTestClasspath() {
-        return testClasspath;
+    public boolean getTestCompiled() {
+        return testCompiled;
     }
 
     /**
@@ -150,7 +149,7 @@ public final class TestRun {
      * classpath prepared and have not yet been assigned a result.
      */
     public boolean isRunnable() {
-        return testClasspath != null && result == null;
+        return testCompiled && result == null;
     }
 
     public void setResult(Result result, Throwable e) {
@@ -181,7 +180,7 @@ public final class TestRun {
         return outputLines;
     }
 
-    public Class<? extends TestRunner> getRunnerClass() {
+    public Class<? extends Runner> getRunnerClass() {
         return runnerClass;
     }
 

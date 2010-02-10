@@ -50,11 +50,11 @@ final class DeviceDalvikVm extends Vm {
         postCompile("testrunner", environment.testRunnerClassesDir());
     }
 
-    @Override protected Classpath postCompileTest(TestRun testRun) {
-        return postCompile(testRun.getQualifiedName(), environment.testClassesDir(testRun));
+    @Override protected void postCompileTest(TestRun testRun) {
+        postCompile(testRun.getQualifiedName(), environment.testClassesDir(testRun));
     }
 
-    private Classpath postCompile(String name, File dir) {
+    private void postCompile(String name, File dir) {
         logger.fine("dex and push " + name);
 
         // make the local dex (inside a jar)
@@ -62,10 +62,12 @@ final class DeviceDalvikVm extends Vm {
         new Dx().dex(localDex, Classpath.of(dir));
 
         // post the local dex to the device
-        File deviceDex = new File(getEnvironmentDevice().runnerDir, name + ".jar");
+        File deviceDex = deviceDexFile(name);
         getEnvironmentDevice().adb.push(localDex, deviceDex);
+    }
 
-        return Classpath.of(deviceDex);
+    private File deviceDexFile(String name) {
+        return new File(getEnvironmentDevice().runnerDir, name + ".jar");
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder(
@@ -81,7 +83,11 @@ final class DeviceDalvikVm extends Vm {
                 .temp(getEnvironmentDevice().testTemp);
     }
 
-    @Override protected Classpath getRuntimeSupportClasspath() {
-        return RUNTIME_SUPPORT_CLASSPATH;
+    @Override protected Classpath getRuntimeSupportClasspath(TestRun testRun) {
+        Classpath classpath = new Classpath();
+        classpath.addAll(deviceDexFile(testRun.getQualifiedName()));
+        classpath.addAll(deviceDexFile("testrunner"));
+        classpath.addAll(RUNTIME_SUPPORT_CLASSPATH);
+        return classpath;
     }
 }

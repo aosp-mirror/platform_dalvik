@@ -33,7 +33,7 @@ public interface CodeFinder {
     /**
      * Return the class for the TestRunner
      */
-    public Class<? extends TestRunner> getRunnerClass();
+    public Class<? extends Runner> getRunnerClass();
 
     /**
      * Return the Java file for the TestRunner

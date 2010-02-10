@@ -58,29 +58,23 @@ public class TestActivity extends Activity {
 
     class ActivityRunner extends TestRunner {
 
-        private final String runnerClass;
         private final File runnerDir;
+        private final Thread shutdownHook = new Thread(new ShutdownHook());
 
         ActivityRunner() {
-            runnerClass = properties.getProperty(TestProperties.RUNNER_CLASS);
             runnerDir = new File(properties.getProperty(TestProperties.DEVICE_RUNNER_DIR));
         }
 
-        @Override public boolean test() {
+        @Override public boolean run() {
             log("Using " + runnerClass + " to run " + qualifiedName);
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            boolean success = super.run();
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            writeResultFile(success);
+            return success;
+        }
 
-            boolean success;
-            try {
-                Method mainMethod = Class.forName(runnerClass)
-                        .getDeclaredMethod("main", String[].class);
-                mainMethod.invoke(null, new Object[] { new String[0] });
-                Field successField = TestRunner.class.getDeclaredField("success");
-                success = successField.getBoolean(null);
-            } catch (Throwable ex) {
-                log("Exception using " + runnerClass + " to run " + qualifiedName, ex);
-                success = false;
-            }
-
+        private void writeResultFile (boolean success) {
             String result = TestProperties.result(success);
             File resultDir = new File(runnerDir, qualifiedName);
             File resultTemp = new File(resultDir, TestProperties.RESULT_FILE + ".temp");
@@ -95,7 +89,17 @@ public class TestActivity extends Activity {
             } catch (IOException e) {
                 log("TestActivity could not create result file", e);
             }
-            return success;
+        }
+
+        /**
+         * Used to trap tests that try to exit on the their own. We
+         * treat this as a failure since they usually are calling
+         * System.exit with a non-zero value.
+         */
+        class ShutdownHook implements Runnable {
+            public void run() {
+                writeResultFile(false);
+            }
         }
     }
 }

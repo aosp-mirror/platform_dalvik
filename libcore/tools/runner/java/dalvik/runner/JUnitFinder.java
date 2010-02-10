@@ -32,7 +32,7 @@ class JUnitFinder extends NamingPatternCodeFinder {
         return "junit";
     }
 
-    public Class<? extends TestRunner> getRunnerClass() {
+    public Class<? extends Runner> getRunnerClass() {
         return JUnitRunner.class;
     }
 

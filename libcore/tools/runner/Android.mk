@@ -43,6 +43,7 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/OptionParser.java \
         java/dalvik/runner/Result.java \
         java/dalvik/runner/Rm.java \
+        java/dalvik/runner/Runner.java \
         java/dalvik/runner/Strings.java \
         java/dalvik/runner/TestProperties.java \
         java/dalvik/runner/TestRun.java \
@@ -56,6 +57,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := javatest jh jtreg kxml2-2.3.0
 
 # TODO this only works when junit is already built...
 LOCAL_JAVA_LIBRARIES := junit
+
+LOCAL_JAVACFLAGS := -Werror -Xlint:unchecked
 
 include $(BUILD_HOST_JAVA_LIBRARY)
 
