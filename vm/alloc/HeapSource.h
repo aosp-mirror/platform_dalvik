@@ -44,7 +44,7 @@ bool dvmHeapSourceStartupBeforeFork(void);
 /*
  * Tears down the heap source and frees any resources associated with it.
  */
-void dvmHeapSourceShutdown(GcHeap *gcHeap);
+void dvmHeapSourceShutdown(GcHeap **gcHeap);
 
 /*
  * Writes shallow copies of the currently-used bitmaps into outBitmaps,

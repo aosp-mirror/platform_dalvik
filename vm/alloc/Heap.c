@@ -106,8 +106,7 @@ bool dvmHeapStartup()
     return true;
 
 fail:
-    gDvm.gcHeap = NULL;
-    dvmHeapSourceShutdown(gcHeap);
+    dvmHeapSourceShutdown(&gcHeap);
     return false;
 }
 
@@ -123,33 +122,28 @@ void dvmHeapShutdown()
 {
 //TODO: make sure we're locked
     if (gDvm.gcHeap != NULL) {
-        GcHeap *gcHeap;
-
-        gcHeap = gDvm.gcHeap;
-        gDvm.gcHeap = NULL;
-
         /* Tables are allocated on the native heap;
          * they need to be cleaned up explicitly.
          * The process may stick around, so we don't
          * want to leak any native memory.
          */
-        dvmHeapFreeHeapRefTable(&gcHeap->nonCollectableRefs);
+        dvmHeapFreeHeapRefTable(&gDvm.gcHeap->nonCollectableRefs);
 
-        dvmHeapFreeLargeTable(gcHeap->finalizableRefs);
-        gcHeap->finalizableRefs = NULL;
+        dvmHeapFreeLargeTable(gDvm.gcHeap->finalizableRefs);
+        gDvm.gcHeap->finalizableRefs = NULL;
 
-        dvmHeapFreeLargeTable(gcHeap->pendingFinalizationRefs);
-        gcHeap->pendingFinalizationRefs = NULL;
+        dvmHeapFreeLargeTable(gDvm.gcHeap->pendingFinalizationRefs);
+        gDvm.gcHeap->pendingFinalizationRefs = NULL;
 
-        dvmHeapFreeLargeTable(gcHeap->referenceOperations);
-        gcHeap->referenceOperations = NULL;
+        dvmHeapFreeLargeTable(gDvm.gcHeap->referenceOperations);
+        gDvm.gcHeap->referenceOperations = NULL;
 
         /* Destroy the heap.  Any outstanding pointers
          * will point to unmapped memory (unless/until
-         * someone else maps it).  This frees gcHeap
+         * someone else maps it).  This frees gDvm.gcHeap
          * as a side-effect.
          */
-        dvmHeapSourceShutdown(gcHeap);
+        dvmHeapSourceShutdown(&gDvm.gcHeap);
     }
 }
 
