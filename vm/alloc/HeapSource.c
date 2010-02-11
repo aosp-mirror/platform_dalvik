@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cutils/ashmem.h>
 #include <cutils/mspace.h>
 #include <limits.h>     // for INT_MAX
 #include <sys/mman.h>
@@ -165,6 +166,16 @@ struct HeapSource {
     /* True if zygote mode was active when the HeapSource was created.
      */
     bool sawZygote;
+
+    /*
+     * The base address of the virtual memory reservation.
+     */
+    char *heapBase;
+
+    /*
+     * The length in bytes of the virtual memory reservation.
+     */
+    size_t heapLength;
 };
 
 #define hs2heap(hs_) (&((hs_)->heaps[0]))
@@ -275,17 +286,9 @@ countFree(Heap *heap, const void *ptr, bool isObj)
 static HeapSource *gHs = NULL;
 
 static mspace
-createMspace(size_t startSize, size_t absoluteMaxSize, size_t id)
+createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
 {
     mspace msp;
-    char name[PATH_MAX];
-
-    /* If two ashmem regions have the same name, only one gets
-     * the name when looking at the maps.
-     */
-    snprintf(name, sizeof(name)-1, "dalvik-heap%s/%zd",
-        gDvm.zygote ? "/zygote" : "", id);
-    name[sizeof(name)-1] = '\0';
 
     /* Create an unlocked dlmalloc mspace to use as
      * a small-object heap source.
@@ -297,8 +300,8 @@ createMspace(size_t startSize, size_t absoluteMaxSize, size_t id)
      */
     LOGV_HEAP("Creating VM heap of size %u\n", startSize);
     errno = 0;
-    msp = create_contiguous_mspace_with_name(startSize/2,
-            absoluteMaxSize, /*locked=*/false, name);
+    msp = create_contiguous_mspace_with_base(startSize/2,
+            absoluteMaxSize, /*locked=*/false, base);
     if (msp != NULL) {
         /* Don't let the heap grow past the starting size without
          * our intervention.
@@ -319,6 +322,7 @@ static bool
 addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
 {
     Heap heap;
+    void *base;
 
     if (hs->numHeaps >= HEAP_SOURCE_MAX_HEAP_COUNT) {
         LOGE("Attempt to create too many heaps (%zd >= %zd)\n",
@@ -343,8 +347,8 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
             return false;
         }
         heap.absoluteMaxSize = hs->absoluteMaxSize - overhead;
-        heap.msp = createMspace(HEAP_MIN_FREE, heap.absoluteMaxSize,
-                hs->numHeaps);
+        base = hs->heapBase + ALIGN_UP_TO_PAGE_SIZE(hs->absoluteMaxSize);
+        heap.msp = createMspace(base, HEAP_MIN_FREE, heap.absoluteMaxSize);
         if (heap.msp == NULL) {
             return false;
         }
@@ -355,7 +359,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
                            "objects"))
     {
         LOGE_HEAP("Can't create objectBitmap\n");
-        goto fail;
+        return false;
     }
 
     /* Don't let the soon-to-be-old heap grow any further.
@@ -373,12 +377,6 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
     hs->numHeaps++;
 
     return true;
-
-fail:
-    if (msp == NULL) {
-        destroy_contiguous_mspace(heap.msp);
-    }
-    return false;
 }
 
 /*
@@ -393,6 +391,9 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     HeapSource *hs;
     Heap *heap;
     mspace msp;
+    size_t length;
+    void *base;
+    int fd, ret;
 
     assert(gHs == NULL);
 
@@ -402,12 +403,31 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
         return NULL;
     }
 
+    /*
+     * Allocate a contiguous region of virtual memory to subdivided
+     * among the heaps managed by the garbage collector.
+     */
+    length = ALIGN_UP_TO_PAGE_SIZE(absoluteMaxSize);
+    length *= HEAP_SOURCE_MAX_HEAP_COUNT;
+    fd = ashmem_create_region("the-java-heap", length);
+    if (fd == -1) {
+        return NULL;
+    }
+    base = mmap(NULL, length, PROT_NONE, MAP_PRIVATE, fd, 0);
+    if (base == MAP_FAILED) {
+        return NULL;
+    }
+    ret = close(fd);
+    if (ret == -1) {
+        goto fail;
+    }
+
     /* Create an unlocked dlmalloc mspace to use as
      * the small object heap source.
      */
-    msp = createMspace(startSize, absoluteMaxSize, 0);
+    msp = createMspace(base, startSize, absoluteMaxSize);
     if (msp == NULL) {
-        return false;
+        goto fail;
     }
 
     /* Allocate a descriptor from the heap we just created.
@@ -434,6 +454,8 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     hs->softLimit = INT_MAX;    // no soft limit at first
     hs->numHeaps = 0;
     hs->sawZygote = gDvm.zygote;
+    hs->heapBase = base;
+    hs->heapLength = length;
     if (!addNewHeap(hs, msp, absoluteMaxSize)) {
         LOGE_HEAP("Can't add initial heap\n");
         goto fail;
@@ -448,7 +470,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     return gcHeap;
 
 fail:
-    destroy_contiguous_mspace(msp);
+    munmap(base, length);
     return NULL;
 }
 
@@ -480,33 +502,31 @@ dvmHeapSourceStartupBeforeFork()
 }
 
 /*
- * Tears down the heap source and frees any resources associated with it.
+ * Tears down the entire GcHeap structure and all of the substructures
+ * attached to it.  This call has the side effect of setting the given
+ * gcHeap pointer and gHs to NULL.
  */
 void
-dvmHeapSourceShutdown(GcHeap *gcHeap)
+dvmHeapSourceShutdown(GcHeap **gcHeap)
 {
-    if (gcHeap != NULL && gcHeap->heapSource != NULL) {
+    if (*gcHeap != NULL && (*gcHeap)->heapSource != NULL) {
         HeapSource *hs;
-        size_t numHeaps;
         size_t i;
 
-        hs = gcHeap->heapSource;
-        gHs = NULL;
+        hs = (*gcHeap)->heapSource;
 
-        /* Cache numHeaps because hs will be invalid after the last
-         * heap is freed.
-         */
-        numHeaps = hs->numHeaps;
+        assert((char *)*gcHeap >= hs->heapBase);
+        assert((char *)*gcHeap < hs->heapBase + hs->heapLength);
 
-        for (i = 0; i < numHeaps; i++) {
+        for (i = 0; i < hs->numHeaps; i++) {
             Heap *heap = &hs->heaps[i];
 
             dvmHeapBitmapDelete(&heap->objectBitmap);
-            destroy_contiguous_mspace(heap->msp);
         }
-        /* The last heap is the original one, which contains the
-         * HeapSource object itself.
-         */
+
+        munmap(hs->heapBase, hs->heapLength);
+        gHs = NULL;
+        *gcHeap = NULL;
     }
 }
 
