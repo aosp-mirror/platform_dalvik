@@ -1835,6 +1835,22 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
     return false;
 }
 
+/* Positive power of 2?  Return shiftCount if so, -1 if not */
+static int mulToShift(int val) {
+    int shiftCount;
+    if (val > 0 && ((val & (val - 1)) == 0)) {
+        shiftCount = 0;
+        val = ~val & (val - 1);
+        while (val) {
+            shiftCount++;
+            val >>= 1;
+        }
+    } else {
+        shiftCount = -1;
+    }
+    return shiftCount;
+}
+
 static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
@@ -1870,9 +1886,18 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             op = kOpAdd;
             break;
         case OP_MUL_INT_LIT8:
-        case OP_MUL_INT_LIT16:
-            op = kOpMul;
+        case OP_MUL_INT_LIT16: {
+            // TUNING: General shift & add for small constants
+            int shiftCount = mulToShift(lit);
+            if (shiftCount >= 0) {
+                op = kOpLsl;
+                lit = shiftCount;
+                shiftOp = true;
+            } else {
+                op = kOpMul;
+            }
             break;
+        }
         case OP_AND_INT_LIT8:
         case OP_AND_INT_LIT16:
             op = kOpAnd;
