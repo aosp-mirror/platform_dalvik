@@ -218,4 +218,35 @@ public abstract class InnerNodeImpl extends LeafNodeImpl {
         return oldChildImpl;
     }
 
+    public String getTextContent() throws DOMException {
+        Node child = getFirstChild();
+        if (child == null) {
+            return "";
+        }
+
+        Node next = child.getNextSibling();
+        if (next == null) {
+            return hasTextContent(child) ? child.getTextContent() : "";
+        }
+
+        StringBuilder buf = new StringBuilder();
+        getTextContent(buf);
+        return buf.toString();
+    }
+
+    void getTextContent(StringBuilder buf) throws DOMException {
+        Node child = getFirstChild();
+        while (child != null) {
+            if (hasTextContent(child)) {
+                ((NodeImpl) child).getTextContent(buf);
+            }
+            child = child.getNextSibling();
+        }
+    }
+
+    final boolean hasTextContent(Node child) {
+        // TODO: skip text nodes with ignorable whitespace?
+        return child.getNodeType() != Node.COMMENT_NODE
+                && child.getNodeType() != Node.PROCESSING_INSTRUCTION_NODE;
+    }
 }

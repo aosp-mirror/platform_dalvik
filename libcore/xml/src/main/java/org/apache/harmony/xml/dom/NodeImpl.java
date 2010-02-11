@@ -190,7 +190,7 @@ public abstract class NodeImpl implements Node {
     }
 
     public String getBaseURI() {
-        throw new UnsupportedOperationException(); // TODO
+        return null; // TODO
     }
 
     public short compareDocumentPosition(Node other)
@@ -199,7 +199,14 @@ public abstract class NodeImpl implements Node {
     }
 
     public String getTextContent() throws DOMException {
-        throw new UnsupportedOperationException(); // TODO
+        return getNodeValue();
+    }
+
+    void getTextContent(StringBuilder buf) throws DOMException {
+        String content = getNodeValue();
+        if (content != null) {
+            buf.append(content);
+        }
     }
 
     public void setTextContent(String textContent) throws DOMException {

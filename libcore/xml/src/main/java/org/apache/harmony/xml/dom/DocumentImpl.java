@@ -296,6 +296,10 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
         return super.insertChildAt(newChild, index);
     }
 
+    @Override public String getTextContent() throws DOMException {
+        return null;
+    }
+
     public String getInputEncoding() {
         throw new UnsupportedOperationException(); // TODO
     }

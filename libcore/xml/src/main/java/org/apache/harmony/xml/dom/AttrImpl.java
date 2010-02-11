@@ -159,11 +159,12 @@ public class AttrImpl extends NodeImpl implements Attr {
         }
         
         if (prefix != null) {
-            if (namespaceURI == null || !document.isXMLIdentifier(prefix) || "xmlns".equals(prefix)) {
-                throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
-            }
-
-            if ("xml".equals(prefix) && !"http://www.w3.org/XML/1998/namespace".equals(namespaceURI)) {
+            if (namespaceURI == null
+                    || !DocumentImpl.isXMLIdentifier(prefix)
+                    || ("xmlns".equals(prefix)
+                            && !"http://www.w3.org/2000/xmlns/".equals(namespaceURI))
+                    || ("xml".equals(prefix)
+                            && !"http://www.w3.org/XML/1998/namespace".equals(namespaceURI))) {
                 throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
             }
         }
