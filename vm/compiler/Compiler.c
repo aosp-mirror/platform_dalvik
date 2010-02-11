@@ -53,6 +53,9 @@ static CompilerWorkOrder workDequeue(void)
  * Attempt to enqueue a work order, returning true if successful.
  * This routine will not block, but simply return if it couldn't
  * aquire the lock or if the queue is full.
+ *
+ * NOTE: Make sure that the caller frees the info pointer if the return value
+ * is false.
  */
 bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
 {
@@ -62,11 +65,6 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     bool result = true;
 
     if (dvmTryLockMutex(&gDvmJit.compilerLock)) {
-        /*
-         * Make sure the memory associated with the info pointer is freed for
-         * dropped work orders.
-         */
-        free(info);
         return false;  // Couldn't acquire the lock
     }
 
@@ -315,8 +313,10 @@ bool compilerThreadStartup(void)
 
     dvmLockMutex(&gDvmJit.compilerLock);
 
+#if defined(WITH_JIT_TUNING)
     /* Track method-level compilation statistics */
     gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
+#endif
 
     dvmUnlockMutex(&gDvmJit.compilerLock);
 

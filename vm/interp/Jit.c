@@ -221,6 +221,10 @@ static void selfVerificationSpinLoop(ShadowSpace *shadowSpace)
     JitTraceDescription* desc = dvmCopyTraceDescriptor(startPC);
     if (desc) {
         dvmCompilerWorkEnqueue(startPC, kWorkOrderTraceDebug, desc);
+        /*
+         * This function effectively terminates the VM right here, so not
+         * freeing the desc pointer when the enqueuing fails is acceptable.
+         */
     }
     gDvmJit.selfVerificationSpin = true;
     while(gDvmJit.selfVerificationSpin) sleep(10);
@@ -722,6 +726,12 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                     if (gDvmJit.blockingMode) {
                         dvmCompilerDrainQueue();
                     }
+                } else {
+                    /*
+                     * Make sure the descriptor for the abandoned work order is
+                     * freed.
+                     */
+                    free(desc);
                 }
                 /*
                  * Reset "trace in progress" flag whether or not we
