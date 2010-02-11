@@ -191,6 +191,7 @@ static int compareMethod(const CompilerMethodStats *m1,
     return (int) m1->method - (int) m2->method;
 }
 
+#if defined(WITH_JIT_TUNING)
 /*
  * Analyze each method whose traces are ever compiled. Collect a variety of
  * statistics like the ratio of exercised vs overall code and code bloat
@@ -247,6 +248,7 @@ static CompilerMethodStats *analyzeMethodBody(const Method *method)
     realMethodEntry->dalvikSize = insnSize * 2;
     return realMethodEntry;
 }
+#endif
 
 /*
  * Crawl the stack of the thread that requesed compilation to see if any of the
@@ -297,7 +299,9 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     int numBlocks = 0;
     static int compilationId;
     CompilationUnit cUnit;
+#if defined(WITH_JIT_TUNING)
     CompilerMethodStats *methodStats;
+#endif
 
     /* If we've already compiled this trace, just return success */
     if (dvmJitGetCodeAddr(startCodePtr) && !info->discardResult) {
@@ -307,8 +311,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     compilationId++;
     memset(&cUnit, 0, sizeof(CompilationUnit));
 
+#if defined(WITH_JIT_TUNING)
     /* Locate the entry to store compilation statistics for this method */
     methodStats = analyzeMethodBody(desc->method);
+#endif
 
     /* Initialize the printMe flag */
     cUnit.printMe = gDvmJit.printMe;
@@ -449,8 +455,10 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
         }
     }
 
+#if defined(WITH_JIT_TUNING)
     /* Convert # of half-word to bytes */
     methodStats->compiledDalvikSize += traceSize * 2;
+#endif
 
     /*
      * Now scan basic blocks containing real code to connect the
@@ -745,7 +753,9 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
     /* Success */
     if (!cUnit.halveInstCount) {
+#if defined(WITH_JIT_TUNING)
         methodStats->nativeSize += cUnit.totalSize;
+#endif
         return info->codeAddress != NULL;
 
     /* Halve the instruction count and retry again */
