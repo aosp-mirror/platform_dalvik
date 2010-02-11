@@ -44,6 +44,7 @@ typedef struct DataHeader {
 
 #define VERSION 2
 int versionNumber = VERSION;
+int verbose = 0;
 
 DataHeader header = { 0x574f4c53, VERSION, sizeof(DataHeader), 0LL };
 
@@ -52,22 +53,22 @@ char *clockDef = "clock=thread-cpu\n";
 
 char *keyThreads =
 "*threads\n"
-"1	main\n"
-"2	foo\n"
-"3	bar\n"
-"4	blah\n";
+"1      main\n"
+"2      foo\n"
+"3      bar\n"
+"4      blah\n";
 
 char *keyEnd = "*end\n";
 
 typedef struct dataRecord {
-    unsigned int	time;
-    int			threadId;
-    unsigned int	action;		/* 0=entry, 1=exit, 2=exception exit */
-    char		*fullName;
-    char		*className;
-    char		*methodName;
-    char		*signature;
-    unsigned int	methodId;
+    unsigned int        time;
+    int                 threadId;
+    unsigned int        action;         /* 0=entry, 1=exit, 2=exception exit */
+    char                *fullName;
+    char                *className;
+    char                *methodName;
+    char                *signature;
+    unsigned int        methodId;
 } dataRecord;
 
 dataRecord *records;
@@ -76,9 +77,8 @@ dataRecord *records;
 char buf[BUF_SIZE];
 
 typedef struct stack {
-    dataRecord	**frames;
-    int		nextFrame;
-    int		indentLevel;
+    dataRecord  **frames;
+    int         indentLevel;
 } stack;
 
 /* Mac OS doesn't have strndup(), so implement it here.
@@ -124,7 +124,6 @@ void parseInputFile(const char *inputFileName)
     int nextRecord = 0;
     int indentLevel = 0;
     stack *callStack;
-    int nextFrame = 0;
 
     FILE *inputFp = fopen(inputFileName, "r");
     if (inputFp == NULL) {
@@ -133,13 +132,15 @@ void parseInputFile(const char *inputFileName)
     }
 
     /* Count the number of lines in the buffer */
-    int numLines = 0;
+    int numRecords = 0;
     int maxThreadId = 1;
+    int maxFrames = 0;
+    char *indentEnd;
     while (fgets(buf, BUF_SIZE, inputFp)) {
         char *cp = buf;
         if (*cp == '#')
             continue;
-        numLines += 1;
+        numRecords += 1;
         if (isdigit(*cp)) {
             int time = strtoul(cp, &cp, 0);
             while (isspace(*cp))
@@ -148,17 +149,22 @@ void parseInputFile(const char *inputFileName)
             if (maxThreadId < threadId)
                 maxThreadId = threadId;
         }
+        indentEnd = cp;
+        while (isspace(*indentEnd))
+            indentEnd += 1;
+        if (indentEnd - cp + 1 > maxFrames)
+            maxFrames = indentEnd - cp + 1;
     }
     int numThreads = maxThreadId + 1;
 
     /* Add space for a sentinel record at the end */
-    numLines += 1;
-    records = (dataRecord *) malloc(sizeof(dataRecord) * numLines);
+    numRecords += 1;
+    records = (dataRecord *) malloc(sizeof(dataRecord) * numRecords);
     callStack = (stack *) malloc(sizeof(stack) * numThreads);
     int ii;
     for (ii = 0; ii < numThreads; ++ii) {
         callStack[ii].frames = NULL;
-        callStack[ii].nextFrame = 0;
+        callStack[ii].indentLevel = 0;
     }
 
     rewind(inputFp);
@@ -169,9 +175,12 @@ void parseInputFile(const char *inputFileName)
 
         linenum += 1;
         char *cp = buf;
+
         /* Skip lines that start with '#' */
         if (*cp == '#')
             continue;
+
+        /* Get time and thread id */
         if (!isdigit(*cp)) {
             /* If the line does not begin with a digit, then fill in
              * default values for the time and threadId.
@@ -189,10 +198,9 @@ void parseInputFile(const char *inputFileName)
         // Allocate space for the thread stack, if necessary
         if (callStack[threadId].frames == NULL) {
             dataRecord **stk;
-            stk = (dataRecord **) malloc(sizeof(dataRecord *) * numLines);
+            stk = (dataRecord **) malloc(sizeof(dataRecord *) * maxFrames);
             callStack[threadId].frames = stk;
         }
-        nextFrame = callStack[threadId].nextFrame;
         indentLevel = callStack[threadId].indentLevel;
 
         save_cp = cp;
@@ -242,58 +250,66 @@ void parseInputFile(const char *inputFileName)
             }
         }
 
+        if (verbose) {
+            printf("Indent: %d; IndentLevel: %d; Line: %s", indent, indentLevel, buf);
+        }
+
         action = 0;
-        if (indent == indentLevel + 1) {
-            callStack[threadId].frames[nextFrame++] = &records[nextRecord];
-        } else if (indent == indentLevel) {
-            char *name = callStack[threadId].frames[nextFrame - 1]->fullName;
-            if (strcmp(name, records[nextRecord].fullName) == 0) {
-                nextFrame -= 1;
+        if (indent == indentLevel + 1) { // Entering a method
+            if (verbose)
+                printf("  Entering %s\n", records[nextRecord].fullName);
+            callStack[threadId].frames[indentLevel] = &records[nextRecord];
+        } else if (indent == indentLevel) { // Exiting a method
+            // Exiting method must be currently on top of stack (unless stack is empty)
+            if (callStack[threadId].frames[indentLevel - 1] == NULL) {
+                if (verbose)
+                    printf("  Exiting %s (past bottom of stack)\n", records[nextRecord].fullName);
+                callStack[threadId].frames[indentLevel - 1] = &records[nextRecord];
                 action = 1;
             } else {
-                if (nextFrame == indentLevel) {
+                if (indentLevel < 1) {
                     fprintf(stderr, "Error: line %d: %s", linenum, buf);
-                    fprintf(stderr, "  expected exit from %s\n",
-                            callStack[threadId].frames[nextFrame - 1]->fullName);
+                    fprintf(stderr, "  expected positive (>0) indentation, found %d\n",
+                            indent);
                     exit(1);
-                } else {
-                    callStack[threadId].frames[nextFrame++] = &records[nextRecord];
                 }
-            }
-        } else if (indent == indentLevel - 1) {
-            action = 1;
-            // Allow popping frames past the bottom of the stack.
-            if (nextFrame > 0) {
-                char *name = callStack[threadId].frames[nextFrame - 1]->fullName;
+                char *name = callStack[threadId].frames[indentLevel - 1]->fullName;
                 if (strcmp(name, records[nextRecord].fullName) == 0) {
-                    nextFrame -= 1;
-                } else {
+                    if (verbose)
+                        printf("  Exiting %s\n", name);
+                    action = 1;
+                } else { // exiting method doesn't match stack's top method
                     fprintf(stderr, "Error: line %d: %s", linenum, buf);
                     fprintf(stderr, "  expected exit from %s\n",
-                            callStack[threadId].frames[nextFrame - 1]->fullName);
+                            callStack[threadId].frames[indentLevel - 1]->fullName);
                     exit(1);
                 }
             }
         } else {
             if (nextRecord != 0) {
                 fprintf(stderr, "Error: line %d: %s", linenum, buf);
-                fprintf(stderr, "  expected indentation %d +/- 1, found %d\n",
+                fprintf(stderr, "  expected indentation %d [+1], found %d\n",
                         indentLevel, indent);
                 exit(1);
+            }
+
+            if (verbose) {
+                printf("  Nonzero indent at first record\n");
+                printf("  Entering %s\n", records[nextRecord].fullName);
             }
 
             // This is the first line of data, so we allow a larger
             // initial indent.  This allows us to test popping off more
             // frames than we entered.
-            callStack[threadId].frames[nextFrame++] = &records[nextRecord];
-            indentLevel = indent;
+            indentLevel = indent - 1;
+            callStack[threadId].frames[indentLevel] = &records[nextRecord];
         }
+
         if (action == 0)
             indentLevel += 1;
         else
             indentLevel -= 1;
         records[nextRecord].action = action;
-        callStack[threadId].nextFrame = nextFrame;
         callStack[threadId].indentLevel = indentLevel;
 
         nextRecord += 1;
@@ -383,14 +399,14 @@ void writeKeyMethods(FILE *keyFp)
                 pNext->methodId = id;
         }
         if (pRecord->className == NULL || pRecord->methodName == NULL) {
-            fprintf(keyFp, "0x%x	%s	m	()\n",
+            fprintf(keyFp, "0x%x        %s      m       ()\n",
                     pRecord->methodId, pRecord->fullName);
         } else if (pRecord->signature == NULL) {
-            fprintf(keyFp, "0x%x	%s	%s	()\n",
+            fprintf(keyFp, "0x%x        %s      %s      ()\n",
                     pRecord->methodId, pRecord->className,
                     pRecord->methodName);
         } else {
-            fprintf(keyFp, "0x%x	%s	%s	%s\n",
+            fprintf(keyFp, "0x%x        %s      %s      %s\n",
                     pRecord->methodId, pRecord->className,
                     pRecord->methodName, pRecord->signature);
         }
@@ -432,7 +448,7 @@ int parseOptions(int argc, char **argv)
 {
     int err = 0;
     while (1) {
-        int opt = getopt(argc, argv, "v:");
+        int opt = getopt(argc, argv, "v:d");
         if (opt == -1)
             break;
         switch (opt) {
@@ -443,6 +459,9 @@ int parseOptions(int argc, char **argv)
                             versionNumber);
                     err = 1;
                 }
+                break;
+            case 'd':
+                verbose = 1;
                 break;
             default:
                 err = 1;
@@ -459,7 +478,7 @@ int main(int argc, char** argv)
     int len;
 
     if (parseOptions(argc, argv) || argc - optind != 2) {
-        fprintf(stderr, "Usage: %s [-v version] input_file trace_prefix\n",
+        fprintf(stderr, "Usage: %s [-v version] [-d] input_file trace_prefix\n",
                 argv[0]);
         exit(1);
     }

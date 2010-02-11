@@ -1,0 +1,42 @@
+*GC
+dvmGcScanRootClassLoader
+mspace_walk_free_pages
+dvmCollectGarbageInternal
+doHeapWork
+dvmGetNextHeapWorkerObject
+GC
+GC2
+GC3
+*Net
+setsockopt
++sys_setsockopt [kernel]
+socketSelect
+send
+recv
+sendto
+recvfrom
++sys_sendto [kernel]
++sys_recvfrom [kernel]
+org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnection
+android.net.http.ConnectionThread
+PlainSocketImpl
+WebCore::HTMLTokenizer
+*IO
+select
++sys_select [kernel]
+*DB
+android.database.sqlite.SQLiteOpenHelper
+android.database.sqlite.SQLiteQueryBuilder
+android.database.sqlite.SQLiteDatabase
+android.database.sqlite.SQLiteDirectCursorDriver
+android.database.sqlite.SQLiteQuery
+android.database.sqlite.SQLiteProgram
+android.database.AbstractCursor
+android.database.sqlite.SQLiteCursor
+*UI
+android.view.View.draw()
+android.view.ViewGroup
+*Sync
++java.lang.Object.wait()
+*Useless
++android.widget.ProgressBar
