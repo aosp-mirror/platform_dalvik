@@ -17,6 +17,8 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * An adb command.
@@ -49,5 +51,40 @@ final class Adb {
     public void forwardTcp(int localPort, int devicePort) {
         new Command("adb", "forward", "tcp:" + localPort, "tcp:" + devicePort)
                 .execute();
+    }
+
+    public void waitForDevice() {
+        new Command("adb", "wait-for-device").execute();
+    }
+
+    /**
+     * Loop until we see a non-empty directory on the device. For
+     * example, wait until /sdcard is mounted.
+     */
+    public void waitForNonEmptyDirectory(File path, int timeoutSeconds) {
+        final int millisPerSecond = 1000;
+        final long start = System.currentTimeMillis();
+        final long deadline = start + (millisPerSecond * timeoutSeconds);
+
+        while (true) {
+            final long remainingSeconds = ((deadline - System.currentTimeMillis())
+                                           / millisPerSecond);
+            Command command = new Command("adb", "shell", "ls", path.getPath());
+            List<String> output;
+            try {
+                output = command.executeWithTimeout(remainingSeconds);
+            } catch (TimeoutException e) {
+                throw new RuntimeException("Timed out after " + timeoutSeconds +
+                                           " seconds waiting for file " + path, e);
+            }
+            try {
+                Thread.sleep(millisPerSecond);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (!output.isEmpty()) {
+                return;
+            }
+        }
     }
 }

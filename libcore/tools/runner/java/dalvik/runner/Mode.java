@@ -25,10 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -72,9 +68,6 @@ abstract class Mode {
             // framework/base for tests
             new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar").getAbsoluteFile());
 
-
-    protected final ExecutorService outputReaders
-            = Executors.newFixedThreadPool(1, Threads.daemonThreadFactory());
 
     Mode(Environment environment, long timeoutSeconds, File sdkJar) {
         this.environment = environment;
@@ -206,14 +199,7 @@ abstract class Mode {
         List<String> output = null;
         for (final Command command : commands) {
             try {
-                command.start();
-
-                // run on a different thread to allow a timeout
-                output = outputReaders.submit(new Callable<List<String>>() {
-                        public List<String> call() throws Exception {
-                            return command.gatherOutput();
-                        }
-                    }).get(timeoutSeconds, TimeUnit.SECONDS);
+                output = command.executeWithTimeout(timeoutSeconds);
             } catch (TimeoutException e) {
                 testRun.setResult(Result.EXEC_TIMEOUT,
                         Collections.singletonList("Exceeded timeout! (" + timeoutSeconds + "s)"));
@@ -221,10 +207,6 @@ abstract class Mode {
             } catch (Exception e) {
                 testRun.setResult(Result.ERROR, e);
                 return;
-            } finally {
-                if (command.isStarted()) {
-                    command.getProcess().destroy(); // to release the output reader
-                }
             }
         }
         // we only look at the output of the last command
@@ -257,7 +239,6 @@ abstract class Mode {
      * Cleans up after all test runs have completed.
      */
     void shutdown() {
-        outputReaders.shutdown();
         environment.shutdown();
     }
 }

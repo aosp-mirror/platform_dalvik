@@ -25,6 +25,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -121,6 +128,38 @@ final class Command {
             throw new RuntimeException("Failed to execute process: " + args, e);
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while executing process: " + args, e);
+        }
+    }
+
+    /**
+     * Executes a command with a specified timeout. Output is returned
+     * if the command succeeds. If Otherwise null is returned if the
+     * command timed out.
+     */
+    public List<String> executeWithTimeout(long timeoutSeconds)
+            throws TimeoutException {
+        ExecutorService outputReader
+            = Executors.newFixedThreadPool(1, Threads.daemonThreadFactory());
+        try {
+            start();
+            // run on a different thread to allow a timeout
+            Future<List<String>> future = outputReader.submit(new Callable<List<String>>() {
+                    public List<String> call() throws Exception {
+                        return gatherOutput();
+                    }
+                });
+            return future.get(timeoutSeconds, TimeUnit.SECONDS);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to execute process: " + args, e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while executing process: " + args, e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (isStarted()) {
+                getProcess().destroy(); // to release the output reader
+            }
+            outputReader.shutdown();
         }
     }
 

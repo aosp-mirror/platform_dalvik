@@ -34,6 +34,8 @@ class EnvironmentDevice extends Environment {
     }
 
     @Override void prepare() {
+        adb.waitForDevice();
+        adb.waitForNonEmptyDirectory(runnerDir.getParentFile(), 5 * 60);
         if (cleanBefore) {
             adb.rm(runnerDir);
         }
