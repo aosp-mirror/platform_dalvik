@@ -16,6 +16,7 @@
 
 #include <sys/mman.h>
 #include <errno.h>
+#include <cutils/ashmem.h>
 
 #include "Dalvik.h"
 #include "interp/Jit.h"
@@ -127,18 +128,26 @@ bool dvmCompilerSetupCodeCache(void)
 {
     extern void dvmCompilerTemplateStart(void);
     extern void dmvCompilerTemplateEnd(void);
+    int fd;
 
     /* Allocate the code cache */
-    gDvmJit.codeCache = mmap(0, gDvmJit.codeCacheSize,
-                          PROT_READ | PROT_WRITE | PROT_EXEC,
-                          MAP_PRIVATE | MAP_ANON, -1, 0);
+    fd = ashmem_create_region("dalvik-jit-code-cache", gDvmJit.codeCacheSize);
+    if (fd < 0) {
+        LOGE("Could not create %u-byte ashmem region for the JIT code cache",
+             gDvmJit.codeCacheSize);
+        return false;
+    }
+    gDvmJit.codeCache = mmap(NULL, gDvmJit.codeCacheSize,
+                             PROT_READ | PROT_WRITE | PROT_EXEC,
+                             MAP_PRIVATE , fd, 0);
+    close(fd);
     if (gDvmJit.codeCache == MAP_FAILED) {
-        LOGE("Failed to create the code cache: %s\n", strerror(errno));
+        LOGE("Failed to mmap the JIT code cache: %s\n", strerror(errno));
         return false;
     }
 
-    // STOPSHIP - for debugging only
-    LOGD("Code cache starts at %p", gDvmJit.codeCache);
+    /* This can be found through "dalvik-jit-code-cache" in /proc/<pid>/maps */
+    // LOGD("Code cache starts at %p", gDvmJit.codeCache);
 
     /* Copy the template code into the beginning of the code cache */
     int templateSize = (intptr_t) dmvCompilerTemplateEnd -
