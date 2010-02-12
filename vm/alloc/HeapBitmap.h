@@ -17,7 +17,6 @@
 #define _DALVIK_HEAP_BITMAP
 
 #include <stdint.h>
-#include <assert.h>
 
 #define HB_OBJECT_ALIGNMENT 8
 #define HB_BITS_PER_WORD    (sizeof (unsigned long int) * 8)
