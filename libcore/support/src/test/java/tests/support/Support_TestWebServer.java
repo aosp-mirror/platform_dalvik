@@ -46,9 +46,6 @@ public class Support_TestWebServer implements Support_HttpConstants {
     /* timeout on client connections */
     int timeout = 0;
 
-    /* Default port for this server to listen on */
-    final static int DEFAULT_PORT = 8080;
-
     /* Default socket timeout value */
     final static int DEFAULT_TIMEOUT = 5000;
 
@@ -100,49 +97,51 @@ public class Support_TestWebServer implements Support_HttpConstants {
      * Initialize a new server with default port and timeout.
      * @param log Set true if you want trace output
      */
-    public void initServer(boolean log) throws Exception {
-        initServer(DEFAULT_PORT, DEFAULT_TIMEOUT, log);
+    public int initServer(boolean log) throws Exception {
+        return initServer(0, DEFAULT_TIMEOUT, log);
     }
 
     /**
      * Initialize a new server with default timeout.
-     * @param port Sets the server to listen on this port
+     * @param port Sets the server to listen on this port, or 0 to let the OS choose.
+     *             Hard-coding ports is evil, so always pass 0.
      * @param log Set true if you want trace output
      */
-    public void initServer(int port, boolean log) throws Exception {
-        initServer(port, DEFAULT_TIMEOUT, log);
+    public int initServer(int port, boolean log) throws Exception {
+        return initServer(port, DEFAULT_TIMEOUT, log);
     }
 
     /**
      * Initialize a new server with default timeout and disabled log.
-     * @param port Sets the server to listen on this port
+     * @param port Sets the server to listen on this port, or 0 to let the OS choose.
+     *             Hard-coding ports is evil, so always pass 0.
      * @param servePath the path to the dynamic web test data
      * @param contentType the type of the dynamic web test data
      */
-    public void initServer(int port, String servePath, String contentType)
+    public int initServer(int port, String servePath, String contentType)
             throws Exception {
         Support_TestWebData.initDynamicTestWebData(servePath, contentType);
-        initServer(port, DEFAULT_TIMEOUT, false);
+        return initServer(port, DEFAULT_TIMEOUT, false);
     }
 
     /**
      * Initialize a new server with default port and timeout.
-     * @param port Sets the server to listen on this port
+     * @param port Sets the server to listen on this port, or 0 to let the OS choose.
+     *             Hard-coding ports is evil, so always pass 0.
      * @param timeout Indicates the period of time to wait until a socket is
      *                closed
      * @param log Set true if you want trace output
      */
-    public void initServer(int port, int timeout, boolean log) throws Exception {
-        mPort = port;
+    public int initServer(int port, int timeout, boolean log) throws Exception {
         mTimeout = timeout;
         mLog = log;
         keepAlive = true;
-
         if (acceptT == null) {
             acceptT = new AcceptThread();
-            acceptT.init();
+            mPort = acceptT.init(port);
             acceptT.start();
         }
+        return mPort;
     }
 
     /**
@@ -246,27 +245,15 @@ public class Support_TestWebServer implements Support_HttpConstants {
         ServerSocket ss = null;
         boolean running = false;
 
-        public void init() {
-            // Networking code doesn't support ServerSocket(port) yet
-            InetSocketAddress ia = new InetSocketAddress(mPort);
-            while (true) {
-                try {
-                    ss = new ServerSocket();
-                    // Socket timeout functionality is not available yet
-                    //ss.setSoTimeout(5000);
-                    ss.setReuseAddress(true);
-                    ss.bind(ia);
-                    break;
-                } catch (IOException e) {
-                    log("IOException in AcceptThread.init()");                    
-                    // wait and retry
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
-                }
-            }
+        /**
+         * @param port the port to use, or 0 to let the OS choose.
+         * Hard-coding ports is evil, so always pass 0!
+         */
+        public int init(int port) throws IOException {
+            ss = new ServerSocket(port);
+            ss.setSoTimeout(5000);
+            ss.setReuseAddress(true);
+            return ss.getLocalPort();
         }
 
         /**
