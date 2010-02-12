@@ -35,6 +35,8 @@ public class Zygote {
     public static final int DEBUG_ENABLE_CHECKJNI   = 1 << 1;
     /** enable Java programming language "assert" statements */
     public static final int DEBUG_ENABLE_ASSERT     = 1 << 2;
+    /** disable the JIT compiler */
+    public static final int DEBUG_ENABLE_SAFEMODE   = 1 << 3;
 
     private Zygote() {}
 
@@ -117,4 +119,3 @@ public class Zygote {
         return forkAndSpecialize(uid, gid, gids, debugFlags, rlimits);
     }
 }
-
