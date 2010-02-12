@@ -16,6 +16,7 @@
 
 package com.ibm.icu4jni.text;
 
+import com.ibm.icu4jni.util.Resources;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.Locale;
@@ -30,36 +31,7 @@ public abstract class BreakIterator implements Cloneable
     protected int type = 0;
     
     public static Locale[] getAvailableLocales() {
-        
-        String[] locales = NativeBreakIterator.getAvailableLocalesImpl();
-        
-        Locale[] result = new Locale[locales.length];
-        
-        String locale;
-        
-        int index, index2;
-        
-        for(int i = 0; i < locales.length; i++) {
-            locale = locales[i];
-            
-            index = locale.indexOf('_');
-            index2 = locale.lastIndexOf('_');
-            
-            if(index == -1) {
-                result[i] = new Locale(locales[i]);
-            } else if(index > 0 && index == index2) {
-                result[i] = new Locale(
-                        locale.substring(0,index),
-                        locale.substring(index+1));
-            } else if(index > 0 && index2 > index) {
-                result[i] = new Locale(
-                        locale.substring(0,index),
-                        locale.substring(index+1,index2),
-                        locale.substring(index2+1));
-            }
-        }
-        
-        return result;
+        return Resources.localesFromStrings(NativeBreakIterator.getAvailableLocalesImpl());
     }
     
     public static BreakIterator getCharacterInstance() {
