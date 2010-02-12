@@ -187,12 +187,6 @@ public class InetAddress implements Serializable {
         }
     };
 
-    static final Comparator<byte[]> LONGEST_FIRST = new Comparator<byte[]>() {
-        public int compare(byte[] a1, byte[] a2) {
-            return a2.length - a1.length;
-        }
-    };
-
     /**
      * Converts an array of byte arrays representing raw IP addresses of a host
      * to an array of InetAddress objects, sorting to respect the value of the
@@ -204,10 +198,12 @@ public class InetAddress implements Serializable {
      */
     static InetAddress[] bytesToInetAddresses(byte[][] rawAddresses,
             String hostName) {
-        // Sort the raw byte arrays.
-        Comparator<byte[]> comparator = NetUtil.preferIPv6Addresses()
-                ? LONGEST_FIRST : SHORTEST_FIRST;
-        Arrays.sort(rawAddresses, comparator);
+        // If we prefer IPv4, ignore the RFC3484 ordering we get from getaddrinfo
+        // and always put IPv4 addresses first. Arrays.sort() is stable, so the
+        // internal ordering will not be changed.
+        if (!NetUtil.preferIPv6Addresses()) {
+            Arrays.sort(rawAddresses, SHORTEST_FIRST);
+        }
 
         // Convert the byte arrays to InetAddresses.
         InetAddress[] returnedAddresses = new InetAddress[rawAddresses.length];
