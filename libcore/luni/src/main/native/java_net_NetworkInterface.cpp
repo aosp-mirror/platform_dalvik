@@ -30,7 +30,7 @@
 
 #include <net/if.h> // Note: Can't appear before <sys/socket.h> on OS X.
 
-#ifdef ANDROID
+#ifdef HAVE_ANDROID_OS
 #include "ifaddrs-android.h"
 #else
 #include <ifaddrs.h>
