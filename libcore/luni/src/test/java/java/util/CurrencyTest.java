@@ -31,4 +31,15 @@ public class CurrencyTest extends junit.framework.TestCase {
         // Canada that Canadians give it a localized (to Canada) symbol.
         assertEquals("AED", Currency.getInstance("AED").getSymbol(Locale.CANADA));
     }
+
+    // Regression test to ensure that Currency.getInstance(String) throws if
+    // given an invalid ISO currency code.
+    public void test_getInstance_illegal_currency_code() throws Exception {
+        Currency.getInstance("USD");
+        try {
+            Currency.getInstance("BOGO-DOLLARS");
+            fail("expected IllegalArgumentException for invalid ISO currency code");
+        } catch (IllegalArgumentException expected) {
+        }
+    }
 }

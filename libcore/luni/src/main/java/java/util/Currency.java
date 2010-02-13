@@ -58,8 +58,17 @@ public final class Currency implements Serializable {
             return;
         }
 
+        // Ensure that we throw if the our currency code isn't an ISO currency code.
+        String symbol = Resources.getCurrencySymbolNative(Locale.US.toString(), currencyCode);
+        if (symbol == null) {
+            throw new IllegalArgumentException(Msg.getString("K0322", currencyCode));
+        }
+
         this.defaultFractionDigits = Resources.getCurrencyFractionDigitsNative(currencyCode);
         if (defaultFractionDigits < 0) {
+            // In practice, I don't think this can fail because ICU doesn't care whether you give
+            // it a valid country code, and will just return a sensible default for the default
+            // locale's currency.
             throw new IllegalArgumentException(Msg.getString("K0322", currencyCode));
         }
         // END android-changed
