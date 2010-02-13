@@ -641,8 +641,8 @@ public final class Bidi {
     public String toString() {
         // BEGIN android-changed
         return super.toString()
-                + "[direction: " + direction + " baselevel: " + baseLevel //$NON-NLS-1$ //$NON-NLS-2$
-                + " length: " + length + " runs: " + (unidirectional ? "null" : runs.toString()) + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                + "[direction: " + direction + " baseLevel: " + baseLevel
+                + " length: " + length + " runs: " + Arrays.toString(runs) + "]";
         // END android-changed
     }
 }

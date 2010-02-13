@@ -58,7 +58,12 @@ public class RuleBasedBreakIterator extends BreakIterator {
         
         return result && iter.equals(this.charIter);
     }
-    
+
+    @Override
+    public int hashCode() {
+        return 42; // No-one uses RuleBasedBreakIterator as a hash key.
+    }
+
     @Override
     public int current() {
         return NativeBreakIterator.currentImpl(this.addr);

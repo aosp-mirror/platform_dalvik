@@ -17,6 +17,7 @@
 package com.ibm.icu4jni.util;
 
 import java.text.DateFormat;
+import java.util.Arrays;
 
 /**
  * Passes locale-specific from ICU native code to Java.
@@ -66,12 +67,12 @@ public class LocaleData {
         return "LocaleData[" +
                 "firstDayOfWeek=" + firstDayOfWeek + "," +
                 "minimalDaysInFirstWeek=" + minimalDaysInFirstWeek + "," +
-                "amPm=" + amPm + "," +
-                "eras=" + eras + "," +
-                "longMonthNames=" + longMonthNames + "," +
-                "shortMonthNames=" + shortMonthNames + "," +
-                "longWeekdayNames=" + longWeekdayNames + "," +
-                "shortWeekdayNames=" + shortWeekdayNames + "," +
+                "amPm=" + Arrays.toString(amPm) + "," +
+                "eras=" + Arrays.toString(eras) + "," +
+                "longMonthNames=" + Arrays.toString(longMonthNames) + "," +
+                "shortMonthNames=" + Arrays.toString(shortMonthNames) + "," +
+                "longWeekdayNames=" + Arrays.toString(longWeekdayNames) + "," +
+                "shortWeekdayNames=" + Arrays.toString(shortWeekdayNames) + "," +
                 "fullTimeFormat=" + fullTimeFormat + "," +
                 "longTimeFormat=" + longTimeFormat + "," +
                 "mediumTimeFormat=" + mediumTimeFormat + "," +
