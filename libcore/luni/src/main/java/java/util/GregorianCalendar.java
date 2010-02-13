@@ -993,6 +993,12 @@ public class GregorianCalendar extends Calendar {
      */
     @Override
     public boolean equals(Object object) {
+        if (!(object instanceof GregorianCalendar)) {
+            return false;
+        }
+        if (object == this) {
+            return true;
+        }
         return super.equals(object)
                 && gregorianCutover == ((GregorianCalendar) object).gregorianCutover;
     }

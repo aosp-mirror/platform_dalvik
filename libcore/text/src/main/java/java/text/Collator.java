@@ -157,29 +157,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      */
     public static final int IDENTICAL = 3;
 
-    private static int CACHE_SIZE;
-
-    static {
-        // CACHE_SIZE includes key and value, so needs to be double
-        String cacheSize = AccessController
-                .doPrivileged(new PrivilegedAction<String>() {
-                    public String run() {
-                        return System.getProperty("collator.cache"); //$NON-NLS-1$
-                    }
-                });
-        if (cacheSize != null) {
-            try {
-                CACHE_SIZE = Integer.parseInt(cacheSize);
-            } catch (NumberFormatException e) {
-                CACHE_SIZE = 6;
-            }
-        } else {
-            CACHE_SIZE = 6;
-        }
-    }
-
-    private static Vector<Collator> cache = new Vector<Collator>(CACHE_SIZE);
-
     // Wrapper class of ICU4JNI Collator
     com.ibm.icu4jni.text.Collator icuColl;
 
@@ -332,15 +309,9 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * @return the collator for {@code locale}.
      */
     public static Collator getInstance(Locale locale) {
-        String key = locale.toString();
-        for (int i = cache.size() - 1; i >= 0; i -= 2) {
-            if (cache.elementAt(i).equals(key)) {
-                return (Collator) (cache.elementAt(i - 1)).clone();
-            }
-        }
-
-        return new RuleBasedCollator(com.ibm.icu4jni.text.Collator
-                .getInstance(locale));
+        // BEGIN android-changed: removed non-functional cache.
+        return new RuleBasedCollator(com.ibm.icu4jni.text.Collator.getInstance(locale));
+        // END android-changed
     }
 
     /**
