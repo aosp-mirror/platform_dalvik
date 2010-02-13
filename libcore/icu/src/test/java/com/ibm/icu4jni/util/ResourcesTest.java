@@ -16,6 +16,8 @@
 
 package com.ibm.icu4jni.util;
 
+import java.util.Locale;
+
 public class ResourcesTest extends junit.framework.TestCase {
     public void test_getISOLanguages() throws Exception {
         // Check that corrupting our array doesn't affect other callers.
@@ -54,5 +56,19 @@ public class ResourcesTest extends junit.framework.TestCase {
         assertNotNull(Resources.getDisplayTimeZones(null)[0][0]);
         Resources.getDisplayTimeZones(null)[0][0] = null;
         assertNotNull(Resources.getDisplayTimeZones(null)[0][0]);
+    }
+
+    public void test_localeFromString() throws Exception {
+        // localeFromString is pretty lenient. Some of these can't be round-tripped
+        // through Locale.toString.
+        assertEquals(Locale.ENGLISH, Resources.localeFromString("en"));
+        assertEquals(Locale.ENGLISH, Resources.localeFromString("en_"));
+        assertEquals(Locale.ENGLISH, Resources.localeFromString("en__"));
+        assertEquals(Locale.US, Resources.localeFromString("en_US"));
+        assertEquals(Locale.US, Resources.localeFromString("en_US_"));
+        assertEquals(new Locale("", "US", ""), Resources.localeFromString("_US"));
+        assertEquals(new Locale("", "US", ""), Resources.localeFromString("_US_"));
+        assertEquals(new Locale("", "", "POSIX"), Resources.localeFromString("__POSIX"));
+        assertEquals(new Locale("aa", "BB", "CC"), Resources.localeFromString("aa_BB_CC"));
     }
 }

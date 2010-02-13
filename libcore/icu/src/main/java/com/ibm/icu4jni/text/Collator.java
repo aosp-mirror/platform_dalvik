@@ -10,8 +10,9 @@
 
 package com.ibm.icu4jni.text;
 
-import java.util.Locale;
 import com.ibm.icu4jni.text.RuleBasedCollator;
+import com.ibm.icu4jni.util.Resources;
+import java.util.Locale;
 
 /**
 * Abstract class handling locale specific collation via JNI and ICU.
@@ -394,38 +395,7 @@ public abstract class Collator implements Cloneable
   */
   public abstract int hashCode();
   
-  // BEGIN android-added
   public static Locale[] getAvailableLocales() {
-      
-      String[] locales = NativeCollation.getAvailableLocalesImpl();
-      
-      Locale[] result = new Locale[locales.length];
-      
-      String locale;
-      
-      int index, index2;
-      
-      for(int i = 0; i < locales.length; i++) {
-          locale = locales[i];
-
-          index = locale.indexOf('_');
-          index2 = locale.lastIndexOf('_');
-
-          if(index == -1) {
-              result[i] = new Locale(locales[i]);
-          } else if(index == 2 && index == index2) {
-              result[i] = new Locale(
-                      locale.substring(0,2),
-                      locale.substring(3,5));
-          } else if(index == 2 && index2 > index) {
-              result[i] = new Locale(
-                      locale.substring(0,index),
-                      locale.substring(index + 1,index2),
-                      locale.substring(index2 + 1));
-          }
-      }
-      
-      return result;
+      return Resources.localesFromStrings(NativeCollation.getAvailableLocalesImpl());
   }
-  // END android-added
 }

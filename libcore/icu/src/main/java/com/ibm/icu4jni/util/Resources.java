@@ -285,6 +285,35 @@ public class Resources {
         return result;
     }
 
+    /**
+     * Returns the appropriate {@code Locale} given a {@code String} of the form returned
+     * by {@code toString}. This is very lenient, and doesn't care what's between the underscores:
+     * this method can parse strings that {@code Locale.toString} won't produce.
+     * Used to remove duplication.
+     */
+    public static Locale localeFromString(String localeName) {
+        int first = localeName.indexOf('_');
+        int second = localeName.indexOf('_', first + 1);
+        if (first == -1) {
+            // Language only ("ja").
+            return new Locale(localeName);
+        } else if (second == -1) {
+            // Language and country ("ja_JP").
+            return new Locale(localeName.substring(0, first), localeName.substring(first + 1));
+        } else {
+            // Language and country and variant ("ja_JP_TRADITIONAL").
+            return new Locale(localeName.substring(0, first), localeName.substring(first + 1, second), localeName.substring(second + 1));
+        }
+    }
+
+    public static Locale[] localesFromStrings(String[] localeNames) {
+        Locale[] result = new Locale[localeNames.length];
+        for (int i = 0; i < result.length; ++i) {
+            result[i] = localeFromString(localeNames[i]);
+        }
+        return result;
+    }
+
     // --- Native methods accessing ICU's database ----------------------------
 
     public static native String getDisplayCountryNative(String countryCode, String locale);

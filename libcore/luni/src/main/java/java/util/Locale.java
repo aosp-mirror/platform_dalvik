@@ -327,31 +327,6 @@ public final class Locale implements Cloneable, Serializable {
         return false;
     }
 
-    // BEGIN android-added
-    static Locale[] find() {
-        String[] locales = Resources.getAvailableLocales();
-        ArrayList<Locale> temp = new ArrayList<Locale>();
-        for (int i = 0; i < locales.length; i++) {
-            String s = locales[i];
-            int first = s.indexOf('_');
-            int second = s.indexOf('_', first + 1);
-
-            if (first == -1) {
-                // Language only
-                temp.add(new Locale(s));
-            } else if (second == -1) {
-                // Language and country
-                temp.add(new Locale(s.substring(0, first), s.substring(first + 1)));
-            } else {
-                // Language and country and variant
-                temp.add(new Locale(s.substring(0, first), s.substring(first + 1, second), s.substring(second + 1)));
-            }
-        }
-        Locale[] result = new Locale[temp.size()];
-        return temp.toArray(result);
-    }
-    // END android-added
-
     /**
      * Gets the list of installed {@code Locale}s. At least a {@code Locale} that is equal to
      * {@code Locale.US} must be contained in this array.
@@ -360,14 +335,8 @@ public final class Locale implements Cloneable, Serializable {
      */
     public static Locale[] getAvailableLocales() {
         // BEGIN android-changed
-        // ULocale[] ulocales =  ULocale.getAvailableLocales();
-        // Locale[] locales = new Locale[ulocales.length];
-        // for (int i = 0; i < locales.length; i++) {
-        //     locales[i] = ulocales[i].toLocale();
-        // }
-        // return locales;
         if (availableLocales == null) {
-            availableLocales = find();
+            availableLocales = Resources.localesFromStrings(Resources.getAvailableLocales());
         }
         return availableLocales.clone();
         // END android-changed

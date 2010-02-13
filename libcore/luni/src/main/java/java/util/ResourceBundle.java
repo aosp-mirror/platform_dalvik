@@ -17,6 +17,7 @@
 
 package java.util;
 
+import com.ibm.icu4jni.util.Resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.AccessController;
@@ -444,25 +445,8 @@ public abstract class ResourceBundle {
     }
 
     private void setLocale(String name) {
-        String language = "", country = "", variant = ""; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-        if (name.length() > 1) {
-            int nextIndex = name.indexOf('_', 1);
-            if (nextIndex == -1) {
-                nextIndex = name.length();
-            }
-            language = name.substring(1, nextIndex);
-            if (nextIndex + 1 < name.length()) {
-                int index = nextIndex;
-                nextIndex = name.indexOf('_', nextIndex + 1);
-                if (nextIndex == -1) {
-                    nextIndex = name.length();
-                }
-                country = name.substring(index + 1, nextIndex);
-                if (nextIndex + 1 < name.length()) {
-                    variant = name.substring(nextIndex + 1, name.length());
-                }
-            }
-        }
-        locale = new Locale(language, country, variant);
+        // BEGIN android-changed: remove duplication.
+        locale = Resources.localeFromString(name);
+        // END android-changed
     }
 }
