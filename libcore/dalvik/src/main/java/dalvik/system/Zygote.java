@@ -38,6 +38,14 @@ public class Zygote {
     /** disable the JIT compiler */
     public static final int DEBUG_ENABLE_SAFEMODE   = 1 << 3;
 
+    /**
+     * When set by the system server, all subsequent apps will be launched in
+     * VM safe mode.
+     *
+     * @hide
+     */
+    public static boolean systemInSafeMode = false;
+
     private Zygote() {}
 
     /**

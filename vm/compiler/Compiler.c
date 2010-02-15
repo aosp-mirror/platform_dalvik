@@ -397,13 +397,41 @@ static void *compilerThreadStart(void *arg)
      * up code isn't worth compiling.  We'll resume when the framework
      * signals us that the first screen draw has happened, or the timer
      * below expires (to catch daemons).
+     *
+     * There is a theoretical race between the callback to
+     * VMRuntime.startJitCompiation and when the compiler thread reaches this
+     * point. In case the callback happens earlier, in order not to permanently
+     * hold the system_server (which is not using the timed wait) in
+     * interpreter-only mode we bypass the delay here.
      */
-    if (gDvmJit.runningInAndroidFramework) {
-        dvmLockMutex(&gDvmJit.compilerLock);
-        // TUNING: experiment with the delay & perhaps make it target-specific
-        dvmRelativeCondWait(&gDvmJit.compilerQueueActivity,
-                             &gDvmJit.compilerLock, 3000, 0);
-        dvmUnlockMutex(&gDvmJit.compilerLock);
+    if (gDvmJit.runningInAndroidFramework &&
+        !gDvmJit.alreadyEnabledViaFramework) {
+        /*
+         * If the current VM instance is the system server (detected by having
+         * 0 in gDvm.systemServerPid), we will use the indefinite wait on the
+         * conditional variable to determine whether to start the JIT or not.
+         * If the system server detects that the whole system is booted in
+         * safe mode, the conditional variable will never be signaled and the
+         * system server will remain in the interpreter-only mode. All
+         * subsequent apps will be started with the --enable-safemode flag
+         * explicitly appended.
+         */
+        if (gDvm.systemServerPid == 0) {
+            dvmLockMutex(&gDvmJit.compilerLock);
+            pthread_cond_wait(&gDvmJit.compilerQueueActivity,
+                              &gDvmJit.compilerLock);
+            dvmUnlockMutex(&gDvmJit.compilerLock);
+            LOGD("JIT started for system_server");
+        } else {
+            dvmLockMutex(&gDvmJit.compilerLock);
+            /*
+             * TUNING: experiment with the delay & perhaps make it
+             * target-specific
+             */
+            dvmRelativeCondWait(&gDvmJit.compilerQueueActivity,
+                                 &gDvmJit.compilerLock, 3000, 0);
+            dvmUnlockMutex(&gDvmJit.compilerLock);
+        }
         if (gDvmJit.haltCompilerThread) {
              return NULL;
         }
