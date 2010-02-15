@@ -857,8 +857,6 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
             }
 
             if (schedEnqueue) {
-                uintptr_t workBits;
-
                 /* Stuff the enqueue bit in the bottom of the pointer.
                  * Assumes that objects are 8-byte aligned.
                  *
@@ -1061,8 +1059,6 @@ void dvmHeapScheduleFinalizations()
 
 void dvmHeapFinishMarkStep()
 {
-    HeapBitmap *markBitmap;
-    HeapBitmap objectBitmap;
     GcMarkContext *markContext;
 
     markContext = &gDvm.gcHeap->markContext;

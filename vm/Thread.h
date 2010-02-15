@@ -374,7 +374,8 @@ INLINE void dvmInitMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmLockMutex(pthread_mutex_t* pMutex)
 {
-    int cc = pthread_mutex_lock(pMutex);
+    int cc __attribute__ ((__unused__));
+    cc = pthread_mutex_lock(pMutex);
     assert(cc == 0);
 }
 
@@ -391,7 +392,8 @@ INLINE int dvmTryLockMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmUnlockMutex(pthread_mutex_t* pMutex)
 {
-    int cc = pthread_mutex_unlock(pMutex);
+    int cc __attribute__ ((__unused__));
+    cc = pthread_mutex_unlock(pMutex);
     assert(cc == 0);
 }
 
@@ -400,7 +402,8 @@ INLINE void dvmUnlockMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmDestroyMutex(pthread_mutex_t* pMutex)
 {
-    int cc = pthread_mutex_destroy(pMutex);
+    int cc __attribute__ ((__unused__));
+    cc  = pthread_mutex_destroy(pMutex);
     assert(cc == 0);
 }
 

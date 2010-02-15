@@ -389,7 +389,6 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
 {
     GcHeap *gcHeap;
     HeapSource *hs;
-    Heap *heap;
     mspace msp;
     size_t length;
     void *base;
@@ -1063,8 +1062,6 @@ setIdealFootprint(size_t max)
 static void
 snapIdealFootprint()
 {
-    HeapSource *hs = gHs;
-
     HS_BOILERPLATE();
 
     setIdealFootprint(getSoftFootprint(true));
@@ -1090,7 +1087,6 @@ float dvmGetTargetHeapUtilization()
 void dvmSetTargetHeapUtilization(float newTarget)
 {
     HeapSource *hs = gHs;
-    size_t newUtilization;
 
     HS_BOILERPLATE();
 
@@ -1164,8 +1160,7 @@ dvmMinimumHeapSize(size_t size, bool set)
  * targetUtilization is in the range 1..HEAP_UTILIZATION_MAX.
  */
 static size_t
-getUtilizationTarget(const HeapSource *hs,
-        size_t liveSize, size_t targetUtilization)
+getUtilizationTarget(size_t liveSize, size_t targetUtilization)
 {
     size_t targetSize;
 
@@ -1228,7 +1223,7 @@ void dvmHeapSourceGrowForUtilization()
     currentHeapUsed += hs->externalBytesAllocated;
 #endif
     targetHeapSize =
-            getUtilizationTarget(hs, currentHeapUsed, hs->targetUtilization);
+            getUtilizationTarget(currentHeapUsed, hs->targetUtilization);
 #if LET_EXTERNAL_INFLUENCE_UTILIZATION
     currentHeapUsed -= hs->externalBytesAllocated;
     targetHeapSize -= hs->externalBytesAllocated;
@@ -1420,12 +1415,6 @@ externalAllocPossible(const HeapSource *hs, size_t n)
 static bool
 externalAlloc(HeapSource *hs, size_t n, bool grow)
 {
-    Heap *heap;
-    size_t currentHeapSize;
-    size_t newTotal;
-    size_t max;
-    bool grew;
-
     assert(hs->externalLimit >= hs->externalBytesAllocated);
 
     HSTRACE("externalAlloc(%zd%s)\n", n, grow ? ", grow" : "");
@@ -1455,7 +1444,7 @@ externalAlloc(HeapSource *hs, size_t n, bool grow)
 
     /* GROW */
     hs->externalBytesAllocated += n;
-    hs->externalLimit = getUtilizationTarget(hs,
+    hs->externalLimit = getUtilizationTarget(
             hs->externalBytesAllocated, EXTERNAL_TARGET_UTILIZATION);
     HSTRACE("EXTERNAL grow limit to %zd\n", hs->externalLimit);
     return true;
@@ -1487,7 +1476,6 @@ bool
 dvmTrackExternalAllocation(size_t n)
 {
     HeapSource *hs = gHs;
-    size_t overhead;
     bool ret = false;
 
     /* gHs caches an entry in gDvm.gcHeap;  we need to hold the
@@ -1570,7 +1558,6 @@ void
 dvmTrackExternalFree(size_t n)
 {
     HeapSource *hs = gHs;
-    size_t newIdealSize;
     size_t newExternalLimit;
     size_t oldExternalBytesAllocated;
 
@@ -1607,7 +1594,7 @@ dvmTrackExternalFree(size_t n)
 
     /* Shrink as quickly as we can.
      */
-    newExternalLimit = getUtilizationTarget(hs,
+    newExternalLimit = getUtilizationTarget(
             hs->externalBytesAllocated, EXTERNAL_TARGET_UTILIZATION);
     if (newExternalLimit < oldExternalBytesAllocated) {
         /* Make sure that the remaining free space is at least

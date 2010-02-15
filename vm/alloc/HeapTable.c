@@ -38,10 +38,7 @@ void dvmHeapHeapTableFree(void *ptr)
 }
 
 #define heapRefTableIsFull(refs) \
-    ({ \
-        const HeapRefTable *HRTIF_refs = (refs); \
-        dvmIsReferenceTableFull(refs); \
-    })
+    dvmIsReferenceTableFull(refs)
 
 bool dvmHeapInitHeapRefTable(HeapRefTable *refs, size_t nelems)
 {
@@ -173,7 +170,6 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable)
     obj = NULL;
     table = *pTable;
     if (table != NULL) {
-        GcHeap *gcHeap = gDvm.gcHeap;
         HeapRefTable *refs = &table->refs;
 
         /* We should never have an empty table node in the list.

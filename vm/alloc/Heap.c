@@ -211,7 +211,6 @@ void dvmUnlockHeap()
 Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
 {
     Object *obj;
-    LargeHeapRefTable *table;
     GcHeap *gcHeap = gDvm.gcHeap;
 
     assert(op != NULL);
@@ -496,7 +495,6 @@ void* dvmMalloc(size_t size, int flags)
     GcHeap *gcHeap = gDvm.gcHeap;
     DvmHeapChunk *hc;
     void *ptr;
-    bool triedGc, triedGrowing;
 
 #if 0
     /* handy for spotting large allocations */
@@ -551,7 +549,6 @@ void* dvmMalloc(size_t size, int flags)
      */
     hc = tryMalloc(size);
     if (hc != NULL) {
-alloc_succeeded:
         /* We've got the memory.
          */
         if ((flags & ALLOC_FINALIZABLE) != 0) {
