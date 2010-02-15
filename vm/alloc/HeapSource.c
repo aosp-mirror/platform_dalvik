@@ -337,7 +337,7 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
         heap.msp = msp;
         heap.absoluteMaxSize = mspAbsoluteMaxSize;
     } else {
-        size_t overhead;
+        size_t diff, overhead;
 
         overhead = oldHeapOverhead(hs, true);
         if (overhead + HEAP_MIN_FREE >= hs->absoluteMaxSize) {
@@ -347,11 +347,14 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
             return false;
         }
         heap.absoluteMaxSize = hs->absoluteMaxSize - overhead;
-        base = hs->heapBase + ALIGN_UP_TO_PAGE_SIZE(hs->absoluteMaxSize);
+        base = contiguous_mspace_sbrk0(hs->heaps[0].msp);
+        base = (void *)ALIGN_UP_TO_PAGE_SIZE(base);
         heap.msp = createMspace(base, HEAP_MIN_FREE, heap.absoluteMaxSize);
         if (heap.msp == NULL) {
             return false;
         }
+        diff = (size_t)base - hs->heaps[0].objectBitmap.base;
+        hs->heaps[0].objectBitmap.bitsLen = HB_OFFSET_TO_INDEX(diff) * 4;
     }
     if (!dvmHeapBitmapInit(&heap.objectBitmap,
                            (void *)ALIGN_DOWN_TO_PAGE_SIZE(heap.msp),

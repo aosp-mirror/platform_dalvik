@@ -70,7 +70,7 @@ dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
 
     memset(hb, 0, sizeof(*hb));
     hb->bits = bits;
-    hb->bitsLen = bitsLen;
+    hb->bitsLen = hb->allocLen = bitsLen;
     hb->base = (uintptr_t)base;
     hb->max = hb->base - 1;
 
@@ -126,9 +126,7 @@ dvmHeapBitmapDelete(HeapBitmap *hb)
     assert(hb != NULL);
 
     if (hb->bits != NULL) {
-        // Re-calculate the size we passed to mmap().
-        size_t allocLen = ALIGN_UP_TO_PAGE_SIZE(hb->bitsLen);
-        munmap((char *)hb->bits, allocLen);
+        munmap((char *)hb->bits, hb->allocLen);
     }
     memset(hb, 0, sizeof(*hb));
 }

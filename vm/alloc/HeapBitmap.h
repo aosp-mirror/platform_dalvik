@@ -53,9 +53,16 @@ typedef struct {
      */
     unsigned long int *bits;
 
-    /* The size of the memory pointed to by bits, in bytes.
+    /* The size of the used memory pointed to by bits, in bytes.  This
+     * value changes when the bitmap is shrunk.
      */
     size_t bitsLen;
+
+    /* The real size of the memory pointed to by bits.  This is the
+     * number of bytes we requested from the allocator and does not
+     * change.
+     */
+    size_t allocLen;
 
     /* The base address, which corresponds to the first bit in
      * the bitmap.
