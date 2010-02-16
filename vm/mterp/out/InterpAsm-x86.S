@@ -703,7 +703,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     GET_GLUE(%ecx)
     EXPORT_PC()
     testl   %eax,%eax                   # null object?
-    je      common_errNullObject        # go if so
+    je      .LOP_MONITOR_EXIT_errNullObject   # go if so
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     movl    %eax,OUT_ARG1(%esp)
     SPILL(rPC)
@@ -6281,9 +6281,12 @@ dvmAsmSisterStart:
     UNSPILL(rPC)
     FETCH_INST_WORD(1)
     testl   %eax,%eax                   # success?
-    je      common_exceptionThrown      # no, exception pending
     ADVANCE_PC(1)
+    je      common_exceptionThrown      # no, exception pending
     GOTO_NEXT
+.LOP_MONITOR_EXIT_errNullObject:
+    ADVANCE_PC(1)                       # advance before throw
+    jmp     common_errNullObject
 
 /* continuation for OP_CHECK_CAST */
 

@@ -253,6 +253,15 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
                 sizeof(StackSaveArea) -
                 offsetof(StackSaveArea, xtra.currentPc));
         opReg(cUnit, kOpBlx, r7);
+        opRegImm(cUnit, kOpCmp, r0, 0); /* Did we throw? */
+        ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+        loadConstant(cUnit, r0,
+                     (int) (cUnit->method->insns + mir->offset +
+                     dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_EXIT)));
+        genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+        ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+        target->defMask = ENCODE_ALL;
+        branchOver->generic.target = (LIR *) target;
         dvmCompilerColbberCallRegs(cUnit);
     }
 

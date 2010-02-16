@@ -14,7 +14,7 @@
     GET_GLUE(%ecx)
     EXPORT_PC()
     testl   %eax,%eax                   # null object?
-    je      common_errNullObject        # go if so
+    je      .L${opcode}_errNullObject   # go if so
     movl    offGlue_self(%ecx),%ecx     # ecx<- glue->self
     movl    %eax,OUT_ARG1(%esp)
     SPILL(rPC)
@@ -27,6 +27,9 @@
     UNSPILL(rPC)
     FETCH_INST_WORD(1)
     testl   %eax,%eax                   # success?
-    je      common_exceptionThrown      # no, exception pending
     ADVANCE_PC(1)
+    je      common_exceptionThrown      # no, exception pending
     GOTO_NEXT
+.L${opcode}_errNullObject:
+    ADVANCE_PC(1)                       # advance before throw
+    jmp     common_errNullObject
