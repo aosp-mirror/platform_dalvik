@@ -29,11 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -79,6 +75,7 @@ final class Driver {
      */
     public void buildAndRunAllTests(Collection<File> testFiles) {
         new Mkdir().mkdirs(localTemp);
+
         Set<TestRun> tests = new LinkedHashSet<TestRun>();
         for (File testFile : testFiles) {
             Set<TestRun> testsForFile = Collections.emptySet();
@@ -113,17 +110,14 @@ final class Driver {
 
         // build and install tests in a background thread. Using lots of
         // threads helps for packages that contain many unsupported tests
-        final BlockingQueue<Future<TestRun>> readyToRun = new ArrayBlockingQueue<Future<TestRun>>(4);
+        final BlockingQueue<TestRun> readyToRun = new ArrayBlockingQueue<TestRun>(4);
 
-        ExecutorService executor = Threads.threadPerCpuExecutor();
-        ExecutorCompletionService<TestRun> builders = new ExecutorCompletionService<TestRun>(
-                executor,
-                readyToRun);
+        ExecutorService builders = Threads.threadPerCpuExecutor();
         int t = 0;
         for (final TestRun testRun : tests) {
             final int runIndex = t++;
-            builders.submit(new Callable<TestRun>() {
-                public TestRun call() {
+            builders.submit(new Runnable() {
+                public void run() {
                     try {
                         ExpectedResult expectedResult = lookupExpectedResult(testRun);
                         testRun.setExpectedResult(expectedResult);
@@ -138,14 +132,15 @@ final class Driver {
                             logger.fine("installed test " + runIndex + "; "
                                     + readyToRun.size() + " are ready to run");
                         }
+
+                        readyToRun.put(testRun);
                     } catch (Throwable throwable) {
                         testRun.setResult(Result.ERROR, throwable);
                     }
-                    return testRun;
                 }
             });
         }
-        executor.shutdown();
+        builders.shutdown();
 
         List<TestRun> runs = new ArrayList<TestRun>(tests.size());
         for (int i = 0; i < tests.size(); i++) {
@@ -155,13 +150,7 @@ final class Driver {
             // if it takes 5 minutes for build and install, something is broken
             TestRun testRun;
             try {
-                Future<TestRun> future = builders.poll(5 * 60, TimeUnit.SECONDS);
-                if (future == null) {
-                    throw new RuntimeException("Timeout for build and install");
-                }
-                testRun = future.get();
-            } catch (ExecutionException e) {
-                throw new RuntimeException("Unexpected exception building test", e);
+                testRun = readyToRun.poll(5 * 60, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 throw new RuntimeException("Unexpected interruption waiting for build and install", e);
             }
