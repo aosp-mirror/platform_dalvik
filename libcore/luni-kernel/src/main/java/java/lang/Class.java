@@ -124,14 +124,16 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
 
     private static final long serialVersionUID = 3206093459760846163L;
 
-    // TODO How is this field being initialized? What's it being used for?
-    private ProtectionDomain pd;
+    /**
+     * This field is initialized by dalvikvm when the class is loaded.
+     */
+    private transient ProtectionDomain pd;
 
     /**
      * null-ok; cache of reflective information, wrapped in a soft
      * reference
      */
-    private volatile SoftReference<ClassCache<T>> cacheRef;
+    private transient volatile SoftReference<ClassCache<T>> cacheRef;
     
     private Class() {
         // Prevent this class to be instantiated, instance
