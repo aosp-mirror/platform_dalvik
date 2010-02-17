@@ -329,9 +329,9 @@ static void gcForMalloc(bool collectSoftReferences)
 
 /* Try as hard as possible to allocate some memory.
  */
-static DvmHeapChunk *tryMalloc(size_t size)
+static void *tryMalloc(size_t size)
 {
-    DvmHeapChunk *hc;
+    void *ptr;
 
     /* Don't try too hard if there's no way the allocation is
      * going to succeed.  We have to collect SoftReferences before
@@ -340,7 +340,7 @@ static DvmHeapChunk *tryMalloc(size_t size)
     if (size >= gDvm.heapSizeMax) {
         LOGW_HEAP("dvmMalloc(%zu/0x%08zx): "
                 "someone's allocating a huge buffer\n", size, size);
-        hc = NULL;
+        ptr = NULL;
         goto collect_soft_refs;
     }
 
@@ -354,9 +354,9 @@ static DvmHeapChunk *tryMalloc(size_t size)
 //    DeflateTest allocs a bunch of ~128k buffers w/in 0-5 allocs of each other
 //      (or, at least, there are only 0-5 objects swept each time)
 
-    hc = dvmHeapSourceAlloc(size + sizeof(DvmHeapChunk));
-    if (hc != NULL) {
-        return hc;
+    ptr = dvmHeapSourceAlloc(size);
+    if (ptr != NULL) {
+        return ptr;
     }
 
     /* The allocation failed.  Free up some space by doing
@@ -364,17 +364,17 @@ static DvmHeapChunk *tryMalloc(size_t size)
      * if the live set is sufficiently large.
      */
     gcForMalloc(false);
-    hc = dvmHeapSourceAlloc(size + sizeof(DvmHeapChunk));
-    if (hc != NULL) {
-        return hc;
+    ptr = dvmHeapSourceAlloc(size);
+    if (ptr != NULL) {
+        return ptr;
     }
 
     /* Even that didn't work;  this is an exceptional state.
      * Try harder, growing the heap if necessary.
      */
-    hc = dvmHeapSourceAllocAndGrow(size + sizeof(DvmHeapChunk));
+    ptr = dvmHeapSourceAllocAndGrow(size);
     dvmHeapSizeChanged();
-    if (hc != NULL) {
+    if (ptr != NULL) {
         size_t newHeapSize;
 
         newHeapSize = dvmHeapSourceGetIdealFootprint();
@@ -384,7 +384,7 @@ static DvmHeapChunk *tryMalloc(size_t size)
         LOGI_HEAP("Grow heap (frag case) to "
                 "%zu.%03zuMB for %zu-byte allocation\n",
                 FRACTIONAL_MB(newHeapSize), size);
-        return hc;
+        return ptr;
     }
 
     /* Most allocations should have succeeded by now, so the heap
@@ -398,10 +398,10 @@ collect_soft_refs:
     LOGI_HEAP("Forcing collection of SoftReferences for %zu-byte allocation\n",
             size);
     gcForMalloc(true);
-    hc = dvmHeapSourceAllocAndGrow(size + sizeof(DvmHeapChunk));
+    ptr = dvmHeapSourceAllocAndGrow(size);
     dvmHeapSizeChanged();
-    if (hc != NULL) {
-        return hc;
+    if (ptr != NULL) {
+        return ptr;
     }
 //TODO: maybe wait for finalizers and try one last time
 
@@ -493,7 +493,6 @@ static void throwOOME()
 void* dvmMalloc(size_t size, int flags)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-    DvmHeapChunk *hc;
     void *ptr;
 
 #if 0
@@ -547,8 +546,8 @@ void* dvmMalloc(size_t size, int flags)
 
     /* Try as hard as possible to allocate some memory.
      */
-    hc = tryMalloc(size);
-    if (hc != NULL) {
+    ptr = tryMalloc(size);
+    if (ptr != NULL) {
         /* We've got the memory.
          */
         if ((flags & ALLOC_FINALIZABLE) != 0) {
@@ -561,15 +560,13 @@ void* dvmMalloc(size_t size, int flags)
              * set.  scanObject() explicitly deals with the NULL clazz.
              */
             if (!dvmHeapAddRefToLargeTable(&gcHeap->finalizableRefs,
-                                    (Object *)hc->data))
+                                    (Object *)ptr))
             {
                 LOGE_HEAP("dvmMalloc(): no room for any more "
                         "finalizable objects\n");
                 dvmAbort();
             }
         }
-
-        ptr = hc->data;
 
         /* The caller may not want us to collect this object.
          * If not, throw it in the nonCollectableRefs table, which
@@ -604,7 +601,6 @@ void* dvmMalloc(size_t size, int flags)
     } else {
         /* The allocation failed.
          */
-        ptr = NULL;
 
 #ifdef WITH_PROFILER
         if (gDvm.allocProf.enabled) {
@@ -647,12 +643,9 @@ void* dvmMalloc(size_t size, int flags)
  */
 bool dvmIsValidObject(const Object* obj)
 {
-    const DvmHeapChunk *hc;
-
     /* Don't bother if it's NULL or not 8-byte aligned.
      */
-    hc = ptr2chunk(obj);
-    if (obj != NULL && ((uintptr_t)hc & (8-1)) == 0) {
+    if (obj != NULL && ((uintptr_t)obj & (8-1)) == 0) {
         /* Even if the heap isn't locked, this shouldn't return
          * any false negatives.  The only mutation that could
          * be happening is allocation, which means that another
@@ -666,7 +659,7 @@ bool dvmIsValidObject(const Object* obj)
          * Freeing will only happen during the sweep phase, which
          * only happens while the heap is locked.
          */
-        return dvmHeapSourceContains(hc);
+        return dvmHeapSourceContains(obj);
     }
     return false;
 }
@@ -699,7 +692,7 @@ void dvmClearAllocFlags(Object *obj, int mask)
 
 size_t dvmObjectSizeInHeap(const Object *obj)
 {
-    return dvmHeapSourceChunkSize(ptr2chunk(obj)) - sizeof(DvmHeapChunk);
+    return dvmHeapSourceChunkSize(obj);
 }
 
 /*

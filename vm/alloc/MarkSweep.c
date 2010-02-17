@@ -74,11 +74,11 @@
 /* Do not cast the result of this to a boolean; the only set bit
  * may be > 1<<8.
  */
-static inline long isMarked(const DvmHeapChunk *hc, const GcMarkContext *ctx)
+static inline long isMarked(const void *obj, const GcMarkContext *ctx)
         __attribute__((always_inline));
-static inline long isMarked(const DvmHeapChunk *hc, const GcMarkContext *ctx)
+static inline long isMarked(const void *obj, const GcMarkContext *ctx)
 {
-    return dvmHeapBitmapIsObjectBitSetInList(ctx->bitmaps, ctx->numBitmaps, hc);
+    return dvmHeapBitmapIsObjectBitSetInList(ctx->bitmaps, ctx->numBitmaps, obj);
 }
 
 static bool
@@ -165,13 +165,13 @@ dvmHeapBeginMarkStep()
     return true;
 }
 
-static long setAndReturnMarkBit(GcMarkContext *ctx, const DvmHeapChunk *hc)
+static long setAndReturnMarkBit(GcMarkContext *ctx, const void *obj)
         __attribute__((always_inline));
 static long
-setAndReturnMarkBit(GcMarkContext *ctx, const DvmHeapChunk *hc)
+setAndReturnMarkBit(GcMarkContext *ctx, const void *obj)
 {
     return dvmHeapBitmapSetAndReturnObjectBitInList(ctx->bitmaps,
-        ctx->numBitmaps, hc);
+        ctx->numBitmaps, obj);
 }
 
 static void _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
@@ -181,8 +181,6 @@ static void
 _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
         bool checkFinger, bool forceStack)
 {
-    DvmHeapChunk *hc;
-
     assert(obj != NULL);
 
 #if GC_DEBUG(GC_DEBUG_PARANOID)
@@ -191,11 +189,10 @@ _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
     assert(dvmIsValidObject(obj));
 #endif
 
-    hc = ptr2chunk(obj);
-    if (!setAndReturnMarkBit(ctx, hc)) {
+    if (!setAndReturnMarkBit(ctx, obj)) {
         /* This object was not previously marked.
          */
-        if (forceStack || (checkFinger && (void *)hc < ctx->finger)) {
+        if (forceStack || (checkFinger && (void *)obj < ctx->finger)) {
             /* This object will need to go on the mark stack.
              */
             MARK_STACK_PUSH(ctx->stack, obj);
@@ -208,7 +205,7 @@ _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
 #endif
 #if DVM_TRACK_HEAP_MARKING
         gDvm.gcHeap->markCount++;
-        gDvm.gcHeap->markSize += dvmHeapSourceChunkSize((void *)hc) +
+        gDvm.gcHeap->markSize += dvmHeapSourceChunkSize((void *)obj) +
                 HEAP_SOURCE_CHUNK_OVERHEAD;
 #endif
 
@@ -558,7 +555,7 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
             referent = dvmGetFieldObject(obj,
                     gDvm.offJavaLangRefReference_referent);
             if (referent != NULL &&
-                    !isMarked(ptr2chunk(referent), &gcHeap->markContext))
+                    !isMarked(referent, &gcHeap->markContext))
             {
                 u4 refFlags;
 
@@ -706,10 +703,7 @@ scanBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
 
     ctx->finger = finger;
     for (i = 0; i < numPtrs; i++) {
-        /* The pointers we're getting back are DvmHeapChunks,
-         * not Objects.
-         */
-        scanObject(chunk2ptr(*ptrs++), ctx);
+        scanObject(*ptrs++, ctx);
     }
 
     return true;
@@ -805,7 +799,7 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
         //      that fail this initial if().  We need to re-walk
         //      the list, and it would be nice to avoid the extra
         //      work.
-        if (referent != NULL && !isMarked(ptr2chunk(referent), markContext)) {
+        if (referent != NULL && !isMarked(referent, markContext)) {
             bool schedEnqueue;
 
             /* This is the strongest reference that refers to referent.
@@ -911,7 +905,7 @@ void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
             next = dvmGetFieldObject(reference, offVmData);
             referent = dvmGetFieldObject(reference, offReferent);
 
-            if (referent != NULL && !isMarked(ptr2chunk(referent), markContext)) {
+            if (referent != NULL && !isMarked(referent, markContext)) {
                 markObjectNonNull(referent, markContext);
                 scanRequired = true;
 
@@ -977,10 +971,7 @@ void dvmHeapScheduleFinalizations()
         gapRef = ref = finRefs->refs.table;
         lastRef = finRefs->refs.nextEntry;
         while (ref < lastRef) {
-            DvmHeapChunk *hc;
-
-            hc = ptr2chunk(*ref);
-            if (!isMarked(hc, markContext)) {
+            if (!isMarked(*ref, markContext)) {
                 if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
@@ -1094,10 +1085,7 @@ hprofUnreachableBitmapCallback(size_t numPtrs, void **ptrs,
     for (i = 0; i < numPtrs; i++) {
         Object *obj;
 
-        /* The pointers we're getting back are DvmHeapChunks, not
-         * Objects.
-         */
-        obj = (Object *)chunk2ptr(*ptrs++);
+        obj = (Object *)*ptrs++;
 
         hprofMarkRootObject(hctx, obj, 0);
         hprofDumpHeapObject(hctx, obj);
@@ -1134,14 +1122,9 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
     void **origPtrs = ptrs;
 
     for (i = 0; i < numPtrs; i++) {
-        DvmHeapChunk *hc;
         Object *obj;
 
-        /* The pointers we're getting back are DvmHeapChunks, not
-         * Objects.
-         */
-        hc = (DvmHeapChunk *)*ptrs++;
-        obj = (Object *)chunk2ptr(hc);
+        obj = (Object *)*ptrs++;
 
         /* NOTE: Dereferencing clazz is dangerous.  If obj was the last
          * one to reference its class object, the class object could be
@@ -1171,7 +1154,7 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
         {
             int chunklen;
             ClassObject *clazz = obj->clazz;
-            chunklen = dvmHeapSourceChunkSize(hc);
+            chunklen = dvmHeapSourceChunkSize(obj);
             memset(hc, 0xa5, chunklen);
             obj->clazz = (ClassObject *)((uintptr_t)clazz ^ 0xffffffff);
         }
@@ -1189,7 +1172,7 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
  */
 static int isUnmarkedObject(void *object)
 {
-    return !isMarked(ptr2chunk((uintptr_t)object & ~(HB_OBJECT_ALIGNMENT-1)),
+    return !isMarked((void *)((uintptr_t)object & ~(HB_OBJECT_ALIGNMENT-1)),
             &gDvm.gcHeap->markContext);
 }
 

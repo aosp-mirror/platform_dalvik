@@ -26,16 +26,6 @@
 
 #define SCHEDULED_REFERENCE_MAGIC   ((Object*)0x87654321)
 
-#define ptr2chunk(p)    (((DvmHeapChunk *)(p)) - 1)
-#define chunk2ptr(p)    ((void *)(((DvmHeapChunk *)(p)) + 1))
-
-typedef struct DvmHeapChunk {
-#if WITH_HPROF && WITH_HPROF_STACK
-    u4 stackTraceSerialNumber;
-#endif
-    u8 data[0];
-} DvmHeapChunk;
-
 struct GcHeap {
     HeapSource      *heapSource;
 
