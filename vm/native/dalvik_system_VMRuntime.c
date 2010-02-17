@@ -188,10 +188,30 @@ static void Dalvik_dalvik_system_VMRuntime_startJitCompilation(const u4* args,
     JValue* pResult)
 {
 #if defined(WITH_JIT)
-    if (gDvm.executionMode == kExecutionModeJit) {
+    if (gDvm.executionMode == kExecutionModeJit &&
+        gDvmJit.disableJit == false) {
         dvmLockMutex(&gDvmJit.compilerLock);
+        gDvmJit.alreadyEnabledViaFramework = true;
         pthread_cond_signal(&gDvmJit.compilerQueueActivity);
         dvmUnlockMutex(&gDvmJit.compilerLock);
+    }
+#endif
+    RETURN_VOID();
+}
+
+/*
+ * public native void disableJitCompilation()
+ *
+ * Callback function from the framework to indicate that a VM instance wants to
+ * permanently disable the JIT compiler. Currently only the system server uses
+ * this interface when it detects system-wide safe mode is enabled.
+ */
+static void Dalvik_dalvik_system_VMRuntime_disableJitCompilation(const u4* args,
+    JValue* pResult)
+{
+#if defined(WITH_JIT)
+    if (gDvm.executionMode == kExecutionModeJit) {
+        gDvmJit.disableJit = true;
     }
 #endif
     RETURN_VOID();
@@ -216,5 +236,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMRuntime[] = {
         Dalvik_dalvik_system_VMRuntime_getExternalBytesAllocated },
     { "startJitCompilation", "()V",
         Dalvik_dalvik_system_VMRuntime_startJitCompilation },
+    { "disableJitCompilation", "()V",
+        Dalvik_dalvik_system_VMRuntime_disableJitCompilation },
     { NULL, NULL, NULL },
 };
