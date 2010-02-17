@@ -330,7 +330,9 @@ public interface LSSerializer {
      * <br> The filter is invoked after the operations requested by the 
      * <code>DOMConfiguration</code> parameters have been applied. For 
      * example, CDATA sections won't be passed to the filter if "<a href='http://www.w3.org/TR/DOM-Level-3-Core/core.html#parameter-cdata-sections'>
-     * cdata-sections</a>" is set to <code>false</code>. 
+     * cdata-sections</a>" is set to <code>false</code>.
+     *
+     * @hide
      */
     public LSSerializerFilter getFilter();
     /**
@@ -341,7 +343,9 @@ public interface LSSerializer {
      * <br> The filter is invoked after the operations requested by the 
      * <code>DOMConfiguration</code> parameters have been applied. For 
      * example, CDATA sections won't be passed to the filter if "<a href='http://www.w3.org/TR/DOM-Level-3-Core/core.html#parameter-cdata-sections'>
-     * cdata-sections</a>" is set to <code>false</code>. 
+     * cdata-sections</a>" is set to <code>false</code>.
+     *
+     * @hide 
      */
     public void setFilter(LSSerializerFilter filter);
 
