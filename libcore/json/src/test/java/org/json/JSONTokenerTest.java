@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package android;
+package org.json;
 
 import junit.framework.TestCase;
-import org.json.JSONException;
-import org.json.JSONTokener;
 
 /**
  * This black box test was written without inspecting the non-free org.json sourcecode.
