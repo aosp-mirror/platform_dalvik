@@ -19,24 +19,23 @@ package org.apache.harmony.luni.internal.net.www.protocol.http;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 /**
  * The general structure for request / response header. It is essentially
  * constructed by hashtable with key indexed in a vector for position lookup.
  */
 public class Header implements Cloneable {
-    /*
-     * we use the non-synchronized ArrayList and HashMap instead of the
-     * synchronized Vector and Hashtable
-     */
     private ArrayList<String> props;
 
-    private HashMap<String, LinkedList<String>> keyTable;
+    // BEGIN android-changed: header fields should be case-insensitive but case-preserving.
+    // http://code.google.com/p/android/issues/detail?id=6684
+    private TreeMap<String, LinkedList<String>> keyTable;
+    // END android-changed
 
     private String statusLine;
 
@@ -48,7 +47,7 @@ public class Header implements Cloneable {
     public Header() {
         super();
         this.props = new ArrayList<String>(20);
-        this.keyTable = new HashMap<String, LinkedList<String>>(20);
+        this.keyTable = new TreeMap<String, LinkedList<String>>(String.CASE_INSENSITIVE_ORDER); // android-changed
     }
 
     /**
@@ -79,11 +78,9 @@ public class Header implements Cloneable {
         try {
             Header clone = (Header) super.clone();
             clone.props = (ArrayList<String>) props.clone();
-            clone.keyTable = new HashMap<String, LinkedList<String>>(20);
-            for (Map.Entry<String, LinkedList<String>> next : this.keyTable
-                    .entrySet()) {
-                LinkedList<String> v = (LinkedList<String>) next.getValue()
-                        .clone();
+            clone.keyTable = new TreeMap<String, LinkedList<String>>(String.CASE_INSENSITIVE_ORDER); // android-changed
+            for (Map.Entry<String, LinkedList<String>> next : this.keyTable.entrySet()) {
+                LinkedList<String> v = (LinkedList<String>) next.getValue().clone();
                 clone.keyTable.put(next.getKey(), v);
             }
             return clone;
@@ -102,14 +99,11 @@ public class Header implements Cloneable {
         if (key == null) {
             throw new NullPointerException();
         }
-        // BEGIN android-changed
-        key = key.toLowerCase();
         LinkedList<String> list = keyTable.get(key);
         if (list == null) {
             list = new LinkedList<String>();
-            keyTable.put(key, list);
+            keyTable.put(key, list); // android-changed
         }
-        // END android-changed
         list.add(value);
         props.add(key);
         props.add(value);
@@ -126,9 +120,6 @@ public class Header implements Cloneable {
         if (key == null) {
             throw new NullPointerException();
         }
-        // BEGIN android-added
-        key = key.toLowerCase();
-        // END android-added
         LinkedList<String> list = keyTable.get(key);
         if (list == null) {
             add(key, value);
@@ -154,8 +145,7 @@ public class Header implements Cloneable {
      * @since 1.4
      */
     public Map<String, List<String>> getFieldMap() {
-        Map<String, List<String>> result = new HashMap<String, List<String>>(
-                keyTable.size());
+        Map<String, List<String>> result = new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER); // android-changed
         for (Map.Entry<String, LinkedList<String>> next : keyTable.entrySet()) {
             List<String> v = next.getValue();
             result.put(next.getKey(), Collections.unmodifiableList(v));
@@ -203,7 +193,7 @@ public class Header implements Cloneable {
      *         such key exists.
      */
     public String get(String key) {
-        LinkedList<String> result = keyTable.get(key.toLowerCase());
+        LinkedList<String> result = keyTable.get(key); // android-changed
         if (result == null) {
             return null;
         }
