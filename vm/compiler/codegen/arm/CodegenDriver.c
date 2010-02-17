@@ -1276,6 +1276,15 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         loadConstant(cUnit, r2, (int)dvmUnlockObject);
         /* Do the call */
         opReg(cUnit, kOpBlx, r2);
+        opRegImm(cUnit, kOpCmp, r0, 0); /* Did we throw? */
+        ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+        loadConstant(cUnit, r0,
+                     (int) (cUnit->method->insns + mir->offset +
+                     dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_EXIT)));
+        genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+        ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+        target->defMask = ENCODE_ALL;
+        branchOver->generic.target = (LIR *) target;
         dvmCompilerColbberCallRegs(cUnit);
     }
 }

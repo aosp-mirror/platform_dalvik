@@ -1371,23 +1371,17 @@ dvmCompiler_TEMPLATE_INTERPRET:
     .balign 4
     .global dvmCompiler_TEMPLATE_MONITOR_ENTER
 dvmCompiler_TEMPLATE_MONITOR_ENTER:
-/* File: armv7-a/TEMPLATE_MONITOR_ENTER.S */
+/* File: armv5te/TEMPLATE_MONITOR_ENTER.S */
     /*
-     * thumb2 specific.
-     *
-     * In this variant of the MONITOR_ENTER handler, we assume that
-     * the test for the simple thin lock case has already been done.
-     * So, we'll just call dvmLockObject(), refresh the
-     * jit's on/off switch on return and then bail out to the interpreter.
-     * We have to bail to the interpreter because the translation cache
-     * may have been cleared while we were blocked on a monitor in
-     * dvmLockObject.
+     * Call out to the runtime to lock an object.  Because this thread
+     * may have been suspended in THREAD_MONITOR state and the Jit's
+     * translation cache subsequently cleared, we cannot return directly.
+     * Instead, unconditionally transition to the interpreter to resume.
      *
      * On entry:
      *    r0 - self pointer
      *    r1 - the object (which has already been null-checked by the caller
      *    r4 - the Dalvik PC of the following instruction.
-     *
      */
     ldr     r2, .LdvmLockObject
     mov     r3, #0                       @ Record that we're not returning
