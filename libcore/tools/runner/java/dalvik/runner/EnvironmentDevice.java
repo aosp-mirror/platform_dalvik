@@ -41,6 +41,7 @@ class EnvironmentDevice extends Environment {
         }
         adb.mkdir(runnerDir);
         adb.mkdir(testTemp);
+        adb.mkdir(new File("/sdcard/dalvik-cache")); // TODO: only necessary on production devices.
         if (debugPort != null) {
             adb.forwardTcp(debugPort, debugPort);
         }

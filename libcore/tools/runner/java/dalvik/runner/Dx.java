@@ -33,7 +33,7 @@ final class Dx {
          * yourself.
          *
          * Memory options pulled from build/core/definitions.mk to
-         * handle larged dx input when building dex for APK.
+         * handle large dx input when building dex for APK.
          */
         new Command.Builder()
                 .args("dx")
