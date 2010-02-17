@@ -195,4 +195,11 @@ public final class VMRuntime {
      */
     public native void startJitCompilation();
 
+    /**
+     * Tells the VM to disable the JIT compiler. If the VM does not have a JIT
+     * implementation, calling this method should have no effect.
+     *
+     * {@hide}
+     */
+    public native void disableJitCompilation();
 }

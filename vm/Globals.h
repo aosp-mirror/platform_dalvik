@@ -794,6 +794,12 @@ struct DvmJitGlobals {
     /* Framework or stand-alone? */
     bool runningInAndroidFramework;
 
+    /* Framework callback happened? */
+    bool alreadyEnabledViaFramework;
+
+    /* Framework requests to disable the JIT for good */
+    bool disableJit;
+
     /* Place arrays at the end to ease the display in gdb sessions */
 
     /* Work order queue for compilations */
