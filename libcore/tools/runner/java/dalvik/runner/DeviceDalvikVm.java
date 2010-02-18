@@ -24,15 +24,6 @@ import java.util.logging.Logger;
  * Execute tests on a Dalvik VM using an Android device or emulator.
  */
 final class DeviceDalvikVm extends Vm {
-
-    // TODO: Don't assume we can put files in /system/framework,
-    // so we can run on production devices.
-    private static final Classpath RUNTIME_SUPPORT_CLASSPATH = Classpath.of(
-            new File("/system/framework/core-tests.jar"),
-            new File("/system/framework/caliper.jar"),
-            new File("/system/framework/guava.jar"),
-            new File("/system/framework/jsr305.jar"));
-
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
 
     DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar,
@@ -47,7 +38,24 @@ final class DeviceDalvikVm extends Vm {
     }
 
     @Override protected void postCompileTestRunner() {
+        // TODO: does this really need to be a special case?
         postCompile("testrunner", environment.testRunnerClassesDir());
+
+        // dex everything on the classpath and push it to the device.
+        for (File classpathElement : testClasspath.getElements()) {
+            String name = basenameOfJar(classpathElement);
+            logger.fine("dex and push " + name);
+            // make the local dex (inside a jar)
+            // TODO: this is *really* expensive. we need a cache!
+            File outputFile = getEnvironmentDevice().testDir(name + ".jar");
+            new Dx().dex(outputFile, Classpath.of(classpathElement));
+            // push the local dex to the device
+            getEnvironmentDevice().adb.push(outputFile, deviceDexFile(name));
+        }
+    }
+
+    private String basenameOfJar(File jarFile) {
+        return jarFile.getName().replaceAll("\\.jar$", "");
     }
 
     @Override protected void postCompileTest(TestRun testRun) {
@@ -74,8 +82,12 @@ final class DeviceDalvikVm extends Vm {
             File workingDirectory) {
         // ignore the working directory; it's device-local and we can't easily
         // set the working directory for commands run via adb shell.
+        // TODO: we only *need* to set ANDROID_DATA on production devices.
+        // We set "user.home" to /sdcard because code might reasonably assume it can write to
+        // that directory.
         return new VmCommandBuilder()
-                .vmCommand("adb", "shell", "dalvikvm")
+                .vmCommand("adb", "shell", "ANDROID_DATA=/sdcard", "dalvikvm")
+                .vmArgs("-Duser.home=/sdcard")
                 .vmArgs("-Duser.name=root")
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US")
@@ -87,7 +99,9 @@ final class DeviceDalvikVm extends Vm {
         Classpath classpath = new Classpath();
         classpath.addAll(deviceDexFile(testRun.getQualifiedName()));
         classpath.addAll(deviceDexFile("testrunner"));
-        classpath.addAll(RUNTIME_SUPPORT_CLASSPATH);
+        for (File testClasspathElement : testClasspath.getElements()) {
+            classpath.addAll(deviceDexFile(basenameOfJar(testClasspathElement)));
+        }
         return classpath;
     }
 }

@@ -62,12 +62,15 @@ abstract class Mode {
     protected final Classpath testRunnerClasspath = new Classpath();
 
     protected final Classpath testClasspath = Classpath.of(
+            new File("dalvik/libcore/tools/runner/lib/jsr305.jar"),
+            new File("dalvik/libcore/tools/runner/lib/guava.jar"),
+            new File("dalvik/libcore/tools/runner/lib/caliper.jar"),
             // TODO: we should be able to work with a shipping SDK, not depend on out/...
-            // dalvik/libcore for tests
-            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar").getAbsoluteFile(),
-            // framework/base for tests
-            new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar").getAbsoluteFile());
-
+            // dalvik/libcore/**/test/ for junit
+            // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
+            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar").getAbsoluteFile());
+            // framework/base for tests (TODO: for what exactly?)
+            //new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar").getAbsoluteFile());
 
     Mode(Environment environment, long timeoutSeconds, File sdkJar) {
         this.environment = environment;
@@ -90,11 +93,15 @@ abstract class Mode {
     private void compileTestRunner() {
         logger.fine("build testrunner");
 
+        Classpath classpath = new Classpath();
+        classpath.addAll(testClasspath);
+        classpath.addAll(testRunnerClasspath);
+
         File base = environment.testRunnerClassesDir();
         new Mkdir().mkdirs(base);
         new Javac()
                 .bootClasspath(sdkJar)
-                .classpath(testRunnerClasspath)
+                .classpath(classpath)
                 .sourcepath(DalvikRunner.HOME_JAVA)
                 .destination(base)
                 .compile(testRunnerJava);
