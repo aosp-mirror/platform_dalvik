@@ -48,7 +48,7 @@ final class ActivityMode extends Mode {
     }
 
     @Override protected void prepare(Set<File> testRunnerJava, Classpath testRunnerClasspath) {
-        testRunnerJava.add(new File(DalvikRunner.HOME_JAVA, "dalvik/runner/TestActivity.java"));
+        testRunnerJava.add(new File("dalvik/libcore/tools/runner/lib/TestActivity.java"));
         super.prepare(testRunnerJava, testRunnerClasspath);
     }
 

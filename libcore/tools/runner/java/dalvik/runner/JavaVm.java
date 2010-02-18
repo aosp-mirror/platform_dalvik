@@ -18,6 +18,7 @@ package dalvik.runner;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A local Java virtual machine like Harmony or the RI.
@@ -34,7 +35,8 @@ final class JavaVm extends Vm {
         this.javaHome = javaHome;
     }
 
-    @Override protected void postCompileTestRunner() {}
+    @Override protected void postCompileTestRunner() {
+    }
 
     @Override protected void postCompileTest(TestRun testRun) {
     }

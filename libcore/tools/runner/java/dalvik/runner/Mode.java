@@ -18,6 +18,7 @@ package dalvik.runner;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,6 +62,7 @@ abstract class Mode {
      */
     protected final Classpath testRunnerClasspath = new Classpath();
 
+    // TODO: this should be an immutable collection.
     protected final Classpath testClasspath = Classpath.of(
             new File("dalvik/libcore/tools/runner/lib/jsr305.jar"),
             new File("dalvik/libcore/tools/runner/lib/guava.jar"),
@@ -69,8 +71,6 @@ abstract class Mode {
             // dalvik/libcore/**/test/ for junit
             // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
             new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar").getAbsoluteFile());
-            // framework/base for tests (TODO: for what exactly?)
-            //new File("out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar").getAbsoluteFile());
 
     Mode(Environment environment, long timeoutSeconds, File sdkJar) {
         this.environment = environment;
@@ -84,10 +84,23 @@ abstract class Mode {
      */
     protected void prepare(Set<File> testRunnerJava, Classpath testRunnerClasspath) {
         this.testRunnerJava.add(new File(DalvikRunner.HOME_JAVA, "dalvik/runner/TestRunner.java"));
+        this.testRunnerJava.addAll(dalvikAnnotationSourceFiles());
         this.testRunnerJava.addAll(testRunnerJava);
         this.testRunnerClasspath.addAll(testRunnerClasspath);
         environment.prepare();
         compileTestRunner();
+    }
+
+    private List<File> dalvikAnnotationSourceFiles() {
+        // Hopefully one day we'll strip the dalvik annotations out, but until then we need to make
+        // them available to javac(1).
+        File sourceDir = new File("dalvik/libcore/dalvik/src/main/java/dalvik/annotation");
+        File[] javaSourceFiles = sourceDir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String filename) {
+                return filename.endsWith(".java");
+            }
+        });
+        return Arrays.asList(javaSourceFiles);
     }
 
     private void compileTestRunner() {
@@ -165,13 +178,17 @@ abstract class Mode {
         classpath.addAll(testClasspath);
         classpath.addAll(testRun.getRunnerClasspath());
 
+        Set<File> sourceFiles = new HashSet<File>();
+        sourceFiles.add(testRun.getTestJava());
+        sourceFiles.addAll(dalvikAnnotationSourceFiles());
+
         // compile the test case
         new Javac()
                 .bootClasspath(sdkJar)
                 .classpath(classpath)
                 .sourcepath(testRun.getTestDirectory())
                 .destination(testClassesDir)
-                .compile(testRun.getTestJava());
+                .compile(sourceFiles);
         postCompileTest(testRun);
         return true;
     }
