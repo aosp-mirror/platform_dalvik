@@ -17,13 +17,25 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.util.logging.Logger;
 
 /**
  * A dx command.
  */
 final class Dx {
+    private static final Logger logger = Logger.getLogger(Dx.class.getName());
+    private static final Md5Cache DEX_CACHE = new Md5Cache("dex");
 
+    /**
+     * Converts all the .class files on 'classpath' into a dex file written to 'output'.
+     */
     public void dex(File output, Classpath classpath) {
+        File key = DEX_CACHE.makeKey(classpath);
+        if (key != null && key.exists()) {
+            logger.fine("dex cache hit for " + classpath);
+            new Command.Builder().args("cp", key, output).execute();
+            return;
+        }
         /*
          * We pass --core-library so that we can write tests in the
          * same package they're testing, even when that's a core
@@ -44,5 +56,6 @@ final class Dx {
                 .args("--core-library")
                 .args(Strings.objectsToStrings(classpath.getElements()))
                 .execute();
+        DEX_CACHE.insert(key, output);
     }
 }

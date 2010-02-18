@@ -2,15 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-ext_dirs := \
-        ../../../../external/jsr305/ri/src/main/java \
-        ../../../../external/guava/src \
-        ../../../../external/caliper/src
-
-ext_src_files := $(call all-java-files-under,$(ext_dirs))
-
 LOCAL_SRC_FILES := \
-        $(ext_src_files) \
         java/dalvik/runner/Aapt.java \
         java/dalvik/runner/Adb.java \
         java/dalvik/runner/ActivityMode.java \
@@ -36,6 +28,7 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/JtregRunner.java \
         java/dalvik/runner/MainFinder.java \
         java/dalvik/runner/MainRunner.java \
+        java/dalvik/runner/Md5Cache.java \
         java/dalvik/runner/Mkdir.java \
         java/dalvik/runner/Mode.java \
         java/dalvik/runner/NamingPatternCodeFinder.java \
@@ -53,7 +46,7 @@ LOCAL_SRC_FILES := \
         java/dalvik/runner/XmlReportPrinter.java \
 
 LOCAL_MODULE:= dalvik_runner
-LOCAL_STATIC_JAVA_LIBRARIES := javatest jh jtreg kxml2-2.3.0
+LOCAL_STATIC_JAVA_LIBRARIES := jsr305 guava caliper javatest jh jtreg kxml2-2.3.0
 
 # TODO this only works when junit is already built...
 LOCAL_JAVA_LIBRARIES := junit
@@ -63,6 +56,23 @@ LOCAL_JAVACFLAGS := -Werror -Xlint:unchecked
 include $(BUILD_HOST_JAVA_LIBRARY)
 
 include $(call all-subdir-makefiles)
+
+# prebuilt jsr305.jar
+# TODO: do we need this any more? caliper.jar has a jarjar'ed copy.
+include $(CLEAR_VARS)
+LOCAL_PREBUILT_JAVA_LIBRARIES := jsr305:lib/jsr305.jar
+include $(BUILD_HOST_PREBUILT)
+
+# prebuilt guava.jar
+# TODO: do we need this any more? caliper.jar has a jarjar'ed copy.
+include $(CLEAR_VARS)
+LOCAL_PREBUILT_JAVA_LIBRARIES := guava:lib/guava.jar
+include $(BUILD_HOST_PREBUILT)
+
+# prebuilt caliper.jar
+include $(CLEAR_VARS)
+LOCAL_PREBUILT_JAVA_LIBRARIES := caliper:lib/caliper.jar
+include $(BUILD_HOST_PREBUILT)
 
 # prebuilt javatest.jar
 include $(CLEAR_VARS)
