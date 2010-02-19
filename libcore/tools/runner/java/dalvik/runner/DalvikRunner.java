@@ -197,10 +197,6 @@ public final class DalvikRunner {
                     System.out.println("Invalid java home: " + javaHome);
                     return false;
                 }
-                if (debugPort != null) {
-                    System.out.println("debug port " + debugPort + " should not be specified for mode " + mode);
-                    return false;
-                }
             }
 
             // check vm option consistency
