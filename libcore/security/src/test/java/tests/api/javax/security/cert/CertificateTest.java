@@ -191,8 +191,4 @@ public class CertificateTest extends TestCase {
     public static Test suite() {
         return new TestSuite(CertificateTest.class);
     }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
 }

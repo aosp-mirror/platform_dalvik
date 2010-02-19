@@ -23,13 +23,8 @@ import junit.framework.TestSuite;
  * Test suite that includes all tests for the Math project.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.math");
+        TestSuite suite = new TestSuite("Tests for java.math");
         // $JUnit-BEGIN$
         suite.addTestSuite(BigDecimalTest.class);
         suite.addTestSuite(BigIntegerTest.class);

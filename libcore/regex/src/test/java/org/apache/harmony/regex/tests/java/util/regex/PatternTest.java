@@ -2377,10 +2377,6 @@ public void testRestoreFlagsAfterGroup() {
         assertTrue(matcher.find());
     }
 
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(PatternTest.class);
-    }
-    
     @TestTargetNew(
         level = TestLevel.PARTIAL_COMPLETE,
         notes = "The test doesn't verify Matcher and should be moved to PatterTest.",

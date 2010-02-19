@@ -51,10 +51,6 @@ public class IdentityScopeTest extends TestCase {
         }
     }
     
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(IdentityScopeTest.class);
-    }
-    
     IdentityScope is;
 
     /**

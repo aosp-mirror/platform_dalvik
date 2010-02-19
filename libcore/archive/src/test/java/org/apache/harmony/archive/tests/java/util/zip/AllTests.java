@@ -24,13 +24,8 @@ import junit.framework.TestSuite;
  * Test suite for java.util.zip package.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
+        TestSuite suite = new TestSuite(
                 "Suite org.apache.harmony.archive.tests.java.util.zip");
         // $JUnit-BEGIN$
         suite.addTestSuite(Adler32Test.class);

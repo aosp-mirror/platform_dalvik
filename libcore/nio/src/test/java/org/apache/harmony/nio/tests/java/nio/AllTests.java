@@ -25,13 +25,8 @@ import junit.framework.TestSuite;
  * 
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.nio");
+        TestSuite suite = new TestSuite("Tests for java.nio");
         //$JUnit-BEGIN$
         suite.addTestSuite(BufferOverflowExceptionTest.class);
         suite.addTestSuite(BufferUnderflowExceptionTest.class);

@@ -24,7 +24,10 @@ import junit.framework.TestSuite;
 public class AllTests {
 
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
+        TestSuite suite = new TestSuite();
+        // BEGIN android-changed: this was only referenced from the xml module!
+        suite.addTest(tests.api.org.w3c.dom.AllTests.suite());
+        // END android-changed
         suite.addTestSuite(JunitTestCases.class);
         return suite;
     }

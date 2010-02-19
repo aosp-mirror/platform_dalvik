@@ -22,11 +22,6 @@
 
 package tests.security.acl;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
 import java.security.acl.LastOwnerException;
@@ -35,18 +30,7 @@ import java.security.acl.LastOwnerException;
  * Unit test for LastOwnerException.
  * 
  */
-@TestTargetClass(LastOwnerException.class)
 public class LastOwnerExceptionTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(LastOwnerExceptionTest.class);
-    }
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "LastOwnerException",
-        args = {}
-    )
     public void testLastOwnerException() {
         assertNotNull(new LastOwnerException());
         assertNull(new LastOwnerException().getMessage());

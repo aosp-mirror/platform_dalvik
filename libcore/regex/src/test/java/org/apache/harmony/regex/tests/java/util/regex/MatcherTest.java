@@ -1464,8 +1464,4 @@ public class MatcherTest extends TestCase {
         assertTrue(pattern.matcher("14pt").matches());
     }
 
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(MatcherTest.class);
-    }
-
 }

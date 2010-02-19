@@ -14,9 +14,6 @@ import junit.framework.*;
 import java.util.*;
 
 public class ThreadPoolExecutorTest extends JSR166TestCase {
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());        
-    }
     public static Test suite() {
         return new TestSuite(ThreadPoolExecutorTest.class);
     }

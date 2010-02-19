@@ -191,10 +191,6 @@ public class KeyPairGenerator3Test extends TestCase {
         }
     }
 
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(KeyPairGenerator3Test.class);
-    }
-    
     /**
      * Additional class to verify KeyPairGenerator constructor
      */

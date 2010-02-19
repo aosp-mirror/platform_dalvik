@@ -22,8 +22,7 @@ import junit.framework.TestSuite;
 public class AllTests {
 
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
-                "Test for tests.api.java.nio.channels.spi");
+        TestSuite suite = new TestSuite("Test for tests.api.java.nio.channels.spi");
         //$JUnit-BEGIN$
         suite.addTestSuite(AbstractInterruptibleChannelTest.class);
         suite.addTestSuite(AbstractSelectorTest.class);

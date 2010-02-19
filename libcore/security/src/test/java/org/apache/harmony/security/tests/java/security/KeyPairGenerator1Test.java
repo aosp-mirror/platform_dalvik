@@ -650,8 +650,4 @@ public class KeyPairGenerator1Test extends TestCase {
             fail("Unexpected InvalidAlgorithmParameterException was thrown");
         }
     }
-
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(KeyPairGenerator1Test.class);
-    }
 }

@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(LinkageError.class) 
 public class LinkageErrorTest extends TestCase {
 
-    /**
-     * @tests java.lang.LinkageError#LinkageError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "LinkageError",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.LinkageError#LinkageError()
+	 */
     public void test_Constructor() {
         LinkageError e = new LinkageError();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class LinkageErrorTest extends TestCase {
     /**
      * @tests java.lang.LinkageError#LinkageError(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "LinkageError",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         LinkageError e = new LinkageError("fixture");
         assertEquals("fixture", e.getMessage());

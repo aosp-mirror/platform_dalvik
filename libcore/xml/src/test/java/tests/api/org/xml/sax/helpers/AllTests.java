@@ -20,13 +20,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for org.xml.sax.helpers package");
+        TestSuite suite = new TestSuite("Tests for org.xml.sax.helpers package");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(AttributeListImplTest.class);

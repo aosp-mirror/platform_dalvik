@@ -887,10 +887,6 @@ public class CertificateFactory1Test extends TestCase {
             fail("Unexpected exception" + e);
         }
     }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(CertificateFactory1Test.class);
-    }
 }
 /**
  * Additional class to verify CertificateFactory constructor

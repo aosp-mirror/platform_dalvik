@@ -25,12 +25,20 @@ tmp=/data/core-tests.tmp
 mkdir $tmp
 chmod 777 $tmp
 
+modules="annotation archive concurrent crypto dom icu logging luni-kernel \
+        luni math nio nio_char prefs regex security sql suncompat support \
+        text x-net xml"
+classpath=""
+for module in $modules; do
+  classpath="$classpath:/system/framework/core-tests-$module.jar"
+done
+
 exec dalvikvm \
      -Duser.name=root \
      -Duser.language=en \
      -Duser.region=US \
      -Djava.io.tmpdir=$tmp \
      -Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks \
-     -classpath /system/framework/core-tests.jar \
+     -classpath $classpath \
      -Xcheck:jni \
      -Xmx64M com.google.coretests.Main "$@"

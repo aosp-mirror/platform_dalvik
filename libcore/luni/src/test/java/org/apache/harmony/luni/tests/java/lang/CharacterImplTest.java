@@ -16,23 +16,10 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(Character.class)
 public class CharacterImplTest extends TestCase {
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "valueOf",
-        args = {char.class}
-    )
     public void test_valueOfC() {
         // test the cache range
 // BEGIN android-changed

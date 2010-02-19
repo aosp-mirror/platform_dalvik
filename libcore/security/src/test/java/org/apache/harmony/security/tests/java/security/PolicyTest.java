@@ -57,10 +57,6 @@ public class PolicyTest extends TestCase {
 
     public static final String JAVA_SECURITY_POLICY = "java.security.policy";
 
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(PolicyTest.class);
-    }
-
     @Override protected void tearDown() throws Exception {
         TestEnvironment.reset();
         super.tearDown();

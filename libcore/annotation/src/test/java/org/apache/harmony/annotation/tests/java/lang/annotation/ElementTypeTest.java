@@ -17,32 +17,20 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
 import java.lang.annotation.ElementType;
 import java.util.Arrays;
+
+import junit.framework.TestCase;
 
 /**
  * Test case of java.lang.annotation.ElementType
  */
-@TestTargetClass(ElementType.class)
 public class ElementTypeTest extends TestCase {
 
     /**
      * @throws Exception
      * @tests java.lang.annotation.ElementType#valueOf(String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "valueOf",
-        args = {java.lang.String.class}
-    )
     @SuppressWarnings("nls")
     public void test_valueOfLjava_lang_String() throws Exception {
         assertSame(ElementType.ANNOTATION_TYPE, ElementType
@@ -67,12 +55,6 @@ public class ElementTypeTest extends TestCase {
      * @throws Exception
      * @tests java.lang.annotation.ElementType#values()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "values",
-        args = {}
-    )
     @SuppressWarnings("nls")
     public void test_values() throws Exception {
         ElementType[] values = ElementType.values();

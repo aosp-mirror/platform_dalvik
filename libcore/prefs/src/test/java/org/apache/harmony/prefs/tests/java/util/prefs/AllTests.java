@@ -24,13 +24,8 @@ import junit.framework.TestSuite;
  * 
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Suite for org.apache.harmony.prefs.tests.java.util.prefs");
+        TestSuite suite = new TestSuite("Suite for org.apache.harmony.prefs.tests.java.util.prefs");
         // $JUnit-BEGIN$
         suite.addTestSuite(NodeChangeListenerTest.class);
         suite.addTestSuite(PreferenceChangeListenerTest.class);

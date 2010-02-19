@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(Exception.class) 
 public class ExceptionTest extends TestCase {
 
-    /**
-     * @tests java.lang.Exception#Exception()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Exception",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.Exception#Exception()
+	 */
     public void test_Constructor() {
         Exception e = new Exception();
         assertNull(e.getMessage());
@@ -46,42 +34,9 @@ public class ExceptionTest extends TestCase {
     /**
      * @tests java.lang.Exception#Exception(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Exception",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         Exception e = new Exception("fixture");
         assertEquals("fixture", e.getMessage());
         assertNull(e.getCause());
     }
-    
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Exception",
-        args = {java.lang.String.class, java.lang.Throwable.class}
-    )
-    public void test_ConstructorLjava_lang_StringLThrowable() {
-      Throwable thr = new Throwable();
-      String message = "Test message";
-      Exception err = new Exception(message, thr);
-      assertEquals(message, err.getMessage());
-      assertEquals(thr, err.getCause());
-    }   
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Exception",
-        args = {java.lang.Throwable.class}
-    )
-    public void test_ConstructorLThrowable() {
-      Throwable thr = new Throwable();
-      Exception err = new Exception(thr);
-      assertEquals(thr, err.getCause());
-    } 
-
 }

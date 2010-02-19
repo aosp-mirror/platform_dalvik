@@ -21,7 +21,7 @@ import junit.framework.TestSuite;
 
 public class AllTests {
     public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
+        TestSuite suite = new TestSuite();
         suite.addTestSuite(tests.api.org.apache.harmony.kernel.dalvik.ThreadsTest.class);
         return suite;
     }

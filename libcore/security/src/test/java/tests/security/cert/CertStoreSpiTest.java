@@ -97,10 +97,6 @@ public class CertStoreSpiTest extends TestCase {
         return new TestSuite(CertStoreSpiTest.class);
     }
 
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(suite());
-    }
-    
     /** 
      * Additional classes for verification CertStoreSpi class
      */

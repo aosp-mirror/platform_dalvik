@@ -97,7 +97,7 @@ public class JSR166TestCase extends TestCase {
             iters = Integer.parseInt(args[0]);
         Test s = suite();
         for (int i = 0; i < iters; ++i) {
-            junit.textui.TestRunner.run (s);
+            // junit.textui.TestRunner.run (s); android-changed
             System.gc();
             System.runFinalization();
         }
@@ -108,8 +108,8 @@ public class JSR166TestCase extends TestCase {
      * Collects all JSR166 unit tests as one suite
      */
     public static Test suite ( ) {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("JSR166 Unit Tests");
         // BEGIN android-changed
+        TestSuite suite = new TestSuite("JSR166 Unit Tests");
         suite.addTest(AbstractExecutorServiceTest.suite());
         suite.addTest(AbstractQueueTest.suite());
         suite.addTest(AbstractQueuedSynchronizerTest.suite());

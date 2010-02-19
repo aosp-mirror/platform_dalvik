@@ -47,16 +47,6 @@ import junit.framework.TestCase;
  */
 
 public class CodeSourceTest extends TestCase {
-    /**
-     * 
-     * Entry point for standalone runs.
-     *
-     * @param args command line arguments
-     */
-    public static void main(String[] args) throws Exception {
-        junit.textui.TestRunner.run(CodeSourceTest.class);
-    }
-
     private java.security.cert.Certificate[] chain = null;
 
     /* Below are various URLs used during the testing */

@@ -38,11 +38,6 @@ import junit.framework.TestCase;
  */
 @TestTargetClass(BasicPermission.class)
 public class BasicPermissionTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(BasicPermissionTest.class);
-    }
-
     /**
      * Check all constructors: an object is created with the specified valid name. 
      * If name equal null then NPE should be thrown. 

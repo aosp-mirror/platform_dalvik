@@ -17,57 +17,51 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
+
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
-@TestTargetClass(IllegalArgumentException.class) 
 public class IllegalArgumentExceptionTest extends TestCase {
 
-    /**
-     * @tests java.lang.IllegalArgumentException#IllegalArgumentException()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalArgumentException",
-        args = {}
-    )
-    public void test_Constructor() {
-        IllegalArgumentException e = new IllegalArgumentException();
+	/**
+	 * @tests java.lang.IllegalArgumentException#IllegalArgumentException()
+	 */
+	public void test_Constructor() {
+		IllegalArgumentException e = new IllegalArgumentException();
         assertNull(e.getMessage());
         assertNull(e.getLocalizedMessage());
         assertNull(e.getCause());
-    }
+	}
 
-    /**
-     * @tests java.lang.IllegalArgumentException#IllegalArgumentException(java.lang.String)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalArgumentException",
-        args = {java.lang.String.class}
-    )
-    public void test_ConstructorLjava_lang_String() {
+	/**
+	 * @tests java.lang.IllegalArgumentException#IllegalArgumentException(java.lang.String)
+	 */
+	public void test_ConstructorLjava_lang_String() {
         IllegalArgumentException e = new IllegalArgumentException("fixture");
         assertEquals("fixture", e.getMessage());
         assertNull(e.getCause());
+	}
+    
+    /**
+     * @tests {@link java.lang.IllegalArgumentException#IllegalArgumentException(Throwable)}
+     */
+    public void test_ConstructorLjava_lang_Throwable() {
+        Throwable emptyThrowable = new Exception();
+        IllegalArgumentException emptyException = new IllegalArgumentException(emptyThrowable);
+        assertEquals(emptyThrowable.getClass().getName(), emptyException.getMessage());
+        assertEquals(emptyThrowable.getClass().getName(), emptyException.getLocalizedMessage());
+        assertEquals(emptyThrowable.getClass().getName(), emptyException.getCause().toString());
+
+        Throwable exception = new Exception("msg");
+        IllegalArgumentException e = new IllegalArgumentException(exception);
+        assertEquals(exception.getClass().getName() + ": " + "msg", e.getMessage());
+        assertEquals(exception.getClass().getName(), emptyException.getLocalizedMessage());
+        assertEquals(exception.getClass().getName(), emptyException.getCause().toString());
     }
     
     /**
      * @tests java.lang.IllegalArgumentException#IllegalArgumentException(String,Throwable)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalArgumentException",
-        args = {java.lang.String.class, java.lang.Throwable.class}
-    )
     @SuppressWarnings("nls")
     public void test_ConstructorLjava_lang_StringLjava_lang_Throwable() {
         NullPointerException npe = new NullPointerException();
@@ -77,27 +71,9 @@ public class IllegalArgumentExceptionTest extends TestCase {
         assertSame(npe, e.getCause());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalArgumentException",
-        args = {java.lang.Throwable.class}
-    )
-    public void test_ConstructorLjava_lang_Throwable() {
-              NullPointerException npe = new NullPointerException();
-              IllegalArgumentException e = new IllegalArgumentException(npe);
-              assertSame(npe, e.getCause());
-    }    
-    
     /**
      * @tests serialization/deserialization.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Verifies serialization/deserialization compatibility.",
-        method = "!SerializationSelf",
-        args = {}
-    )
     public void testSerializationSelf() throws Exception {
         SerializationTest.verifySelf(new IllegalArgumentException());
     }
@@ -105,12 +81,6 @@ public class IllegalArgumentExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Verifies serialization/deserialization compatibility.",
-        method = "!SerializationGolden",
-        args = {}
-    )
     public void testSerializationCompatibility() throws Exception {
         SerializationTest.verifyGolden(this, new IllegalArgumentException());
     }

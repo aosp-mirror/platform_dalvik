@@ -17,44 +17,26 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(CloneNotSupportedException.class) 
 public class CloneNotSupportedExceptionTest extends TestCase {
 
-    /**
-     * @tests java.lang.CloneNotSupportedException#CloneNotSupportedException()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "CloneNotSupportedException",
-        args = {}
-    )
-    public void test_Constructor() {
+	/**
+	 * @tests java.lang.CloneNotSupportedException#CloneNotSupportedException()
+	 */
+	public void test_Constructor() {
         CloneNotSupportedException e = new CloneNotSupportedException();
         assertNull(e.getMessage());
         assertNull(e.getLocalizedMessage());
         assertNull(e.getCause());
-    }
+	}
 
-    /**
-     * @tests java.lang.CloneNotSupportedException#CloneNotSupportedException(java.lang.String)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "CloneNotSupportedException",
-        args = {java.lang.String.class}
-    )
-    public void test_ConstructorLjava_lang_String() {
+	/**
+	 * @tests java.lang.CloneNotSupportedException#CloneNotSupportedException(java.lang.String)
+	 */
+	public void test_ConstructorLjava_lang_String() {
         CloneNotSupportedException e = new CloneNotSupportedException("fixture");
         assertEquals("fixture", e.getMessage());
         assertNull(e.getCause());
-    }
+	}
 }

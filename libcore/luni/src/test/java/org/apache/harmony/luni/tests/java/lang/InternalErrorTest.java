@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(InternalError.class) 
 public class InternalErrorTest extends TestCase {
 
-    /**
-     * @tests java.lang.InternalError#InternalError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "InternalError",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.InternalError#InternalError()
+	 */
     public void test_Constructor() {
         InternalError e = new InternalError();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class InternalErrorTest extends TestCase {
     /**
      * @tests java.lang.InternalError#InternalError(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "InternalError",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         InternalError e = new InternalError("fixture");
         assertEquals("fixture", e.getMessage());

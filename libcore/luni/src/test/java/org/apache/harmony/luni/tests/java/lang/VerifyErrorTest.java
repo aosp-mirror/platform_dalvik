@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(VerifyError.class) 
 public class VerifyErrorTest extends TestCase {
 
-    /**
-     * @tests java.lang.VerifyError#VerifyError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "VerifyError",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.VerifyError#VerifyError()
+	 */
     public void test_Constructor() {
         VerifyError e = new VerifyError();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class VerifyErrorTest extends TestCase {
     /**
      * @tests java.lang.VerifyError#VerifyError(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "VerifyError",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         VerifyError e = new VerifyError("fixture");
         assertEquals("fixture", e.getMessage());

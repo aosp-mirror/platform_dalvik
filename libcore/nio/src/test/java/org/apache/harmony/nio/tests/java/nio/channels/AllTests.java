@@ -20,13 +20,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite(AllTests.class.getName());
+        TestSuite suite = new TestSuite(AllTests.class.getName());
         //$JUnit-BEGIN$
         suite.addTestSuite(AlreadyConnectedExceptionTest.class);
         suite.addTestSuite(AsynchronousCloseExceptionTest.class);

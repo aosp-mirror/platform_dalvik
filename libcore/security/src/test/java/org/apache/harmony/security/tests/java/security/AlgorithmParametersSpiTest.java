@@ -126,9 +126,5 @@ public class AlgorithmParametersSpiTest extends TestCase {
         }
     }
     
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(AlgorithmParametersSpiTest.class);
-    }
-    
     class MyAlgorithmParameterSpec implements AlgorithmParameterSpec {}
 }

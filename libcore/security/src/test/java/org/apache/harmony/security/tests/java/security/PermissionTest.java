@@ -36,11 +36,6 @@ import dalvik.annotation.TestTargetNew;
  */
 
 public class PermissionTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(PermissionTest.class);
-    }
-
     // Bare extension to instantiate abstract Permission class
     static final class RealPermission extends Permission {
 

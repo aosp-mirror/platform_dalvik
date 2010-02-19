@@ -23,13 +23,8 @@ import junit.framework.TestSuite;
  * Test suite that includes all tests for the regex project.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All regex test suites");
+        TestSuite suite = new TestSuite("All regex test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.regex.tests.java.util.regex.AllTests.suite());
         // $JUnit-END$

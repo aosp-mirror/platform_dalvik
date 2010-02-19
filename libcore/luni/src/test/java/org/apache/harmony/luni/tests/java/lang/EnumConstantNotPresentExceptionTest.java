@@ -16,14 +16,8 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(EnumConstantNotPresentException.class) 
 public class EnumConstantNotPresentExceptionTest extends TestCase {
 
     public enum Fixture {
@@ -34,20 +28,7 @@ public class EnumConstantNotPresentExceptionTest extends TestCase {
      * @test java.lang.EnumConstantNotPresentException#EnumConstantNotPresentException(Class<?
      * extends Enum>, String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "EnumConstantNotPresentException",
-        args = {java.lang.Class.class, java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_ClassLjava_lang_String() {
-        String tm = "Test Message";
-        EnumConstantNotPresentException ecnpe = new 
-                    EnumConstantNotPresentException(Fixture.class, tm);
-
-        assertEquals("Constant name is incorrect: " + ecnpe.constantName() + 
-                " instead of " + tm, tm, ecnpe.constantName());
-        
         try {
             new EnumConstantNotPresentException(null, "");
             fail("No NPE");
@@ -58,12 +39,6 @@ public class EnumConstantNotPresentExceptionTest extends TestCase {
     /**
      * @test java.lang.EnumConstantNotPresentException#enumType()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "enumType",
-        args = {}
-    )
     public void test_enumType() {
         EnumConstantNotPresentException e = new EnumConstantNotPresentException(Fixture.class, "FOUR");
         assertEquals(Fixture.class, e.enumType());
@@ -72,12 +47,6 @@ public class EnumConstantNotPresentExceptionTest extends TestCase {
     /**
      * @test java.lang.EnumConstantNotPresentException#constantName()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "constantName",
-        args = {}
-    )
     public void test_constantName() {
         EnumConstantNotPresentException e = new EnumConstantNotPresentException(Fixture.class, "FOUR");
         assertEquals("FOUR", e.constantName());

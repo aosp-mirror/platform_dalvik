@@ -13,9 +13,6 @@ import java.util.concurrent.atomic.*;
 import java.io.*;
 
 public class AtomicIntegerTest extends JSR166TestCase {
-    public static void main (String[] args) {
-        junit.textui.TestRunner.run (suite());
-    }
     public static Test suite() {
         return new TestSuite(AtomicIntegerTest.class);
     }

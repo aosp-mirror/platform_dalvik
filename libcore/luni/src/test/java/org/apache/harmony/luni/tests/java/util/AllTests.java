@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.util");
+        TestSuite suite = new TestSuite("Tests for java.util");
 
         suite.addTestSuite(AbstractCollectionTest.class);
         suite.addTestSuite(AbstractMapTest.class);

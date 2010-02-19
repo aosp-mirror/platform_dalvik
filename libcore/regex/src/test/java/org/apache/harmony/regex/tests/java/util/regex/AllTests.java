@@ -24,13 +24,8 @@ import junit.framework.TestSuite;
  * Provides a test suite for java.util.regex package.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.util.regex");
+        TestSuite suite = new TestSuite("Tests for java.util.regex");
         //$JUnit-BEGIN$
 
         suite.addTestSuite(Matcher2Test.class);

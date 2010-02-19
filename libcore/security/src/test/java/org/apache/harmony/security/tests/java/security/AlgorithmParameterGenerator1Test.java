@@ -478,10 +478,6 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(AlgorithmParameterGenerator1Test.class);
-    }
 }
 /**
  * Additional class to verify AlgorithmParameterGenerator constructor

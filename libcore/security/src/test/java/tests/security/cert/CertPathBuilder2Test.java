@@ -265,9 +265,4 @@ public class CertPathBuilder2Test extends TestCase {
             checkResult(cerPB);
         }
     }
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(CertPathBuilder2Test.class);
-    }  
-    
-
 }

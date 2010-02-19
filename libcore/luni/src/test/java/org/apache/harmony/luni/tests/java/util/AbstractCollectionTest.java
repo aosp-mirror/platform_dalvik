@@ -17,29 +17,17 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import junit.framework.TestCase;
 
-@TestTargetClass(java.util.AbstractCollection.class)
 public class AbstractCollectionTest extends TestCase {
 
     /**
      * @tests java.util.AbstractCollection#add(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "add",
-        args = {java.lang.Object.class}
-    )
     public void test_addLjava_lang_Object() {
         AbstractCollection<Object> ac = new AbstractCollection<Object>() {
 
@@ -65,12 +53,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#addAll(java.util.Collection)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "addAll",
-        args = {java.util.Collection.class}
-    )
     public void test_addAllLjava_util_Collection() {
         final Collection<String> fixtures = Arrays.asList("0", "1", "2");
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -100,12 +82,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#containsAll(java.util.Collection)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "containsAll",
-        args = {java.util.Collection.class}
-    )
     public void test_containsAllLjava_util_Collection() {
         final Collection<String> fixtures = Arrays.asList("0", "1", "2");
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -135,12 +111,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#isEmpty()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "isEmpty",
-        args = {}
-    )
     public void test_isEmpty() {
         final boolean[] sizeCalled = new boolean[1];
         AbstractCollection<Object> ac = new AbstractCollection<Object>(){
@@ -162,12 +132,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#removeAll(java.util.Collection)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "removeAll",
-        args = {java.util.Collection.class}
-    )
     public void test_removeAllLjava_util_Collection() {
         final String[] removed = new String[3];
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -210,12 +174,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#retainAll(java.util.Collection)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "retainAll",
-        args = {java.util.Collection.class}
-    )
     public void test_retainAllLjava_util_Collection() {
         final String[] removed = new String[1];
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -254,12 +212,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#toArray()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toArray",
-        args = {}
-    )
     public void test_toArray() {
         AbstractCollection<String> ac = new AbstractCollection<String>() {
             @Override
@@ -300,12 +252,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#toArray(java.lang.Object[])
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toArray",
-        args = {java.lang.Object[].class}
-    )
     public void test_toArray$Ljava_lang_Object() {
         AbstractCollection<String> ac = new AbstractCollection<String>() {
             @Override
@@ -365,12 +311,6 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#toString()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "toString",
-        args = {}
-    )
     public void test_toString() {
         // see HARMONY-1522
         // collection that returns null iterator(this is against the spec.)
@@ -395,129 +335,5 @@ public class AbstractCollectionTest extends TestCase {
             fail("No expected NullPointerException");
         } catch (NullPointerException e) {
         }
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "AbstractCollection",
-        args = {}
-    )
-    public void test_Constructor() {
-        AbstractCollection<?> ac = new AbstractCollection<Object>() {
-            @Override
-            public Iterator<Object> iterator() {
-                return null;
-            }
-
-            @Override
-            public int size() {
-                return 0;
-            }
-        };
-        
-        assertNotNull(ac);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "clear",
-        args = {}
-    )
-    public void test_clear() {
-        AbstractCollection<?> ac = new AbstractCollection<Object>() {
-            @Override
-            public Iterator<Object> iterator() {
-                return new Iterator<Object>() {
-
-                    public boolean hasNext() {
-                        return false;
-                    }
-
-                    public Object next() {
-                        return null;
-                    }
-
-                    public void remove() {
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return 0;
-            }
-        };
-        
-        ac.clear();
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "contains",
-        args = {java.lang.Object.class}
-    )
-    public void test_containsLjava_lang_Object() {
-        AbstractCollection<?> ac = new AbstractCollection<Object>() {
-            @Override
-            public Iterator<Object> iterator() {
-                return new Iterator<Object>() {
-
-                    public boolean hasNext() {
-                        return false;
-                    }
-
-                    public Object next() {
-                        return null;
-                    }
-
-                    public void remove() {
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return 0;
-            }
-        };
-        
-        assertFalse(ac.contains(this));
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.Vector.",
-        method = "remove",
-        args = {java.lang.Object.class}
-    )
-    public void test_removeLjava_lang_Object() {
-        AbstractCollection<?> ac = new AbstractCollection<Object>() {
-            @Override
-            public Iterator<Object> iterator() {
-                return new Iterator<Object>() {
-
-                    public boolean hasNext() {
-                        return false;
-                    }
-
-                    public Object next() {
-                        return null;
-                    }
-
-                    public void remove() {
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return 0;
-            }
-        };
-        
-        assertFalse(ac.remove(this));
     }
 }

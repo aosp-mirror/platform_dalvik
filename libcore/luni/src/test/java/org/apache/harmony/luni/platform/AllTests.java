@@ -27,7 +27,7 @@ public class AllTests {
     }
     
     public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for org.apache.harmony.luni.platform");
+        TestSuite suite = new TestSuite("Tests for org.apache.harmony.luni.platform");
         
         suite.addTestSuite(OSMemoryTest.class);
         

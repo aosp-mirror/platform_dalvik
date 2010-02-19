@@ -23,13 +23,8 @@ import junit.framework.TestSuite;
  * Test suite that includes all tests for the security project.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All security test suites");
+        TestSuite suite = new TestSuite("All security test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.security.tests.java.security.AllTests.suite());
         suite.addTest(org.bouncycastle.jce.provider.AllTests.suite());

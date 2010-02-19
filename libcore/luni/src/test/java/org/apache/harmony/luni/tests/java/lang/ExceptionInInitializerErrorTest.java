@@ -17,31 +17,11 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-@TestTargetClass(ExceptionInInitializerError.class) 
 public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
 
-    /**
-     * @tests java.lang.ExceptionInInitializerError#ExceptionInInitializerError()
-     */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "ExceptionInInitializerError",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getCause",
-            args = {}
-        )
-    })
+	/**
+	 * @tests java.lang.ExceptionInInitializerError#ExceptionInInitializerError()
+	 */
     public void test_Constructor() {
         ExceptionInInitializerError e = new ExceptionInInitializerError();
         assertNull(e.getMessage());
@@ -52,56 +32,22 @@ public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ExceptionInInitializerError#ExceptionInInitializerError(java.lang.String)
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "ExceptionInInitializerError",
-            args = {java.lang.String.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getCause",
-            args = {}
-        )
-    })
     public void test_ConstructorLjava_lang_String() {
         ExceptionInInitializerError e = new ExceptionInInitializerError("fixture");
         assertEquals("fixture", e.getMessage());
         assertNull(e.getCause());
     }
 
-    /**
-     * @tests java.lang.ExceptionInInitializerExceptionInInitializerError#ExceptionInInitializerError(java.lang.Throwable)
-     */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "ExceptionInInitializerError",
-            args = {java.lang.Throwable.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getCause",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getException",
-            args = {}
-        )
-    })
-    public void test_ConstructorLjava_lang_Throwable() {
-        NullPointerException npe = new NullPointerException("fixture");
+	/**
+	 * @tests java.lang.ExceptionInInitializerExceptionInInitializerError#ExceptionInInitializerError(java.lang.Throwable)
+	 */
+	public void test_ConstructorLjava_lang_Throwable() {
+	    NullPointerException npe = new NullPointerException("fixture");
         ExceptionInInitializerError e = new ExceptionInInitializerError(npe);
         assertNull(e.getMessage());
         assertNull(e.getLocalizedMessage());
         assertSame(npe, e.getException());
         assertSame(npe, e.getCause());
-    }
+	}
 
 }

@@ -41,15 +41,6 @@ import junit.framework.TestCase;
  */
 
 public class CodeSignerTest extends TestCase {
-
-    /**
-     * Entry point for standalone runs.
-     * @param args command line arguments
-     */
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(CodeSignerTest.class);
-    }
-
     private CertPath cpath = TestCertUtils.genCertPath(3, 0);
     private Date now = new Date();
 

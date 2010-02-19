@@ -22,11 +22,6 @@
 
 package tests.security.acl;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
 import java.security.acl.NotOwnerException;
@@ -35,18 +30,7 @@ import java.security.acl.NotOwnerException;
  * Unit test for NotOwnerException.
  * 
  */
-@TestTargetClass(NotOwnerException.class)
 public class NotOwnerExceptionTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(NotOwnerExceptionTest.class);
-    }
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "NotOwnerException",
-        args = {}
-    )
     public void testNotOwnerException() {
         assertNotNull(new NotOwnerException());
         assertNull(new NotOwnerException().getMessage());

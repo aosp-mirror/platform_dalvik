@@ -62,10 +62,6 @@ public class SSLEngineTest extends TestCase {
     private HandshakeHandler clientEngine;
     private HandshakeHandler serverEngine;
 
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(SSLEngineTest.class);
-    }
-
     @Override protected void setUp() throws Exception {
         super.setUp();
         TestEnvironment.reset();

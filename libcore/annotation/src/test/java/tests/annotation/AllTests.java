@@ -23,13 +23,8 @@ import junit.framework.TestSuite;
  * Test suite that includes all tests for the NIO_Char project.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Annotation test suites");
+        TestSuite suite = new TestSuite("All Annotation test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.annotation.tests.java.lang.annotation.AllTests.suite());
         // $JUnit-END$

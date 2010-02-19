@@ -13,10 +13,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class LinkedListTest extends JSR166TestCase {
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());        
-    }
-
     public static Test suite() {
         return new TestSuite(LinkedListTest.class);
     }

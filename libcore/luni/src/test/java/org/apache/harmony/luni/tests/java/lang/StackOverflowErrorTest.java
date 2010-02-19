@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(StackOverflowError.class) 
 public class StackOverflowErrorTest extends TestCase {
 
-    /**
-     * @tests java.lang.StackOverflowError#StackOverflowError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "StackOverflowError",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.StackOverflowError#StackOverflowError()
+	 */
     public void test_Constructor() {
         StackOverflowError e = new StackOverflowError();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class StackOverflowErrorTest extends TestCase {
     /**
      * @tests java.lang.StackOverflowError#StackOverflowError(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "StackOverflowError",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         StackOverflowError e = new StackOverflowError("fixture");
         assertEquals("fixture", e.getMessage());

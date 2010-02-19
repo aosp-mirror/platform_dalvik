@@ -49,11 +49,6 @@ import junit.framework.TestCase;
  */
 
 public class PermissionsTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(PermissionsTest.class);
-    }
-
     /**
      * Can add any type of permissions. Cannot add if collection is read-only.
      */

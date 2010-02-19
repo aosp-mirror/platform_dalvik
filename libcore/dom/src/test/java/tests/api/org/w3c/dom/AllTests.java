@@ -28,7 +28,7 @@ public class AllTests {
     }*/
 
     public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
+        TestSuite suite = new TestSuite();
         suite.addTest(AllTests_Level1.suite());
         suite.addTest(AllTests_Level2.suite());
         return suite;

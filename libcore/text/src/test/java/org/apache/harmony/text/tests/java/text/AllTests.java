@@ -21,14 +21,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
-                "Suite org.apache.harmony.text.tests.java.text");
+        TestSuite suite = new TestSuite("Suite org.apache.harmony.text.tests.java.text");
         //$JUnit-BEGIN$
         suite.addTestSuite(AnnotationTest.class);
         suite.addTestSuite(AttributedCharacterIteratorAttributeTest.class);

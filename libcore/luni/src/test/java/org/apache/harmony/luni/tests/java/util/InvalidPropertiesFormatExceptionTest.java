@@ -1,53 +1,50 @@
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
+import java.io.NotSerializableException;
 import java.util.InvalidPropertiesFormatException;
 
-@TestTargetClass(InvalidPropertiesFormatException.class)
-public class InvalidPropertiesFormatExceptionTest extends TestCase {
+import org.apache.harmony.testframework.serialization.SerializationTest;
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "InvalidPropertiesFormatException",
-        args = {java.lang.Throwable.class}
-    )
-    public void testInvalidPropertiesFormatExceptionThrowable() {
-        assertNotNull(new InvalidPropertiesFormatException(new Exception()));
-        assertNotNull(new InvalidPropertiesFormatException((Throwable)null));
+public class InvalidPropertiesFormatExceptionTest extends
+        junit.framework.TestCase {
+
+    /**
+     * @tests java.util.InvalidPropertiesFormatException#SerializationTest()
+     */
+    public void test_Serialization() throws Exception {
+        InvalidPropertiesFormatException ipfe = new InvalidPropertiesFormatException(
+                "Hey, this is InvalidPropertiesFormatException");
+        try {
+            SerializationTest.verifySelf(ipfe);
+        } catch (NotSerializableException e) {
+            // expected
+        }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "InvalidPropertiesFormatException",
-        args = {java.lang.String.class}
-    )
-    public void testInvalidPropertiesFormatExceptionString() {
-        assertNotNull(new InvalidPropertiesFormatException("String"));
-        assertNotNull(new InvalidPropertiesFormatException((String)null));
+    /**
+     * @tests {@link java.util.InvalidPropertiesFormatException#InvalidPropertiesFormatException(Throwable)}
+     */
+    public void test_Constructor_Ljava_lang_Throwable() {
+        Throwable throwable = new Throwable();
+        InvalidPropertiesFormatException exception = new InvalidPropertiesFormatException(
+                throwable);
+        assertEquals("the casue did not equals argument passed in constructor",
+                throwable, exception.getCause());
     }
 
 }

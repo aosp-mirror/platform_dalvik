@@ -24,13 +24,8 @@ import junit.framework.TestSuite;
  */
 
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.security.spec;");
+        TestSuite suite = new TestSuite("All tests for package tests.security.spec;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(DSAParameterSpecTest.class);

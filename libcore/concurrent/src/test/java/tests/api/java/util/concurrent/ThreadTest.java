@@ -15,10 +15,6 @@ import dalvik.annotation.BrokenTest;
 import junit.framework.*;
 
 public class ThreadTest extends JSR166TestCase {
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());        
-    }
-    
     public static Test suite() {
         return new TestSuite(ThreadTest.class);
     }

@@ -25,7 +25,7 @@ import junit.framework.TestSuite;
 public class AllTests {
 
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Test for java.lang.annotation");
+        TestSuite suite = new TestSuite("Test for java.lang.annotation");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(AnnotationTest.class);

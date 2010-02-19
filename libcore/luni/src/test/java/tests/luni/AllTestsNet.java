@@ -31,7 +31,7 @@ public class AllTestsNet
     }
 
     public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.net");
+        TestSuite suite = new TestSuite("Tests for java.net");
 
         suite.addTest(org.apache.harmony.luni.tests.java.net.AllTests.suite());
         

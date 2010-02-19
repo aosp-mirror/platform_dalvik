@@ -57,10 +57,6 @@ public class SignerTest extends TestCase {
             if (denied!=null && denied.implies(permission)) throw new SecurityException();
         }
     }    
-    
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(SignerTest.class);
-    }
 
     /**
      * @tests java.security.Signer#toString()
