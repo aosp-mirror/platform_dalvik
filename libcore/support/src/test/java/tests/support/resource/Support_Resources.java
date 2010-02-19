@@ -205,4 +205,20 @@ public class Support_Resources {
             throw new RuntimeException("Failed to load resource: " + name);
         }
     }
+
+    public static File resourceToTempFile(String path) throws IOException {
+        File f = File.createTempFile("out", ".xml");
+        f.deleteOnExit();
+        FileOutputStream out = new FileOutputStream(f);
+
+        InputStream xml = Support_Resources.class.getResourceAsStream(path);
+        int b;
+        while ((b = xml.read()) != -1) {
+            out.write(b);
+        }
+        out.flush();
+        out.close();
+        xml.close();
+        return f;
+    }
 }

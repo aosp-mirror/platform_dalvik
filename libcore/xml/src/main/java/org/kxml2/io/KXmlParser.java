@@ -45,6 +45,7 @@ public class KXmlParser implements XmlPullParser {
 
     private boolean processNsp;
     private boolean relaxed;
+    private boolean keepNamespaceAttributes; // android-added
     private Hashtable entityMap;
     private int depth;
     private String[] elementStack = new String[16];
@@ -80,6 +81,14 @@ public class KXmlParser implements XmlPullParser {
 
     private boolean degenerated;
     private int attributeCount;
+
+    /**
+     * The current element's attributes arranged in groups of 4:
+     * i + 0 = attribute namespace URI
+     * i + 1 = attribute namespace prefix
+     * i + 2 = attribute qualified name (may contain ":", as in "html:h1")
+     * i + 3 = attribute value
+     */
     private String[] attributes = new String[16];
 //    private int stackMismatch = 0;
     private String error;
@@ -99,6 +108,19 @@ public class KXmlParser implements XmlPullParser {
         srcBuf =
             new char[Runtime.getRuntime().freeMemory() >= 1048576 ? 8192 : 128];
     }
+
+    // BEGIN android-added
+    /**
+     * Retains namespace attributes like {@code xmlns="http://foo"} or {@code
+     * xmlns:foo="http:foo"} in pulled elements. Most applications will only be
+     * interested in the effective namespaces of their elements, so these
+     * attributes aren't useful. But for structure preserving wrappers like DOM,
+     * it is necessary to keep the namespace data around.
+     */
+    public void keepNamespaceAttributes() {
+        this.keepNamespaceAttributes = true;
+    }
+    // END android-added
 
     private final boolean isProp(String n1, boolean prop, String n2) {
         if (!n1.startsWith("http://xmlpull.org/v1/doc/"))
@@ -148,14 +170,23 @@ public class KXmlParser implements XmlPullParser {
 
                 //System.out.println (prefixMap);
 
-                System.arraycopy(
-                    attributes,
-                    i + 4,
-                    attributes,
-                    i,
-                    ((--attributeCount) << 2) - i);
+                // BEGIN android-changed
+                if (keepNamespaceAttributes) {
+                    // explicitly set the namespace for unprefixed attributes 
+                    // such as xmlns="http://foo"
+                    attributes[i] = "http://www.w3.org/2000/xmlns/";
+                    any = true;
+                } else {
+                    System.arraycopy(
+                            attributes,
+                            i + 4,
+                            attributes,
+                            i,
+                            ((--attributeCount) << 2) - i);
 
-                i -= 4;
+                    i -= 4;
+                }
+                // END android-changed
             }
         }
 

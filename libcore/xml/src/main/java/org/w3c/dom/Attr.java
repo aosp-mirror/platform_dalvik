@@ -176,7 +176,7 @@ public interface Attr extends Node {
     /**
      * On retrieval, the value of the attribute is returned as a string. 
      * Character and general entity references are replaced with their 
-     * values. See also the method <code>getAttribute</code> on the 
+     * values. See also the method <code>getAttribute</code> on the
      * <code>Element</code> interface.
      * <br>On setting, this creates a <code>Text</code> node with the unparsed 
      * contents of the string, i.e. any characters that an XML processor 
