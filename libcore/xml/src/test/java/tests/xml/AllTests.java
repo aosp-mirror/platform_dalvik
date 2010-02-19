@@ -26,7 +26,7 @@ public class AllTests {
 
         suite.addTestSuite(SimpleParserTest.class);
         suite.addTestSuite(SimpleBuilderTest.class);
-        suite.addTestSuite(NodeTests.class);
+        suite.addTestSuite(NodeTest.class);
         
         //suite.addTest(tests.org.w3c.dom.AllTests.suite());
         suite.addTest(tests.api.javax.xml.parsers.AllTests.suite());

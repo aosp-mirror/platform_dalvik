@@ -73,7 +73,7 @@ public class AttrImpl extends NodeImpl implements Attr {
             throw new DOMException(DOMException.NAMESPACE_ERR, localName);
         }
             
-        if (!document.isXMLIdentifier(localName)) {
+        if (!DocumentImpl.isXMLIdentifier(localName)) {
             throw new DOMException(DOMException.INVALID_CHARACTER_ERR, localName);
         }
             
@@ -90,11 +90,11 @@ public class AttrImpl extends NodeImpl implements Attr {
             String prefix = name.substring(0, prefixSeparator);
             String localName = name.substring(prefixSeparator + 1);
             
-            if (!document.isXMLIdentifier(prefix) || !document.isXMLIdentifier(localName)) {
+            if (!DocumentImpl.isXMLIdentifier(prefix) || !DocumentImpl.isXMLIdentifier(localName)) {
                 throw new DOMException(DOMException.INVALID_CHARACTER_ERR, name);
             }
         } else {
-            if (!document.isXMLIdentifier(name)) {
+            if (!DocumentImpl.isXMLIdentifier(name)) {
                 throw new DOMException(DOMException.INVALID_CHARACTER_ERR, name);
             }
         }
@@ -108,7 +108,9 @@ public class AttrImpl extends NodeImpl implements Attr {
     }
 
     public String getName() {
-        return (prefix != null ? prefix + ":" : "") + localName;
+        return prefix != null
+                ? prefix + ":" + localName
+                : localName;
     }
 
     @Override
@@ -154,22 +156,7 @@ public class AttrImpl extends NodeImpl implements Attr {
     
     @Override
     public void setPrefix(String prefix) {
-        if (!namespaceAware) {
-            throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
-        }
-        
-        if (prefix != null) {
-            if (namespaceURI == null
-                    || !DocumentImpl.isXMLIdentifier(prefix)
-                    || ("xmlns".equals(prefix)
-                            && !"http://www.w3.org/2000/xmlns/".equals(namespaceURI))
-                    || ("xml".equals(prefix)
-                            && !"http://www.w3.org/XML/1998/namespace".equals(namespaceURI))) {
-                throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
-            }
-        }
-
-        this.prefix = prefix;
+        this.prefix = validatePrefix(prefix, namespaceAware, namespaceURI);
     }
     
     public void setValue(String value) throws DOMException {

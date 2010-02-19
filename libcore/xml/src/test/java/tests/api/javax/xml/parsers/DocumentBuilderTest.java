@@ -34,6 +34,7 @@ import org.xml.sax.SAXParseException;
 import tests.api.org.xml.sax.support.MethodLogger;
 import tests.api.org.xml.sax.support.MockHandler;
 import tests.api.org.xml.sax.support.MockResolver;
+import tests.support.resource.Support_Resources;
 import tests.util.TestEnvironment;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -41,8 +42,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -272,7 +271,7 @@ public class DocumentBuilderTest extends TestCase {
         args = {java.io.File.class}
     )
     public void testGetBaseURI() throws IOException, SAXException {
-        File f = resourceToTmpFile("/simple.xml");
+        File f = Support_Resources.resourceToTempFile("/simple.xml");
         Document d = db.parse(f);
         assertTrue(d.getDocumentElement().getBaseURI().startsWith("file://"));
     }
@@ -291,7 +290,7 @@ public class DocumentBuilderTest extends TestCase {
         args = {java.io.File.class}
     )
     public void test_parseLjava_io_File() throws IOException {
-        File f = resourceToTmpFile("/simple.xml");
+        File f = Support_Resources.resourceToTempFile("/simple.xml");
 
         // case 1: Trivial use.
         try {
@@ -333,7 +332,7 @@ public class DocumentBuilderTest extends TestCase {
         }
 
         // case 4: Try to parse incorrect xml file
-        f = resourceToTmpFile("/wrong.xml");
+        f = Support_Resources.resourceToTempFile("/wrong.xml");
         try {
             db.parse(f);
             fail("Expected SAXException was not thrown");
@@ -342,22 +341,6 @@ public class DocumentBuilderTest extends TestCase {
         } catch (SAXException sax) {
             // expected
         }
-    }
-
-    private File resourceToTmpFile(String path) throws IOException,
-            FileNotFoundException {
-        File f = File.createTempFile("out", ".xml");
-        f.deleteOnExit();
-        FileOutputStream out = new FileOutputStream(f);
-
-        InputStream xml = getClass().getResourceAsStream(path);
-        while (xml.available() > 0) {
-            out.write(xml.read());
-        }
-        out.flush();
-        out.close();
-        xml.close();
-        return f;
     }
 
     /**
