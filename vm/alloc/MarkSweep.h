@@ -38,8 +38,7 @@ typedef struct {
 /* This is declared publicly so that it can be included in gDvm.gcHeap.
  */
 typedef struct {
-    HeapBitmap bitmaps[HEAP_SOURCE_MAX_HEAP_COUNT];
-    size_t numBitmaps;
+    HeapBitmap *bitmap;
     GcMarkStack stack;
     const void *finger;   // only used while scanning/recursing.
 } GcMarkContext;

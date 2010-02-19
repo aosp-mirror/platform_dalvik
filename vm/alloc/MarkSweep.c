@@ -78,7 +78,7 @@ static inline long isMarked(const void *obj, const GcMarkContext *ctx)
         __attribute__((always_inline));
 static inline long isMarked(const void *obj, const GcMarkContext *ctx)
 {
-    return dvmHeapBitmapIsObjectBitSetInList(ctx->bitmaps, ctx->numBitmaps, obj);
+    return dvmHeapBitmapIsObjectBitSet(ctx->bitmap, obj);
 }
 
 static bool
@@ -137,31 +137,11 @@ bool
 dvmHeapBeginMarkStep()
 {
     GcMarkContext *mc = &gDvm.gcHeap->markContext;
-    HeapBitmap objectBitmaps[HEAP_SOURCE_MAX_HEAP_COUNT];
-    size_t numBitmaps;
 
     if (!createMarkStack(&mc->stack)) {
         return false;
     }
-
-    numBitmaps = dvmHeapSourceGetObjectBitmaps(objectBitmaps,
-            HEAP_SOURCE_MAX_HEAP_COUNT);
-    if (numBitmaps == 0) {
-        return false;
-    }
-
-    /* Create mark bitmaps that cover the same ranges as the
-     * current object bitmaps.
-     */
-    if (!dvmHeapBitmapInitListFromTemplates(mc->bitmaps, objectBitmaps,
-            numBitmaps, "mark"))
-    {
-        return false;
-    }
-
-    mc->numBitmaps = numBitmaps;
     mc->finger = NULL;
-
     return true;
 }
 
@@ -170,8 +150,7 @@ static long setAndReturnMarkBit(GcMarkContext *ctx, const void *obj)
 static long
 setAndReturnMarkBit(GcMarkContext *ctx, const void *obj)
 {
-    return dvmHeapBitmapSetAndReturnObjectBitInList(ctx->bitmaps,
-        ctx->numBitmaps, obj);
+    return dvmHeapBitmapSetAndReturnObjectBit(ctx->bitmap, obj);
 }
 
 static void _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
@@ -725,8 +704,7 @@ void dvmHeapScanMarkedObjects()
 #ifndef NDEBUG
     gLastFinger = 0;
 #endif
-    dvmHeapBitmapWalkList(ctx->bitmaps, ctx->numBitmaps,
-            scanBitmapCallback, ctx);
+    dvmHeapBitmapWalk(ctx->bitmap, scanBitmapCallback, ctx);
 
     /* We've walked the mark bitmaps.  Scan anything that's
      * left on the mark stack.
@@ -1058,20 +1036,14 @@ void dvmHeapFinishMarkStep()
      * HeapSource bitmaps that didn't appear in the mark bitmaps.
      * The new state of the HeapSource is exactly the final
      * mark bitmaps, so swap them in.
-     *
-     * The old bitmaps will be swapped into the context so that
-     * we can clean them up.
      */
-    dvmHeapSourceReplaceObjectBitmaps(markContext->bitmaps,
-            markContext->numBitmaps);
+    dvmHeapSourceSwapBitmaps();
 
-    /* Clean up the old HeapSource bitmaps and anything else associated
-     * with the marking process.
+    /* Clean up everything else associated with the marking process.
      */
-    dvmHeapBitmapDeleteList(markContext->bitmaps, markContext->numBitmaps);
     destroyMarkStack(&markContext->stack);
 
-    memset(markContext, 0, sizeof(*markContext));
+    markContext->finger = NULL;
 }
 
 #if WITH_HPROF && WITH_HPROF_UNREACHABLE
@@ -1181,9 +1153,8 @@ static int isUnmarkedObject(void *object)
 void
 dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed)
 {
-    const HeapBitmap *markBitmaps;
-    const GcMarkContext *markContext;
-    HeapBitmap objectBitmaps[HEAP_SOURCE_MAX_HEAP_COUNT];
+    HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+    HeapBitmap objBits[HEAP_SOURCE_MAX_HEAP_COUNT];
     size_t origObjectsAllocated;
     size_t origBytesAllocated;
     size_t numBitmaps;
@@ -1199,26 +1170,16 @@ dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed)
     origObjectsAllocated = dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED, NULL, 0);
     origBytesAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
 
-    markContext = &gDvm.gcHeap->markContext;
-    markBitmaps = markContext->bitmaps;
-    numBitmaps = dvmHeapSourceGetObjectBitmaps(objectBitmaps,
-            HEAP_SOURCE_MAX_HEAP_COUNT);
-#ifndef NDEBUG
-    if (numBitmaps != markContext->numBitmaps) {
-        LOGE("heap bitmap count mismatch: %zd != %zd\n",
-                numBitmaps, markContext->numBitmaps);
-        dvmAbort();
-    }
-#endif
-
 #if WITH_HPROF && WITH_HPROF_UNREACHABLE
     hprofDumpUnmarkedObjects(markBitmaps, objectBitmaps, numBitmaps);
 #endif
 
     dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);
 
-    dvmHeapBitmapXorWalkLists(markBitmaps, objectBitmaps, numBitmaps,
-            sweepBitmapCallback, NULL);
+    numBitmaps = dvmHeapSourceGetNumHeaps();
+    dvmHeapSourceGetObjectBitmaps(objBits, markBits, numBitmaps);
+    dvmHeapBitmapXorWalkLists(markBits, objBits, numBitmaps,
+                              sweepBitmapCallback, NULL);
 
     *numFreed = origObjectsAllocated -
             dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED, NULL, 0);
