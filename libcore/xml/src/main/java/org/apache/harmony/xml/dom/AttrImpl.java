@@ -150,11 +150,6 @@ public class AttrImpl extends NodeImpl implements Attr {
     }
 
     @Override
-    public void setNodeValue(String value) throws DOMException {
-        setValue(value);
-    }
-    
-    @Override
     public void setPrefix(String prefix) {
         this.prefix = validatePrefix(prefix, namespaceAware, namespaceURI);
     }

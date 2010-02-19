@@ -20,17 +20,27 @@ import junit.framework.TestCase;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Entity;
+import org.w3c.dom.EntityReference;
 import org.w3c.dom.Node;
+import org.w3c.dom.Notation;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,9 +50,13 @@ import java.util.List;
  */
 public class DomTest extends TestCase {
 
+    private Transformer transformer;
+    private DocumentBuilder builder;
+
     private final String xml
             = "<!DOCTYPE menu ["
             + "  <!ENTITY sp \"Maple Syrup\">"
+            + "  <!NOTATION png SYSTEM \"image/png\">"
             + "]>"
             + "<menu>\n"
             + "  <item xmlns=\"http://food\" xmlns:a=\"http://addons\">\n"
@@ -63,6 +77,7 @@ public class DomTest extends TestCase {
     private Document document;
     private DocumentType doctype;
     private Entity sp;
+    private Notation png;
     private Element menu;
     private Element item;
     private Attr itemXmlns;
@@ -76,7 +91,7 @@ public class DomTest extends TestCase {
     private Text descriptionText3;
     private Element option1;
     private Element option2;
-    private Node option2Reference; // Text on RI, EntityReference on Dalvik
+    private Node option2Reference; // resolved to Text on RI, an EntityReference on Dalvik
     private ProcessingInstruction wafflemaker;
     private Element nutrition;
     private Element vitamins;
@@ -84,20 +99,23 @@ public class DomTest extends TestCase {
     private Comment comment;
     private Element vitaminc;
     private Text vitamincText;
-
     private List<Node> allNodes;
 
     @Override protected void setUp() throws Exception {
+        transformer = TransformerFactory.newInstance().newTransformer();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
+        builder = factory.newDocumentBuilder();
 
-        document = factory.newDocumentBuilder()
-                .parse(new InputSource(new StringReader(xml)));
+        document = builder.parse(new InputSource(new StringReader(xml)));
 
         // doctype nodes
         doctype = document.getDoctype();
         if (doctype.getEntities() != null) {
             sp = (Entity) doctype.getEntities().item(0);
+        }
+        if (doctype.getNotations() != null) {
+            png = (Notation) doctype.getNotations().item(0);
         }
 
         // document nodes
@@ -128,6 +146,9 @@ public class DomTest extends TestCase {
         if (sp != null) {
             allNodes.add(sp);
         }
+        if (png != null) {
+            allNodes.add(png);
+        }
 
         allNodes.addAll(Arrays.asList(document, doctype, menu, item, itemXmlns,
                 itemXmlnsA, name, standard, deluxe, description,
@@ -144,10 +165,21 @@ public class DomTest extends TestCase {
         assertNotNull("This implementation does not parse entity declarations", sp);
     }
 
+    /**
+     * Android's parsed DOM doesn't include notations. These nodes will only be
+     * tested for implementations that support them.
+     */
+    public void testNotations() {
+        assertNotNull("This implementation does not parse notations", png);
+    }
+
     public void testLookupNamespaceURIByPrefix() {
         assertEquals(null, doctype.lookupNamespaceURI("a"));
         if (sp != null) {
             assertEquals(null, sp.lookupNamespaceURI("a"));
+        }
+        if (png != null) {
+            assertEquals(null, png.lookupNamespaceURI("a"));
         }
         assertEquals(null, document.lookupNamespaceURI("a"));
         assertEquals(null, menu.lookupNamespaceURI("a"));
@@ -178,6 +210,9 @@ public class DomTest extends TestCase {
         assertEquals(null, doctype.lookupNamespaceURI(null));
         if (sp != null) {
             assertEquals(null, sp.lookupNamespaceURI(null));
+        }
+        if (png != null) {
+            assertEquals(null, png.lookupNamespaceURI(null));
         }
         assertEquals(null, menu.lookupNamespaceURI(null));
         assertEquals("http://food", item.lookupNamespaceURI(null));
@@ -213,6 +248,9 @@ public class DomTest extends TestCase {
         assertEquals(null, doctype.lookupPrefix("http://addons"));
         if (sp != null) {
             assertEquals(null, sp.lookupPrefix("http://addons"));
+        }
+        if (png != null) {
+            assertEquals(null, png.lookupPrefix("http://addons"));
         }
         assertEquals(null, menu.lookupPrefix("http://addons"));
         assertEquals("a", item.lookupPrefix("http://addons"));
@@ -255,6 +293,9 @@ public class DomTest extends TestCase {
         if (sp != null) {
             assertEquals(null, sp.lookupPrefix("http://usda"));
         }
+        if (png != null) {
+            assertEquals(null, png.lookupPrefix("http://usda"));
+        }
         assertEquals(null, menu.lookupPrefix("http://usda"));
         assertEquals(null, item.lookupPrefix("http://usda"));
         assertEquals(null, itemXmlns.lookupPrefix("http://usda"));
@@ -276,5 +317,112 @@ public class DomTest extends TestCase {
         assertEquals("a", comment.lookupPrefix("http://usda"));
         assertEquals("a", vitaminc.lookupPrefix("http://usda"));
         assertEquals("a", vitamincText.lookupPrefix("http://usda"));
+    }
+
+    public void testDoctypeSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        doctype.setTextContent("foobar"); // strangely, this is specified to no-op
+        assertEquals(original, domToString(document));
+    }
+
+    public void testDocumentSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        document.setTextContent("foobar"); // strangely, this is specified to no-op
+        assertEquals(original, domToString(document));
+    }
+
+    public void testElementSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        nutrition.setTextContent("foobar");
+        String expected = original.replaceFirst(
+                "(?s)<nutrition>.*</nutrition>", "<nutrition>foobar</nutrition>");
+        assertEquals(expected, domToString(document));
+    }
+
+    public void testEntitySetTextContent() throws TransformerException {
+        if (sp == null) {
+            return;
+        }
+        try {
+            sp.setTextContent("foobar");
+            fail(); // is this implementation-specific behaviour?
+        } catch (DOMException e) {
+        }
+    }
+
+    public void testNotationSetTextContent() throws TransformerException {
+        if (png == null) {
+            return;
+        }
+        String original = domToString(document);
+        png.setTextContent("foobar");
+        String expected = original.replace("image/png", "foobar");
+        assertEquals(expected, domToString(document));
+    }
+
+    /**
+     * Tests setTextContent on entity references. Although the other tests can
+     * act on a parsed DOM, this needs to use a programmatically constructed DOM
+     * because the parser may have replaced the entity reference with the
+     * corresponding text.
+     */
+    public void testEntityReferenceSetTextContent() throws TransformerException {
+        document = builder.newDocument();
+        Element root = document.createElement("menu");
+        document.appendChild(root);
+
+        EntityReference entityReference = document.createEntityReference("sp");
+        entityReference.setNodeValue("Maple Syrup");
+        root.appendChild(entityReference);
+
+        try {
+            entityReference.setTextContent("Lite Syrup");
+            fail();
+        } catch (DOMException e) {
+        }
+    }
+
+    public void testAttributeSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        standard.setTextContent("foobar");
+        String expected = original.replaceFirst(
+                "standard=\"strawberry\"", "standard=\"foobar\"");
+        assertEquals(expected, domToString(document));
+    }
+
+    public void testTextSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        descriptionText1.setTextContent("foobar");
+        String expected = original.replace(">Belgian<!", ">foobar<!");
+        assertEquals(expected, domToString(document));
+    }
+
+    public void testCdataSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        descriptionText2.setTextContent("foobar");
+        String expected = original.replace(
+                " waffles & strawberries (< 5g ", "foobar");
+        assertEquals(expected, domToString(document));
+    }
+
+    public void testProcessingInstructionSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        wafflemaker.setTextContent("foobar");
+        String expected = original.replace(" square shape?>", " foobar?>");
+        assertEquals(expected, domToString(document));
+    }
+
+    public void testCommentSetTextContent() throws TransformerException {
+        String original = domToString(document);
+        comment.setTextContent("foobar");
+        String expected = original.replace("-- add other vitamins? --", "--foobar--");
+        assertEquals(expected, domToString(document));
+    }
+
+    private String domToString(Document document)
+            throws TransformerException {
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(document), new StreamResult(writer));
+        return writer.toString();
     }
 }

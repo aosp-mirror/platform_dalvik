@@ -17,11 +17,13 @@
 package org.apache.harmony.xml.dom;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.UserDataHandler;
 
 /**
@@ -135,7 +137,35 @@ public abstract class NodeImpl implements Node {
         throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, null);
     }
 
-    public void setNodeValue(String nodeValue) throws DOMException {
+    public final void setNodeValue(String nodeValue) throws DOMException {
+        switch (getNodeType()) {
+            case CDATA_SECTION_NODE:
+            case COMMENT_NODE:
+            case TEXT_NODE:
+                ((CharacterData) this).setData(nodeValue);
+                return;
+
+            case PROCESSING_INSTRUCTION_NODE:
+                ((ProcessingInstruction) this).setData(nodeValue);
+                return;
+
+            case ATTRIBUTE_NODE:
+                ((Attr) this).setValue(nodeValue);
+                return;
+
+            case ELEMENT_NODE:
+            case ENTITY_REFERENCE_NODE:
+            case ENTITY_NODE:
+            case DOCUMENT_NODE:
+            case DOCUMENT_TYPE_NODE:
+            case DOCUMENT_FRAGMENT_NODE:
+            case NOTATION_NODE:
+                return; // do nothing!
+
+            default:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Unsupported node type " + getNodeType());
+        }
     }
 
     public void setPrefix(String prefix) throws DOMException {
@@ -259,7 +289,7 @@ public abstract class NodeImpl implements Node {
         }
     }
 
-    public void setTextContent(String textContent) throws DOMException {
+    public final void setTextContent(String textContent) throws DOMException {
         switch (getNodeType()) {
             case DOCUMENT_TYPE_NODE:
             case DOCUMENT_NODE:

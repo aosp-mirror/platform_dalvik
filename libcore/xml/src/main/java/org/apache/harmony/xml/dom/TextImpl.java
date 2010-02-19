@@ -46,11 +46,6 @@ public class TextImpl extends CharacterDataImpl implements Text {
         return Node.TEXT_NODE;
     }
 
-    @Override
-    public String getNodeValue() {
-        return getData();
-    }
-
     public Text splitText(int offset) throws DOMException {
         Text newText = getOwnerDocument().createTextNode(
                 substringData(offset, getLength() - offset));
