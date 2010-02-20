@@ -21,6 +21,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
+import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
@@ -52,6 +53,7 @@ public class DomTest extends TestCase {
 
     private Transformer transformer;
     private DocumentBuilder builder;
+    private DOMImplementation domImplementation;
 
     private final String xml
             = "<!DOCTYPE menu ["
@@ -106,6 +108,7 @@ public class DomTest extends TestCase {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         builder = factory.newDocumentBuilder();
+        domImplementation = builder.getDOMImplementation();
 
         document = builder.parse(new InputSource(new StringReader(xml)));
 
@@ -319,6 +322,79 @@ public class DomTest extends TestCase {
         assertEquals("a", vitamincText.lookupPrefix("http://usda"));
     }
 
+    public void testIsDefaultNamespace() {
+        assertFalse(document.isDefaultNamespace("http://food"));
+        assertFalse(doctype.isDefaultNamespace("http://food"));
+        if (sp != null) {
+            assertFalse(sp.isDefaultNamespace("http://food"));
+        }
+        if (png != null) {
+            assertFalse(png.isDefaultNamespace("http://food"));
+        }
+        assertFalse(menu.isDefaultNamespace("http://food"));
+        assertTrue(item.isDefaultNamespace("http://food"));
+        assertTrue(itemXmlns.isDefaultNamespace("http://food"));
+        assertTrue(itemXmlnsA.isDefaultNamespace("http://food"));
+        assertTrue(name.isDefaultNamespace("http://food"));
+        assertTrue(standard.isDefaultNamespace("http://food"));
+        assertTrue(deluxe.isDefaultNamespace("http://food"));
+        assertFalse(description.isDefaultNamespace("http://food"));
+        assertFalse(descriptionText1.isDefaultNamespace("http://food"));
+        assertFalse(descriptionText2.isDefaultNamespace("http://food"));
+        assertFalse(descriptionText3.isDefaultNamespace("http://food"));
+        assertTrue(option1.isDefaultNamespace("http://food"));
+        assertTrue(option2.isDefaultNamespace("http://food"));
+        assertTrue(option2Reference.isDefaultNamespace("http://food"));
+        assertTrue(wafflemaker.isDefaultNamespace("http://food"));
+        assertTrue(nutrition.isDefaultNamespace("http://food"));
+        assertTrue(vitamins.isDefaultNamespace("http://food"));
+        assertTrue(vitaminsXmlnsA.isDefaultNamespace("http://food"));
+        assertTrue(comment.isDefaultNamespace("http://food"));
+        assertTrue(vitaminc.isDefaultNamespace("http://food"));
+        assertTrue(vitamincText.isDefaultNamespace("http://food"));
+    }
+
+    /**
+     * Xerces fails this test. It returns false always for entity, notation,
+     * document fragment and document type nodes. This contradicts its own
+     * behaviour on lookupNamespaceURI(null).
+     */
+    public void testIsDefaultNamespaceNull_XercesBugs() {
+        String message = "isDefaultNamespace() should be consistent with lookupNamespaceURI(null)";
+        assertTrue(message, doctype.isDefaultNamespace(null));
+        if (sp != null) {
+            assertTrue(message, sp.isDefaultNamespace(null));
+        }
+        if (png != null) {
+            assertTrue(message, png.isDefaultNamespace(null));
+        }
+    }
+
+    public void testIsDefaultNamespaceNull() {
+        assertTrue(document.isDefaultNamespace(null));
+        assertTrue(menu.isDefaultNamespace(null));
+        assertFalse(item.isDefaultNamespace(null));
+        assertFalse(itemXmlns.isDefaultNamespace(null));
+        assertFalse(itemXmlnsA.isDefaultNamespace(null));
+        assertFalse(name.isDefaultNamespace(null));
+        assertFalse(standard.isDefaultNamespace(null));
+        assertFalse(deluxe.isDefaultNamespace(null));
+        assertFalse(description.isDefaultNamespace(null));
+        assertFalse(descriptionText1.isDefaultNamespace(null));
+        assertFalse(descriptionText2.isDefaultNamespace(null));
+        assertFalse(descriptionText3.isDefaultNamespace(null));
+        assertFalse(option1.isDefaultNamespace(null));
+        assertFalse(option2.isDefaultNamespace(null));
+        assertFalse(option2Reference.isDefaultNamespace(null));
+        assertFalse(wafflemaker.isDefaultNamespace(null));
+        assertFalse(nutrition.isDefaultNamespace(null));
+        assertFalse(vitamins.isDefaultNamespace(null));
+        assertFalse(vitaminsXmlnsA.isDefaultNamespace(null));
+        assertFalse(comment.isDefaultNamespace(null));
+        assertFalse(vitaminc.isDefaultNamespace(null));
+        assertFalse(vitamincText.isDefaultNamespace(null));
+    }
+
     public void testDoctypeSetTextContent() throws TransformerException {
         String original = domToString(document);
         doctype.setTextContent("foobar"); // strangely, this is specified to no-op
@@ -417,6 +493,125 @@ public class DomTest extends TestCase {
         comment.setTextContent("foobar");
         String expected = original.replace("-- add other vitamins? --", "--foobar--");
         assertEquals(expected, domToString(document));
+    }
+
+    public void testCoreFeature() {
+        assertTrue(domImplementation.hasFeature("Core", null));
+        assertTrue(domImplementation.hasFeature("Core", ""));
+        assertTrue(domImplementation.hasFeature("Core", "1.0"));
+        assertTrue(domImplementation.hasFeature("Core", "2.0"));
+        assertTrue(domImplementation.hasFeature("Core", "3.0"));
+        assertTrue(domImplementation.hasFeature("CORE", "3.0"));
+        assertTrue(domImplementation.hasFeature("+Core", "3.0"));
+        assertFalse(domImplementation.hasFeature("Core", "4.0"));
+    }
+
+    public void testXmlFeature() {
+        assertTrue(domImplementation.hasFeature("XML", null));
+        assertTrue(domImplementation.hasFeature("XML", ""));
+        assertTrue(domImplementation.hasFeature("XML", "1.0"));
+        assertTrue(domImplementation.hasFeature("XML", "2.0"));
+        assertTrue(domImplementation.hasFeature("XML", "3.0"));
+        assertTrue(domImplementation.hasFeature("Xml", "3.0"));
+        assertTrue(domImplementation.hasFeature("+XML", "3.0"));
+        assertFalse(domImplementation.hasFeature("XML", "4.0"));
+    }
+
+    /**
+     * The RI fails this test.
+     * http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/core.html#Document3-version
+     */
+    public void testXmlVersionFeature() {
+        String message = "This implementation does not support the XMLVersion feature";
+        assertTrue(message, domImplementation.hasFeature("XMLVersion", null));
+        assertTrue(message, domImplementation.hasFeature("XMLVersion", ""));
+        assertTrue(message, domImplementation.hasFeature("XMLVersion", "1.0"));
+        assertTrue(message, domImplementation.hasFeature("XMLVersion", "1.1"));
+        assertTrue(message, domImplementation.hasFeature("XMLVERSION", "1.1"));
+        assertTrue(message, domImplementation.hasFeature("+XMLVersion", "1.1"));
+        assertFalse(domImplementation.hasFeature("XMLVersion", "1.2"));
+        assertFalse(domImplementation.hasFeature("XMLVersion", "2.0"));
+        assertFalse(domImplementation.hasFeature("XMLVersion", "2.0"));
+    }
+
+    public void testLsFeature() {
+        assertTrue("This implementation does not support the LS feature",
+                domImplementation.hasFeature("LS", "3.0"));
+    }
+
+    public void testElementTraversalFeature() {
+        assertTrue("This implementation does not support the ElementTraversal feature",
+                domImplementation.hasFeature("ElementTraversal", "1.0"));
+    }
+
+    public void testIsSupported() {
+        // we don't independently test the features; instead just assume the
+        // implementation calls through to hasFeature (as tested above)
+        for (Node node : allNodes) {
+            assertTrue(node.isSupported("XML", null));
+            assertTrue(node.isSupported("XML", "3.0"));
+            assertFalse(node.isSupported("foo", null));
+            assertFalse(node.isSupported("foo", "bar"));
+        }
+    }
+
+    public void testGetFeature() {
+        // we don't independently test the features; instead just assume the
+        // implementation calls through to hasFeature (as tested above)
+        for (Node node : allNodes) {
+            assertSame(node, node.getFeature("XML", null));
+            assertSame(node, node.getFeature("XML", "3.0"));
+            assertNull(node.getFeature("foo", null));
+            assertNull(node.getFeature("foo", "bar"));
+        }
+    }
+
+    public void testNodeEqualsPositive() throws Exception {
+        DomTest copy = new DomTest();
+        copy.setUp();
+        
+        for (int i = 0; i < allNodes.size(); i++) {
+            Node a = allNodes.get(i);
+            Node b = copy.allNodes.get(i);
+            assertTrue(a.isEqualNode(b));
+        }
+    }
+
+    public void testNodeEqualsNegative() throws Exception {
+        for (Node a : allNodes) {
+            for (Node b : allNodes) {
+                assertEquals(a == b, a.isEqualNode(b));
+            }
+        }
+    }
+
+    public void testNodeEqualsNegativeRecursive() throws Exception {
+        DomTest copy = new DomTest();
+        copy.setUp();
+        copy.vitaminc.setTextContent("55%");
+
+        // changing anything about a node should break equality for all parents
+        assertFalse(document.isEqualNode(copy.document));
+        assertFalse(menu.isEqualNode(copy.menu));
+        assertFalse(item.isEqualNode(copy.item));
+        assertFalse(nutrition.isEqualNode(copy.nutrition));
+        assertFalse(vitamins.isEqualNode(copy.vitamins));
+        assertFalse(vitaminc.isEqualNode(copy.vitaminc));
+
+        // but not siblings
+        assertTrue(doctype.isEqualNode(copy.doctype));
+        assertTrue(description.isEqualNode(copy.description));
+        assertTrue(option1.isEqualNode(copy.option1));
+    }
+
+    public void testNodeEqualsNull() {
+        for (Node node : allNodes) {
+            try {
+                node.isEqualNode(null);
+                fail();
+            } catch (NullPointerException e) {
+            }
+        }
     }
 
     private String domToString(Document document)

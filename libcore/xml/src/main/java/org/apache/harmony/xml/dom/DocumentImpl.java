@@ -100,6 +100,8 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
      * @return The new node.
      */
     Node cloneNode(Node node, boolean deep) throws DOMException {
+        // TODO: callback the UserDataHandler with a NODE_CLONED event
+
         Node target;
         
         switch (node.getNodeType()) {
@@ -279,6 +281,7 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
     }
 
     public Node importNode(Node importedNode, boolean deep) throws DOMException {
+        // TODO: callback the UserDataHandler with a NODE_IMPORTED event
         return cloneNode(importedNode, deep);
     }
 
@@ -341,6 +344,7 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
     }
 
     public Node adoptNode(Node source) throws DOMException {
+        // TODO: callback the UserDataHandler with a NODE_ADOPTED event
         throw new UnsupportedOperationException(); // TODO
     }
 
@@ -354,6 +358,7 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
 
     public Node renameNode(Node n, String namespaceURI, String qualifiedName)
             throws DOMException {
+        // TODO: callback the UserDataHandler with a NODE_RENAMED event
         throw new UnsupportedOperationException(); // TODO
     }
 }
