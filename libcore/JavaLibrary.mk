@@ -75,7 +75,7 @@ LOCAL_SRC_FILES := $(test_src_files)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper
+LOCAL_JAVA_LIBRARIES := core
 LOCAL_DX_FLAGS := --core-library
 
 LOCAL_MODULE_TAGS := tests
