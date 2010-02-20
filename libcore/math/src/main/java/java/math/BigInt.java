@@ -82,7 +82,6 @@ class BigInt
     public static int consumeErrors(StringBuilder sb) {
         int cnt = 0;
         int e, reason;
-        boolean first = true;
         while ((e = NativeBN.ERR_get_error()) != 0) {
             reason = e & 255;
             if (reason == 103) {
@@ -96,7 +95,6 @@ class BigInt
             if (reason == 65) {
                 throw new OutOfMemoryError();
             }
-            if (!first) { sb.append(" *** "); first = false; }
             sb.append(e).append(": ");
             String s = NativeBN.ERR_error_string(e);
             sb.append(s);
