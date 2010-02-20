@@ -20,11 +20,15 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.UserDataHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A straightforward implementation of the corresponding W3C DOM node.
@@ -435,8 +439,11 @@ public abstract class NodeImpl implements Node {
         return uri.equals(actual);
     }
 
-    public boolean isDefaultNamespace(String namespaceURI) {
-        throw new UnsupportedOperationException(); // TODO
+    public final boolean isDefaultNamespace(String namespaceURI) {
+        String actual = lookupNamespaceURI(null); // null yields the default namespace
+        return namespaceURI == null
+                ? actual == null
+                : namespaceURI.equals(actual);
     }
 
     public final String lookupNamespaceURI(String prefix) {
@@ -476,12 +483,108 @@ public abstract class NodeImpl implements Node {
         return null;
     }
 
-    public boolean isEqualNode(Node arg) {
-        throw new UnsupportedOperationException(); // TODO
+    /**
+     * Returns a list of objects such that two nodes are equal if their lists
+     * are equal. Be careful: the lists may contain NamedNodeMaps and Nodes,
+     * neither of which override Object.equals(). Such values must be compared
+     * manually.
+     */
+    private static List<Object> createEqualityKey(Node node) {
+        List<Object> values = new ArrayList<Object>();
+        values.add(node.getNodeType());
+        values.add(node.getNodeName());
+        values.add(node.getLocalName());
+        values.add(node.getNamespaceURI());
+        values.add(node.getPrefix());
+        values.add(node.getNodeValue());
+        for (Node child = node.getFirstChild(); child != null; child = child.getNextSibling()) {
+            values.add(child);
+        }
+
+        switch (node.getNodeType()) {
+            case DOCUMENT_TYPE_NODE:
+                DocumentTypeImpl doctype = (DocumentTypeImpl) node;
+                values.add(doctype.getPublicId());
+                values.add(doctype.getSystemId());
+                values.add(doctype.getInternalSubset());
+                values.add(doctype.getEntities());
+                values.add(doctype.getNotations());
+                break;
+
+            case ELEMENT_NODE:
+                Element element = (Element) node;
+                values.add(element.getAttributes());
+                break;
+        }
+
+        return values;
     }
 
-    public Object getFeature(String feature, String version) {
-        throw new UnsupportedOperationException(); // TODO
+    public final boolean isEqualNode(Node arg) {
+        if (arg == this) {
+            return true;
+        }
+
+        List<Object> listA = createEqualityKey(this);
+        List<Object> listB = createEqualityKey(arg);
+
+        if (listA.size() != listB.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < listA.size(); i++) {
+            Object a = listA.get(i);
+            Object b = listB.get(i);
+
+            if (a == b) {
+                continue;
+
+            } else if (a == null || b == null) {
+                return false;
+
+            } else if (a instanceof String || a instanceof Short) {
+                if (!a.equals(b)) {
+                    return false;
+                }
+
+            } else if (a instanceof NamedNodeMap) {
+                if (!(b instanceof NamedNodeMap)
+                        || !namedNodeMapsEqual((NamedNodeMap) a, (NamedNodeMap) b)) {
+                    return false;
+                }
+
+            } else if (a instanceof Node) {
+                if (!(b instanceof Node)
+                        || !((Node) a).isEqualNode((Node) b)) {
+                    return false;
+                }
+
+            } else {
+                throw new AssertionError(); // unexpected type
+            }
+        }
+        
+        return true;
+    }
+
+    private boolean namedNodeMapsEqual(NamedNodeMap a, NamedNodeMap b) {
+        if (a.getLength() != b.getLength()) {
+            return false;
+        }
+        for (int i = 0; i < a.getLength(); i++) {
+            Node aNode = a.item(i);
+            Node bNode = aNode.getLocalName() == null
+                    ? b.getNamedItem(aNode.getNodeName())
+                    : b.getNamedItemNS(aNode.getNamespaceURI(), aNode.getLocalName());
+            if (bNode == null || !aNode.isEqualNode(bNode)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public final Object getFeature(String feature, String version) {
+        return isSupported(feature, version) ? this : null;
     }
 
     public Object setUserData(String key, Object data,
