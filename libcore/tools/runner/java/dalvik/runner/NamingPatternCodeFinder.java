@@ -32,7 +32,7 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
     private final String PACKAGE_PATTERN = "(?m)^\\s*package\\s+(\\S+)\\s*;";
 
     private final String TYPE_DECLARATION_PATTERN
-            = "(?m)\\b(?:public|private)\\s+(?:interface|class|enum)\\b";
+            = "(?m)\\b(?:public|private)\\s+(?:final\\s+)?(?:interface|class|enum)\\b";
 
     public Set<TestRun> findTests(File testDirectory) {
         Set<TestRun> result = new LinkedHashSet<TestRun>();
@@ -48,8 +48,6 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
     }
 
     protected abstract String testName(File file);
-
-    protected abstract Class<? extends TestRunner> runnerClass();
 
     private void findTestsRecursive(Set<TestRun> sink, File file) {
         if (file.isDirectory()) {
@@ -68,7 +66,8 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
         String testName = testName(file);
         String testDescription = null;
         sink.add(new TestRun(testDirectory, file, className, className,
-                testName, className, testDescription, runnerClass()));
+                testName, className, testDescription,
+                getRunnerClass(), getRunnerJava(), getRunnerClasspath()));
     }
 
     /**
@@ -100,7 +99,7 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
                 if (Pattern.compile(TYPE_DECLARATION_PATTERN).matcher(content).find()) {
                     return className;
                 }
-                throw new IllegalArgumentException("Not a .java file: '" + file + "'\n"+content);
+                throw new IllegalArgumentException("Not a .java file: '" + file + "'\n" + content);
             }
             String packageName = packageMatcher.group(1);
             return packageName + "." + className;

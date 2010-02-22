@@ -146,7 +146,7 @@ dvmHeapBeginMarkStep()
 
     numBitmaps = dvmHeapSourceGetObjectBitmaps(objectBitmaps,
             HEAP_SOURCE_MAX_HEAP_COUNT);
-    if (numBitmaps <= 0) {
+    if (numBitmaps == 0) {
         return false;
     }
 

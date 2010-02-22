@@ -35,33 +35,38 @@ import java.util.List;
 public final class TestRun {
 
     private final File testDirectory;
-    private final File javaFile;
+    private final File testJava;
     private final String testClass;
-    private final Class<? extends TestRunner> testRunner;
+    private final Class<? extends Runner> runnerClass;
+    private final File runnerJava;
+    private final Classpath runnerClasspath;
 
     private final String suiteName;
     private final String testName;
     private final String qualifiedName;
     private final String description;
 
-    private Classpath testClasspath;
+    private boolean testCompiled;
     private File userDir = new File(System.getProperty("user.dir"));
 
     private ExpectedResult expectedResult = ExpectedResult.SUCCESS;
     private Result result;
     private List<String> outputLines;
 
-    public TestRun(File testDirectory, File javaFile, String testClass,
+    public TestRun(File testDirectory, File testJava, String testClass,
             String suiteName, String testName, String qualifiedName,
-            String description, Class<? extends TestRunner> testRunner) {
+            String description, Class<? extends Runner> runnerClass,
+            File runnerJava, Classpath runnerClasspath) {
         this.qualifiedName = qualifiedName;
         this.suiteName = suiteName;
         this.testName = testName;
         this.testDirectory = testDirectory;
-        this.javaFile = javaFile;
+        this.testJava = testJava;
         this.description = description;
         this.testClass = testClass;
-        this.testRunner = testRunner;
+        this.runnerClass = runnerClass;
+        this.runnerJava = runnerJava;
+        this.runnerClasspath = runnerClasspath;
     }
 
     /**
@@ -71,8 +76,8 @@ public final class TestRun {
         return testDirectory;
     }
 
-    public File getJavaFile() {
-        return javaFile;
+    public File getTestJava() {
+        return testJava;
     }
 
     /**
@@ -118,15 +123,14 @@ public final class TestRun {
     }
 
     /**
-     * Initializes the path to the jar file or directory containing test
-     * classes.
+     * Set when the test is successfully compiled.
      */
-    public void setTestClasspath(Classpath classpath) {
-        this.testClasspath = classpath;
+    public void setTestCompiled(boolean testCompiled) {
+        this.testCompiled = testCompiled;
     }
 
-    public Classpath getTestClasspath() {
-        return testClasspath;
+    public boolean getTestCompiled() {
+        return testCompiled;
     }
 
     /**
@@ -145,7 +149,7 @@ public final class TestRun {
      * classpath prepared and have not yet been assigned a result.
      */
     public boolean isRunnable() {
-        return testClasspath != null && result == null;
+        return testCompiled && result == null;
     }
 
     public void setResult(Result result, Throwable e) {
@@ -154,7 +158,7 @@ public final class TestRun {
 
     public void setResult(Result result, List<String> outputLines) {
         if (this.result != null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("result already set");
         }
 
         this.result = result;
@@ -176,8 +180,16 @@ public final class TestRun {
         return outputLines;
     }
 
-    public Class<? extends TestRunner> getTestRunner() {
-        return testRunner;
+    public Class<? extends Runner> getRunnerClass() {
+        return runnerClass;
+    }
+
+    public File getRunnerJava() {
+        return runnerJava;
+    }
+
+    public Classpath getRunnerClasspath() {
+        return runnerClasspath;
     }
 
     /**

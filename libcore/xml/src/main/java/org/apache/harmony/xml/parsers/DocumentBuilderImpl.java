@@ -115,8 +115,8 @@ class DocumentBuilderImpl extends DocumentBuilder {
         Document document = newDocument();
 
         try {
-            XmlPullParser parser = new KXmlParser();
-
+            KXmlParser parser = new KXmlParser();
+            parser.keepNamespaceAttributes();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES,
                     namespaceAware);
             

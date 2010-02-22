@@ -167,7 +167,7 @@ struct StackSaveArea {
     ((u4*) ((u1*)SAVEAREA_FROM_FP(_fp) - sizeof(u4) * (_argCount)))
 
 /* reserve this many bytes for handling StackOverflowError */
-#define STACK_OVERFLOW_RESERVE  512
+#define STACK_OVERFLOW_RESERVE  768
 
 /*
  * Determine if the frame pointer points to a "break frame".
@@ -277,7 +277,7 @@ bool dvmCreateStackTraceArray(const void* fp, const Method*** pArray,
  * Common handling for stack overflow.
  */
 void dvmHandleStackOverflow(Thread* self, const Method* method);
-void dvmCleanupStackOverflow(Thread* self);
+void dvmCleanupStackOverflow(Thread* self, const Object* exception);
 
 /* debugging; dvmDumpThread() is probably a better starting point */
 void dvmDumpThreadStack(const DebugOutputTarget* target, Thread* thread);

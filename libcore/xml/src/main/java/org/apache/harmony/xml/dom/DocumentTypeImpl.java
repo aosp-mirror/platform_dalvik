@@ -107,4 +107,7 @@ public class DocumentTypeImpl extends LeafNodeImpl implements DocumentType {
         return systemId;
     }
 
+    @Override public String getTextContent() throws DOMException {
+        return null;
+    }
 }

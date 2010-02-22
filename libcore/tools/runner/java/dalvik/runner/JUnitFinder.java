@@ -32,7 +32,16 @@ class JUnitFinder extends NamingPatternCodeFinder {
         return "junit";
     }
 
-    @Override protected Class<? extends TestRunner> runnerClass() {
+    public Class<? extends Runner> getRunnerClass() {
         return JUnitRunner.class;
+    }
+
+    public File getRunnerJava() {
+        return new File(DalvikRunner.HOME_JAVA, "dalvik/runner/JUnitRunner.java");
+    }
+
+    public Classpath getRunnerClasspath() {
+        // TODO: we should be able to work with a shipping SDK, not depend on out/...
+        return Classpath.of(new File("out/host/common/obj/JAVA_LIBRARIES/junit_intermediates/javalib.jar").getAbsoluteFile());
     }
 }

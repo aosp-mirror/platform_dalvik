@@ -35,6 +35,9 @@ import java.util.logging.Logger;
  */
 public final class DalvikRunner {
 
+    static final File HOME = new File("dalvik/libcore/tools/runner");
+    static final File HOME_JAVA = new File(HOME, "java");
+
     private static class Options {
 
         private final List<File> testFiles = new ArrayList<File>();
@@ -53,6 +56,12 @@ public final class DalvikRunner {
 
         @Option(names = { "--timeout" })
         private long timeoutSeconds = 10 * 60; // default is ten minutes;
+
+        @Option(names = { "--clean-before" })
+        private boolean cleanBefore = true;
+
+        @Option(names = { "--clean-after" })
+        private boolean cleanAfter = true;
 
         @Option(names = { "--clean" })
         private boolean clean = true;
@@ -96,9 +105,16 @@ public final class DalvikRunner {
             System.out.println("      device within an android.app.Activity.");
             System.out.println("      Default is: " + mode);
             System.out.println();
-            System.out.println("  --clean: remove temporary files (default). Disable with --no-clean");
-            System.out.println("      and use with --verbose if you'd like to manually re-run");
-            System.out.println("      commands afterwards.");
+            System.out.println("  --clean-before: remove working directories before building and");
+            System.out.println("      running (default). Disable with --no-clean-before if you are");
+            System.out.println("      using interactively with your own temporary input files.");
+            System.out.println();
+            System.out.println("  --clean-after: remove temporary files after running (default).");
+            System.out.println("      Disable with --no-clean-after and use with --verbose if");
+            System.out.println("      you'd like to manually re-run commands afterwards.");
+            System.out.println();
+            System.out.println("  --clean: synonym for --clean-before and --clean-after (default).");
+            System.out.println("      Disable with --no-clean if you want no files removed.");
             System.out.println();
             System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
             System.out.println("      test before the runner aborts it.");
@@ -181,10 +197,6 @@ public final class DalvikRunner {
                     System.out.println("Invalid java home: " + javaHome);
                     return false;
                 }
-                if (debugPort != null) {
-                    System.out.println("debug port " + debugPort + " should not be specified for mode " + mode);
-                    return false;
-                }
             }
 
             // check vm option consistency
@@ -210,6 +222,11 @@ public final class DalvikRunner {
                 return false;
             }
 
+            if (!clean) {
+                cleanBefore = false;
+                cleanAfter = false;
+            }
+
             //
             // Post-processing arguments
             //
@@ -228,7 +245,7 @@ public final class DalvikRunner {
     }
 
     private final Options options = new Options();
-    private final File localTemp = new File("/tmp/" + UUID.randomUUID());
+    private final File localTemp = new File("/tmp/dalvikrunner/" + UUID.randomUUID());
 
     private DalvikRunner() {}
 
@@ -246,29 +263,36 @@ public final class DalvikRunner {
     }
 
     private void run() {
-        Vm vm;
+        Mode mode;
         if (options.mode.equals(Options.MODE_DEVICE)) {
-            vm = new DeviceDalvikVm(
+            mode = new DeviceDalvikVm(
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
                     localTemp,
                     options.vmArgs,
-                    options.clean,
+                    options.cleanBefore,
+                    options.cleanAfter,
                     options.deviceRunnerDir);
         } else if (options.mode.equals(Options.MODE_HOST)) {
-            vm = new JavaVm(
+            mode = new JavaVm(
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
                     localTemp,
                     options.javaHome,
                     options.vmArgs,
-                    options.clean);
+                    options.cleanBefore,
+                    options.cleanAfter);
         } else if (options.mode.equals(Options.MODE_ACTIVITY)) {
-            vm = null;
-            System.out.println("Mode " + options.mode + " not currently supported.");
-            return;
+            mode = new ActivityMode(
+                    options.debugPort,
+                    options.timeoutSeconds,
+                    options.sdkJar,
+                    localTemp,
+                    options.cleanBefore,
+                    options.cleanAfter,
+                    options.deviceRunnerDir);
         } else {
             System.out.println("Unknown mode mode " + options.mode + ".");
             return;
@@ -281,7 +305,7 @@ public final class DalvikRunner {
                 new MainFinder());
         Driver driver = new Driver(
                 localTemp,
-                vm,
+                mode,
                 options.expectationFiles,
                 options.xmlReportsDirectory,
                 codeFinders);
@@ -293,7 +317,7 @@ public final class DalvikRunner {
         }
 
         driver.buildAndRunAllTests(options.testFiles);
-        vm.shutdown();
+        mode.shutdown();
     }
 
     public static void main(String[] args) {

@@ -30,13 +30,21 @@ final class Classpath {
     private final List<File> elements = new ArrayList<File>();
 
     public static Classpath of(File... files) {
+        return of(Arrays.asList(files));
+    }
+
+    public static Classpath of(Collection<File> files) {
         Classpath result = new Classpath();
-        result.elements.addAll(Arrays.asList(files));
+        result.elements.addAll(files);
         return result;
     }
 
     public void addAll(File... elements) {
-        this.elements.addAll(Arrays.asList(elements));
+        addAll(Arrays.asList(elements));
+    }
+
+    public void addAll(Collection<File> elements) {
+        this.elements.addAll(elements);
     }
 
     public void addAll(Classpath anotherClasspath) {

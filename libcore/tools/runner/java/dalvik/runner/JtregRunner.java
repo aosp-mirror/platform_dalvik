@@ -21,20 +21,19 @@ import java.lang.reflect.Method;
 /**
  * Runs a jtreg test.
  */
-public final class JtregRunner extends TestRunner {
+public final class JtregRunner implements Runner {
 
     private Method main;
 
-    @Override public void prepareTest() {
+    public void prepareTest(Class<?> testClass) {
         try {
-            Class<?> testClass = Class.forName(className);
             main = testClass.getMethod("main", String[].class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Override public boolean test() {
+    public boolean test(Class<?> testClass) {
         try {
             main.invoke(null, new Object[] { new String[0] });
             return true;
@@ -42,9 +41,5 @@ public final class JtregRunner extends TestRunner {
             failure.printStackTrace();
             return false;
         }
-    }
-
-    public static void main(String[] args) {
-        new JtregRunner().run();
     }
 }

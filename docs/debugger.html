@@ -55,9 +55,9 @@ A connection from DDMS alone doesn't result in a change in VM behavior,
 but when the VM sees debugger packets it allocates additional data
 structures and may switch to a different implementation of the interpreter.
 </p><p>
-Pre-Flan implementations of the Dalvik VM used read-only memory mappings
+Pre-Froyo implementations of the Dalvik VM used read-only memory mappings
 for all bytecode, which made it necessary to scan for breakpoints by
-comparing the program counter to a set of addresses.  In Flan this was
+comparing the program counter to a set of addresses.  In Froyo this was
 changed to allow insertion of breakpoint opcodes.  This allows the VM
 to execute code more quickly, and does away with the hardcoded limit
 of 20 breakpoints.  Even with this change, however, the debug-enabled

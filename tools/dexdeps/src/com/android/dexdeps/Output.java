@@ -20,6 +20,12 @@ package com.android.dexdeps;
  * Generate fancy output.
  */
 public class Output {
+    private static final String IN0 = "";
+    private static final String IN1 = "  ";
+    private static final String IN2 = "    ";
+    private static final String IN3 = "      ";
+    private static final String IN4 = "        ";
+
     public static void generate(DexData dexData, String format) {
         if (format.equals("brief")) {
             printBrief(dexData);
@@ -35,36 +41,56 @@ public class Output {
      * Prints the data in a simple human-readable format.
      */
     static void printBrief(DexData dexData) {
-        FieldRef[] externFieldRefs = dexData.getExternalFieldReferences();
-        MethodRef[] externMethodRefs = dexData.getExternalMethodReferences();
+        ClassRef[] externClassRefs = dexData.getExternalReferences();
 
-        printFieldRefs(externFieldRefs);
-        printMethodRefs(externMethodRefs);
+        printClassRefs(externClassRefs);
+        printFieldRefs(externClassRefs);
+        printMethodRefs(externClassRefs);
+    }
+
+    /**
+     * Prints the list of classes in a simple human-readable format.
+     */
+    static void printClassRefs(ClassRef[] classes) {
+        System.out.println("Classes:");
+        for (int i = 0; i < classes.length; i++) {
+            ClassRef ref = classes[i];
+
+            System.out.println(descriptorToDot(ref.getName()));
+        }
     }
 
     /**
      * Prints the list of fields in a simple human-readable format.
      */
-    static void printFieldRefs(FieldRef[] fields) {
-        System.out.println("Fields:");
-        for (int i = 0; i < fields.length; i++) {
-            FieldRef ref = fields[i];
+    static void printFieldRefs(ClassRef[] classes) {
+        System.out.println("\nFields:");
+        for (int i = 0; i < classes.length; i++) {
+            FieldRef[] fields = classes[i].getFieldArray();
 
-            System.out.println(descriptorToDot(ref.getDeclClassName()) + "." +
-                ref.getName() + " : " + ref.getTypeName());
+            for (int j = 0; j < fields.length; j++) {
+                FieldRef ref = fields[j];
+
+                System.out.println(descriptorToDot(ref.getDeclClassName()) +
+                    "." + ref.getName() + " : " + ref.getTypeName());
+            }
         }
     }
 
     /**
      * Prints the list of methods in a simple human-readable format.
      */
-    static void printMethodRefs(MethodRef[] methods) {
-        System.out.println("Methods:");
-        for (int i = 0; i < methods.length; i++) {
-            MethodRef ref = methods[i];
+    static void printMethodRefs(ClassRef[] classes) {
+        System.out.println("\nMethods:");
+        for (int i = 0; i < classes.length; i++) {
+            MethodRef[] methods = classes[i].getMethodArray();
 
-            System.out.println(descriptorToDot(ref.getDeclClassName()) +
-                "." + ref.getName() + " : " + ref.getDescriptor());
+            for (int j = 0; j < methods.length; j++) {
+                MethodRef ref = methods[j];
+
+                System.out.println(descriptorToDot(ref.getDeclClassName()) +
+                    "." + ref.getName() + " : " + ref.getDescriptor());
+            }
         }
     }
 
@@ -75,79 +101,90 @@ public class Output {
      * We shouldn't need to XML-escape the field/method info.
      */
     static void printXml(DexData dexData) {
-        final String IN0 = "";
-        final String IN1 = "  ";
-        final String IN2 = "    ";
-        final String IN3 = "      ";
-        FieldRef[] externFieldRefs = dexData.getExternalFieldReferences();
-        MethodRef[] externMethodRefs = dexData.getExternalMethodReferences();
-        String prevClass = null;
+        ClassRef[] externClassRefs = dexData.getExternalReferences();
 
         System.out.println(IN0 + "<external>");
 
-        /* print fields */
-        for (int i = 0; i < externFieldRefs.length; i++) {
-            FieldRef fref = externFieldRefs[i];
-            String declClassName = fref.getDeclClassName();
+        /*
+         * Iterate through externClassRefs.  For each class, dump all of
+         * the matching fields and methods.
+         */
+        String prevPackage = null;
+        for (int i = 0; i < externClassRefs.length; i++) {
+            ClassRef cref = externClassRefs[i];
+            String declClassName = cref.getName();
+            String className = classNameOnly(declClassName);
+            String packageName = packageNameOnly(declClassName);
 
-            if (prevClass != null && !prevClass.equals(declClassName)) {
-                System.out.println(IN1 + "</class>");
-            }
-            if (!declClassName.equals(prevClass)) {
-                String className = classNameOnly(declClassName);
-                String packageName = packageNameOnly(declClassName);
-                System.out.println(IN1 + "<class package=\"" + packageName +
-                    "\" name=\"" + className + "\">");
-                prevClass = declClassName;
+            /*
+             * If we're in a different package, emit the appropriate tags.
+             */
+            if (!packageName.equals(prevPackage)) {
+                if (prevPackage != null) {
+                    System.out.println(IN1 + "</package>");
+                }
+
+                System.out.println(IN1 +
+                    "<package name=\"" + packageName + "\">");
+
+                prevPackage = packageName;
             }
 
-            System.out.println(IN2 + "<field name=\"" + fref.getName() +
-                "\" type=\"" + descriptorToDot(fref.getTypeName()) + "\"/>");
+            System.out.println(IN2 + "<class name=\"" + className + "\">");
+            printXmlFields(cref);
+            printXmlMethods(cref);
+            System.out.println(IN2 + "</class>");
         }
 
-        /* print methods */
-        for (int i = 0; i < externMethodRefs.length; i++) {
-            MethodRef mref = externMethodRefs[i];
+        if (prevPackage != null)
+            System.out.println(IN1 + "</package>");
+        System.out.println(IN0 + "</external>");
+    }
+
+    /**
+     * Prints the externally-visible fields in XML format.
+     */
+    private static void printXmlFields(ClassRef cref) {
+        FieldRef[] fields = cref.getFieldArray();
+        for (int i = 0; i < fields.length; i++) {
+            FieldRef fref = fields[i];
+
+            System.out.println(IN3 + "<field name=\"" + fref.getName() +
+                "\" type=\"" + descriptorToDot(fref.getTypeName()) + "\"/>");
+        }
+    }
+
+    /**
+     * Prints the externally-visible methods in XML format.
+     */
+    private static void printXmlMethods(ClassRef cref) {
+        MethodRef[] methods = cref.getMethodArray();
+        for (int i = 0; i < methods.length; i++) {
+            MethodRef mref = methods[i];
             String declClassName = mref.getDeclClassName();
             boolean constructor;
 
-            if (prevClass != null && !prevClass.equals(declClassName)) {
-                System.out.println(IN1 + "</class>");
-            }
-            if (!declClassName.equals(prevClass)) {
-                String className = classNameOnly(declClassName);
-                String packageName = packageNameOnly(declClassName);
-                System.out.println(IN1 + "<class package=\"" + packageName +
-                    "\" name=\"" + className + "\">");
-                prevClass = declClassName;
-            }
-
             constructor = mref.getName().equals("<init>");
             if (constructor) {
-                /* use class name instead of method name */
-                System.out.println(IN2 + "<constructor name=\"" +
-                    classNameOnly(declClassName) + "\" return=\"" +
-                    descriptorToDot(mref.getReturnTypeName()) + "\">");
+                // use class name instead of method name
+                System.out.println(IN3 + "<constructor name=\"" +
+                    classNameOnly(declClassName) + "\">");
             } else {
-                System.out.println(IN2 + "<method name=\"" + mref.getName() +
+                System.out.println(IN3 + "<method name=\"" + mref.getName() +
                     "\" return=\"" + descriptorToDot(mref.getReturnTypeName()) +
                     "\">");
             }
             String[] args = mref.getArgumentTypeNames();
             for (int j = 0; j < args.length; j++) {
-                System.out.println(IN3 + "<parameter type=\"" +
+                System.out.println(IN4 + "<parameter type=\"" +
                     descriptorToDot(args[j]) + "\"/>");
             }
             if (constructor) {
-                System.out.println(IN2 + "</constructor>");
+                System.out.println(IN3 + "</constructor>");
             } else {
-                System.out.println(IN2 + "</method>");
+                System.out.println(IN3 + "</method>");
             }
         }
-
-        if (prevClass != null)
-            System.out.println(IN1 + "</class>");
-        System.out.println(IN0 + "</external>");
     }
 
 

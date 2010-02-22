@@ -18,6 +18,7 @@ package dalvik.runner;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A local Java virtual machine like Harmony or the RI.
@@ -27,9 +28,17 @@ final class JavaVm extends Vm {
     private final File javaHome;
 
     JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
-            File javaHome, List<String> additionalVmArgs, boolean clean) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
+            File javaHome, List<String> additionalVmArgs,
+            boolean cleanBefore, boolean cleanAfter) {
+        super(new EnvironmentHost(cleanBefore, cleanAfter, debugPort, localTemp),
+                timeoutSeconds, sdkJar, additionalVmArgs);
         this.javaHome = javaHome;
+    }
+
+    @Override protected void postCompileTestRunner() {
+    }
+
+    @Override protected void postCompileTest(TestRun testRun) {
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder(
@@ -38,5 +47,13 @@ final class JavaVm extends Vm {
         return new VmCommandBuilder()
                 .vmCommand(java)
                 .workingDir(workingDirectory);
+    }
+    @Override protected Classpath getRuntimeSupportClasspath(TestRun testRun) {
+        Classpath classpath = new Classpath();
+        classpath.addAll(environment.testClassesDir(testRun));
+        classpath.addAll(testClasspath);
+        classpath.addAll(environment.testRunnerClassesDir());
+        classpath.addAll(testRunnerClasspath);
+        return classpath;
     }
 }

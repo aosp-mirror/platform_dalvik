@@ -85,7 +85,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,annotation)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-annotation
@@ -95,7 +95,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,archive)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-archive
@@ -105,7 +105,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,concurrent)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-concurrent
@@ -115,7 +115,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,crypto)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-crypto
@@ -125,7 +125,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,dom)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-dom
@@ -135,7 +135,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,icu)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-icu
@@ -145,7 +145,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,logging)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-logging
@@ -155,7 +155,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,luni-kernel)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-luni-kernel
@@ -169,7 +169,7 @@ LOCAL_NO_STANDARD_LIBRARIES := true
 # together, so it has compile-time dependencies on all the other test
 # libraries.
 # TODO: we should have a bogus module that just contains tests.AllTests for speed.
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_JAVA_LIBRARIES += core-tests-annotation core-tests-archive
 LOCAL_JAVA_LIBRARIES += core-tests-concurrent core-tests-crypto
 LOCAL_JAVA_LIBRARIES += core-tests-dom core-tests-icu core-tests-logging
@@ -186,7 +186,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,math)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-math
@@ -196,7 +196,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,nio)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-nio
@@ -206,7 +206,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,nio_char)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-nio_char
@@ -216,7 +216,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,prefs)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-prefs
@@ -226,7 +226,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,regex)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-regex
@@ -236,7 +236,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,security)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-security
@@ -246,7 +246,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,sql)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-sql
@@ -256,7 +256,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,suncompat)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-suncompat
@@ -266,7 +266,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,support)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper
+LOCAL_JAVA_LIBRARIES := core
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-support
@@ -276,7 +276,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,text)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-text
@@ -286,7 +286,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,x-net)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-x-net
@@ -296,7 +296,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,xml)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core caliper core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-xml

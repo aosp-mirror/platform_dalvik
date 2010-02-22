@@ -22,15 +22,16 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.w3c.dom.Attr;
-import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.EntityReference;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
-import org.w3c.dom.Text;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
@@ -38,17 +39,25 @@ import org.xmlpull.v1.XmlSerializer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,13 +69,23 @@ import java.util.List;
  * XSLT conformance test suite</a>, adapted for use by JUnit. To run these tests
  * on a device:
  * <ul>
- *    <li>Obtain the <a href="http://www.oasis-open.org/committees/download.php/12171/XSLT-testsuite-04.ZIP">test
- *        suite zip file from the OASIS project site.</li>
- *    <li>Unzip.
- *    <li>Copy the files to a device: <code>adb shell mkdir /data/oasis ;
- *        adb push ./XSLT-Conformance-TC /data/oasis</code>.
- *    <li>Invoke this class' main method, passing the on-device path to the test
- *        suite's <code>catalog.xml</code> file as an argument.
+ *     <li>Obtain the <a href="http://www.oasis-open.org/committees/download.php/12171/XSLT-testsuite-04.ZIP">test
+ *         suite zip file from the OASIS project site.</li>
+ *     <li>Unzip.
+ *     <li>Copy the files to a device: <code>adb shell mkdir /data/oasis ;
+ *         adb push ./XSLT-Conformance-TC /data/oasis</code>.
+ *     <li>Invoke this class' main method, passing the on-device path to the test
+ *         suite's <code>catalog.xml</code> file as an argument.
+ * </ul>
+ *
+ * <p>Unfortunately, some of the tests in the OASIS suite will fail when
+ * executed outside of their original development environment:
+ * <ul>
+ *     <li>The tests assume case insensitive filesystems. Some will fail with
+ *        "Couldn't open file" errors due to a mismatch in file name casing.
+ *     <li>The tests assume certain network hosts will exist and serve
+ *         stylesheet files. In particular, "http://webxtest/" isn't generally
+ *         available.
  * </ul>
  */
 public class XsltXPathConformanceTestSuite {
@@ -77,7 +96,7 @@ public class XsltXPathConformanceTestSuite {
     /** Orders element attributes by optional URI and name. */
     private static final Comparator<Attr> orderByName = new Comparator<Attr>() {
         public int compare(Attr a, Attr b) {
-            int result = compareNullsFirst(a.getBaseURI(), b.getBaseURI());
+            int result = compareNullsFirst(a.getNamespaceURI(), b.getNamespaceURI());
             return result == 0 ? result
                     : compareNullsFirst(a.getName(), b.getName());
         }
@@ -163,7 +182,7 @@ public class XsltXPathConformanceTestSuite {
     /**
      * Returns a JUnit test for the test described by the given element.
      */
-    private Test create(File base, Element testCaseElement) {
+    private TestCase create(File base, Element testCaseElement) {
 
         /*
          * Extract the XSLT test from a DOM entity with the following structure:
@@ -290,7 +309,6 @@ public class XsltXPathConformanceTestSuite {
      * the result to an expected output file.
      */
     public class XsltTest extends TestCase {
-        // TODO: include these in toString
         private final String category;
         private final String id;
         private final String purpose;
@@ -303,7 +321,10 @@ public class XsltXPathConformanceTestSuite {
         /** either "standard" or "execution-error" */
         private final String operation;
 
-        /** the syntax to compare the output file using, such as "XML" or "HTML" */
+        /**
+         * The syntax to compare the output file using, such as "XML", "HTML",
+         * "manual", or null for expected execution errors.
+         */
         private final String compareAs;
 
         XsltTest(String category, String id, String purpose, String spec,
@@ -321,6 +342,11 @@ public class XsltXPathConformanceTestSuite {
             this.compareAs = compareAs;
         }
 
+        XsltTest(File principalData, File principalStylesheet, File principal) {
+            this("standalone", "test", "", "",
+                    principalData, principalStylesheet, principal, "standard", "XML");
+        }
+
         public void test() throws Exception {
             if (purpose != null) {
                 System.out.println("Purpose: " + purpose);
@@ -329,36 +355,49 @@ public class XsltXPathConformanceTestSuite {
                 System.out.println("Spec: " + spec);
             }
 
-            Source xslt = new StreamSource(principalStylesheet);
-            Source in = new StreamSource(principalData);
+            Result result;
+            if ("XML".equals(compareAs)) {
+                DOMResult domResult = new DOMResult();
+                domResult.setNode(documentBuilder.newDocument().createElementNS("", "result"));
+                result = domResult;
+            } else {
+                result = new StreamResult(new StringWriter());
+            }
+
+            ErrorRecorder errorRecorder = new ErrorRecorder();
+            transformerFactory.setErrorListener(errorRecorder);
 
             Transformer transformer;
             try {
+                Source xslt = new StreamSource(principalStylesheet);
                 transformer = transformerFactory.newTransformer(xslt);
-                assertEquals("Expected transformer creation to fail",
-                        "standard", operation);
-            } catch (TransformerConfigurationException e) {
-                if (operation.equals("execution-error")) {
-                    return; // expected, such as in XSLT-Result-Tree.Attributes__78369
+                if (errorRecorder.error == null) {
+                    transformer.setErrorListener(errorRecorder);
+                    transformer.transform(new StreamSource(principalData), result);
                 }
-                AssertionFailedError failure = new AssertionFailedError();
-                failure.initCause(e);
-                throw failure;
+            } catch (TransformerConfigurationException e) {
+                errorRecorder.fatalError(e);
             }
 
-            Result result;
-            if (compareAs.equals("XML")) {
-                result = new DOMResult();
+            if (operation.equals("standard")) {
+                if (errorRecorder.error != null) {
+                    throw errorRecorder.error;
+                }
+            } else if (operation.equals("execution-error")) {
+                if (errorRecorder.error != null) {
+                    return;
+                }
+                fail("Expected " + operation + ", but transform completed normally." 
+                        + " (Warning=" + errorRecorder.warning + ")");
+            } else {
+                throw new UnsupportedOperationException("Unexpected operation: " + operation);
+            }
+
+            if ("XML".equals(compareAs)) {
+                assertNodesAreEquivalent(principal, ((DOMResult) result).getNode());
             } else {
                 // TODO: implement support for comparing HTML etc.
                 throw new UnsupportedOperationException("Cannot compare as " + compareAs);
-            }
-
-            transformer.transform(in, result);
-
-            if (compareAs.equals("XML")) {
-                DOMResult domResult = (DOMResult) result;
-                assertNodesAreEquivalent(principal, domResult.getNode());
             }
         }
 
@@ -370,17 +409,63 @@ public class XsltXPathConformanceTestSuite {
     /**
      * Ensures both XML documents represent the same semantic data. Non-semantic
      * data such as namespace prefixes, comments, and whitespace is ignored.
+     *
+     * @param actual an XML document whose root is a {@code <result>} element.
+     * @param expected a file containing an XML document fragment.
      */
     private void assertNodesAreEquivalent(File expected, Node actual)
             throws ParserConfigurationException, IOException, SAXException,
             XmlPullParserException {
 
-        Document expectedDocument = documentBuilder.parse(new FileInputStream(expected));
-        String expectedString = nodeToNormalizedString(expectedDocument);
+        Node expectedNode = fileToResultNode(expected);
+        String expectedString = nodeToNormalizedString(expectedNode);
         String actualString = nodeToNormalizedString(actual);
 
         Assert.assertEquals("Expected XML to match file " + expected,
                 expectedString, actualString);
+    }
+
+    /**
+     * Returns the given file's XML fragment as a single node, wrapped in
+     * {@code <result>} tags. This takes care of normalizing the following
+     * conditions:
+     *
+     * <ul>
+     * <li>Files containing XML document fragments with multiple elements:
+     * {@code <SPAN style="color=blue">Smurfs!</SPAN><br />}
+     *
+     * <li>Files containing XML document fragments with no elements:
+     * {@code Smurfs!}
+     *
+     * <li>Files containing proper XML documents with a single element and an
+     * XML declaration:
+     * {@code <?xml version="1.0"?><doc />}
+     *
+     * <li>Files prefixed with a byte order mark header, such as 0xEFBBBF.
+     * </ul>
+     */
+    private Node fileToResultNode(File file) throws IOException, SAXException {
+        String rawContents = fileToString(file);
+        String fragment = rawContents;
+
+        // If the file had an XML declaration, strip that. Otherwise wrapping
+        // it in <result> tags would result in a malformed XML document.
+        if (fragment.startsWith("<?xml")) {
+            int declarationEnd = fragment.indexOf("?>");
+            fragment = fragment.substring(declarationEnd + 2);
+        }
+
+        // Parse it as document fragment wrapped in <result> tags.
+        try {
+            fragment = "<result>" + fragment + "</result>";
+            return documentBuilder.parse(new InputSource(new StringReader(fragment)))
+                    .getDocumentElement();
+        } catch (SAXParseException e) {
+            Error error = new AssertionFailedError(
+                    "Failed to parse XML: " + file + "\n" + rawContents);
+            error.initCause(e);
+            throw error;
+        }
     }
 
     private String nodeToNormalizedString(Node node)
@@ -395,14 +480,18 @@ public class XsltXPathConformanceTestSuite {
     }
 
     private void emitNode(XmlSerializer serializer, Node node) throws IOException {
-        if (node instanceof Element) {
+        if (node == null) {
+            throw new UnsupportedOperationException("Cannot emit null nodes");
+
+        } else if (node.getNodeType() == Node.ELEMENT_NODE) {
             Element element = (Element) node;
-            serializer.startTag(element.getBaseURI(), element.getLocalName());
+            serializer.startTag(element.getNamespaceURI(), element.getLocalName());
             emitAttributes(serializer, element);
             emitChildren(serializer, element);
-            serializer.endTag(element.getBaseURI(), element.getLocalName());
+            serializer.endTag(element.getNamespaceURI(), element.getLocalName());
 
-        } else if (node instanceof Text) {
+        } else if (node.getNodeType() == Node.TEXT_NODE
+                || node.getNodeType() == Node.CDATA_SECTION_NODE) {
             // TODO: is it okay to trim whitespace in general? This may cause
             //     false positives for elements like HTML's <pre> tag
             String trimmed = node.getTextContent().trim();
@@ -410,25 +499,28 @@ public class XsltXPathConformanceTestSuite {
                 serializer.text(trimmed);
             }
 
-        } else if (node instanceof Document) {
+        } else if (node.getNodeType() == Node.DOCUMENT_NODE) {
             Document document = (Document) node;
             serializer.startDocument("UTF-8", true);
             emitNode(serializer, document.getDocumentElement());
             serializer.endDocument();
 
-        } else if (node instanceof ProcessingInstruction) {
+        } else if (node.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {
             ProcessingInstruction processingInstruction = (ProcessingInstruction) node;
             String data = processingInstruction.getData();
             String target = processingInstruction.getTarget();
             serializer.processingInstruction(target + " " + data);
 
-        } else if (node instanceof Comment) {
+        } else if (node.getNodeType() == Node.COMMENT_NODE) {
             // ignore!
 
+        } else if (node.getNodeType() == Node.ENTITY_REFERENCE_NODE) {
+            EntityReference entityReference = (EntityReference) node;
+            serializer.entityRef(entityReference.getNodeName());
+
         } else {
-            Object nodeClass = node != null ? node.getClass() : null;
             throw new UnsupportedOperationException(
-                    "Cannot serialize nodes of type " + nodeClass);
+                    "Cannot emit " + node + " of type " + node.getNodeType());
         }
     }
 
@@ -457,7 +549,7 @@ public class XsltXPathConformanceTestSuite {
                  * generate one for us, using a predictable pattern.
                  */
             } else {
-                serializer.attribute(attr.getBaseURI(), attr.getLocalName(), attr.getValue());
+                serializer.attribute(attr.getNamespaceURI(), attr.getLocalName(), attr.getValue());
             }
         }
     }
@@ -479,5 +571,65 @@ public class XsltXPathConformanceTestSuite {
             }
         }
         return result;
+    }
+
+    /**
+     * Reads the given file into a string. If the file contains a byte order
+     * mark, the corresponding character set will be used. Otherwise the system
+     * default charset will be used.
+     */
+    private String fileToString(File file) throws IOException {
+        InputStream in = new BufferedInputStream(new FileInputStream(file), 1024);
+
+        // Read the byte order mark to determine the charset.
+        // TODO: use a built-in API for this...
+        Reader reader;
+        in.mark(3);
+        int byte1 = in.read();
+        int byte2 = in.read();
+        if (byte1 == 0xFF && byte2 == 0xFE) {
+            reader = new InputStreamReader(in, "UTF-16LE");
+        } else if (byte1 == 0xFF && byte2 == 0xFF) {
+            reader = new InputStreamReader(in, "UTF-16BE");
+        } else {
+            int byte3 = in.read();
+            if (byte1 == 0xEF && byte2 == 0xBB && byte3 == 0xBF) {
+                reader = new InputStreamReader(in, "UTF-8");
+            } else {
+                in.reset();
+                reader = new InputStreamReader(in);
+            }
+        }
+
+        StringWriter out = new StringWriter();
+        char[] buffer = new char[1024];
+        int count;
+        while ((count = reader.read(buffer)) != -1) {
+            out.write(buffer, 0, count);
+        }
+        return out.toString();
+    }
+
+    static class ErrorRecorder implements ErrorListener {
+        Exception warning;
+        Exception error;
+
+        public void warning(TransformerException exception) {
+            if (this.warning == null) {
+                this.warning = exception;
+            }
+        }
+
+        public void error(TransformerException exception) {
+            if (this.error == null) {
+                this.error = exception;
+            }
+        }
+
+        public void fatalError(TransformerException exception) {
+            if (this.error == null) {
+                this.error = exception;
+            }
+        }
     }
 }

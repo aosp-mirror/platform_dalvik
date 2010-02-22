@@ -50,17 +50,24 @@ public class DOMImplementationImpl implements DOMImplementation {
     }
 
     public boolean hasFeature(String feature, String version) {
-        // We claim to support DOM Core Level 1 & 2, nothing else.
-
-        // TODO
-
-        if ("Core".equalsIgnoreCase(feature) || "XML".equalsIgnoreCase(feature)) {
-            if (version == null || "".equals(version) || "1.0".equals(version) || "2.0".equals(version)) {
-                return true;
-            }
+        boolean anyVersion = version == null || version.length() == 0;
+        if (feature.startsWith("+")) {
+            feature = feature.substring(1);
         }
 
-        return false;
+        // TODO: fully implement these APIs:
+        // "LS" (org.w3c.dom.ls) versions "3.0"
+        // "ElementTraversal" (org.w3c.dom.traversal) versions "1.0"
+
+        if (feature.equalsIgnoreCase("Core")) {
+            return anyVersion || version.equals("1.0") || version.equals("2.0") || version.equals("3.0");
+        } else if (feature.equalsIgnoreCase("XML")) {
+            return anyVersion || version.equals("1.0") || version.equals("2.0") || version.equals("3.0");
+        } else if (feature.equalsIgnoreCase("XMLVersion")) {
+            return anyVersion || version.equals("1.0") || version.equals("1.1");
+        } else {
+            return false;
+        }
     }
 
     /**

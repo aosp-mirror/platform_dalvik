@@ -32,7 +32,15 @@ class CaliperFinder extends NamingPatternCodeFinder {
         return "caliper";
     }
 
-    @Override protected Class<? extends TestRunner> runnerClass() {
+    public Class<? extends Runner> getRunnerClass() {
         return CaliperRunner.class;
+    }
+
+    public File getRunnerJava() {
+        return new File(DalvikRunner.HOME_JAVA, "dalvik/runner/CaliperRunner.java");
+    }
+
+    public Classpath getRunnerClasspath() {
+        return new Classpath();
     }
 }

@@ -29,4 +29,19 @@ public interface CodeFinder {
      * is empty, no executable code of this kind were found.
      */
     public Set<TestRun> findTests(File file);
+
+    /**
+     * Return the class for the TestRunner
+     */
+    public Class<? extends Runner> getRunnerClass();
+
+    /**
+     * Return the Java file for the TestRunner
+     */
+    public File getRunnerJava();
+
+    /**
+     * Return the compile classpath for the TestRunner
+     */
+    public Classpath getRunnerClasspath();
 }

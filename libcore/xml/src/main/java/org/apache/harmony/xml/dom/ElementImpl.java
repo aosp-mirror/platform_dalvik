@@ -65,7 +65,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
             qualifiedName = qualifiedName.substring(p + 1);
         }
         
-        if (!document.isXMLIdentifier(qualifiedName)) {
+        if (!DocumentImpl.isXMLIdentifier(qualifiedName)) {
             throw new DOMException(DOMException.INVALID_CHARACTER_ERR, qualifiedName);
         }
             
@@ -82,11 +82,11 @@ public class ElementImpl extends InnerNodeImpl implements Element {
             String prefix = name.substring(0, p);
             String localName = name.substring(p + 1);
             
-            if (!document.isXMLIdentifier(prefix) || !document.isXMLIdentifier(localName)) {
+            if (!DocumentImpl.isXMLIdentifier(prefix) || !DocumentImpl.isXMLIdentifier(localName)) {
                 throw new DOMException(DOMException.INVALID_CHARACTER_ERR, name);
             }
         } else {
-            if (!document.isXMLIdentifier(name)) {
+            if (!DocumentImpl.isXMLIdentifier(name)) {
                 throw new DOMException(DOMException.INVALID_CHARACTER_ERR, name);
             }
         }
@@ -241,7 +241,9 @@ public class ElementImpl extends InnerNodeImpl implements Element {
     }
 
     public String getTagName() {
-        return (prefix != null ? prefix + ":" : "") + localName;
+        return prefix != null
+                ? prefix + ":" + localName
+                : localName;
     }
 
     public boolean hasAttribute(String name) {
@@ -281,7 +283,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
             throw new DOMException(DOMException.NOT_FOUND_ERR, null);
         }
 
-        attributes.remove(oldAttr);
+        attributes.remove(oldAttrImpl);
         oldAttrImpl.ownerElement = null;
 
         return oldAttrImpl;
@@ -362,21 +364,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
 
     @Override
     public void setPrefix(String prefix) {
-        if (!namespaceAware) {
-            throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
-        }
-        
-        if (prefix != null) {
-            if (namespaceURI == null || !document.isXMLIdentifier(prefix)) {
-                throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
-            }
-            
-            if ("xml".equals(prefix) && !"http://www.w3.org/XML/1998/namespace".equals(namespaceURI)) {
-                throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
-            }
-        }
-        
-        this.prefix = prefix;
+        this.prefix = validatePrefix(prefix, namespaceAware, namespaceURI);
     }
     
     public class ElementAttrNamedNodeMapImpl implements NamedNodeMap {

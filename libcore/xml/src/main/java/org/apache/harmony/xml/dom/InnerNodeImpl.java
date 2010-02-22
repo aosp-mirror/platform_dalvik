@@ -28,14 +28,16 @@ import java.util.List;
  * Provides a straightforward implementation of the corresponding W3C DOM
  * interface. The class is used internally only, thus only notable members that
  * are not in the original interface are documented (the W3C docs are quite
- * extensive). Hope that's ok.
- * <p>
- * Some of the fields may have package visibility, so other classes belonging to
- * the DOM implementation can easily access them while maintaining the DOM tree
- * structure.
- * <p>
- * This class represents a Node that has a parent Node as well as (potentially)
- * a number of children.
+ * extensive).
+ *
+ * <p>Some of the fields may have package visibility, so other classes belonging
+ * to the DOM implementation can easily access them while maintaining the DOM
+ * tree structure.
+ *
+ * <p>This class represents a Node that has a parent Node as well as
+ * (potentially) a number of children.
+ *
+ * <p>Some code was adapted from Apache Xerces.
  */
 public abstract class InnerNodeImpl extends LeafNodeImpl {
 
@@ -218,4 +220,35 @@ public abstract class InnerNodeImpl extends LeafNodeImpl {
         return oldChildImpl;
     }
 
+    public String getTextContent() throws DOMException {
+        Node child = getFirstChild();
+        if (child == null) {
+            return "";
+        }
+
+        Node next = child.getNextSibling();
+        if (next == null) {
+            return hasTextContent(child) ? child.getTextContent() : "";
+        }
+
+        StringBuilder buf = new StringBuilder();
+        getTextContent(buf);
+        return buf.toString();
+    }
+
+    void getTextContent(StringBuilder buf) throws DOMException {
+        Node child = getFirstChild();
+        while (child != null) {
+            if (hasTextContent(child)) {
+                ((NodeImpl) child).getTextContent(buf);
+            }
+            child = child.getNextSibling();
+        }
+    }
+
+    final boolean hasTextContent(Node child) {
+        // TODO: skip text nodes with ignorable whitespace?
+        return child.getNodeType() != Node.COMMENT_NODE
+                && child.getNodeType() != Node.PROCESSING_INSTRUCTION_NODE;
+    }
 }

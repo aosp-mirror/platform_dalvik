@@ -21,20 +21,24 @@ import java.lang.reflect.Method;
 /**
  * Runs a Java class with a main method.
  */
-public final class MainRunner extends TestRunner {
+public final class MainRunner implements Runner {
 
-    @Override public boolean test() {
+    private Method main;
+
+    public void prepareTest(Class<?> testClass) {
         try {
-            Method mainMethod = Class.forName(className)
-                    .getDeclaredMethod("main", String[].class);
-            mainMethod.invoke(null, new Object[] { new String[0] });
-        } catch (Exception ex) {
+            main = testClass.getMethod("main", String[].class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean test(Class<?> testClass) {
+        try {
+            main.invoke(null, new Object[] { new String[0] });
+        } catch (Throwable ex) {
             ex.printStackTrace();
         }
         return false; // always print main method output
-    }
-
-    public static void main(String[] args) throws Exception {
-        new MainRunner().run();
     }
 }

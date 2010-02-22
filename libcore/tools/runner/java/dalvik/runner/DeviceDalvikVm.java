@@ -24,91 +24,84 @@ import java.util.logging.Logger;
  * Execute tests on a Dalvik VM using an Android device or emulator.
  */
 final class DeviceDalvikVm extends Vm {
-
-    private static final Classpath RUNTIME_SUPPORT_CLASSPATH = Classpath.of(
-            new File("/system/framework/core-tests.jar"),
-            new File("/system/framework/caliper.jar"),
-            new File("/system/framework/guava.jar"),
-            new File("/system/framework/jsr305.jar"));
-
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
-    private final File runnerDir;
-    private final File testTemp;
-
-    private final Adb adb = new Adb();
 
     DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar,
-            File localTemp, List<String> additionalVmArgs, boolean clean, File runnerDir) {
-        super(debugPort, timeoutSeconds, sdkJar, localTemp, additionalVmArgs, clean);
-
-        this.runnerDir = runnerDir;
-        this.testTemp = new File(this.runnerDir, "/tests.tmp");
+            File localTemp, List<String> additionalVmArgs,
+            boolean cleanBefore, boolean cleanAfter, File runnerDir) {
+        super(new EnvironmentDevice(cleanBefore, cleanAfter, debugPort, localTemp, runnerDir),
+                timeoutSeconds, sdkJar, additionalVmArgs);
     }
 
-    @Override public void prepare() {
-        adb.rm(runnerDir);
-        adb.mkdir(testTemp);
-        if (debugPort != null) {
-            adb.forwardTcp(debugPort, debugPort);
+    private EnvironmentDevice getEnvironmentDevice() {
+        return (EnvironmentDevice) environment;
+    }
+
+    @Override protected void postCompileTestRunner() {
+        // TODO: does this really need to be a special case?
+        postCompile("testrunner", environment.testRunnerClassesDir());
+
+        // dex everything on the classpath and push it to the device.
+        for (File classpathElement : testClasspath.getElements()) {
+            String name = basenameOfJar(classpathElement);
+            logger.fine("dex and push " + name);
+            // make the local dex (inside a jar)
+            // TODO: this is *really* expensive. we need a cache!
+            File outputFile = getEnvironmentDevice().testDir(name + ".jar");
+            new Dx().dex(outputFile, Classpath.of(classpathElement));
+            // push the local dex to the device
+            getEnvironmentDevice().adb.push(outputFile, deviceDexFile(name));
         }
-        super.prepare();
     }
 
-    @Override protected Classpath postCompile(String name, Classpath targetClasses) {
+    private String basenameOfJar(File jarFile) {
+        return jarFile.getName().replaceAll("\\.jar$", "");
+    }
+
+    @Override protected void postCompileTest(TestRun testRun) {
+        postCompile(testRun.getQualifiedName(), environment.testClassesDir(testRun));
+    }
+
+    private void postCompile(String name, File dir) {
         logger.fine("dex and push " + name);
 
-        // make the local dex
-        File localDex = new File(localTemp, name + ".jar");
-        new Dx().dex(localDex.toString(), targetClasses);
+        // make the local dex (inside a jar)
+        File localDex = new File(dir.getPath() + ".jar");
+        new Dx().dex(localDex, Classpath.of(dir));
 
         // post the local dex to the device
-        File deviceDex = new File(runnerDir, localDex.getName());
-        adb.push(localDex, deviceDex);
-
-        return Classpath.of(deviceDex);
+        File deviceDex = deviceDexFile(name);
+        getEnvironmentDevice().adb.push(localDex, deviceDex);
     }
 
-    @Override public void shutdown() {
-        super.shutdown();
-
-        if (clean) {
-            adb.rm(runnerDir);
-        }
-    }
-
-    @Override protected void prepareUserDir(TestRun testRun) {
-        File testClassesDirOnDevice = testClassesDirOnDevice(testRun);
-        adb.mkdir(testClassesDirOnDevice);
-        adb.push(testRun.getTestDirectory(), testClassesDirOnDevice);
-        testRun.setUserDir(testClassesDirOnDevice);
-    }
-
-    @Override public void cleanup(TestRun testRun) {
-        super.cleanup(testRun);
-
-        if (clean) {
-            adb.rm(testClassesDirOnDevice(testRun));
-        }
-    }
-
-    private File testClassesDirOnDevice(TestRun testRun) {
-        return new File(runnerDir, testRun.getQualifiedName());
+    private File deviceDexFile(String name) {
+        return new File(getEnvironmentDevice().runnerDir, name + ".jar");
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder(
             File workingDirectory) {
         // ignore the working directory; it's device-local and we can't easily
         // set the working directory for commands run via adb shell.
+        // TODO: we only *need* to set ANDROID_DATA on production devices.
+        // We set "user.home" to /sdcard because code might reasonably assume it can write to
+        // that directory.
         return new VmCommandBuilder()
-                .vmCommand("adb", "shell", "dalvikvm")
+                .vmCommand("adb", "shell", "ANDROID_DATA=/sdcard", "dalvikvm")
+                .vmArgs("-Duser.home=/sdcard")
                 .vmArgs("-Duser.name=root")
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US")
                 .vmArgs("-Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks")
-                .temp(testTemp);
+                .temp(getEnvironmentDevice().testTemp);
     }
 
-    @Override protected Classpath getRuntimeSupportClasspath() {
-        return RUNTIME_SUPPORT_CLASSPATH;
+    @Override protected Classpath getRuntimeSupportClasspath(TestRun testRun) {
+        Classpath classpath = new Classpath();
+        classpath.addAll(deviceDexFile(testRun.getQualifiedName()));
+        classpath.addAll(deviceDexFile("testrunner"));
+        for (File testClasspathElement : testClasspath.getElements()) {
+            classpath.addAll(deviceDexFile(basenameOfJar(testClasspathElement)));
+        }
+        return classpath;
     }
 }

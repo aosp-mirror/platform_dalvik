@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Stacks and their uses (e.g. native --> interpreted method calls).
  *
@@ -1055,18 +1056,24 @@ void dvmHandleStackOverflow(Thread* self, const Method* method)
         LOGW("Stack overflow while throwing exception\n");
         dvmClearException(self);
     }
-    dvmThrowChainedException("Ljava/lang/StackOverflowError;", NULL, excep);
+    dvmThrowChainedExceptionByClass(gDvm.classJavaLangStackOverflowError,
+        NULL, excep);
 }
 
 /*
  * Reduce the available stack size.  By this point we should have finished
  * our overflow processing.
  */
-void dvmCleanupStackOverflow(Thread* self)
+void dvmCleanupStackOverflow(Thread* self, const Object* exception)
 {
     const u1* newStackEnd;
 
     assert(self->stackOverflowed);
+
+    if (exception->clazz != gDvm.classJavaLangStackOverflowError) {
+        /* exception caused during SOE, not the SOE itself */
+        return;
+    }
 
     newStackEnd = (self->interpStackStart - self->interpStackSize)
         + STACK_OVERFLOW_RESERVE;

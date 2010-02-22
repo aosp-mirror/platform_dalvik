@@ -1874,6 +1874,9 @@ GOTO_TARGET(exceptionThrown)
          *
          * If we do find a catch block, we want to transfer execution to
          * that point.
+         *
+         * Note this can cause an exception while resolving classes in
+         * the "catch" blocks.
          */
         catchRelPc = dvmFindCatchBlock(self, pc - curMethod->insns,
                     exception, false, (void*)&fp);
@@ -1888,9 +1891,19 @@ GOTO_TARGET(exceptionThrown)
          * Note we want to do this *after* the call to dvmFindCatchBlock,
          * because that may need extra stack space to resolve exception
          * classes (e.g. through a class loader).
+         *
+         * It's possible for the stack overflow handling to cause an
+         * exception (specifically, class resolution in a "catch" block
+         * during the call above), so we could see the thread's overflow
+         * flag raised but actually be running in a "nested" interpreter
+         * frame.  We don't allow doubled-up StackOverflowErrors, so
+         * we can check for this by just looking at the exception type
+         * in the cleanup function.  Also, we won't unroll past the SOE
+         * point because the more-recent exception will hit a break frame
+         * as it unrolls to here.
          */
         if (self->stackOverflowed)
-            dvmCleanupStackOverflow(self);
+            dvmCleanupStackOverflow(self, exception);
 
         if (catchRelPc < 0) {
             /* falling through to JNI code or off the bottom of the stack */

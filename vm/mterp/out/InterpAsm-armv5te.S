@@ -10286,6 +10286,7 @@ common_exceptionThrown:
     beq     1f                          @ no, skip ahead
     mov     rFP, r0                     @ save relPc result in rFP
     mov     r0, r10                     @ r0<- self
+    mov     r1, r9                      @ r1<- exception
     bl      dvmCleanupStackOverflow     @ call(self)
     mov     r0, rFP                     @ restore result
 1:
@@ -10323,6 +10324,7 @@ common_exceptionThrown:
     ldrb    r1, [r10, #offThread_stackOverflowed]
     cmp     r1, #0                      @ did we overflow earlier?
     movne   r0, r10                     @ if yes: r0<- self
+    movne   r1, r9                      @ if yes: r1<- exception
     blne    dvmCleanupStackOverflow     @ if yes: call(self)
 
     @ may want to show "not caught locally" debug messages here

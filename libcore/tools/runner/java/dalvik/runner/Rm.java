@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,28 @@
  * limitations under the License.
  */
 
-package org.apache.harmony.luni.tests.java.util;
+package dalvik.runner;
 
-import com.google.caliper.Benchmark;
-import com.google.caliper.SimpleBenchmark;
+import java.io.File;
 
 /**
- * This class exists only to force a dependency from our libraries on Caliper,
- * our micro benchmarking framework. 
+ * A rm command.
  */
-public class NullBenchmarkSuite extends SimpleBenchmark {
+final class Rm {
 
-    public void timeNullBenchmark(int trials) throws Exception {
-            for (int i = 0; i < trials; i++) {
-                // code under test goes here!
-            }
+    public void file(File file) {
+        new Command.Builder()
+                .args("rm")
+                .args("-f")
+                .args(file)
+                .execute();
+    }
+
+    public void directoryTree(File directory) {
+        new Command.Builder()
+                .args("rm")
+                .args("-rf")
+                .args(directory)
+                .execute();
     }
 }

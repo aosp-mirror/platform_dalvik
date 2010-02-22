@@ -590,16 +590,17 @@ dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, size_t perHeapStats[],
 
 /*
  * Writes shallow copies of the currently-used bitmaps into outBitmaps,
- * returning the number of bitmaps written.  Returns <0 if the array
- * was not long enough.
+ * returning the number of bitmaps written.  Returns 0 if the array was
+ * not long enough or if there are no heaps, either of which is an error.
  */
-ssize_t
+size_t
 dvmHeapSourceGetObjectBitmaps(HeapBitmap outBitmaps[], size_t maxBitmaps)
 {
     HeapSource *hs = gHs;
 
     HS_BOILERPLATE();
 
+    assert(hs->numHeaps != 0);
     if (maxBitmaps >= hs->numHeaps) {
         size_t i;
 
@@ -608,7 +609,7 @@ dvmHeapSourceGetObjectBitmaps(HeapBitmap outBitmaps[], size_t maxBitmaps)
         }
         return i;
     }
-    return -1;
+    return 0;
 }
 
 /*

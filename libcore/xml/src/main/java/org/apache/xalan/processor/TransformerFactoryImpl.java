@@ -792,7 +792,7 @@ public class TransformerFactoryImpl extends SAXTransformerFactory
         try 
         {
           m_errorListener.fatalError( ex );
-          return null;
+          return null; // TODO: but the API promises to never return null...
         } 
         catch( TransformerConfigurationException ex1 ) 
         {

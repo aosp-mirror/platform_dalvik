@@ -23,57 +23,68 @@ import java.util.Properties;
 /**
  * Runs a test.
  */
-public abstract class TestRunner {
+public class TestRunner {
 
-    /**
-     * The name of the test properties file within the {@code .jar} file.
-     */
-    static final String TEST_PROPERTIES_FILE = "test.properties";
+    protected final Properties properties;
 
-    /**
-     * Property identifier for the test's main class name. This class should
-     * have a {@code public static void main(String[] args)} method.
-     */
-    static final String CLASS_NAME = "className";
+    protected final String qualifiedName;
+    protected final Class<?> testClass;
+    protected final Class<?> runnerClass;
 
-    /**
-     * Property identifier for the test's name, such as {@code
-     * java.math.BigDecimal.PowTests}.
-     */
-    static final String QUALIFIED_NAME = "qualifiedName";
+    protected TestRunner () {
+        properties = loadProperties();
+        qualifiedName = properties.getProperty(TestProperties.QUALIFIED_NAME);
+        testClass = classProperty(TestProperties.TEST_CLASS, Object.class);
+        runnerClass = classProperty(TestProperties.RUNNER_CLASS, Runner.class);
+    }
 
-    protected String className;
-    protected String qualifiedName;
-
-    protected Properties loadProperties() {
+    protected static Properties loadProperties() {
         Properties properties = new Properties();
         try {
             InputStream propertiesStream = TestRunner.class.getResourceAsStream(
-                    "/" + TEST_PROPERTIES_FILE);
+                    "/" + TestProperties.FILE);
             if (propertiesStream == null) {
-                throw new RuntimeException(TEST_PROPERTIES_FILE + " missing!");
+                throw new RuntimeException(TestProperties.FILE + " missing!");
             }
-
             properties.load(propertiesStream);
+            return properties;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        className = properties.getProperty(CLASS_NAME);
-        qualifiedName = properties.getProperty(QUALIFIED_NAME);
-        return properties;
     }
 
-    public void prepareTest() {}
+    private Class<?> classProperty(String propertyName, Class<?> superClass) {
+        String className = properties.getProperty(propertyName);
+        if (className == null) {
+            throw new IllegalArgumentException("Could not find property for " +
+                                               propertyName);
+        }
+        try {
+            Class<?> klass = Class.forName(className);
+            if (!superClass.isAssignableFrom(klass)) {
+                throw new IllegalArgumentException(
+                        className + " can not be assigned to " + Runner.class);
+            }
+            return klass;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    public abstract boolean test();
+    public boolean run() {
+        Runner runner;
+        try {
+            runner = (Runner) runnerClass.newInstance();
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        runner.prepareTest(testClass);
+        return runner.test(testClass);
+    }
 
-    public void run() {
-        loadProperties();
-        prepareTest();
-
-        System.out.println("Executing " + qualifiedName);
-        boolean success = test();
-        System.out.println(success ? "SUCCESS" : "FAILURE");
+    public static void main(String[] args) {
+        System.out.println(TestProperties.result(new TestRunner().run()));
     }
 }
