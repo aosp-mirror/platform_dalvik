@@ -457,9 +457,5 @@ public class X509CRLTest extends TestCase {
     public static Test suite() {
         return new TestSuite(X509CRLTest.class);
     }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
 }
 

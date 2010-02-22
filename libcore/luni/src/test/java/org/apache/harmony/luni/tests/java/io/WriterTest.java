@@ -4,67 +4,78 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.harmony.luni.tests.java.io;
 
 import java.io.IOException;
 import java.io.Writer;
 
 import junit.framework.TestCase;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 
-@TestTargetClass(Writer.class) 
 public class WriterTest extends TestCase {
 
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            method = "Writer",
-            args = {}
-        )
-    public void test_Writer() {
-        MockWriter w = new MockWriter();
-        assertTrue("Test 1: Lock has not been set correctly.", w.lockSet(w));
-    }
-    
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            method = "Writer",
-            args = {java.lang.Object.class}
-        )
-    public void test_WriterLjava_lang_Object() {
-        Object o = new Object();
-        MockWriter w;
-        
-        try {
-            w = new MockWriter(null);
-            fail("Test 1: NullPointerException expected.");
-        } catch (NullPointerException e) {
-            // Expected.
-        }
-        w = new MockWriter(o);
-        assertTrue("Test 2: Lock has not been set correctly.", w.lockSet(o));
+    /**
+     * @tests java.io.Writer#append(char)
+     */
+    public void test_appendChar() throws IOException {
+        char testChar = ' ';
+        MockWriter writer = new MockWriter(20);
+        writer.append(testChar);
+        assertEquals(String.valueOf(testChar), String.valueOf(writer
+                .getContents()));
+        writer.close();
     }
 
-    class MockWriter extends Writer {
+    /**
+     * @tests java.io.Writer#append(CharSequence)
+     */
+    public void test_appendCharSequence() throws IOException {
+        String testString = "My Test String";
+        MockWriter writer = new MockWriter(20);
+        writer.append(testString);
+        assertEquals(testString, String.valueOf(writer.getContents()));
+        writer.close();
+
+    }
+
+    /**
+     * @tests java.io.Writer#append(CharSequence, int, int)
+     */
+    public void test_appendCharSequenceIntInt() throws IOException {
+        String testString = "My Test String";
+        MockWriter writer = new MockWriter(20);
+        writer.append(testString, 1, 3);
+        assertEquals(testString.substring(1, 3), String.valueOf(writer
+                .getContents()));
+        writer.close();
+
+    }
+
+
+
+    /**
+     * @tests java.io.Writer#write(String)
+     */
+    public void test_writeLjava_lang_String() throws IOException {
+        // Regression for HARMONY-51
+        Object lock = new Object();
+        Writer wr = new MockLockWriter(lock);
+        wr.write("Some string");
+        wr.close();
+    }
+
+    class MockLockWriter extends Writer {
         final Object myLock;
 
-        MockWriter() {
-            super();
-            myLock = this;
-        }
-        
-        MockWriter(Object lock) {
+        MockLockWriter(Object lock) {
             super(lock);
             myLock = lock;
         }
@@ -83,9 +94,55 @@ public class WriterTest extends TestCase {
         public void write(char[] arg0, int arg1, int arg2) throws IOException {
             assertTrue(Thread.holdsLock(myLock));
         }
+    }
 
-        public boolean lockSet(Object o) {
-            return (lock == o);
+    
+    class MockWriter extends Writer {
+        private char[] contents;
+
+        private int length;
+
+        private int offset;
+
+        MockWriter(int capacity) {
+            contents = new char[capacity];
+            length = capacity;
+            offset = 0;
+        }
+
+        public synchronized void close() throws IOException {
+            flush();
+            contents = null;
+        }
+
+        public synchronized void flush() throws IOException {
+            // do nothing
+        }
+
+        public void write(char[] buffer, int offset, int count)
+                throws IOException {
+            if (null == contents) {
+                throw new IOException();
+            }
+            if (offset < 0 || count < 0 || offset >= buffer.length) {
+                throw new IndexOutOfBoundsException();
+            }
+            count = Math.min(count, buffer.length - offset);
+            count = Math.min(count, this.length - this.offset);
+            for (int i = 0; i < count; i++) {
+                contents[this.offset + i] = buffer[offset + i];
+            }
+            this.offset += count;
+
+        }
+
+        public char[] getContents() {
+            char[] result = new char[offset];
+            for (int i = 0; i < offset; i++) {
+                result[i] = contents[i];
+            }
+            return result;
         }
     }
+
 }

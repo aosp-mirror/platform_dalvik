@@ -16,48 +16,27 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.lang.annotation.Annotation;
 
-import java.lang.annotation.Annotation;
-
-import tests.support.Support_ClassLoader;
 import tests.support.resource.Support_Resources;
 
-@TestTargetClass(Package.class) 
 public class PackageTest extends junit.framework.TestCase {
 
     private File resources;
 
     private String resPath;
-    
-    Class clazz;
 
     Package getTestPackage(String resourceJar, String className)
             throws Exception {
-        
-        if ("Dalvik".equals(System.getProperty("java.vm.name"))) {
-            resourceJar = resourceJar.substring(0, resourceJar.indexOf(".")) + 
-                                                                    "_dex.jar";
-        }
         Support_Resources.copyFile(resources, "Package", resourceJar);
         URL resourceURL = new URL("file:/" + resPath + "/Package/"
                 + resourceJar);
 
-        ClassLoader cl = Support_ClassLoader.getInstance(resourceURL,
-                getClass().getClassLoader());
-
-       clazz = cl.loadClass(className);
-       return clazz.getPackage();
+        URLClassLoader ucl = new URLClassLoader(new URL[] { resourceURL }, null);
+        return Class.forName(className, true, ucl).getPackage();
     }
 
     @Override
@@ -82,45 +61,6 @@ public class PackageTest extends junit.framework.TestCase {
      * @tests java.lang.Package#getSpecificationVersion()
      * @tests java.lang.Package#getImplementationTitle()
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getImplementationTitle",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getImplementationVendor",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getImplementationVersion",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getSpecificationTitle",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getSpecificationVendor",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getSpecificationVersion",
-            args = {}
-        )
-    })
-    @KnownFailure("get methods don't work.")
     public void test_helper_Attributes() throws Exception {
 
         Package p = getTestPackage("hyts_all_attributes.jar", "p.C");
@@ -231,13 +171,6 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#getName()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getName",
-        args = {}
-    )
-    @BrokenTest("Different behavior between cts host and run-core-test")
     public void test_getName() throws Exception {
         Package p = getTestPackage("hyts_pq.jar", "p.q.C");
         assertEquals("Package getName returns a wrong string", "p.q", p
@@ -247,34 +180,17 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#getPackage(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getPackage",
-        args = {java.lang.String.class}
-    )
-    @KnownFailure("Real package information missing on android.")
-    public void test_getPackageLjava_lang_String() throws Exception {
+    public void test_getPackageLjava_lang_String() {
         assertSame("Package getPackage failed for java.lang", Package
                 .getPackage("java.lang"), Package.getPackage("java.lang"));
 
         assertSame("Package getPackage failed for java.lang", Package
                 .getPackage("java.lang"), Object.class.getPackage());
-        
-        Package p = getTestPackage("hyts_package.jar", "C");
-        assertNull("getPackage should return null.", p);
     }
 
     /**
      * @tests java.lang.Package#getPackages()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getPackages",
-        args = {}
-    )
-    @KnownFailure("Package information missing on android")
     public void test_getPackages() throws Exception {
         Package[] pckgs = Package.getPackages();
         boolean found = false;
@@ -290,12 +206,6 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#hashCode()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
     public void test_hashCode() {
         Package p1 = Package.getPackage("java.lang");
         if (p1 != null) {
@@ -306,13 +216,6 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#isCompatibleWith(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "isCompatibleWith",
-        args = {java.lang.String.class}
-    )
-    @KnownFailure("Dalvik packages are always version '0.0'.")
     public void test_isCompatibleWithLjava_lang_String() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
 
@@ -363,31 +266,14 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#isSealed()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "isSealed",
-        args = {}
-    )
-    @KnownFailure("isSealed method returns false for sealed package.")    
     public void test_isSealed() throws Exception {
         Package p = getTestPackage("hyts_pq.jar", "p.q.C");
         assertTrue("Package isSealed returns wrong boolean", p.isSealed());
-        
-        p = String.class.getPackage();
-        assertFalse("Package isSealed returns wrong boolean", p.isSealed());
     }
 
     /**
      * @tests java.lang.Package#isSealed(java.net.URL)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "isSealed",
-        args = {java.net.URL.class}
-    )
-    @KnownFailure("isSealed method returns false for sealed package.")
     public void test_isSealedLjava_net_URL() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
         assertFalse("Package isSealed returns wrong boolean (1)", p
@@ -399,91 +285,106 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#toString()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )
-    @BrokenTest("Different behavior between cts host and run-core-test")
     public void test_toString() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
         assertTrue("Package toString returns wrong string", p.toString()
                 .length() > 0);
     }
     
-    @SuppressWarnings("unchecked")
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getAnnotation",
-        args = {java.lang.Class.class}
-    )
-    @KnownFailure("Class loader can't retrieve information about annotations.")
-    public void test_getAnnotation() throws Exception {
-        String annotationName = "a.b.PackageAnnotation";
-        Package p = getTestPackage("hyts_package.jar", annotationName);
-        assertEquals(annotationName, 
-                p.getAnnotation(clazz).annotationType().getName());
-        assertNull(String.class.getPackage().getAnnotation(Deprecated.class));
-        assertNull(ExtendTestClass.class.getPackage().
-                getAnnotation(Deprecated.class));        
+    public void test_SealedPackage_forName() throws Exception {
+        Support_Resources.copyFile(resources, "Package", "hyts_c.jar");
+        Support_Resources.copyFile(resources, "Package", "hyts_d.jar");
+        Support_Resources.copyFile(resources, "Package", "hyts_d1.jar");
+        Support_Resources.copyFile(resources, "Package", "hyts_d2.jar");
+
+        URL resourceURL1 = new URL("file:/" + resPath + "/Package/hyts_c.jar");
+        URL resourceURL2 = new URL("file:/" + resPath + "/Package/hyts_d.jar");
+        URL resourceURL3 = new URL("file:/" + resPath + "/Package/hyts_d1.jar");
+        URL resourceURL4 = new URL("file:/" + resPath + "/Package/hyts_d2.jar");
+        URL resourceURL5 = new URL("file:/" + resPath + "/");
+
+        URLClassLoader uclClassLoader;
+        // load from the sealed jar, then an unsealed jar with no manifest
+        uclClassLoader = new java.net.URLClassLoader(new URL[] { resourceURL1,
+                resourceURL2 }, null);
+        Class.forName("p.C", true, uclClassLoader);
+        try {
+            Class.forName("p.D", true, uclClassLoader);
+            fail("should throw SecurityException");
+        } catch (SecurityException e) {
+            // Expected
+        }
+
+        // setup for next test
+        Support_Resources.copyFile(resources, "p", "");
+        InputStream in = uclClassLoader.getResourceAsStream("p/D.class");
+        Support_Resources.copyLocalFileto(new File(resources.toString(),
+                "p/D.class"), in);
+
+        // load from a sealed jar, then the directory
+        uclClassLoader = new java.net.URLClassLoader(new URL[] { resourceURL1,
+                resourceURL5 }, null);
+        Class.forName("p.C", true, uclClassLoader);
+        try {
+            Class.forName("p.D", true, uclClassLoader);
+            fail("should throw SecurityException");
+        } catch (SecurityException e) {
+            // Expected
+        }
+
+        // load from a directory, then the sealed jar
+        uclClassLoader = new java.net.URLClassLoader(new URL[] { resourceURL1,
+                resourceURL5 }, null);
+        Class.forName("p.D", true, uclClassLoader);
+        try {
+            Class.forName("p.C", true, uclClassLoader);
+            fail("should throw SecurityException");
+        } catch (SecurityException e) {
+            // Expected
+        }
+
+        // load from an unsealed jar with no manifest, then the sealed jar
+        uclClassLoader = new java.net.URLClassLoader(new URL[] { resourceURL1,
+                resourceURL2 }, null);
+        Class.forName("p.D", true, uclClassLoader);
+        try {
+            Class.forName("p.C", true, uclClassLoader);
+            fail("should throw SecurityException");
+        } catch (SecurityException e) {
+            // Expected
+        }
+
+        // load from an unsealed jar with a manifest, then the sealed jar
+        uclClassLoader = new java.net.URLClassLoader(new URL[] { resourceURL1,
+                resourceURL3 }, null);
+        Class.forName("p.C", true, uclClassLoader);
+        try {
+            Class.forName("p.D", true, uclClassLoader);
+            fail("should throw SecurityException");
+        } catch (SecurityException e) {
+            // Expected
+        }
+
+        // load from an sealed jar, then the unsealed jar with a manifest
+        uclClassLoader = new java.net.URLClassLoader(new URL[] { resourceURL1,
+                resourceURL3 }, null);
+        Class.forName("p.D", true, uclClassLoader);
+        try {
+            Class.forName("p.C", true, uclClassLoader);
+            fail("should throw SecurityException");
+        } catch (SecurityException e) {
+            // Expected
+        }
+
+        // load from the sealed jar, then another sealed jar
+        uclClassLoader = new java.net.URLClassLoader(new URL[] { resourceURL1,
+                resourceURL4 }, null);
+        Class.forName("p.C", true, uclClassLoader);
+        try {
+            Class.forName("p.D", true, uclClassLoader);
+            fail("should throw SecurityException");
+        } catch (SecurityException e) {
+            // Expected
+        }
     }
-    
-    @SuppressWarnings("unchecked")
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getAnnotations",
-        args = {}
-    )
-    @KnownFailure("Class loader can't retrieve information about annotations.")    
-    public void test_getAnnotations() throws Exception {
-        String annotationName = "a.b.PackageAnnotation";
-        Package p = getTestPackage("hyts_package.jar", annotationName);
-
-        Annotation [] annotations = p.getAnnotations();
-        assertEquals(1, annotations.length);
-        
-        p = String.class.getPackage();
-        assertEquals(0, p.getAnnotations().length);
-    }   
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getDeclaredAnnotations",
-        args = {}
-    )
-    @KnownFailure("Class loader can't retrieve information about annotations.")
-    public void test_getDeclaredAnnotations() throws Exception {
-        String annotationName = "a.b.PackageAnnotation";
-        Package p = getTestPackage("hyts_package.jar", annotationName);
-
-        Annotation [] annotations = p.getDeclaredAnnotations();
-        assertEquals(1, annotations.length);
-        
-        p = String.class.getPackage();
-        assertEquals(0, p.getDeclaredAnnotations().length);
-    } 
-    
-    @SuppressWarnings("unchecked")
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "isAnnotationPresent",
-        args = {java.lang.Class.class}
-    )
-    @KnownFailure("Class loader can't retrieve information about annotations.")
-    public void test_isAnnotationPresent() throws Exception {
-        String annotationName = "a.b.PackageAnnotation";
-        Package p = getTestPackage("hyts_package.jar", annotationName);
-
-        assertTrue(p.isAnnotationPresent(clazz));
-        assertFalse(p.isAnnotationPresent(Deprecated.class));
-        
-        p = String.class.getPackage();
-        assertFalse(p.isAnnotationPresent(clazz));
-        assertFalse(p.isAnnotationPresent(Deprecated.class));        
-    }          
 }

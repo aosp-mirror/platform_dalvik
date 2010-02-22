@@ -92,8 +92,4 @@ public class Character_SubsetTest extends TestCase {
       assertFalse(subset1.hashCode() == subset2.hashCode());      
       assertFalse(subset1.hashCode() == subset3.hashCode());
     }
-    
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(Character_SubsetTest.class);
-    }
 }

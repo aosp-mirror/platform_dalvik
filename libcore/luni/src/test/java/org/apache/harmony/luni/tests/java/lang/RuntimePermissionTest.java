@@ -17,46 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-@TestTargetClass(RuntimePermission.class) 
 public class RuntimePermissionTest extends junit.framework.TestCase {
 
-    /**
-     * @tests java.lang.RuntimePermission#RuntimePermission(java.lang.String)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "RuntimePermission",
-        args = {java.lang.String.class}
-    )
-    public void test_ConstructorLjava_lang_String() {
-        // Test for method java.lang.RuntimePermission(java.lang.String)
-        RuntimePermission r = new RuntimePermission("createClassLoader");
-        assertEquals("Returned incorrect name", 
-                "createClassLoader", r.getName());
+	/**
+	 * @tests java.lang.RuntimePermission#RuntimePermission(java.lang.String)
+	 */
+	public void test_ConstructorLjava_lang_String() {
+		// Test for method java.lang.RuntimePermission(java.lang.String)
+		RuntimePermission r = new RuntimePermission("createClassLoader");
+		assertEquals("Returned incorrect name", 
+				"createClassLoader", r.getName());
 
-    }
+	}
 
-    /**
-     * @tests java.lang.RuntimePermission#RuntimePermission(java.lang.String,
-     *        java.lang.String)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "RuntimePermission",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
-    public void test_ConstructorLjava_lang_StringLjava_lang_String() {
-        // Test for method java.lang.RuntimePermission(java.lang.String,
-        // java.lang.String)
-        RuntimePermission r = new RuntimePermission("createClassLoader", null);
-        assertEquals("Returned incorrect name", 
-                "createClassLoader", r.getName());
-    }
+	/**
+	 * @tests java.lang.RuntimePermission#RuntimePermission(java.lang.String,
+	 *        java.lang.String)
+	 */
+	public void test_ConstructorLjava_lang_StringLjava_lang_String() {
+		// Test for method java.lang.RuntimePermission(java.lang.String,
+		// java.lang.String)
+		RuntimePermission r = new RuntimePermission("createClassLoader", null);
+		assertEquals("Returned incorrect name", 
+				"createClassLoader", r.getName());
+	}
 }

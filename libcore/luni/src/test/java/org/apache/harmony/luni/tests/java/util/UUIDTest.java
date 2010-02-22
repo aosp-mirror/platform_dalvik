@@ -17,30 +17,18 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
 import java.util.UUID;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
-@TestTargetClass(UUID.class) 
+import junit.framework.TestCase;
+
 public class UUIDTest extends TestCase {
 
     /**
      * @see UUID#UUID(long, long)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "UUID",
-        args = {long.class, long.class}
-    )
-    public void test_ConstructurJJ() {
+    public void test_ConstructorJJ() {
         UUID uuid = new UUID(0xf81d4fae7dec11d0L, 0xa76500a0c91e6bf6L);
         assertEquals(2, uuid.variant());
         assertEquals(1, uuid.version());
@@ -53,12 +41,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#getLeastSignificantBits()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getLeastSignificantBits",
-        args = {}
-    )
     public void test_getLeastSignificantBits() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.getLeastSignificantBits());
@@ -71,12 +53,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#getMostSignificantBits()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getMostSignificantBits",
-        args = {}
-    )
     public void test_getMostSignificantBits() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.getMostSignificantBits());
@@ -89,12 +65,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#version()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "version",
-        args = {}
-    )
     public void test_version() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.version());
@@ -113,12 +83,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#variant()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "variant",
-        args = {}
-    )
     public void test_variant() {
         UUID uuid = new UUID(0, 0x0000000000000000L);
         assertEquals(0, uuid.variant());
@@ -152,12 +116,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#timestamp()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "timestamp",
-        args = {}
-    )
     public void test_timestamp() {
         UUID uuid = new UUID(0x0000000000001000L, 0x8000000000000000L);
         assertEquals(0x0, uuid.timestamp());
@@ -181,12 +139,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#clockSequence()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "clockSequence",
-        args = {}
-    )
     public void test_clockSequence() {
         UUID uuid = new UUID(0x0000000000001000L, 0x8000000000000000L);
         assertEquals(0x0, uuid.clockSequence());
@@ -213,12 +165,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#node()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "node",
-        args = {}
-    )
     public void test_node() {
         UUID uuid = new UUID(0x0000000000001000L, 0x8000000000000000L);
         assertEquals(0x0, uuid.node());
@@ -242,12 +188,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#compareTo(UUID)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "compareTo",
-        args = {java.util.UUID.class}
-    )
     public void test_compareTo() {
         UUID uuid1 = new UUID(0, 0);
         assertEquals(0, uuid1.compareTo(uuid1));
@@ -263,12 +203,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#hashCode()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
     public void test_hashCode() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.hashCode());
@@ -280,12 +214,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#equals(Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void test_equalsObject() {
         UUID uuid1 = new UUID(0, 0);
         assertEquals(uuid1, uuid1);
@@ -308,12 +236,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#toString()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )
     public void test_toString() {
         UUID uuid = new UUID(0xf81d4fae7dec11d0L, 0xa76500a0c91e6bf6L);
         String actual = uuid.toString();
@@ -327,12 +249,6 @@ public class UUIDTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "!SerializationSelf",
-        args = {}
-    )
     public void testSerializationSelf() throws Exception {
         SerializationTest.verifySelf(new UUID(0xf81d4fae7dec11d0L,
                 0xa76500a0c91e6bf6L));
@@ -341,12 +257,6 @@ public class UUIDTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "!SerializationGolden",
-        args = {}
-    )
     public void testSerializationCompatibility() throws Exception {
         SerializationTest.verifyGolden(this, new UUID(0xf81d4fae7dec11d0L,
                 0xa76500a0c91e6bf6L));
@@ -355,12 +265,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#randomUUID()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "randomUUID",
-        args = {}
-    )
     public void test_randomUUID() {
         UUID uuid = UUID.randomUUID();
         assertEquals(2, uuid.variant());
@@ -370,12 +274,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#nameUUIDFromBytes(byte[])
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "nameUUIDFromBytes",
-        args = {byte[].class}
-    )
     public void test_nameUUIDFromBytes() throws Exception {
         byte[] name = { (byte) 0x6b, (byte) 0xa7, (byte) 0xb8, (byte) 0x11,
                 (byte) 0x9d, (byte) 0xad, (byte) 0x11, (byte) 0xd1,
@@ -406,12 +304,6 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#fromString(String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "fromString",
-        args = {java.lang.String.class}
-    )
     public void test_fromString() {
         UUID actual = UUID.fromString("f81d4fae-7dec-11d0-a765-00a0c91e6bf6");
         UUID expected = new UUID(0xf81d4fae7dec11d0L, 0xa76500a0c91e6bf6L);
@@ -464,108 +356,102 @@ public class UUIDTest extends TestCase {
         } catch (IllegalArgumentException e) {}
     }
 
-    /**
-     * @tests java.util.UUID#fromString(String)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "fromString",
-        args = {java.lang.String.class}
-    )
-    public void test_fromString_LString_Exception() {
+	/**
+	 * @tests java.util.UUID#fromString(String)
+	 */
+	public void test_fromString_LString_Exception() {
 
-        UUID uuid = UUID.fromString("0-0-0-0-0");
+		UUID uuid = UUID.fromString("0-0-0-0-0");
 
-        try {
-            uuid = UUID.fromString("0-0-0-0-");
-            fail("should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("0-0-0-0-");
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
 
-        try {
-            uuid = UUID.fromString("-0-0-0-0-0");
-            fail("should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("-0-0-0-0-0");
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
 
-        try {
-            uuid = UUID.fromString("-0-0-0-0");
-            fail("should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("-0-0-0-0");
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
 
-        try {
-            uuid = UUID.fromString("-0-0-0-");
-            fail("should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("-0-0-0-");
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
 
-        try {
-            uuid = UUID.fromString("0--0-0-0");
-            fail("should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("0--0-0-0");
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
 
-        try {
-            uuid = UUID.fromString("0-0-0-0-");
-            fail("should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("0-0-0-0-");
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
 
-        try {
-            uuid = UUID.fromString("-1-0-0-0-0");
-            fail("should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("-1-0-0-0-0");
+			fail("should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
 
-        uuid = UUID.fromString("123456789-0-0-0-0");
-        assertEquals(0x2345678900000000L, uuid.getMostSignificantBits());
-        assertEquals(0x0L, uuid.getLeastSignificantBits());
+		uuid = UUID.fromString("123456789-0-0-0-0");
+		assertEquals(0x2345678900000000L, uuid.getMostSignificantBits());
+		assertEquals(0x0L, uuid.getLeastSignificantBits());
 
-        uuid = UUID.fromString("111123456789-0-0-0-0");
-        assertEquals(0x2345678900000000L, uuid.getMostSignificantBits());
-        assertEquals(0x0L, uuid.getLeastSignificantBits());
+		uuid = UUID.fromString("111123456789-0-0-0-0");
+		assertEquals(0x2345678900000000L, uuid.getMostSignificantBits());
+		assertEquals(0x0L, uuid.getLeastSignificantBits());
 
-        uuid = UUID.fromString("7fffffffffffffff-0-0-0-0");
-        assertEquals(0xffffffff00000000L, uuid.getMostSignificantBits());
-        assertEquals(0x0L, uuid.getLeastSignificantBits());
+		uuid = UUID.fromString("7fffffffffffffff-0-0-0-0");
+		assertEquals(0xffffffff00000000L, uuid.getMostSignificantBits());
+		assertEquals(0x0L, uuid.getLeastSignificantBits());
 
-        try {
-            uuid = UUID.fromString("8000000000000000-0-0-0-0");
-            fail("should throw NumberFormatException");
-        } catch (NumberFormatException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("8000000000000000-0-0-0-0");
+			fail("should throw NumberFormatException");
+		} catch (NumberFormatException e) {
+			// expected
+		}
 
-        uuid = UUID
-                .fromString("7fffffffffffffff-7fffffffffffffff-7fffffffffffffff-0-0");
-        assertEquals(0xffffffffffffffffL, uuid.getMostSignificantBits());
-        assertEquals(0x0L, uuid.getLeastSignificantBits());
+		uuid = UUID
+				.fromString("7fffffffffffffff-7fffffffffffffff-7fffffffffffffff-0-0");
+		assertEquals(0xffffffffffffffffL, uuid.getMostSignificantBits());
+		assertEquals(0x0L, uuid.getLeastSignificantBits());
 
-        uuid = UUID.fromString("0-0-0-7fffffffffffffff-7fffffffffffffff");
-        assertEquals(0x0L, uuid.getMostSignificantBits());
-        assertEquals(0xffffffffffffffffL, uuid.getLeastSignificantBits());
+		uuid = UUID.fromString("0-0-0-7fffffffffffffff-7fffffffffffffff");
+		assertEquals(0x0L, uuid.getMostSignificantBits());
+		assertEquals(0xffffffffffffffffL, uuid.getLeastSignificantBits());
 
-        try {
-            uuid = UUID.fromString("0-0-0-8000000000000000-0");
-            fail("should throw NumberFormatException");
-        } catch (NumberFormatException e) {
-            // expected
-        }
+		try {
+			uuid = UUID.fromString("0-0-0-8000000000000000-0");
+			fail("should throw NumberFormatException");
+		} catch (NumberFormatException e) {
+			// expected
+		}
 
-        try {
-            uuid = UUID.fromString("0-0-0-0-8000000000000000");
-            fail("should throw NumberFormatException");
-        } catch (NumberFormatException e) {
-            // expected
-        }
-    }
+		try {
+			uuid = UUID.fromString("0-0-0-0-8000000000000000");
+			fail("should throw NumberFormatException");
+		} catch (NumberFormatException e) {
+			// expected
+		}
+	}
 }

@@ -424,12 +424,6 @@ public class KeyStoreSpiTest extends TestCase {
         } catch (UnsupportedOperationException e) {
         }
     }
-    
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(KeyStoreSpiTest.class);
-    }
-    
-    
 }
 
 /**

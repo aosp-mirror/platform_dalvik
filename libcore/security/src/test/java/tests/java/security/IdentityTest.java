@@ -56,10 +56,6 @@ public class IdentityTest extends TestCase {
         }
     }
     
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(IdentityTest.class);
-    }
-
     @TestTargetNew(
         level = TestLevel.PARTIAL,
         notes = "Method's returned variable is not checked",

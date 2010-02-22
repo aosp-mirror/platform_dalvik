@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(IndexOutOfBoundsException.class) 
 public class IndexOutOfBoundsExceptionTest extends TestCase {
 
-    /**
-     * @tests java.lang.IndexOutOfBoundsException#IndexOutOfBoundsException()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IndexOutOfBoundsException",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.IndexOutOfBoundsException#IndexOutOfBoundsException()
+	 */
     public void test_Constructor() {
         IndexOutOfBoundsException e = new IndexOutOfBoundsException();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class IndexOutOfBoundsExceptionTest extends TestCase {
     /**
      * @tests java.lang.IndexOutOfBoundsException#IndexOutOfBoundsException(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IndexOutOfBoundsException",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         IndexOutOfBoundsException e = new IndexOutOfBoundsException("fixture");
         assertEquals("fixture", e.getMessage());

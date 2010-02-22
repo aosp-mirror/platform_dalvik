@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.net");
+        TestSuite suite = new TestSuite("Tests for java.net");
 
         // add net testsuites here
         suite.addTestSuite(ContentHandlerTest.class);

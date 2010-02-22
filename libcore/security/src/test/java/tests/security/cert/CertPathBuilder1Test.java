@@ -522,11 +522,6 @@ public class CertPathBuilder1Test extends TestCase {
         }
 
     }
-
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(CertPathBuilder1Test.class);
-    }  
-    
 }
 /**
  * Additional class to verify CertPathBuilder constructor

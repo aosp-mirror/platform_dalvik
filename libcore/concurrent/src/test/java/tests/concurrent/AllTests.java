@@ -23,16 +23,11 @@ import junit.framework.TestSuite;
  * Test suite for the concurrent module
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     /**
      * Collects all JSR166 unit tests as one suite
      */ 
     public static Test suite ( ) {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("JSR166 Unit Tests");
+        TestSuite suite = new TestSuite("JSR166 Unit Tests");
 
         suite.addTest(tests.api.java.util.concurrent.JSR166TestCase.suite());
         

@@ -17,26 +17,14 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
 @SuppressWarnings("serial")
-@TestTargetClass(VirtualMachineError.class) 
 public class VirtualMachineErrorTest extends TestCase {
 
-    /**
-     * @tests java.lang.VirtualMachineError#VirtualMachineError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "VirtualMachineError",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.VirtualMachineError#VirtualMachineError()
+	 */
     public void test_Constructor() {
         VirtualMachineError e = new VirtualMachineError() {};
         assertNull(e.getMessage());
@@ -47,12 +35,6 @@ public class VirtualMachineErrorTest extends TestCase {
     /**
      * @tests java.lang.VirtualMachineError#VirtualMachineError(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "VirtualMachineError",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         VirtualMachineError e = new VirtualMachineError("fixture") {};
         assertEquals("fixture", e.getMessage());

@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(UnsatisfiedLinkError.class) 
 public class UnsatisfiedLinkErrorTest extends TestCase {
 
-    /**
-     * @tests java.lang.UnsatisfiedLinkError#UnsatisfiedLinkError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "UnsatisfiedLinkError",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.UnsatisfiedLinkError#UnsatisfiedLinkError()
+	 */
     public void test_Constructor() {
         UnsatisfiedLinkError e = new UnsatisfiedLinkError();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class UnsatisfiedLinkErrorTest extends TestCase {
     /**
      * @tests java.lang.UnsatisfiedLinkError#UnsatisfiedLinkError(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "UnsatisfiedLinkError",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         UnsatisfiedLinkError e = new UnsatisfiedLinkError("fixture");
         assertEquals("fixture", e.getMessage());

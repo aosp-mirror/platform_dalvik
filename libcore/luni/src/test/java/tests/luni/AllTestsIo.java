@@ -31,7 +31,7 @@ public class AllTestsIo
     }
 
     public static final Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.io");
+        TestSuite suite = new TestSuite("Tests for java.io");
 
         suite.addTest(tests.api.java.io.AllTests.suite());
 

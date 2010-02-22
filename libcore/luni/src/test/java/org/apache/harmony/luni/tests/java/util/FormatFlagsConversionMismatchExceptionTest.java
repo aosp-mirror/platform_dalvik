@@ -16,32 +16,20 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
 import java.io.Serializable;
 import java.util.FormatFlagsConversionMismatchException;
+
+import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
-@TestTargetClass(FormatFlagsConversionMismatchException.class)     
 public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
 
     /**
      * @tests java.util.FormatFlagsConversionMismatchException#FormatFlagsConversionMismatchException(String,
      *        char)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Verifies NullPointerException.",
-        method = "FormatFlagsConversionMismatchException",
-        args = {java.lang.String.class, char.class}
-    )
     public void test_formatFlagsConversionMismatchException() {
         try {
             new FormatFlagsConversionMismatchException(null, ' ');
@@ -50,18 +38,11 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
             // expected
         }
 
-        assertNotNull(new FormatFlagsConversionMismatchException("String", ' '));
     }
 
     /**
      * @tests java.util.FormatFlagsConversionMismatchException#getFlags()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getFlags",
-        args = {}
-    )
     public void test_getFlags() {
         String flags = "MYTESTFLAGS";
         char conversion = 'T';
@@ -73,18 +54,10 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests java.util.FormatFlagsConversionMismatchException#getConversion()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getConversion",
-        args = {}
-    )
     public void test_getConversion() {
         String flags = "MYTESTFLAGS";
         char conversion = 'T';
-        FormatFlagsConversionMismatchException 
-                formatFlagsConversionMismatchException = 
-                                    new FormatFlagsConversionMismatchException(
+        FormatFlagsConversionMismatchException formatFlagsConversionMismatchException = new FormatFlagsConversionMismatchException(
                 flags, conversion);
         assertEquals(conversion, formatFlagsConversionMismatchException
                 .getConversion());
@@ -94,12 +67,6 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests java.util.FormatFlagsConversionMismatchException#getMessage()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getMessage",
-        args = {}
-    )
     public void test_getMessage() {
         String flags = "MYTESTFLAGS";
         char conversion = 'T';
@@ -129,12 +96,6 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "!SerializationSelf",
-        args = {}
-    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(
@@ -145,12 +106,6 @@ public class FormatFlagsConversionMismatchExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "!SerializationGolden",
-        args = {}
-    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

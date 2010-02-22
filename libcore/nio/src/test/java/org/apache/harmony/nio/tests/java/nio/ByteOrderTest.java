@@ -32,10 +32,6 @@ import junit.framework.TestCase;
 @TestTargetClass(ByteOrder.class)
 public class ByteOrderTest extends TestCase {
 
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(ByteOrderTest.class);
-    }
-
     @TestTargetNew(
         level = TestLevel.COMPLETE,
         notes = "",

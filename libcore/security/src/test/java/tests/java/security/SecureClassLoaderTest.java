@@ -64,16 +64,6 @@ import java.security.cert.Certificate;
 
 public class SecureClassLoaderTest extends TestCase {
     /**
-     * Entry point for stand alone runs.
-     * 
-     * @param args
-     *            command line parameters
-     */
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(SecureClassLoaderTest.class);
-    }
-
-    /**
      * A class name for the class presented as {@link #klassData bytecode below}
      */
     private static final String klassName = "HiWorld";

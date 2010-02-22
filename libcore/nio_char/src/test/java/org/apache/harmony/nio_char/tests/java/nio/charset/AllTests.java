@@ -20,14 +20,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
-                "Test for org.apache.harmony.nio_char.tests.java.nio.charset");
+        TestSuite suite = new TestSuite("Test for org.apache.harmony.nio_char.tests.java.nio.charset");
         //$JUnit-BEGIN$
         suite.addTestSuite(ASCIICharsetEncoderTest.class);
         suite.addTestSuite(CharacterCodingExceptionTest.class);

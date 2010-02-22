@@ -526,10 +526,6 @@ public class CertPathValidator1Test extends TestCase {
                     defaultProvider);
         }
     }
-
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(CertPathValidator1Test.class);
-    }  
 }
 /**
  * Additional class to verify CertPathValidator constructor

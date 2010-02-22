@@ -505,7 +505,4 @@ public class KeyPairGenerator2Test extends TestCase {
         setProv();
         GetInstance03(4);
     }
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(KeyPairGenerator2Test.class);
-    }
 }

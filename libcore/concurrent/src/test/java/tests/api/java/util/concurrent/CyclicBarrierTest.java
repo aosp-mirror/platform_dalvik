@@ -15,9 +15,6 @@ import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.*;
 
 public class CyclicBarrierTest extends JSR166TestCase{
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());        
-    }
     public static Test suite() {
         return new TestSuite(CyclicBarrierTest.class);
     }

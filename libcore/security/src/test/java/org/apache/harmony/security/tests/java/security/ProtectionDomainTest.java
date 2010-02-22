@@ -48,14 +48,6 @@ import junit.framework.TestCase;
 
 public class ProtectionDomainTest extends TestCase {
 
-    /**
-     * Entry point for standalone runs.
-     * @param args command line arguments
-     */
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(ProtectionDomainTest.class);
-    }
-
     private final AllPermission allperm = new AllPermission();
 
     private URL url = null;

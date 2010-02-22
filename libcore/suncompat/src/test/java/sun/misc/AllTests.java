@@ -20,13 +20,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Test for sun.misc");
+        TestSuite suite = new TestSuite("Test for sun.misc");
 
         // $JUnit-BEGIN$
 

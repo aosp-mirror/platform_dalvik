@@ -21,7 +21,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
@@ -116,7 +115,7 @@ public class XsltXPathConformanceTestSuite {
         }
 
         File catalogXml = new File(args[0]);
-        TestRunner.run(suite(catalogXml));
+        // TestRunner.run(suite(catalogXml)); android-changed
     }
 
     public static Test suite() throws Exception {

@@ -104,9 +104,6 @@ public class KeyPairGeneratorSpiTest extends TestCase {
         KeyPair kp = keyPairGen.generateKeyPair();
         assertNull("Not null KeyPair", kp);
     }
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(KeyPairGeneratorSpiTest.class);
-    }
     
     class MyAlgorithmParameterSpec implements AlgorithmParameterSpec {}
 

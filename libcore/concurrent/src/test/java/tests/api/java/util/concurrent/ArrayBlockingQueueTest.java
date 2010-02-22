@@ -14,9 +14,6 @@ import java.util.concurrent.*;
 import java.io.*;
 
 public class ArrayBlockingQueueTest extends JSR166TestCase {
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());        
-    }
     public static Test suite() {
         return new TestSuite(ArrayBlockingQueueTest.class);
     }

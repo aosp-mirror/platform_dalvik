@@ -16,25 +16,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(Boolean.class) 
 public class BooleanTest extends TestCase {
 
     /**
      * @tests java.lang.Boolean#hashCode()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
     public void test_hashCode() {
         assertEquals(1231, Boolean.TRUE.hashCode());
         assertEquals(1237, Boolean.FALSE.hashCode());
@@ -43,12 +31,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#Boolean(String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Boolean",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         assertEquals(Boolean.TRUE, new Boolean("TRUE"));
         assertEquals(Boolean.TRUE, new Boolean("true"));
@@ -61,12 +43,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#Boolean(boolean)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Boolean",
-        args = {boolean.class}
-    )
     public void test_ConstructorZ() {
         assertEquals(Boolean.TRUE, new Boolean(true));
         assertEquals(Boolean.FALSE, new Boolean(false));
@@ -75,12 +51,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#booleanValue()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "booleanValue",
-        args = {}
-    )
     public void test_booleanValue() {
         assertTrue(Boolean.TRUE.booleanValue());
         assertFalse(Boolean.FALSE.booleanValue());
@@ -89,12 +59,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#equals(Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void test_equalsLjava_lang_Object() {
         assertTrue(Boolean.TRUE.equals(Boolean.TRUE));
         assertTrue(Boolean.TRUE.equals(new Boolean(true)));
@@ -108,12 +72,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#getBoolean(String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getBoolean",
-        args = {java.lang.String.class}
-    )
     public void test_getBooleanLjava_lang_String() {
         System.setProperty(getClass().getName(), "true");
         assertTrue(Boolean.getBoolean(getClass().getName()));
@@ -128,12 +86,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#toString()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )
     public void test_toString() {
         assertEquals("true", Boolean.TRUE.toString());
         assertEquals("false", Boolean.FALSE.toString());
@@ -142,12 +94,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#toString(boolean)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {boolean.class}
-    )
     public void test_toStringZ() {
         assertEquals("true", Boolean.toString(true));
         assertEquals("false", Boolean.toString(false));
@@ -156,12 +102,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#valueOf(String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "valueOf",
-        args = {java.lang.String.class}
-    )
     public void test_valueOfLjava_lang_String() {
         assertEquals(Boolean.TRUE, Boolean.valueOf("true"));
         assertEquals(Boolean.FALSE, Boolean.valueOf("false"));
@@ -182,12 +122,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#valueOf(boolean)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "valueOf",
-        args = {boolean.class}
-    )
     public void test_valueOfZ() {
         assertEquals(Boolean.TRUE, Boolean.valueOf(true));
         assertEquals(Boolean.FALSE, Boolean.valueOf(false));
@@ -196,12 +130,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#parseBoolean(String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "parseBoolean",
-        args = {java.lang.String.class}
-    )
     public void test_parseBooleanLjava_lang_String() {
         assertTrue(Boolean.parseBoolean("true"));
         assertTrue(Boolean.parseBoolean("TRUE"));
@@ -214,12 +142,6 @@ public class BooleanTest extends TestCase {
     /**
      * @tests java.lang.Boolean#compareTo(Boolean)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "compareTo",
-        args = {java.lang.Boolean.class}
-    )
     public void test_compareToLjava_lang_Boolean() {
         assertTrue(Boolean.TRUE.compareTo(Boolean.TRUE) == 0);
         assertTrue(Boolean.FALSE.compareTo(Boolean.FALSE) == 0);

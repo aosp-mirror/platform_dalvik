@@ -17,26 +17,15 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
+
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
-@TestTargetClass(IllegalStateException.class) 
 public class IllegalStateExceptionTest extends TestCase {
 
-    /**
-     * @tests java.lang.IllegalStateException#IllegalStateException()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalStateException",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.IllegalStateException#IllegalStateException()
+	 */
     public void test_Constructor() {
         IllegalStateException e = new IllegalStateException();
         assertNull(e.getMessage());
@@ -47,60 +36,50 @@ public class IllegalStateExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalStateException#IllegalStateException(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalStateException",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         IllegalStateException e = new IllegalStateException("fixture");
         assertEquals("fixture", e.getMessage());
         assertNull(e.getCause());
     }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalStateException",
-        args = {java.lang.String.class, java.lang.Throwable.class}
-    )
-    public void test_ConstructorLjava_lang_StringLThrowable() {
-        String message = "Test message";
-        NullPointerException npe = new NullPointerException();
-        IllegalStateException e = new IllegalStateException(message, npe);
-        assertEquals(message, e.getMessage());
-        assertEquals(npe, e.getCause());
-        
-        e = new IllegalStateException(message, null);
-        assertEquals(message, e.getMessage());
-        assertNull(e.getCause());
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalStateException",
-        args = {java.lang.Throwable.class}
-    )
-    public void test_ConstructorLThrowable() {
-      NullPointerException npe = new NullPointerException();
-      IllegalStateException e = new IllegalStateException(npe);
-      assertEquals(npe, e.getCause());
-      
-      e = new IllegalStateException((Throwable)null);
-      assertNull(e.getCause());
-    }
     
+    /**
+     * @tests {@link java.land.IllegalStateException#IllIllegalStateException(java.lang.Throwable)}
+     */
+    public void test_ConstructorLjava_lang_Throwable() {
+        Throwable emptyThrowable = new Exception();
+        IllegalStateException emptyException = new IllegalStateException(emptyThrowable);
+        assertEquals(emptyThrowable.getClass().getName(), emptyException.getMessage());
+        assertEquals(emptyThrowable.getClass().getName(), emptyException.getLocalizedMessage());
+        assertEquals(emptyThrowable.getClass().getName(), emptyException.getCause().toString());
+
+        Throwable throwable = new Exception("msg");
+        IllegalStateException exception = new IllegalStateException(throwable);
+        assertEquals(throwable.getClass().getName() + ": " + "msg", exception.getMessage());
+        assertEquals(throwable.getClass().getName(), emptyException.getLocalizedMessage());
+        assertEquals(throwable.getClass().getName(), emptyException.getCause().toString());
+    }
+
+    /**
+     * @tests {@link java.land.IllegalStateException#IllIllegalStateException(java.lang.String, java.lang.Throwable)}
+     */
+    public void test_ConstructorLjava_lang_StringLjava_lang_Throwable() {
+        Throwable emptyThrowable = new Exception();
+        IllegalStateException emptyException = new IllegalStateException("msg", emptyThrowable);
+        assertEquals("msg", emptyException.getMessage());
+        assertEquals("msg", emptyException.getLocalizedMessage());
+        assertEquals(emptyThrowable.getClass().getName(), emptyException.getCause().toString());
+
+        Throwable throwable = new Exception("msg_exception");
+        IllegalStateException exception = new IllegalStateException("msg", throwable);
+        assertEquals("msg", exception.getMessage());
+        assertEquals("msg", exception.getLocalizedMessage());
+        assertEquals(throwable.getClass().getName() + ": " + throwable.getMessage(), exception
+                .getCause().toString());
+    }
+
     /**
      * @tests serialization/deserialization.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Verifies serialization/deserialization.",
-        method = "!SerializationSelf",
-        args = {}
-    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new IllegalStateException());
@@ -109,12 +88,6 @@ public class IllegalStateExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Verifies serialization/deserialization.",
-        method = "!SerializationGolden",
-        args = {}
-    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new IllegalStateException());

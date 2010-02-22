@@ -17,48 +17,30 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
-@TestTargetClass(OutOfMemoryError.class) 
 public class OutOfMemoryErrorTest extends junit.framework.TestCase {
 
-    /**
-     * @tests java.lang.OutOfMemoryError#OutOfMemoryError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "OutOfMemoryError",
-        args = {}
-    )
-    public void test_Constructor() {
-        // Test for method java.lang.OutOfMemoryError()
-        Error e = new OutOfMemoryError();
+	/**
+	 * @tests java.lang.OutOfMemoryError#OutOfMemoryError()
+	 */
+	public void test_Constructor() {
+		// Test for method java.lang.OutOfMemoryError()
+	    Error e = new OutOfMemoryError();
         assertNull(e.getCause());
         assertNull(e.getMessage());
-    }
+	}
 
-    /**
-     * @tests java.lang.OutOfMemoryError#OutOfMemoryError(java.lang.String)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "OutOfMemoryError",
-        args = {java.lang.String.class}
-    )
-    public void test_ConstructorLjava_lang_String() {
-        // Test for method java.lang.OutOfMemoryError(java.lang.String)
-        Error e = new OutOfMemoryError(null);
+	/**
+	 * @tests java.lang.OutOfMemoryError#OutOfMemoryError(java.lang.String)
+	 */
+	public void test_ConstructorLjava_lang_String() {
+		// Test for method java.lang.OutOfMemoryError(java.lang.String)
+		Error e = new OutOfMemoryError(null);
         assertNull(e.getMessage());
         assertNull(e.getCause());
         
         e= new OutOfMemoryError("msg");
         assertEquals("msg", e.getMessage());
         assertNull(e.getCause());
-    }
+	}
 
 }

@@ -37,11 +37,6 @@ import java.security.acl.AclNotFoundException;
  */
 @TestTargetClass(AclNotFoundException.class)
 public class AclNotFoundExceptionTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AclNotFoundExceptionTest.class);
-    }
-
     /**
      * check default constructor 
      */  

@@ -17,29 +17,17 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
+import java.lang.annotation.AnnotationFormatError;
 
 import junit.framework.TestCase;
-
-import java.lang.annotation.AnnotationFormatError;
 
 /**
  * Test case of java.lang.annotation.AnnotationFormatError
  */
-@TestTargetClass(AnnotationFormatError.class) 
 public class AnnotationFormatErrorTest extends TestCase {
     /**
      * @tests java.lang.annotation.AnnotationFormatError#AnnotationFormatError(String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "AnnotationFormatError",
-        args = {java.lang.String.class}
-    )
     @SuppressWarnings("nls")
     public void test_constructorLjava_lang_String() {
         AnnotationFormatError e = new AnnotationFormatError("some message");
@@ -49,12 +37,6 @@ public class AnnotationFormatErrorTest extends TestCase {
     /**
      * @tests java.lang.annotation.AnnotationFormatError#AnnotationFormatError(Throwable)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "AnnotationFormatError",
-        args = {java.lang.Throwable.class}
-    )
     public void test_constructorLjava_lang_Throwable() {
         IllegalArgumentException iae = new IllegalArgumentException();
         AnnotationFormatError e = new AnnotationFormatError(iae);
@@ -64,12 +46,6 @@ public class AnnotationFormatErrorTest extends TestCase {
     /**
      * @tests java.lang.annotation.AnnotationFormatError#AnnotationFormatError(String,Throwable)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "AnnotationFormatError",
-        args = {java.lang.String.class, java.lang.Throwable.class}
-    )
     @SuppressWarnings("nls")
     public void test_constructorLjava_lang_StringLjava_lang_Throwable() {
         IllegalArgumentException iae = new IllegalArgumentException();

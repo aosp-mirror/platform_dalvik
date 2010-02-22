@@ -231,10 +231,6 @@ public class KSPrivateKeyEntryTest extends TestCase {
         return new TestSuite(KSPrivateKeyEntryTest.class);
     }
 
-    public static void main(String args[]) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     private static class tmpPrivateKey implements PrivateKey {
         private String alg = "My algorithm";
 

@@ -23,13 +23,8 @@ import junit.framework.TestSuite;
  * Test suite that includes all tests for the Math project.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Math test suites");
+        TestSuite suite = new TestSuite("All Math test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.nio.tests.java.nio.AllTests.suite());
         suite.addTest(org.apache.harmony.nio.tests.java.nio.channels.AllTests.suite());

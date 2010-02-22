@@ -40,10 +40,6 @@ import junit.framework.TestCase;
  */
 public class AllPermissionTest extends TestCase {
 
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllPermissionTest.class);
-    }
-
     /**
      * Test all constructors: an object is created, name and actions are ignored
      */

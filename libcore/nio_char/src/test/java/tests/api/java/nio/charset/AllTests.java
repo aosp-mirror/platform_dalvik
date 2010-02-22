@@ -20,13 +20,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.api.java.nio.charset;");
+        TestSuite suite = new TestSuite("All tests for package tests.api.java.nio.charset;");
 
         suite.addTestSuite(CharsetProviderTest.class);
         suite.addTestSuite(CharsetTest.class);

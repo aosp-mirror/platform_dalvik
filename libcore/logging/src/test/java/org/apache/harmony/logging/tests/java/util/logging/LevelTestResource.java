@@ -17,12 +17,8 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.TestTargetClass;
-
 import java.util.ListResourceBundle;
-import java.util.logging.Level;
 
-//@TestTargetClass = No test needed, just test class helper
 public class LevelTestResource extends ListResourceBundle {
     public Object[][] getContents() {
         return contents;

@@ -15,12 +15,7 @@
  *  limitations under the License.
  */
 
-package org.apache.harmony.luni.tests.util; 
-
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass; 
+package org.apache.harmony.luni.tests.util;
 
 import org.apache.harmony.luni.util.Base64;
 
@@ -30,19 +25,12 @@ import junit.framework.TestSuite;
 
 /**
  * Base64 encoder/decoder test.
- */ 
-@TestTargetClass(Base64.class)
+ */
 public class Base64Test extends TestCase {
 
     /**
      * Checks the result on empty parameter.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "decode",
-        args = {byte[].class}
-    )    
     public static void testDecodeEmpty() throws Exception {
         // Regression for HARMONY-1513
         byte[] result = Base64.decode(new byte[0]);
@@ -52,10 +40,6 @@ public class Base64Test extends TestCase {
 
     public static Test suite() {
         return new TestSuite(Base64Test.class);
-    }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
     }
 }
 

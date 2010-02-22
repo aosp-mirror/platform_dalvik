@@ -15,9 +15,6 @@ import java.util.*;
 import java.io.*;
 
 public class ReentrantLockTest extends JSR166TestCase {
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());
-    }
     public static Test suite() {
         return new TestSuite(ReentrantLockTest.class);
     }

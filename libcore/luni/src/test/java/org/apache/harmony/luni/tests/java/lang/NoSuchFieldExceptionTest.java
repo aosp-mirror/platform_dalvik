@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(NoSuchFieldException.class) 
 public class NoSuchFieldExceptionTest extends TestCase {
 
-    /**
-     * @tests java.lang.NoSuchFieldException#NoSuchFieldException()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "NoSuchFieldException",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.NoSuchFieldException#NoSuchFieldException()
+	 */
     public void test_Constructor() {
         NoSuchFieldException e = new NoSuchFieldException();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class NoSuchFieldExceptionTest extends TestCase {
     /**
      * @tests java.lang.NoSuchFieldException#NoSuchFieldException(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "NoSuchFieldException",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         NoSuchFieldException e = new NoSuchFieldException("fixture");
         assertEquals("fixture", e.getMessage());

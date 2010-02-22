@@ -17,11 +17,6 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.io.IOException;
 import java.net.ContentHandler;
 import java.net.URL;
@@ -29,19 +24,12 @@ import java.net.URLConnection;
 
 import junit.framework.TestCase;
 
-@TestTargetClass(ContentHandler.class) 
 public class ContentHandlerTest extends TestCase {
 
     /**
      * @tests java.net.ContentHandler#getContent(java.net.URLConnection,
      *        java.lang.Class[])
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getContent",
-        args = {java.net.URLConnection.class, java.lang.Class[].class}
-    )
     public void test_getContent() throws IOException {
         URLConnection conn = new URL("http://www.apache.org").openConnection();
         Class[] classes = { Foo.class, String.class, };
@@ -49,7 +37,7 @@ public class ContentHandlerTest extends TestCase {
         ((ContentHandlerImpl) handler).setContent(new Foo());
         Object content = handler.getContent(conn, classes);
         assertEquals("Foo", ((Foo) content).getFoo());
-        
+
         ((ContentHandlerImpl) handler).setContent(new FooSub());
         content = handler.getContent(conn, classes);
         assertEquals("FooSub", ((Foo) content).getFoo());
@@ -58,33 +46,6 @@ public class ContentHandlerTest extends TestCase {
         ((ContentHandlerImpl) handler).setContent(new Foo());
         content = handler.getContent(conn, classes2);
         assertNull(content);
-      
-    }
-    
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getContent",
-        args = {java.net.URLConnection.class}
-    )
-    public void test_getContentLURLConnection() throws IOException {
-        URLConnection conn = new URL("http://www.apache.org").openConnection();
-        Class[] classes = { Foo.class, String.class, };
-        ContentHandler handler = new ContentHandlerImpl();
-        ((ContentHandlerImpl) handler).setContent(new Foo());
-        Object content = handler.getContent(conn);
-        assertEquals("Foo", ((Foo) content).getFoo());
-    }
-    
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "ContentHandler",
-        args = {}
-    )
-    public void test_Constructor() {
-        ContentHandlerImpl ch = new ContentHandlerImpl();
-        ch.setContent(new Object());
     }
 }
 

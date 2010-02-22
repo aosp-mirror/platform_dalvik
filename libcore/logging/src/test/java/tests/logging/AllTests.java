@@ -24,13 +24,8 @@ import junit.framework.TestSuite;
  * Test suite that includes all tests for the Logging project.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Logging test suites");
+        TestSuite suite = new TestSuite("All Logging test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.logging.tests.java.util.logging.AllTests.suite());
         // $JUnit-END$

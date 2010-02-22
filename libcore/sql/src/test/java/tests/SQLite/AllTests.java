@@ -23,7 +23,7 @@ public class AllTests {
 
     //All tests executed with sqlite3 only
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for SQLite");
+        TestSuite suite = new TestSuite("Tests for SQLite");
         //$JUnit-BEGIN$
         suite.addTestSuite(DatabaseTest.class);
         suite.addTestSuite(JDBCDriverFunctionalTest.class);

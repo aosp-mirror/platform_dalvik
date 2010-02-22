@@ -41,11 +41,6 @@ import junit.framework.TestCase;
  */
 
 public class TimestampTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(TimestampTest.class);
-    }
-
     private Date now = new Date();
 
     private static final byte[] encoding = { 1, 2, 3 };

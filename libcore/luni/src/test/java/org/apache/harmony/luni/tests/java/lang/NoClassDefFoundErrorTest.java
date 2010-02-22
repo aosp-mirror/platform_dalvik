@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(NoClassDefFoundError.class) 
 public class NoClassDefFoundErrorTest extends TestCase {
 
-    /**
-     * @tests java.lang.NoClassDefFoundError#NoClassDefFoundError()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "NoClassDefFoundError",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.NoClassDefFoundError#NoClassDefFoundError()
+	 */
     public void test_Constructor() {
         NoClassDefFoundError e = new NoClassDefFoundError();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class NoClassDefFoundErrorTest extends TestCase {
     /**
      * @tests java.lang.NoClassDefFoundError#NoClassDefFoundError(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "NoClassDefFoundError",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         NoClassDefFoundError e = new NoClassDefFoundError("fixture");
         assertEquals("fixture", e.getMessage());

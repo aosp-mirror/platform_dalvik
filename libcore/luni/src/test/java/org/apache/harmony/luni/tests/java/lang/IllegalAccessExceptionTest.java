@@ -17,25 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(IllegalAccessException.class) 
 public class IllegalAccessExceptionTest extends TestCase {
 
-    /**
-     * @tests java.lang.IllegalAccessException#IllegalAccessException()
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalAccessException",
-        args = {}
-    )
+	/**
+	 * @tests java.lang.IllegalAccessException#IllegalAccessException()
+	 */
     public void test_Constructor() {
         IllegalAccessException e = new IllegalAccessException();
         assertNull(e.getMessage());
@@ -46,12 +34,6 @@ public class IllegalAccessExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalAccessException#IllegalAccessException(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "IllegalAccessException",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         IllegalAccessException e = new IllegalAccessException("fixture");
         assertEquals("fixture", e.getMessage());

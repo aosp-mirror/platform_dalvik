@@ -17,117 +17,49 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
-@TestTargetClass(Compiler.class) 
 public class CompilerTest extends TestCase {
 
     /**
      * @tests java.lang.Compiler#command(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "command",
-        args = {java.lang.Object.class}
-    )
     public void test_commandLjava_lang_Object() {
-       
-        if(System.getProperty("java.compiler") != null) {
-            try {
-                assertNull("Incorrect behavior.", Compiler.command(new Object()));
-            } catch (Exception e) {
-                fail("Exception during test : " + e.getMessage());
-            }
-            // NullPointerException is not specified.
-            Compiler.command(null);
-        } else {
-            Compiler.command("");
-        }
+        assertNull("Incorrect behavior.", Compiler.command(new Object()));
     }
 
     /**
      * @tests java.lang.Compiler#compileClass(java.lang.Class)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "compileClass",
-        args = {java.lang.Class.class}
-    )
     public void test_compileClassLjava_lang_Class() {
-        try {
-            // Do not test return value, may return true or false depending on
-            // if the jit is enabled. Make the call to ensure it doesn't crash.
-            Compiler.compileClass(Compiler.class);
-        } catch (Exception e) {
-            fail("Exception during test.");
-        }
-        
-        // NullPointerException is not specified.
-        Compiler.compileClass((Class) null);
+        // Do not test return value, may return true or false depending on
+        // if the jit is enabled. Make the call to ensure it doesn't crash.
+        Compiler.compileClass(Compiler.class);
     }
 
     /**
      * @tests java.lang.Compiler#compileClasses(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "compileClasses",
-        args = {java.lang.String.class}
-    )
     public void test_compileClassesLjava_lang_String() {
-        try {
-            // Do not test return value, may return true or false depending on
-            // if the jit is enabled. Make the call to ensure it doesn't crash.
+        // Do not test return value, may return true or false depending on
+        // if the jit is enabled. Make the call to ensure it doesn't crash.
             Compiler.compileClasses("Compiler");
-        } catch (Exception e) {
-            fail("Exception during test.");
-        }
-        
-        // NullPointerException is not specified.
-        Compiler.compileClasses((String) null);
     }
 
     /**
      * @tests java.lang.Compiler#disable()
      */
-    @TestTargetNew(
-        level = TestLevel.NOT_NECESSARY,
-        notes = "Doesn't verify that disable() method causes the Compiler to cease operation.",
-        method = "disable",
-        args = {}
-    )
     public void test_disable() {
-        try {
-            Compiler.disable();
-            Compiler.compileClass(Compiler.class);
-        } catch (Exception e) {
-            fail("Exception during test : " + e.getMessage());
-        }
+        Compiler.disable();
+        Compiler.compileClass(Compiler.class);
     }
 
     /**
      * @tests java.lang.Compiler#enable()
      */
-    @TestTargetNew(
-        level = TestLevel.NOT_NECESSARY,
-        notes = "Doesn't verify that enable() method causes the Compiler to resume operation.",
-        method = "enable",
-        args = {}
-    )
     public void test_enable() {
-        try {
-            Compiler.disable();
-            Compiler.enable();
-            Compiler.compileClass(Compiler.class);
-        } catch (Exception e) {
-            fail("Exception during test : " + e.getMessage());
-        }
+        Compiler.disable();
+        Compiler.enable();
+        Compiler.compileClass(Compiler.class);
     }
 }

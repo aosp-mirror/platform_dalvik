@@ -24,13 +24,8 @@ import junit.framework.TestSuite;
  * Test suite for java.util.jar package.
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
+        TestSuite suite = new TestSuite(
                 "Suite org.apache.harmony.archive.tests.java.util.jar");
         suite.addTestSuite(AttributesNameTest.class);
         suite.addTestSuite(AttributesTest.class);

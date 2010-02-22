@@ -13,9 +13,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class CountDownLatchTest extends JSR166TestCase {
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run (suite());        
-    }
     public static Test suite() {
         return new TestSuite(CountDownLatchTest.class);
     }

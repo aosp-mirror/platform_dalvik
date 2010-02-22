@@ -25,13 +25,8 @@ import junit.framework.TestSuite;
  * 
  */
 public class AllTests {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(AllTests.suite());
-    }
-
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Text test suites");
+        TestSuite suite = new TestSuite("All Text test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.text.tests.java.text.AllTests.suite());
         // $JUnit-END$

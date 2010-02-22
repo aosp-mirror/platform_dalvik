@@ -36,11 +36,6 @@ import junit.framework.TestCase;
  * 
  */
 public class SecurityPermissionTest extends TestCase {
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(SecurityPermissionTest.class);
-    }
-
     /**
      * Check all constructors: an object is created with the specified valid name. 
      * If name equal null then NPE should be thrown. 

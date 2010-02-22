@@ -904,8 +904,4 @@ public class X509CertificateTest extends TestCase {
     public static Test suite() {
         return new TestSuite(X509CertificateTest.class);
     }
-
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
 }
