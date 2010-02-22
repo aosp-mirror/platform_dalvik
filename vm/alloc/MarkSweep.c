@@ -1152,10 +1152,10 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
          * more obvious.
          */
         if (overwriteFree) {
-            int chunklen;
+            int objlen;
             ClassObject *clazz = obj->clazz;
-            chunklen = dvmHeapSourceChunkSize(obj);
-            memset(hc, 0xa5, chunklen);
+            objlen = dvmHeapSourceChunkSize(obj);
+            memset(obj, 0xa5, objlen);
             obj->clazz = (ClassObject *)((uintptr_t)clazz ^ 0xffffffff);
         }
     }
