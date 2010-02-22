@@ -142,6 +142,16 @@ LOCAL_MODULE := core-tests-icu
 include $(BUILD_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_SRC_FILES := $(call all-test-java-files-under,json)
+LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
+LOCAL_NO_STANDARD_LIBRARIES := true
+LOCAL_JAVA_LIBRARIES := core core-tests-support
+LOCAL_DX_FLAGS := --core-library
+LOCAL_MODULE_TAGS := tests
+LOCAL_MODULE := core-tests-json
+include $(BUILD_JAVA_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,logging)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
@@ -169,14 +179,29 @@ LOCAL_NO_STANDARD_LIBRARIES := true
 # together, so it has compile-time dependencies on all the other test
 # libraries.
 # TODO: we should have a bogus module that just contains tests.AllTests for speed.
-LOCAL_JAVA_LIBRARIES := core core-tests-support
-LOCAL_JAVA_LIBRARIES += core-tests-annotation core-tests-archive
-LOCAL_JAVA_LIBRARIES += core-tests-concurrent core-tests-crypto
-LOCAL_JAVA_LIBRARIES += core-tests-dom core-tests-icu core-tests-logging
-LOCAL_JAVA_LIBRARIES += core-tests-luni-kernel core-tests-math core-tests-nio
-LOCAL_JAVA_LIBRARIES += core-tests-nio_char core-tests-prefs core-tests-regex
-LOCAL_JAVA_LIBRARIES += core-tests-security core-tests-sql core-tests-suncompat
-LOCAL_JAVA_LIBRARIES += core-tests-text core-tests-x-net core-tests-xml
+LOCAL_JAVA_LIBRARIES := \
+        core \
+        core-tests-support \
+        core-tests-annotation \
+        core-tests-archive \
+        core-tests-concurrent \
+        core-tests-crypto \
+        core-tests-dom \
+        core-tests-icu \
+        core-tests-json \
+        core-tests-logging \
+        core-tests-luni-kernel \
+        core-tests-math \
+        core-tests-nio \
+        core-tests-nio_char \
+        core-tests-prefs \
+        core-tests-regex \
+        core-tests-security \
+        core-tests-sql \
+        core-tests-suncompat \
+        core-tests-text \
+        core-tests-x-net \
+        core-tests-xml
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-luni

@@ -21,7 +21,7 @@ import junit.framework.TestSuite;
 
 public class AllTests {
     public static Test suite() {
-        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
+        TestSuite suite = new TestSuite();
         suite.addTestSuite(JSONArrayTest.class);
         suite.addTestSuite(JSONStringerTest.class);
         suite.addTestSuite(JSONStringerTest.class);
