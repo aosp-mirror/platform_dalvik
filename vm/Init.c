@@ -107,6 +107,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
+    dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -955,6 +956,10 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.preciseGc = true;
             else if (strcmp(argv[i] + 5, "noprecise") == 0)
                 gDvm.preciseGc = false;
+            else if (strcmp(argv[i] + 5, "overwritefree") == 0)
+                gDvm.overwriteFree = true;
+            else if (strcmp(argv[i] + 5, "nooverwritefree") == 0)
+                gDvm.overwriteFree = false;
             else {
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;
