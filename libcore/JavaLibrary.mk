@@ -26,7 +26,7 @@
 # a directory for tests.
 
 define all-core-java-files
-$(patsubst ./%,%,$(shell cd $(LOCAL_PATH) && find */src/$(1)/java -name "*.java"))
+$(patsubst ./%,%,$(shell cd $(LOCAL_PATH) && find */src/main/java -name "*.java"))
 endef
 
 define all-test-java-files-under
@@ -36,15 +36,13 @@ endef
 # Redirect ls stderr to /dev/null because the corresponding resources
 # directories don't always exist.
 define all-core-resource-dirs
-$(shell cd $(LOCAL_PATH) && ls -d */src/test/{java,resources} 2> /dev/null)
+$(shell cd $(LOCAL_PATH) && ls -d */src/$(1)/{java,resources} 2> /dev/null)
 endef
 
-# The core Java files and associated resources.
-core_src_files := $(call all-core-java-files,main)
+# The Java files and their associated resources.
+core_src_files := $(call all-core-java-files)
 core_resource_dirs := $(call all-core-resource-dirs,main)
-
-# The tests' associated resources.
-test_resource_dirs := $(call all-core-resource-dirs)
+test_resource_dirs := $(call all-core-resource-dirs,test)
 
 
 #
