@@ -48,7 +48,7 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
 
     private DOMImplementation domImplementation;
 
-    DocumentImpl(DOMImplementationImpl impl, String namespaceURI,
+    public DocumentImpl(DOMImplementationImpl impl, String namespaceURI,
             String qualifiedName, DocumentType doctype) {
         super(null);
 

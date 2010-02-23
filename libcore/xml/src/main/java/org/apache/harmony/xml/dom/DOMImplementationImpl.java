@@ -31,7 +31,7 @@ import org.w3c.dom.DocumentType;
  * the DOM implementation can easily access them while maintaining the DOM tree
  * structure.
  */
-public class DOMImplementationImpl implements DOMImplementation {
+public final class DOMImplementationImpl implements DOMImplementation {
 
     // Singleton instance.
     private static DOMImplementationImpl instance;

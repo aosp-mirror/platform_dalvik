@@ -677,8 +677,7 @@ public class SAXParserTest extends TestCase {
                 MyDefaultHandler dh = new MyDefaultHandler();
                 InputStream is = new FileInputStream(list_wf[i]);
                 parser.parse(is, dh, SAXParserTestSupport.XML_SYSTEM_ID);
-                assertTrue(SAXParserTestSupport.equalsMaps(hm, 
-                        dh.createData()));
+                assertEquals(hm, dh.createData());
             } catch (IOException ioe) {
                 fail("Unexpected IOException " + ioe.toString());
             } catch (SAXException sax) {
