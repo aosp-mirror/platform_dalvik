@@ -80,6 +80,9 @@ typedef struct AllocProfState {
 
     int     gcCount;            // #of times an allocation triggered a GC
 
+    int     classInitCount;     // #of initialized classes
+    u8      classInitTime;      // cumulative time spent in class init (nsec)
+
 #if PROFILE_EXTERNAL_ALLOCATIONS
     int     externalAllocCount; // #of calls to dvmTrackExternalAllocation()
     int     externalAllocSize;  // #of bytes passed to ...ExternalAllocation()

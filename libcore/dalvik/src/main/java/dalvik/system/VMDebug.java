@@ -34,6 +34,8 @@ import java.io.IOException;
 public final class VMDebug {
     /**
      * Specifies the default method trace data file name.
+     *
+     * @deprecated only used in one place, which is unused and deprecated
      */
     static public final String DEFAULT_METHOD_TRACE_FILE_NAME = "/sdcard/dmtrace.trace";
 
@@ -44,11 +46,13 @@ public final class VMDebug {
     public static final int TRACE_COUNT_ALLOCS = 1;
 
     /* constants for getAllocCount */
-    private static final int KIND_ALLOCATED_OBJECTS = 1<<0;
-    private static final int KIND_ALLOCATED_BYTES   = 1<<1;
-    private static final int KIND_FREED_OBJECTS     = 1<<2;
-    private static final int KIND_FREED_BYTES       = 1<<3;
-    private static final int KIND_GC_INVOCATIONS    = 1<<4;
+    private static final int KIND_ALLOCATED_OBJECTS     = 1<<0;
+    private static final int KIND_ALLOCATED_BYTES       = 1<<1;
+    private static final int KIND_FREED_OBJECTS         = 1<<2;
+    private static final int KIND_FREED_BYTES           = 1<<3;
+    private static final int KIND_GC_INVOCATIONS        = 1<<4;
+    private static final int KIND_CLASS_INIT_COUNT      = 1<<5;
+    private static final int KIND_CLASS_INIT_TIME       = 1<<6;
     private static final int KIND_EXT_ALLOCATED_OBJECTS = 1<<12;
     private static final int KIND_EXT_ALLOCATED_BYTES   = 1<<13;
     private static final int KIND_EXT_FREED_OBJECTS     = 1<<14;
@@ -64,6 +68,10 @@ public final class VMDebug {
         KIND_FREED_BYTES;
     public static final int KIND_GLOBAL_GC_INVOCATIONS =
         KIND_GC_INVOCATIONS;
+    public static final int KIND_GLOBAL_CLASS_INIT_COUNT =
+        KIND_CLASS_INIT_COUNT;
+    public static final int KIND_GLOBAL_CLASS_INIT_TIME =
+        KIND_CLASS_INIT_TIME;
     public static final int KIND_GLOBAL_EXT_ALLOCATED_OBJECTS =
         KIND_EXT_ALLOCATED_OBJECTS;
     public static final int KIND_GLOBAL_EXT_ALLOCATED_BYTES =
@@ -83,6 +91,10 @@ public final class VMDebug {
         KIND_FREED_BYTES << 16;
     public static final int KIND_THREAD_GC_INVOCATIONS =
         KIND_GC_INVOCATIONS << 16;
+    public static final int KIND_THREAD_CLASS_INIT_COUNT =
+        KIND_CLASS_INIT_COUNT << 16;
+    public static final int KIND_THREAD_CLASS_INIT_TIME =
+        KIND_CLASS_INIT_TIME << 16;
     public static final int KIND_THREAD_EXT_ALLOCATED_OBJECTS =
         KIND_EXT_ALLOCATED_OBJECTS << 16;
     public static final int KIND_THREAD_EXT_ALLOCATED_BYTES =
@@ -131,6 +143,8 @@ public final class VMDebug {
     /**
      * Start method tracing with default name, size, and with <code>0</code>
      * flags.
+     *
+     * @deprecated not used, not needed
      */
     public static void startMethodTracing() {
         startMethodTracing(DEFAULT_METHOD_TRACE_FILE_NAME, 0, 0);
