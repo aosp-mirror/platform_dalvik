@@ -16,8 +16,12 @@
 
 package dalvik.runner;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -72,6 +76,10 @@ public final class DalvikRunner {
         @Option(names = { "--verbose" })
         private boolean verbose;
 
+        @Option(names = { "--tee" })
+        private String teeName;
+        private PrintStream tee;
+
         @Option(names = { "--debug" })
         private Integer debugPort;
 
@@ -115,6 +123,9 @@ public final class DalvikRunner {
             System.out.println();
             System.out.println("  --clean: synonym for --clean-before and --clean-after (default).");
             System.out.println("      Disable with --no-clean if you want no files removed.");
+            System.out.println();
+            System.out.println("  --tee <file>: emit test output to file during execution.");
+            System.out.println("      Specify '-' for stdout.");
             System.out.println();
             System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
             System.out.println("      test before the runner aborts it.");
@@ -235,6 +246,19 @@ public final class DalvikRunner {
                 testFiles.add(new File(testFilename));
             }
 
+            if (teeName != null) {
+                if (teeName.equals("-")) {
+                    tee = System.out;
+                } else {
+                    try {
+                        tee = new PrintStream(new BufferedOutputStream(new FileOutputStream(teeName)));
+                    } catch (FileNotFoundException e) {
+                        System.out.println("Could not open file teeName: " + e);
+                        return false;
+                    }
+                }
+            }
+
             if (verbose) {
                 Logger.getLogger("dalvik.runner").setLevel(Level.FINE);
             }
@@ -269,6 +293,7 @@ public final class DalvikRunner {
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
+                    options.tee,
                     localTemp,
                     options.vmArgs,
                     options.cleanBefore,
@@ -279,6 +304,7 @@ public final class DalvikRunner {
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
+                    options.tee,
                     localTemp,
                     options.javaHome,
                     options.vmArgs,
@@ -289,6 +315,7 @@ public final class DalvikRunner {
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
+                    options.tee,
                     localTemp,
                     options.cleanBefore,
                     options.cleanAfter,

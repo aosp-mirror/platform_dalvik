@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,6 +45,7 @@ final class Command {
     private final List<String> args;
     private final File workingDirectory;
     private final boolean permitNonZeroExitStatus;
+    private final PrintStream tee;
     private Process process;
 
     Command(String... args) {
@@ -54,12 +56,14 @@ final class Command {
         this.args = new ArrayList<String>(args);
         this.workingDirectory = null;
         this.permitNonZeroExitStatus = false;
+        this.tee = null;
     }
 
     private Command(Builder builder) {
         this.args = new ArrayList<String>(builder.args);
         this.workingDirectory = builder.workingDirectory;
         this.permitNonZeroExitStatus = builder.permitNonZeroExitStatus;
+        this.tee = builder.tee;
     }
 
     public List<String> getArgs() {
@@ -106,6 +110,9 @@ final class Command {
         List<String> outputLines = new ArrayList<String>();
         String outputLine;
         while ((outputLine = in.readLine()) != null) {
+            if (tee != null) {
+                tee.println(outputLine);
+            }
             outputLines.add(outputLine);
         }
 
@@ -167,6 +174,7 @@ final class Command {
         private final List<String> args = new ArrayList<String>();
         private File workingDirectory;
         private boolean permitNonZeroExitStatus = false;
+        private PrintStream tee = null;
 
         public Builder args(Object... objects) {
             for (Object object : objects) {
@@ -197,6 +205,11 @@ final class Command {
 
         public Builder permitNonZeroExitStatus() {
             permitNonZeroExitStatus = true;
+            return this;
+        }
+
+        public Builder tee(PrintStream printStream) {
+            tee = printStream;
             return this;
         }
 

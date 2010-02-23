@@ -19,10 +19,12 @@ package dalvik.runner;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Logger;
@@ -36,11 +38,11 @@ final class ActivityMode extends Mode {
 
     private static final String TEST_ACTIVITY_CLASS   = "dalvik.runner.TestActivity";
 
-    ActivityMode(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
+    ActivityMode(Integer debugPort, long timeoutSeconds, File sdkJar, PrintStream tee, File localTemp,
             boolean cleanBefore, boolean cleanAfter, File deviceRunnerDir) {
         super(new EnvironmentDevice(cleanBefore, cleanAfter,
                 debugPort, localTemp, deviceRunnerDir),
-                timeoutSeconds, sdkJar);
+                timeoutSeconds, sdkJar, tee);
     }
 
     private EnvironmentDevice getEnvironmentDevice() {
@@ -148,11 +150,21 @@ final class ActivityMode extends Mode {
         return dex;
     }
 
+    /**
+     * According to android.content.pm.PackageParser, package name
+     * "must have at least one '.' separator" Since the qualified name
+     * may not contain a dot, we prefix containing one to ensure we
+     * are compliant.
+     */
+    private static String packageName(TestRun testRun) {
+        return "DalvikRunner." + testRun.getQualifiedName();
+    }
+
     private File createApk (TestRun testRun, File dex) {
         String androidManifest =
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
             "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-            "      package=\"" + testRun.getQualifiedName() + "\">\n" +
+            "      package=\"" + packageName(testRun) + "\">\n" +
             "    <uses-permission android:name=\"android.permission.INTERNET\" />\n" +
             "    <application>\n" +
             "        <activity android:name=\"" + TEST_ACTIVITY_CLASS + "\">\n" +
@@ -202,7 +214,7 @@ final class ActivityMode extends Mode {
 
     private void installApk(TestRun testRun, File apkSigned) {
         // install the local apk ona the device
-        getEnvironmentDevice().adb.uninstall(testRun.getQualifiedName());
+        getEnvironmentDevice().adb.uninstall(packageName(testRun));
         getEnvironmentDevice().adb.install(apkSigned);
     }
 
@@ -211,40 +223,20 @@ final class ActivityMode extends Mode {
         properties.setProperty(TestProperties.DEVICE_RUNNER_DIR, getEnvironmentDevice().runnerDir.getPath());
     }
 
-    @Override protected List<Command> buildCommands(TestRun testRun) {
-        List<Command> commands = new ArrayList<Command>();
-        commands.add(new Command.Builder()
-            .args("adb")
-            .args("shell")
-            .args("am")
-            .args("start")
-            .args("-a")
-            .args("android.intent.action.MAIN")
-            .args("-n")
-            .args(testRun.getQualifiedName() + "/" + TEST_ACTIVITY_CLASS).build());
+    @Override protected List<String> runTestCommand(TestRun testRun)
+            throws TimeoutException {
+        new Command(
+            "adb", "shell", "am", "start",
+            "-a","android.intent.action.MAIN",
+            "-n", (packageName(testRun) + "/" + TEST_ACTIVITY_CLASS)).executeWithTimeout(timeoutSeconds);
 
         File resultDir = new File(getEnvironmentDevice().runnerDir, testRun.getQualifiedName());
         File resultFile = new File(resultDir, TestProperties.RESULT_FILE);
-        /*
-         * The follow bash script waits for the result file to
-         * exist. It polls once a second to see if it is there with
-         * "adb shell ls". The "tr" is to remove the carriage return
-         * and newline from the adb output. When it does exist, we
-         * "adb shell cat" it so we can see the SUCCESS/FAILURE
-         * results that are expected by Mode.runTest.
-         */
-        // TODO: move loop to Java
-        commands.add(new Command.Builder()
-            .args("bash")
-            .args("-c")
-            .args(
-                    "while [ ! \"`adb shell ls " + resultFile + " | tr -d '\\r\\n'`\" = " +
-                    "        \"" + resultFile + "\" ] ; do " +
-                    "    sleep 1; " +
-                    "done; " +
-                    "adb shell cat " + resultFile).build());
-
-        return commands;
+        getEnvironmentDevice().adb.waitForFile(resultFile, timeoutSeconds);
+        return new Command.Builder()
+            .args("adb", "shell", "cat", resultFile.getPath())
+            .tee(tee)
+            .build().executeWithTimeout(timeoutSeconds);
     }
 
     @Override void cleanup(TestRun testRun) {

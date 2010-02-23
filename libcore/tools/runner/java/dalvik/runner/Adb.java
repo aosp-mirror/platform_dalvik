@@ -58,10 +58,22 @@ final class Adb {
     }
 
     /**
+     * Loop until we see a file on the device. For example, wait
+     * result.txt appears.
+     */
+    public void waitForFile(File file, long timeoutSeconds) {
+        waitFor(true, file, timeoutSeconds);
+    }
+
+    /**
      * Loop until we see a non-empty directory on the device. For
      * example, wait until /sdcard is mounted.
      */
-    public void waitForNonEmptyDirectory(File path, int timeoutSeconds) {
+    public void waitForNonEmptyDirectory(File path, long timeoutSeconds) {
+        waitFor(false, path, timeoutSeconds);
+    }
+
+    private void waitFor(boolean file, File path, long timeoutSeconds) {
         final int millisPerSecond = 1000;
         final long start = System.currentTimeMillis();
         final long deadline = start + (millisPerSecond * timeoutSeconds);
@@ -82,8 +94,16 @@ final class Adb {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            if (!output.isEmpty()) {
-                return;
+            if (file) {
+                // for files, we expect one line of output that matches the filename
+                if (output.size() == 1 && output.get(0).equals(path.getPath())) {
+                    return;
+                }
+            } else {
+                // for a non empty directory, we just want any output
+                if (!output.isEmpty()) {
+                    return;
+                }
             }
         }
     }

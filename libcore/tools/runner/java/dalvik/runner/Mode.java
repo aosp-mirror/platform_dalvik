@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,6 +45,7 @@ abstract class Mode {
     protected final Environment environment;
     protected final long timeoutSeconds;
     protected final File sdkJar;
+    protected final PrintStream tee;
 
     /**
      * Set of Java files needed to built to tun the currently selected
@@ -72,10 +74,11 @@ abstract class Mode {
             // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
             new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar").getAbsoluteFile());
 
-    Mode(Environment environment, long timeoutSeconds, File sdkJar) {
+    Mode(Environment environment, long timeoutSeconds, File sdkJar, PrintStream tee) {
         this.environment = environment;
         this.timeoutSeconds = timeoutSeconds;
         this.sdkJar = sdkJar;
+        this.tee = tee;
     }
 
     /**
@@ -218,20 +221,16 @@ abstract class Mode {
             throw new IllegalArgumentException();
         }
 
-        final List<Command> commands = buildCommands(testRun);
-
-        List<String> output = null;
-        for (final Command command : commands) {
-            try {
-                output = command.executeWithTimeout(timeoutSeconds);
-            } catch (TimeoutException e) {
-                testRun.setResult(Result.EXEC_TIMEOUT,
-                        Collections.singletonList("Exceeded timeout! (" + timeoutSeconds + "s)"));
-                return;
-            } catch (Exception e) {
-                testRun.setResult(Result.ERROR, e);
-                return;
-            }
+        List<String> output;
+        try {
+            output = runTestCommand(testRun);
+        } catch (TimeoutException e) {
+            testRun.setResult(Result.EXEC_TIMEOUT,
+                Collections.singletonList("Exceeded timeout! (" + timeoutSeconds + "s)"));
+            return;
+        } catch (Exception e) {
+            testRun.setResult(Result.ERROR, e);
+            return;
         }
         // we only look at the output of the last command
         if (output.isEmpty()) {
@@ -247,9 +246,10 @@ abstract class Mode {
     }
 
     /**
-     * Returns commands for test execution.
+     * Run the actual test to gather output
      */
-    protected abstract List<Command> buildCommands(TestRun testRun);
+    protected abstract List<String> runTestCommand(TestRun testRun)
+        throws TimeoutException;
 
     /**
      * Deletes files and releases any resources required for the execution of
