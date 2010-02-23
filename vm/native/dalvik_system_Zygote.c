@@ -299,6 +299,29 @@ static void enableDebugFeatures(u4 debugFlags)
             gDvm.executionMode = kExecutionModeInterpFast;
 #endif
     }
+
+#if HAVE_ANDROID_OS
+    if ((debugFlags & DEBUG_ENABLE_DEBUGGER) != 0) {
+        /* To let a non-privileged gdbserver attach to this
+         * process, we must set its dumpable bit flag. However
+         * we are not interested in generating a coredump in
+         * case of a crash, so also set the coredump size to 0
+         * to disable that
+         */
+        if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) < 0) {
+            LOGE("could not set dumpable bit flag for pid %d, errno=%d",
+                 getpid(), errno);
+        } else {
+            struct rlimit rl;
+            rl.rlim_cur = 0;
+            rl.rlim_max = RLIM_INFINITY;
+            if (setrlimit(RLIMIT_CORE, &rl) < 0) {
+                LOGE("could not disable core file generation "
+                     "for pid %d, errno=%d", getpid(), errno);
+            }
+        }
+    }
+#endif
 }
 
 /* 
