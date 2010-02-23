@@ -16,23 +16,13 @@
 
 package sun.misc;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 import junit.framework.TestCase;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
-@TestTargetClass(Unsafe.class)
 public class UnsafeTest extends TestCase {
 
-    @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "",
-            method = "getUnsafe",
-            args = {}
-    )
     public void test_getUnsafeForbidden() {
         try {
             Unsafe.getUnsafe();
@@ -45,12 +35,6 @@ public class UnsafeTest extends TestCase {
      * Regression for 2053217. We used to look one level higher than necessary
      * on the stack.
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "",
-            method = "getUnsafe",
-            args = {}
-    )
     public void test_getUnsafeForbiddenWithSystemCaller() throws Exception {
         Callable<Object> callable = Executors.callable(new Runnable() {
             public void run() {

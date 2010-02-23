@@ -17,11 +17,6 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
-
 import junit.framework.TestCase;
 
 import java.lang.annotation.Annotation;
@@ -35,23 +30,8 @@ import java.util.Map;
 /**
  * Test case of java.lang.annotation.Annotation
  */
-@TestTargetClass(value = Annotation.class,
-        untestedMethods = {
-            @TestTargetNew(
-                level = TestLevel.NOT_NECESSARY,
-                notes = "the spec does not require any specific output (although @something is probable)",
-                method = "toString",
-                args = {}
-            )}
-) 
 public class AnnotationTest extends TestCase {
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "annotationType",
-        args = {}
-    )
     public void test_annotationType() {
         Annotation [] annotations = AnnotatedClass.class.getDeclaredAnnotations();
         assertEquals(1, annotations.length);
@@ -59,20 +39,6 @@ public class AnnotationTest extends TestCase {
         assertEquals(TestAnnotation1.class, anno.annotationType());
     }
     
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "equals",
-            args = { Object.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "hashCode",
-            args = {}
-        )
-    })
     public void test_equals() throws Exception {
         // test type
         Method m1 = AnnotatedClass2.class
@@ -133,12 +99,6 @@ public class AnnotationTest extends TestCase {
         }
     }
     
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
     public void test_hashCode() throws SecurityException, NoSuchMethodException { 
         Annotation a1 = AnnotatedClass.class.getDeclaredAnnotations()[0];
         assertEquals(a1.hashCode(), (127 * "value".hashCode() ^ "foobar".hashCode()));

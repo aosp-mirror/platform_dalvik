@@ -16,27 +16,14 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import junit.framework.TestCase;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.jar.Pack200;
 
-@TestTargetClass(Pack200.class)
 public class Pack200Test extends TestCase {
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "newPacker",
-        args = {}
-    )
-    @KnownFailure("No Implementation in Android!")
     public void testNewPacker() {
         Method[] methodsInt = Pack200.Packer.class.getDeclaredMethods();
         Method[] methodsImpl = Pack200.newPacker().getClass()
@@ -68,13 +55,6 @@ public class Pack200Test extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "newUnpacker",
-        args = {}
-    )
-    @KnownFailure("No Implementation in Android!")
     public void testNewUnpacker() {
         assertNotNull(Pack200.newUnpacker().getClass());
         Method[] methodsInt = Pack200.Unpacker.class.getDeclaredMethods();

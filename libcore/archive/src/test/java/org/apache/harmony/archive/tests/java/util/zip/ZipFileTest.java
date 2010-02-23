@@ -17,10 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 import tests.support.Support_PlatformFile;
 import tests.support.resource.Support_Resources;
 import tests.util.TestEnvironment;
@@ -38,7 +34,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-@TestTargetClass(ZipFile.class)
 public class ZipFileTest extends junit.framework.TestCase {
 
     public byte[] getAllBytesFromStream(InputStream is) throws IOException {
@@ -77,12 +72,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#ZipFile(java.io.File)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "setUp procedure checks this type of constructor.",
-        method = "ZipFile",
-        args = {java.io.File.class}
-    )
     public void test_ConstructorLjava_io_File() {
         // Test for method java.util.zip.ZipFile(java.io.File)
         assertTrue("Used to test", true);
@@ -91,11 +80,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#ZipFile(java.io.File, int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "ZipFile",
-        args = {java.io.File.class, int.class}
-    )
     public void test_ConstructorLjava_io_FileI() throws IOException {
         zfile.close(); // about to reopen the same temp file
         File file = new File(tempFileName);
@@ -136,12 +120,6 @@ public class ZipFileTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.zip.ZipFile#ZipFile(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Test contains empty brackets.",
-        method = "ZipFile",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() throws IOException {
         System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
 
@@ -181,12 +159,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#finalize()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "finalize",
-        args = {}
-    )
     public void test_finalize() throws IOException {
         InputStream in = Support_Resources.getStream("hyts_ZipFile.zip");
         File file = Support_Resources.createTempFile(".jar");
@@ -217,11 +189,6 @@ public class ZipFileTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.zip.ZipFile#close()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "close",
-        args = {}
-    )
     public void test_close() throws IOException {
         // Test for method void java.util.zip.ZipFile.close()
         File fl = new File(tempFileName);
@@ -252,12 +219,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#entries()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entries",
-        args = {}
-    )
     public void test_entries() throws Exception {
         // Test for method java.util.Enumeration java.util.zip.ZipFile.entries()
         Enumeration<? extends ZipEntry> enumer = zfile.entries();
@@ -292,11 +253,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#getEntry(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "getEntry",
-        args = {java.lang.String.class}
-    )
     public void test_getEntryLjava_lang_String() throws IOException {
         // Test for method java.util.zip.ZipEntry
         // java.util.zip.ZipFile.getEntry(java.lang.String)
@@ -325,11 +281,6 @@ public class ZipFileTest extends junit.framework.TestCase {
                 0, r));
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "getEntry",
-        args = {java.lang.String.class}
-    )
     public void test_getEntryLjava_lang_String_AndroidOnly() throws IOException {
         java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
         assertNotNull("Could not obtain ZipEntry", zentry);
@@ -351,12 +302,6 @@ public class ZipFileTest extends junit.framework.TestCase {
         assertEquals("Must not be able to read directory data", -1, data);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IllegalStateException checking.",
-        method = "getEntry",
-        args = {java.lang.String.class}
-    )
     public void test_getEntryLjava_lang_String_Ex() throws IOException {
         java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
         assertNotNull("Could not obtain ZipEntry", zentry);
@@ -373,12 +318,6 @@ public class ZipFileTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.zip.ZipFile#getInputStream(java.util.zip.ZipEntry)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getInputStream",
-        args = {java.util.zip.ZipEntry.class}
-    )
     public void test_getInputStreamLjava_util_zip_ZipEntry() throws IOException {
         // Test for method java.io.InputStream
         // java.util.zip.ZipFile.getInputStream(java.util.zip.ZipEntry)
@@ -417,12 +356,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#getName()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getName",
-        args = {}
-    )
     public void test_getName() {
         // Test for method java.lang.String java.util.zip.ZipFile.getName()
         assertTrue("Returned incorrect name: " + zfile.getName(), zfile
@@ -433,11 +366,6 @@ public class ZipFileTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.zip.ZipFile#size()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "size",
-        args = {}
-    )
     public void test_size() throws IOException {
         assertEquals(6, zfile.size());
         zfile.close();
@@ -451,11 +379,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.InputStream#reset()
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            method = "getInputStream",
-            args = {java.util.zip.ZipEntry.class}
-    )
     public void test_reset() throws IOException {
         // read an uncompressed entry
         ZipEntry zentry = zfile.getEntry("File1.txt");
@@ -502,11 +425,6 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.InputStream#reset()
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            method = "getInputStream",
-            args = {java.util.zip.ZipEntry.class}
-    )
     public void test_reset_subtest0() throws IOException {
         // read an uncompressed entry
         ZipEntry zentry = zfile.getEntry("File1.txt");

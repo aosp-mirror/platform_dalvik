@@ -17,10 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 import static tests.support.Support_Exec.javaProcessBuilder;
 import static tests.support.Support_Exec.execAndGetOutput;
 import tests.support.resource.Support_Resources;
@@ -42,15 +38,7 @@ import java.util.zip.ZipOutputStream;
  * some tests are just copy of JarExecTest ones
  */
 
-@TestTargetClass(ZipOutputStream.class)
 public class ZipExecTest extends junit.framework.TestCase {
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Regression functional test. Exception checking missed.",
-        method = "putNextEntry",
-        args = {java.util.zip.ZipEntry.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_1562() throws Exception {
         Manifest man = new Manifest();
         Attributes att = man.getMainAttributes();
@@ -86,13 +74,6 @@ public class ZipExecTest extends junit.framework.TestCase {
      * 
      * @throws Exception in case of troubles
      */
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Functional test.",
-        method = "ZipOutputStream",
-        args = {java.io.OutputStream.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_zip_class_path() throws Exception {
         File fooZip = File.createTempFile("hyts_", ".zip");
         File barZip = File.createTempFile("hyts_", ".zip");
@@ -160,13 +141,6 @@ public class ZipExecTest extends junit.framework.TestCase {
     }
 
 
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Functional test.",
-        method = "ZipOutputStream",
-        args = {java.io.OutputStream.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_zip_jar_mix() throws Exception {
         File fooJar = File.createTempFile("hyts_", ".jar");
         File barZip = File.createTempFile("hyts_", ".zip");
@@ -201,13 +175,6 @@ public class ZipExecTest extends junit.framework.TestCase {
                 execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Functional test.",
-        method = "ZipOutputStream",
-        args = {java.io.OutputStream.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_zip_jar_mix_1() throws Exception {
         File fooZip = File.createTempFile("hyts_", ".zip");
         File barJar = File.createTempFile("hyts_", ".jar");
@@ -251,13 +218,6 @@ public class ZipExecTest extends junit.framework.TestCase {
      * 
      * @throws Exception in case of troubles
      */
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Functional test.",
-        method = "ZipOutputStream",
-        args = {java.io.OutputStream.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_main_class_in_another_zip() throws Exception {
         File fooZip = File.createTempFile("hyts_", ".zip");
         File barZip = File.createTempFile("hyts_", ".zip");

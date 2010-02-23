@@ -17,10 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 import tests.support.resource.Support_Resources;
 
 import java.io.File;
@@ -36,7 +32,6 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 
-@TestTargetClass(JarInputStream.class)
 public class JarInputStreamTest extends junit.framework.TestCase {
     // a 'normal' jar file
     private String jarName;
@@ -61,12 +56,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.jar.JarInputStream#JarInputStream(java.io.InputStream)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarInputStream",
-        args = {java.io.InputStream.class}
-    )
     public void test_ConstructorLjava_io_InputStream() {
         // Test for method java.util.jar.JarInputStream(java.io.InputStream)
         InputStream is = null;
@@ -103,12 +92,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.jar.JarInputStream#getManifest()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getManifest",
-        args = {}
-    )
     public void test_getManifest() {
         // Test for method java.util.jar.Manifest
         // java.util.jar.JarInputStream.getManifest()
@@ -134,11 +117,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.jar.JarInputStream#getNextJarEntry()
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "getNextJarEntry",
-        args = {}
-    )
     public void test_getNextJarEntry() throws Exception {
         final Set<String> desired = new HashSet<String>(Arrays
                 .asList(new String[] {
@@ -174,11 +152,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "getNextJarEntry",
-        args = {}
-    )
     public void test_getNextJarEntry_Ex() throws Exception {
         final Set<String> desired = new HashSet<String>(Arrays
                 .asList("foo/", "foo/bar/", "foo/bar/A.class", "Blah.txt"));
@@ -213,12 +186,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Exceptions checking missed. Case2",
-        method = "getNextJarEntry",
-        args = {}
-    )
     public void test_JarInputStream_Integrate_Jar_getNextEntry()
             throws IOException {
         String intJarName = Support_Resources.getURL("Integrate.jar");
@@ -234,12 +201,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IOException & ZipException checking missed.",
-        method = "getNextEntry",
-        args = {}
-    )
     public void test_JarInputStream_Modified_Class_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources.getURL("Modified_Class.jar");
@@ -266,12 +227,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IOException & ZipException checking missed.",
-        method = "getNextEntry",
-        args = {}
-    )
     public void test_JarInputStream_Modified_Manifest_MainAttributes_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources.getURL("Modified_Manifest_MainAttributes.jar");
@@ -292,12 +247,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IOException & ZipException checking missed.",
-        method = "getNextEntry",
-        args = {}
-    )
     public void test_JarInputStream_Modified_Manifest_EntryAttributes_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources
@@ -324,12 +273,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IOException & ZipException checking missed.",
-        method = "getNextEntry",
-        args = {}
-    )
     public void test_JarInputStream_Modified_SF_EntryAttributes_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources
@@ -356,12 +299,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IOException & ZipException checking missed.",
-        method = "read",
-        args = {byte[].class}
-    )
     public void test_JarInputStream_Modified_Class_read() throws IOException {
         String modJarName = Support_Resources.getURL("Modified_Class.jar");
         InputStream is = new URL(modJarName).openConnection().getInputStream();
@@ -390,12 +327,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Exception checking missed.",
-        method = "read",
-        args = {byte[].class}
-    )
     public void test_Integrate_Jar_read() throws IOException {
         String intJarName = Support_Resources.getURL("Integrate.jar");
         InputStream is = new URL(intJarName).openConnection().getInputStream();
@@ -416,12 +347,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IOException & ZipException checking missed.",
-        method = "read",
-        args = {byte[].class}
-    )
     public void test_JarInputStream_Modified_Manifest_MainAttributes_read()
             throws IOException {
         String modJarName = Support_Resources
@@ -452,12 +377,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IOException & ZipException checking missed.",
-        method = "read",
-        args = {byte[].class}
-    )
     public void test_JarInputStream_Modified_SF_EntryAttributes_read()
             throws IOException {
         String modJarName = Support_Resources
@@ -488,12 +407,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarInputStream",
-        args = {java.io.InputStream.class, boolean.class}
-    )
     public void test_ConstructorLjava_io_InputStreamZ() {
         // Test for method java.util.jar.JarInputStream(java.io.InputStream)
         InputStream is = null;
@@ -527,11 +440,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "close",
-        args = {}
-    )
     public void test_closeAfterException() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_entry.jar");
@@ -553,11 +461,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "getNextEntry",
-        args = {}
-    )
     public void test_getNextEntry() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_entry.jar");
@@ -591,12 +494,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "createZipEntry",
-        args = {java.lang.String.class}
-    )
     public void test_createZipEntryLjava_lang_String() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_entry.jar");
@@ -605,11 +502,6 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         assertNotNull(mjis.createZipEntry("New entry"));
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "read",
-        args = {byte[].class, int.class, int.class}
-    )
     public void test_read$ZII() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_entry_data.jar");

@@ -17,10 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 import static tests.support.Support_Exec.execAndGetOutput;
 import static tests.support.Support_Exec.javaProcessBuilder;
 import tests.support.resource.Support_Resources;
@@ -40,19 +36,11 @@ import java.util.jar.Manifest;
  * 
  */
 
-@TestTargetClass(JarOutputStream.class)
 public class JarExecTest extends junit.framework.TestCase {
     /**
      * regression test for HARMONY-1562 issue
      * 
      */
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Regression functional test. Exception checking missed.",
-        method = "putNextEntry",
-        args = {java.util.zip.ZipEntry.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_1562() throws Exception {
         // create the manifest
         Manifest man = new Manifest();
@@ -87,13 +75,6 @@ public class JarExecTest extends junit.framework.TestCase {
      * 
      * @throws Exception in case of troubles
      */
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Functional test.",
-        method = "JarOutputStream",
-        args = {java.io.OutputStream.class, java.util.jar.Manifest.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_jar_class_path() throws Exception {
         File fooJar = File.createTempFile("hyts_", ".jar");
         File barJar = File.createTempFile("hyts_", ".jar");
@@ -159,13 +140,6 @@ public class JarExecTest extends junit.framework.TestCase {
      * 
      * @throws Exception in case of troubles
      */
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Functional test.",
-        method = "JarOutputStream",
-        args = {java.io.OutputStream.class, java.util.jar.Manifest.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_main_class_in_another_jar() throws Exception {
         File fooJar = File.createTempFile("hyts_", ".jar");
         File barJar = File.createTempFile("hyts_", ".jar");
@@ -201,13 +175,6 @@ public class JarExecTest extends junit.framework.TestCase {
                 execAndGetOutput(builder).startsWith("FOOBAR"));
     }
 
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Functional test.",
-        method = "JarOutputStream",
-        args = {java.io.OutputStream.class, java.util.jar.Manifest.class}
-    )
-    @KnownFailure("Maybe not a failure, but dalvikvm -jar is not supported (, as yet).")
     public void test_classpath() throws Exception {
         File resources = Support_Resources.createTempFolder();
 

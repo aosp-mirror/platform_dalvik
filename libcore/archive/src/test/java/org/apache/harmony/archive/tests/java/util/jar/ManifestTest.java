@@ -16,11 +16,6 @@
  */
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -38,7 +33,6 @@ import junit.framework.TestCase;
 
 import tests.support.resource.Support_Resources;
 
-@TestTargetClass(Manifest.class)
 public class ManifestTest extends TestCase {
 
     private final String jarName = "hyts_patch.jar";
@@ -88,12 +82,6 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#Manifest()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Manifest",
-        args = {}
-    )
     public void test_Constructor() {
         // Test for method java.util.jar.Manifest()
         Manifest emptyManifest = new Manifest();
@@ -106,12 +94,6 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#Manifest(java.util.jar.Manifest)
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "Manifest",
-            args = {java.util.jar.Manifest.class}
-    )
     public void testCopyingConstructor() throws IOException {
         Manifest firstManifest = new Manifest(new URL(Support_Resources
                 .getURL(MANIFEST_NAME)).openStream());
@@ -122,12 +104,6 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#Manifest(Manifest)
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "Manifest",
-            args = {java.util.jar.Manifest.class}
-    )
     public void test_ConstructorLjava_util_jar_Manifest() {
         // Test for method java.util.jar.Manifest()
         Manifest emptyManifest = new Manifest();
@@ -173,12 +149,6 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#Manifest(java.io.InputStream)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "IOException checking missed.",
-        method = "Manifest",
-        args = {java.io.InputStream.class}
-    )
     public void test_ConstructorLjava_io_InputStream() throws IOException {
         Manifest m = getManifest(attJarName);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -214,12 +184,6 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#clear()
      */
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "clear",
-            args = {}
-    )
     public void test_clear() {
         m2.clear();
         assertTrue("Should have no entries", m2.getEntries().isEmpty());
@@ -227,12 +191,6 @@ public class ManifestTest extends TestCase {
                 .isEmpty());
     }
 
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "clone",
-            args = {}
-    )
     public void test_clone() throws IOException {
         Manifest emptyManifest = new Manifest();
         Manifest emptyClone = (Manifest) emptyManifest.clone();
@@ -250,12 +208,6 @@ public class ManifestTest extends TestCase {
         checkManifest(manifestClone);
     }
 
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "equals",
-            args = {java.lang.Object.class}
-    )
     public void test_equals() throws IOException {
         Manifest manifest1 = new Manifest(new URL(Support_Resources.getURL(
                 "manifest/hyts_MANIFEST.MF")).openStream());
@@ -269,12 +221,6 @@ public class ManifestTest extends TestCase {
         assertFalse(manifest1.equals(this));
     }
 
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "hashCode",
-            args = {}
-    )
     public void test_hashCode() throws IOException {
         Manifest manifest1 = new Manifest(new URL(Support_Resources
                 .getURL("manifest/hyts_MANIFEST.MF")).openStream());
@@ -286,12 +232,6 @@ public class ManifestTest extends TestCase {
 	/**
 	 * @tests java.util.jar.Manifest#getAttributes(java.lang.String)
 	 */
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getAttributes",
-            args = {String.class}
-    )
 	public void test_getAttributesLjava_lang_String() {
 		assertNull("Should not exist",
 				m2.getAttributes("Doesn't Exist"));
@@ -302,12 +242,6 @@ public class ManifestTest extends TestCase {
 	/**
 	 * @tests java.util.jar.Manifest#getEntries()
 	 */
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getEntries",
-            args = {}
-    )
 	public void test_getEntries() {
 		Map<String, Attributes> myMap = m2.getEntries();
 		assertNull("Shouldn't exist", myMap.get("Doesn't exist"));
@@ -319,12 +253,6 @@ public class ManifestTest extends TestCase {
 	/**
 	 * @tests java.util.jar.Manifest#getMainAttributes()
 	 */
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getMainAttributes",
-            args = {}
-    )
 	public void test_getMainAttributes() {
 		// Test for method java.util.jar.Attributes
 		// java.util.jar.Manifest.getMainAttributes()
@@ -333,12 +261,6 @@ public class ManifestTest extends TestCase {
 				Attributes.Name.MANIFEST_VERSION));
 	}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "write",
-        args = {java.io.OutputStream.class}
-    )
     public void test_writeLjava_io_OutputStream() throws IOException {
         byte b[] = null;
         Manifest manifest1 = null;
@@ -385,12 +307,6 @@ public class ManifestTest extends TestCase {
      * @see <a
      *      href="http://issues.apache.org/jira/browse/HARMONY-5662">HARMONY-5662</a>
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "Manifest",
-            args = {InputStream.class}
-    )
     public void testNul() throws IOException {
         String manifestContent =
                 "Manifest-Version: 1.0\nCreated-By: nasty gcc tool\n\n\0";
@@ -413,11 +329,6 @@ public class ManifestTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            method = "Manifest",
-            args = {InputStream.class}
-    )
     public void testDecoding() throws IOException {
         Manifest m = getManifest(attJarName);
         final byte[] bVendor = new byte[] { (byte) 0xd0, (byte) 0x9C,
@@ -564,12 +475,6 @@ public class ManifestTest extends TestCase {
     /**
      * @tests {@link java.util.jar.Manifest#read(java.io.InputStream)
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "",
-            method = "read",
-            args = {InputStream.class}
-    )
     public void testRead() {
         // Regression for HARMONY-89
         InputStream is = new InputStreamImpl();

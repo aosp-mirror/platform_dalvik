@@ -8,10 +8,6 @@
 
 package tests.api.java.util.concurrent;
 
-// BEGIN android-added
-import dalvik.annotation.BrokenTest;
-// END android-added
-
 import junit.framework.*;
 
 public class ThreadTest extends JSR166TestCase {
@@ -46,9 +42,6 @@ public class ThreadTest extends JSR166TestCase {
      * getDefaultUncaughtExceptionHandler returns value of last
      * setDefaultUncaughtExceptionHandler. 
      */
-    // BEGIN android-added
-    @BrokenTest("Different behavior between run-core-tests and CTS")
-    // END android-added
     public void testGetAndSetDefaultUncaughtExceptionHandler() {
         assertEquals(null, Thread.getDefaultUncaughtExceptionHandler());
         // failure due to securityException is OK.
@@ -70,4 +63,3 @@ public class ThreadTest extends JSR166TestCase {
     // How to test actually using UEH within junit?
 
 }
-

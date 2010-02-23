@@ -17,11 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -36,17 +31,11 @@ import java.util.zip.ZipEntry;
 
 import tests.support.resource.Support_Resources;
 
-@TestTargetClass(JarOutputStream.class)
 public class JarOutputStreamTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.jar.JarOutputStream#putNextEntry(java.util.zip.ZipEntry)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "putNextEntry",
-        args = {java.util.zip.ZipEntry.class}
-    )
     public void test_putNextEntryLjava_util_zip_ZipEntry() throws Exception {
         // testClass file`s actual extension is .class, since having .class
         // extension files in source dir causes
@@ -133,12 +122,6 @@ public class JarOutputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Checks IOException",
-        method = "JarOutputStream",
-        args = {java.io.OutputStream.class, java.util.jar.Manifest.class}
-    )
     public void test_JarOutputStreamLjava_io_OutputStreamLjava_util_jar_Manifest()
             throws IOException {
         File fooJar = File.createTempFile("hyts_", ".jar");
@@ -161,12 +144,6 @@ public class JarOutputStreamTest extends junit.framework.TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Can not check IOException",
-        method = "JarOutputStream",
-        args = {java.io.OutputStream.class}
-    )
     public void test_JarOutputStreamLjava_io_OutputStream() throws IOException {
         File fooJar = File.createTempFile("hyts_", ".jar");
 

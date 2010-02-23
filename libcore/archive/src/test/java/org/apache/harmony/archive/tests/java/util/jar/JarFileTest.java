@@ -17,11 +17,6 @@
 package org.apache.harmony.archive.tests.java.util.jar;
 
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import junit.framework.TestCase;
 
 import tests.support.Support_PlatformFile;
@@ -47,7 +42,6 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 
-@TestTargetClass(JarFile.class)
 public class JarFileTest extends TestCase {
 
     // BEGIN android-added
@@ -112,12 +106,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#JarFile(java.io.File)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "JarFile",
-        args = {java.io.File.class}
-    )
     public void test_ConstructorLjava_io_File() {
         try {
             JarFile jarFile = new JarFile(new File("Wrong.file"));
@@ -149,12 +137,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#JarFile(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarFile",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         try {
             JarFile jarFile = new JarFile("Wrong.file");
@@ -187,12 +169,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#JarFile(java.lang.String, boolean)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarFile",
-        args = {java.lang.String.class, boolean.class}
-    )
     public void test_ConstructorLjava_lang_StringZ() {
         try {
             JarFile jarFile = new JarFile("Wrong.file", false);
@@ -225,12 +201,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#JarFile(java.io.File, boolean)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarFile",
-        args = {java.io.File.class, boolean.class}
-    )
     public void test_ConstructorLjava_io_FileZ() {
         try {
             JarFile jarFile = new JarFile(new File("Wrong.file"), true);
@@ -262,12 +232,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#JarFile(java.io.File, boolean, int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarFile",
-        args = {java.io.File.class, boolean.class, int.class}
-    )
     public void test_ConstructorLjava_io_FileZI() {
         try {
             JarFile jarFile = new JarFile(new File("Wrong.file"), true,
@@ -316,12 +280,6 @@ public class JarFileTest extends TestCase {
      * @tests java.util.jar.JarFile#JarFile(java.io.File)
      * @tests java.util.jar.JarFile#JarFile(java.lang.String)
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "JarFile",
-            args = {java.io.File.class}
-    )
     public void testConstructor_file() throws IOException {
         File f = new File(resources, jarName);
         Support_Resources.copyFile(resources, null, jarName);
@@ -334,12 +292,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#entries()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entries",
-        args = {}
-    )
     public void test_entries() throws Exception {
         /*
          * Note only (and all of) the following should be contained in the file
@@ -357,12 +309,6 @@ public class JarFileTest extends TestCase {
         assertEquals(6, i);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entries",
-        args = {}
-    )
     public void test_entries2() throws Exception {
         Support_Resources.copyFile(resources, null, jarName);
         JarFile jarFile = new JarFile(new File(resources, jarName));
@@ -388,12 +334,6 @@ public class JarFileTest extends TestCase {
      * @throws IOException
      * @tests java.util.jar.JarFile#getJarEntry(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getEntry",
-        args = {java.lang.String.class}
-    )
     public void test_getEntryLjava_lang_String() throws IOException {
         try {
             Support_Resources.copyFile(resources, null, jarName);
@@ -431,12 +371,6 @@ public class JarFileTest extends TestCase {
      * @throws IOException
      * @tests java.util.jar.JarFile#getJarEntry(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getJarEntry",
-        args = {java.lang.String.class}
-    )
     public void test_getJarEntryLjava_lang_String() throws IOException {
         try {
             Support_Resources.copyFile(resources, null, jarName);
@@ -474,12 +408,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#getJarEntry(java.lang.String)
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getEntry",
-            args = {java.lang.String.class}
-    )
     public void testGetJarEntry() throws Exception {
         Support_Resources.copyFile(resources, null, jarName);
         JarFile jarFile = new JarFile(new File(resources, jarName));
@@ -559,12 +487,6 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#getManifest()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getManifest",
-        args = {}
-    )
     public void test_getManifest() {
         // Test for method java.util.jar.Manifest
         // java.util.jar.JarFile.getManifest()
@@ -656,16 +578,9 @@ public class JarFileTest extends TestCase {
     /**
      * @tests java.util.jar.JarFile#getInputStream(java.util.zip.ZipEntry)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "SecurityException and functionality checked.",
-        method = "getInputStream",
-        args = {java.util.zip.ZipEntry.class}
-    )
-    @AndroidOnly("This test doesn't pass on RI. If entry size is set up " +
-            "incorrectly, SecurityException is thrown. " +
-            "But SecurityException is thrown on RI only " +
-            "if jar file is signed incorreclty.")
+    // This test doesn't pass on RI. If entry size is set up incorrectly,
+    // SecurityException is thrown. But SecurityException is thrown on RI only
+    // if jar file is signed incorrectly.
     public void test_getInputStreamLjava_util_jar_JarEntry_subtest0() {
         File signedFile = null;
         try {
@@ -734,12 +649,6 @@ public class JarFileTest extends TestCase {
      * The jar created by 1.4 which does not provide a
      * algorithm-Digest-Manifest-Main-Attributes entry in .SF file.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entries",
-        args = {}
-    )
     public void test_Jar_created_before_java_5() throws IOException {
         String modifiedJarName = "Created_by_1_4.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -753,12 +662,6 @@ public class JarFileTest extends TestCase {
     }
 
     /* The jar is intact, then everything is all right. */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entries",
-        args = {}
-    )
     public void test_JarFile_Integrate_Jar() throws IOException {
         String modifiedJarName = "Integrate.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -774,12 +677,6 @@ public class JarFileTest extends TestCase {
     /**
      * The jar is intact, but the entry object is modified.
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getInputStream",
-            args = {ZipEntry.class}
-    )
     public void testJarVerificationModifiedEntry() throws IOException {
         Support_Resources.copyFile(resources, null, integrateJar);
         File f = new File(resources, integrateJar);
@@ -805,12 +702,6 @@ public class JarFileTest extends TestCase {
      * If another entry is inserted into Manifest, no security exception will be
      * thrown out.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entries",
-        args = {}
-    )
     public void test_JarFile_InsertEntry_in_Manifest_Jar() throws IOException {
         String modifiedJarName = "Inserted_Entry_Manifest.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -831,12 +722,6 @@ public class JarFileTest extends TestCase {
      * If another entry is inserted into Manifest, no security exception will be
      * thrown out.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entries",
-        args = {}
-    )
     public void test_Inserted_Entry_Manifest_with_DigestCode()
             throws IOException {
         String modifiedJarName = "Inserted_Entry_Manifest_with_DigestCode.jar";
@@ -858,12 +743,6 @@ public class JarFileTest extends TestCase {
      * throw security Exception, but it will anytime before the inputStream got
      * from getInputStream method has been read to end.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "SecurityException and functionality checked.",
-        method = "getInputStream",
-        args = {java.util.zip.ZipEntry.class}
-    )
     public void test_JarFile_Modified_Class() throws IOException {
         String modifiedJarName = "Modified_Class.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -893,12 +772,6 @@ public class JarFileTest extends TestCase {
      * tampered manually. Hence the RI 5.0 JarFile.getInputStream of any
      * JarEntry will throw security exception.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "SecurityException and functionality checked.",
-        method = "getInputStream",
-        args = {java.util.zip.ZipEntry.class}
-    )
     public void test_JarFile_Modified_Manifest_MainAttributes()
             throws IOException {
         String modifiedJarName = "Modified_Manifest_MainAttributes.jar";
@@ -922,12 +795,6 @@ public class JarFileTest extends TestCase {
      * example Test.class in our jar, the jarFile.getInputStream will throw
      * Security Exception.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "SecurityException and functionality checked.",
-        method = "getInputStream",
-        args = {java.util.zip.ZipEntry.class}
-    )
     public void test_JarFile_Modified_Manifest_EntryAttributes()
             throws IOException {
         String modifiedJarName = "Modified_Manifest_EntryAttributes.jar";
@@ -950,12 +817,6 @@ public class JarFileTest extends TestCase {
      * If the content of the .SA file is modified, no matter what it resides,
      * JarFile.getInputStream of any JarEntry will throw Security Exception.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "SecurityException and functionality checked.",
-        method = "getInputStream",
-        args = {java.util.zip.ZipEntry.class}
-    )
     public void test_JarFile_Modified_SF_EntryAttributes() throws IOException {
         String modifiedJarName = "Modified_SF_EntryAttributes.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -973,12 +834,6 @@ public class JarFileTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "close",
-        args = {}
-    )
     public void test_close() throws IOException {
         String modifiedJarName = "Modified_SF_EntryAttributes.jar";
         Support_Resources.copyFile(resources, null, modifiedJarName);
@@ -996,12 +851,6 @@ public class JarFileTest extends TestCase {
      * @throws IOException
      * @tests java.util.jar.JarFile#getInputStream(java.util.zip.ZipEntry)
      */
-    @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getInputStream",
-            args = {java.util.zip.ZipEntry.class}
-    )
     public void test_getInputStreamLjava_util_jar_JarEntry() throws IOException {
         File localFile = null;
         try {
@@ -1074,13 +923,7 @@ public class JarFileTest extends TestCase {
     /**
      * The jar is intact, but the entry object is modified.
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Regression test for issue introduced by HAROMNY-4569. "
-                + "signed archives containing files with size 0 could not get verified",
-            method = "getInputStream",
-            args = {ZipEntry.class}
-    )
+    // Regression test for issue introduced by HARMONY-4569: signed archives containing files with size 0 could not get verified.
     public void testJarVerificationEmptyEntry() throws IOException {
         Support_Resources.copyFile(resources, null, emptyEntryJar);
         File f = new File(resources, emptyEntryJar);

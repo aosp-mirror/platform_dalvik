@@ -17,11 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,7 +26,6 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import junit.framework.TestCase;
 
-@TestTargetClass(Attributes.class)
 public class AttributesTest extends TestCase {
     private Attributes a;
 
@@ -47,12 +41,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#Attributes(java.util.jar.Attributes)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Attributes",
-        args = {java.util.jar.Attributes.class}
-    )
     public void test_ConstructorLjava_util_jar_Attributes() {
         Attributes a2 = new Attributes(a);
         assertEquals(a, a2);
@@ -63,12 +51,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#clear()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "clear",
-        args = {}
-    )
     public void test_clear() {
         a.clear();
         assertNull("a) All entries should be null after clear", a.get("1"));
@@ -81,12 +63,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#containsKey(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "containsKey",
-        args = {java.lang.Object.class}
-    )
     public void test_containsKeyLjava_lang_Object() {
         assertTrue("a) Should have returned false", !a.containsKey(new Integer(
                 1)));
@@ -98,12 +74,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#containsValue(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "containsValue",
-        args = {java.lang.Object.class}
-    )
     public void test_containsValueLjava_lang_Object() {
         assertTrue("Should have returned false", !a.containsValue("One"));
         assertTrue("Should have returned true", a.containsValue("one"));
@@ -112,12 +82,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#entrySet()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "entrySet",
-        args = {}
-    )
     public void test_entrySet() {
         Set<Map.Entry<Object, Object>> entrySet = a.entrySet();
         Set<Object> keySet = new HashSet<Object>();
@@ -148,12 +112,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#get(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getValue",
-        args = {java.lang.String.class}
-    )
     public void test_getLjava_lang_Object() {
         assertEquals("a) Incorrect value returned", "one", a.getValue("1"));
         assertNull("b) Incorrect value returned", a.getValue("0"));
@@ -168,12 +126,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#isEmpty()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "isEmpty",
-        args = {}
-    )
     public void test_isEmpty() {
         assertTrue("Should not be empty", !a.isEmpty());
         a.clear();
@@ -185,12 +137,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#keySet()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "keySet",
-        args = {}
-    )
     public void test_keySet() {
         Set<?> s = a.keySet();
         assertEquals(4, s.size());
@@ -207,12 +153,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#putAll(java.util.Map)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "putAll",
-        args = {java.util.Map.class}
-    )
     public void test_putAllLjava_util_Map() {
         Attributes b = new Attributes();
         b.putValue("3", "san");
@@ -245,12 +185,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#putAll(java.util.Map)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Regression test",
-        method = "putAll",
-        args = {java.util.Map.class}
-    )
     public void test_putAllLjava_util_Map2() {
         // Regression for HARMONY-464
         try {
@@ -275,12 +209,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#remove(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "remove",
-        args = {java.lang.Object.class}
-    )
     public void test_removeLjava_lang_Object() {
         a.remove(new Attributes.Name("1"));
         a.remove(new Attributes.Name("3"));
@@ -291,12 +219,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#size()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "size",
-        args = {}
-    )
     public void test_size() {
         assertEquals("Incorrect size returned", 4, a.size());
         a.clear();
@@ -306,12 +228,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#values()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "values",
-        args = {}
-    )
     public void test_values() {
         Collection<?> valueCollection = a.values();
         assertTrue("a) Should contain entry", valueCollection.contains("one"));
@@ -323,12 +239,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#clone()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "clone",
-        args = {}
-    )
     public void test_clone() {
         Attributes a2 = (Attributes) a.clone();
         assertEquals(a, a2);
@@ -339,12 +249,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#equals(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void test_equalsLjava_lang_Object() {
         Attributes.Name n1 = new Attributes.Name("name"), n2 = new Attributes.Name(
                 "Name");
@@ -361,12 +265,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes.put(java.lang.Object, java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Regression test. Checks ClassCastException",
-        method = "put",
-        args = {java.lang.Object.class, java.lang.Object.class}
-    )
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         Attributes atts = new Attributes();
         assertNull("Assert 0: ", atts.put(Attributes.Name.CLASS_PATH,
@@ -391,12 +289,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes.put(java.lang.Object, java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "ClassCastException checking missed.",
-        method = "put",
-        args = {java.lang.Object.class, java.lang.Object.class}
-    )
     public void test_putLjava_lang_ObjectLjava_lang_Object_Null() {
 
         Attributes attribute = new Attributes();
@@ -424,12 +316,6 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes.hashCode()
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "hashCode",
-            args = {}
-    )
     public void test_hashCode_consistent_with_map() {
         MockAttributes mockAttr = new MockAttributes();
         mockAttr.putValue("1", "one");
@@ -442,34 +328,16 @@ public class AttributesTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Attributes",
-        args = {}
-    )
     public void test_Constructor() {
         Attributes attr = new Attributes();
         assertTrue(attr.size() >= 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Attributes",
-        args = {int.class}
-    )
     public void test_ConstructorI() {
         Attributes attr = new Attributes(10);
         assertTrue(attr.size() >= 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "get",
-        args = {java.lang.Object.class}
-    )
     public void test_getLjava_lang_Object_true() {
         assertEquals("a) Incorrect value returned", "one", a
                 .get(new Attributes.Name("1")));
@@ -477,12 +345,6 @@ public class AttributesTest extends TestCase {
         assertNull("b) Incorrect value returned", a.get("1"));
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getValue",
-        args = {java.util.jar.Attributes.Name.class}
-    )
     public void test_getValueLjava_util_jar_Attributes_Name() {
         assertEquals("a) Incorrect value returned", "one", a
                 .getValue(new Attributes.Name("1")));
@@ -490,12 +352,6 @@ public class AttributesTest extends TestCase {
                 .getValue(new Attributes.Name("0")));
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
     public void test_hashCode() {
         Attributes b = (Attributes) a.clone();
         b.putValue("33", "Thirty three");
@@ -505,12 +361,6 @@ public class AttributesTest extends TestCase {
         assertNotSame(a.hashCode(), b.hashCode());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "putValue",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void test_putValueLjava_lang_StringLjava_lang_String() {
         Attributes b = new Attributes();
         b.put(new Attributes.Name("1"), "one");

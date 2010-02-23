@@ -17,26 +17,14 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.util.jar.Attributes;
 import junit.framework.TestCase;
 
-@TestTargetClass(Attributes.Name.class)
 public class AttributesNameTest extends TestCase {
 
     /**
      * @tests java.util.jar.Attributes.Name#Name(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Name",
-        args = {java.lang.String.class}
-    )
     public void test_AttributesName_Constructor() {
         // Regression for HARMONY-85
         try {
@@ -57,12 +45,6 @@ public class AttributesNameTest extends TestCase {
         assertNotNull(new Attributes.Name("Attr"));
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void test_equalsLjava_lang_Object() {
         Attributes.Name attr1 = new Attributes.Name("Attr");
         Attributes.Name attr2 = new Attributes.Name("Attr");
@@ -72,12 +54,6 @@ public class AttributesNameTest extends TestCase {
         assertFalse(attr1.equals(attr2));
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
     public void test_hashCode() {
         Attributes.Name attr1 = new Attributes.Name("Attr1");
         Attributes.Name attr2 = new Attributes.Name("Attr2");
@@ -85,12 +61,6 @@ public class AttributesNameTest extends TestCase {
         assertNotSame(attr1.hashCode(), attr2.hashCode());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )
     public void test_toString() {
         String str1 = "Attr1";
         String str2 = "Attr2";

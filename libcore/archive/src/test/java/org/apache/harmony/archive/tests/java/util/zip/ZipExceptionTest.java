@@ -16,35 +16,17 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
 import java.util.zip.ZipException;
 
-@TestTargetClass(ZipException.class)
 public class ZipExceptionTest extends TestCase {
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "ZipException",
-        args = {}
-    )
     public void testZipException() {
         ZipException zz = new ZipException();
         assertEquals(zz.getMessage(), null);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "ZipException",
-        args = {java.lang.String.class}
-    )
     public void testZipExceptionLjava_lang_String() {
         ZipException zz = new ZipException("Test");
         assertEquals(zz.getMessage(), "Test");

@@ -16,11 +16,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
 import junit.framework.TestCase;
 import static tests.support.Support_Exec.execAndGetOutput;
 import tests.support.resource.Support_Resources;
@@ -37,8 +32,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 
-@TestTargetClass(JarOutputStream.class)
-@AndroidOnly("dalvik vm specific")
 public class DalvikExecTest extends TestCase {
 
     String execDalvik1(String classpath, String mainClass, String arg1)
@@ -78,15 +71,7 @@ public class DalvikExecTest extends TestCase {
         return execDalvik1(classpath, mainClass, null);
     }
 
-    @TestTargets ({
-        @TestTargetNew(
-            level = TestLevel.ADDITIONAL,
-            notes = "Execute an existing JAR on dalvikvm using -classpath option.",
-            clazz = Runtime.class,
-            method = "exec",
-            args = {java.lang.String[].class}
-        )
-    })
+    // Execute an existing JAR on dalvikvm using -classpath option.",
     public void test_execExistingJar () throws IOException, InterruptedException {
         String res;
         File jarFile;
@@ -113,26 +98,7 @@ public class DalvikExecTest extends TestCase {
         }
     }
 
-
-    @TestTargets ({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            method = "putNextEntry",
-            args = {java.util.zip.ZipEntry.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.ADDITIONAL,
-            method = "JarOutputStream",
-            args = {java.io.OutputStream.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.ADDITIONAL,
-            notes = "Create a temp file, fill it with contents according to Dalvik JAR format, and execute it on dalvikvm using -classpath option.",
-            clazz = Runtime.class,
-            method = "exec",
-            args = {java.lang.String[].class}
-        )
-    })
+    // Create a temp file, fill it with contents according to Dalvik JAR format, and execute it on dalvikvm using -classpath option.",
     public void test_execCreatedJar () throws IOException, InterruptedException {
         File jarFile = File.createTempFile("cts_dalvikExecTest_", ".jar");
         jarFile.deleteOnExit();
@@ -171,24 +137,6 @@ public class DalvikExecTest extends TestCase {
     }
 
 
-    @TestTargets ({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            method = "putNextEntry",
-            args = {java.util.zip.ZipEntry.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            method = "JarOutputStream",
-            args = {java.io.OutputStream.class, java.util.jar.Manifest.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.ADDITIONAL,
-            clazz = Runtime.class,
-            method = "exec",
-            args = {java.lang.String[].class}
-        )
-    })
     /**
      * This test does quite the same as test_execCreatedJar, but includes a manifest.
      * Note however that the Dalvik JAR format does not require this manifest.

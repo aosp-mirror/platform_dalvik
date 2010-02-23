@@ -17,11 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,19 +24,12 @@ import java.util.zip.Adler32;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 
-@TestTargetClass(CheckedOutputStream.class)
 public class CheckedOutputStreamTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.zip.CheckedOutputStream#CheckedOutputStream(java.io.OutputStream,
      *        java.util.zip.Checksum)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "CheckedOutputStream",
-        args = {java.io.OutputStream.class, java.util.zip.Checksum.class}
-    )
     public void test_ConstructorLjava_io_OutputStreamLjava_util_zip_Checksum() {
         // test method java.util.zip.checkedOutputStream.constructor
         try {
@@ -62,12 +50,6 @@ public class CheckedOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CheckedOutputStream#getChecksum()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getChecksum",
-        args = {}
-    )
     public void test_getChecksum() {
         // test method java.util.zip.checkedOutputStream.getChecksum()
         byte byteArray[] = {1, 2, 3, 'e', 'r', 't', 'g', 3, 6};
@@ -100,12 +82,6 @@ public class CheckedOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CheckedOutputStream#write(int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "write",
-        args = {int.class}
-    )
     public void test_writeI() {
         // test method java.util.zip.checkedOutputStream.writeI()
         CheckedOutputStream chkOut = null;
@@ -137,12 +113,6 @@ public class CheckedOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CheckedOutputStream#write(byte[], int, int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "write",
-        args = {byte[].class, int.class, int.class}
-    )
     public void test_write$BII() {
         // test method java.util.zip.checkOutputStream.writeBII()
         CheckedOutputStream chkOut = null;

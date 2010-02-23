@@ -17,11 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +30,6 @@ import junit.framework.TestCase;
 import tests.support.resource.Support_Resources;
 
 
-@TestTargetClass(JarEntry.class)
 public class JarEntryTest extends TestCase {
     private ZipEntry zipEntry;
 
@@ -75,12 +69,6 @@ public class JarEntryTest extends TestCase {
      * @throws IOException
      * @tests java.util.jar.JarEntry#JarEntry(java.util.jar.JarEntry)
      */
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "JarEntry",
-            args = {java.util.jar.JarEntry.class}
-    )
     public void test_ConstructorLjava_util_jar_JarEntry_on_null() throws IOException {
         JarEntry newJarEntry = new JarEntry(jarFile.getJarEntry(entryName));
         assertNotNull(newJarEntry);
@@ -97,12 +85,6 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#JarEntry(java.util.zip.ZipEntry)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarEntry",
-        args = {java.util.zip.ZipEntry.class}
-    )
     public void test_ConstructorLjava_util_zip_ZipEntry() {
         assertNotNull("Jar file is null", jarFile);
         zipEntry = jarFile.getEntry(entryName);
@@ -118,12 +100,6 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#getAttributes()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getAttributes",
-        args = {}
-    )
     public void test_getAttributes() {
         JarFile attrJar = null;
         File file = null;
@@ -165,12 +141,6 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#getCertificates()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getCertificates",
-        args = {}
-    )
     public void test_getCertificates() throws Exception {
         zipEntry = jarFile.getEntry(entryName2);
         jarEntry = new JarEntry(zipEntry);
@@ -206,12 +176,6 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#getCodeSigners()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getCodeSigners",
-        args = {}
-    )
     public void test_getCodeSigners() throws IOException {
         String jarFileName = "TestCodeSigners.jar";
         Support_Resources.copyFile(resources, null, jarFileName);
@@ -247,12 +211,6 @@ public class JarEntryTest extends TestCase {
                 new JarEntry("aaa").getCodeSigners());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarEntry",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         assertNotNull("Jar file is null", jarFile);
         zipEntry = jarFile.getEntry(entryName);
@@ -279,12 +237,6 @@ public class JarEntryTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "JarEntry",
-        args = {java.util.jar.JarEntry.class}
-    )
     public void test_ConstructorLjava_util_jar_JarEntry() {
         assertNotNull("Jar file is null", jarFile);
         JarEntry je = jarFile.getJarEntry(entryName);

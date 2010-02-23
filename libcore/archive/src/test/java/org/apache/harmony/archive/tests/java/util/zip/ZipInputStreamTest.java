@@ -17,10 +17,6 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import junit.framework.TestCase;
 
 import tests.support.resource.Support_Resources;
@@ -37,7 +33,6 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-@TestTargetClass(ZipInputStream.class)
 public class ZipInputStreamTest extends TestCase {
     // the file hyts_zipFile.zip used in setup needs to included as a resource
     private ZipEntry zentry;
@@ -84,12 +79,6 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#ZipInputStream(java.io.InputStream)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "ZipInputStream",
-        args = {java.io.InputStream.class}
-    )
     public void test_ConstructorLjava_io_InputStream() throws Exception {
         zentry = zis.getNextEntry();
         zis.closeEntry();
@@ -98,12 +87,6 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#close()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "close",
-        args = {}
-    )
     public void test_close() {
         try {
             zis.close();
@@ -118,12 +101,6 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#close()
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Checks calling method two times",
-        method = "close",
-        args = {}
-    )
     public void test_close2() throws Exception {
         // Regression for HARMONY-1101
         zis.close();
@@ -134,12 +111,6 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#closeEntry()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "closeEntry",
-        args = {}
-    )
     public void test_closeEntry() throws Exception {
         zentry = zis.getNextEntry();
         zis.closeEntry();
@@ -169,11 +140,6 @@ public class ZipInputStreamTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "close",
-        args = {}
-    )
     public void test_closeAfterException() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "Broken_manifest.jar");
@@ -203,11 +169,6 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#getNextEntry()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "getNextEntry",
-        args = {}
-    )
     public void test_getNextEntry() throws Exception {
         assertNotNull("getNextEntry failed", zis.getNextEntry());
 
@@ -239,11 +200,6 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#read(byte[], int, int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "read",
-        args = {byte[].class, int.class, int.class}
-    )
     public void test_read$BII() throws Exception {
         zentry = zis.getNextEntry();
         byte[] rbuf = new byte[(int) zentry.getSize()];
@@ -279,11 +235,6 @@ public class ZipInputStreamTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            method = "read",
-            args = {byte[].class, int.class, int.class}
-    )
     public void testReadOneByteAtATime() throws IOException {
         InputStream in = new FilterInputStream(Support_Resources.getStream("hyts_ZipFile.zip")) {
             @Override
@@ -307,11 +258,6 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#skip(long)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "skip",
-        args = {long.class}
-    )
     public void test_skipJ() throws Exception {
         zentry = zis.getNextEntry();
         byte[] rbuf = new byte[(int) zentry.getSize()];
@@ -365,11 +311,6 @@ public class ZipInputStreamTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "available",
-        args = {}
-    )
     public void test_available() throws Exception {
 
         File resources = Support_Resources.createTempFolder();
@@ -422,12 +363,6 @@ public class ZipInputStreamTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "createZipEntry",
-        args = {java.lang.String.class}
-    )
     public void test_createZipEntryLjava_lang_String() throws Exception {
 
         File resources = Support_Resources.createTempFolder();

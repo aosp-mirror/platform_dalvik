@@ -16,11 +16,6 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import junit.framework.TestCase;
 
 import tests.support.resource.Support_Resources;
@@ -38,29 +33,14 @@ import java.util.jar.Pack200;
 import java.util.jar.Pack200.Packer;
 import java.util.jar.Pack200.Unpacker;
 
-@TestTargetClass(Pack200.Unpacker.class)
 public class Pack200UnpackerTest extends TestCase {
     Unpacker unpacker;
     Map properties;
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "properties",
-        args = {}
-    )
-    @KnownFailure("No Implementation in Android!")
     public void testProperties() {
         assertTrue(properties.size()>0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "unpack",
-        args = {java.io.File.class, java.util.jar.JarOutputStream.class}
-    )
-    @KnownFailure("No Implementation in Android!")
     public void testUnpackInputStreamJarOutputStream() throws IOException {
         File resources = Support_Resources.createTempFolder();
         //Use junit4.jar file for testing pack200 compressing rate.
@@ -115,13 +95,6 @@ public class Pack200UnpackerTest extends TestCase {
         assertEquals(jarEntries, new JarFile(jarFile3).size());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "unpack",
-        args = {java.io.InputStream.class, java.util.jar.JarOutputStream.class}
-    )
-    @KnownFailure("No Implementation in Android!")
     public void testUnpackFileJarOutputStream() throws IOException {
         File resources = Support_Resources.createTempFolder();
         //Use junit4.jar file for testing pack200 compressing rate.
@@ -191,13 +164,6 @@ public class Pack200UnpackerTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "addPropertyChangeListener",
-        args = {java.beans.PropertyChangeListener.class}
-    )
-    @KnownFailure("No Implementation in Android!")
     public void testAddPropertyChangeListener() {
         MyPCL pcl = new MyPCL();
         unpacker.addPropertyChangeListener(pcl);
@@ -206,13 +172,6 @@ public class Pack200UnpackerTest extends TestCase {
         assertTrue(pcl.isCalled());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removePropertyChangeListener",
-        args = {java.beans.PropertyChangeListener.class}
-    )
-    @KnownFailure("No Implementation in Android!")
     public void testRemovePropertyChangeListener() {
         MyPCL pcl = new MyPCL();
         unpacker.addPropertyChangeListener(pcl);

@@ -17,28 +17,16 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.jar.Manifest;
 import junit.framework.TestCase;
 import java.util.jar.JarException;
 
-@TestTargetClass(JarException.class)
 public class JarExceptionTest extends TestCase {
     /**
      * @tests java.util.jar.JarException#JarException(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarException",
-        args = {}
-    )
     public void test_Constructor() throws Exception {
         JarException ex = new JarException();
         JarException ex1 = new JarException("Test string");
@@ -49,12 +37,6 @@ public class JarExceptionTest extends TestCase {
         assertSame(ex.getMessage(), ex2.getMessage());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "JarException",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() throws Exception {
         JarException ex1 = new JarException("Test string");
         JarException ex2 = new JarException(null);
