@@ -1,3 +1,4 @@
+# -*- mode: bash -*-
 #
 # Copyright (C) 2007 The Android Open Source Project
 #
@@ -13,30 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Run all the tests contained in the core-tests library.
-#
-# To install this script and the tests on a device:
-# $ make (only necessary once)
-# $ make CtsCoreTests snod (to create a system.img containing these files)
-#  OR
-# $ make CtsCoreTests && adb sync (to push these files to a running system)
+# To run these tests:
+# mmm -j14 dalvik snod
+# adb reboot && fastboot flashall
+# adb shell run-core-tests
 
 tmp=/data/core-tests.tmp
 mkdir $tmp
 chmod 777 $tmp
 
-modules="annotation archive concurrent crypto dom icu logging luni-kernel \
-        luni math nio nio_char prefs regex security sql suncompat support \
-        text x-net xml"
+# Build the classpath by putting together the jar file for each module.
+modules="annotation archive concurrent crypto dom icu json \
+        logging luni-kernel luni math nio nio_char prefs regex security sql \
+        suncompat support text x-net xml"
 classpath=""
 for module in $modules; do
   classpath="$classpath:/system/framework/core-tests-$module.jar"
 done
+classpath=${classpath#:}
 
 exec dalvikvm \
      -Duser.name=root \
      -Duser.language=en \
      -Duser.region=US \
+     -Duser.dir=$tmp \
+     -Duser.home=$tmp \
      -Djava.io.tmpdir=$tmp \
      -Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks \
      -classpath $classpath \
