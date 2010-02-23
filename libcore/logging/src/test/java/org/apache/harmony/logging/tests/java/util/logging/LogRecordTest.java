@@ -17,11 +17,6 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -36,7 +31,6 @@ import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
-@TestTargetClass(LogRecord.class)
 public class LogRecordTest extends TestCase {
 
     static final String MSG = "test msg, pls. ignore itb";
@@ -50,12 +44,6 @@ public class LogRecordTest extends TestCase {
         lr = new LogRecord(Level.CONFIG, MSG);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "LogRecord",
-        args = {java.util.logging.Level.class, java.lang.String.class}
-    )
     public void testLogRecordWithNullPointers() {
         try {
             new LogRecord(null, null);
@@ -72,20 +60,6 @@ public class LogRecordTest extends TestCase {
         assertNull(r.getMessage());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "normally set/get don't need to be tested",
-            method = "getLoggerName",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "normally set/get don't need to be tested",
-            method = "setLoggerName",
-            args = {java.lang.String.class}
-        )
-    })
     public void testGetSetLoggerName() {
         assertNull(lr.getLoggerName());
         lr.setLoggerName(null);
@@ -94,21 +68,6 @@ public class LogRecordTest extends TestCase {
         assertEquals("test logger name", lr.getLoggerName());
     }
 
-
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getResourceBundle",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setResourceBundle",
-            args = {java.util.ResourceBundle.class}
-        )
-    })
     public void testGetSetResourceBundle() {
         assertNull(lr.getResourceBundleName());
         assertNull(lr.getResourceBundle());
@@ -127,20 +86,6 @@ public class LogRecordTest extends TestCase {
         assertNull(lr.getResourceBundleName());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getResourceBundleName",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setResourceBundleName",
-            args = {java.lang.String.class}
-        )
-    })
     public void testGetSetResourceBundleName() {
         assertNull(lr.getResourceBundleName());
         lr.setResourceBundleName(null);
@@ -149,20 +94,6 @@ public class LogRecordTest extends TestCase {
         assertEquals("test", lr.getResourceBundleName());
     }
     
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "normal behavior of getter/setter don't need to be tested (normally)",
-            method = "getLevel",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "normal behavior of getter/setter don't need to be tested (normally)",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        )
-    })
     public void testGetSetLevelNormal() {           
         assertSame(lr.getLevel(), Level.CONFIG);
         lr.setLevel(Level.ALL);
@@ -171,20 +102,6 @@ public class LogRecordTest extends TestCase {
         assertSame(lr.getLevel(), Level.FINEST);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getLevel",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        )
-    })
     public void testGetSetLevelNullPointerException() {
         try {
             lr.setLevel(null);
@@ -194,20 +111,6 @@ public class LogRecordTest extends TestCase {
         assertSame(lr.getLevel(), Level.CONFIG);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getSequenceNumber",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setSequenceNumber",
-            args = {long.class}
-        )
-    })
     public void testGetSetSequenceNumber() {
         long l = lr.getSequenceNumber();
         lr.setSequenceNumber(-111);
@@ -218,20 +121,6 @@ public class LogRecordTest extends TestCase {
         assertEquals(lr.getSequenceNumber(), l + 1);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getSourceClassName",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setSourceClassName",
-            args = {java.lang.String.class}
-        )
-    })
     public void testGetSetSourceClassName() {
         lr.setSourceClassName(null);
         assertNull(lr.getSourceClassName());
@@ -241,20 +130,6 @@ public class LogRecordTest extends TestCase {
         assertEquals(this.getClass().getName(), lr.getSourceClassName());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getSourceMethodName",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "setSourceMethodName",
-            args = {java.lang.String.class}
-        )
-    })
     public void testGetSetSourceMethodName() {
         lr.setSourceMethodName(null);
         assertNull(lr.getSourceMethodName());
@@ -264,32 +139,6 @@ public class LogRecordTest extends TestCase {
         assertEquals(this.getClass().getName(), lr.getSourceMethodName());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getSourceMethodName",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "setSourceMethodName",
-            args = {java.lang.String.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getSourceClassName",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "setSourceClassName",
-            args = {java.lang.String.class}
-        )
-    })
     public void testGetSourceDefaultValue() {
         assertNull(lr.getSourceMethodName());
         assertNull(lr.getSourceClassName());
@@ -363,20 +212,6 @@ public class LogRecordTest extends TestCase {
         logger.removeHandler(handler);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getMessage",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setMessage",
-            args = {java.lang.String.class}
-        )
-    })
     public void testGetSetMessage() {
         assertEquals(MSG, lr.getMessage());
         lr.setMessage(null);
@@ -385,20 +220,6 @@ public class LogRecordTest extends TestCase {
         assertEquals("", lr.getMessage());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getParameters",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setParameters",
-            args = {java.lang.Object[].class}
-        )
-    })
     public void testGetSetParameters() {
         assertNull(lr.getParameters());
         lr.setParameters(null);
@@ -411,20 +232,6 @@ public class LogRecordTest extends TestCase {
         assertSame(oa, lr.getParameters());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getMillis",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setMillis",
-            args = {long.class}
-        )
-    })
     public void testGetSetMillis() {
         long milli = lr.getMillis();
         assertTrue(milli > 0);
@@ -434,20 +241,6 @@ public class LogRecordTest extends TestCase {
         assertEquals(0, lr.getMillis());
     }
     
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getMillis",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setMillis",
-            args = {long.class}
-        )
-    })
     public void testGetSetTimeCheck() {
         long before = lr.getMillis();
         try {
@@ -462,20 +255,6 @@ public class LogRecordTest extends TestCase {
     
 
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getThreadID",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setThreadID",
-            args = {int.class}
-        )
-    })
     public void testGetSetThreadID() {
         int id = lr.getThreadID();
         lr = new LogRecord(Level.ALL, "a1");
@@ -489,20 +268,6 @@ public class LogRecordTest extends TestCase {
     /*
      * Check threadID are different
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getThreadID",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setThreadID",
-            args = {int.class}
-        )
-    })
     public void testGetSetThreadID_DifferentThread() {
         int id = lr.getThreadID();
         // Create and start the thread
@@ -529,20 +294,6 @@ public class LogRecordTest extends TestCase {
     }
 
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getThrown",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setThrown",
-            args = {java.lang.Throwable.class}
-        )
-    })
     public void testGetSetThrown() {
         assertNull(lr.getThrown());
         lr.setThrown(null);
@@ -600,12 +351,6 @@ public class LogRecordTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "serialisation/deserialization",
-        method = "!SerializationSelf",
-        args = {}
-    )
     public void testSerializationSelf() throws Exception {
         LogRecord r = new LogRecord(Level.ALL, "msg");
         r.setLoggerName("LoggerName");
@@ -624,12 +369,6 @@ public class LogRecordTest extends TestCase {
     /**
      * @tests resolution of resource bundle for serialization/deserialization.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "tests resolution of resource bundle during deserialization",
-        method = "!Serialization",
-        args = {}
-    )
     public void testSerializationResourceBundle() throws Exception {
 
         // test case: valid resource bundle name
@@ -653,12 +392,6 @@ public class LogRecordTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "!SerializationGolden",
-        args = {}
-    )
     public void testSerializationCompatibility() throws Exception {
         LogRecord r = new LogRecord(Level.ALL, "msg");
         r.setLoggerName("LoggerName");

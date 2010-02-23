@@ -17,16 +17,9 @@
 
 package tests.api.java.math;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
-
 import java.math.BigInteger;
 import java.util.Random;
 
-@TestTargetClass(BigInteger.class)
 public class BigIntegerTest extends junit.framework.TestCase {
 
     BigInteger minusTwo = new BigInteger("-2", 10);
@@ -87,12 +80,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(int, java.util.Random)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigInteger",
-        args = {int.class, java.util.Random.class}
-    )
     public void test_ConstructorILjava_util_Random() {
         // regression test for HARMONY-1047
         try {
@@ -123,12 +110,7 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(int, int, java.util.Random)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        method = "BigInteger",
-        args = {int.class, int.class, java.util.Random.class}
-    )
-    @KnownFailure("BIGNUM returns no Primes smaller than 16 bits.")
+    // BIGNUM returns no Primes smaller than 16 bits.
     public void test_ConstructorIILjava_util_Random() {
         bi = new BigInteger(10, 5, rand);
         bi2 = new BigInteger(10, 5, rand);
@@ -168,12 +150,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(byte[])
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "NumberFormatException checking missed",
-        method = "BigInteger",
-        args = {byte[].class}
-    )
     public void test_Constructor$B() {
         byte[] myByteArray;
         myByteArray = new byte[] { (byte) 0x00, (byte) 0xFF, (byte) 0xFE };
@@ -188,12 +164,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(int, byte[])
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigInteger",
-        args = {int.class, byte[].class}
-    )
     public void test_ConstructorI$B() {
         byte[] myByteArray;
         myByteArray = new byte[] { (byte) 0xFF, (byte) 0xFE };
@@ -218,12 +188,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Checks NumberFormatException",
-        method = "BigInteger",
-        args = {java.lang.String.class}
-    )
     public void test_constructor_String_empty() {
         try {
             new BigInteger("");            
@@ -235,12 +199,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#toByteArray()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toByteArray",
-        args = {}
-    )
     public void test_toByteArray() {
         byte[] myByteArray, anotherByteArray;
         myByteArray = new byte[] { 97, 33, 120, 124, 50, 2, 0, 0, 0, 12, 124,
@@ -274,20 +232,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#isProbablePrime(int)
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "isProbablePrime",
-            args = {int.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "probablePrime",
-            args = {int.class, java.util.Random.class}
-        )
-    })
     public void test_isProbablePrimeI() {
         int fails = 0;
         bi = new BigInteger(20, 20, rand);
@@ -355,20 +299,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#nextProbablePrime()
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "nextProbablePrime",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "isProbablePrime",
-            args = {int.class}
-        )
-    })
     public void test_nextProbablePrime() {
         largePrimesProduct(
                 new BigInteger("2537895984043447429238717358455377929009126353874925049325287329295635198252046158619999217453233889378619619008359011789"),
@@ -400,12 +330,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#probablePrime(int, java.util.Random)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "probablePrime",
-        args = {int.class, java.util.Random.class}
-    )
     public void test_probablePrime() {
         for (int bitLength = 50; bitLength <= 1050; bitLength += 100) {
             BigInteger a = BigInteger.probablePrime(bitLength, rand);
@@ -478,12 +402,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#equals(java.lang.Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void test_equalsLjava_lang_Object() {
         assertTrue("0=0", zero.equals(BigInteger.valueOf(0)));
         assertTrue("-123=-123", BigInteger.valueOf(-123).equals(
@@ -499,12 +417,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#compareTo(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "compareTo",
-        args = {java.math.BigInteger.class}
-    )
     public void test_compareToLjava_math_BigInteger() {
         assertTrue("Smaller number returned >= 0", one.compareTo(two) < 0);
         assertTrue("Larger number returned >= 0", two.compareTo(one) > 0);
@@ -516,12 +428,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#intValue()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "intValue",
-        args = {}
-    )
     public void test_intValue() {
         assertTrue("Incorrect intValue for 2**70",
                 twoToTheSeventy.intValue() == 0);
@@ -531,12 +437,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#longValue()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "longValue",
-        args = {}
-    )
     public void test_longValue() {
         assertTrue("Incorrect longValue for 2**70",
                 twoToTheSeventy.longValue() == 0);
@@ -546,12 +446,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#valueOf(long)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "valueOf",
-        args = {long.class}
-    )
     public void test_valueOfJ() {
         assertTrue("Incurred number returned for 2", BigInteger.valueOf(2L)
                 .equals(two));
@@ -562,12 +456,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#add(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Test is OK, but some cases listed below can be reasonable.",
-        method = "add",
-        args = {java.math.BigInteger.class}
-    )
     public void test_addLjava_math_BigInteger() {
         assertTrue("Incorrect sum--wanted a zillion", aZillion.add(aZillion)
                 .add(aZillion.negate()).equals(aZillion));
@@ -609,12 +497,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#negate()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "negate",
-        args = {}
-    )
     public void test_negate() {
         assertTrue("Single negation of zero did not result in zero", zero
                 .negate().equals(zero));
@@ -643,12 +525,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#signum()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "signum",
-        args = {}
-    )
     public void test_signum() {
         assertTrue("Wrong positive signum", two.signum() == 1);
         assertTrue("Wrong zero signum", zero.signum() == 0);
@@ -659,12 +535,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#abs()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "abs",
-        args = {}
-    )
     public void test_abs() {
         assertTrue("Invalid number returned for zillion", aZillion.negate()
                 .abs().equals(aZillion.abs()));
@@ -678,12 +548,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#pow(int)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed",
-        method = "pow",
-        args = {int.class}
-    )
     public void test_powI() {
         assertTrue("Incorrect exponent returned for 2**10", two.pow(10).equals(
                 twoToTheTen));
@@ -696,12 +560,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#modInverse(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "modInverse",
-        args = {java.math.BigInteger.class}
-    )
     public void test_modInverseLjava_math_BigInteger() {
         BigInteger a = zero, mod, inv;
         for (int j = 3; j < 50; j++) {
@@ -751,12 +609,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#shiftRight(int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void test_shiftRightI() {
         assertTrue("1 >> 0", BigInteger.valueOf(1).shiftRight(0).equals(
                 BigInteger.ONE));
@@ -814,12 +666,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#shiftLeft(int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "shiftLeft",
-        args = {int.class}
-    )
     public void test_shiftLeftI() {
         assertTrue("1 << 0", one.shiftLeft(0).equals(one));
         assertTrue("1 << 1", one.shiftLeft(1).equals(two));
@@ -861,12 +707,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#multiply(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void test_multiplyLjava_math_BigInteger() {
         assertTrue("Incorrect sum--wanted three zillion", aZillion
                 .add(aZillion).add(aZillion).equals(
@@ -893,12 +733,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#divide(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "divide",
-        args = {java.math.BigInteger.class}
-    )
     public void test_divideLjava_math_BigInteger() {
         testAllDivs(bi33, bi3);
         testAllDivs(bi22, bi2);
@@ -957,12 +791,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#remainder(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checked",
-        method = "remainder",
-        args = {java.math.BigInteger.class}
-    )
     public void test_remainderLjava_math_BigInteger() {
         try {
             largePos.remainder(zero);
@@ -992,12 +820,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#mod(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checked",
-        method = "mod",
-        args = {java.math.BigInteger.class}
-    )
     public void test_modLjava_math_BigInteger() {
         try {
             largePos.mod(zero);
@@ -1027,12 +849,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#divideAndRemainder(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checked",
-        method = "divideAndRemainder",
-        args = {java.math.BigInteger.class}
-    )
     public void test_divideAndRemainderLjava_math_BigInteger() {
         try {
             largePos.divideAndRemainder(zero);
@@ -1062,12 +878,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "NumberFormatException checking missed.",
-        method = "BigInteger",
-        args = {java.lang.String.class}
-    )
     public void test_ConstructorLjava_lang_String() {
         assertTrue("new(0)", new BigInteger("0").equals(BigInteger.valueOf(0)));
         assertTrue("new(1)", new BigInteger("1").equals(BigInteger.valueOf(1)));
@@ -1082,12 +892,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String, int)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "NumberFormatException checking missed.",
-        method = "BigInteger",
-        args = {java.lang.String.class, int.class}
-    )
     public void test_ConstructorLjava_lang_StringI() {
         assertTrue("new(0,16)", new BigInteger("0", 16).equals(BigInteger
                 .valueOf(0)));
@@ -1112,12 +916,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#toString()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )
     public void test_toString() {
         assertTrue("0.toString", "0".equals(BigInteger.valueOf(0).toString()));
         assertTrue("1.toString", "1".equals(BigInteger.valueOf(1).toString()));
@@ -1132,12 +930,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#toString(int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {int.class}
-    )
     public void test_toStringI() {
         assertTrue("0.toString(16)", "0".equals(BigInteger.valueOf(0).toString(
                 16)));
@@ -1156,12 +948,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#and(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "and",
-        args = {java.math.BigInteger.class}
-    )
     public void test_andLjava_math_BigInteger() {
         for (BigInteger[] element : booleanPairs) {
             BigInteger i1 = element[0], i2 = element[1];
@@ -1178,12 +964,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#or(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void test_orLjava_math_BigInteger() {
         for (BigInteger[] element : booleanPairs) {
             BigInteger i1 = element[0], i2 = element[1];
@@ -1200,12 +980,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#xor(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "xor",
-        args = {java.math.BigInteger.class}
-    )
     public void test_xorLjava_math_BigInteger() {
         for (BigInteger[] element : booleanPairs) {
             BigInteger i1 = element[0], i2 = element[1];
@@ -1222,12 +996,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#not()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "not",
-        args = {}
-    )
     public void test_not() {
         for (BigInteger[] element : booleanPairs) {
             BigInteger i1 = element[0];
@@ -1242,12 +1010,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigInteger#andNot(java.math.BigInteger)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "andNot",
-        args = {java.math.BigInteger.class}
-    )
     public void test_andNotLjava_math_BigInteger() {
         for (BigInteger[] element : booleanPairs) {
             BigInteger i1 = element[0], i2 = element[1];
@@ -1279,12 +1041,6 @@ public class BigIntegerTest extends junit.framework.TestCase {
     }
     
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Regression test",
-        method = "clone",
-        args = {}
-    )
     public void testClone() {
         // Regression test for HARMONY-1770
         MyBigInteger myBigInteger = new MyBigInteger("12345");

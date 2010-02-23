@@ -21,15 +21,10 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.math.BigInteger;
 
 import junit.framework.TestCase;
-@TestTargetClass(BigInteger.class)
+
 /**
  * Class:   java.math.BigInteger
  * Methods: bitLength, shiftLeft, shiftRight,
@@ -39,12 +34,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitCount() of zero.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitCount method.",
-        method = "bitCount",
-        args = {}
-    )
     public void testBitCountZero() {
         BigInteger aNumber = new BigInteger("0");
         assertEquals(0, aNumber.bitCount());
@@ -53,12 +42,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitCount() of a negative number.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitCount method.",
-        method = "bitCount",
-        args = {}
-    )
     public void testBitCountNeg() {
         BigInteger aNumber = new BigInteger("-12378634756382937873487638746283767238657872368748726875");
         assertEquals(87, aNumber.bitCount());
@@ -67,12 +50,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitCount() of a negative number.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitCount method.",
-        method = "bitCount",
-        args = {}
-    )
     public void testBitCountPos() {
         BigInteger aNumber = new BigInteger("12378634756343564757582937873487638746283767238657872368748726875");
         assertEquals(107, aNumber.bitCount());
@@ -81,12 +58,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitLength() of zero.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitLength method.",
-        method = "bitLength",
-        args = {}
-    )
     public void testBitLengthZero() {
         BigInteger aNumber = new BigInteger("0");
         assertEquals(0, aNumber.bitLength());
@@ -95,12 +66,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitLength() of a positive number.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitLength method.",
-        method = "bitLength",
-        args = {}
-    )
     public void testBitLengthPositive1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = 1;
@@ -111,12 +76,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitLength() of a positive number with the leftmost bit set
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitLength method.",
-        method = "bitLength",
-        args = {}
-    )
     public void testBitLengthPositive2() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -127,12 +86,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitLength() of a positive number which is a power of 2
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitLength method.",
-        method = "bitLength",
-        args = {}
-    )
     public void testBitLengthPositive3() {
         byte aBytes[] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         int aSign = 1;
@@ -143,12 +96,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitLength() of a negative number.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitLength method.",
-        method = "bitLength",
-        args = {}
-    )
     public void testBitLengthNegative1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = -1;
@@ -159,12 +106,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitLength() of a negative number with the leftmost bit set
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitLength method.",
-        method = "bitLength",
-        args = {}
-    )
     public void testBitLengthNegative2() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -175,12 +116,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * bitLength() of a negative number which is a power of 2
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for bitLength method.",
-        method = "bitLength",
-        args = {}
-    )
     public void testBitLengthNegative3() {
         byte aBytes[] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         int aSign = -1;
@@ -191,12 +126,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) of a negative n
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitException() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -213,12 +142,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) outside zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitZero() {
         byte aBytes[] = {0};
         int aSign = 0;
@@ -237,12 +160,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) outside zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitZeroOutside1() {
         byte aBytes[] = {0};
         int aSign = 0;
@@ -261,12 +178,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) inside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitNegativeInside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -285,12 +196,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) inside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitNegativeInside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -309,12 +214,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(2) in the negative number with all ones in bit representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitNegativeInside3() {
         String as = "-18446744073709551615";
         int number = 2;
@@ -328,12 +227,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * with all ones in bit representation.
      * the resulting number's length is 2.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitNegativeInside4() {
         String as = "-4294967295";
         String res = "-4294967296";
@@ -348,12 +241,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * with all ones in bit representation.
      * the resulting number's length is 3.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitNegativeInside5() {
         String as = "-18446744073709551615";
         String res = "-18446744073709551616";
@@ -366,12 +253,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) outside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitNegativeOutside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -390,12 +271,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) outside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitNegativeOutside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -414,12 +289,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitPositiveInside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -438,12 +307,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitPositiveInside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -462,12 +325,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitPositiveInside3() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -486,12 +343,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitPositiveInside4 () {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -510,12 +361,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitPositiveInside5 () {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -534,12 +379,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) outside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitPositiveOutside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -558,12 +397,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) outside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitPositiveOutside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -582,12 +415,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * clearBit(int n) the leftmost bit in a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for clearBit method.",
-        method = "clearBit",
-        args = {int.class}
-    )
     public void testClearBitTopNegative() {
         byte aBytes[] = {1, -128, 56, 100, -15, 35, 26};
         int aSign = -1;
@@ -606,12 +433,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) of a negative n
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitException() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -628,12 +449,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitZero() {
         byte aBytes[] = {0};
         int aSign = 0;
@@ -652,12 +467,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) outside zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitZeroOutside1() {
         byte aBytes[] = {0};
         int aSign = 0;
@@ -676,12 +485,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) outside zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitZeroOutside2() {
         byte aBytes[] = {0};
         int aSign = 0;
@@ -700,12 +503,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) the leftmost bit in a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitLeftmostNegative() {
         byte aBytes[] = {1, -128, 56, 100, -15, 35, 26};
         int aSign = -1;
@@ -724,12 +521,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) the leftmost bit in a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitLeftmostPositive() {
         byte aBytes[] = {1, -128, 56, 100, -15, 35, 26};
         int aSign = 1;
@@ -748,12 +539,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) inside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitNegativeInside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -772,12 +557,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) inside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitNegativeInside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -796,12 +575,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) inside a negative number with all ones in bit representation 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitNegativeInside3() {
         String as = "-18446744073709551615";
         String res = "-18446744073709551611";
@@ -816,12 +589,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * with all ones in bit representation.
      * the resulting number's length is 2.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitNegativeInside4() {
         String as = "-4294967295";
         String res = "-4294967296";
@@ -836,12 +603,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * with all ones in bit representation.
      * the resulting number's length is 3.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitNegativeInside5() {
         String as = "-18446744073709551615";
         String res = "-18446744073709551616";
@@ -854,12 +615,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) outside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitNegativeOutside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -878,12 +633,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) outside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitNegativeOutside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -902,12 +651,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitPositiveInside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -926,12 +669,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitPositiveInside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -950,12 +687,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) outside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitPositiveOutside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -974,12 +705,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * flipBit(int n) outside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for flipBit method.",
-        method = "flipBit",
-        args = {int.class}
-    )
     public void testFlipBitPositiveOutside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -998,12 +723,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) of a negative n
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitException() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1020,12 +739,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) outside zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitZero() {
         byte aBytes[] = {0};
         int aSign = 0;
@@ -1044,12 +757,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) outside zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitZeroOutside1() {
         byte aBytes[] = {0};
         int aSign = 0;
@@ -1068,12 +775,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitPositiveInside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1092,12 +793,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitPositiveInside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1116,12 +811,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitPositiveInside3() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1140,12 +829,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) inside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitPositiveInside4 () {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1164,12 +847,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) outside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitPositiveOutside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1188,12 +865,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) outside a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitPositiveOutside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1212,12 +883,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) the leftmost bit in a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitTopPositive() {
         byte aBytes[] = {1, -128, 56, 100, -15, 35, 26};
         int aSign = 1;
@@ -1236,12 +901,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) the leftmost bit in a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitLeftmostNegative() {
         byte aBytes[] = {1, -128, 56, 100, -15, 35, 26};
         int aSign = -1;
@@ -1260,12 +919,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) inside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitNegativeInside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1284,12 +937,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) inside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitNegativeInside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1308,12 +955,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) inside a negative number with all ones in bit representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitNegativeInside3() {
         String as = "-18446744073709551615";
         String res = "-18446744073709551611";
@@ -1328,12 +969,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * with all ones in bit representation.
      * the resulting number's length is 2.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitNegativeInside4() {
         String as = "-4294967295";
         int number = 0;
@@ -1347,12 +982,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * with all ones in bit representation.
      * the resulting number's length is 3.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitNegativeInside5() {
         String as = "-18446744073709551615";
         int number = 0;
@@ -1364,12 +993,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) outside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitNegativeOutside1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1388,12 +1011,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * setBit(int n) outside a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitNegativeOutside2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1414,12 +1031,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * represented as n * 32 + 31, where n is an arbitrary integer.
      * Here 191 = 5 * 32 + 31 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for setBit method.",
-        method = "setBit",
-        args = {int.class}
-    )
     public void testSetBitBug1331() {
         BigInteger result = BigInteger.valueOf(0L).setBit(191);
         assertEquals("incorrect value", "3138550867693340381917894711603833208051177722232017256448", result.toString());
@@ -1429,12 +1040,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftLeft(int n), n = 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftLeft method.",
-        method = "shiftLeft",
-        args = {int.class}
-    )
     public void testShiftLeft1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1453,12 +1058,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftLeft(int n), n < 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftLeft method.",
-        method = "shiftLeft",
-        args = {int.class}
-    )
     public void testShiftLeft2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1477,12 +1076,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftLeft(int n) a positive number, n > 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftLeft method.",
-        method = "shiftLeft",
-        args = {int.class}
-    )
     public void testShiftLeft3() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1501,12 +1094,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftLeft(int n) a positive number, n > 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftLeft method.",
-        method = "shiftLeft",
-        args = {int.class}
-    )
     public void testShiftLeft4() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1525,12 +1112,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftLeft(int n) a negative number, n > 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftLeft method.",
-        method = "shiftLeft",
-        args = {int.class}
-    )
     public void testShiftLeft5() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1549,12 +1130,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftRight(int n), n = 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRight1() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1573,12 +1148,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftRight(int n), n < 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRight2() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1597,12 +1166,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftRight(int n), 0 < n < 32
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRight3() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1621,12 +1184,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftRight(int n), n > 32
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRight4() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1645,12 +1202,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * shiftRight(int n), n is greater than bitLength()
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRight5() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1671,12 +1222,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * shift distance is multiple of 32;
      * shifted bits are NOT zeroes. 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRightNegNonZeroesMul32() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 1, 0, 0, 0, 0, 0, 0, 0};
         int aSign = -1;
@@ -1697,12 +1242,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * shift distance is NOT multiple of 32;
      * shifted bits are NOT zeroes. 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRightNegNonZeroes() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 0, 0, 0, 0, 0, 0, 0, 0};
         int aSign = -1;
@@ -1723,12 +1262,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * shift distance is NOT multiple of 32;
      * shifted bits are zeroes. 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRightNegZeroes() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         int aSign = -1;
@@ -1749,12 +1282,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * shift distance is multiple of 32;
      * shifted bits are zeroes. 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "shiftRight",
-        args = {int.class}
-    )
     public void testShiftRightNegZeroesMul32() {
         byte aBytes[] = {1, -128, 56, 100, -2, -76, 89, 45, 91, 0, 0, 0, 0, 0, 0, 0, 0};
         int aSign = -1;
@@ -1773,12 +1300,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * testBit(int n) of a negative n
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "testBit",
-        args = {int.class}
-    )
     public void testTestBitException() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1795,12 +1316,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * testBit(int n) of a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "testBit",
-        args = {int.class}
-    )
     public void testTestBitPositive1() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1812,12 +1327,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * testBit(int n) of a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "testBit",
-        args = {int.class}
-    )
     public void testTestBitPositive2() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1829,12 +1338,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * testBit(int n) of a positive number, n > bitLength()
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "testBit",
-        args = {int.class}
-    )
     public void testTestBitPositive3() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = 1;
@@ -1846,12 +1349,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * testBit(int n) of a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "testBit",
-        args = {int.class}
-    )
     public void testTestBitNegative1() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1863,12 +1360,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * testBit(int n) of a positive n
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "testBit",
-        args = {int.class}
-    )
     public void testTestBitNegative2() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1880,12 +1371,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
     /**
      * testBit(int n) of a positive n, n > bitLength()
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shiftRight method.",
-        method = "testBit",
-        args = {int.class}
-    )
     public void testTestBitNegative3() {
         byte aBytes[] = {-1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26};
         int aSign = -1;
@@ -1900,12 +1385,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * @tests java.math.BigInteger#getLowestSetBit() getLowestSetBit for
      *        negative BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for getLowestSetBit method.",
-        method = "getLowestSetBit",
-        args = {}
-    )
     public void test_getLowestSetBitNeg() {
         byte aBytes[] = {
                 -1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26
@@ -1921,12 +1400,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * @tests java.math.BigInteger#getLowestSetBit() getLowestSetBit for
      *        positive BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for getLowestSetBit method.",
-        method = "getLowestSetBit",
-        args = {}
-    )
     public void test_getLowestSetBitPos() {
         byte aBytes[] = {
                 -1, -128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26
@@ -1958,12 +1431,6 @@ public class BigIntegerOperateBitsTest extends TestCase {
      * @tests java.math.BigInteger#getLowestSetBit() getLowestSetBit for zero
      *        BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for getLowestSetBit method.",
-        method = "getLowestSetBit",
-        args = {}
-    )
     public void test_getLowestSetBitZero() {
         byte[] aBytes = {
             0

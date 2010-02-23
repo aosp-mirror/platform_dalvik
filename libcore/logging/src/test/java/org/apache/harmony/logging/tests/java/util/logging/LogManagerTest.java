@@ -40,11 +40,6 @@ import junit.framework.TestCase;
 import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
 import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
-import dalvik.annotation.SideEffect;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
 import tests.util.TestEnvironment;
 
 /**
@@ -52,7 +47,6 @@ import tests.util.TestEnvironment;
  * add/get logger(dot)
  * 
  */
-@TestTargetClass(LogManager.class) 
 public class LogManagerTest extends TestCase {
 
     private static final String FOO = "LogManagerTestFoo";
@@ -113,12 +107,6 @@ public class LogManagerTest extends TestCase {
         handler = null;
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "LogManager",
-        args = {}
-    )
     public void testLogManager() {
        class TestLogManager extends LogManager {
            public TestLogManager() {
@@ -129,20 +117,6 @@ public class LogManagerTest extends TestCase {
        assertNotNull(tlm.toString());
     }
     
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies NullPointerException.",
-            method = "addLogger",
-            args = {java.util.logging.Logger.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies NullPointerException.",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        )
-    })
     public void testAddGetLogger() {
         Logger log = new MockLogger(FOO, null);
         Logger foo = mockManager.getLogger(FOO);
@@ -176,20 +150,6 @@ public class LogManagerTest extends TestCase {
         assertEquals(i, 1);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "addLogger",
-            args = {java.util.logging.Logger.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        )
-    })
     public void testAddGetLogger_duplicateName() {
         // add logger with duplicate name has no effect
         Logger foo = new MockLogger(FOO, null);
@@ -207,20 +167,6 @@ public class LogManagerTest extends TestCase {
         assertEquals(1, i);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "addLogger",
-            args = {java.util.logging.Logger.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        )
-    })
     public void testAddGetLogger_Hierachy() {
         Logger foo = new MockLogger("testAddGetLogger_Hierachy.foo", null);
         Logger child = new MockLogger("testAddGetLogger_Hierachy.foo.child", null);
@@ -260,20 +206,6 @@ public class LogManagerTest extends TestCase {
         assertSame(otherChild, grandson.getParent());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "addLogger",
-            args = {java.util.logging.Logger.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        )
-    })
     public void testAddLoggerReverseOrder() {
         Logger root = new MockLogger("testAddLoggerReverseOrder", null);
         Logger foo = new MockLogger("testAddLoggerReverseOrder.foo", null);
@@ -306,12 +238,6 @@ public class LogManagerTest extends TestCase {
         assertSame(realRoot, root.getParent());
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "addLogger",
-        args = {java.util.logging.Logger.class}
-    )
     public void testAddSimiliarLogger() {
         Logger root = new MockLogger("testAddSimiliarLogger", null);
         Logger foo = new MockLogger("testAddSimiliarLogger.foo", null);
@@ -343,20 +269,6 @@ public class LogManagerTest extends TestCase {
         assertSame(fooo, foooChild.getParent());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "addLogger",
-            args = {java.util.logging.Logger.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        )
-    })
     public void testAddGetLogger_nameWithSpace() {
         Logger foo = new MockLogger(FOO, null);
         Logger fooBeforeSpace = new MockLogger(FOO + " ", null);
@@ -373,20 +285,6 @@ public class LogManagerTest extends TestCase {
         assertSame(fooWithBothSpace, mockManager.getLogger(" " + FOO + " "));
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Doesn't verify NullPointerException",
-            method = "addLogger",
-            args = {java.util.logging.Logger.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        )
-    })
     public void testAddGetLogger_addRoot() {
         Logger foo = new MockLogger(FOO, null);
         Logger fooChild = new MockLogger(FOO + ".child", null);
@@ -417,20 +315,6 @@ public class LogManagerTest extends TestCase {
     /**
      * @tests java.util.logging.LogManager#addLogger(Logger)
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "addLogger",
-            args = {java.util.logging.Logger.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogManager",
-            args = {}
-        )
-    })
     public void test_addLoggerLLogger_Security() throws Exception {
         // regression test for Harmony-1286
         SecurityManager originalSecurityManager = System.getSecurityManager();
@@ -449,12 +333,6 @@ public class LogManagerTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "readConfiguration",
-        args = {java.io.InputStream.class}
-    )
     public void testDefaultLoggerProperties() throws Exception {
         // mock LogManager has no default logger
         assertNull(mockManager.getLogger(""));
@@ -500,20 +378,6 @@ public class LogManagerTest extends TestCase {
      * case 4: check correct tested value
      */
     
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getLoggerNames",
-            args = {}
-        )
-    })
     public void testGetLogger() throws Exception {
 
         // case 1: test default and valid value
@@ -550,20 +414,6 @@ public class LogManagerTest extends TestCase {
     /*
      * test for method public Logger getLogger(String name)
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getLogger",
-            args = {java.lang.String.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "",
-            method = "getLoggerNames",
-            args = {}
-        )
-    })
     public void testGetLogger_duplicateName() throws Exception {
         // test duplicate name
         // add logger with duplicate name has no effect
@@ -587,12 +437,6 @@ public class LogManagerTest extends TestCase {
     /*
      * test for method public Logger getLogger(String name)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetLogger_hierachy() throws Exception {
         // test hierachy
         Logger foo = new MockLogger("testGetLogger_hierachy.foo", null);
@@ -605,12 +449,6 @@ public class LogManagerTest extends TestCase {
     /*
      * test for method public Logger getLogger(String name)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetLogger_nameSpace() throws Exception {
         // test name with space
         Logger foo = new MockLogger(FOO, null);
@@ -631,20 +469,6 @@ public class LogManagerTest extends TestCase {
     /*
      * test for method public void checkAccess() throws SecurityException
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "checkAccess",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getLogManager",
-            args = {}
-        )
-    })
     public void testCheckAccess() {
         try {
             manager.checkAccess();
@@ -666,44 +490,6 @@ public class LogManagerTest extends TestCase {
         System.setSecurityManager(securityManager);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies SecurityException.",
-            method = "readConfiguration",
-            args = {java.io.InputStream.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies SecurityException.",
-            method = "readConfiguration",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies SecurityException.",
-            method = "checkAccess",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies SecurityException.",
-            method = "reset",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies SecurityException.",
-            method = "getLogManager",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Verifies SecurityException.",
-            method = "addPropertyChangeListener",
-            args = {java.beans.PropertyChangeListener.class}
-        )
-    })
     public void testLoggingPermission() throws IOException {
         System.setSecurityManager(new MockSecurityManagerLogPermission());
         mockManager.addLogger(new MockLogger("abc", null));
@@ -756,20 +542,6 @@ public class LogManagerTest extends TestCase {
     }
 
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "readConfiguration",
-            args = {java.io.InputStream.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getProperty",
-            args = {java.lang.String.class}
-        )
-    })
     public void testMockGetProperty() throws Exception {
         // mock manager doesn't read configuration until you call
         // readConfiguration()
@@ -788,12 +560,6 @@ public class LogManagerTest extends TestCase {
         assertEquals(0, mockManager.getLogger("").getHandlers().length);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getProperty",
-        args = {java.lang.String.class}
-    )
     public void testGetProperty() throws SecurityException, IOException {
 
         Logger root = manager.getLogger("");
@@ -810,12 +576,6 @@ public class LogManagerTest extends TestCase {
         manager.reset();
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies NullPointerException.",
-        method = "readConfiguration",
-        args = {java.io.InputStream.class}
-    )
     public void testReadConfiguration_null() throws SecurityException, IOException {
         try {
             manager.readConfiguration(null);
@@ -892,12 +652,6 @@ public class LogManagerTest extends TestCase {
     /*
      * Class under test for void readConfiguration(InputStream)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "readConfiguration",
-        args = {java.io.InputStream.class}
-    )
     public void testReadConfigurationInputStream() throws IOException {
 
         Logger foo = new MockLogger(FOO, null);
@@ -928,12 +682,6 @@ public class LogManagerTest extends TestCase {
         assertSame(l, h.getLevel());
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies NullPointerException.",
-        method = "readConfiguration",
-        args = {java.io.InputStream.class}
-    )
     public void testReadConfigurationInputStream_null() throws SecurityException, IOException {
         try {
             mockManager.readConfiguration(null);
@@ -942,12 +690,6 @@ public class LogManagerTest extends TestCase {
         }
 
     }
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies IOException.",
-        method = "readConfiguration",
-        args = {java.io.InputStream.class}
-    )
     public void testReadConfigurationInputStream_IOException_1parm() throws SecurityException {
         try {
             mockManager.readConfiguration(new MockInputStream());
@@ -958,12 +700,6 @@ public class LogManagerTest extends TestCase {
 
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "readConfiguration",
-        args = {java.io.InputStream.class}
-    )
     public void testReadConfigurationInputStream_root() throws IOException {
         manager.readConfiguration(EnvironmentHelper.PropertiesToInputStream(props));
 
@@ -1028,20 +764,6 @@ public class LogManagerTest extends TestCase {
         assertEquals(0, logger.getHandlers().length);
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "addPropertyChangeListener",
-            args = {java.beans.PropertyChangeListener.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "removePropertyChangeListener",
-            args = {java.beans.PropertyChangeListener.class}
-        )
-    })
     public void testAddRemovePropertyChangeListener() throws Exception {
         MockPropertyChangeListener listener1 = new MockPropertyChangeListener();
         MockPropertyChangeListener listener2 = new MockPropertyChangeListener();
@@ -1088,20 +810,6 @@ public class LogManagerTest extends TestCase {
         assertNull(listener2.getEvent());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "addPropertyChangeListener",
-            args = {java.beans.PropertyChangeListener.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "removePropertyChangeListener",
-            args = {java.beans.PropertyChangeListener.class}
-        )
-    })
     public void testAddRemovePropertyChangeListener_null() {
         // seems nothing happened
         try{
@@ -1112,12 +820,6 @@ public class LogManagerTest extends TestCase {
         mockManager.removePropertyChangeListener(null);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Doesn't verify SecurityException.",
-        method = "reset",
-        args = {}
-    )
     public void testReset() throws SecurityException, IOException {
         // mock LogManager
         mockManager.readConfiguration(EnvironmentHelper.PropertiesToInputStream(props));
@@ -1153,12 +855,6 @@ public class LogManagerTest extends TestCase {
     }
 
     
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Doesn't verify SecurityException.",
-        method = "readConfiguration",
-        args = {java.io.InputStream.class}
-    )
     public void testGlobalPropertyConfig() throws Exception {
         PrintStream err = System.err;
         try {
@@ -1232,12 +928,6 @@ public class LogManagerTest extends TestCase {
         }
 
     }
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "readConfiguration",
-        args = {}
-    )
     public void testValidConfigClass() throws Exception {
         //            System.setProperty("java.util.logging.config.class", "org.apache.harmony.logging.tests.java.util.logging.LogManagerTest$ConfigClass");
         System.setProperty("java.util.logging.config.class", this.getClass().getName()

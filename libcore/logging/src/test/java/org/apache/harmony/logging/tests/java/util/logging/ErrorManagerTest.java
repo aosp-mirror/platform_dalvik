@@ -17,11 +17,6 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
 import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
@@ -31,7 +26,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.logging.ErrorManager;
 
-@TestTargetClass(ErrorManager.class)
 public class ErrorManagerTest extends TestCase {
     
     
@@ -53,12 +47,6 @@ public class ErrorManagerTest extends TestCase {
     }
     
     
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies positive case only with ErrorManager.GENERIC_FAILURE, impove MockStream",
-        method = "error",
-        args = {java.lang.String.class, java.lang.Exception.class, int.class}
-    )
     public void test_errorCheck() {
         ErrorManager em = new ErrorManager();
         MockStream aos = new MockStream();
@@ -71,12 +59,6 @@ public class ErrorManagerTest extends TestCase {
        assertTrue("message appears (supertest)", aos.getWrittenData().indexOf("supertest") != -1);
     }
     
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies positive case only with ErrorManager.GENERIC_FAILURE",
-        method = "error",
-        args = {java.lang.String.class, java.lang.Exception.class, int.class}
-    )
     public void test_errorStringStringint() {
         ErrorManager em = new ErrorManager();
         em.error(null, new NullPointerException(),
@@ -85,12 +67,6 @@ public class ErrorManagerTest extends TestCase {
         em.error(null, null, ErrorManager.GENERIC_FAILURE);
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "ErrorManager",
-        args = {}
-    )
     public void test_constants() {
         assertEquals(3, ErrorManager.CLOSE_FAILURE);
         assertEquals(2, ErrorManager.FLUSH_FAILURE);

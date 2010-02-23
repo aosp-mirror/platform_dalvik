@@ -21,15 +21,10 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.math.BigInteger;
 
 import junit.framework.TestCase;
-@TestTargetClass(BigInteger.class)
+
 /**
  * Class:   java.math.BigInteger
  * Methods: modPow, modInverse, and gcd 
@@ -38,12 +33,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modPow: non-positive modulus
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modPow method.",
-        method = "modPow",
-        args = {java.math.BigInteger.class, java.math.BigInteger.class}
-    )
     public void testModPowException() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         byte eBytes[] = {1, 2, 3, 4, 5};
@@ -65,12 +54,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modPow: positive exponent
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modPow method.",
-        method = "modPow",
-        args = {java.math.BigInteger.class, java.math.BigInteger.class}
-    )
     public void testModPowPosExp() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75, 48, -7};
         byte eBytes[] = {27, -15, 65, 39};
@@ -94,12 +77,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modPow: negative exponent
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modPow method.",
-        method = "modPow",
-        args = {java.math.BigInteger.class, java.math.BigInteger.class}
-    )
     public void testModPowNegExp() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75, 48, -7};
         byte eBytes[] = {27, -15, 65, 39};
@@ -123,12 +100,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modInverse: non-positive modulus
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modInverse method.",
-        method = "modInverse",
-        args = {java.math.BigInteger.class}
-    )
     public void testmodInverseException() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         byte mBytes[] = {1, 2, 3};
@@ -147,12 +118,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modInverse: non-invertible number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modInverse method.",
-        method = "modInverse",
-        args = {java.math.BigInteger.class}
-    )
     public void testmodInverseNonInvertible() {
         byte aBytes[] = {-15, 24, 123, 56, -11, -112, -34, -98, 8, 10, 12, 14, 25, 125, -15, 28, -127};
         byte mBytes[] = {-12, 1, 0, 0, 0, 23, 44, 55, 66};
@@ -171,12 +136,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modInverse: positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modInverse method.",
-        method = "modInverse",
-        args = {java.math.BigInteger.class}
-    )
     public void testmodInversePos1() {
         byte aBytes[] = {24, 123, 56, -11, -112, -34, -98, 8, 10, 12, 14, 25, 125, -15, 28, -127};
         byte mBytes[] = {122, 45, 36, 100, 122, 45};
@@ -197,12 +156,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modInverse: positive number (another case: a < 0)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modInverse method.",
-        method = "modInverse",
-        args = {java.math.BigInteger.class}
-    )
     public void testmodInversePos2() {
         byte aBytes[] = {15, 24, 123, 56, -11, -112, -34, -98, 8, 10, 12, 14, 25, 125, -15, 28, -127};
         byte mBytes[] = {2, 122, 45, 36, 100};
@@ -223,12 +176,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modInverse: negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modInverse method.",
-        method = "modInverse",
-        args = {java.math.BigInteger.class}
-    )
     public void testmodInverseNeg1() {
         byte aBytes[] = {15, 24, 123, 56, -11, -112, -34, -98, 8, 10, 12, 14, 25, 125, -15, 28, -127};
         byte mBytes[] = {2, 122, 45, 36, 100};
@@ -249,12 +196,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * modInverse: negative number (another case: x < 0)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for modInverse method.",
-        method = "modInverse",
-        args = {java.math.BigInteger.class}
-    )
     public void testmodInverseNeg2() {
         byte aBytes[] = {-15, 24, 123, 57, -15, 24, 123, 57, -15, 24, 123, 57};
         byte mBytes[] = {122, 2, 4, 122, 2, 4};
@@ -273,12 +214,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * gcd: the second number is zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for gcd method.",
-        method = "gcd",
-        args = {java.math.BigInteger.class}
-    )
     public void testGcdSecondZero() {
         byte aBytes[] = {15, 24, 123, 57, -15, 24, 123, 57, -15, 24, 123, 57};
         byte bBytes[] = {0};
@@ -299,12 +234,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * gcd: the first number is zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for gcd method.",
-        method = "gcd",
-        args = {java.math.BigInteger.class}
-    )
     public void testGcdFirstZero() {
         byte aBytes[] = {0};
         byte bBytes[] = {15, 24, 123, 57, -15, 24, 123, 57, -15, 24, 123, 57};
@@ -325,12 +254,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * gcd: the first number is ZERO
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for gcd method.",
-        method = "gcd",
-        args = {java.math.BigInteger.class}
-    )
     public void testGcdFirstZERO() {
         byte bBytes[] = {15, 24, 123, 57, -15, 24, 123, 57, -15, 24, 123, 57};
         int bSign = 1;
@@ -349,12 +272,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * gcd: both numbers are zeros
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for gcd method.",
-        method = "gcd",
-        args = {java.math.BigInteger.class}
-    )
     public void testGcdBothZeros() {
         byte rBytes[] = {0};
         BigInteger aNumber = new BigInteger("0");
@@ -370,12 +287,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * gcd: the first number is longer
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for gcd method.",
-        method = "gcd",
-        args = {java.math.BigInteger.class}
-    )
     public void testGcdFirstLonger() {
         byte aBytes[] = {-15, 24, 123, 56, -11, -112, -34, -98, 8, 10, 12, 14, 25, 125, -15, 28, -127};
         byte bBytes[] = {-12, 1, 0, 0, 0, 23, 44, 55, 66};
@@ -396,12 +307,6 @@ public class BigIntegerModPowTest extends TestCase {
     /**
      * gcd: the second number is longer
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for gcd method.",
-        method = "gcd",
-        args = {java.math.BigInteger.class}
-    )
     public void testGcdSecondLonger() {
         byte aBytes[] = {-12, 1, 0, 0, 0, 23, 44, 55, 66};
         byte bBytes[] = {-15, 24, 123, 56, -11, -112, -34, -98, 8, 10, 12, 14, 25, 125, -15, 28, -127};

@@ -21,15 +21,10 @@ import java.lang.reflect.Field;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import sun.misc.Unsafe;
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
 
 /**
  * Tests for the <code>park()</code> functionality of {@link Unsafe}.
  */
-@TestTargetClass(Unsafe.class)
 public class ThreadsTest extends TestCase {
     private static Unsafe UNSAFE = null;
     private static RuntimeException INITIALIZEFAILED = null;
@@ -54,13 +49,6 @@ public class ThreadsTest extends TestCase {
     }
 
     /** Test the case where the park times out. */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "",
-        method = "unpark",
-        args = {Object.class}
-    )    
-    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkFor_1() {
         Parker parker = new Parker(false, 500);
         Thread parkerThread = new Thread(parker);
@@ -73,13 +61,6 @@ public class ThreadsTest extends TestCase {
     }
 
     /** Test the case where the unpark happens before the timeout. */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "",
-        method = "unpark",
-        args = {Object.class}
-    )    
-    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkFor_2() {
         Parker parker = new Parker(false, 1000);
         Thread parkerThread = new Thread(parker);
@@ -92,13 +73,6 @@ public class ThreadsTest extends TestCase {
     }
 
     /** Test the case where the thread is preemptively unparked. */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "",
-        method = "unpark",
-        args = {Object.class}
-    )    
-    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkFor_3() {
         Parker parker = new Parker(false, 1000);
         Thread parkerThread = new Thread(parker);
@@ -109,13 +83,6 @@ public class ThreadsTest extends TestCase {
     }
 
     /** Test the case where the park times out. */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "",
-        method = "unpark",
-        args = {Object.class}
-    )    
-    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkUntil_1() {
         Parker parker = new Parker(true, 500);
         Thread parkerThread = new Thread(parker);
@@ -128,13 +95,6 @@ public class ThreadsTest extends TestCase {
     }
 
     /** Test the case where the unpark happens before the timeout. */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "",
-        method = "unpark",
-        args = {Object.class}
-    )    
-    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkUntil_2() {
         Parker parker = new Parker(true, 1000);
         Thread parkerThread = new Thread(parker);
@@ -147,13 +107,6 @@ public class ThreadsTest extends TestCase {
     }
 
     /** Test the case where the thread is preemptively unparked. */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "",
-        method = "unpark",
-        args = {Object.class}
-    )    
-    @AndroidOnly("Accesses Android-specific private field")
     public void test_parkUntil_3() {
         Parker parker = new Parker(true, 1000);
         Thread parkerThread = new Thread(parker);

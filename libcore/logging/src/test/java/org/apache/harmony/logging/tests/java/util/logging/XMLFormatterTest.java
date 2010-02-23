@@ -17,12 +17,6 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import junit.framework.TestCase;
 
 import java.io.UnsupportedEncodingException;
@@ -32,7 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.XMLFormatter;
 
-@TestTargetClass(XMLFormatter.class)
 public class XMLFormatterTest extends TestCase {
 
     XMLFormatter formatter = null;
@@ -52,26 +45,6 @@ public class XMLFormatterTest extends TestCase {
      * test for constructor public XMLFormatter()
      * 
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "XMLFormatter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getHead",
-            args = {java.util.logging.Handler.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getTail",
-            args = {java.util.logging.Handler.class}
-        )
-    })
     public void testXMLFormatter() throws SecurityException,
             UnsupportedEncodingException {
 
@@ -93,12 +66,6 @@ public class XMLFormatterTest extends TestCase {
                 .getTail(handler).indexOf("/log>") > 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "format",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLocalFormat() {
         // if set resource bundle, output will use localized message,
         // but put the original message into the key element
@@ -130,12 +97,6 @@ public class XMLFormatterTest extends TestCase {
         assertTrue(result.indexOf("<key>") < 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "format",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testFullFormat() {
         lr.setSourceClassName("source class");
         lr.setSourceMethodName("source method");
@@ -168,12 +129,6 @@ public class XMLFormatterTest extends TestCase {
         assertTrue(output.indexOf("<key>pattern</key>") > 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "format",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testFormat() {
         String output = formatter.format(lr);
         // System.out.println(output);
@@ -193,12 +148,6 @@ public class XMLFormatterTest extends TestCase {
         assertTrue(output.indexOf("<key>") < 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getHead",
-        args = {java.util.logging.Handler.class}
-    )
     public void testGetHead() throws SecurityException,
             UnsupportedEncodingException {
         String result = formatter.getHead(handler);
@@ -230,12 +179,6 @@ public class XMLFormatterTest extends TestCase {
     /*
      * test for method public String getTail(Handler h)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getTail",
-        args = {java.util.logging.Handler.class}
-    )
     public void testGetTail() {
         assertEquals(
                 "Tail string with null handler should be equal expected value",
@@ -248,28 +191,7 @@ public class XMLFormatterTest extends TestCase {
                 "</log>", formatter.getTail(handler).trim());
     }
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "format",
-            args = {java.util.logging.LogRecord.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getTail",
-            args = {java.util.logging.Handler.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "XMLFormatter",
-            args = {}
-        )
-    })
-    @AndroidOnly("This test fails on RI. Output doesn't contain " +
-            "<message/>.")
+    // This test fails on RI. Output doesn't contain <message/>.
     public void testInvalidParameter() {
         formatter.getTail(null);
         try {

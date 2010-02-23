@@ -16,11 +16,6 @@
  */
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestLevel;
-
 import junit.framework.TestCase;
 
 import tests.util.CallVerificationStack;
@@ -31,7 +26,6 @@ import java.util.logging.LoggingMXBean;
  * This testcase verifies the signature of the interface Filter.
  * 
  */
-@TestTargetClass(LoggingMXBean.class) 
 public class LoggingMXBeanTest extends TestCase {
     
     private MockLoggingMXBean m = null;
@@ -53,43 +47,19 @@ public class LoggingMXBeanTest extends TestCase {
     
        
     
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getLoggerLevel",
-        args = {java.lang.String.class}
-    )
     public void testGetLoggerLevel() {
         assertNull(m.getLoggerLevel(null));
     }
 
     
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getLoggerNames",
-        args = {}
-    )
           public void testGetLoggerNames() {
                 assertNull(m.getLoggerNames());
           }
     
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getParentLoggerName",
-        args = {java.lang.String.class}
-    )
           public void testGetParentLoggerName() {
               assertNull(m.getParentLoggerName(null));
           }
     
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setLoggerLevel",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
           public void testSetLoggerLevel() {
             try{
                 m.setLoggerLevel(null,null);

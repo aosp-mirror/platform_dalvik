@@ -21,18 +21,13 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.math.MathContext;
 
 import junit.framework.TestCase;
-@TestTargetClass(BigDecimal.class)
+
 /**
  * Class:  java.math.BigDecimal
  * Methods: doubleValue, floatValue, intValue, longValue,  
@@ -42,12 +37,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Double value of a negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for doubleValue method.",
-        method = "doubleValue",
-        args = {}
-    )
     public void testDoubleValueNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -58,12 +47,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Double value of a positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for doubleValue method.",
-        method = "doubleValue",
-        args = {}
-    )
     public void testDoubleValuePos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -74,12 +57,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Double value of a large positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for doubleValue method.",
-        method = "doubleValue",
-        args = {}
-    )
     public void testDoubleValuePosInfinity() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+400";
         BigDecimal aNumber = new BigDecimal(a);
@@ -90,12 +67,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Double value of a large negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for doubleValue method.",
-        method = "doubleValue",
-        args = {}
-    )
     public void testDoubleValueNegInfinity() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+400";
         BigDecimal aNumber = new BigDecimal(a);
@@ -106,12 +77,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Double value of a small negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for doubleValue method.",
-        method = "doubleValue",
-        args = {}
-    )
     public void testDoubleValueMinusZero() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E-400";
         BigDecimal aNumber = new BigDecimal(a);
@@ -123,12 +88,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Double value of a small positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for doubleValue method.",
-        method = "doubleValue",
-        args = {}
-    )
     public void testDoubleValuePlusZero() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E-400";
         BigDecimal aNumber = new BigDecimal(a);
@@ -140,12 +99,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Float value of a negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for floatValue method.",
-        method = "floatValue",
-        args = {}
-    )
     public void testFloatValueNeg() {
         String a = "-1238096483923847.6356789029578E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -156,12 +109,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Float value of a positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for floatValue method.",
-        method = "floatValue",
-        args = {}
-    )
     public void testFloatValuePos() {
         String a = "1238096483923847.6356789029578E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -172,12 +119,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Float value of a large positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for floatValue method.",
-        method = "floatValue",
-        args = {}
-    )
     public void testFloatValuePosInfinity() {
         String a = "123809648373567356745735.6356789787678287E+200";
         BigDecimal aNumber = new BigDecimal(a);
@@ -188,12 +129,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Float value of a large negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for floatValue method.",
-        method = "floatValue",
-        args = {}
-    )
     public void testFloatValueNegInfinity() {
         String a = "-123809648392384755735.63567887678287E+200";
         BigDecimal aNumber = new BigDecimal(a);
@@ -204,12 +139,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Float value of a small negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for floatValue method.",
-        method = "floatValue",
-        args = {}
-    )
     public void testFloatValueMinusZero() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E-400";
         BigDecimal aNumber = new BigDecimal(a);
@@ -221,12 +150,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Float value of a small positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for floatValue method.",
-        method = "floatValue",
-        args = {}
-    )
     public void testFloatValuePlusZero() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E-400";
         BigDecimal aNumber = new BigDecimal(a);
@@ -238,12 +161,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Integer value of a negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValue method.",
-        method = "intValue",
-        args = {}
-    )
     public void testIntValueNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -254,12 +171,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Integer value of a positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValue method.",
-        method = "intValue",
-        args = {}
-    )
     public void testIntValuePos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -270,12 +181,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Long value of a negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for longValue method",
-        method = "longValue",
-        args = {}
-    )
     public void testLongValueNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -286,12 +191,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Long value of a positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for longValue method",
-        method = "longValue",
-        args = {}
-    )
     public void testLongValuePos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -302,12 +201,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * scaleByPowerOfTen(int n)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed",
-        method = "scaleByPowerOfTen",
-        args = {int.class}
-    )
     public void testScaleByPowerOfTen1() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 13;
@@ -322,12 +215,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * scaleByPowerOfTen(int n)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed",
-        method = "scaleByPowerOfTen",
-        args = {int.class}
-    )
     public void testScaleByPowerOfTen2() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -13;
@@ -342,12 +229,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a positive BigDecimal to BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigInteger method",
-        method = "toBigInteger",
-        args = {}
-    )
     public void testToBigIntegerPos1() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigInteger bNumber = new BigInteger("123809648392384754573567356745735635678902957849027687");
@@ -359,12 +240,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a positive BigDecimal to BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigInteger method",
-        method = "toBigInteger",
-        args = {}
-    )
     public void testToBigIntegerPos2() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+15";
         BigInteger bNumber = new BigInteger("123809648392384754573567356745735635678902957849");
@@ -376,12 +251,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a positive BigDecimal to BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigInteger method",
-        method = "toBigInteger",
-        args = {}
-    )
     public void testToBigIntegerPos3() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+45";
         BigInteger bNumber = new BigInteger("123809648392384754573567356745735635678902957849027687876782870000000000000000");
@@ -393,12 +262,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a negative BigDecimal to BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigInteger method",
-        method = "toBigInteger",
-        args = {}
-    )
     public void testToBigIntegerNeg1() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigInteger bNumber = new BigInteger("-123809648392384754573567356745735635678902957849027687");
@@ -410,12 +273,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a negative BigDecimal to BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigInteger method",
-        method = "toBigInteger",
-        args = {}
-    )
     public void testToBigIntegerNeg2() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+15";
         BigInteger bNumber = new BigInteger("-123809648392384754573567356745735635678902957849");
@@ -427,12 +284,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a negative BigDecimal to BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigInteger method",
-        method = "toBigInteger",
-        args = {}
-    )
     public void testToBigIntegerNeg3() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+45";
         BigInteger bNumber = new BigInteger("-123809648392384754573567356745735635678902957849027687876782870000000000000000");
@@ -444,12 +295,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a small BigDecimal to BigInteger
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigInteger method",
-        method = "toBigInteger",
-        args = {}
-    )
     public void testToBigIntegerZero() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E-500";
         BigInteger bNumber = new BigInteger("0");
@@ -461,12 +306,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * toBigIntegerExact()
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigIntegerExact method",
-        method = "toBigIntegerExact",
-        args = {}
-    )
     public void testToBigIntegerExact1() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+45";
         BigDecimal aNumber = new BigDecimal(a);
@@ -478,12 +317,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * toBigIntegerExact()
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toBigIntegerExact method",
-        method = "toBigIntegerExact",
-        args = {}
-    )
     public void testToBigIntegerExactException() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E-10";
         BigDecimal aNumber = new BigDecimal(a);
@@ -498,12 +331,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a positive BigDecimal to an engineering string representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toEngineeringString method",
-        method = "toEngineeringString",
-        args = {}
-    )
     public void testToEngineeringStringPos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E-501";
         BigDecimal aNumber = new BigDecimal(a);
@@ -514,12 +341,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a negative BigDecimal to an engineering string representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toEngineeringString method",
-        method = "toEngineeringString",
-        args = {}
-    )
     public void testToEngineeringStringNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E-501";
         BigDecimal aNumber = new BigDecimal(a);
@@ -530,12 +351,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a negative BigDecimal to an engineering string representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toEngineeringString method",
-        method = "toEngineeringString",
-        args = {}
-    )
     public void testToEngineeringStringZeroPosExponent() {
         String a = "0.0E+16";
         BigDecimal aNumber = new BigDecimal(a);
@@ -546,12 +361,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a negative BigDecimal to an engineering string representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toEngineeringString method",
-        method = "toEngineeringString",
-        args = {}
-    )
     public void testToEngineeringStringZeroNegExponent() {
         String a = "0.0E-16";
         BigDecimal aNumber = new BigDecimal(a);
@@ -563,12 +372,6 @@ public class BigDecimalConvertTest extends TestCase {
      * Convert a negative BigDecimal with a negative exponent to a plain string
      * representation; scale == 0.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toPlainString method",
-        method = "toPlainString",
-        args = {}
-    )
     public void testToPlainStringNegNegExp() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E-100";
         BigDecimal aNumber = new BigDecimal(a);
@@ -581,12 +384,6 @@ public class BigDecimalConvertTest extends TestCase {
      * to a plain string representation;
      * scale == 0.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toPlainString method",
-        method = "toPlainString",
-        args = {}
-    )
     public void testToPlainStringNegPosExp() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E100";
         BigDecimal aNumber = new BigDecimal(a);
@@ -599,12 +396,6 @@ public class BigDecimalConvertTest extends TestCase {
      * to a plain string representation;
      * scale == 0.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toPlainString method",
-        method = "toPlainString",
-        args = {}
-    )
     public void testToPlainStringPosNegExp() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E-100";
         BigDecimal aNumber = new BigDecimal(a);
@@ -617,12 +408,6 @@ public class BigDecimalConvertTest extends TestCase {
      * to a plain string representation;
      * scale == 0.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toPlainString method",
-        method = "toPlainString",
-        args = {}
-    )
     public void testToPlainStringPosPosExp() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+100";
         BigDecimal aNumber = new BigDecimal(a);
@@ -634,12 +419,6 @@ public class BigDecimalConvertTest extends TestCase {
      * Convert a BigDecimal to a string representation;
      * scale == 0.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toString method",
-        method = "toString",
-        args = {}
-    )
     public void testToStringZeroScale() {
         String a = "-123809648392384754573567356745735635678902957849027687876782870";
         BigDecimal aNumber = new BigDecimal(new BigInteger(a));
@@ -650,12 +429,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a positive BigDecimal to a string representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toString method",
-        method = "toString",
-        args = {}
-    )
     public void testToStringPos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E-500";
         BigDecimal aNumber = new BigDecimal(a);
@@ -666,12 +439,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Convert a negative BigDecimal to a string representation
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for toString method",
-        method = "toString",
-        args = {}
-    )
     public void testToStringNeg() {
         String a = "-123.4564563673567380964839238475457356735674573563567890295784902768787678287E-5";
         BigDecimal aNumber = new BigDecimal(a);
@@ -682,12 +449,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a positive long value; scale == 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(long) method",
-        method = "valueOf",
-        args = {long.class}
-    )
     public void testValueOfPosZeroScale() {
         long a = 98374823947823578L;
         BigDecimal aNumber = BigDecimal.valueOf(a);
@@ -698,12 +459,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a negative long value; scale is 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(long) method",
-        method = "valueOf",
-        args = {long.class}
-    )
     public void testValueOfNegZeroScale() {
         long a = -98374823947823578L;
         BigDecimal aNumber = BigDecimal.valueOf(a);
@@ -714,12 +469,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a negative long value; scale is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(long) method",
-        method = "valueOf",
-        args = {long.class}
-    )
     public void testValueOfNegScalePos() {
         long a = -98374823947823578L;
         int scale = 12;
@@ -731,12 +480,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a negative long value; scale is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(long) method",
-        method = "valueOf",
-        args = {long.class}
-    )
     public void testValueOfNegScaleNeg() {
         long a = -98374823947823578L;
         int scale = -12;
@@ -748,12 +491,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a negative long value; scale is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(long) method",
-        method = "valueOf",
-        args = {long.class}
-    )
     public void testValueOfPosScalePos() {
         long a = 98374823947823578L;
         int scale = 12;
@@ -765,12 +502,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a negative long value; scale is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(long) method",
-        method = "valueOf",
-        args = {long.class}
-    )
     public void testValueOfPosScaleNeg() {
         long a = 98374823947823578L;
         int scale = -12;
@@ -782,12 +513,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a negative double value
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(double) method",
-        method = "valueOf",
-        args = {double.class}
-    )
     public void testValueOfDoubleNeg() {
         double a = -65678765876567576.98788767;
         BigDecimal result = BigDecimal.valueOf(a);
@@ -800,12 +525,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a positive double value
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(double) method",
-        method = "valueOf",
-        args = {double.class}
-    )
     public void testValueOfDoublePos1() {
         double a = 65678765876567576.98788767;
         BigDecimal result = BigDecimal.valueOf(a);
@@ -818,12 +537,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a positive double value
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(double) method",
-        method = "valueOf",
-        args = {double.class}
-    )
     public void testValueOfDoublePos2() {
         double a = 12321237576.98788767;
         BigDecimal result = BigDecimal.valueOf(a);
@@ -836,12 +549,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * Create a BigDecimal from a positive double value
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(double) method",
-        method = "valueOf",
-        args = {double.class}
-    )
     public void testValueOfDoublePos3() {
         double a = 12321237576.9878838;
         BigDecimal result = BigDecimal.valueOf(a);
@@ -854,12 +561,6 @@ public class BigDecimalConvertTest extends TestCase {
     /**
      * valueOf(Double.NaN)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for valueOf(double) method",
-        method = "valueOf",
-        args = {double.class}
-    )
     public void testValueOfDoubleNaN() {
         double a = Double.NaN;
         try {
@@ -876,12 +577,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#intValueExact() Integer value of a negative
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValueExact method",
-        method = "intValueExact",
-        args = {}
-    )
     public void test_IntValueExactNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -897,12 +592,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#intValueExact() Integer value of a positive
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValueExact method",
-        method = "intValueExact",
-        args = {}
-    )
     public void test_IntValueExactPos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -918,12 +607,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#intValueExact() Integer value of a negative
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValueExact method",
-        method = "intValueExact",
-        args = {}
-    )
     public void test_IntValueExactFloatNeg() {
         BigDecimal aNumber = new BigDecimal("-2147483647.999");
         try {
@@ -938,12 +621,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#intValueExact() Integer value of a positive
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValueExact method",
-        method = "intValueExact",
-        args = {}
-    )
     public void test_IntValueExactFloatPos() {
         float a = 2147483646.99999F;
         BigDecimal aNumber = new BigDecimal(a);
@@ -959,12 +636,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#intValueExact() Integer value of a positive
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValueExact method",
-        method = "intValueExact",
-        args = {}
-    )
     public void test_IntValueExactLongPos() {
         long a = 2147483647L;
         BigDecimal aNumber = new BigDecimal(a);
@@ -976,12 +647,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#intValueExact() Integer value of a positive
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for intValueExact method",
-        method = "intValueExact",
-        args = {}
-    )
     public void test_IntValueExactLongNeg() {
         long a = -2147483648L;
         BigDecimal aNumber = new BigDecimal(a);
@@ -993,12 +658,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#longValueExact() Long value of a negative
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checked",
-        method = "longValueExact",
-        args = {}
-    )
     public void test_LongValueExactNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -1014,12 +673,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#longValueExact() Long value of a positive
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "ArithmeticException checked",
-        method = "longValueExact",
-        args = {}
-    )
     public void test_LongValueExactPos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -1035,12 +688,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#longValueExact() Long value of a negative
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "ArithmeticException checked",
-        method = "longValueExact",
-        args = {}
-    )
     public void test_LongValueExactFloatNeg() {
         BigDecimal aNumber = new BigDecimal("-9223372036854775807.99999");
         try {
@@ -1055,12 +702,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#longValueExact() Long value of a positive
      *        BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "ArithmeticException checked",
-        method = "longValueExact",
-        args = {}
-    )
     public void test_LongValueExactFloatPos() {
         float a = 9223372036854775806.99999F;
         BigDecimal aNumber = new BigDecimal(a);
@@ -1076,12 +717,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValueExact() Convert pisitive BigDesimal
      *       to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactPos() {
         int i = 127;
         BigDecimal bdNumber = new BigDecimal(i);
@@ -1093,12 +728,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValueExact() Convert negative BigDesimal
      *       to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactNeg() {
         String sNumber = "-127.56789";
         int iNumber = -128;
@@ -1114,12 +743,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from char array to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactCharZero() {
         char[] cNumber = {
                 '-', '0', '.', '0'
@@ -1137,12 +760,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from String to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactStringZero() {
         String sNumber = "00000000000000";
         int iNumber = 0;
@@ -1158,12 +775,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from double to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactDoubleMax() {
         double dNumber = Double.MAX_VALUE;
         BigDecimal bdNumber = new BigDecimal(dNumber);
@@ -1180,12 +791,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from double to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactDoubleMin() {
         double dNumber = Double.MIN_VALUE;
         BigDecimal bdNumber = new BigDecimal(dNumber);
@@ -1202,12 +807,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from float to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactFloatPos() {
         float fNumber = 123.5445F;
         BigDecimal bdNumber = new BigDecimal(fNumber);
@@ -1224,12 +823,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from float to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactFloatNeg() {
         float fNumber = -12.987654321F;
         BigDecimal bdNumber = new BigDecimal(fNumber);
@@ -1246,12 +839,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from double to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactDouble() {
         double dNumber = 123.0000D;
         BigDecimal bdNumber = new BigDecimal(dNumber);
@@ -1264,12 +851,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from long to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactLongMin() {
         long lNumber = Long.MIN_VALUE;
         BigDecimal bdNumber = new BigDecimal(lNumber);
@@ -1286,12 +867,6 @@ public class BigDecimalConvertTest extends TestCase {
      *       from int to byte type
      */
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for byteValueExact method",
-        method = "byteValueExact",
-        args = {}
-    )
     public void test_ByteValueExactIntMax() {
         int iNumber = Integer.MAX_VALUE;
         BigDecimal bdNumber = new BigDecimal(iNumber);
@@ -1307,11 +882,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert pisitive BigDesimal to
      *       byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValuePos() {
         int i = 127;
         BigDecimal bdNumber = new BigDecimal(i);
@@ -1323,11 +893,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert negative BigDesimal to
      *       byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueNeg() {
         String sNumber = "-127.56789";
         int iNumber = -128;
@@ -1342,11 +907,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       char array to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueCharZero() {
         char[] cNumber = {
                 '-', '0', '.', '0'
@@ -1363,11 +923,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       String to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueStringZero() {
         String sNumber = "00000";
         int iNumber = 0;
@@ -1382,11 +937,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       double to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueDoubleMax() {
         double dNumber = Double.MAX_VALUE;
         BigDecimal bdNumber = new BigDecimal(dNumber);
@@ -1399,11 +949,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       double to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueDoubleMin() {
         double dNumber = Double.MIN_VALUE;
         BigDecimal bdNumber = new BigDecimal(dNumber);
@@ -1416,11 +961,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test_ java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *        float to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueFloatNeg() {
         float fNumber = -12.987654321F;
         byte bValue = -12;
@@ -1433,11 +973,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       double to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueDouble() {
         double dNumber = 123.0000D;
         BigDecimal bdNumber = new BigDecimal(dNumber);
@@ -1449,11 +984,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       long to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueLongMin() {
         long lNumber = Long.MIN_VALUE;
         int result = 0;
@@ -1466,11 +996,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       int to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueIntMin() {
         int iNumber = Integer.MIN_VALUE;
         int result = 0;
@@ -1483,11 +1008,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#byteValue() Convert BigDesimal created from
      *       int to byte type
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "byteValue",
-        args = {}
-    )
     public void test_ByteValueIntMax() {
         int iNumber = Integer.MAX_VALUE;
         int result = -1;
@@ -1500,11 +1020,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValue() Short value of a negative
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "shortValue",
-        args = {}
-    )
     public void test_ShortValueNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -1516,11 +1031,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValue() Short value of a positive
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "shortValue",
-        args = {}
-    )
     public void test_ShortValuePos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -1532,12 +1042,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValueExact() Short value of a negative
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shortValueExact method",
-        method = "shortValueExact",
-        args = {}
-    )
     public void test_ShortValueExactNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -1553,12 +1057,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValueExact() Short value of a positive
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shortValueExact method",
-        method = "shortValueExact",
-        args = {}
-    )
     public void test_ShortValueExactPos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -1574,12 +1072,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValueExact() Short value of a negative
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shortValueExact method",
-        method = "shortValueExact",
-        args = {}
-    )
     public void test_ShortValueExactFloatNeg() {
         BigDecimal aNumber = new BigDecimal("-32766.99999");
         try {
@@ -1594,12 +1086,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValueExact() Short value of a positive
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shortValueExact method",
-        method = "shortValueExact",
-        args = {}
-    )
     public void test_ShortValueExactFloatPos() {
         float a = 32767.99999F;
         BigDecimal aNumber = new BigDecimal(a);
@@ -1615,12 +1101,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValueExact() Short value of a positive
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shortValueExact method",
-        method = "shortValueExact",
-        args = {}
-    )
     public void test_ShortValueExactLongPos() {
         long a = 12345L;
         BigDecimal aNumber = new BigDecimal(a);
@@ -1632,12 +1112,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @test java.math.BigDecimal#shortValueExact() Short value of a positive
      *       BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for shortValueExact method",
-        method = "shortValueExact",
-        args = {}
-    )
     public void test_ShortValueExactLongNeg() {
         long a = -12345L;
         BigDecimal aNumber = new BigDecimal(a);
@@ -1649,12 +1123,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#stripTrailingZeros() stripTrailingZeros() for
      *        BigDecimal with zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for stripTrailingZeros method",
-        method = "stripTrailingZeros",
-        args = {}
-    )
     public void test_stripTrailingZerosZeros() {
 
         BigDecimal bdNumber = new BigDecimal("0000000");
@@ -1677,12 +1145,6 @@ public class BigDecimalConvertTest extends TestCase {
      * @tests java.math.BigDecimal#stripTrailingZeros() stripTrailingZeros() for
      *        positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for stripTrailingZeros method",
-        method = "stripTrailingZeros",
-        args = {}
-    )
     public void test_stripTrailingZeros() {
 
         String s = "00000000100000000100000000.000000000100000000";

@@ -17,12 +17,6 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.AndroidOnly;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestLevel;
-
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.Locale;
@@ -40,7 +34,6 @@ import junit.framework.TestCase;
 
 import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
-@TestTargetClass(Formatter.class) 
 public class FormatterTest extends TestCase {
     Formatter f;
 
@@ -97,26 +90,6 @@ public class FormatterTest extends TestCase {
     /*
      * test for constructor protected Formatter()
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "Formatter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getHead",
-            args = {java.util.logging.Handler.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getTail",
-            args = {java.util.logging.Handler.class}
-        )
-    })
     public void testFormatter() {
         assertEquals("head string is not empty", "", f.getHead(null));
         assertEquals("tail string is not empty", "", f.getTail(null));
@@ -126,12 +99,6 @@ public class FormatterTest extends TestCase {
     /*
      * test for method public String getHead(Handler h)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getHead",
-        args = {Handler.class}
-    )
     public void testGetHead() {
         assertEquals("head string is not empty", "", f.getHead(null));
         assertEquals("head string is not empty", "", f.getHead(h));
@@ -142,12 +109,6 @@ public class FormatterTest extends TestCase {
     /*
      * test for method public String getTail(Handler h)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getTail",
-        args = {Handler.class}
-    )
     public void testGetTail() {
         assertEquals("tail string is not empty", "", f.getTail(null));
         assertEquals("tail string is not empty", "", f.getTail(h));
@@ -155,16 +116,10 @@ public class FormatterTest extends TestCase {
         assertEquals("tail string is not empty", "", f.getTail(h));
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "formatMessage",
-        args = {LogRecord.class}
-    )
-    @AndroidOnly("The RI fails in this test because it uses a MessageFormat " +
-            "to format the message even though it doesn't contain \"{0\". " +
-            "The spec says that this would indicate that a MessageFormat " +
-            "should be used and else no formatting should be done.")
+    // The RI fails in this test because it uses a MessageFormat
+    // to format the message even though it doesn't contain "{0".
+    // The spec says that this would indicate that a MessageFormat
+    // should be used and else no formatting should be done.
     public void testFormatMessage() {
         assertEquals(MSG, f.formatMessage(r));
 
@@ -200,12 +155,6 @@ public class FormatterTest extends TestCase {
         assertEquals(pattern, f.formatMessage(r));
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "formatMessage",
-        args = {LogRecord.class}
-    )
     public void testLocalizedFormatMessage() {
         // normal case
         r.setMessage("msg");

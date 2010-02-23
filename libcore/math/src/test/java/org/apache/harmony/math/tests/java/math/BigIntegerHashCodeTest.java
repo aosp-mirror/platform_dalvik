@@ -21,15 +21,10 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.math.BigInteger;
 
 import junit.framework.TestCase;
-@TestTargetClass(BigInteger.class)
+
 /**
  * Class:   java.math.BigInteger
  * Method: hashCode()
@@ -38,12 +33,6 @@ public class BigIntegerHashCodeTest extends TestCase {
     /**
      * Test hash codes for the same object
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for hashCode method.",
-        method = "hashCode",
-        args = {}
-    )
     public void testSameObject() {
         String value1 = "12378246728727834290276457386374882976782849";
         String value2 = "-5634562095872038262928728727834290276457386374882976782849";
@@ -62,12 +51,6 @@ public class BigIntegerHashCodeTest extends TestCase {
     /**
      * Test hash codes for equal objects.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for hashCode method.",
-        method = "hashCode",
-        args = {}
-    )
     public void testEqualObjects() {
         String value1 = "12378246728727834290276457386374882976782849";
         String value2 = "12378246728727834290276457386374882976782849";
@@ -84,12 +67,6 @@ public class BigIntegerHashCodeTest extends TestCase {
      * Test hash codes for unequal objects.
      * The codes are unequal.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for hashCode method.",
-        method = "hashCode",
-        args = {}
-    )
     public void testUnequalObjectsUnequal() {
         String value1 = "12378246728727834290276457386374882976782849";
         String value2 = "-5634562095872038262928728727834290276457386374882976782849";

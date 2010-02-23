@@ -17,24 +17,12 @@
 
 package org.apache.harmony.luni.platform;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.AndroidOnly;
-
 import junit.framework.TestCase;
 
 /**
  * Tests org.apache.harmony.luni.platform.OSMemory (via IMemorySystem).
  */
-@TestTargetClass(org.apache.harmony.luni.platform.OSMemory.class)
 public class OSMemoryTest extends TestCase {
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "memset",
-        args = {}
-    )
     public void testMemset() {
         IMemorySystem memory = Platform.getMemorySystem();
         
@@ -62,12 +50,6 @@ public class OSMemoryTest extends TestCase {
         }
     }
     
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "setIntArray",
-        args = {}
-    )
     public void testSetIntArray() {
         IMemorySystem memory = Platform.getMemorySystem();
         
@@ -115,12 +97,6 @@ public class OSMemoryTest extends TestCase {
                (((n >> 24) & 0xff) <<  0);
     }
     
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "setShortArray",
-        args = {}
-    )
     public void testSetShortArray() {
         IMemorySystem memory = Platform.getMemorySystem();
         

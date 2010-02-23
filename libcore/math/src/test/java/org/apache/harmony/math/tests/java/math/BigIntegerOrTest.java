@@ -21,16 +21,10 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.BrokenTest;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.math.BigInteger;
 
 import junit.framework.TestCase;
-@TestTargetClass(BigInteger.class)
+
 /**
  * Class:  java.math.BigInteger
  * Method: or 
@@ -39,12 +33,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for zero and a positive number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testZeroPos() {
         byte aBytes[] = {0};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -65,12 +53,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for zero and a negative number
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testZeroNeg() {
         byte aBytes[] = {0};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -91,12 +73,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for a positive number and zero 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testPosZero() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {0};
@@ -117,12 +93,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for a negative number and zero  
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testNegPos() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {0};
@@ -143,12 +113,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for zero and zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testZeroZero() {
         byte aBytes[] = {0};
         byte bBytes[] = {0};
@@ -169,12 +133,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for zero and one
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testZeroOne() {
         byte aBytes[] = {0};
         byte bBytes[] = {1};
@@ -195,12 +153,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for one and one
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testOneOne() {
         byte aBytes[] = {1};
         byte bBytes[] = {1};
@@ -221,12 +173,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two positive numbers of the same length
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testPosPosSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -247,12 +193,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two positive numbers; the first is longer
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testPosPosFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -273,12 +213,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two positive numbers; the first is shorter
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testPosPosFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -299,12 +233,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two negative numbers of the same length
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testNegNegSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -325,12 +253,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two negative numbers; the first is longer
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testNegNegFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -351,12 +273,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two negative numbers; the first is shorter
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testNegNegFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -377,12 +293,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two numbers of different signs and the same length
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testPosNegSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -403,12 +313,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two numbers of different signs and the same length
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testNegPosSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -429,12 +333,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for a negative and a positive numbers; the first is longer
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testNegPosFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -455,12 +353,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for two negative numbers; the first is shorter
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testNegPosFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -481,12 +373,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for a positive and a negative numbers; the first is longer
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testPosNegFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -507,12 +393,6 @@ public class BigIntegerOrTest extends TestCase {
     /**
      * Or for a positive and a negative number; the first is shorter
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
     public void testPosNegFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -530,13 +410,6 @@ public class BigIntegerOrTest extends TestCase {
         assertEquals("incorrect sign", -1, result.signum());
     }
     
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for or operation",
-        method = "or",
-        args = {java.math.BigInteger.class}
-    )
-    @BrokenTest("Fails in CTS environment, but passes in CoreTestRunner")
     public void testRegression() {
         // Regression test for HARMONY-1996
         BigInteger x = new BigInteger("-1023");

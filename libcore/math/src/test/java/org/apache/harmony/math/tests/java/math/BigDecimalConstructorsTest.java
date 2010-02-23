@@ -21,17 +21,13 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import junit.framework.TestCase;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
-@TestTargetClass(BigDecimal.class)
+
 /**
  * Class:  java.math.BigDecimal
  * Methods: constructors and fields
@@ -40,11 +36,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * check ONE
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "tests BigDecimal.ONE to be 1.0d",
-        method = "!field:BigDecimal.ONE"
-    )        
     public void testFieldONE() {
         String oneS = "1";
         double oneD = 1.0;
@@ -55,11 +46,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * check TEN
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "tests BigDecimal.TEN to be 10.0d",
-        method = "!field:BigDecimal.TEN"
-    )        
     public void testFieldTEN() {
         String oneS = "10";
         double oneD = 10.0;
@@ -70,11 +56,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * check ZERO
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "tests BigDecimal.ZERO to be 0.0d",
-        method = "!field:BigDecimal.ZERO"
-    )            
     public void testFieldZERO() {
         String oneS = "0";
         double oneD = 0.0;
@@ -85,12 +66,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(BigInteger value)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {java.math.BigInteger.class}
-    )
     public void testConstrBI() {
         String a = "1231212478987482988429808779810457634781384756794987";
         BigInteger bA = new BigInteger(a);
@@ -109,12 +84,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(BigInteger value, int scale)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {java.math.BigInteger.class, int.class}
-    )
     public void testConstrBIScale() {
         String a = "1231212478987482988429808779810457634781384756794987";
         BigInteger bA = new BigInteger(a);
@@ -127,12 +96,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(BigInteger value, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {java.math.BigInteger.class, java.math.MathContext.class}
-    )
     public void testConstrBigIntegerMathContext() {
         String a = "1231212478987482988429808779810457634781384756794987";
         BigInteger bA = new BigInteger(a);
@@ -213,11 +176,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(BigInteger value, int scale, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "BigDecimal",
-        args = {java.math.BigInteger.class, int.class, java.math.MathContext.class}
-    )
     public void testConstrBigIntegerScaleMathContext() {
         String a = "1231212478987482988429808779810457634781384756794987";
         BigInteger bA = new BigInteger(a);
@@ -368,11 +326,6 @@ public class BigDecimalConstructorsTest extends TestCase {
         assertEquals("incorrect value", "-1234567890123456789012345.679", bd.toString());
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "BigDecimal",
-        args = {java.math.BigInteger.class, int.class, java.math.MathContext.class}
-    )
     public void testConstrBigIntegerScaleMathContext_AndroidFailure() {
         MathContext mc;
         BigDecimal bd;
@@ -385,12 +338,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(char[] value); 
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {char[].class}
-    )
     public void testConstrChar() {
         char value[] = {'-', '1', '2', '3', '8', '0', '.', '4', '7', '3', '8', 'E', '-', '4', '2', '3'};
         BigDecimal result = new BigDecimal(value);
@@ -410,12 +357,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(char[] value, int offset, int len); 
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {char[].class, int.class, int.class}
-    )
     public void testConstrCharIntInt() {
         char value[] = {'-', '1', '2', '3', '8', '0', '.', '4', '7', '3', '8', 'E', '-', '4', '2', '3'};
         int offset = 3;
@@ -437,12 +378,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(char[] value, int offset, int len, MathContext mc); 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {char[].class, int.class, int.class, java.math.MathContext.class}
-    )
     public void testConstrCharIntIntMathContext() {
         char value[] = {'-', '1', '2', '3', '8', '0', '.', '4', '7', '3', '8', 'E', '-', '4', '2', '3'};
         int offset = 3;
@@ -536,12 +471,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(char[] value, int offset, int len, MathContext mc); 
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {char[].class, int.class, int.class, java.math.MathContext.class}
-    )
     public void testConstrCharIntIntMathContextException1() {
         char value[] = {'-', '1', '2', '3', '8', '0', '.', '4', '7', '3', '8', 'E', '-', '4', '2', '3'};
         int offset = 3;
@@ -559,12 +488,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(char[] value, MathContext mc);
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {char[].class, java.math.MathContext.class}
-    )
     public void testConstrCharMathContext() {
         try {
             // Regression for HARMONY-783
@@ -617,12 +540,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(double value) when value is NaN
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDoubleNaN() {
         double a = Double.NaN;
         try {
@@ -637,12 +554,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(double value) when value is positive infinity
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDoublePosInfinity() {
         double a = Double.POSITIVE_INFINITY;
         try {
@@ -657,12 +568,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(double value) when value is positive infinity
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDoubleNegInfinity() {
         double a = Double.NEGATIVE_INFINITY;
         try {
@@ -677,12 +582,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(double value)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDouble() {
         double a = 732546982374982347892379283571094797.287346782359284756;
         int aScale = 0;
@@ -695,11 +594,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(double, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "BigDecimal",
-        args = {double.class, java.math.MathContext.class}
-    )
     public void testConstrDoubleMathContext() {
         double a = 732546982374982347892379283571094797.287346782359284756;
         int precision = 21;
@@ -795,11 +689,6 @@ public class BigDecimalConstructorsTest extends TestCase {
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "BigDecimal",
-        args = {double.class, java.math.MathContext.class}
-    )
     public void testConstrDoubleMathContext_AndroidFailure() {
         BigDecimal bd;
         MathContext mc;
@@ -843,12 +732,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(0.1)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDouble01() {
         double a = 1.E-1;
         int aScale = 55;
@@ -861,12 +744,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(0.555)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDouble02() {
         double a = 0.555;
         int aScale = 53;
@@ -879,12 +756,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(-0.1)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDoubleMinus01() {
         double a = -1.E-1;
         int aScale = 55;
@@ -897,12 +768,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(int value)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {int.class}
-    )
     public void testConstrInt() {
         int a = 732546982;
         String res = "732546982";
@@ -915,12 +780,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(int, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {int.class, java.math.MathContext.class}
-    )
     public void testConstrIntMathContext() {
         int a = 732546982;
         int precision = 21;
@@ -936,12 +795,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(long value)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {long.class}
-    )
     public void testConstrLong() {
         long a = 4576578677732546982L;
         String res = "4576578677732546982";
@@ -954,12 +807,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(long, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {long.class, java.math.MathContext.class}
-    )
     public void testConstrLongMathContext() {
         long a = 4576578677732546982L;
         int precision = 5;
@@ -1037,12 +884,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(double value) when value is denormalized
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(double) constructor.",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void testConstrDoubleDenormalized() {
         double a = 2.274341322658976E-309;
         int aScale = 1073;
@@ -1056,12 +897,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value)
      * when value is not a valid representation of BigDecimal.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringException() {
         String a = "-238768.787678287a+10";
         try {
@@ -1075,12 +910,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(String value) when exponent is empty.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringExceptionEmptyExponent1() {
         String a = "-238768.787678287e";
         try {
@@ -1093,12 +922,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(String value) when exponent is empty.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringExceptionEmptyExponent2() {
         String a = "-238768.787678287e-";
         try {
@@ -1112,12 +935,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value) when exponent is greater than
      * Integer.MAX_VALUE.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringExceptionExponentGreaterIntegerMax() {
         String a = "-238768.787678287e214748364767876";
         try {
@@ -1131,12 +948,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value) when exponent is less than
      * Integer.MIN_VALUE.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringExceptionExponentLessIntegerMin() {
         String a = "-238768.787678287e-214748364767876";
         try {
@@ -1150,12 +961,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value)
      * when exponent is Integer.MAX_VALUE.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringExponentIntegerMax() {
         String a = "-238768.787678287e2147483647";
         int aScale = -2147483638;
@@ -1169,12 +974,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value)
      * when exponent is Integer.MIN_VALUE.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringExponentIntegerMin() {
         String a = ".238768e-2147483648";
         try {
@@ -1189,12 +988,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(String value); value does not contain exponent
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithoutExpPos1() {
         String a = "732546982374982347892379283571094797.287346782359284756";
         int aScale = 18;
@@ -1207,12 +1000,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(String value); value does not contain exponent
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithoutExpPos2() {
         String a = "+732546982374982347892379283571094797.287346782359284756";
         int aScale = 18;
@@ -1225,12 +1012,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(String value); value does not contain exponent
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithoutExpNeg() {
         String a = "-732546982374982347892379283571094797.287346782359284756";
         int aScale = 18;
@@ -1244,12 +1025,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); value does not contain exponent
      * and decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithoutExpWithoutPoint() {
         String a = "-732546982374982347892379283571094797287346782359284756";
         int aScale = 0;
@@ -1263,12 +1038,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); value contains exponent
      * and does not contain decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithoutPoint1() {
         String a = "-238768787678287e214";
         int aScale = -214;
@@ -1282,12 +1051,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); value contains exponent
      * and does not contain decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithoutPoint2() {
         String a = "-238768787678287e-214";
         int aScale = 214;
@@ -1301,12 +1064,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); value contains exponent
      * and does not contain decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithoutPoint3() {
         String a = "238768787678287e-214";
         int aScale = 214;
@@ -1320,12 +1077,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); value contains exponent
      * and does not contain decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithoutPoint4() {
         String a = "238768787678287e+214";
         int aScale = -214;
@@ -1339,12 +1090,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); value contains exponent
      * and does not contain decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithoutPoint5() {
         String a = "238768787678287E214";
         int aScale = -214;
@@ -1358,12 +1103,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); 
      * value contains both exponent and decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithPoint1() {
         String a = "23985439837984782435652424523876878.7678287e+214";
         int aScale = -207;
@@ -1377,12 +1116,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); 
      * value contains both exponent and decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithPoint2() {
         String a = "238096483923847545735673567457356356789029578490276878.7678287e-214";
         int aScale = 221;
@@ -1396,12 +1129,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); 
      * value contains both exponent and decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithPoint3() {
         String a = "2380964839238475457356735674573563567890.295784902768787678287E+21";
         int aScale = 0;
@@ -1415,12 +1142,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); 
      * value contains both exponent and decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithPoint4() {
         String a = "23809648392384754573567356745735635678.90295784902768787678287E+21";
         int aScale = 2;
@@ -1434,12 +1155,6 @@ public class BigDecimalConstructorsTest extends TestCase {
      * new BigDecimal(String value); 
      * value contains both exponent and decimal point
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for BigDecimal(String) constructor.",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void testConstrStringWithExponentWithPoint5() {
         String a = "238096483923847545735673567457356356789029.5784902768787678287E+21";
         int aScale = -2;
@@ -1452,12 +1167,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * new BigDecimal(String value, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {java.lang.String.class, java.math.MathContext.class}
-    )
     public void testConstrStringMathContext() {
         String a = "-238768787678287e214";
         int precision = 5;
@@ -1517,12 +1226,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.math.BigInteger, int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {java.math.BigInteger.class, int.class}
-    )
     public void test_Constructor_java_math_BigInteger_int() {
         BigInteger value = new BigInteger("12345908");
         BigDecimal big = new BigDecimal(value);
@@ -1542,12 +1245,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(double)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {double.class}
-    )
     public void test_Constructor_Double() {
         BigDecimal big = new BigDecimal(123E04);
         assertTrue("the BigDecimal value taking a double argument is not initialized properly", big
@@ -1576,12 +1273,6 @@ public class BigDecimalConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "BigDecimal",
-        args = {java.lang.String.class}
-    )
     public void test_Constructor_java_lang_String() throws NumberFormatException {
         BigDecimal big = new BigDecimal("345.23499600293850");
         assertTrue("the BigDecimal value is not initialized properly", big.toString().equals(

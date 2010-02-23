@@ -17,6 +17,8 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
+import dalvik.annotation.SideEffect;
+
 import java.security.Permission;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -37,16 +39,10 @@ import junit.framework.TestCase;
 import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
 import tests.util.CallVerificationStack;
-import dalvik.annotation.SideEffect;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
 
 /**
  * Test suite for the class java.util.logging.Logger.
  */
-@TestTargetClass(Logger.class)
 public class LoggerTest extends TestCase {
 
     private final static String VALID_RESOURCE_BUNDLE = "bundles/java/util/logging/res";
@@ -95,12 +91,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test the global logger
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Logger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGlobalLogger() {
         assertNull(Logger.global.getFilter());
         assertEquals(0, Logger.global.getHandlers().length);
@@ -118,12 +108,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test constructor under normal conditions.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies constructor under normal conditions.",
-        method = "Logger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testConstructor_Normal() {
         MockLogger mlog = new MockLogger("myname", VALID_RESOURCE_BUNDLE);
         assertNull(mlog.getFilter());
@@ -140,12 +124,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test constructor with null parameters.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies constructor with null parameters.",
-        method = "Logger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testConstructor_Null() {
         MockLogger mlog = new MockLogger(null, null);
         assertNull(mlog.getFilter());
@@ -161,12 +139,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test constructor with invalid name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies constructor with invalid name.",
-        method = "Logger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testConstructor_InvalidName() {
         MockLogger mlog = new MockLogger("...#$%%^&&()-_+=!@~./,[]{};:'\\\"?|",
                 null);
@@ -176,12 +148,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test constructor with empty name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies constructor with empty name.",
-        method = "Logger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testConstructor_EmptyName() {
         MockLogger mlog = new MockLogger("", null);
         assertEquals("", mlog.getName());
@@ -190,12 +156,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test constructor with invalid resource bundle name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies MissingResourceException.",
-        method = "Logger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testConstructor_InvalidResourceBundle() {
 
         // try anonymous with invalid resource
@@ -225,12 +185,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getAnonymousLogger()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getAnonymousLogger",
-        args = {}
-    )
     public void testGetAnonymousLogger() {
         Logger alog = Logger.getAnonymousLogger();
         assertNotSame(alog, Logger.getAnonymousLogger());
@@ -249,12 +203,6 @@ public class LoggerTest extends TestCase {
      * Test getAnonymousLogger(String resourceBundleName) with valid resource
      * bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getAnonymousLogger(String resourceBundleName) with valid resource bundle.",
-        method = "getAnonymousLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetAnonymousLogger_ValidResourceBundle() {
         Logger alog = Logger.getAnonymousLogger(VALID_RESOURCE_BUNDLE);
         assertNotSame(alog, Logger.getAnonymousLogger(VALID_RESOURCE_BUNDLE));
@@ -273,12 +221,6 @@ public class LoggerTest extends TestCase {
      * Test getAnonymousLogger(String resourceBundleName) with null resource
      * bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getAnonymousLogger(String resourceBundleName) with null resource bundle.",
-        method = "getAnonymousLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetAnonymousLogger_NullResourceBundle() {
         Logger alog = Logger.getAnonymousLogger(null);
         assertNotSame(alog, Logger.getAnonymousLogger(null));
@@ -297,12 +239,6 @@ public class LoggerTest extends TestCase {
      * Test getAnonymousLogger(String resourceBundleName) with invalid resource
      * bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getAnonymousLogger(String resourceBundleName) with invalid resource bundle.",
-        method = "getAnonymousLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetAnonymousLogger_InvalidResourceBundle() {
         try {
             Logger.getAnonymousLogger(INVALID_RESOURCE_BUNDLE);
@@ -320,12 +256,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String), getting a logger with no parent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String), getting a logger with no parent.",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetLogger_Normal() throws Exception {
         // config the level
         Properties p = new Properties();
@@ -359,12 +289,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String), getting a logger with invalid level configured.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String), getting a logger with invalid level configured.",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetLogger_InvalidLevel() throws Exception {
         // config the level
         Properties p = new Properties();
@@ -390,12 +314,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String) with null name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String) with null name.",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetLogger_Null() {
         try {
             Logger.getLogger(null);
@@ -414,12 +332,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String) with invalid name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String) with invalid name.",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetLogger_Invalid() {
         Logger log = Logger.getLogger("...#$%%^&&()-_+=!@~./,[]{};:'\\\"?|");
         assertEquals("...#$%%^&&()-_+=!@~./,[]{};:'\\\"?|", log.getName());
@@ -428,12 +340,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String) with empty name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String) with empty name.",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void testGetLogger_Empty() {
         assertNotNull(LogManager.getLogManager().getLogger(""));
         Logger log = Logger.getLogger("");
@@ -452,12 +358,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String), getting a logger with existing parent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String), getting a logger with existing parent.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLogger_WithParent() {
         assertNull(LogManager.getLogManager().getLogger(
                 "testGetLogger_WithParent_ParentLogger"));
@@ -544,12 +444,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String, String), getting a logger with no parent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String), getting a logger with no parent.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_Normal() throws Exception {
         // config the level
         Properties p = new Properties();
@@ -583,12 +477,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String, String) with null parameters.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String) with null parameters.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_Null() {
         Logger.getLogger("testGetLoggerWithRes_Null_ANewLogger", null);
         try {
@@ -602,12 +490,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String, String) with invalid resource bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String) with invalid resource bundle.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_InvalidResourceBundle() {
 
         assertNull(LogManager.getLogManager().getLogger(
@@ -645,12 +527,6 @@ public class LoggerTest extends TestCase {
      * Test getLogger(String, String) with valid resource bundle, to get an
      * existing logger with no associated resource bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String) with valid resource bundle, to get an existing logger with no associated resource bundle.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_ExistingLoggerWithNoRes() {
         assertNull(LogManager.getLogManager().getLogger(
                 "testGetLoggerWithRes_ExistingLoggerWithNoRes_ANewLogger"));
@@ -671,12 +547,6 @@ public class LoggerTest extends TestCase {
      * Test getLogger(String, String) with valid resource bundle, to get an
      * existing logger with the same associated resource bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String) with valid resource bundle, to get an existing logger with the same associated resource bundle.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_ExistingLoggerWithSameRes() {
         assertNull(LogManager.getLogManager().getLogger(
                 "testGetLoggerWithRes_ExistingLoggerWithSameRes_ANewLogger"));
@@ -697,12 +567,6 @@ public class LoggerTest extends TestCase {
      * Test getLogger(String, String) with valid resource bundle, to get an
      * existing logger with different associated resource bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String) with valid resource bundle, to get an existing logger with different associated resource bundle.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_ExistingLoggerWithDiffRes() {
         assertNull(LogManager.getLogManager().getLogger(
                 "testGetLoggerWithRes_ExistingLoggerWithDiffRes_ANewLogger"));
@@ -734,12 +598,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String, String) with invalid name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String) with invalid name.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_InvalidName() {
         Logger log = Logger.getLogger(
                 "...#$%%^&&()-_+=!@~./,[]{};:'\\\"?|WithRes",
@@ -751,12 +609,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String, String) with empty name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String) with empty name.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     @SideEffect("Attaches ResourceBundle to anonymous logger; irreversible")
     public void testGetLoggerWithRes_Empty() {
         Logger log = Logger.getLogger("", VALID_RESOURCE_BUNDLE);
@@ -775,12 +627,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLogger(String, String), getting a logger with existing parent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getLogger(String, String), getting a logger with existing parent.",
-        method = "getLogger",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testGetLoggerWithRes_WithParentNormal() {
         assertNull(LogManager.getLogManager().getLogger(
                 "testGetLoggerWithRes_WithParent_ParentLogger"));
@@ -812,12 +658,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test addHandler(Handler) for a named logger with sufficient privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_NamedLoggerSufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testAddHandler_NamedLoggerSufficientPrivilege");
@@ -832,12 +672,6 @@ public class LoggerTest extends TestCase {
      * Test addHandler(Handler) for a named logger with sufficient privilege,
      * add duplicate handlers.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_NamedLoggerSufficientPrivilegeDuplicate() {
         Logger log = Logger
                 .getLogger("testAddHandler_NamedLoggerSufficientPrivilegeDuplicate");
@@ -855,12 +689,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test addHandler(Handler) with a null handler.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies NullPointerException.",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_Null() {
         Logger log = Logger.getLogger("testAddHandler_Null");
         try {
@@ -874,12 +702,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test addHandler(Handler) for a named logger with insufficient privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_NamedLoggerInsufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testAddHandler_NamedLoggerInsufficientPrivilege");
@@ -900,12 +722,6 @@ public class LoggerTest extends TestCase {
      * Test addHandler(Handler) for a named logger with insufficient privilege,
      * using a null handler.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_NamedLoggerInsufficientPrivilegeNull() {
         Logger log = Logger
                 .getLogger("testAddHandler_NamedLoggerInsufficientPrivilege");
@@ -925,12 +741,6 @@ public class LoggerTest extends TestCase {
      * Test addHandler(Handler) for an anonymous logger with sufficient
      * privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_AnonyLoggerSufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         MockHandler h = new MockHandler();
@@ -944,12 +754,6 @@ public class LoggerTest extends TestCase {
      * Test addHandler(Handler) for an anonymous logger with insufficient
      * privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_AnonyLoggerInsufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         MockHandler h = new MockHandler();
@@ -969,12 +773,6 @@ public class LoggerTest extends TestCase {
      * Test addHandler(Handler) for a null-named mock logger with insufficient
      * privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies addHandler(Handler) for a null-named mock logger with insufficient privilege, SecurityException.",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testAddHandler_NullNamedMockLoggerInsufficientPrivilege() {
         MockLogger mlog = new MockLogger(null, null);
         MockHandler h = new MockHandler();
@@ -993,12 +791,6 @@ public class LoggerTest extends TestCase {
      * Test removeHandler(Handler) for a named logger with sufficient privilege,
      * remove an existing handler.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "addHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_NamedLoggerSufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testRemoveHandler_NamedLoggerSufficientPrivilege");
@@ -1013,12 +805,6 @@ public class LoggerTest extends TestCase {
      * Test removeHandler(Handler) for a named logger with sufficient privilege,
      * remove a non-existing handler.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removeHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_NamedLoggerSufficientPrivilegeNotExisting() {
         Logger log = Logger
                 .getLogger("testRemoveHandler_NamedLoggerSufficientPrivilegeNotExisting");
@@ -1031,12 +817,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test removeHandler(Handler) with a null handler.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removeHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_Null() {
         Logger log = Logger.getLogger("testRemoveHandler_Null");
         log.removeHandler(null);
@@ -1047,12 +827,6 @@ public class LoggerTest extends TestCase {
      * Test removeHandler(Handler) for a named logger with insufficient
      * privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removeHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_NamedLoggerInsufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testRemoveHandler_NamedLoggerInsufficientPrivilege");
@@ -1073,12 +847,6 @@ public class LoggerTest extends TestCase {
      * Test removeHandler(Handler) for a named logger with insufficient
      * privilege, using a null handler.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removeHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_NamedLoggerInsufficientPrivilegeNull() {
         Logger log = Logger
                 .getLogger("testRemoveHandler_NamedLoggerInsufficientPrivilege");
@@ -1098,12 +866,6 @@ public class LoggerTest extends TestCase {
      * Test removeHandler(Handler) for an anonymous logger with sufficient
      * privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removeHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_AnonyLoggerSufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         MockHandler h = new MockHandler();
@@ -1117,12 +879,6 @@ public class LoggerTest extends TestCase {
      * Test removeHandler(Handler) for an anonymous logger with insufficient
      * privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removeHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_AnonyLoggerInsufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         MockHandler h = new MockHandler();
@@ -1142,12 +898,6 @@ public class LoggerTest extends TestCase {
      * Test removeHandler(Handler) for a null-named mock logger with
      * insufficient privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "removeHandler",
-        args = {java.util.logging.Handler.class}
-    )
     public void testRemoveHandler_NullNamedMockLoggerInsufficientPrivilege() {
         MockLogger mlog = new MockLogger(null, null);
         MockHandler h = new MockHandler();
@@ -1165,12 +915,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getHandlers() when there's no handler.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getHandlers() when there's no handler.",
-        method = "getHandlers",
-        args = {}
-    )
     public void testGetHandlers_None() {
         Logger log = Logger.getLogger("testGetHandlers_None");
         assertEquals(log.getHandlers().length, 0);
@@ -1179,12 +923,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getHandlers() when there are several handlers.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getHandlers() when there are several handlers.",
-        method = "getHandlers",
-        args = {}
-    )
     public void testGetHandlers_Several() {
         Logger log = Logger.getLogger("testGetHandlers_None");
         assertEquals(log.getHandlers().length, 0);
@@ -1210,20 +948,6 @@ public class LoggerTest extends TestCase {
      * Test getFilter & setFilter with normal value for a named logger, having
      * sufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getFilter & setFilter with normal value for a named logger, having sufficient privilege.",
-            method = "getFilter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getFilter & setFilter with normal value for a named logger, having sufficient privilege.",
-            method = "setFilter",
-            args = {java.util.logging.Filter.class}
-        )
-    })
     public void testGetSetFilter_NamedLoggerSufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testGetSetFilter_NamedLoggerSufficientPrivilege");
@@ -1237,20 +961,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getFilter & setFilter with null value, having sufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getFilter & setFilter with null value, having sufficient privilege.",
-            method = "getFilter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getFilter & setFilter with null value, having sufficient privilege.",
-            method = "setFilter",
-            args = {java.util.logging.Filter.class}
-        )
-    })
     public void testGetSetFilter_Null() {
         Logger log = Logger.getLogger("testGetSetFilter_Null");
 
@@ -1266,20 +976,6 @@ public class LoggerTest extends TestCase {
      * Test setFilter with normal value for a named logger, having insufficient
      * privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies setFilter with normal value for a named logger, having insufficient privilege.",
-            method = "getFilter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies setFilter with normal value for a named logger, having insufficient privilege.",
-            method = "setFilter",
-            args = {java.util.logging.Filter.class}
-        )
-    })
     public void testGetSetFilter_NamedLoggerInsufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testGetSetFilter_NamedLoggerInsufficientPrivilege");
@@ -1298,20 +994,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setFilter for an anonymous logger with sufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getFilter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setFilter",
-            args = {java.util.logging.Filter.class}
-        )
-    })
     public void testSetFilter_AnonyLoggerSufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         Filter f = new MockFilter();
@@ -1323,20 +1005,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setFilter for an anonymous logger with insufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getFilter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setFilter",
-            args = {java.util.logging.Filter.class}
-        )
-    })
     public void testSetFilter_AnonyLoggerInsufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         Filter f = new MockFilter();
@@ -1354,20 +1022,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setFilter for a null-named mock logger with insufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getFilter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setFilter",
-            args = {java.util.logging.Filter.class}
-        )
-    })
     public void testSetFilter_NullNamedMockLoggerInsufficientPrivilege() {
         MockLogger mlog = new MockLogger(null, null);
         Filter f = new MockFilter();
@@ -1386,20 +1040,6 @@ public class LoggerTest extends TestCase {
      * Test getLevel & setLevel with normal value for a named logger, having
      * sufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getLevel & setLevel with normal value for a named logger, having sufficient privilege.",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getLevel & setLevel with normal value for a named logger, having sufficient privilege.",
-            method = "getLevel",
-            args = {}
-        )
-    })
     public void testGetSetLevel_NamedLoggerSufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testGetSetLevel_NamedLoggerSufficientPrivilege");
@@ -1412,20 +1052,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getLevel & setLevel with null value, having sufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getLevel & setLevel with null value, having sufficient privilege.",
-            method = "getLevel",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies getLevel & setLevel with null value, having sufficient privilege.",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        )
-    })
     public void testGetSetLevel_Null() {
         Logger log = Logger.getLogger("testGetSetLevel_Null");
 
@@ -1441,20 +1067,6 @@ public class LoggerTest extends TestCase {
      * Test setLevel with normal value for a named logger, having insufficient
      * privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies setLevel with normal value for a named logger, having insufficient privilege.",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL,
-            notes = "Verifies setLevel with normal value for a named logger, having insufficient privilege.",
-            method = "getLevel",
-            args = {}
-        )
-    })
     public void testGetSetLevel_NamedLoggerInsufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testGetSetLevel_NamedLoggerInsufficientPrivilege");
@@ -1472,20 +1084,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setLevel for an anonymous logger with sufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getLevel",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        )
-    })
     public void testSetLevel_AnonyLoggerSufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         assertNull(log.getLevel());
@@ -1496,20 +1094,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setLevel for an anonymous logger with insufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getLevel",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        )
-    })
     public void testSetLevel_AnonyLoggerInsufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         SecurityManager oldMan = System.getSecurityManager();
@@ -1526,20 +1110,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setLevel for a null-named mock logger with insufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getLevel",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setLevel",
-            args = {java.util.logging.Level.class}
-        )
-    })
     public void testSetLevel_NullNamedMockLoggerInsufficientPrivilege() {
         MockLogger mlog = new MockLogger(null, null);
         SecurityManager oldMan = System.getSecurityManager();
@@ -1557,20 +1127,6 @@ public class LoggerTest extends TestCase {
      * Test getUseParentHandlers & setUseParentHandlers with normal value for a
      * named logger, having sufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getUseParentHandlers",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setUseParentHandlers",
-            args = {boolean.class}
-        )
-    })
     public void testGetSetUseParentHandlers_NamedLoggerSufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testGetSetUseParentHandlers_NamedLoggerSufficientPrivilege");
@@ -1584,20 +1140,6 @@ public class LoggerTest extends TestCase {
      * Test setUseParentHandlers with normal value for a named logger, having
      * insufficient privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getUseParentHandlers",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setUseParentHandlers",
-            args = {boolean.class}
-        )
-    })
     public void testGetSetUseParentHandlers_NamedLoggerInsufficientPrivilege() {
         Logger log = Logger
                 .getLogger("testGetSetUseParentHandlers_NamedLoggerInsufficientPrivilege");
@@ -1616,20 +1158,6 @@ public class LoggerTest extends TestCase {
      * Test setUseParentHandlers for an anonymous logger with sufficient
      * privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getUseParentHandlers",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setUseParentHandlers",
-            args = {boolean.class}
-        )
-    })
     public void testSetUseParentHandlers_AnonyLoggerSufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         assertTrue(log.getUseParentHandlers());
@@ -1641,20 +1169,6 @@ public class LoggerTest extends TestCase {
      * Test setUseParentHandlers for an anonymous logger with insufficient
      * privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getUseParentHandlers",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setUseParentHandlers",
-            args = {boolean.class}
-        )
-    })
     public void testSetUseParentHandlers_AnonyLoggerInsufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         SecurityManager oldMan = System.getSecurityManager();
@@ -1672,20 +1186,6 @@ public class LoggerTest extends TestCase {
      * Test setUseParentHandlers for a null-named mock logger with insufficient
      * privilege.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getUseParentHandlers",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setUseParentHandlers",
-            args = {boolean.class}
-        )
-    })
     public void testSetUseParentHandlers_NullNamedMockLoggerInsufficientPrivilege() {
         MockLogger mlog = new MockLogger(null, null);
         SecurityManager oldMan = System.getSecurityManager();
@@ -1702,12 +1202,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getParent() for root logger.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getParent() for root logger.",
-        method = "getParent",
-        args = {}
-    )
     public void testGetParent_Root() {
         assertNull(Logger.getLogger("").getParent());
     }
@@ -1715,12 +1209,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getParent() for normal named loggers.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getParent() for normal named loggers.",
-        method = "getParent",
-        args = {}
-    )
     public void testGetParent_NormalNamed() {
         Logger log = Logger.getLogger("testGetParent_NormalNamed");
         assertSame(log.getParent(), Logger.getLogger(""));
@@ -1733,12 +1221,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getParent() for anonymous loggers.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getParent() for anonymous loggers.",
-        method = "getParent",
-        args = {}
-    )
     public void testGetParent_Anonymous() {
         assertSame(Logger.getAnonymousLogger().getParent(), Logger
                 .getLogger(""));
@@ -1748,12 +1230,6 @@ public class LoggerTest extends TestCase {
      * Test setParent(Logger) for the mock logger since it is advised not to
      * call this method on named loggers. Test normal conditions.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setParent",
-        args = {java.util.logging.Logger.class}
-    )
     public void testSetParent_Normal() {
         Logger log = new MockLogger(null, null);
         Logger parent = new MockLogger(null, null);
@@ -1765,12 +1241,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setParent(Logger) with null.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setParent",
-        args = {java.util.logging.Logger.class}
-    )
     public void testSetParent_Null() {
         try {
             (new MockLogger(null, null)).setParent(null);
@@ -1782,12 +1252,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setParent(Logger), having insufficient privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setParent",
-        args = {java.util.logging.Logger.class}
-    )
     public void testSetParent_InsufficientPrivilege() {
         MockLogger log = new MockLogger(null, null);
         SecurityManager oldMan = System.getSecurityManager();
@@ -1804,12 +1268,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test setParent(Logger) with null, having insufficient privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setParent",
-        args = {java.util.logging.Logger.class}
-    )
     public void testSetParent_InsufficientPrivilegeNull() {
         MockLogger log = new MockLogger(null, null);
         SecurityManager oldMan = System.getSecurityManager();
@@ -1827,12 +1285,6 @@ public class LoggerTest extends TestCase {
      * Test setParent(Logger) for an anonymous logger with insufficient
      * privilege.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setParent",
-        args = {java.util.logging.Logger.class}
-    )
     public void testSetParent_AnonyLoggerInsufficientPrivilege() {
         Logger log = Logger.getAnonymousLogger();
         SecurityManager oldMan = System.getSecurityManager();
@@ -1849,12 +1301,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getName() for normal names.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getName() for normal names.",
-        method = "getName",
-        args = {}
-    )
     public void testGetName_Normal() {
         Logger log = Logger.getLogger("testGetName_Normal");
         assertEquals("testGetName_Normal", log.getName());
@@ -1866,12 +1312,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getName() for empty name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getName() for empty name.",
-        method = "getName",
-        args = {}
-    )
     public void testGetName_Empty() {
         Logger log = Logger.getLogger("");
         assertEquals("", log.getName());
@@ -1883,12 +1323,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getName() for null name.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getName() for null name.",
-        method = "getName",
-        args = {}
-    )
     public void testGetName_Null() {
         Logger log = Logger.getAnonymousLogger();
         assertNull(log.getName());
@@ -1900,12 +1334,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getResourceBundle() when it it not null.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getResourceBundle() when it it not null.",
-        method = "getResourceBundle",
-        args = {}
-    )
     public void testGetResourceBundle_Normal() {
         Logger log = Logger.getLogger("testGetResourceBundle_Normal",
                 VALID_RESOURCE_BUNDLE);
@@ -1918,12 +1346,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getResourceBundle() when it it null.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getResourceBundle() when it it null.",
-        method = "getResourceBundle",
-        args = {}
-    )
     public void testGetResourceBundle_Null() {
         Logger log = Logger.getLogger("testGetResourceBundle_Null", null);
         assertNull(log.getResourceBundle());
@@ -1936,12 +1358,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getResourceBundleName() when it it not null.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getResourceBundleName() when it it not null.",
-        method = "getResourceBundleName",
-        args = {}
-    )
     public void testGetResourceBundleName_Normal() {
         Logger log = Logger.getLogger("testGetResourceBundleName_Normal",
                 VALID_RESOURCE_BUNDLE);
@@ -1954,12 +1370,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test getResourceBundleName() when it it null.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies getResourceBundleName() when it it null.",
-        method = "getResourceBundleName",
-        args = {}
-    )
     public void testGetResourceBundleName_Null() {
         Logger log = Logger.getLogger("testGetResourceBundleName_Null", null);
         assertNull(log.getResourceBundleName());
@@ -1972,12 +1382,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test isLoggable(Level).
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "isLoggable",
-        args = {java.util.logging.Level.class}
-    )
     public void testIsLoggable() {
         MockLogger mlog = new MockLogger(null, null);
         assertNull(mlog.getLevel());
@@ -2011,12 +1415,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test throwing(String, String, Throwable) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "throwing",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testThrowing_Normal() {
         Throwable t = new Throwable();
         this.sharedLogger.setLevel(Level.FINER);
@@ -2045,12 +1443,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test throwing(String, String, Throwable) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "throwing",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testThrowing_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2075,12 +1467,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test entering(String, String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies entering(String, String) with normal values.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testEntering_StringString_Normal() {
         this.sharedLogger.setLevel(Level.FINER);
         this.sharedLogger.entering("sourceClass", "sourceMethod");
@@ -2105,12 +1491,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test entering(String, String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies entering(String, String) with null values.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testEntering_StringString_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2135,12 +1515,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test entering(String, String, Object) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies entering(String, String, Object) with normal values.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testEntering_StringStringObject_Normal() {
         Object param = new Object();
         this.sharedLogger.setLevel(Level.FINER);
@@ -2167,12 +1541,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test entering(String, String, Object) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies entering(String, String, Object) with null values.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testEntering_StringStringObject_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2198,12 +1566,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test entering(String, String, Object[]) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies entering(String, String, Object[]) with normal values.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testEntering_StringStringObjects_Normal() {
         Object[] params = new Object[2];
         params[0] = new Object();
@@ -2234,12 +1596,6 @@ public class LoggerTest extends TestCase {
      * Test entering(String, String, Object[]) with null class name and method
      * name and empty parameter array.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies entering(String, String, Object[]) with null class name and method name and empty parameter array.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testEntering_StringStringObjects_NullEmpty() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2265,12 +1621,6 @@ public class LoggerTest extends TestCase {
      * Test entering(String, String, Object[]) with null values with appropriate
      * logging level set.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies  entering(String, String, Object[]) with null values with appropriate logging level set.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testEntering_StringStringObjects_Null() {
         sharedLogger.setLevel(Level.FINER);
         sharedLogger.entering(null, null, (Object[]) null);
@@ -2293,12 +1643,6 @@ public class LoggerTest extends TestCase {
      * Test entering(String, String, Object[]) with null values with
      * inappropriate logging level set.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies entering(String, String, Object[]) with null values with inappropriate logging level set.",
-        method = "entering",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testEntering_StringStringObjects_NullDisabled() {
         this.sharedLogger.setLevel(Level.FINE);
         this.sharedLogger.entering(null, null, (Object[]) null);
@@ -2308,12 +1652,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test exiting(String, String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies exiting(String, String) with normal values.",
-        method = "exiting",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testExiting_StringString_Normal() {
         this.sharedLogger.setLevel(Level.FINER);
         this.sharedLogger.exiting("sourceClass", "sourceMethod");
@@ -2338,12 +1676,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test exiting(String, String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies exiting(String, String) with null values.",
-        method = "exiting",
-        args = {java.lang.String.class, java.lang.String.class}
-    )
     public void testExiting_StringString_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2368,12 +1700,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test exiting(String, String, Object) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies exiting(String, String, Object) with normal values.",
-        method = "exiting",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testExiting_StringStringObject_Normal() {
         Object param = new Object();
         this.sharedLogger.setLevel(Level.FINER);
@@ -2400,12 +1726,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test exiting(String, String, Object) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies exiting(String, String, Object) with null values.",
-        method = "exiting",
-        args = {java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testExiting_StringStringObject_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2431,12 +1751,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test config(String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "config",
-        args = {java.lang.String.class}
-    )
     public void testConfig_Normal() {
         this.sharedLogger.setLevel(Level.CONFIG);
         this.sharedLogger.config("config msg");
@@ -2461,12 +1775,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test config(String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies null as a parameter.",
-        method = "config",
-        args = {java.lang.String.class}
-    )
     public void testConfig_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2495,12 +1803,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test fine(String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "fine",
-        args = {java.lang.String.class}
-    )
     public void testFine_Normal() {
         this.sharedLogger.setLevel(Level.FINE);
         this.sharedLogger.fine("fine msg");
@@ -2525,12 +1827,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test fine(String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies fine(String) with null values.",
-        method = "fine",
-        args = {java.lang.String.class}
-    )
     public void testFine_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2559,12 +1855,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test finer(String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies finer(String) with normal values.",
-        method = "finer",
-        args = {java.lang.String.class}
-    )
     public void testFiner_Normal() {
         this.sharedLogger.setLevel(Level.FINER);
         this.sharedLogger.finer("finer msg");
@@ -2589,12 +1879,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test finer(String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies finer(String) with null values.",
-        method = "finer",
-        args = {java.lang.String.class}
-    )
     public void testFiner_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2623,12 +1907,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test finest(String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies finest(String) with normal values.",
-        method = "finest",
-        args = {java.lang.String.class}
-    )
     public void testFinest_Normal() {
         this.sharedLogger.setLevel(Level.FINEST);
         this.sharedLogger.finest("finest msg");
@@ -2653,12 +1931,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test finest(String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies finest(String) with null values.",
-        method = "finest",
-        args = {java.lang.String.class}
-    )
     public void testFinest_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2687,12 +1959,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test info(String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "info",
-        args = {java.lang.String.class}
-    )
     public void testInfo_Normal() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.info("info msg");
@@ -2717,12 +1983,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test info(String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "info",
-        args = {java.lang.String.class}
-    )
     public void testInfo_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2751,12 +2011,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test warning(String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "warning",
-        args = {java.lang.String.class}
-    )
     public void testWarning_Normal() {
         this.sharedLogger.setLevel(Level.WARNING);
         this.sharedLogger.warning("warning msg");
@@ -2781,12 +2035,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test warning(String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "warning",
-        args = {java.lang.String.class}
-    )
     public void testWarning_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2815,12 +2063,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test severe(String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "severe",
-        args = {java.lang.String.class}
-    )
     public void testSevere_Normal() {
         this.sharedLogger.setLevel(Level.SEVERE);
         this.sharedLogger.severe("severe msg");
@@ -2845,12 +2087,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test severe(String) with null values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "severe",
-        args = {java.lang.String.class}
-    )
     public void testSevere_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2879,12 +2115,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class}
-    )
     public void testLog_LevelString_Normal() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.log(Level.INFO, "log(Level, String) msg");
@@ -2911,12 +2141,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String) with null message.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class}
-    )
     public void testLog_LevelString_NullMsg() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -2941,12 +2165,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class}
-    )
     public void testLog_LevelString_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -2959,12 +2177,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Object) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLog_LevelStringObject_Normal() {
         Object param = new Object();
         this.sharedLogger.setLevel(Level.INFO);
@@ -2996,12 +2208,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Object) with null message and object.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLog_LevelStringObject_NullMsgObj() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -3027,12 +2233,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Object) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLog_LevelStringObject_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -3046,12 +2246,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Object[]) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Object[].class}
-    )
             
     public void testLog_LevelStringObjects_Normal() {
         Object[] params = new Object[2];
@@ -3087,12 +2281,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Object[]) with null message and object.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testLog_LevelStringObjects_NullMsgObj() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -3117,12 +2305,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Object[]) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testLog_LevelStringObjects_NullLevel() {
         try {
             this.sharedLogger.log(null, "log(Level, String, Object[]) msg",
@@ -3135,12 +2317,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Throwable) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLog_LevelStringThrowable_Normal() {
         Throwable t = new Throwable();
         this.sharedLogger.setLevel(Level.INFO);
@@ -3171,12 +2347,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Throwable) with null message and throwable.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLog_LevelStringThrowable_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -3201,12 +2371,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(Level, String, Throwable) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLog_LevelStringThrowable_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -3220,12 +2384,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void testLogp_LevelStringStringString_Normal() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.logp(Level.INFO, "sourceClass", "sourceMethod",
@@ -3255,12 +2413,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String) with null message.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void testLogp_LevelStringStringString_NullMsg() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -3285,12 +2437,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void testLogp_LevelStringStringString_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -3304,12 +2450,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String, Object) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLogp_LevelStringStringStringObject_Normal() {
         Object param = new Object();
         this.sharedLogger.setLevel(Level.INFO);
@@ -3343,12 +2483,6 @@ public class LoggerTest extends TestCase {
      * Test logp(Level, String, String, String, Object) with null message and
      * object.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLogp_LevelStringStringStringObject_NullMsgObj() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -3374,13 +2508,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String, Object) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
-            
     public void testLogp_LevelStringStringStringObject_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -3395,13 +2522,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String, Object[]) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
-                    
     public void testLogp_LevelStringStringStringObjects_Normal() {
         Object[] params = new Object[2];
         params[0] = new Object();
@@ -3438,12 +2558,6 @@ public class LoggerTest extends TestCase {
      * Test logp(Level, String, String, String, Object[]) with null message and
      * object.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testLogp_LevelStringStringStringObjects_NullMsgObj() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -3468,12 +2582,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String, Object[]) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testLogp_LevelStringStringStringObjects_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -3488,12 +2596,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String, Throwable) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLogp_LevelStringStringStringThrowable_Normal() {
         Throwable t = new Throwable();
         this.sharedLogger.setLevel(Level.INFO);
@@ -3526,12 +2628,6 @@ public class LoggerTest extends TestCase {
      * Test logp(Level, String, String, String, Throwable) with null message and
      * throwable.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLogp_LevelStringStringStringThrowable_Null() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -3556,12 +2652,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logp(Level, String, String, String, Throwable) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logp",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLogp_LevelStringStringStringThrowable_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -3576,12 +2666,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logrb(Level, String, String, String, String) with normal values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void testLogrb_LevelStringStringString_Normal() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.logrb(Level.INFO, "sourceClass", "sourceMethod",
@@ -3614,12 +2698,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logrb(Level, String, String, String, String) with null message.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void testLogrb_LevelStringStringString_NullMsg() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.logrb(Level.INFO, null, null, null, null);
@@ -3638,12 +2716,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test logrb(Level, String, String, String) with null level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void testLogrb_LevelStringStringString_NullLevel() {
         try {
             this.sharedLogger.logrb(null, "sourceClass", "sourceMethod",
@@ -3658,12 +2730,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String) with invalid resource
      * bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void testLogrb_LevelStringStringString_InvalidRes() {
         this.sharedLogger.setLevel(Level.ALL);
         this.sharedLogger.logrb(Level.ALL, "sourceClass", "sourceMethod",
@@ -3687,12 +2753,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Object) with normal
      * values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLogrb_LevelStringStringStringObject_Normal() {
         Object param = new Object();
         this.sharedLogger.setLevel(Level.INFO);
@@ -3730,12 +2790,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Object) with null
      * message and object.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLogrb_LevelStringStringStringObject_NullMsgObj() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.logrb(Level.INFO, null, null, null, null,
@@ -3757,12 +2811,6 @@ public class LoggerTest extends TestCase {
      * java.util.logging.Logger#logrb(Level, String, String, String, String,
      * Object)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Regression test.",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class}
-    )
     public void test_logrbLLevel_LString_LString_LObject_Security()
             throws Exception {
         // regression test for Harmony-1290
@@ -3779,12 +2827,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Object) with null
      * level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLogrb_LevelStringStringStringObject_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -3801,12 +2843,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Object) with invalid
      * resource bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class}
-    )
     public void testLogrb_LevelStringStringStringObject_InvalidRes() {
         Object param = new Object();
         this.sharedLogger.setLevel(Level.ALL);
@@ -3831,13 +2867,7 @@ public class LoggerTest extends TestCase {
     /*
      * Test logrb(Level, String, String, String, String, Object[]) with normal
      * values.
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )      
+     */      
     public void testLogrb_LevelStringStringStringObjects_Normal() {
         Object[] params = new Object[2];
         params[0] = new Object();
@@ -3878,12 +2908,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Object[]) with null
      * message and object.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testLogrb_LevelStringStringStringObjects_NullMsgObj() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.logrb(Level.INFO, null, null, null, null,
@@ -3904,12 +2928,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Object[]) with null
      * level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testLogrb_LevelStringStringStringObjects_NullLevel() {
         try {
             this.sharedLogger.logrb(
@@ -3928,12 +2946,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Object[]) with invalid
      * resource bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object[].class}
-    )
     public void testLogrb_LevelStringStringStringObjects_InvalidRes() {
         Object[] params = new Object[2];
         params[0] = new Object();
@@ -3962,12 +2974,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Throwable) with normal
      * values.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLogrb_LevelStringStringStringThrowable_Normal() {
         Throwable t = new Throwable();
         this.sharedLogger.setLevel(Level.INFO);
@@ -4005,12 +3011,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Throwable) with null
      * message and throwable.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLogrb_LevelStringTStringStringhrowable_NullMsgObj() {
         this.sharedLogger.setLevel(Level.INFO);
         this.sharedLogger.logrb(Level.INFO, null, null, null, null,
@@ -4031,12 +3031,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Throwable) with null
      * level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLogrb_LevelStringStringStringThrowable_NullLevel() {
         // this.sharedLogger.setLevel(Level.OFF);
         try {
@@ -4056,12 +3050,6 @@ public class LoggerTest extends TestCase {
      * Test logrb(Level, String, String, String, String, Throwable) with invalid
      * resource bundle.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "logrb",
-        args = {java.util.logging.Level.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Throwable.class}
-    )
     public void testLogrb_LevelStringStringStringThrowable_InvalidRes() {
         Throwable t = new Throwable();
         this.sharedLogger.setLevel(Level.ALL);
@@ -4086,12 +3074,6 @@ public class LoggerTest extends TestCase {
      * Test log(LogRecord) for a normal log record. Meanwhile the logger has an
      * appropriate level, no filter, no parent.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_LogRecord_AppropriateLevelNoFilterNoParent() {
         LogRecord r = new LogRecord(Level.INFO,
         "testLog_LogRecord_AppropriateLevelNoFilterNoParent");
@@ -4115,12 +3097,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test log(LogRecord) with null log record.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_LogRecord_Null() {
         this.sharedLogger.setLevel(Level.INFO);
         try {
@@ -4134,12 +3110,6 @@ public class LoggerTest extends TestCase {
      * Test log(LogRecord) for a normal log record. Meanwhile the logger has an
      * inappropriate level, no filter, no parent.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_LogRecord_InppropriateLevelNoFilterNoParent() {
         LogRecord r = new LogRecord(Level.INFO,
                 "testLog_LogRecord_InppropriateLevelNoFilterNoParent");
@@ -4158,12 +3128,6 @@ public class LoggerTest extends TestCase {
      * Test log(LogRecord) for a normal log record. Meanwhile the logger has an
      * appropriate level, a filter that accepts the fed log record, no parent.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_LogRecord_AppropriateLevelTrueFilterNoParent() {
         LogRecord r = new LogRecord(Level.INFO,
                 "testLog_LogRecord_AppropriateLevelTrueFilterNoParent");
@@ -4192,12 +3156,6 @@ public class LoggerTest extends TestCase {
      * Test log(LogRecord) for a normal log record. Meanwhile the logger has an
      * appropriate level, a filter that rejects the fed log record, no parent.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_LogRecord_AppropriateLevelFalseFilterNoParent() {
         LogRecord r = new LogRecord(Level.INFO,
                 "testLog_LogRecord_AppropriateLevelFalseFilterNoParent");
@@ -4225,12 +3183,6 @@ public class LoggerTest extends TestCase {
      * Test that the parent's handler is notified for a new log record when
      * getUseParentHandlers() is true.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_ParentInformed() {
         Logger child = new MockLogger("childLogger", VALID_RESOURCE_BUNDLE);
         Logger parent = new MockParentLogger("parentLogger",
@@ -4283,12 +3235,6 @@ public class LoggerTest extends TestCase {
      * Test that the ancestor's handler is notified for a new log record when
      * getUseParentHandlers() is true.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_AncestorInformed() {
         Logger child = new MockLogger("childLogger", VALID_RESOURCE_BUNDLE);
         Logger parent = new MockParentLogger("parentLogger",
@@ -4335,12 +3281,6 @@ public class LoggerTest extends TestCase {
      * Test that the parent's handler is notified for a new log record when
      * getUseParentHandlers() is false.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_ParentNotInformed() {
         Logger child = new MockLogger("childLogger", VALID_RESOURCE_BUNDLE);
         Logger parent = new MockParentLogger("parentLogger",
@@ -4361,12 +3301,6 @@ public class LoggerTest extends TestCase {
      * Test that a logger with null level and no parent. Defaulted to
      * Level.INFO.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_NullLevelNoParent() {
         LogRecord r = new LogRecord(Level.INFO, "testLog_NullLevelNoParent");
         assertNull(this.sharedLogger.getLevel());
@@ -4392,12 +3326,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test that a logger inherits its parent level when its level is null.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_NullLevelHasParent() {
         Logger child = new MockLogger("childLogger", VALID_RESOURCE_BUNDLE);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -4450,12 +3378,6 @@ public class LoggerTest extends TestCase {
      * Test that a logger with null resource bundle and no parent. Defaulted to
      * null.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_NullResNoParent() {
         Logger log = new MockLogger("Logger", null);
         log.addHandler(new MockHandler());
@@ -4477,12 +3399,6 @@ public class LoggerTest extends TestCase {
      * Test that a logger inherits its parent resource bundle when its resource
      * bundle is null.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_NullResHasParent() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", VALID_RESOURCE_BUNDLE2);
@@ -4513,12 +3429,6 @@ public class LoggerTest extends TestCase {
      * Test that a logger inherits its ancestor's resource bundle when its
      * resource bundle and its parent's resource bundle are both null.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_NullResHasAncestor() {
         Logger child = new MockLogger("childLogger", null);
         Logger parent = new MockLogger("parentLogger", null);
@@ -4551,12 +3461,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test when one handler throws an exception.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "log",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLog_ExceptionalHandler() {
         MockLogger l = new MockLogger("testLog_ExceptionalHandler", null);
         l.addHandler(new MockExceptionalHandler());
@@ -4572,12 +3476,6 @@ public class LoggerTest extends TestCase {
     /*
      * Test whether privileged code is used to load resource bundles.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getAnonymousLogger",
-        args = {java.lang.String.class}
-    )
     public void testLoadResourceBundle() {
         // 
         SecurityManager oldMan = System.getSecurityManager();
@@ -4594,12 +3492,6 @@ public class LoggerTest extends TestCase {
      * java.util.logging.Logger#logrb(Level, String, String, String, String,
      * Object)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getLogger",
-        args = {java.lang.String.class}
-    )
     public void test_init_logger() throws Exception {
         Properties p = new Properties();
         p.put("testGetLogger_Normal_ANewLogger2.level", "ALL");
@@ -4633,12 +3525,6 @@ public class LoggerTest extends TestCase {
     /*
      * test initHandler
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "initHandler",
-        args = {}
-    )
     public void test_initHandler() throws Exception {
         File logProps = new File(LOGGING_CONFIG_FILE);
         LogManager lm = LogManager.getLogManager();

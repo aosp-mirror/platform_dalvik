@@ -17,18 +17,13 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.KnownFailure;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-
 import junit.framework.TestCase;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
-@TestTargetClass(BigDecimal.class)
+
 /**
  * Class:  java.math.BigDecimal
  * Methods: add, subtract, multiply, divide 
@@ -38,12 +33,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two numbers of equal positive scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for add method.",
-        method = "add",
-        args = {java.math.BigDecimal.class}
-    )
     public void testAddEqualScalePosPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 10;
@@ -61,12 +50,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two numbers of equal positive scales using MathContext
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Together with all other methods including a MathContext these tests form m a complete test set.",
-        method = "add",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testAddMathContextEqualScalePosPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 10;
@@ -85,12 +68,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two numbers of equal negative scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for add method.",
-        method = "add",
-        args = {java.math.BigDecimal.class}
-    )
     public void testAddEqualScaleNegNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -10;
@@ -108,12 +85,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two numbers of equal negative scales using MathContext
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Together with all other methods including a MathContext these tests form a complete test set.",
-        method = "add",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testAddMathContextEqualScaleNegNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -10;
@@ -132,12 +103,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two numbers of different scales; the first is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for add method.",
-        method = "add",
-        args = {java.math.BigDecimal.class}
-    )
     public void testAddDiffScalePosNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -155,12 +120,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two numbers of different scales using MathContext; the first is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "Together with all other methods including a MathContext these tests form a complete test set.",
-        method = "add",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testAddMathContextDiffScalePosNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -179,12 +138,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two numbers of different scales; the first is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for add method.",
-        method = "add",
-        args = {java.math.BigDecimal.class}
-    )
     public void testAddDiffScaleNegPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -15;
@@ -202,12 +155,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Add two zeroes of different scales; the first is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for add method.",
-        method = "add",
-        args = {java.math.BigDecimal.class}
-    )
     public void testAddDiffScaleZeroZero() {
         String a = "0";
         int aScale = -15;
@@ -225,12 +172,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "add",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testAddMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -259,12 +200,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Subtract two numbers of equal positive scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "subtract",
-        args = {java.math.BigDecimal.class}
-    )
     public void testSubtractEqualScalePosPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 10;
@@ -282,12 +217,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Subtract two numbers of equal positive scales using MathContext
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "subtract",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testSubtractMathContextEqualScalePosPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 10;
@@ -306,12 +235,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Subtract two numbers of equal negative scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "subtract",
-        args = {java.math.BigDecimal.class}
-    )
     public void testSubtractEqualScaleNegNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -10;
@@ -329,12 +252,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Subtract two numbers of different scales; the first is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "subtract",
-        args = {java.math.BigDecimal.class}
-    )
     public void testSubtractDiffScalePosNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -353,12 +270,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * Subtract two numbers of different scales using MathContext;
      *  the first is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "subtract",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testSubtractMathContextDiffScalePosNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -377,12 +288,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Subtract two numbers of different scales; the first is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "subtract",
-        args = {java.math.BigDecimal.class}
-    )
     public void testSubtractDiffScaleNegPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -15;
@@ -401,12 +306,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * Subtract two numbers of different scales using MathContext;
      *  the first is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "subtract",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testSubtractMathContextDiffScaleNegPos() {
         String a = "986798656676789766678767876078779810457634781384756794987";
         int aScale = -15;
@@ -425,12 +324,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "subtract",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testSubtractMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -457,12 +350,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Multiply two numbers of positive scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "multiply",
-        args = {java.math.BigDecimal.class}
-    )
     public void testMultiplyScalePosPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -480,12 +367,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Multiply two numbers of positive scales using MathContext
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "multiply",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testMultiplyMathContextScalePosPos() {
         String a = "97665696756578755423325476545428779810457634781384756794987";
         int aScale = -25;
@@ -504,12 +385,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Multiply two numbers of negative scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "multiply",
-        args = {java.math.BigDecimal.class}
-    )
     public void testMultiplyEqualScaleNegNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -15;
@@ -527,12 +402,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Multiply two numbers of different scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "multiply",
-        args = {java.math.BigDecimal.class}
-    )
     public void testMultiplyDiffScalePosNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 10;
@@ -550,12 +419,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Multiply two numbers of different scales using MathContext
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "multiply",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testMultiplyMathContextDiffScalePosNeg() {
         String a = "987667796597975765768768767866756808779810457634781384756794987";
         int aScale = 100;
@@ -574,12 +437,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Multiply two numbers of different scales
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for subtract method.",
-        method = "multiply",
-        args = {java.math.BigDecimal.class}
-    )
     public void testMultiplyDiffScaleNegPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -15;
@@ -597,12 +454,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Multiply two numbers of different scales using MathContext
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "multiply",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testMultiplyMathContextDiffScaleNegPos() {
         String a = "488757458676796558668876576576579097029810457634781384756794987";
         int aScale = -63;
@@ -621,12 +472,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "multiply",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testMultiplyMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -647,12 +492,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * pow(int)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPow() {
         String a = "123121247898748298842980";
         int aScale = 10;
@@ -671,12 +510,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * pow(0)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPow0() {
         String a = "123121247898748298842980";
         int aScale = 10;
@@ -692,12 +525,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * ZERO.pow(0)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testZeroPow0() {
         String c = "1";
         int cScale = 0;
@@ -709,12 +536,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPowNonTrivial() {
         BigDecimal a, b, res;
 
@@ -736,12 +557,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * pow(int, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "pow",
-        args = {int.class, java.math.MathContext.class}
-    )
     public void testPowMathContext() {
         String a = "123121247898748298842980";
         int aScale = 10;
@@ -758,12 +573,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "pow",
-        args = {int.class, java.math.MathContext.class}
-    )
     public void testPowMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -832,12 +641,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide by zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "ArithmeticException checked.",
-        method = "divide",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideByZero() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -854,12 +657,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide with ROUND_UNNECESSARY
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException only checked.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class}
-    )
     public void testDivideExceptionRM() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -878,12 +675,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide with invalid rounding mode
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "IllegalArgumentException only checked.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class}
-    )
     public void testDivideExceptionInvalidRM() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -902,12 +693,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class}
-    )
     public void testDivideINonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -938,12 +723,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: local variable exponent is less than zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideExpLessZero() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 15;
@@ -961,12 +740,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: local variable exponent is equal to zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed. Should be added checking for ArithmeticException to complete functional testing.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideExpEqualsZero() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -15;
@@ -984,12 +757,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: local variable exponent is greater than zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideExpGreaterZero() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -15;
@@ -1007,12 +774,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: remainder is zero
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRemainderIsZero() {
         String a = "8311389578904553209874735431110";
         int aScale = -15;
@@ -1030,12 +791,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_UP, result is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundUpNeg() {
         String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1053,12 +808,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_UP, result is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundUpPos() {
         String a = "92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1076,12 +825,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_DOWN, result is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundDownNeg() {
         String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1099,12 +842,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_DOWN, result is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundDownPos() {
         String a = "92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1122,12 +859,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_FLOOR, result is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundFloorPos() {
         String a = "92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1145,12 +876,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_FLOOR, result is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundFloorNeg() {
         String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1168,12 +893,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_CEILING, result is positive
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundCeilingPos() {
         String a = "92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1191,12 +910,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_CEILING, result is negative
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundCeilingNeg() {
         String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1214,12 +927,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_UP, result is positive; distance = -1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfUpPos() {
         String a = "92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1237,12 +944,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_UP, result is negative; distance = -1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
  public void testDivideRoundHalfUpNeg() {
         String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1260,12 +961,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_UP, result is positive; distance = 1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfUpPos1() {
         String a = "92948782094488478231212478987482988798104576347813847567949855464535634534563456";
         int aScale = -24;
@@ -1283,12 +978,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_UP, result is negative; distance = 1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfUpNeg1() {
         String a = "-92948782094488478231212478987482988798104576347813847567949855464535634534563456";
         int aScale = -24;
@@ -1306,12 +995,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_UP, result is negative; equidistant
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfUpNeg2() {
         String a = "-37361671119238118911893939591735";
         int aScale = 10;
@@ -1329,12 +1012,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_DOWN, result is positive; distance = -1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfDownPos() {
         String a = "92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1352,12 +1029,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_DOWN, result is negative; distance = -1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfDownNeg() {
         String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1375,12 +1046,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_DOWN, result is positive; distance = 1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfDownPos1() {
         String a = "92948782094488478231212478987482988798104576347813847567949855464535634534563456";
         int aScale = -24;
@@ -1398,12 +1063,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_DOWN, result is negative; distance = 1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfDownNeg1() {
         String a = "-92948782094488478231212478987482988798104576347813847567949855464535634534563456";
         int aScale = -24;
@@ -1421,12 +1080,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_UP, result is negative; equidistant
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfDownNeg2() {
         String a = "-37361671119238118911893939591735";
         int aScale = 10;
@@ -1444,12 +1097,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_EVEN, result is positive; distance = -1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfEvenPos() {
         String a = "92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1467,12 +1114,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_EVEN, result is negative; distance = -1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfEvenNeg() {
         String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
         int aScale = -24;
@@ -1490,12 +1131,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_EVEN, result is positive; distance = 1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfEvenPos1() {
         String a = "92948782094488478231212478987482988798104576347813847567949855464535634534563456";
         int aScale = -24;
@@ -1513,12 +1148,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_EVEN, result is negative; distance = 1
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfEvenNeg1() {
         String a = "-92948782094488478231212478987482988798104576347813847567949855464535634534563456";
         int aScale = -24;
@@ -1536,12 +1165,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide: rounding mode is ROUND_HALF_EVEN, result is negative; equidistant
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ROUND_UNNECESSARY and exceptions checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideRoundHalfEvenNeg2() {
         String a = "-37361671119238118911893939591735";
         int aScale = 10;
@@ -1559,12 +1182,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, int.class}
-    )
     public void testDivideIINonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -1593,12 +1210,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide to BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Common functionality checked",
-        method = "divide",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideBigDecimal1() {
         String a = "-37361671119238118911893939591735";
         int aScale = 10;
@@ -1616,12 +1227,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Divide to BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Common functionality checked",
-        method = "divide",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideBigDecimal2() {
         String a = "-37361671119238118911893939591735";
         int aScale = 10;
@@ -1639,12 +1244,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, scale, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException and UNNECESSARY round mode checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
     public void testDivideBigDecimalScaleRoundingModeUP() {
         String a = "-37361671119238118911893939591735";
         int aScale = 10;
@@ -1663,12 +1262,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, scale, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException and UNNECESSARY round mode checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
     public void testDivideBigDecimalScaleRoundingModeDOWN() {
         String a = "-37361671119238118911893939591735";
         int aScale = 10;
@@ -1687,12 +1280,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, scale, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException and UNNECESSARY round mode checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
     public void testDivideBigDecimalScaleRoundingModeCEILING() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 100;
@@ -1711,12 +1298,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, scale, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException and UNNECESSARY round mode checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
     public void testDivideBigDecimalScaleRoundingModeFLOOR() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 100;
@@ -1735,12 +1316,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, scale, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException and UNNECESSARY round mode checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
     public void testDivideBigDecimalScaleRoundingModeHALF_UP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = -51;
@@ -1761,12 +1336,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, scale, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException and UNNECESSARY round mode checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
     public void testDivideBigDecimalScaleRoundingModeHALF_DOWN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 5;
@@ -1785,12 +1354,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, scale, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException and UNNECESSARY round mode checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
     public void testDivideBigDecimalScaleRoundingModeHALF_EVEN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 5;
@@ -1809,15 +1372,9 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "divide",
-        args = {java.math.BigDecimal.class, int.class, java.math.RoundingMode.class}
-    )
-    @KnownFailure("Has a rounding problem. seems like the precision is"
-            + " 1 too small and cuts off the last digit. also this test might"
-            + "not be correct. The name implies that scale should be used.")
+    // Has a rounding problem. seems like the precision is
+    // 1 too small and cuts off the last digit. also this test might
+    // not be correct. The name implies that scale should be used.
     public void testDivideScaleRoundingModeNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -1850,12 +1407,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideBigDecimalScaleMathContextUP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 15;
@@ -1876,12 +1427,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideBigDecimalScaleMathContextDOWN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 15;
@@ -1902,12 +1447,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideBigDecimalScaleMathContextCEILING() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 15;
@@ -1928,12 +1467,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideBigDecimalScaleMathContextFLOOR() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 15;
@@ -1954,12 +1487,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideBigDecimalScaleMathContextHALF_UP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -1980,12 +1507,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideBigDecimalScaleMathContextHALF_DOWN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2006,12 +1527,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divide(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideBigDecimalScaleMathContextHALF_EVEN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2032,14 +1547,7 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
-    @KnownFailure("The same test and the same problem like "
-            + "testDivideScaleRoundingModeNonTrivial")
+    // The same test and the same problem like testDivideScaleRoundingModeNonTrivial.
     public void testDivideMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -2090,11 +1598,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideToIntegralValue(BigDecimal)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "divideToIntegralValue",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideToIntegralValue() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2109,11 +1612,6 @@ public class BigDecimalArithmeticTest extends TestCase {
         assertEquals("incorrect scale", resScale, result.scale());
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "divideToIntegralValue",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideToIntegralValueByZero() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2136,12 +1634,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideToIntegralValue(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divideToIntegralValue",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideToIntegralValueMathContextUP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2162,12 +1654,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideToIntegralValue(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divideToIntegralValue",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideToIntegralValueMathContextDOWN() {
         String a = "3736186567876876578956958769675785435673453453653543654354365435675671119238118911893939591735";
         int aScale = 45;
@@ -2188,12 +1674,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "divideToIntegralValue",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideToIntegralValueMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -2229,12 +1709,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideAndRemainder(BigDecimal)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "divideAndRemainder",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideAndRemainder1() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2256,12 +1730,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideAndRemainder(BigDecimal)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "divideAndRemainder",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideAndRemainder2() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = -45;
@@ -2285,12 +1753,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideAndRemainder(BigDecimal)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "divideAndRemainder",
-        args = {java.math.BigDecimal.class}
-    )
     public void testDivideAndRemainderByZero() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2313,12 +1775,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideAndRemainder(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divideAndRemainder",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideAndRemainderMathContextUP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2343,12 +1799,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * divideAndRemainder(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "divideAndRemainder",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideAndRemainderMathContextDOWN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2373,12 +1823,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "divideAndRemainder",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testDivideAndRemainderMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res[];
@@ -2413,11 +1857,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * remainder(BigDecimal)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "remainder",
-        args = {java.math.BigDecimal.class}
-    )
     public void testRemainder1() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2435,11 +1874,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * remainder(BigDecimal)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "remainder",
-        args = {java.math.BigDecimal.class}
-    )
     public void testRemainder2() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = -45;
@@ -2454,11 +1888,6 @@ public class BigDecimalArithmeticTest extends TestCase {
         assertEquals("incorrect quotient scale", resScale, result.scale());
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        method = "remainder",
-        args = {java.math.BigDecimal.class}
-    )
     public void testRemainderByZero() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2480,12 +1909,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * remainder(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "remainder",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testRemainderMathContextHALF_UP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2506,12 +1929,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * remainder(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "remainder",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testRemainderMathContextHALF_DOWN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = -45;
@@ -2532,12 +1949,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * Non-trivial tests using MathContext:
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "remainder",
-        args = {java.math.BigDecimal.class, java.math.MathContext.class}
-    )
     public void testRemainderMathContextNonTrivial() {
         MathContext mc;
         BigDecimal a, b, res;
@@ -2572,12 +1983,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * round(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "round",
-        args = {java.math.MathContext.class}
-    )
     public void testRoundMathContextHALF_DOWN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = -45;
@@ -2595,12 +2000,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * round(BigDecimal, MathContext)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "round",
-        args = {java.math.MathContext.class}
-    )
     public void testRoundMathContextHALF_UP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2618,12 +2017,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * round(BigDecimal, MathContext) when precision = 0
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL,
-        notes = "ArithmeticException checking missed.",
-        method = "round",
-        args = {java.math.MathContext.class}
-    )
     public void testRoundMathContextPrecision0() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2637,12 +2030,6 @@ public class BigDecimalArithmeticTest extends TestCase {
         assertEquals("incorrect quotient scale", aScale, result.scale());
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "round",
-        args = {java.math.MathContext.class}
-    )
     public void testRoundNonTrivial() {
         MathContext mc;
         String biStr = new String( "12345678901234567890123456789012345.0E+10");
@@ -2693,12 +2080,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * ulp() of a positive BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for ulp method.",
-        method = "ulp",
-        args = {}
-    )
     public void testUlpPos() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = -45;
@@ -2713,12 +2094,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * ulp() of a negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for ulp method.",
-        method = "ulp",
-        args = {}
-    )
     public void testUlpNeg() {
         String a = "-3736186567876876578956958765675671119238118911893939591735";
         int aScale = 45;
@@ -2733,12 +2108,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * ulp() of a negative BigDecimal
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for ulp method.",
-        method = "ulp",
-        args = {}
-    )
     public void testUlpZero() {
         String a = "0";
         int aScale = 2;
@@ -2755,12 +2124,6 @@ public class BigDecimalArithmeticTest extends TestCase {
     /**
      * @tests java.math.BigDecimal#add(java.math.BigDecimal)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for add method.",
-        method = "add",
-        args = {java.math.BigDecimal.class}
-    )
     public void test_addBigDecimal() {
         BigDecimal add1 = new BigDecimal("23.456");
         BigDecimal add2 = new BigDecimal("3849.235");
@@ -2779,12 +2142,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.MathContext) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingModeUP() {
         String a = "-37361671119238118911893939591735";
         String b = "74723342238476237823787879183470";
@@ -2800,12 +2157,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.RoundingMode) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingModeDOWN() {
         String a = "-37361671119238118911893939591735";
         String b = "74723342238476237823787879183470";
@@ -2821,12 +2172,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.RoundingMode) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingModeCEILING() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         String b = "74723342238476237823787879183470";
@@ -2842,12 +2187,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.RoundingMode) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingModeFLOOR() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         String b = "74723342238476237823787879183470";
@@ -2863,12 +2202,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.RoundingMode) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingModeHALF_UP() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         String b = "74723342238476237823787879183470";
@@ -2884,12 +2217,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.RoundingMode) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingModeHALF_DOWN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         int aScale = 5;
@@ -2909,12 +2236,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.RoundingMode) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingModeHALF_EVEN() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         String b = "74723342238476237823787879183470";
@@ -2930,12 +2251,6 @@ public class BigDecimalArithmeticTest extends TestCase {
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal,
      *        java.math.RoundingMode) divide(BigDecimal, RoundingMode)
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for divide method.",
-        method = "divide",
-        args = {java.math.BigDecimal.class, java.math.RoundingMode.class}
-    )
     public void test_DivideBigDecimalRoundingExc() {
         String a = "3736186567876876578956958765675671119238118911893939591735";
         String b = "74723342238476237823787879183470";

@@ -17,11 +17,6 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestLevel;
-
 import java.io.Serializable;
 import java.util.ResourceBundle;
 import java.util.logging.Handler;
@@ -36,7 +31,6 @@ import org.apache.harmony.testframework.serialization.SerializationTest.Serializ
  * This class implements Serializable, so that the non-static inner class
  * MockLevel can be Serializable.
  */
-@TestTargetClass(Level.class) 
 public class LevelTest extends TestCase implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -45,20 +39,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test the constructor without resource bundle parameter using normal
      * values. As byproducts, getName & intValue are also tested.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Checks  the constructor without resource bundle parameter using normal values.",
-            method = "Level",
-            args = {java.lang.String.class, int.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Checks  the constructor without resource bundle parameter using normal values.",
-            method = "getName",
-            args = {}
-        )
-    })
     public void testConstructorNoResBundle_Normal() {
         MockLevel l = new MockLevel("level1", 1);
         assertEquals("level1", l.getName());
@@ -70,20 +50,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test the constructor without resource bundle parameter using null name.
      * As byproducts, getName & intValue are also tested.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Checks the constructor without resource bundle parameter using null name.",
-            method = "Level",
-            args = {java.lang.String.class, int.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Checks the constructor without resource bundle parameter using null name.",
-            method = "getName",
-            args = {}
-        )
-    })
     public void testConstructorNoResBundle_NullName() {
         try {
             new MockLevel(null, -2);
@@ -97,20 +63,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test the constructor without resource bundle parameter using empty name.
      * As byproducts, getName & intValue are also tested.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Checks the constructor without resource bundle parameter using empty name.",
-            method = "Level",
-            args = {java.lang.String.class, int.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "Checks the constructor without resource bundle parameter using empty name.",
-            method = "getName",
-            args = {}
-        )
-    })
      public void testConstructorNoResBundle_EmptyName() {
         MockLevel l = new MockLevel("", -3);
         assertEquals("", l.getName());
@@ -122,20 +74,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test the constructor having resource bundle parameter using normal
      * values. As byproducts, getName & intValue are also tested.
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "Level",
-            args = {java.lang.String.class, int.class, java.lang.String.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getName",
-            args = {}
-        )
-    })
     public void testConstructorHavingResBundle_Normal() {
         MockLevel l = new MockLevel("level1", 1, "resourceBundle");
         assertEquals("level1", l.getName());
@@ -147,12 +85,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test the constructor having resource bundle parameter using null names.
      * As byproducts, getName & intValue are also tested.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Checks NullPointerException.",
-        method = "Level",
-        args = {java.lang.String.class, int.class, java.lang.String.class}
-    )
     public void testConstructorHavingResBundle_NullName() {
         try {
             new MockLevel(null, -123, "qwe");
@@ -167,12 +99,6 @@ public class LevelTest extends TestCase implements Serializable {
      names.
      * As byproducts, getName & intValue are also tested.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies the constructor having resource bundle parameter using empty names.",
-        method = "Level",
-        args = {java.lang.String.class, int.class, java.lang.String.class}
-    )
      public void testConstructorHavingResBundle_EmptyName() {
      MockLevel l = new MockLevel("", -1000, "");
      assertEquals("", l.getName());
@@ -183,12 +109,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test method parse, with the pre-defined string consts.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies parse, with the pre-defined string consts.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_PredefinedConstStrings() {
         assertSame(Level.SEVERE, Level.parse("SEVERE"));
         assertSame(Level.WARNING, Level.parse("WARNING"));
@@ -204,12 +124,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test method parse, with an undefined string.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "IllegalArgumentException is verified.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_IllegalConstString() {
         try {
             Level.parse("SEVERe");
@@ -222,12 +136,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test method parse, with a null string.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies null as a parameter.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_NullString() {
         try {
             Level.parse(null);
@@ -240,12 +148,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test method parse, with pre-defined valid number strings.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies parse, with pre-defined valid number strings.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_PredefinedNumber() {
         assertSame(Level.SEVERE, Level.parse("SEVERE"));
         assertSame(Level.WARNING, Level.parse("WARNING"));
@@ -270,12 +172,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test method parse, with an undefined valid number strings.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies parse, with an undefined valid number strings.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_UndefinedNumber() {
         Level l = Level.parse("0");
         assertEquals(0, l.intValue());
@@ -286,12 +182,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test method parse, with an undefined valid number strings with spaces.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies parse, with an undefined valid number strings with spaces.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_UndefinedNumberWithSpaces() {
         try {
             Level.parse(" 0");
@@ -299,12 +189,6 @@ public class LevelTest extends TestCase implements Serializable {
             // expected
         }
     }
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies negative number.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_NegativeNumber() {
         Level l = Level.parse("-4");
         assertEquals(-4, l.intValue());
@@ -316,12 +200,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test method parse, expecting the same objects will be returned given the
      * same name, even for non-predefined levels.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies parse, expecting the same objects will be returned given the same name, even for non-predefined levels.",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testParse_SameObject() {
         Level l = Level.parse("-100");
         assertSame(l, Level.parse("-100"));
@@ -330,12 +208,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test method hashCode, with normal fields.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
     public void testHashCode_Normal() {
         assertEquals(100, Level.parse("100").hashCode());
         assertEquals(-1, Level.parse("-1").hashCode());
@@ -346,12 +218,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test equals when two objects are equal.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Doesn't check negative case.",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void testEquals_Equal() {
         MockLevel l1 = new MockLevel("level1", 1);
         MockLevel l2 = new MockLevel("level2", 1);
@@ -362,12 +228,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test equals when two objects are not equal.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Checks negative case.",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void testEquals_NotEqual() {
         MockLevel l1 = new MockLevel("level1", 1);
         MockLevel l2 = new MockLevel("level1", 2);
@@ -378,12 +238,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test equals when the other object is null.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Checks null as a parameter.",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void testEquals_Null() {
         assertFalse(Level.ALL.equals(null));
     }
@@ -391,12 +245,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test equals when the other object is not an instance of Level.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Checks negative case.",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void testEquals_NotLevel() {
         assertFalse(Level.ALL.equals(new Object()));
     }
@@ -404,12 +252,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test equals when the other object is itself.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Checks equals when the other object is itself.",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
     public void testEquals_Itself() {
         assertTrue(Level.ALL.equals(Level.ALL));
     }
@@ -417,12 +259,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test toString of a normal Level.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )
     public void testToString_Normal() {
         assertEquals("ALL", Level.ALL.toString());
 
@@ -457,12 +293,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test serialization of pre-defined const levels. It is expected that the
      * deserialized cost level should be the same instance as the existing one.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Serialization of pre-defined const levels. ",
-        method = "!SerializationSelf",
-        args = {}
-    )
     public void testSerialization_ConstLevel() throws Exception {
 
         SerializationTest.verifySelf(Level.ALL,
@@ -475,12 +305,6 @@ public class LevelTest extends TestCase implements Serializable {
      * Test serialization of normal instance of Level. It is expected that the
      * deserialized level object should be equal to the original one.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Test serialization of normal instance of Level.",
-        method = "!SerializationSelf",
-        args = {}
-    )
     public void testSerialization_InstanceLevel() throws Exception {
 
         // tests that objects are the same
@@ -500,23 +324,11 @@ public class LevelTest extends TestCase implements Serializable {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Serialization/deserialization compatibility",
-        method = "!SerializationGolden",
-        args = {}
-    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,
                 new MockLevel("123", 123, "bundle"), LEVEL_COMPARATOR);
     }
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getLocalizedName",
-        args = {}
-    )
     public void testGetLocalName() {
         ResourceBundle rb = ResourceBundle.getBundle("bundles/java/util/logging/res");
         Level l = new MockLevel("level1", 120,
@@ -543,12 +355,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * test for method public String getResourceBundleName()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getResourceBundleName",
-        args = {}
-    )
      public void testGetResourceBundleName() {
         String bundleName = "bundles/java/util/logging/res";
         Level l = new MockLevel("level1", 120);
@@ -565,12 +371,6 @@ public class LevelTest extends TestCase implements Serializable {
      /*
      * test for method public final int intValue()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "intValue",
-        args = {}
-    )
     public void testIntValue() {
         int value1 = 120;
         Level l = new MockLevel("level1", value1);
@@ -582,12 +382,6 @@ public class LevelTest extends TestCase implements Serializable {
     /*
      * Test defining new levels in subclasses of Level
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Test defining new levels in subclasses of Level",
-        method = "parse",
-        args = {java.lang.String.class}
-    )
     public void testSubclassNewLevel() {
         MyLevel.DUPLICATENAME.getName();// just to load MyLevel class
         

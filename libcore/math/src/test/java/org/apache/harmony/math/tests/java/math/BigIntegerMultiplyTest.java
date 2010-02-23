@@ -21,15 +21,10 @@
 
 package org.apache.harmony.math.tests.java.math;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-
 import java.math.BigInteger;
 
 import junit.framework.TestCase;
-@TestTargetClass(BigInteger.class)
+
 /**
  * Class:  java.math.BigInteger
  * Method: multiply 
@@ -38,12 +33,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Multiply two negative numbers of the same length
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase1() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -65,12 +54,6 @@ public class BigIntegerMultiplyTest extends TestCase {
      * Multiply two numbers of the same length and different signs.
      * The first is negative.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase2() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -92,12 +75,6 @@ public class BigIntegerMultiplyTest extends TestCase {
      * Multiply two positive numbers of different length.
      * The first is longer.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase3() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -120,12 +97,6 @@ public class BigIntegerMultiplyTest extends TestCase {
      * Multiply two positive numbers of different length.
      * The second is longer.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase4() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
@@ -149,12 +120,6 @@ public class BigIntegerMultiplyTest extends TestCase {
      * The first is positive.
      * The first is longer.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase5() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -178,12 +143,6 @@ public class BigIntegerMultiplyTest extends TestCase {
      * The first is positive.
      * The second is longer.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase6() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
@@ -205,12 +164,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Multiply a number by zero.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase7() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
         byte bBytes[] = {0};
@@ -231,12 +184,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Multiply a number by ZERO.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase8() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
         int aSign = 1;
@@ -255,12 +202,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Multiply a positive number by ONE.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase9() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
         int aSign = 1;
@@ -279,12 +220,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Multiply a negative number by ONE.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testCase10() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 1, 2, 3, 4, 5};
         int aSign = -1;
@@ -303,12 +238,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Multiply two numbers of 4 bytes length.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testIntbyInt1() {
         byte aBytes[] = {10, 20, 30, 40};
         byte bBytes[] = {1, 2, 3, 4};
@@ -329,12 +258,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Multiply two numbers of 4 bytes length.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for multiply method.",
-        method = "multiply",
-        args = {java.math.BigInteger.class}
-    )
     public void testIntbyInt2() {
         byte aBytes[] = {-1, -1, -1, -1};
         byte bBytes[] = {-1, -1, -1, -1};
@@ -355,12 +278,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Negative exponent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for pow method.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPowException() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         int aSign = 1;
@@ -377,12 +294,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Exponentiation of a negative number to an odd exponent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for pow method.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPowNegativeNumToOddExp() {
         byte aBytes[] = {50, -26, 90, 69, 120, 32, 63, -103, -14, 35};
         int aSign = -1;
@@ -404,12 +315,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Exponentiation of a negative number to an even exponent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for pow method.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPowNegativeNumToEvenExp() {
         byte aBytes[] = {50, -26, 90, 69, 120, 32, 63, -103, -14, 35};
         int aSign = -1;
@@ -430,12 +335,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Exponentiation of a negative number to zero exponent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for pow method.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPowNegativeNumToZeroExp() {
         byte aBytes[] = {50, -26, 90, 69, 120, 32, 63, -103, -14, 35};
         int aSign = -1;
@@ -454,12 +353,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Exponentiation of a positive number.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for pow method.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPowPositiveNum() {
         byte aBytes[] = {50, -26, 90, 69, 120, 32, 63, -103, -14, 35};
         int aSign = 1;
@@ -481,12 +374,6 @@ public class BigIntegerMultiplyTest extends TestCase {
     /**
      * Exponentiation of a negative number to zero exponent.
      */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "This is a complete subset of tests for pow method.",
-        method = "pow",
-        args = {int.class}
-    )
     public void testPowPositiveNumToZeroExp() {
         byte aBytes[] = {50, -26, 90, 69, 120, 32, 63, -103, -14, 35};
         int aSign = 1;

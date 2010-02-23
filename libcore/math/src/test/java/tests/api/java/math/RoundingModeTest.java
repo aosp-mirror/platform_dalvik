@@ -17,26 +17,14 @@
 
 package tests.api.java.math;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-@TestTargetClass(RoundingMode.class)
 public class RoundingModeTest extends junit.framework.TestCase {
 
     /**
      * @tests java.math.RoundingMode#valueOf(int)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "valueOf",
-        args = {int.class}
-    )
     public void test_valueOfI() {
         assertEquals("valueOf failed for ROUND_CEILING", RoundingMode.valueOf(BigDecimal.ROUND_CEILING), RoundingMode.CEILING);
         assertEquals("valueOf failed for ROUND_DOWN", RoundingMode.valueOf(BigDecimal.ROUND_DOWN), RoundingMode.DOWN);

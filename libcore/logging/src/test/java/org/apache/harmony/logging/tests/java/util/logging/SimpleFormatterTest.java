@@ -17,11 +17,6 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
 import java.util.Calendar;
 import java.util.ResourceBundle;
 import java.util.logging.Handler;
@@ -35,7 +30,6 @@ import junit.framework.TestCase;
 /**
  * 
  */
-@TestTargetClass(SimpleFormatter.class)
 public class SimpleFormatterTest extends TestCase {
 
     SimpleFormatter sf;
@@ -56,38 +50,12 @@ public class SimpleFormatterTest extends TestCase {
     /*
      * test for constructor protected SimpleFormatter
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "SimpleFormatter",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getHead",
-            args = {java.util.logging.Handler.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.PARTIAL_COMPLETE,
-            notes = "",
-            method = "getTail",
-            args = {java.util.logging.Handler.class}
-        )
-    })
     public void testSimpleFormatter() {
         assertEquals("Head for this SimpleFormatter should be empty", "", sf
                 .getHead(null));
         assertEquals("Tail for this SimpleFormatter should be empty", "", sf
                 .getTail(null));
     }
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "format",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testFormatNull() {
         try {
             sf.format(null);
@@ -97,12 +65,6 @@ public class SimpleFormatterTest extends TestCase {
         sf.format(new LogRecord(Level.SEVERE, null));
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "format",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testLocalizedFormat() {
         // if bundle set, should use localized message
         ResourceBundle rb = ResourceBundle
@@ -122,12 +84,6 @@ public class SimpleFormatterTest extends TestCase {
         assertTrue(str.indexOf(localeMsg) < 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "format",
-        args = {java.util.logging.LogRecord.class}
-    )
     public void testFormat() {
         String str = sf.format(lr);
         Throwable t;
@@ -159,22 +115,10 @@ public class SimpleFormatterTest extends TestCase {
         assertTrue(str.indexOf(Level.FINE.getLocalizedName()) > 0);
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getHead",
-        args = {java.util.logging.Handler.class}
-    )
     public void testGetHead() {
         assertEquals("", sf.getHead(null));
     }
 
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "",
-        method = "getTail",
-        args = {java.util.logging.Handler.class}
-    )
     public void testGetTail() {
         assertEquals("", sf.getTail(null));
     }
