@@ -914,6 +914,8 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
         dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
     }
+    assert (!IS_CLASS_FLAG_SET(((Object *)arrayObj)->clazz,
+                               CLASS_ISOBJECTARRAY));
 
     /*
      * Array data table format:
