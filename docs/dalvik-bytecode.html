@@ -49,7 +49,8 @@
 <li>Bitwise literal data is represented in-line in the instruction stream.</li>
 <li>Because, in practice, it is uncommon for a method to need more than
   16 registers, and because needing more than eight registers <i>is</i>
-  reasonably common, many instructions may only address the first 16
+  reasonably common, many instructions are limited to only addressing
+  the first 16
   registers. When reasonably possible, instructions allow references to
   up to the first 256 registers. In cases where an instruction variant isn't
   available to address a desired register, it is expected that the register
@@ -238,7 +239,7 @@
   <td><code>A:</code> destination register (8 bits)</td>
   <td>Save a just-caught exception into the given register. This should
     be the first instruction of any exception handler whose caught
-    exception is not to be ignored, and this instruction may <i>only</i>
+    exception is not to be ignored, and this instruction must <i>only</i>
     ever occur as the first instruction of an exception handler; anywhere
     else is invalid.</td>
 </tr>
@@ -444,10 +445,11 @@
   <td>Construct an array of the given type and size, filling it with the
     supplied contents. The type must be an array type. The array's
     contents must be single-word (that is,
-    no arrays of <code>long</code> or <code>double</code>). The constructed
+    no arrays of <code>long</code> or <code>double</code>, but reference
+    types are acceptable). The constructed
     instance is stored as a "result" in the same way that the method invocation
     instructions store their results, so the constructed instance must 
-    be moved to a register with a subsequent
+    be moved to a register with an immediately subsequent
     <code>move-result-object</code> instruction (if it is to be used).</td>
 </tr>
 <tr>
@@ -488,7 +490,7 @@
   <td><code>A:</code> signed branch offset (8 bits)</td>
   <td>Unconditionally jump to the indicated instruction.
     <p><b>Note:</b>
-    The branch offset may not be <code>0</code>. (A spin
+    The branch offset must not be <code>0</code>. (A spin
     loop may be legally constructed either with <code>goto/32</code> or
     by including a <code>nop</code> as a target before the branch.)</p>
   </td>
@@ -499,7 +501,7 @@
   <td><code>A:</code> signed branch offset (16 bits)<br/></td>
   <td>Unconditionally jump to the indicated instruction.
     <p><b>Note:</b>
-    The branch offset may not be <code>0</code>. (A spin
+    The branch offset must not be <code>0</code>. (A spin
     loop may be legally constructed either with <code>goto/32</code> or
     by including a <code>nop</code> as a target before the branch.)</p>
   </td>
@@ -581,7 +583,7 @@
   <td>Branch to the given destination if the given two registers' values
     compare as specified.
     <p><b>Note:</b>
-    The branch offset may not be <code>0</code>. (A spin
+    The branch offset must not be <code>0</code>. (A spin
     loop may be legally constructed either by branching around a
     backward <code>goto</code> or by including a <code>nop</code> as
     a target before the branch.)</p>
@@ -602,7 +604,7 @@
   <td>Branch to the given destination if the given register's value compares
     with 0 as specified.
     <p><b>Note:</b>
-    The branch offset may not be <code>0</code>. (A spin
+    The branch offset must not be <code>0</code>. (A spin
     loop may be legally constructed either by branching around a
     backward <code>goto</code> or by including a <code>nop</code> as
     a target before the branch.)</p>
