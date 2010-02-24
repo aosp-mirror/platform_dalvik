@@ -81,7 +81,11 @@ final class Adb {
         while (true) {
             final long remainingSeconds = ((deadline - System.currentTimeMillis())
                                            / millisPerSecond);
-            Command command = new Command("adb", "shell", "ls", path.getPath());
+            String pathArgument = path.getPath();
+            if (!file) {
+                pathArgument += "/";
+            }
+            Command command = new Command("adb", "shell", "ls", pathArgument);
             List<String> output;
             try {
                 output = command.executeWithTimeout(remainingSeconds);
