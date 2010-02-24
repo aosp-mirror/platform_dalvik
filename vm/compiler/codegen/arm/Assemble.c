@@ -1704,11 +1704,13 @@ char *getTraceBase(const JitEntry *p)
 }
 
 /* Dumps profile info for a single trace */
-static int dumpTraceProfile(JitEntry *p)
+static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
+                            unsigned long sum)
 {
     ChainCellCounts* pCellCounts;
     char* traceBase;
     u4* pExecutionCount;
+    u4 executionCount;
     u2* pCellOffset;
     JitTraceDescription *desc;
     const Method* method;
@@ -1716,15 +1718,24 @@ static int dumpTraceProfile(JitEntry *p)
     traceBase = getTraceBase(p);
 
     if (p->codeAddress == NULL) {
-        LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
+        if (!silent)
+            LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
         return 0;
     }
     if (p->codeAddress == gDvmJit.interpretTemplate) {
-        LOGD("TRACEPROFILE 0x%08x 0 INTERPRET_ONLY  0 0", (int)traceBase);
+        if (!silent)
+            LOGD("TRACEPROFILE 0x%08x 0 INTERPRET_ONLY  0 0", (int)traceBase);
         return 0;
     }
 
     pExecutionCount = (u4*) (traceBase);
+    executionCount = *pExecutionCount;
+    if (reset) {
+        *pExecutionCount =0;
+    }
+    if (silent) {
+        return executionCount;
+    }
     pCellOffset = (u2*) (traceBase + 4);
     pCellCounts = (ChainCellCounts*) ((char *)pCellOffset + *pCellOffset);
     desc = (JitTraceDescription*) ((char*)pCellCounts + sizeof(*pCellCounts));
@@ -1746,22 +1757,24 @@ static int dumpTraceProfile(JitEntry *p)
                        method->accessFlags,
                        addrToLineCb, NULL, &addrToLine);
 
-    LOGD("TRACEPROFILE 0x%08x % 10d [%#x(+%d), %d] %s%s;%s",
+    LOGD("TRACEPROFILE 0x%08x % 10d %5.2f%% [%#x(+%d), %d] %s%s;%s",
          (int)traceBase,
-         *pExecutionCount,
+         executionCount,
+         ((float ) executionCount) / sum * 100.0,
          desc->trace[0].frag.startOffset,
          desc->trace[0].frag.numInsts,
          addrToLine.lineNum,
          method->clazz->descriptor, method->name, methodDesc);
     free(methodDesc);
 
-    return *pExecutionCount;
+    return executionCount;
 }
 
 /* Create a copy of the trace descriptor of an existing compilation */
-JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc)
+JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
+                                            const JitEntry *knownEntry)
 {
-    JitEntry *jitEntry = dvmFindJitEntry(pc);
+    const JitEntry *jitEntry = knownEntry ? knownEntry : dvmFindJitEntry(pc);
     if (jitEntry == NULL) return NULL;
 
     /* Find out the startint point */
@@ -1810,7 +1823,7 @@ void dvmCompilerSortAndPrintTraceProfiles()
 {
     JitEntry *sortedEntries;
     int numTraces = 0;
-    unsigned long counts = 0;
+    unsigned long sum = 0;
     unsigned int i;
 
     /* Make sure that the table is not changing */
@@ -1825,16 +1838,40 @@ void dvmCompilerSortAndPrintTraceProfiles()
     qsort(sortedEntries, gDvmJit.jitTableSize, sizeof(JitEntry),
           sortTraceProfileCount);
 
-    /* Dump the sorted entries */
+    /* Analyze the sorted entries */
     for (i=0; i < gDvmJit.jitTableSize; i++) {
         if (sortedEntries[i].dPC != 0) {
-            counts += dumpTraceProfile(&sortedEntries[i]);
+            sum += dumpTraceProfile(&sortedEntries[i],
+                                       true /* silent */,
+                                       false /* reset */,
+                                       0);
             numTraces++;
         }
     }
     if (numTraces == 0)
         numTraces = 1;
-    LOGD("JIT: Average execution count -> %d",(int)(counts / numTraces));
+    if (sum == 0) {
+        sum = 1;
+    }
+
+    LOGD("JIT: Average execution count -> %d",(int)(sum / numTraces));
+
+    /* Dump the sorted entries. The count of each trace will be reset to 0. */
+    for (i=0; i < gDvmJit.jitTableSize; i++) {
+        if (sortedEntries[i].dPC != 0) {
+            dumpTraceProfile(&sortedEntries[i],
+                             false /* silent */,
+                             true /* reset */,
+                             sum);
+        }
+    }
+
+    for (i=0; i < gDvmJit.jitTableSize && i < 10; i++) {
+        JitTraceDescription* desc =
+            dvmCopyTraceDescriptor(NULL, &sortedEntries[i]);
+        dvmCompilerWorkEnqueue(sortedEntries[i].dPC,
+                               kWorkOrderTraceDebug, desc);
+    }
 
     free(sortedEntries);
 done:

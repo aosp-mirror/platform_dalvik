@@ -160,6 +160,7 @@ struct CompilationUnit;
 struct BasicBlock;
 struct SSARepresentation;
 struct GrowableList;
+struct JitEntry;
 
 void dvmInitializeSSAConversion(struct CompilationUnit *cUnit);
 int dvmConvertSSARegToDalvik(struct CompilationUnit *cUnit, int ssaReg);
@@ -179,6 +180,7 @@ char *dvmCompilerGetSSAString(struct CompilationUnit *cUnit,
 void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
                 void (*func)(struct CompilationUnit *, struct BasicBlock *));
 void dvmCompilerStateRefresh(void);
-JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc);
+JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
+                                            const struct JitEntry *desc);
 
 #endif /* _DALVIK_VM_COMPILER */
