@@ -32,7 +32,7 @@ import org.w3c.dom.Text;
  */
 public class TextImpl extends CharacterDataImpl implements Text {
 
-    TextImpl(DocumentImpl document, String data) {
+    public TextImpl(DocumentImpl document, String data) {
         super(document, data);
     }
 
@@ -46,7 +46,7 @@ public class TextImpl extends CharacterDataImpl implements Text {
         return Node.TEXT_NODE;
     }
 
-    public Text splitText(int offset) throws DOMException {
+    public final Text splitText(int offset) throws DOMException {
         Text newText = getOwnerDocument().createTextNode(
                 substringData(offset, getLength() - offset));
         deleteData(0, offset);
@@ -61,15 +61,83 @@ public class TextImpl extends CharacterDataImpl implements Text {
         return this;
     }
 
-    public boolean isElementContentWhitespace() {
-        throw new UnsupportedOperationException(); // TODO
+    public final boolean isElementContentWhitespace() {
+        // Undefined because we don't validate. Whether whitespace characters
+        // constitute "element content whitespace" is defined by the containing
+        // element's declaration (DTD) and we don't parse that.
+        // TODO: wire this up when we support document validation
+        return false;
     }
 
-    public String getWholeText() {
-        throw new UnsupportedOperationException(); // TODO
+    public final String getWholeText() {
+        // TODO: support entity references. This code should expand through
+        // the child elements of entity references.
+        //     http://code.google.com/p/android/issues/detail?id=6807
+
+        StringBuilder result = new StringBuilder();
+        for (TextImpl n = firstTextNodeInCurrentRun(); n != null; n = n.nextTextNode()) {
+            n.appendDataTo(result);
+        }
+        return result.toString();
     }
 
-    public Text replaceWholeText(String content) throws DOMException {
-        throw new UnsupportedOperationException(); // TODO
+    public final Text replaceWholeText(String content) throws DOMException {
+        // TODO: support entity references. This code should expand and replace
+        // the child elements of entity references.
+        //     http://code.google.com/p/android/issues/detail?id=6807
+
+        Node parent = getParentNode();
+        Text result = null;
+
+        // delete all nodes in the current run of text...
+        for (TextImpl n = firstTextNodeInCurrentRun(); n != null; ) {
+
+            // ...except the current node if we have content for it
+            if (n == this && content != null && content.length() > 0) {
+                setData(content);
+                result = this;
+                n = n.nextTextNode();
+
+            } else {
+                Node toRemove = n; // because removeChild() detaches siblings
+                n = n.nextTextNode();
+                parent.removeChild(toRemove);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the first text or CDATA node in the current sequence of text and
+     * CDATA nodes.
+     */
+    private TextImpl firstTextNodeInCurrentRun() {
+        TextImpl firstTextInCurrentRun = this;
+        for (Node p = getPreviousSibling(); p != null; p = p.getPreviousSibling()) {
+            short nodeType = p.getNodeType();
+            if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+                firstTextInCurrentRun = (TextImpl) p;
+            } else {
+                break;
+            }
+        }
+        return firstTextInCurrentRun;
+    }
+
+    /**
+     * Returns the next sibling node if it exists and it is text or CDATA.
+     * Otherwise returns null.
+     */
+    private TextImpl nextTextNode() {
+        Node nextSibling = getNextSibling();
+        if (nextSibling == null) {
+            return null;
+        }
+
+        short nodeType = nextSibling.getNodeType();
+        return nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE
+                ? (TextImpl) nextSibling
+                : null;
     }
 }

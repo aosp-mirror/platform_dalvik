@@ -224,7 +224,6 @@ public abstract class NodeImpl implements Node {
      * account null arguments and the "*" special case.
      * 
      * @param name The required name.
-     * @param wildcard TODO
      * @return True if and only if the actual name matches the required one.
      */
     public boolean matchesName(String name, boolean wildcard) {
@@ -238,7 +237,6 @@ public abstract class NodeImpl implements Node {
      *
      * @param namespaceURI The required namespace.
      * @param localName The required local name.
-     * @param wildcard TODO
      * @return True if and only if the actual namespace and local name match
      *         the required pair of namespace and local name.
      */
@@ -309,7 +307,7 @@ public abstract class NodeImpl implements Node {
                     removeChild(child);
                 }
                 // create a text node to hold the given content
-                if (textContent != null && textContent.length() != 0){
+                if (textContent != null && textContent.length() != 0) {
                     appendChild(getOwnerDocument().createTextNode(textContent));
                 }
                 return;
