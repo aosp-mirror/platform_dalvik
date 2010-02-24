@@ -315,7 +315,6 @@ void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*))
     Object *obj;
 
     assert(mon != NULL);
-    assert(*mon != NULL);
     assert(isUnmarkedObject != NULL);
     prev = &handle;
     prev->next = curr = *mon;
