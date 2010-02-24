@@ -108,11 +108,13 @@ static void Dalvik_dalvik_system_VMDebug_getVmFeatureList(const u4* args,
 /* These must match the values in dalvik.system.VMDebug.
  */
 enum {
-    KIND_ALLOCATED_OBJECTS = 1<<0,
-    KIND_ALLOCATED_BYTES   = 1<<1,
-    KIND_FREED_OBJECTS     = 1<<2,
-    KIND_FREED_BYTES       = 1<<3,
-    KIND_GC_INVOCATIONS    = 1<<4,
+    KIND_ALLOCATED_OBJECTS      = 1<<0,
+    KIND_ALLOCATED_BYTES        = 1<<1,
+    KIND_FREED_OBJECTS          = 1<<2,
+    KIND_FREED_BYTES            = 1<<3,
+    KIND_GC_INVOCATIONS         = 1<<4,
+    KIND_CLASS_INIT_COUNT       = 1<<5,
+    KIND_CLASS_INIT_TIME        = 1<<6,
 #if PROFILE_EXTERNAL_ALLOCATIONS
     KIND_EXT_ALLOCATED_OBJECTS = 1<<12,
     KIND_EXT_ALLOCATED_BYTES   = 1<<13,
@@ -125,6 +127,8 @@ enum {
     KIND_GLOBAL_FREED_OBJECTS       = KIND_FREED_OBJECTS,
     KIND_GLOBAL_FREED_BYTES         = KIND_FREED_BYTES,
     KIND_GLOBAL_GC_INVOCATIONS      = KIND_GC_INVOCATIONS,
+    KIND_GLOBAL_CLASS_INIT_COUNT    = KIND_CLASS_INIT_COUNT,
+    KIND_GLOBAL_CLASS_INIT_TIME     = KIND_CLASS_INIT_TIME,
 #if PROFILE_EXTERNAL_ALLOCATIONS
     KIND_GLOBAL_EXT_ALLOCATED_OBJECTS = KIND_EXT_ALLOCATED_OBJECTS,
     KIND_GLOBAL_EXT_ALLOCATED_BYTES = KIND_EXT_ALLOCATED_BYTES,
@@ -169,6 +173,12 @@ static void clearAllocProfStateFields(AllocProfState *allocProf,
     }
     if (kinds & KIND_GC_INVOCATIONS) {
         allocProf->gcCount = 0;
+    }
+    if (kinds & KIND_CLASS_INIT_COUNT) {
+        allocProf->classInitCount = 0;
+    }
+    if (kinds & KIND_CLASS_INIT_TIME) {
+        allocProf->classInitTime = 0;
     }
 #if PROFILE_EXTERNAL_ALLOCATIONS
     if (kinds & KIND_EXT_ALLOCATED_OBJECTS) {
@@ -253,6 +263,13 @@ static void Dalvik_dalvik_system_VMDebug_getAllocCount(const u4* args,
         break;
     case KIND_GC_INVOCATIONS:
         pResult->i = allocProf->gcCount;
+        break;
+    case KIND_CLASS_INIT_COUNT:
+        pResult->i = allocProf->classInitCount;
+        break;
+    case KIND_CLASS_INIT_TIME:
+        /* convert nsec to usec, reduce to 32 bits */
+        pResult->i = (int) (allocProf->classInitTime / 1000);
         break;
 #if PROFILE_EXTERNAL_ALLOCATIONS
     case KIND_EXT_ALLOCATED_OBJECTS:
