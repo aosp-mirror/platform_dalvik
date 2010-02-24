@@ -70,7 +70,7 @@ abstract class Mode {
             // TODO: we should be able to work with a shipping SDK, not depend on out/...
             // dalvik/libcore/**/test/ for junit
             // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
-            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests_intermediates/classes.jar").getAbsoluteFile());
+            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests-luni_intermediates/classes.jar").getAbsoluteFile());
 
     Mode(Environment environment, long timeoutSeconds, File sdkJar) {
         this.environment = environment;
