@@ -290,12 +290,17 @@ endif
 
 ifeq ($(dvm_arch),x86)
   ifeq ($(dvm_os),linux)
+
+# TODO: Remove this once build core defines a default arch variant for x86
+    ifneq ($(dvm_arch_variant),x86-atom)
+        dvm_arch_variant := x86
+    endif
     MTERP_ARCH_KNOWN := true
     LOCAL_SRC_FILES += \
-		arch/x86/Call386ABI.S \
-		arch/x86/Hints386ABI.c \
-		mterp/out/InterpC-x86.c \
-		mterp/out/InterpAsm-x86.S
+		arch/$(dvm_arch_variant)/Call386ABI.S \
+		arch/$(dvm_arch_variant)/Hints386ABI.c \
+		mterp/out/InterpC-$(dvm_arch_variant).c \
+		mterp/out/InterpAsm-$(dvm_arch_variant).S
   endif
 endif
 
