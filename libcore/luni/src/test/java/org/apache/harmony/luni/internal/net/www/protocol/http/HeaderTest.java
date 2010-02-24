@@ -38,4 +38,18 @@ public class HeaderTest extends junit.framework.TestCase {
         assertEquals(Arrays.asList("text/plain"), h.getFieldMap().get("Content-Type"));
         assertEquals(Arrays.asList("text/plain"), h.getFieldMap().get("Content-type")); // RI fails this.
     }
+
+    // The copy constructor used to be broken for headers with multiple values.
+    // http://code.google.com/p/android/issues/detail?id=6722
+    public void test_copyConstructor() {
+        Header h1 = new Header();
+        h1.add("key", "value1");
+        h1.add("key", "value2");
+        Header h2 = new Header(h1.getFieldMap());
+        assertEquals(2, h2.length());
+        assertEquals("key", h2.getKey(0));
+        assertEquals("value1", h2.get(0));
+        assertEquals("key", h2.getKey(1));
+        assertEquals("value2", h2.get(1));
+    }
 }
