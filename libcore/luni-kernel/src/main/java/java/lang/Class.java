@@ -177,7 +177,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @throws ExceptionInInitializerError
      *             if an exception occurs during static initialization of a
      *             class.
-     * @since Android 1.0
      */
     public static Class<?> forName(String className) throws ClassNotFoundException {
         return forName(className, true, VMStack.getCallingClassLoader());
@@ -210,7 +209,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @throws ExceptionInInitializerError
      *             if an exception occurs during static initialization of a
      *             class.
-     * @since Android 1.0
      */
     public static Class<?> forName(String className, boolean initializeBoolean,
             ClassLoader classLoader) throws ClassNotFoundException {
@@ -270,7 +268,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @throws SecurityException
      *             if a security manager exists and it does not allow member
      *             access.
-     * @since Android 1.0
      */
     public Class[] getClasses() {
         // BEGIN android-note
@@ -289,7 +286,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *            the annotation type.
      * @return the annotation of the given type, or {@code null} if there is no
      *         such annotation.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
@@ -309,7 +305,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return a copy of the array containing this class' annotations.
      * @see #getDeclaredAnnotations()         
-     * @since Android 1.0
      */
     public Annotation[] getAnnotations() {
         /*
@@ -353,7 +348,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return this class' canonical name, or {@code null} if it does not have a
      *         canonical name.
-     * @since Android 1.0
      */
     public String getCanonicalName() {
         if (isLocalClass() || isAnonymousClass())
@@ -403,7 +397,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow accessing
      *             the class loader.
      * @see ClassLoader
-     * @since Android 1.0
      */
     public ClassLoader getClassLoader() {
         SecurityManager smgr = System.getSecurityManager();
@@ -459,7 +452,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * the type of the elements of the array.
      * 
      * @return the component type of this class.
-     * @since Android 1.0
      */
     public native Class<?> getComponentType();
 
@@ -477,7 +469,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getDeclaredConstructor(Class...)
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public Constructor<T> getConstructor(Class... parameterTypes) throws NoSuchMethodException,
@@ -498,7 +489,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getDeclaredConstructors()
-     * @since Android 1.0
      */
     public Constructor[] getConstructors() throws SecurityException {
         // BEGIN android-note
@@ -518,7 +508,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @return a copy of the array containing the annotations defined for the
      *         class that this {@code Class} represents.
      * @see #getAnnotations()
-     * @since Android 1.0
      */
     native public Annotation[] getDeclaredAnnotations();
 
@@ -534,7 +523,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @throws SecurityException
      *             if a security manager exists and it does not allow member
      *             access.
-     * @since Android 1.0
      */
     public Class[] getDeclaredClasses() throws SecurityException {
         // BEGIN android-note
@@ -596,7 +584,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getConstructor(Class...)
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public Constructor<T> getDeclaredConstructor(Class... parameterTypes)
@@ -618,7 +605,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getConstructors()
-     * @since Android 1.0
      */
     public Constructor[] getDeclaredConstructors() throws SecurityException {
         // BEGIN android-note
@@ -688,7 +674,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getField(String)
-     * @since Android 1.0
      */
     public Field getDeclaredField(String name)
             throws NoSuchFieldException, SecurityException {
@@ -716,7 +701,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getFields()
-     * @since Android 1.0
      */
     public Field[] getDeclaredFields() throws SecurityException {
         checkDeclaredMemberAccess();
@@ -755,7 +739,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getMethod(String, Class...)
-     * @since Android 1.0
      */
     public Method getDeclaredMethod(String name, Class... parameterTypes)
             throws NoSuchMethodException, SecurityException {
@@ -783,7 +766,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getMethods()
-     * @since Android 1.0
      */
     public Method[] getDeclaredMethods() throws SecurityException {
         checkDeclaredMemberAccess();
@@ -829,7 +811,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * {@code Class} represents an array class, a primitive type or void.
      * 
      * @return the declaring {@code Class} or {@code null}.
-     * @since Android 1.0
      */
     native public Class<?> getDeclaringClass();
 
@@ -838,7 +819,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * enclosing class the method returns {@code null}.
      * 
      * @return the enclosing {@code Class} or {@code null}.
-     * @since Android 1.0
      */
     native public Class<?> getEnclosingClass();
 
@@ -847,7 +827,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * anonymous or local/automatic class; otherwise {@code null}.
      * 
      * @return the enclosing {@code Constructor} instance or {@code null}.
-     * @since Android 1.0
      */
     native public Constructor<?> getEnclosingConstructor();
 
@@ -856,7 +835,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * anonymous or local/automatic class; otherwise {@code null}.
      * 
      * @return the enclosing {@code Method} instance or {@code null}.
-     * @since Android 1.0
      */
     native public Method getEnclosingMethod();
 
@@ -866,7 +844,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * enum} type.
      * 
      * @return an array with the {@code enum} constants or {@code null}.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public T[] getEnumConstants() {
@@ -896,7 +873,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getDeclaredField(String)
-     * @since Android 1.0
      */
     public Field getField(String name) throws NoSuchFieldException, SecurityException {
         checkPublicMemberAccess();
@@ -927,7 +903,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getDeclaredFields()
-     * @since Android 1.0
      */
     public Field[] getFields() throws SecurityException {
         checkPublicMemberAccess();
@@ -944,7 +919,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return an array of {@link Type} instances directly implemented by the
      *         class represented by this {@code class}.
-     * @since Android 1.0
      */
     public Type[] getGenericInterfaces() {
         GenericSignatureParser parser = new GenericSignatureParser(
@@ -958,7 +932,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * class}.
      * 
      * @return an instance of {@code Type} representing the superclass.
-     * @since Android 1.0
      */
     public Type getGenericSuperclass() {
         GenericSignatureParser parser = new GenericSignatureParser(
@@ -976,7 +949,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return an array with the interfaces of the class represented by this
      *         class.
-     * @since Android 1.0
      */
     public native Class[] getInterfaces();
     // BEGIN android-note
@@ -1004,7 +976,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getDeclaredMethod(String, Class...)
-     * @since Android 1.0
      */
     public Method getMethod(String name, Class... parameterTypes) throws NoSuchMethodException, 
             SecurityException {
@@ -1036,7 +1007,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow member
      *             access.
      * @see #getDeclaredMethods()
-     * @since Android 1.0
      */
     public Method[] getMethods() throws SecurityException {
         checkPublicMemberAccess();
@@ -1097,7 +1067,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * defined by constants in the {@link Modifier} class.
      * 
      * @return the modifiers of the class represented by this {@code Class}.
-     * @since Android 1.0
      */
     public int getModifiers() {
         return getModifiers(this, false);
@@ -1118,7 +1087,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * {@link Class}.
      * 
      * @return the name of the class represented by this {@code Class}.
-     * @since Android 1.0
      */
     public native String getName();
 
@@ -1130,7 +1098,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * example {@code &quot;Integer[]&quot;}) is returned.
      * 
      * @return the simple name of the class represented by this {@code Class}.
-     * @since Android 1.0
      */
     public String getSimpleName() {
         if (isArray()) {
@@ -1199,7 +1166,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @return the requested resource's {@code URL} object or {@code null} if
      *         the resource can not be found.
      * @see ClassLoader
-     * @since Android 1.0
      */
     public URL getResource(String resName) {
         // Get absolute resource name, but without the leading slash
@@ -1236,7 +1202,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @return a stream for the requested resource or {@code null} if no
      *         resource with the specified name can be found.
      * @see ClassLoader
-     * @since Android 1.0
      */    
     public InputStream getResourceAsStream(String resName) {
         // Get absolute resource name, but without the leading slash
@@ -1264,15 +1229,15 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
     }
 
     /**
-     * Returns the signers for the class represented by this {@code Class} or
-     * {@code null} if either there are no signers or this {@code Class}
-     * represents a primitive type or void.
+     * Returns null. (On Android, a {@code ClassLoader} can load classes from multiple dex files.
+     * All classes from any given dex file will have the same signers, but different dex
+     * files may have different signers. This does not fit well with the original
+     * {@code ClassLoader}-based model of {@code getSigners}.)
      * 
-     * @return the signers of the class represented by this {@code Class}.
-     * @since Android 1.0
+     * @return null.
      */
     public Object[] getSigners() {
-        // TODO Delegate this to class loader somehow? What are these signers?
+        // See http://code.google.com/p/android/issues/detail?id=1766.
         return null;
     }
 
@@ -1284,7 +1249,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * class then the {@code Object} class is returned.
      * 
      * @return the superclass of the class represented by this {@code Class}.
-     * @since Android 1.0
      */
     public native Class<? super T> getSuperclass();
 
@@ -1295,7 +1259,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return an array with the type variables of the class represented by this
      *         class.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public synchronized TypeVariable<Class<T>>[] getTypeParameters() {
@@ -1310,7 +1273,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if this {@code Class} represents an annotation
      *         class; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isAnnotation() {
         final int ACC_ANNOTATION = 0x2000;  // not public in reflect.Modifiers
@@ -1326,7 +1288,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *            the annotation to look for.
      * @return {@code true} if the class represented by this {@code Class} is
      *         annotated with {@code annotationClass}; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
         return getAnnotation(annotationClass) != null;
@@ -1338,7 +1299,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if the class represented by this {@code Class} is
      *         anonymous; {@code false} otherwise.
-     * @since Android 1.0
      */
     native public boolean isAnonymousClass();
 
@@ -1348,7 +1308,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if the class represented by this {@code Class} is an
      *         array class; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isArray() {
         return getComponentType() != null;
@@ -1367,7 +1326,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *         represented by this {@code Class}; {@code false} otherwise.
      * @throws NullPointerException
      *             if {@code cls} is {@code null}.
-     * @since Android 1.0
      */
     public native boolean isAssignableFrom(Class<?> cls);
 
@@ -1377,7 +1335,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if the class represented by this {@code Class} is an
      *         {@code enum}; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isEnum() {
         return ((getModifiers() & 0x4000) != 0) && (getSuperclass() == Enum.class);
@@ -1393,7 +1350,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @return {@code true} if {@code object} can be cast to the type
      *         represented by this {@code Class}; {@code false} if {@code
      *         object} is {@code null} or cannot be cast.
-     * @since Android 1.0
      */
     public native boolean isInstance(Object object);
 
@@ -1402,7 +1358,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if this {@code Class} represents an interface;
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public native boolean isInterface();
 
@@ -1412,7 +1367,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if the class represented by this {@code Class} is
      *         defined locally; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isLocalClass() {
         boolean enclosed = (getEnclosingMethod() != null ||
@@ -1426,7 +1380,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if the class represented by this {@code Class} is a
      *         member class; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isMemberClass() {
         return getDeclaringClass() != null;
@@ -1437,7 +1390,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if this {@code Class} represents a primitive type;
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public native boolean isPrimitive();
 
@@ -1446,7 +1398,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return {@code true} if this {@code Class} represents a synthetic type;
      *         {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isSynthetic() {
         final int ACC_SYNTHETIC = 0x1000;   // not public in reflect.Modifiers
@@ -1471,7 +1422,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @throws SecurityException
      *             if a security manager exists and it does not allow creating
      *             new instances.
-     * @since Android 1.0
      */
     public T newInstance() throws IllegalAccessException,
             InstantiationException {
@@ -1498,7 +1448,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return Package the {@code Package} of which this {@code Class} is a
      *         member or {@code null}.
-     * @since Android 1.0
      */
     public Package getPackage() {
         // TODO This might be a hack, but the VM doesn't have the necessary info.
@@ -1519,7 +1468,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * 
      * @return the assertion status for the class represented by this {@code
      *         Class}.
-     * @since Android 1.0
      */
     public native boolean desiredAssertionStatus();
 
@@ -1533,7 +1481,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @return this {@code Class} cast as a subclass of the given type.
      * @throws ClassCastException
      *             if this {@code Class} cannot be cast to the specified type.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public <U> Class<? extends U> asSubclass(Class<U> clazz) {
@@ -1552,7 +1499,6 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      * @return the object that has been cast.
      * @throws ClassCastException
      *             if the object cannot be cast to the specified type.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public T cast(Object obj) {
