@@ -1015,8 +1015,6 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 
 #if defined(WITH_JIT)
-    extern void dvmCompilerPerformSafePointChecks(void);
-
     /*
      * Patching a chaining cell is very cheap as it only updates 4 words. It's
      * the overhead of stopping all threads and synchronizing the I/D cache
