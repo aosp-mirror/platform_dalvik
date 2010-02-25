@@ -47,23 +47,11 @@ bool dvmHeapSourceStartupBeforeFork(void);
 void dvmHeapSourceShutdown(GcHeap **gcHeap);
 
 /*
- * Writes shallow copies of the currently-used bitmaps into outBitmaps,
- * returning the number of bitmaps written.  Returns 0 if the array was
- * not long enough or if there are no heaps, either of which is an error.
+ * Initializes a vector of object and mark bits to the object and mark
+ * bits of to each heap.
  */
-size_t dvmHeapSourceGetObjectBitmaps(HeapBitmap outBitmaps[],
-        size_t maxBitmaps);
-
-/*
- * Replaces the object location HeapBitmaps with the elements of
- * <objectBitmaps>.  The elements of <objectBitmaps> are overwritten
- * with shallow copies of the old bitmaps.
- *
- * Returns false if the number of bitmaps doesn't match the number
- * of heaps.
- */
-bool dvmHeapSourceReplaceObjectBitmaps(HeapBitmap objectBitmaps[],
-        size_t nBitmaps);
+void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
+                                   size_t numHeaps);
 
 /*
  * Returns the requested value. If the per-heap stats are requested, fill
@@ -161,5 +149,10 @@ void dvmHeapSourceWalk(void(*callback)(const void *chunkptr, size_t chunklen,
  * Gets the number of heaps available in the heap source.
  */
 size_t dvmHeapSourceGetNumHeaps(void);
+
+/*
+ * Exchanges the mark and object bitmaps and zeros the mark bitmap.
+ */
+void dvmHeapSourceSwapBitmaps(void);
 
 #endif  // _DALVIK_HEAP_SOURCE
