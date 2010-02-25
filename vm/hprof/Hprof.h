@@ -92,7 +92,7 @@ typedef enum hprof_heap_tag_t {
     HPROF_ROOT_REFERENCE_CLEANUP = 0x8c,
     HPROF_ROOT_VM_INTERNAL = 0x8d,
     HPROF_ROOT_JNI_MONITOR = 0x8e,
-    HPROF_UNREACHABLE = 0x90,
+    HPROF_UNREACHABLE = 0x90,  /* deprecated */
     HPROF_PRIMITIVE_ARRAY_NODATA_DUMP = 0xc3,
 } hprof_heap_tag_t;
 

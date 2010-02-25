@@ -1046,46 +1046,6 @@ void dvmHeapFinishMarkStep()
     markContext->finger = NULL;
 }
 
-#if WITH_HPROF && WITH_HPROF_UNREACHABLE
-static bool
-hprofUnreachableBitmapCallback(size_t numPtrs, void **ptrs,
-        const void *finger, void *arg)
-{
-    hprof_context_t *hctx = (hprof_context_t *)arg;
-    size_t i;
-
-    for (i = 0; i < numPtrs; i++) {
-        Object *obj;
-
-        obj = (Object *)*ptrs++;
-
-        hprofMarkRootObject(hctx, obj, 0);
-        hprofDumpHeapObject(hctx, obj);
-    }
-
-    return true;
-}
-
-static void
-hprofDumpUnmarkedObjects(const HeapBitmap markBitmaps[],
-        const HeapBitmap objectBitmaps[], size_t numBitmaps)
-{
-    hprof_context_t *hctx = gDvm.gcHeap->hprofContext;
-    if (hctx == NULL) {
-        return;
-    }
-
-    LOGI("hprof: dumping unreachable objects\n");
-
-    HPROF_SET_GC_SCAN_STATE(HPROF_UNREACHABLE, 0);
-
-    dvmHeapBitmapXorWalkLists(markBitmaps, objectBitmaps, numBitmaps,
-            hprofUnreachableBitmapCallback, hctx);
-
-    HPROF_CLEAR_GC_SCAN_STATE();
-}
-#endif
-
 static bool
 sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
 {
@@ -1169,10 +1129,6 @@ dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed)
      */
     origObjectsAllocated = dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED, NULL, 0);
     origBytesAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED, NULL, 0);
-
-#if WITH_HPROF && WITH_HPROF_UNREACHABLE
-    hprofDumpUnmarkedObjects(markBitmaps, objectBitmaps, numBitmaps);
-#endif
 
     dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);
 
