@@ -68,7 +68,7 @@ static void loadValueDirectFixed(CompilationUnit *cUnit, RegLocation rlSrc,
                                  int reg1)
 {
     dvmCompilerClobber(cUnit, reg1);
-    dvmcompilerMarkInUse(cUnit, reg1);
+    dvmCompilerMarkInUse(cUnit, reg1);
     loadValueDirect(cUnit, rlSrc, reg1);
 }
 
@@ -104,8 +104,8 @@ static void loadValueDirectWideFixed(CompilationUnit *cUnit, RegLocation rlSrc,
 {
     dvmCompilerClobber(cUnit, regLo);
     dvmCompilerClobber(cUnit, regHi);
-    dvmcompilerMarkInUse(cUnit, regLo);
-    dvmcompilerMarkInUse(cUnit, regHi);
+    dvmCompilerMarkInUse(cUnit, regLo);
+    dvmCompilerMarkInUse(cUnit, regHi);
     loadValueDirectWide(cUnit, rlSrc, regLo, regHi);
 }
 
