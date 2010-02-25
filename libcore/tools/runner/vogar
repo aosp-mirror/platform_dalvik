@@ -17,5 +17,8 @@
 # m core-tests junit caliper snod && adb reboot bootloader && fastboot flashall && adb wait-for-device
 # mmm dalvik/libcore/tools/runner
 
-classpath=`dirname $0`/../../../../out/host/linux-x86/framework/dalvik_runner.jar
-exec java -cp $classpath dalvik.runner.DalvikRunner "$@"
+android_root=`dirname $0`/../../../..
+
+classpath=${android_root}/out/host/linux-x86/framework/dalvik_runner.jar
+core_jar=${android_root}/out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar
+exec java -cp $classpath dalvik.runner.DalvikRunner --sdk ${core_jar} "$@"
