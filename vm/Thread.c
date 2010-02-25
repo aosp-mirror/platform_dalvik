@@ -3348,9 +3348,15 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         groupName = strdup("(BOGUS GROUP)");
 
     dvmPrintDebugMessage(target,
-        "\"%s\"%s prio=%d tid=%d %s\n",
+        "\"%s\"%s prio=%d tid=%d %s%s\n",
         threadName, isDaemon ? " daemon" : "",
-        priority, thread->threadId, dvmGetThreadStatusStr(thread->status));
+        priority, thread->threadId, dvmGetThreadStatusStr(thread->status),
+#if defined(WITH_JIT)
+        thread->inJitCodeCache ? " JIT" : ""
+#else
+        ""
+#endif
+        );
     dvmPrintDebugMessage(target,
         "  | group=\"%s\" sCount=%d dsCount=%d s=%c obj=%p self=%p\n",
         groupName, thread->suspendCount, thread->dbgSuspendCount,
