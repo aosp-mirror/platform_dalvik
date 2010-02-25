@@ -144,9 +144,6 @@ static void dvmUsage(const char* progName)
 #ifdef WITH_HPROF_STACK
         " hprof_stack"
 #endif
-#ifdef WITH_HPROF_STACK_UNREACHABLE
-        " hprof_stack_unreachable"
-#endif
 #ifdef WITH_ALLOC_LIMITS
         " alloc_limits"
 #endif
