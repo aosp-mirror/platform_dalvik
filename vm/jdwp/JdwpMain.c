@@ -148,7 +148,8 @@ fail:
 
 /*
  * Reset all session-related state.  There should not be an active connection
- * to the client at this point (we may be listening for a new one though).
+ * to the client at this point.  The rest of the VM still thinks there is
+ * a debugger attached.
  *
  * This includes freeing up the debugger event list.
  */
@@ -318,13 +319,14 @@ static void* jdwpThreadStart(void* arg)
             dvmDbgThreadWaiting();
         }
 
-        /* interpreter can ignore breakpoints */
+        /* release session state, e.g. remove breakpoint instructions */
+        dvmJdwpResetState(state);
+
+        /* tell the interpreter that the debugger is no longer around */
         dvmDbgDisconnected();
 
-        /* if we had stuff suspended, resume it now */
+        /* if we had threads suspended, resume them now */
         dvmUndoDebuggerSuspensions();
-
-        dvmJdwpResetState(state);
 
         /* if we connected out, this was a one-shot deal */
         if (!state->params.server)
