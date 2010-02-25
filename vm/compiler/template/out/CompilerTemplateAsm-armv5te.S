@@ -267,7 +267,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     bxne    lr                          @ bail to the interpreter
 #endif
 
-    ldr     r10, .LdvmJitToInterpNoChain
+    ldr     r10, .LdvmJitToInterpTraceSelectNoChain
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
     ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
 
@@ -281,7 +281,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
 #if defined(EXIT_STATS)
     mov     r0, #kInlineCacheMiss
 #endif
-    mov     pc, r10                         @ dvmJitToInterpNoChain
+    mov     pc, r10                         @ dvmJitToInterpTraceSelectNoChain
 
 /* ------------------------------ */
     .balign 4
@@ -453,7 +453,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     bxne    r2                          @ yes - go ahead
 
     @ continue executing the next instruction through the interpreter
-    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
+    ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
 #if defined(EXIT_STATS)
     mov     r0, #kCallsiteInterpreted
@@ -1217,7 +1217,7 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     bxne    r2                          @ yes - go ahead
 
     @ continue executing the next instruction through the interpreter
-    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
+    ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
 #if defined(EXIT_STATS)
     mov     r0, #kCallsiteInterpreted
@@ -1240,6 +1240,8 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     .align  2
 .LdvmAsmInstructionStart:
     .word   dvmAsmInstructionStart
+.LdvmJitToInterpTraceSelectNoChain:
+    .word   dvmJitToInterpTraceSelectNoChain
 .LdvmJitToInterpNoChain:
     .word   dvmJitToInterpNoChain
 .LdvmMterpStdBail:

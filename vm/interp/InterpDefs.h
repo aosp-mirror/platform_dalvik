@@ -73,10 +73,11 @@ struct JitToInterpEntries {
     void *dvmJitToInterpNoChain;
     void *dvmJitToInterpPunt;
     void *dvmJitToInterpSingleStep;
-    void *dvmJitToTraceSelect;
+    void *dvmJitToInterpTraceSelectNoChain;
+    void *dvmJitToInterpTraceSelect;
     void *dvmJitToPatchPredictedChain;
 #if defined(WITH_SELF_VERIFICATION)
-    void *dvmJitToBackwardBranch;
+    void *dvmJitToInterpBackwardBranch;
 #endif
 };
 
@@ -88,7 +89,10 @@ struct JitToInterpEntries {
  */
 #define JIT_CALLEE_SAVE_DOUBLE_COUNT 8
 
-#define JIT_TRACE_THRESH_FILTER_SIZE  16
+/* Number of entries in the 2nd level JIT profiler filter cache */
+#define JIT_TRACE_THRESH_FILTER_SIZE 32
+/* Granularity of coverage (power of 2) by each cached entry */
+#define JIT_TRACE_THRESH_FILTER_GRAN_LOG2 6
 #endif
 
 /*
@@ -173,7 +177,7 @@ typedef struct InterpState {
     int currRunLen;           // Length of run in 16-bit words
     int lastThreshFilter;
     const u2* lastPC;         // Stage the PC first for the threaded interpreter
-    const u2* threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
+    intptr_t threshFilter[JIT_TRACE_THRESH_FILTER_SIZE];
     JitTraceRun trace[MAX_JIT_RUN_LEN];
     double calleeSave[JIT_CALLEE_SAVE_DOUBLE_COUNT];
 #endif

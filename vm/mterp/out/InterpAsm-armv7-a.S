@@ -9009,14 +9009,20 @@ dvmJitToInterpSingleStep:
     mov    r2,#kSVSSingleStep           @ r2<- interpreter entry point
     b      dvmJitSelfVerificationEnd    @ doesn't return
 
-    .global dvmJitToTraceSelect
-dvmJitToTraceSelect:
+    .global dvmJitToInterpTraceSelectNoChain
+dvmJitToInterpTraceSelectNoChain:
+    mov    r0,rPC                       @ pass our target PC
+    mov    r2,#kSVSTraceSelectNoChain   @ r2<- interpreter entry point
+    b      dvmJitSelfVerificationEnd    @ doesn't return
+
+    .global dvmJitToInterpTraceSelect
+dvmJitToInterpTraceSelect:
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
     b      dvmJitSelfVerificationEnd    @ doesn't return
 
-    .global dvmJitToBackwardBranch
-dvmJitToBackwardBranch:
+    .global dvmJitToInterpBackwardBranch
+dvmJitToInterpBackwardBranch:
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSBackwardBranch       @ r2<- interpreter entry point
     b      dvmJitSelfVerificationEnd    @ doesn't return
@@ -9079,14 +9085,32 @@ dvmJitToInterpSingleStep:
     mov    r1,#1                  @ set changeInterp to bail to debug interp
     b      common_gotoBail
 
+/*
+ * Return from the translation cache and immediately request
+ * a translation for the exit target.  Commonly used for callees.
+ */
+    .global dvmJitToInterpTraceSelectNoChain
+dvmJitToInterpTraceSelectNoChain:
+#ifdef EXIT_STATS
+    bl     dvmBumpNoChain
+#endif
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
+    mov    r0,rPC
+    bl     dvmJitGetCodeAddr        @ Is there a translation?
+    str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
+    mov    r1, rPC                  @ arg1 of translation may need this
+    mov    lr, #0                   @  in case target is HANDLER_INTERPRET
+    cmp    r0,#0
+    bxne   r0                       @ continue native execution if so
+    b      2f
 
 /*
  * Return from the translation cache and immediately request
  * a translation for the exit target.  Commonly used following
  * invokes.
  */
-    .global dvmJitToTraceSelect
-dvmJitToTraceSelect:
+    .global dvmJitToInterpTraceSelect
+dvmJitToInterpTraceSelect:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
@@ -9109,6 +9133,7 @@ dvmJitToTraceSelect:
     GET_JIT_PROF_TABLE(r0)
     FETCH_INST()
     cmp    r0, #0
+    movne  r2,#kJitTSelectRequestHot   @ ask for trace selection
     bne    common_selectTrace
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
@@ -9218,7 +9243,10 @@ common_updateProfile:
     cmp     r0,#0
 #if !defined(WITH_SELF_VERIFICATION)
     bxne    r0                          @ jump to the translation
+    mov     r2,#kJitTSelectRequest      @ ask for trace selection
+    @ fall-through to common_selectTrace
 #else
+    moveq   r2,#kJitTSelectRequest      @ ask for trace selection
     beq     common_selectTrace
     /*
      * At this point, we have a target translation.  However, if
@@ -9234,8 +9262,11 @@ common_updateProfile:
     /* no return */
 #endif
 
+/*
+ * On entry:
+ *  r2 is jit state, e.g. kJitTSelectRequest or kJitTSelectRequestHot
+ */
 common_selectTrace:
-    mov     r2,#kJitTSelectRequest      @ ask for trace selection
     str     r2,[rGLUE,#offGlue_jitState]
     mov     r2,#kInterpEntryInstr       @ normal entry reason
     str     r2,[rGLUE,#offGlue_entryPoint]

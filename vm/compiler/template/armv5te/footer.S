@@ -48,7 +48,7 @@
     bxne    r2                          @ yes - go ahead
 
     @ continue executing the next instruction through the interpreter
-    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
+    ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
 #if defined(EXIT_STATS)
     mov     r0, #kCallsiteInterpreted
@@ -71,6 +71,8 @@
     .align  2
 .LdvmAsmInstructionStart:
     .word   dvmAsmInstructionStart
+.LdvmJitToInterpTraceSelectNoChain:
+    .word   dvmJitToInterpTraceSelectNoChain
 .LdvmJitToInterpNoChain:
     .word   dvmJitToInterpNoChain
 .LdvmMterpStdBail:
