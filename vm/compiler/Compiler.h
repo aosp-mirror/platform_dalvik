@@ -155,6 +155,7 @@ void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
 void dvmCompilerSortAndPrintTraceProfiles(void);
+void dvmCompilerPerformSafePointChecks(void);
 
 struct CompilationUnit;
 struct BasicBlock;
