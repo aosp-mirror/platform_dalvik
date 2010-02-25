@@ -706,7 +706,7 @@ extern ArmEncodingMap EncodingMap[kArmLast];
 
 /*
  * Each instance of this struct holds a pseudo or real LIR instruction:
- * - pesudo ones (eg labels and marks) and will be discarded by the assembler.
+ * - pseudo ones (eg labels and marks) and will be discarded by the assembler.
  * - real ones will be assembled into Thumb instructions.
  *
  * Machine resources are encoded into a 64-bit vector, where the encodings are

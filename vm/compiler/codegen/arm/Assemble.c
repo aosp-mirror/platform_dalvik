@@ -36,7 +36,7 @@
  * s2e: src2 end bit position
  * operands: number of operands (for sanity check purposes)
  * name: mnemonic name
- * fmt: for pretty-prining
+ * fmt: for pretty-printing
  */
 #define ENCODING_MAP(opcode, skeleton, k0, ds, de, k1, s1s, s1e, k2, s2s, s2e, \
                      k3, k3s, k3e, flags, name, fmt, size) \

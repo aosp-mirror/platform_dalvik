@@ -289,3 +289,12 @@ static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
     dvmCompilerClobber(cUnit, ophi);
     return false;
 }
+
+static void genMultiplyByTwoBitMultiplier(CompilationUnit *cUnit,
+        RegLocation rlSrc, RegLocation rlResult, int lit,
+        int firstBit, int secondBit)
+{
+    // We can't implement "add src, src, src, lsl#shift" on Thumb, so we have
+    // to do a regular multiply.
+    opRegRegImm(cUnit, kOpMul, rlResult.lowReg, rlSrc.lowReg, lit);
+}
