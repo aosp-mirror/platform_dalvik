@@ -225,10 +225,6 @@ ifeq ($(WITH_HPROF),true)
 	hprof/HprofString.c
   LOCAL_CFLAGS += -DWITH_HPROF=1
 
-  ifeq ($(strip $(WITH_HPROF_UNREACHABLE)),true)
-    LOCAL_CFLAGS += -DWITH_HPROF_UNREACHABLE=1
-  endif
-
   ifeq ($(strip $(WITH_HPROF_STACK)),true)
     LOCAL_SRC_FILES += \
 	hprof/HprofStack.c \

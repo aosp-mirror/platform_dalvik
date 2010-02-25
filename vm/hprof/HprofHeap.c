@@ -146,7 +146,6 @@ hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
     case HPROF_ROOT_DEBUGGER:
     case HPROF_ROOT_REFERENCE_CLEANUP:
     case HPROF_ROOT_VM_INTERNAL:
-    case HPROF_UNREACHABLE:
         hprofAddU1ToRecord(rec, heapTag);
         hprofAddIdToRecord(rec, (hprof_object_id)obj);
         break;
