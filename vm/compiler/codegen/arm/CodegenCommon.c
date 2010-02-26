@@ -107,7 +107,7 @@ static void setupResourceMasks(ArmLIR *lir)
         lir->defMask |= ENCODE_REG_SP;
     }
 
-    if (flags & REG_DEF_SP) {
+    if (flags & REG_DEF_LR) {
         lir->defMask |= ENCODE_REG_LR;
     }
 
