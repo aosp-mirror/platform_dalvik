@@ -48,11 +48,23 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
 
     private DOMImplementation domImplementation;
 
+    /*
+     * The default values of these fields are specified by the Document
+     * interface.
+     */
+    private String documentUri;
+    private String inputEncoding;
+    private String xmlEncoding;
+    private String xmlVersion = "1.0";
+    private boolean xmlStandalone = false;
+    private boolean strictErrorChecking = true;
+
     public DocumentImpl(DOMImplementationImpl impl, String namespaceURI,
-            String qualifiedName, DocumentType doctype) {
+            String qualifiedName, DocumentType doctype, String inputEncoding) {
         super(null);
 
         this.domImplementation = impl;
+        this.inputEncoding = inputEncoding;
         // this.document = this;
         
         if (doctype != null) {
@@ -304,43 +316,43 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
     }
 
     public String getInputEncoding() {
-        throw new UnsupportedOperationException(); // TODO
+        return inputEncoding;
     }
 
     public String getXmlEncoding() {
-        throw new UnsupportedOperationException(); // TODO
+        return xmlEncoding;
     }
 
     public boolean getXmlStandalone() {
-        throw new UnsupportedOperationException(); // TODO
+        return xmlStandalone;
     }
 
     public void setXmlStandalone(boolean xmlStandalone) throws DOMException {
-        throw new UnsupportedOperationException(); // TODO
+        this.xmlStandalone = xmlStandalone;
     }
 
     public String getXmlVersion() {
-        throw new UnsupportedOperationException(); // TODO
+        return xmlVersion;
     }
 
     public void setXmlVersion(String xmlVersion) throws DOMException {
-        throw new UnsupportedOperationException(); // TODO
+        this.xmlVersion = xmlVersion;
     }
 
     public boolean getStrictErrorChecking() {
-        throw new UnsupportedOperationException(); // TODO
+        return strictErrorChecking;
     }
 
     public void setStrictErrorChecking(boolean strictErrorChecking) {
-        throw new UnsupportedOperationException(); // TODO
+        this.strictErrorChecking = strictErrorChecking;
     }
 
     public String getDocumentURI() {
-        throw new UnsupportedOperationException(); // TODO
+        return documentUri;
     }
 
-    public void setDocumentURI(String documentURI) {
-        throw new UnsupportedOperationException(); // TODO
+    public void setDocumentURI(String documentUri) {
+        this.documentUri = documentUri;
     }
 
     public Node adoptNode(Node source) throws DOMException {
