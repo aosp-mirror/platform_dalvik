@@ -24,6 +24,7 @@ public class AllTests {
     public static Test suite() {
         TestSuite suite = tests.TestSuiteFactory.createTestSuite();
 
+        suite.addTestSuite(DeclarationTest.class);
         suite.addTestSuite(DomTest.class);
         suite.addTestSuite(SimpleParserTest.class);
         suite.addTestSuite(SimpleBuilderTest.class);
