@@ -24,14 +24,13 @@ mkdir $tmp
 chmod 777 $tmp
 
 # Build the classpath by putting together the jar file for each module.
+classpath="/system/framework/sqlite-jdbc.jar" # Bonus item for jdbc testing.
 modules="annotation archive concurrent crypto dom icu json \
         logging luni-kernel luni math nio nio_char prefs regex security sql \
         suncompat support text x-net xml"
-classpath=""
 for module in $modules; do
   classpath="$classpath:/system/framework/core-tests-$module.jar"
 done
-classpath=${classpath#:}
 
 exec dalvikvm \
      -Duser.name=root \

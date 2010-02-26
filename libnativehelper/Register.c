@@ -100,17 +100,6 @@ int jniRegisterSystemMethods(JNIEnv* env)
     if (register_com_ibm_icu4jni_util_Resources(env) != 0)
         goto bail;
 
-    if (register_SQLite_Database(env) != 0)
-        goto bail;
-    if (register_SQLite_Vm(env) != 0)
-        goto bail;
-    if (register_SQLite_FunctionContext(env) != 0)
-        goto bail;
-    if (register_SQLite_Stmt(env) != 0)
-        goto bail;
-    if (register_SQLite_Blob(env) != 0)
-        goto bail;
-
     /*
      * Initialize the Android classes last, as they have dependencies
      * on the "corer" core classes.

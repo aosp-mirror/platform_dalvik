@@ -24,6 +24,7 @@ subdirs := $(addprefix $(LOCAL_PATH)/,$(addsuffix /Android.mk, \
 		dvz \
 		dx \
 		libcore \
+		libcore/sqlite-jdbc \
 		libnativehelper \
 		tools \
 	))

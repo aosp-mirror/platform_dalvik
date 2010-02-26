@@ -587,29 +587,29 @@ public class Database {
      */
 
     static {
-    try {
-//        String path = System.getProperty("SQLite.library.path");
-//        if (path == null || path.length() == 0){
-//        System.loadLibrary("sqlite_jni");
-//        } else {
-//        try {
-//            java.lang.reflect.Method mapLibraryName;
-//            Class param[] = new Class[1];
-//            param[0] = String.class;
-//            mapLibraryName = System.class.getMethod("mapLibraryName",
-//                                param);
-//            Object args[] = new Object[1];
-//            args[0] = "sqlite_jni";
-//            String mapped = (String) mapLibraryName.invoke(null, args);
-//            System.load(path + java.io.File.separator + mapped);
-//        } catch (Throwable t) {
-//            System.loadLibrary("sqlite_jni");
-//        }
-//        }
-        internal_init();
-    } catch (Throwable t) {
-        System.err.println("Unable to load sqlite: " + t);
-    }
+        try {
+            String path = System.getProperty("SQLite.library.path");
+            if (path == null || path.length() == 0){
+                System.loadLibrary("sqlite_jni");
+            } else {
+                try {
+                    java.lang.reflect.Method mapLibraryName;
+                    Class param[] = new Class[1];
+                    param[0] = String.class;
+                    mapLibraryName = System.class.getMethod("mapLibraryName",
+                                                            param);
+                    Object args[] = new Object[1];
+                    args[0] = "sqlite_jni";
+                    String mapped = (String) mapLibraryName.invoke(null, args);
+                    System.load(path + java.io.File.separator + mapped);
+                } catch (Throwable t) {
+                    System.loadLibrary("sqlite_jni");
+                }
+            }
+            internal_init();
+        } catch (Throwable t) {
+            System.err.println("Unable to load sqlite: " + t);
+        }
     }
 }
 

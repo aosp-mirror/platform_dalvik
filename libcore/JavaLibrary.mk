@@ -21,26 +21,36 @@
 # Common definitions for host and target.
 #
 
-# The core library is divided into modules. Each module has a separate
-# Java source directory, and some (hopefully eventually all) also have
-# a directory for tests.
+# dalvik/libcore is divided into modules.
+#
+# The structure of each module is:
+#
+#   src/
+#       main/               # To be shipped on every device.
+#            java/          # Java source for library code.
+#            native/        # C++ source for library code.
+#            resources/     # Support files.
+#       test/               # Built only on demand, for testing.
+#            java/          # Java source for tests.
+#            native/        # C++ source for tests (rare).
+#            resources/     # Support files.
+#
+# All subdirectories are optional (hence the "2> /dev/null"s below).
 
-define all-core-java-files
-$(patsubst ./%,%,$(shell cd $(LOCAL_PATH) && find */src/main/java -name "*.java"))
+define all-main-java-files-under
+$(foreach dir,$(1),$(patsubst ./%,%,$(shell cd $(LOCAL_PATH) && find $(dir)/src/main/java -name "*.java" 2> /dev/null)))
 endef
 
 define all-test-java-files-under
-$(patsubst ./%,%,$(shell cd $(LOCAL_PATH) && find $(1)/src/test/java -name "*.java"))
+$(patsubst ./%,%,$(shell cd $(LOCAL_PATH) && find $(1)/src/test/java -name "*.java" 2> /dev/null))
 endef
 
-# Redirect ls stderr to /dev/null because the corresponding resources
-# directories don't always exist.
 define all-core-resource-dirs
 $(shell cd $(LOCAL_PATH) && ls -d */src/$(1)/{java,resources} 2> /dev/null)
 endef
 
 # The Java files and their associated resources.
-core_src_files := $(call all-core-java-files)
+core_src_files := $(call all-main-java-files-under,annotation archive auth awt-kernel concurrent crypto dalvik dom icu json junit logging luni luni-kernel math nio nio_char openssl prefs regex security security-kernel sql suncompat support text x-net xml)
 core_resource_dirs := $(call all-core-resource-dirs,main)
 test_resource_dirs := $(call all-core-resource-dirs,test)
 
@@ -69,6 +79,15 @@ include $(BUILD_JAVA_LIBRARY)
 core-intermediates := ${intermediates}
 
 
+
+# Definitions to make the sqlite JDBC driver.
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := $(call all-main-java-files-under,sqlite-jdbc)
+LOCAL_NO_STANDARD_LIBRARIES := true
+LOCAL_JAVA_LIBRARIES := core
+LOCAL_MODULE := sqlite-jdbc
+include $(BUILD_JAVA_LIBRARY)
 
 
 # Definitions to make the core-tests libraries.
@@ -269,7 +288,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,sql)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core core-tests-support
+LOCAL_JAVA_LIBRARIES := core core-tests-support sqlite-jdbc
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-sql

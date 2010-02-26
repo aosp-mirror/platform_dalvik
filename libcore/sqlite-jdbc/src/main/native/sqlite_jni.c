@@ -1,10 +1,9 @@
 #include "JNIHelp.h"
+#include "sqlite_jni_defs.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "sqlite_jni_defs.h"
 
 #if HAVE_SQLITE2
 #include "sqlite.h"
@@ -278,13 +277,23 @@ freep(char **strp)
 static void
 throwex(JNIEnv *env, const char *msg)
 {
-    jniThrowException(env, "SQLite/Exception", msg);
+    jclass except = (*env)->FindClass(env, "SQLite/Exception");
+
+    (*env)->ExceptionClear(env);
+    if (except) {
+	(*env)->ThrowNew(env, except, msg);
+    }
 }
 
 static void
 throwoom(JNIEnv *env, const char *msg)
 {
-    jniThrowException(env, "java/lang/OutOfMemoryError", msg);
+    jclass except = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
+
+    (*env)->ExceptionClear(env);
+    if (except) {
+	(*env)->ThrowNew(env, except, msg);
+    }
 }
 
 static void
@@ -297,7 +306,12 @@ throwclosed(JNIEnv *env)
 static void
 throwioex(JNIEnv *env, const char *msg)
 {
-    jniThrowException(env, "java/io/IOException", msg);
+    jclass except = (*env)->FindClass(env, "java/io/IOException");
+
+    (*env)->ExceptionClear(env);
+    if (except) {
+	(*env)->ThrowNew(env, except, msg);
+    }
 }
 #endif
 

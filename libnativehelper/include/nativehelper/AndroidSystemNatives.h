@@ -87,14 +87,6 @@ int register_com_ibm_icu4jni_text_NativeDecimalFormat(JNIEnv* env);
 int register_com_ibm_icu4jni_regex_NativeRegEx(JNIEnv* env);
 int register_com_ibm_icu4jni_util_Resources(JNIEnv* env);
 
-int register_sun_misc_Unsafe(JNIEnv* env);
-
-int register_SQLite_Database(JNIEnv* env);
-int register_SQLite_Vm(JNIEnv* env);
-int register_SQLite_FunctionContext(JNIEnv* env);
-int register_SQLite_Stmt(JNIEnv* env);
-int register_SQLite_Blob(JNIEnv* env);
-
 int register_org_openssl_NativeBN(JNIEnv* env);
 
 #ifdef __cplusplus
