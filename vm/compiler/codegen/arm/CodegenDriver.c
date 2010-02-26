@@ -43,7 +43,7 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
     }
     loadConstant(cUnit, r2, (int)funct);
     opReg(cUnit, kOpBlx, r2);
-    dvmCompilerColbberCallRegs(cUnit);
+    dvmCompilerClobberCallRegs(cUnit);
     if (tgtSize == 1) {
         RegLocation rlResult;
         rlDest = dvmCompilerGetDest(cUnit, mir, 0);
@@ -106,7 +106,7 @@ static bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
     loadValueDirectFixed(cUnit, rlSrc2, r1);
     loadConstant(cUnit, r2, (int)funct);
     opReg(cUnit, kOpBlx, r2);
-    dvmCompilerColbberCallRegs(cUnit);
+    dvmCompilerClobberCallRegs(cUnit);
     rlResult = dvmCompilerGetReturn(cUnit);
     storeValue(cUnit, rlDest, rlResult);
     return false;
@@ -159,7 +159,7 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
     loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
     loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
     opReg(cUnit, kOpBlx, rlr);
-    dvmCompilerColbberCallRegs(cUnit);
+    dvmCompilerClobberCallRegs(cUnit);
     rlResult = dvmCompilerGetReturnWide(cUnit);
     storeValueWide(cUnit, rlDest, rlResult);
     return false;
@@ -623,7 +623,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         loadConstant(cUnit, rlr, (int) callTgt);
         loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
         opReg(cUnit, kOpBlx, rlr);
-        dvmCompilerColbberCallRegs(cUnit);
+        dvmCompilerClobberCallRegs(cUnit);
         if (retReg == r0)
             rlResult = dvmCompilerGetReturnWide(cUnit);
         else
@@ -750,7 +750,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
             genNullCheck(cUnit, rlSrc2.sRegLow, r1, mir->offset, NULL);
         }
         opReg(cUnit, kOpBlx, r2);
-        dvmCompilerColbberCallRegs(cUnit);
+        dvmCompilerClobberCallRegs(cUnit);
         if (retReg == r0)
             rlResult = dvmCompilerGetReturn(cUnit);
         else
@@ -1285,7 +1285,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
         target->defMask = ENCODE_ALL;
         branchOver->generic.target = (LIR *) target;
-        dvmCompilerColbberCallRegs(cUnit);
+        dvmCompilerClobberCallRegs(cUnit);
     }
 }
 
@@ -1532,7 +1532,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r0, (int) classPtr);
             loadConstant(cUnit, r1, ALLOC_DONT_TRACK);
             opReg(cUnit, kOpBlx, r2);
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             /* generate a branch over if allocation is successful */
             opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
             ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
@@ -1590,7 +1590,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             opRegReg(cUnit, kOpCmp, r0, r1);
             ArmLIR *branch2 = opCondBranch(cUnit, kArmCondEq);
             opReg(cUnit, kOpBlx, r2);
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             /*
              * If null, check cast failed - punt to the interpreter.  Because
              * interpreter will be the one throwing, we don't need to
@@ -2007,7 +2007,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             }
             loadConstant(cUnit, r1, lit);
             opReg(cUnit, kOpBlx, r2);
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             if (isDiv)
                 rlResult = dvmCompilerGetReturn(cUnit);
             else
@@ -2067,7 +2067,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
                 genRegImmCheck(cUnit, kArmCondMi, r1, 0, mir->offset, NULL);
             loadConstant(cUnit, r2, ALLOC_DONT_TRACK);
             opReg(cUnit, kOpBlx, r3);
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             /* generate a branch over if allocation is successful */
             opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
             ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
@@ -2123,7 +2123,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             genRegCopy(cUnit, r0, r1);
             genRegCopy(cUnit, r1, r2);
             opReg(cUnit, kOpBlx, r3);
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             /* branch target here */
             ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
             target->defMask = ENCODE_ALL;
@@ -2501,7 +2501,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             loadConstant(cUnit, r1,
                (int) (cUnit->method->insns + mir->offset + mir->dalvikInsn.vB));
             opReg(cUnit, kOpBlx, r2);
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             /* generate a branch over if successful */
             opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
             ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
@@ -2539,7 +2539,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             /* r2 <- pc of the instruction following the blx */
             opRegReg(cUnit, kOpMov, r2, rpc);
             opReg(cUnit, kOpBlx, r4PC);
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             /* pc <- computed goto target */
             opRegReg(cUnit, kOpMov, rpc, r0);
             break;
@@ -3029,7 +3029,7 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
                     dvmAbort();
             }
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
-            dvmCompilerColbberCallRegs(cUnit);
+            dvmCompilerClobberCallRegs(cUnit);
             dvmCompilerClobber(cUnit, r4PC);
             dvmCompilerClobber(cUnit, r7);
             opRegRegImm(cUnit, kOpAdd, r4PC, rGLUE, offset);

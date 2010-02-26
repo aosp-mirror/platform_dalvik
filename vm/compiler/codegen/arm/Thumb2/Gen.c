@@ -262,7 +262,7 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
         ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
         target->defMask = ENCODE_ALL;
         branchOver->generic.target = (LIR *) target;
-        dvmCompilerColbberCallRegs(cUnit);
+        dvmCompilerClobberCallRegs(cUnit);
     }
 
     // Resume here

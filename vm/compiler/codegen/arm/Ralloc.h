@@ -127,11 +127,11 @@ extern RegLocation dvmCompilerGetDest(CompilationUnit *cUnit, MIR *mir,
 extern RegLocation dvmCompilerGetReturnWide(CompilationUnit *cUnit);
 
 /* Clobber all regs that might be used by an external C call */
-extern void dvmCompilerColbberCallRegs(CompilationUnit *cUnit);
+extern void dvmCompilerClobberCallRegs(CompilationUnit *cUnit);
 
 extern RegisterInfo *dvmCompilerIsTemp(CompilationUnit *cUnit, int reg);
 
-extern void dvmcompilerMarkInUse(CompilationUnit *cUnit, int reg);
+extern void dvmCompilerMarkInUse(CompilationUnit *cUnit, int reg);
 
 extern int dvmCompilerAllocTemp(CompilationUnit *cUnit);
 
