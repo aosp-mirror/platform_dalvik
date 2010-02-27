@@ -141,7 +141,7 @@ public class Stmt {
      */
 
     public native void bind_zeroblob(int pos, int length)
-    throws SQLite.Exception;
+	throws SQLite.Exception;
 
     /**
      * Return number of parameters in compiled SQLite3 statement.
@@ -165,7 +165,7 @@ public class Stmt {
      */
 
     public native int bind_parameter_index(String name)
-    throws SQLite.Exception;
+	throws SQLite.Exception;
 
 
     /**
@@ -226,16 +226,16 @@ public class Stmt {
 
     public Object column(int col) throws SQLite.Exception {
         switch (column_type(col)) {
-    case Constants.SQLITE_INTEGER:
-        return new Long(column_long(col));
-    case Constants.SQLITE_FLOAT:
-        return new Double(column_double(col));
-    case Constants.SQLITE_BLOB:
-        return column_bytes(col);
-    case Constants.SQLITE3_TEXT:
-        return column_string(col);
-    }
-    return null;
+	case Constants.SQLITE_INTEGER:
+	    return new Long(column_long(col));
+	case Constants.SQLITE_FLOAT:
+	    return new Double(column_double(col));
+	case Constants.SQLITE_BLOB:
+	    return column_bytes(col);
+	case Constants.SQLITE3_TEXT:
+	    return column_string(col);
+	}
+	return null;
     }
 
     /**
@@ -283,6 +283,6 @@ public class Stmt {
     private static native void internal_init();
 
     static {
-    internal_init();
+	internal_init();
     }
 }

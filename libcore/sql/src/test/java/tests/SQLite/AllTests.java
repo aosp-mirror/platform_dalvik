@@ -28,7 +28,6 @@ public class AllTests {
         suite.addTestSuite(DatabaseTest.class);
         suite.addTestSuite(JDBCDriverFunctionalTest.class);
         suite.addTestSuite(JDBCDriverTest.class);
-        suite.addTestSuite(ConstantsTest.class);
         suite.addTestSuite(BlobTest.class);
         suite.addTestSuite(StmtTest.class);
         suite.addTestSuite(ExceptionTest.class);

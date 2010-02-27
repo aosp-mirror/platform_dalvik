@@ -982,17 +982,6 @@ public class StmtTest extends SQLiteTest {
         }
     }
     
-    /**
-     * @throws Exception 
-     * @tests {@link Stmt#column_type(int)}
-     */
-    @TestTargetNew(
-        level = TestLevel.SUFFICIENT,
-        notes = "method test",
-        method = "column_type",
-        args = {int.class}
-    )
-    @KnownFailure("For numeric, float and blob wrong type is returned")
     public void testColumn_type() throws Exception {
         db.exec(createAllTypes, null);
         db.exec(insertAllTypes, null);
@@ -1033,10 +1022,8 @@ public class StmtTest extends SQLiteTest {
         assertEquals(Constants.SQLITE_NULL, st.column_type(29));
 
         // Failing tests
-        assertTrue("NUMERIC".equalsIgnoreCase(st.column_decltype(12)));
-        assertEquals(Constants.SQLITE_NUMERIC, st.column_type(12)); // NUMERIC
-                                                                    // -> got
-                                                                    // INTEGER
+        assertTrue("INTEGER".equalsIgnoreCase(st.column_decltype(12)));
+        assertEquals(Constants.SQLITE_INTEGER, st.column_type(12));
         
         assertTrue("FLOAT".equalsIgnoreCase(st.column_decltype(11)));
         assertEquals(Constants.SQLITE_FLOAT, st.column_type(11)); // FLOAT ->

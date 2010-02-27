@@ -2981,16 +2981,6 @@ public class PreparedStatementTest extends SQLTest {
         }
     }
     
-    /**
-     * @test {@link java.sql.PreparedStatement#setCharacterStream(int, java.io.Reader, int)}
-     * 
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "not supported",
-        method = "setCharacterStream",
-        args = {int.class, java.io.Reader.class, int.class}
-    )
     public void testSetCharacterSteam() {
         ResultSet res = null;
         PreparedStatement ps = null;
@@ -3002,9 +2992,6 @@ public class PreparedStatementTest extends SQLTest {
             assertNotNull("Error in test setup: file not found",file);
             Reader reader = new InputStreamReader(file);
             ps.setCharacterStream(1, reader, 100);
-            fail("Exception expected not supported"); 
-        } catch (SQLException e) {
-            // ok     
         } catch (Exception e) {
             fail("Error in test setup "+e.getMessage());
             e.printStackTrace();

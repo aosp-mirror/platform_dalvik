@@ -1069,7 +1069,7 @@ public class DatabaseTest extends SQLiteTest {
             db.exec("insert into TEST values(4, 'Fiona', 'Apple'); ", null);
             db.trace((Trace) t);
             db.create_aggregate("myaggfunc", 1, aggFunction);
-            db.function_type("myaggfunc", Constants.SQLITE_TEXT);
+            db.function_type("myaggfunc", Constants.SQLITE3_TEXT);
             db.exec("PRAGMA show_datatypes = on", null);
             
             assertFalse(aggFunction.functionCalled);
@@ -1125,7 +1125,7 @@ public class DatabaseTest extends SQLiteTest {
                 null);
         
         db.create_function("sin", 1, sinFunc);
-        db.function_type("sin", Constants.SQLITE_NUMERIC);
+        db.function_type("sin", Constants.SQLITE_FLOAT);
         res = db.get_table("select sin(res) from TEST WHERE res = "
                 + Double.toString(input));
          
@@ -2036,4 +2036,3 @@ public class DatabaseTest extends SQLiteTest {
     }
    
 }
-

@@ -941,23 +941,14 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
                 meta.ownInsertsAreVisible(100));
     }
 
-    /**
-     * @tests {@link java.sql.DatabaseMetaData#ownUpdatesAreVisible(int)}
-     */
-    @TestTargetNew(
-        level = TestLevel.NOT_FEASIBLE,
-        notes = "not supported. Verification with invalid parameters missed.",
-        method = "ownUpdatesAreVisible",
-        args = {int.class}
-    )
     public void test_ownUpdatesAreVisibleI() throws SQLException {
-        assertFalse(
+        assertTrue(
                 "result set's own updates are visible for TYPE_FORWARD_ONLY type",
                 meta.ownUpdatesAreVisible(ResultSet.TYPE_FORWARD_ONLY));
-        assertFalse(
+        assertTrue(
                 "result set's own updates are visible for TYPE_SCROLL_INSENSITIVE type",
                 meta.ownUpdatesAreVisible(ResultSet.TYPE_SCROLL_INSENSITIVE));
-        assertFalse(
+        assertTrue(
                 "result set's own updates are visible for TYPE_SCROLL_SENSITIVE type",
                 meta.ownUpdatesAreVisible(ResultSet.TYPE_SCROLL_SENSITIVE));
         assertFalse("result set's own updates are visible for unknown type",
@@ -1090,18 +1081,8 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
 
     }
 
-    /**
-     * @tests java.sql.DatabaseMetaData#supportsBatchUpdates()
-     */
-    @TestTargetNew(
-        level = TestLevel.NOT_FEASIBLE,
-        notes = "not supported",
-        method = "supportsBatchUpdates",
-        args = {}
-    )
     public void test_supportsBatchUpdates() throws SQLException {
-        // NOT_FEASIBLE: SQLITE does not implement this functionality
-        assertFalse(meta.supportsBatchUpdates());
+        assertTrue(meta.supportsBatchUpdates());
     }
 
     /**
@@ -1792,32 +1773,12 @@ public class DatabaseMetaDataNotSupportedTest extends TestCase {
         assertFalse(meta.supportsTransactions());
     }
 
-    /**
-     * @tests java.sql.DatabaseMetaData#supportsUnion()
-     */
-    @TestTargetNew(
-        level = TestLevel.NOT_FEASIBLE,
-        notes = "not supported",
-        method = "supportsUnion",
-        args = {}
-    )
     public void test_supportsUnion() throws SQLException {
-        // NOT_FEASIBLE: SQLITE does not implement this functionality
-        assertFalse(meta.supportsUnion());
+        assertTrue(meta.supportsUnion());
     }
 
-    /**
-     * @tests java.sql.DatabaseMetaData#supportsUnionAll()
-     */
-    @TestTargetNew(
-        level = TestLevel.NOT_FEASIBLE,
-        notes = "not supported",
-        method = "supportsUnionAll",
-        args = {}
-    )
     public void test_supportsUnionAll() throws SQLException {
-        // NOT_FEASIBLE: SQLITE does not implement this functionality
-        assertFalse(meta.supportsUnionAll());
+        assertTrue(meta.supportsUnionAll());
     }
     
     /**

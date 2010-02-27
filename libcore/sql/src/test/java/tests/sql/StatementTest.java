@@ -692,29 +692,28 @@ public class StatementTest extends SQLTest {
         }
     }
 
-    /**
-     * @test java.sql.Statement#setMaxRows(int max)
-     * TODO not supported
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "not supported",
-        method = "setMaxRows",
-        args = {int.class}
-    )
-    public void testSetMaxRows() {
+    public void testMaxRows() {
         Statement st = null;
         try {
             st = conn.createStatement();
-            st.execute("select * from zoo;");
-            for (int i = 0; i < 300; i += 50) {
+            for (int i = 0; i < 300; i += 50) { 
                 try {
                     st.setMaxRows(i);
                     assertEquals(i, st.getMaxRows());
-                    fail("Revise test implemenation for feature impl. has changed");
+                    ResultSet r = st.executeQuery("select * from zoo;");
+                    int rowCount = 0;
+                    while (r.next()) {
+                        ++rowCount;
+                    }
+                    if (i == 0) {
+                        // 0 means unlimited.
+                        assertTrue("rowCount=" + rowCount + " i=" + i, rowCount > i);
+                    } else {
+                        assertTrue("rowCount=" + rowCount + " i=" + i, rowCount <= i);
+                    }
+                    r.close();
                 } catch (SQLException sqle) {
-                    assertEquals("not supported", sqle.getMessage());
-//                   fail("SQLException is thrown: " + sqle.getMessage());
+                    fail("SQLException is thrown: " + sqle.getMessage());
                 }
             }
             try {
@@ -722,41 +721,6 @@ public class StatementTest extends SQLTest {
                 fail("SQLException isn't thrown");
             } catch (SQLException sqle) {
                 // expecteds
-            }
-        } catch (SQLException e) {
-            fail("Can't create statement, SQLException is thrown: "
-                    + e.getMessage());
-        } finally {
-            try {
-                st.close();
-            } catch (SQLException ee) {
-            }
-        }
-    }
-
-    /**
-     * @test java.sql.Statement#getMaxRows()
-     * TODO not supported
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "not supported",
-        method = "getMaxRows",
-        args = {}
-    )
-    public void testGetMaxRows() {
-        Statement st = null;
-        try {
-            st = conn.createStatement();
-            for (int i = 200; i < 500; i += 50) {
-                try {
-                    st.setMaxRows(i);
-                    assertEquals(i, st.getMaxRows());
-                    fail("Revise test implemenation for feature impl. has changed");
-                } catch (SQLException sqle) {
-                    assertEquals("not supported", sqle.getMessage());
-//                    fail("SQLException is thrown: " + sqle.getMessage());
-                }
             }
         } catch (SQLException e) {
             fail("Can't create statement, SQLException is thrown: "
