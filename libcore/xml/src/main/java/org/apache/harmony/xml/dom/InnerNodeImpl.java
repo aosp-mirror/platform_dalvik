@@ -148,28 +148,35 @@ public abstract class InnerNodeImpl extends LeafNodeImpl {
         return false;
     }
 
+    /**
+     * Normalize the text nodes within this subtree. Although named similarly,
+     * this method is unrelated to Document.normalize.
+     */
     @Override
-    public void normalize() {
-        Node nextNode = null;
-        
+    public final void normalize() {
+        Text next = null; // null if next doesn't exist or is not a TEXT_NODE
         for (int i = children.size() - 1; i >= 0; i--) {
-            Node thisNode = children.get(i);
+            Node node = children.get(i);
+            node.normalize();
 
-            thisNode.normalize();
-            
-            if (thisNode.getNodeType() == Node.TEXT_NODE) {
-                if (nextNode != null && nextNode.getNodeType() == Node.TEXT_NODE) {
-                    ((Text)thisNode).setData(thisNode.getNodeValue() + nextNode.getNodeValue());
-                    removeChild(nextNode);
-                }
-                
-                if ("".equals(thisNode.getNodeValue())) {
-                    removeChild(thisNode);
-                    nextNode = null;
-                } else {
-                    nextNode = thisNode;
-                }
+            if (node.getNodeType() != Node.TEXT_NODE) {
+                next = null;
+                continue;
             }
+
+            Text text = (Text) node;
+
+            if (text.getLength() == 0) {
+                removeChild(text);
+                continue;
+            }
+
+            if (next != null) {
+                text.appendData(next.getData());
+                removeChild(next);
+            }
+
+            next = text;
         }
     }
 
