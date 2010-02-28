@@ -109,7 +109,6 @@ public class DomTest extends TestCase {
         factory.setNamespaceAware(true);
         builder = factory.newDocumentBuilder();
         domImplementation = builder.getDOMImplementation();
-
         document = builder.parse(new InputSource(new StringReader(xml)));
 
         // doctype nodes
@@ -448,7 +447,6 @@ public class DomTest extends TestCase {
         document.appendChild(root);
 
         EntityReference entityReference = document.createEntityReference("sp");
-        entityReference.setNodeValue("Maple Syrup");
         root.appendChild(entityReference);
 
         try {
@@ -461,8 +459,7 @@ public class DomTest extends TestCase {
     public void testAttributeSetTextContent() throws TransformerException {
         String original = domToString(document);
         standard.setTextContent("foobar");
-        String expected = original.replaceFirst(
-                "standard=\"strawberry\"", "standard=\"foobar\"");
+        String expected = original.replace("standard=\"strawberry\"", "standard=\"foobar\"");
         assertEquals(expected, domToString(document));
     }
 
@@ -614,8 +611,136 @@ public class DomTest extends TestCase {
         }
     }
 
-    private String domToString(Document document)
-            throws TransformerException {
+    public void testIsElementContentWhitespaceWithoutDeclaration() throws Exception {
+        String xml = "<menu>    <item/>   </menu>";
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        Text text = (Text) factory.newDocumentBuilder()
+                .parse(new InputSource(new StringReader(xml)))
+                .getDocumentElement().getChildNodes().item(0);
+        assertFalse(text.isElementContentWhitespace());
+    }
+
+    public void testIsElementContentWhitespaceWithDeclaration() throws Exception {
+        String xml = "<!DOCTYPE menu [\n"
+                + "  <!ELEMENT menu (item)*>\n"
+                + "  <!ELEMENT item (#PCDATA)>\n"
+                + "]><menu>    <item/>   </menu>";
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        Text text = (Text) factory.newDocumentBuilder()
+                .parse(new InputSource(new StringReader(xml)))
+                .getDocumentElement().getChildNodes().item(0);
+        assertTrue("This implementation does not recognize element content whitespace",
+                text.isElementContentWhitespace());
+    }
+
+    public void testGetWholeTextFirst() {
+        assertEquals("Belgian waffles & strawberries (< 5g of fat)",
+                descriptionText1.getWholeText());
+    }
+
+    public void testGetWholeTextMiddle() {
+        assertEquals("This implementation doesn't include preceding nodes in getWholeText()",
+                "Belgian waffles & strawberries (< 5g of fat)", descriptionText2.getWholeText());
+    }
+
+    public void testGetWholeTextLast() {
+        assertEquals("This implementation doesn't include preceding nodes in getWholeText()",
+                "Belgian waffles & strawberries (< 5g of fat)", descriptionText3.getWholeText());
+    }
+
+    public void testGetWholeTextOnly() {
+        assertEquals("60%", vitamincText.getWholeText());
+    }
+
+    public void testGetWholeTextWithEntityReference() {
+        EntityReference spReference = document.createEntityReference("sp");
+        description.insertBefore(spReference, descriptionText2);
+
+        assertEquals("This implementation doesn't resolve entity references in getWholeText()",
+                "BelgianMaple Syrup waffles & strawberries (< 5g of fat)",
+                descriptionText1.getWholeText());
+    }
+
+    public void testReplaceWholeTextFirst() throws TransformerException {
+        String original = domToString(document);
+        Text replacement = descriptionText1.replaceWholeText("Eggos");
+        assertSame(descriptionText1, replacement);
+        String expected = original.replace(
+                "Belgian<![CDATA[ waffles & strawberries (< 5g ]]>of fat)", "Eggos");
+        assertEquals(expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextMiddle() throws TransformerException {
+        String original = domToString(document);
+        Text replacement = descriptionText2.replaceWholeText("Eggos");
+        assertSame(descriptionText2, replacement);
+        String expected = original.replace(
+                "Belgian<![CDATA[ waffles & strawberries (< 5g ]]>of fat)", "<![CDATA[Eggos]]>");
+        assertEquals("This implementation doesn't remove preceding nodes in replaceWholeText()",
+                expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextLast() throws TransformerException {
+        String original = domToString(document);
+        Text replacement = descriptionText3.replaceWholeText("Eggos");
+        assertSame(descriptionText3, replacement);
+        String expected = original.replace(
+                "Belgian<![CDATA[ waffles & strawberries (< 5g ]]>of fat)", "Eggos");
+        assertEquals("This implementation doesn't remove preceding nodes in replaceWholeText()",
+                expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextOnly() throws TransformerException {
+        String original = domToString(document);
+        Text replacement = vitamincText.replaceWholeText("70%");
+        assertEquals(Node.TEXT_NODE, replacement.getNodeType());
+        assertSame(vitamincText, replacement);
+        String expected = original.replace("60%", "70%");
+        assertEquals(expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextFirstWithNull() throws TransformerException {
+        String original = domToString(document);
+        assertNull(descriptionText1.replaceWholeText(null));
+        String expected = original.replaceFirst(">.*</description>", "/>");
+        assertEquals("This implementation doesn't remove adjacent nodes in replaceWholeText(null)",
+                expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextMiddleWithNull() throws TransformerException {
+        String original = domToString(document);
+        assertNull(descriptionText2.replaceWholeText(null));
+        String expected = original.replaceFirst(">.*</description>", "/>");
+        assertEquals("This implementation doesn't remove adjacent nodes in replaceWholeText(null)",
+                expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextLastWithNull() throws TransformerException {
+        String original = domToString(document);
+        assertNull(descriptionText3.replaceWholeText(null));
+        String expected = original.replaceFirst(">.*</description>", "/>");
+        assertEquals("This implementation doesn't remove adjacent nodes in replaceWholeText(null)",
+                expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextFirstWithEmptyString() throws TransformerException {
+        String original = domToString(document);
+        assertNull(descriptionText1.replaceWholeText(""));
+        String expected = original.replaceFirst(">.*</description>", "/>");
+        assertEquals("This implementation doesn't remove adjacent nodes in replaceWholeText(null)",
+                expected, domToString(document));
+    }
+
+    public void testReplaceWholeTextOnlyWithEmptyString() throws TransformerException {
+        String original = domToString(document);
+        assertNull(vitamincText.replaceWholeText(""));
+        String expected = original.replaceFirst(">.*</a:vitaminc>", "/>");
+        assertEquals(expected, domToString(document));
+    }
+
+    private String domToString(Document document) throws TransformerException {
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(document), new StreamResult(writer));
         return writer.toString();

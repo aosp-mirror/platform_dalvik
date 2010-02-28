@@ -23,10 +23,14 @@ import java.util.StringTokenizer;
 
 import javax.xml.parsers.DocumentBuilder;
 
+import org.apache.harmony.xml.dom.CDATASectionImpl;
+import org.apache.harmony.xml.dom.DocumentImpl;
+import org.apache.harmony.xml.dom.TextImpl;
 import org.kxml2.io.KXmlParser;
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
@@ -49,7 +53,7 @@ import org.apache.harmony.xml.dom.DOMImplementationImpl;
  */
 class DocumentBuilderImpl extends DocumentBuilder {
 
-    private static DOMImplementation dom = DOMImplementationImpl.getInstance();
+    private static DOMImplementationImpl dom = DOMImplementationImpl.getInstance();
 
     private boolean coalescing;
 
@@ -70,25 +74,6 @@ class DocumentBuilderImpl extends DocumentBuilder {
     @Override
     public DOMImplementation getDOMImplementation() {
         return dom;
-    }
-
-    /**
-     * Reflects whether this DocumentBuilder is configured to ignore comments.
-     * 
-     * @return True if and only if comments are ignored.
-     */
-    public boolean isIgnoringComments() {
-        return ignoreComments;
-    }
-
-    /**
-     * Reflects whether this DocumentBuilder is configured to ignore element
-     * content whitespace.
-     * 
-     * @return True if and only if whitespace element content is ignored.
-     */
-    public boolean isIgnoringElementContentWhitespace() {
-        return ignoreElementContentWhitespace;
     }
 
     @Override
@@ -112,7 +97,10 @@ class DocumentBuilderImpl extends DocumentBuilder {
             throw new IllegalArgumentException();
         }
         
-        Document document = newDocument();
+        String namespaceURI = null;
+        String qualifiedName = null;
+        DocumentType doctype = null;
+        DocumentImpl document = new DocumentImpl(dom, namespaceURI, qualifiedName, doctype);
 
         try {
             KXmlParser parser = new KXmlParser();
@@ -189,7 +177,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
      * @throws XmlPullParserException If a parsing error occurs.
      * @throws IOException If a general IO error occurs.
      */
-    private void parse(XmlPullParser parser, Document document, Node node,
+    private void parse(XmlPullParser parser, DocumentImpl document, Node node,
             int endToken) throws XmlPullParserException, IOException {
 
         int token = parser.getEventType();
@@ -271,7 +259,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
                  * whitespace at all.
                  */
                 if (!ignoreElementContentWhitespace) {
-                    appendText(document, node, true, parser.getText());
+                    appendText(document, node, token, parser.getText());
                 }
             } else if (token == XmlPullParser.TEXT || token == XmlPullParser.CDSECT) {
                 /*
@@ -279,7 +267,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
                  * That's the easiest case. We simply take it and create a new text node,
                  * or merge with an adjacent text node.
                  */
-                appendText(document, node, token == XmlPullParser.TEXT, parser.getText());
+                appendText(document, node, token, parser.getText());
             } else if (token == XmlPullParser.ENTITY_REF) {
                 /*
                  * Found an entity reference. If an entity resolver is
@@ -294,7 +282,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
 
                 String replacement = resolveStandardEntity(entity);
                 if (replacement != null) {
-                    appendText(document, node, true, replacement);
+                    appendText(document, node, token, replacement);
                 } else {
                     node.appendChild(document.createEntityReference(entity));
                 }
@@ -380,17 +368,17 @@ class DocumentBuilderImpl extends DocumentBuilder {
     }
 
     /**
-     * @param isText true for a normal TextNode, false for a CDATA section.
-     * (If we're not coalescing, it matters which kind of node we put into the DOM.)
+     * @param token the XML pull parser token type, such as XmlPullParser.CDSECT
+     *      or XmlPullParser.ENTITY_REF.
      */ 
-    private void appendText(Document document, Node node, boolean isText, String text) {
+    private void appendText(DocumentImpl document, Node parent, int token, String text) {
         // Ignore empty runs.
         if (text.length() == 0) {
             return;
         }
         // Merge with any previous text node if possible.
         if (coalescing) {
-            Node lastChild = node.getLastChild();
+            Node lastChild = parent.getLastChild();
             if (lastChild != null && lastChild.getNodeType() == Node.TEXT_NODE) {
                 Text textNode = (Text) lastChild;
                 textNode.setData(textNode.getNodeValue() + text);
@@ -398,11 +386,9 @@ class DocumentBuilderImpl extends DocumentBuilder {
             }
         }
         // Okay, we really do need a new text node
-        if (isText) {
-            node.appendChild(document.createTextNode(text));
-        } else {
-            node.appendChild(document.createCDATASection(text));
-        }
+        parent.appendChild(token == XmlPullParser.CDSECT
+                ? new CDATASectionImpl(document, text)
+                : new TextImpl(document, text));
     }
 
     @Override

@@ -561,24 +561,18 @@ public class DocumentBuilderTest extends TestCase {
         method = "parse",
         args = {java.lang.String.class}
     )
-    public void test_parseLjava_lang_String() {
+    public void test_parseLjava_lang_String() throws Exception {
         // case 1: Trivial use.
         File f = new File(getClass().getResource("/simple.xml").getFile());
-        try {
-            Document d = db.parse(f.getAbsolutePath());
-            assertNotNull(d);
+        Document d = db.parse(f.getAbsolutePath());
+        assertNotNull(d);
 //          TBD  getXmlEncoding() is not supported
 //          assertEquals("ISO-8859-1", d.getXmlEncoding());
-            assertEquals(2, d.getChildNodes().getLength());
-            assertEquals("#comment",
-                    d.getChildNodes().item(0).getNodeName());
-            assertEquals("breakfast_menu",
-                    d.getChildNodes().item(1).getNodeName());
-        } catch (IOException ioe) {
-            fail("Unexpected IOException " + ioe.toString());
-        } catch (SAXException sax) {
-            fail("Unexpected SAXException " + sax.toString());
-        }
+        assertEquals(2, d.getChildNodes().getLength());
+        assertEquals("#comment",
+                d.getChildNodes().item(0).getNodeName());
+        assertEquals("breakfast_menu",
+                d.getChildNodes().item(1).getNodeName());
 
         // case 2: Try to call parse with null argument
         try {
@@ -586,10 +580,6 @@ public class DocumentBuilderTest extends TestCase {
             fail("Expected IllegalArgumentException was not thrown");
         } catch (IllegalArgumentException iae) {
             // expected
-        } catch (IOException ioe) {
-            fail("Unexpected IOException " + ioe.toString());
-        } catch (SAXException sax) {
-            fail("Unexpected SAXException " + sax.toString());
         }
 
         // case 3: Try to parse a non-existent uri
@@ -598,8 +588,6 @@ public class DocumentBuilderTest extends TestCase {
             fail("Expected IOException was not thrown");
         } catch (IOException ioe) {
             // expected
-        } catch (SAXException sax) {
-            fail("Unexpected SAXException " + sax.toString());
         }
 
         // case 4: Try to parse incorrect xml file
@@ -607,8 +595,6 @@ public class DocumentBuilderTest extends TestCase {
             f = new File(getClass().getResource("/wrong.xml").getFile());
             db.parse(f.getAbsolutePath());
             fail("Expected SAXException was not thrown");
-        } catch (IOException ioe) {
-            fail("Unexpected IOException " + ioe.toString());
         } catch (SAXException sax) {
             // expected
         }

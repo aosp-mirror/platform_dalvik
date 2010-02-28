@@ -51,6 +51,13 @@ public abstract class CharacterDataImpl extends LeafNodeImpl implements
         return buffer.toString();
     }
 
+    /**
+     * Appends this node's text content to the given builder.
+     */
+    public void appendDataTo(StringBuilder stringBuilder) {
+        stringBuilder.append(buffer);
+    }
+
     public int getLength() {
         return buffer.length();
     }
