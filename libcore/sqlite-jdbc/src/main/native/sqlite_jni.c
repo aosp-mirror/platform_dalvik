@@ -30,7 +30,9 @@
 #define HAVE_BOTH_SQLITE 1
 #endif
 
-#define CANT_PASS_VALIST_AS_CHARPTR
+#ifndef HAVE_SQLITE3_SHARED_CACHE
+#define HAVE_SQLITE3_SHARED_CACHE 0
+#endif
 
 #include "sqlite_jni.h"
 
@@ -181,7 +183,7 @@ jstrlen(const jchar *jstr)
     int len = 0;
 
     if (jstr) {
-        while (*jstr++) {
+	while (*jstr++) {
 	    len++;
 	}
     }
@@ -332,6 +334,7 @@ trans2iso(JNIEnv *env, int haveutf, jstring enc, jstring src,
     dest->result = 0;
     dest->tofree = 0;
     if (haveutf) {
+        // BEGIN android-changed: leak/error reporting/simplification/performance.
         const jsize utfLength = (*env)->GetStringUTFLength(env, src);
         dest->result = dest->tofree = malloc(utfLength + 1);
         if (!dest->tofree) {
@@ -340,6 +343,7 @@ trans2iso(JNIEnv *env, int haveutf, jstring enc, jstring src,
         }
         (*env)->GetStringUTFRegion(env, src, 0, utfLength, dest->result);
         return dest->result;
+        // END android-changed
     }
     if (enc) {
 	bytes = (*env)->CallObjectMethod(env, src,
@@ -417,7 +421,7 @@ busyhandler(void *udata, const char *table, int count)
 					    "(Ljava/lang/String;I)Z");
 
 	if (mid == 0) {
-	    (*env)->DeleteLocalRef(env, cls);
+	    (*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
 	    return ret;
 	}
 	trans2utf(env, h->haveutf, h->enc, table, &tabstr);
@@ -425,7 +429,7 @@ busyhandler(void *udata, const char *table, int count)
 					(jint) count)
 	      != JNI_FALSE;
 	(*env)->DeleteLocalRef(env, tabstr.jstr);
-	(*env)->DeleteLocalRef(env, cls);
+	(*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
     }
     return ret;
 }
@@ -445,12 +449,12 @@ busyhandler3(void *udata, int count)
 					    "(Ljava/lang/String;I)Z");
 
 	if (mid == 0) {
-	    (*env)->DeleteLocalRef(env, cls);
+	    (*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
 	    return ret;
 	}
 	ret = (*env)->CallBooleanMethod(env, h->bh, mid, 0, (jint) count)
 	    != JNI_FALSE;
-	(*env)->DeleteLocalRef(env, cls);
+	(*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
     }
     return ret;
 }
@@ -468,11 +472,11 @@ progresshandler(void *udata)
 	jmethodID mid = (*env)->GetMethodID(env, cls, "progress", "()Z");
 
 	if (mid == 0) {
-	    (*env)->DeleteLocalRef(env, cls);
+	    (*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
 	    return ret;
 	}
 	ret = (*env)->CallBooleanMethod(env, h->ph, mid) != JNI_TRUE;
-	(*env)->DeleteLocalRef(env, cls);
+	(*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
     }
     return ret;
 }
@@ -690,41 +694,39 @@ callback(void *udata, int ncol, char **data, char **cols)
 #endif
 #endif
 	}
-	mid = (*env)->GetMethodID(env, cls, "newrow",
-				  "([Ljava/lang/String;)Z");
-	if (mid) {
-	    jboolean rc;
+	if (data) {
+	    mid = (*env)->GetMethodID(env, cls, "newrow",
+				      "([Ljava/lang/String;)Z");
+	    if (mid) {
+		jboolean rc;
 
-	    if (data) {
 		arr = (*env)->NewObjectArray(env, ncol, C_java_lang_String, 0);
-	    } else {
-		arr = 0;
-	    }
-	    for (i = 0; arr && i < ncol; i++) {
-		if (data[i]) {
-		    transstr dats;
+		for (i = 0; arr && i < ncol; i++) {
+		    if (data[i]) {
+			transstr dats;
 
-		    trans2utf(env, h->haveutf, h->enc, data[i], &dats);
-		    (*env)->SetObjectArrayElement(env, arr, i, dats.jstr);
-		    exc = (*env)->ExceptionOccurred(env);
-		    if (exc) {
-			(*env)->DeleteLocalRef(env, exc);
-			return 1;
+			trans2utf(env, h->haveutf, h->enc, data[i], &dats);
+			(*env)->SetObjectArrayElement(env, arr, i, dats.jstr);
+			exc = (*env)->ExceptionOccurred(env);
+			if (exc) {
+			    (*env)->DeleteLocalRef(env, exc);
+			    return 1;
+			}
+			(*env)->DeleteLocalRef(env, dats.jstr);
 		    }
-		    (*env)->DeleteLocalRef(env, dats.jstr);
 		}
+		rc = (*env)->CallBooleanMethod(env, h->cb, mid, arr);
+		exc = (*env)->ExceptionOccurred(env);
+		if (exc) {
+		    (*env)->DeleteLocalRef(env, exc);
+		    return 1;
+		}
+		if (arr) {
+		    (*env)->DeleteLocalRef(env, arr);
+		}
+		(*env)->DeleteLocalRef(env, cls);
+		return rc != JNI_FALSE;
 	    }
-	    rc = (*env)->CallBooleanMethod(env, h->cb, mid, arr);
-	    exc = (*env)->ExceptionOccurred(env);
-	    if (exc) {
-		(*env)->DeleteLocalRef(env, exc);
-		return 1;
-	    }
-	    if (arr) {
-		(*env)->DeleteLocalRef(env, arr);
-	    }
-	    (*env)->DeleteLocalRef(env, cls);
-	    return rc != JNI_FALSE;
 	}
     }
     return 0;
@@ -803,7 +805,7 @@ doclose(JNIEnv *env, jobject obj, int final)
 	    bl->next = 0;
 	    bl->h = 0;
 	    if (bl->blob) {
-	        sqlite3_blob_close(bl->blob);
+		sqlite3_blob_close(bl->blob);
 	    }
 	    bl->blob = 0;
 	}
@@ -996,13 +998,21 @@ Java_SQLite_Database__1interrupt(JNIEnv *env, jobject obj)
 }
 
 JNIEXPORT void JNICALL
-Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
+Java_SQLite_Database__1open4(JNIEnv *env, jobject obj, jstring file, jint mode,
+			     jstring vfs, jboolean ver2)
 {
     handle *h = gethandle(env, obj);
     jthrowable exc;
     char *err = 0;
     transstr filename;
     int maj, min, lev;
+#if HAVE_SQLITE3_OPEN_V2
+    transstr vfsname;
+
+    vfsname.result = 0;
+    vfsname.tofree = 0;
+    vfsname.jstr = 0;
+#endif
 
     if (h) {
 	if (h->sqlite) {
@@ -1066,6 +1076,17 @@ Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
 	(*env)->DeleteLocalRef(env, exc);
 	return;
     }
+#if HAVE_SQLITE3_OPEN_V2
+    if (vfs) {
+	trans2iso(env, 1, h->enc, vfs, &vfsname);
+	exc = (*env)->ExceptionOccurred(env);
+	if (exc) {
+	    transfree(&filename);
+	    (*env)->DeleteLocalRef(env, exc);
+	    return;
+	}
+    }
+#endif
 #if HAVE_BOTH_SQLITE
     {
 	FILE *f = fopen(filename.result, "rb");
@@ -1075,8 +1096,13 @@ Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
 	    c_0 = fgetc(f);
 	    fclose(f);
 	}
-	if (c_0 != '*') {
+	if (c_0 != '*' && ver2 == JNI_FALSE) {
+#if HAVE_SQLITE3_OPEN_V2
+	    int rc = sqlite3_open_v2(filename.result, (sqlite3 **) &h->sqlite,
+				     (int) mode, vfsname.result);
+#else
 	    int rc = sqlite3_open(filename.result, (sqlite3 **) &h->sqlite);
+#endif
 
 	    if (rc == SQLITE_OK) {
 		h->is3 = 1;
@@ -1094,7 +1120,13 @@ Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
     h->sqlite = (void *) sqlite_open(filename.result, (int) mode, &err);
 #endif
 #if HAVE_SQLITE3
-    if (sqlite3_open(filename.result, (sqlite3 **) &h->sqlite) != SQLITE_OK) {
+#if HAVE_SQLITE3_OPEN_V2
+    if (sqlite3_open_v2(filename.result, (sqlite3 **) &h->sqlite,
+			(int) mode, vfsname.result) != SQLITE_OK)
+#else
+    if (sqlite3_open(filename.result, (sqlite3 **) &h->sqlite) != SQLITE_OK)
+#endif
+    {
         if (h->sqlite) {
 	    sqlite3_close((sqlite3 *) h->sqlite);
 	    h->sqlite = 0;
@@ -1103,6 +1135,9 @@ Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
 #endif
 #endif
     transfree(&filename);
+#if HAVE_SQLITE3_OPEN_V2
+    transfree(&vfsname);
+#endif
     exc = (*env)->ExceptionOccurred(env);
     if (exc) {
 	(*env)->DeleteLocalRef(env, exc);
@@ -1145,6 +1180,9 @@ Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
 #if HAVE_BOTH_SQLITE
 	if (h->is3) {
 	    sscanf(sqlite3_libversion(), "%d.%d.%d", &maj, &min, &lev);
+#if HAVE_SQLITE3_LOAD_EXTENSION
+	    sqlite3_enable_load_extension((sqlite3 *) h->sqlite, 1);
+#endif
 	} else {
 	    sscanf(sqlite_libversion(), "%d.%d.%d", &maj, &min, &lev);
 	}
@@ -1154,6 +1192,9 @@ Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
 #endif
 #if HAVE_SQLITE3
 	sscanf(sqlite3_libversion(), "%d.%d.%d", &maj, &min, &lev);
+#if HAVE_SQLITE3_LOAD_EXTENSION
+	sqlite3_enable_load_extension((sqlite3 *) h->sqlite, 1);
+#endif
 #endif
 #endif
 	h->ver = ((maj & 0xFF) << 16) | ((min & 0xFF) << 8) | (lev & 0xFF);
@@ -1165,6 +1206,12 @@ Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
 	sqlite_freemem(err);
     }
 #endif
+}
+
+JNIEXPORT void JNICALL
+Java_SQLite_Database__1open(JNIEnv *env, jobject obj, jstring file, jint mode)
+{
+    Java_SQLite_Database__1open4(env, obj, file, mode, 0, 0);
 }
 
 JNIEXPORT void JNICALL
@@ -1339,7 +1386,7 @@ Java_SQLite_Database__1exec__Ljava_lang_String_2LSQLite_Callback_2_3Ljava_lang_S
 	    jthrowable exc;
 	    int rc = SQLITE_ERROR, nargs, i;
 	    char *err = 0, *p;
-	    const char *str = (*env)->GetStringUTFChars(env, sql, NULL);
+	    const char *str = (*env)->GetStringUTFChars(env, sql, NULL); // android-changed: unused variable
 	    transstr sqlstr;
 	    struct args {
 		char *arg;
@@ -1615,7 +1662,7 @@ call_common(sqlite_func *sf, int isstep, int nargs, const char **args)
 	int i;
 
 	if (mid == 0) {
-	    (*env)->DeleteLocalRef(env, cls);
+	    (*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
 	    return;
 	}
 	arr = (*env)->NewObjectArray(env, nargs, C_java_lang_String, 0);
@@ -1664,7 +1711,7 @@ call_final(sqlite_func *sf)
 	jmethodID mid = (*env)->GetMethodID(env, cls, "last_step",
 					    "(LSQLite/FunctionContext;)V");
 	if (mid == 0) {
-	    (*env)->DeleteLocalRef(env, cls);
+	    (*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
 	    return;
 	}
 	f->sf = sf;
@@ -1691,7 +1738,7 @@ call3_common(sqlite3_context *sf, int isstep, int nargs, sqlite3_value **args)
 	int i;
 
 	if (mid == 0) {
-	    (*env)->DeleteLocalRef(env, cls);
+	    (*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
 	    return;
 	}
 	arr = (*env)->NewObjectArray(env, nargs, C_java_lang_String, 0);
@@ -1741,7 +1788,7 @@ call3_final(sqlite3_context *sf)
 	jmethodID mid = (*env)->GetMethodID(env, cls, "last_step",
 					    "(LSQLite/FunctionContext;)V");
 	if (mid == 0) {
-	    (*env)->DeleteLocalRef(env, cls);
+	    (*env)->DeleteLocalRef(env, cls); // android-changed: plug leak
 	    return;
 	}
 	f->sf = sf;
@@ -2520,7 +2567,8 @@ Java_SQLite_Vm_step(JNIEnv *env, jobject obj, jobject cb)
 
     if (v && v->vm && v->h) {
 	jthrowable exc;
-	int ret, ncol = 0;
+	int ret, tmp;
+	long ncol = 0;
 #if HAVE_SQLITE3
 	freemem *freeproc = 0;
 	const char **blob = 0;
@@ -2531,7 +2579,29 @@ Java_SQLite_Vm_step(JNIEnv *env, jobject obj, jobject cb)
 #if HAVE_BOTH_SQLITE
 	if (v->is3) {
 	    ret = sqlite3_step((sqlite3_stmt *) v->vm);
-	    if (ret == SQLITE_ROW) {
+	    if (ret == SQLITE_DONE && v->hh.row1) {
+		ncol = sqlite3_column_count((sqlite3_stmt *) v->vm);
+		if (ncol > 0) {
+		    data = calloc(ncol * 3 + 3 + 1, sizeof (char *));
+		    if (data) {
+			data[0] = (const char *) ncol;
+			++data;
+			cols = data + ncol + 1;
+			blob = cols + ncol + 1;
+			freeproc = free_tab;
+		    } else {
+			ret = SQLITE_NOMEM;
+		    }
+		}
+		if (ret != SQLITE_NOMEM) {
+		    int i;
+
+		    for (i = 0; i < ncol; i++) {
+			cols[i] =
+			    sqlite3_column_name((sqlite3_stmt *) v->vm, i);
+		    }
+		}
+	    } else if (ret == SQLITE_ROW) {
 		ncol = sqlite3_data_count((sqlite3_stmt *) v->vm);
 		if (ncol > 0) {
 		    data = calloc(ncol * 3 + 3 + 1, sizeof (char *));
@@ -2584,15 +2654,41 @@ Java_SQLite_Vm_step(JNIEnv *env, jobject obj, jobject cb)
 		}
 	    }
 	} else {
-	    ret = sqlite_step((sqlite_vm *) v->vm, &ncol, &data, &cols);
+	    tmp = 0;
+	    ret = sqlite_step((sqlite_vm *) v->vm, &tmp, &data, &cols);
+	    ncol = tmp;
 	}
 #else
 #if HAVE_SQLITE2
-	ret = sqlite_step((sqlite_vm *) v->vm, &ncol, &data, &cols);
+	tmp = 0;
+	ret = sqlite_step((sqlite_vm *) v->vm, &tmp, &data, &cols);
+	ncol = tmp;
 #endif
 #if HAVE_SQLITE3
 	ret = sqlite3_step((sqlite3_stmt *) v->vm);
-	if (ret == SQLITE_ROW) {
+	if (ret == SQLITE_DONE && v->hh.row1) {
+	    ncol = sqlite3_column_count((sqlite3_stmt *) v->vm);
+	    if (ncol > 0) {
+		data = calloc(ncol * 3 + 3 + 1, sizeof (char *));
+		if (data) {
+		    data[0] = (const char *) ncol;
+		    ++data;
+		    cols = data + ncol + 1;
+		    blob = cols + ncol + 1;
+		    freeproc = free_tab;
+		} else {
+		    ret = SQLITE_NOMEM;
+		}
+	    }
+	    if (ret != SQLITE_NOMEM) {
+		int i;
+
+		for (i = 0; i < ncol; i++) {
+		    cols[i] =
+			sqlite3_column_name((sqlite3_stmt *) v->vm, i);
+		}
+	    }
+	} else if (ret == SQLITE_ROW) {
 	    ncol = sqlite3_data_count((sqlite3_stmt *) v->vm);
 	    if (ncol > 0) {
 		data = calloc(ncol * 3 + 3 + 1, sizeof (char *));
@@ -2670,6 +2766,29 @@ Java_SQLite_Vm_step(JNIEnv *env, jobject obj, jobject cb)
 	    return JNI_TRUE;
 	} else if (ret == SQLITE_DONE) {
 dofin:
+	    if (v->hh.row1 && cols) {
+		v->hh.cb = cb;
+		v->hh.env = env;
+#if HAVE_BOTH_SQLITE
+		if (v->is3) {
+		    v->hh.stmt = (sqlite3_stmt *) v->vm;
+		}
+#else
+#if HAVE_SQLITE3
+		v->hh.stmt = (sqlite3_stmt *) v->vm;
+#endif
+#endif
+		callback((void *) &v->hh, ncol, (char **) 0, (char **) cols);
+#if HAVE_SQLITE3
+		if (data && freeproc) {
+		    freeproc((void *) data);
+		}
+#endif
+		exc = (*env)->ExceptionOccurred(env);
+		if (exc) {
+		    (*env)->DeleteLocalRef(env, exc);
+		}
+	    }
 #if HAVE_BOTH_SQLITE
 	    if (v->is3) {
 		sqlite3_finalize((sqlite3_stmt *) v->vm);
@@ -2720,6 +2839,9 @@ Java_SQLite_Vm_compile(JNIEnv *env, jobject obj)
     hvm *v = gethvm(env, obj);
     void *svm = 0;
     char *err = 0;
+#ifdef HAVE_SQLITE2
+    char *errfr = 0;
+#endif
     const char *tail;
     int ret;
 
@@ -2759,11 +2881,13 @@ Java_SQLite_Vm_compile(JNIEnv *env, jobject obj)
 		    sqlite3_finalize((sqlite3_stmt *) svm);
 		    svm = 0;
 		}
+		err = (char *) sqlite3_errmsg((sqlite3 *) v->h->sqlite);
 	    }
 	} else {
 	    ret = sqlite_compile((sqlite *) v->h->sqlite, v->tail,
-				 &tail, (sqlite_vm **) &svm, &err);
+				 &tail, (sqlite_vm **) &svm, &errfr);
 	    if (ret != SQLITE_OK) {
+		err = errfr;
 		if (svm) {
 		    sqlite_finalize((sqlite_vm *) svm, 0);
 		    svm = 0;
@@ -2773,8 +2897,9 @@ Java_SQLite_Vm_compile(JNIEnv *env, jobject obj)
 #else
 #if HAVE_SQLITE2
 	ret = sqlite_compile((sqlite *) v->h->sqlite, v->tail,
-			     &tail, (sqlite_vm **) &svm, &err);
+			     &tail, (sqlite_vm **) &svm, &errfr);
 	if (ret != SQLITE_OK) {
+	    err = errfr;
 	    if (svm) {
 		sqlite_finalize((sqlite_vm *) svm, 0);
 		svm = 0;
@@ -2794,6 +2919,7 @@ Java_SQLite_Vm_compile(JNIEnv *env, jobject obj)
 		sqlite3_finalize((sqlite3_stmt *) svm);
 		svm = 0;
 	    }
+	    err = (char *) sqlite3_errmsg((sqlite3 *) v->h->sqlite);
 	}
 #endif
 #endif
@@ -2802,15 +2928,15 @@ Java_SQLite_Vm_compile(JNIEnv *env, jobject obj)
 	    v->tail = 0;
 	    throwex(env, err ? err : "error in compile/prepare");
 #if HAVE_SQLITE2
-	    if (err) {
-		sqlite_freemem(err);
+	    if (errfr) {
+		sqlite_freemem(errfr);
 	    }
 #endif
 	    return JNI_FALSE;
 	}
 #if HAVE_SQLITE2
-	if (err) {
-	    sqlite_freemem(err);
+	if (errfr) {
+	    sqlite_freemem(errfr);
 	}
 #endif
 	if (!svm) {
@@ -2838,6 +2964,9 @@ Java_SQLite_Database_vm_1compile(JNIEnv *env, jobject obj, jstring sql,
     void *svm = 0;
     hvm *v;
     char *err = 0;
+#if HAVE_SQLITE2
+    char *errfr = 0;
+#endif
     const char *tail;
     transstr tr;
     jvalue vv;
@@ -2877,11 +3006,13 @@ Java_SQLite_Database_vm_1compile(JNIEnv *env, jobject obj, jstring sql,
 		sqlite3_finalize((sqlite3_stmt *) svm);
 		svm = 0;
 	    }
+	    err = (char *) sqlite3_errmsg((sqlite3 *) h->sqlite);
 	}
     } else {
 	ret = sqlite_compile((sqlite *) h->sqlite, tr.result, &tail,
-			     (sqlite_vm **) &svm, &err);
+			     (sqlite_vm **) &svm, &errfr);
 	if (ret != SQLITE_OK) {
+	    err = errfr;
 	    if (svm) {
 		sqlite_finalize((sqlite_vm *) svm, 0);
 	    }
@@ -2890,8 +3021,9 @@ Java_SQLite_Database_vm_1compile(JNIEnv *env, jobject obj, jstring sql,
 #else
 #if HAVE_SQLITE2
     ret = sqlite_compile((sqlite *) h->sqlite, tr.result, &tail,
-			 (sqlite_vm **) &svm, &err);
+			 (sqlite_vm **) &svm, &errfr);
     if (ret != SQLITE_OK) {
+	err = errfr;
 	if (svm) {
 	    sqlite_finalize((sqlite_vm *) svm, 0);
 	    svm = 0;
@@ -2911,6 +3043,7 @@ Java_SQLite_Database_vm_1compile(JNIEnv *env, jobject obj, jstring sql,
 	    sqlite3_finalize((sqlite3_stmt *) svm);
 	    svm = 0;
 	}
+	err = (char *) sqlite3_errmsg((sqlite3 *) h->sqlite);
     }
 #endif
 #endif
@@ -2919,15 +3052,15 @@ Java_SQLite_Database_vm_1compile(JNIEnv *env, jobject obj, jstring sql,
 	setvmerr(env, vm, ret);
 	throwex(env, err ? err : "error in prepare/compile");
 #if HAVE_SQLITE2
-	if (err) {
-	    sqlite_freemem(err);
+	if (errfr) {
+	    sqlite_freemem(errfr);
 	}
 #endif
 	return;
     }
 #if HAVE_SQLITE2
-    if (err) {
-	sqlite_freemem(err);
+    if (errfr) {
+	sqlite_freemem(errfr);
     }
 #endif
     if (!svm) {
@@ -3019,7 +3152,7 @@ Java_SQLite_Database_vm_1compile_1args(JNIEnv *env,
 	jthrowable exc;
 	int rc = SQLITE_ERROR, nargs, i;
 	char *p;
-	const char *str = (*env)->GetStringUTFChars(env, sql, NULL);
+	const char *str = (*env)->GetStringUTFChars(env, sql, NULL); // android-changed: unused variable
 	const char *tail;
 	transstr sqlstr;
 	struct args {
@@ -3408,7 +3541,7 @@ Java_SQLite_Database_stmt_1prepare(JNIEnv *env, jobject obj, jstring sql,
 	return;
     }
     len16 = len16 + sizeof (jchar) - ((char *) tail - (char *) sql16);
-    if (len16 < (jsize) sizeof (jchar)) {
+    if (len16 < (jsize) sizeof (jchar)) { // android-changed: signed/unsigned comparison
         len16 = sizeof (jchar);
     }
     v = malloc(sizeof (hvm) + len16);
@@ -3681,6 +3814,7 @@ Java_SQLite_Stmt_bind__ILjava_lang_String_2(JNIEnv *env, jobject obj,
 	    return;
 	}
 	if (val) {
+	    // BEGIN android-changed: simplification/performance.
 	    const jsize charCount = (*env)->GetStringLength(env, val);
 	    len = charCount * sizeof(jchar);
 	    if (len > 0) {
@@ -3697,6 +3831,7 @@ Java_SQLite_Stmt_bind__ILjava_lang_String_2(JNIEnv *env, jobject obj,
 	        ret = sqlite3_bind_text16((sqlite3_stmt *) v->vm, pos, "", 0,
 					  SQLITE_STATIC);
 	    }
+	    // END android-changed
 	} else {
 	    ret = sqlite3_bind_null((sqlite3_stmt *) v->vm, pos);
 	}
@@ -4312,6 +4447,108 @@ Java_SQLite_Blob_finalize(JNIEnv *env, jobject obj)
 #endif
 }
 
+JNIEXPORT void
+JNICALL Java_SQLite_Database__1key(JNIEnv *env, jobject obj, jbyteArray key)
+{
+    jsize len;
+    jbyte *data;
+#if HAVE_SQLITE3_KEY
+    handle *h = gethandle(env, obj);
+#endif
+
+    len = (*env)->GetArrayLength(env, key);
+    data = (*env)->GetByteArrayElements(env, key, 0);
+    if (len == 0) {
+	data = 0;
+    }
+    if (!data) {
+	len = 0;
+    }
+#if HAVE_SQLITE3_KEY
+    if (h && h->sqlite) {
+#if HAVE_BOTH_SQLITE
+	if (!h->is3) {
+	    if (data) {
+		memset(data, 0, len);
+	    }
+	    throwex(env, "unsupported");
+	}
+#endif
+	sqlite3_key((sqlite3 *) h->sqlite, data, len);
+	if (data) {
+	    memset(data, 0, len);
+	}
+    } else {
+	if (data) {
+	    memset(data, 0, len);
+	}
+	throwclosed(env);
+    }
+#else
+    if (data) {
+	memset(data, 0, len);
+    }
+    /* no error */
+#endif
+}
+
+JNIEXPORT void JNICALL
+Java_SQLite_Database__1rekey(JNIEnv *env, jobject obj, jbyteArray key)
+{
+    jsize len;
+    jbyte *data;
+#if HAVE_SQLITE3_KEY
+    handle *h = gethandle(env, obj);
+#endif
+
+    len = (*env)->GetArrayLength(env, key);
+    data = (*env)->GetByteArrayElements(env, key, 0);
+    if (len == 0) {
+	data = 0;
+    }
+    if (!data) {
+	len = 0;
+    }
+#if HAVE_SQLITE3_KEY
+    if (h && h->sqlite) {
+#if HAVE_BOTH_SQLITE
+	if (!h->is3) {
+	    if (data) {
+		memset(data, 0, len);
+	    }
+	    throwex(env, "unsupported");
+	}
+#endif
+	sqlite3_rekey((sqlite3 *) h->sqlite, data, len);
+	if (data) {
+	    memset(data, 0, len);
+	}
+    } else {
+	if (data) {
+	    memset(data, 0, len);
+	}
+	throwclosed(env);
+    }
+#else
+    if (data) {
+	memset(data, 0, len);
+    }
+    throwex(env, "unsupported");
+#endif
+}
+
+JNIEXPORT jboolean JNICALL
+Java_SQLite_Database__1enable_1shared_1cache(JNIEnv *env, jclass cls,
+					     jboolean onoff)
+{
+#if HAVE_SQLITE3_SHARED_CACHE
+    return (sqlite3_enable_shared_cache(onoff == JNI_TRUE) == SQLITE_OK) ?
+	   JNI_TRUE : JNI_FALSE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
 JNIEXPORT void JNICALL
 Java_SQLite_Stmt_internal_1init(JNIEnv *env, jclass cls)
 {
@@ -4342,11 +4579,13 @@ Java_SQLite_Blob_internal_1init(JNIEnv *env, jclass cls)
 JNIEXPORT void JNICALL
 Java_SQLite_Database_internal_1init(JNIEnv *env, jclass cls)
 {
-//#ifndef JNI_VERSION_1_2
-    jclass jls = (*env)->FindClass(env, "java/lang/String");
+#if defined(DONT_USE_JNI_ONLOAD) || !defined(JNI_VERSION_1_2)
+    while (C_java_lang_String == 0) {
+	jclass jls = (*env)->FindClass(env, "java/lang/String");
 
-    C_java_lang_String = (*env)->NewGlobalRef(env, jls);
-//#endif
+	C_java_lang_String = (*env)->NewGlobalRef(env, jls);
+    }
+#endif
     F_SQLite_Database_handle =
 	(*env)->GetFieldID(env, cls, "handle", "J");
     F_SQLite_Database_error_code =
@@ -4363,7 +4602,7 @@ Java_SQLite_Database_internal_1init(JNIEnv *env, jclass cls)
 			    "([BLjava/lang/String;)V");
 }
 
-#ifdef JNI_VERSION_1_2
+#if !defined(DONT_USE_JNI_ONLOAD) && defined(JNI_VERSION_1_2)
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {
@@ -4384,7 +4623,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     if (!cls) {
 	return JNI_ERR;
     }
-    C_java_lang_String = (*env)->NewWeakGlobalRef(env, cls);
+    C_java_lang_String = (*env)->NewGlobalRef(env, cls); // android-changed: bug
     return JNI_VERSION_1_2;
 }
 
@@ -4397,7 +4636,7 @@ JNI_OnUnload(JavaVM *vm, void *reserved)
 	return;
     }
     if (C_java_lang_String) {
-	(*env)->DeleteWeakGlobalRef(env, C_java_lang_String);
+	(*env)->DeleteGlobalRef(env, C_java_lang_String); // android-changed: bug
 	C_java_lang_String = 0;
     }
 }

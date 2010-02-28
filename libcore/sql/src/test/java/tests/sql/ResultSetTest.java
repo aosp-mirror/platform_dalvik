@@ -107,19 +107,6 @@ public class ResultSetTest extends SQLTest {
         } catch (SQLException e) {
             fail("Unexpected exception: " + e.getMessage());
         }
-        
-        try {
-//          Go back in position with forward only cursor
-            assertEquals(ResultSet.TYPE_FORWARD_ONLY, target.getFetchDirection());
-            target.absolute(2);
-            target.absolute(1);
-            fail("Should get SQLException");
-        } catch (SQLException e) {
-            // ok
-        }
-        
-        
-        
     }
 
     /**
@@ -598,42 +585,8 @@ public class ResultSetTest extends SQLTest {
         
     }
 
-    /**
-     * Test method for {@link java.sql.ResultSet#previous()}.
-     */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "tests SQLException",
-        method = "previous",
-        args = {}
-    )
-    public void testPrevious() {
-        
+    public void testPrevious() throws SQLException {
         try {
-            assertEquals(ResultSet.FETCH_FORWARD, target.getFetchDirection());
-            target.last();
-            target.previous();
-            fail("Should get SQLException");
-        } catch (SQLException e) {
-            // ok
-        }
-    }
-    
-    /**
-     * Test method for {@link java.sql.ResultSet#previous()}.
-     * @throws SQLException 
-     */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "not supported",
-        method = "previous",
-        args = {}
-    )
-    @KnownFailure("not supported")
-    public void testPrevious2() throws SQLException {
-        try {
-            assertSame(ResultSet.TYPE_SCROLL_INSENSITIVE, scrollableTarget.getFetchDirection());
-            
             target.first();
             target.previous();
             assertTrue(target.isBeforeFirst());

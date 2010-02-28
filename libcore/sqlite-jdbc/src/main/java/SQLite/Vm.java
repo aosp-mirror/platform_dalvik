@@ -73,6 +73,6 @@ public class Vm {
     private static native void internal_init();
 
     static {
-    internal_init();
+	internal_init();
     }
 }

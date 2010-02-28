@@ -299,7 +299,6 @@ public class ResultSetGetterTests extends SQLTest {
         method = "getBytes",
         args = {int.class}
     )
-    @KnownFailure("last assertion fails: invalid conversion. Test passes on RI")
     public void testGetBytesIntVarbinary() throws SQLException {
 
         Statement st = null;
@@ -347,7 +346,6 @@ public class ResultSetGetterTests extends SQLTest {
         method = "getBytes",
         args = {int.class}
     )
-     @KnownFailure("last assertion fails: invalid conversion. Test passes on RI")
     public void testGetBytesIntBinary() throws SQLException {
 
         Statement st = null;
@@ -511,18 +509,9 @@ public class ResultSetGetterTests extends SQLTest {
         }
     }
 
-    /**
-     * Test method for {@link java.sql.ResultSet#getConcurrency()}.
-     */
-    @TestTargetNew(
-        level = TestLevel.SUFFICIENT,
-        notes = "Not fully supported: CONCUR_UPDATABLE not supported",
-        method = "getConcurrency",
-        args = {}
-    )
     public void testGetConcurrency() {
         try {
-            assertEquals(ResultSet.CONCUR_READ_ONLY, res.getConcurrency());
+            assertEquals(ResultSet.CONCUR_UPDATABLE, res.getConcurrency());
         } catch (SQLException e) {
             fail("Unexpected exception: " + e.getMessage());
         }
