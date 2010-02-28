@@ -19,6 +19,7 @@ package dalvik.runner;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -39,22 +41,25 @@ public abstract class Vm extends Mode {
     protected final List<String> additionalVmArgs;
 
     Vm(Environment environment, long timeoutSeconds, File sdkJar,
-            List<String> additionalVmArgs) {
-        super(environment, timeoutSeconds, sdkJar);
+           PrintStream tee, List<String> additionalVmArgs) {
+        super(environment, timeoutSeconds, sdkJar, tee);
         this.additionalVmArgs = additionalVmArgs;
     }
 
     /**
      * Returns a VM for test execution.
      */
-    @Override protected List<Command> buildCommands(TestRun testRun) {
-        return Collections.singletonList(newVmCommandBuilder(testRun.getUserDir())
+    @Override protected List<String> runTestCommand(TestRun testRun)
+            throws TimeoutException {
+        Command command = newVmCommandBuilder(testRun.getUserDir())
                 .classpath(getRuntimeSupportClasspath(testRun))
                 .userDir(testRun.getUserDir())
                 .debugPort(environment.debugPort)
                 .vmArgs(additionalVmArgs)
                 .mainClass(TestRunner.class.getName())
-                .build());
+                .output(tee)
+                .build();
+        return command.executeWithTimeout(timeoutSeconds);
     }
 
     /**
@@ -78,6 +83,7 @@ public abstract class Vm extends Mode {
         private File userDir;
         private Integer debugPort;
         private String mainClass;
+        private PrintStream output;
         private List<String> vmCommand = Collections.singletonList("java");
         private List<String> vmArgs = new ArrayList<String>();
 
@@ -116,6 +122,11 @@ public abstract class Vm extends Mode {
             return this;
         }
 
+        public VmCommandBuilder output(PrintStream output) {
+            this.output = output;
+            return this;
+        }
+
         public VmCommandBuilder vmArgs(String... vmArgs) {
             return vmArgs(Arrays.asList(vmArgs));
         }
@@ -145,6 +156,8 @@ public abstract class Vm extends Mode {
 
             builder.args(vmArgs);
             builder.args(mainClass);
+
+            builder.tee(output);
 
             return builder.build();
         }

@@ -17,6 +17,7 @@
 package dalvik.runner;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
 
@@ -27,11 +28,11 @@ final class JavaVm extends Vm {
 
     private final File javaHome;
 
-    JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, File localTemp,
-            File javaHome, List<String> additionalVmArgs,
+    JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, PrintStream tee,
+            File localTemp, File javaHome, List<String> additionalVmArgs,
             boolean cleanBefore, boolean cleanAfter) {
         super(new EnvironmentHost(cleanBefore, cleanAfter, debugPort, localTemp),
-                timeoutSeconds, sdkJar, additionalVmArgs);
+                timeoutSeconds, sdkJar, tee, additionalVmArgs);
         this.javaHome = javaHome;
     }
 
