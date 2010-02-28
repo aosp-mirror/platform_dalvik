@@ -21,6 +21,7 @@ import com.android.dx.rop.code.BasicBlockList;
 import com.android.dx.rop.code.CstInsn;
 import com.android.dx.rop.code.Insn;
 import com.android.dx.rop.code.InsnList;
+import com.android.dx.rop.code.RegOps;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.code.SwitchInsn;
 import com.android.dx.util.IntList;
@@ -92,6 +93,8 @@ public class IdenticalBlockCombiner {
                     BasicBlock jBlock = blocks.labelToBlock(jLabel);
 
                     if (jBlock.getSuccessors().size() == 1
+                            && iBlock.getFirstInsn().getOpcode().getOpcode() !=
+                                RegOps.MOVE_RESULT
                             && compareInsns(iBlock, jBlock)) {
 
                         toCombine.add(jLabel);
