@@ -218,7 +218,7 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
 static void selfVerificationSpinLoop(ShadowSpace *shadowSpace)
 {
     const u2 *startPC = shadowSpace->startPC;
-    JitTraceDescription* desc = dvmCopyTraceDescriptor(startPC);
+    JitTraceDescription* desc = dvmCopyTraceDescriptor(startPC, NULL);
     if (desc) {
         dvmCompilerWorkEnqueue(startPC, kWorkOrderTraceDebug, desc);
         /*

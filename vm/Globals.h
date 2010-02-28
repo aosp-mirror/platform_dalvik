@@ -716,7 +716,7 @@ struct DvmJitGlobals {
     pthread_mutex_t    compilerICPatchLock;
     pthread_cond_t     compilerQueueActivity;
     pthread_cond_t     compilerQueueEmpty;
-    int                compilerQueueLength;
+    volatile int       compilerQueueLength;
     int                compilerHighWater;
     int                compilerWorkEnqueueIndex;
     int                compilerWorkDequeueIndex;

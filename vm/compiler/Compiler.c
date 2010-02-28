@@ -532,6 +532,12 @@ void dvmCompilerShutdown(void)
 {
     void *threadReturn;
 
+    if (gDvm.verboseShutdown) {
+        dvmCompilerDumpStats();
+        while (gDvmJit.compilerQueueLength)
+          sleep(5);
+    }
+
     if (gDvmJit.compilerHandle) {
 
         gDvmJit.haltCompilerThread = true;
@@ -545,9 +551,6 @@ void dvmCompilerShutdown(void)
         else if (gDvm.verboseShutdown)
             LOGD("Compiler thread has shut down\n");
     }
-
-    if (gDvm.verboseShutdown)
-        dvmCompilerDumpStats();
 
     dvmDestroyMutex(&gDvmJit.tableLock);
     dvmDestroyMutex(&gDvmJit.compilerLock);
