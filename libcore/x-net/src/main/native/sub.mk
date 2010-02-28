@@ -3,10 +3,7 @@
 # or BUILD_*_LIBRARY.
 
 LOCAL_SRC_FILES := \
-	org_apache_harmony_xnet_provider_jsse_NativeCrypto.cpp \
-	org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl.cpp \
-	org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl.cpp \
-	org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl.cpp
+	org_apache_harmony_xnet_provider_jsse_NativeCrypto.cpp
 
 LOCAL_C_INCLUDES += \
 	external/openssl/include
@@ -19,6 +16,6 @@ LOCAL_C_INCLUDES += \
 LOCAL_SHARED_LIBRARIES += \
 	libcrypto \
 	libssl \
-    libutils
-    
+	libutils
+
 LOCAL_STATIC_LIBRARIES +=

@@ -59,13 +59,6 @@ int jniRegisterSystemMethods(JNIEnv* env)
     if (register_org_apache_harmony_text_BidiWrapper(env) != 0)
         goto bail;
 
-    if (register_org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_xnet_provider_jsse_OpenSSLServerSocketImpl(env) != 0)
-        goto bail;
-    if (register_org_apache_harmony_xnet_provider_jsse_OpenSSLSessionImpl(env) != 0)
-        goto bail;
-
     if (register_org_openssl_NativeBN(env) != 0)
         goto bail;
     if (register_org_apache_harmony_xnet_provider_jsse_NativeCrypto(env) != 0)
