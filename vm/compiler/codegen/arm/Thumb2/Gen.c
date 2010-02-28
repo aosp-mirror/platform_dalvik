@@ -442,3 +442,14 @@ static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
     storeValueWide(cUnit, rlDest, rlResult);
     return false;
 }
+
+static void genMultiplyByTwoBitMultiplier(CompilationUnit *cUnit,
+        RegLocation rlSrc, RegLocation rlResult, int lit,
+        int firstBit, int secondBit)
+{
+    opRegRegRegShift(cUnit, kOpAdd, rlResult.lowReg, rlSrc.lowReg, rlSrc.lowReg,
+                     encodeShift(kArmLsl, secondBit - firstBit));
+    if (firstBit != 0) {
+        opRegRegImm(cUnit, kOpLsl, rlResult.lowReg, rlResult.lowReg, firstBit);
+    }
+}

@@ -56,7 +56,7 @@ ifeq ($(WITH_JIT),true)
     # Enable assert and JIT tuning
     include $(LOCAL_PATH)/ReconfigureDvm.mk
 
-    # Enable asserion and JIT-tuning
+    # Enable assertions and JIT-tuning
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
 				    -DWITH_JIT_TUNING -DEXIT_STATS
     LOCAL_MODULE := libdvm_assert
@@ -66,7 +66,7 @@ ifeq ($(WITH_JIT),true)
     # Enable assert and self-verification
     include $(LOCAL_PATH)/ReconfigureDvm.mk
 
-    # Enable asserion and JIT self-verification
+    # Enable assertions and JIT self-verification
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
 					-DWITH_SELF_VERIFICATION
     LOCAL_MODULE := libdvm_sv
