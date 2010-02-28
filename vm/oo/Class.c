@@ -4394,6 +4394,11 @@ noverify:
         return false;
     }
 
+    u8 startWhen = 0;
+    if (gDvm.allocProf.enabled) {
+        startWhen = dvmGetRelativeTimeNsec();
+    }
+
     /*
      * We're ready to go, and have exclusive access to the class.
      *
@@ -4485,6 +4490,17 @@ noverify:
         dvmLockObject(self, (Object*) clazz);
         clazz->status = CLASS_INITIALIZED;
         LOGVV("Initialized class: %s\n", clazz->descriptor);
+
+        /*
+         * Update alloc counters.  TODO: guard with mutex.
+         */
+        if (gDvm.allocProf.enabled && startWhen != 0) {
+            u8 initDuration = dvmGetRelativeTimeNsec() - startWhen;
+            gDvm.allocProf.classInitTime += initDuration;
+            self->allocProf.classInitTime += initDuration;
+            gDvm.allocProf.classInitCount++;
+            self->allocProf.classInitCount++;
+        }
     }
 
 bail_notify:
