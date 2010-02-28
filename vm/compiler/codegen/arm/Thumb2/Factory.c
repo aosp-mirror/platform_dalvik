@@ -189,7 +189,7 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
 {
     if (dvmCompilerIsTemp(cUnit, rDest)) {
         dvmCompilerClobber(cUnit, rDest);
-        dvmcompilerMarkInUse(cUnit, rDest);
+        dvmCompilerMarkInUse(cUnit, rDest);
     }
     return loadConstantValue(cUnit, rDest, value);
 }

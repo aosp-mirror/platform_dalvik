@@ -446,13 +446,13 @@ static void lockArgRegs(CompilationUnit *cUnit)
 }
 
 /* Clobber all regs that might be used by an external C call */
-extern void dvmCompilerColbberCallRegs(CompilationUnit *cUnit)
+extern void dvmCompilerClobberCallRegs(CompilationUnit *cUnit)
 {
     dvmCompilerClobber(cUnit, r0);
     dvmCompilerClobber(cUnit, r1);
     dvmCompilerClobber(cUnit, r2);
     dvmCompilerClobber(cUnit, r3);
-    dvmCompilerClobber(cUnit, r9); // Need to do this?, be convervative
+    dvmCompilerClobber(cUnit, r9); // Need to do this?, be conservative
     dvmCompilerClobber(cUnit, r11);
     dvmCompilerClobber(cUnit, r12);
     dvmCompilerClobber(cUnit, rlr);
@@ -462,7 +462,7 @@ extern void dvmCompilerColbberCallRegs(CompilationUnit *cUnit)
 extern void dvmCompilerClobberHandlerRegs(CompilationUnit *cUnit)
 {
     //TUNING: reduce the set of regs used by handlers.  Only a few need lots.
-    dvmCompilerColbberCallRegs(cUnit);
+    dvmCompilerClobberCallRegs(cUnit);
     dvmCompilerClobber(cUnit, r4PC);
     dvmCompilerClobber(cUnit, r9);
     dvmCompilerClobber(cUnit, r10);
@@ -690,7 +690,7 @@ extern void dvmCompilerMarkDirty(CompilationUnit *cUnit, int reg)
     info->dirty = true;
 }
 
-extern void dvmcompilerMarkInUse(CompilationUnit *cUnit, int reg)
+extern void dvmCompilerMarkInUse(CompilationUnit *cUnit, int reg)
 {
       RegisterInfo *info = getRegInfo(cUnit, reg);
           info->inUse = true;
@@ -931,8 +931,8 @@ extern RegLocation dvmCompilerGetReturnWide(CompilationUnit *cUnit)
     RegLocation res = LOC_C_RETURN_WIDE;
     dvmCompilerClobber(cUnit, r0);
     dvmCompilerClobber(cUnit, r1);
-    dvmcompilerMarkInUse(cUnit, r0);
-    dvmcompilerMarkInUse(cUnit, r1);
+    dvmCompilerMarkInUse(cUnit, r0);
+    dvmCompilerMarkInUse(cUnit, r1);
     dvmCompilerMarkPair(cUnit, res.lowReg, res.highReg);
     return res;
 }
@@ -944,8 +944,8 @@ extern RegLocation dvmCompilerGetReturnWideAlt(CompilationUnit *cUnit)
     res.highReg = r3;
     dvmCompilerClobber(cUnit, r2);
     dvmCompilerClobber(cUnit, r3);
-    dvmcompilerMarkInUse(cUnit, r2);
-    dvmcompilerMarkInUse(cUnit, r3);
+    dvmCompilerMarkInUse(cUnit, r2);
+    dvmCompilerMarkInUse(cUnit, r3);
     dvmCompilerMarkPair(cUnit, res.lowReg, res.highReg);
     return res;
 }
@@ -954,7 +954,7 @@ extern RegLocation dvmCompilerGetReturn(CompilationUnit *cUnit)
 {
     RegLocation res = LOC_C_RETURN;
     dvmCompilerClobber(cUnit, r0);
-    dvmcompilerMarkInUse(cUnit, r0);
+    dvmCompilerMarkInUse(cUnit, r0);
     return res;
 }
 
@@ -963,7 +963,7 @@ extern RegLocation dvmCompilerGetReturnAlt(CompilationUnit *cUnit)
     RegLocation res = LOC_C_RETURN;
     res.lowReg = r1;
     dvmCompilerClobber(cUnit, r1);
-    dvmcompilerMarkInUse(cUnit, r1);
+    dvmCompilerMarkInUse(cUnit, r1);
     return res;
 }
 
