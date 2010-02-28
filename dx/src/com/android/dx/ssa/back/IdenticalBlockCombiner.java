@@ -81,7 +81,9 @@ public class IdenticalBlockCombiner {
                 BasicBlock iBlock = blocks.labelToBlock(iLabel);
 
                 if (toDelete.get(iLabel)
-                        || iBlock.getSuccessors().size() > 1) {
+                        || iBlock.getSuccessors().size() > 1
+                        || iBlock.getFirstInsn().getOpcode().getOpcode() ==
+                            RegOps.MOVE_RESULT) {
                     continue;
                 }
 
@@ -93,8 +95,6 @@ public class IdenticalBlockCombiner {
                     BasicBlock jBlock = blocks.labelToBlock(jLabel);
 
                     if (jBlock.getSuccessors().size() == 1
-                            && iBlock.getFirstInsn().getOpcode().getOpcode() !=
-                                RegOps.MOVE_RESULT
                             && compareInsns(iBlock, jBlock)) {
 
                         toCombine.add(jLabel);
