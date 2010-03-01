@@ -1,0 +1,10 @@
+Items requiring attention:
+
+(hi) Correct stack overflow handling (dvmCleanupStackOverflow takes an
+     additional argument now)
+
+(md) Correct OP_MONITOR_EXIT (need to adjust PC before throw)
+
+(lo) Implement OP_BREAKPOINT
+(lo) Implement OP_EXECUTE_INLINE_RANGE
+
