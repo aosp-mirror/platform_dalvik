@@ -41,7 +41,7 @@ public final class DOMImplementationImpl implements DOMImplementation {
 
     public Document createDocument(String namespaceURI, String qualifiedName,
             DocumentType doctype) throws DOMException {
-        return new DocumentImpl(this, namespaceURI, qualifiedName, doctype);
+        return new DocumentImpl(this, namespaceURI, qualifiedName, doctype, null);
     }
 
     public DocumentType createDocumentType(String qualifiedName,

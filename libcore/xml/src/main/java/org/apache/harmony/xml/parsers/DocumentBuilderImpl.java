@@ -100,25 +100,27 @@ class DocumentBuilderImpl extends DocumentBuilder {
         String namespaceURI = null;
         String qualifiedName = null;
         DocumentType doctype = null;
-        DocumentImpl document = new DocumentImpl(dom, namespaceURI, qualifiedName, doctype);
+        String inputEncoding = source.getEncoding();
+        String systemId = source.getSystemId();
+        DocumentImpl document = new DocumentImpl(
+                dom, namespaceURI, qualifiedName, doctype, inputEncoding);
+        document.setDocumentURI(systemId);
 
         try {
             KXmlParser parser = new KXmlParser();
             parser.keepNamespaceAttributes();
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES,
-                    namespaceAware);
-            
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, namespaceAware);
+
             if (source.getByteStream() != null) {
-                parser.setInput(source.getByteStream(), source.getEncoding());
+                parser.setInput(source.getByteStream(), inputEncoding);
             } else if (source.getCharacterStream() != null) {
                 parser.setInput(source.getCharacterStream());
-            } else if (source.getSystemId() != null) {
-                URL url = new URL(source.getSystemId());
+            } else if (systemId != null) {
+                URL url = new URL(systemId);
                 URLConnection urlConnection = url.openConnection();
                 urlConnection.connect();
-                String encoding = source.getEncoding();
-                // TODO: if null, extract the encoding from the Content-Type header?
-                parser.setInput(urlConnection.getInputStream(), encoding);
+                // TODO: if null, extract the inputEncoding from the Content-Type header?
+                parser.setInput(urlConnection.getInputStream(), inputEncoding);
             } else {
                 throw new SAXParseException(
                         "InputSource needs a stream, reader or URI", null);
@@ -143,7 +145,7 @@ class DocumentBuilderImpl extends DocumentBuilder {
             LocatorImpl locator = new LocatorImpl();
 
             locator.setPublicId(source.getPublicId());
-            locator.setSystemId(source.getSystemId());
+            locator.setSystemId(systemId);
             locator.setLineNumber(ex.getLineNumber());
             locator.setColumnNumber(ex.getColumnNumber());
 
