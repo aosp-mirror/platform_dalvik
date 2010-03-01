@@ -95,7 +95,7 @@ StaticField* dvmFindStaticField(const ClassObject* clazz,
      * fields, the VM allows you to have two fields with the same name so
      * long as they have different types.
      */
-    pField = clazz->sfields;
+    pField = &clazz->sfields[0];
     for (i = 0; i < clazz->sfieldCount; i++, pField++) {
         if (strcmp(fieldName, pField->field.name) == 0 &&
             strcmp(signature, pField->field.signature) == 0)
@@ -739,4 +739,3 @@ void dvmDumpObject(const Object* obj)
         clazz = clazz->super;
     }
 }
-

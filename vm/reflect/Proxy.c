@@ -47,6 +47,7 @@ static bool mustWrapException(const Method* method, const Object* throwable);
 
 /* private static fields in the Proxy class */
 #define kThrowsField    0
+#define kProxySFieldCount 1
 
 
 /*
@@ -177,7 +178,9 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     /*
      * Allocate storage for the class object and set some basic fields.
      */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass) +
+                                        kProxySFieldCount * sizeof(StaticField),
+                                        ALLOC_DEFAULT);
     if (newClass == NULL)
         goto bail;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
@@ -228,8 +231,8 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      * Static field list.  We have one private field, for our list of
      * exceptions declared for each method.
      */
-    newClass->sfieldCount = 1;
-    newClass->sfields = (StaticField*) calloc(1, sizeof(StaticField));
+    assert(kProxySFieldCount == 1);
+    newClass->sfieldCount = kProxySFieldCount;
     StaticField* sfield = &newClass->sfields[kThrowsField];
     sfield->field.clazz = newClass;
     sfield->field.name = "throws";
@@ -1094,4 +1097,3 @@ static bool mustWrapException(const Method* method, const Object* throwable)
     /* no match in declared throws */
     return true;
 }
-

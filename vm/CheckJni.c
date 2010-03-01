@@ -804,7 +804,7 @@ static void checkSig(JNIEnv* env, jmethodID methodID, char expectedSigByte,
 static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
 {
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
-    StaticField* base = clazz->sfields;
+    StaticField* base = &clazz->sfields[0];
     int fieldCount = clazz->sfieldCount;
 
     if ((StaticField*) fieldID < base ||

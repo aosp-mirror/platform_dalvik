@@ -306,7 +306,7 @@ static int fieldToSlot(const Field* field, const ClassObject* clazz)
     int slot;
 
     if (dvmIsStaticField(field)) {
-        slot = (StaticField*)field - clazz->sfields;
+        slot = (StaticField*)field - &clazz->sfields[0];
         assert(slot >= 0 && slot < clazz->sfieldCount);
         slot = -(slot+1);
     } else {
@@ -1255,4 +1255,3 @@ Object* dvmCreateReflectObjForMethod(const ClassObject* clazz, Method* method)
         return dvmCreateReflectMethodObject(method);
     }
 }
-

@@ -1674,7 +1674,9 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      * Note that we assume that java.lang.Class does not override
      * finalize().
      */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass) +
+                 sizeof(StaticField) * pHeader->staticFieldsSize,
+                                        ALLOC_DEFAULT);
     if (newClass == NULL)
         return NULL;
 
@@ -1729,11 +1731,12 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
     /* load field definitions */
 
     /*
-     * TODO: consider over-allocating the class object and appending the
-     * static field info onto the end.  It's fixed-size and known at alloc
-     * time.  This would save a couple of native heap allocations, but it
-     * would also make heap compaction more difficult because we pass Field
-     * pointers around internally.
+     * Over-allocate the class object and append static field info
+     * onto the end.  It's fixed-size and known at alloc time.  This
+     * seems to increase zygote sharing.  Heap compaction will have to
+     * be careful if it ever tries to move ClassObject instances,
+     * because we pass Field pointers around internally. But at least
+     * now these Field pointers are in the object heap.
      */
 
     if (pHeader->staticFieldsSize != 0) {
@@ -1743,8 +1746,6 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         DexField field;
 
         newClass->sfieldCount = count;
-        newClass->sfields =
-            (StaticField*) calloc(count, sizeof(StaticField));
         for (i = 0; i < count; i++) {
             dexReadClassDataField(&pEncodedData, &field, &lastIndex);
             loadSFieldFromDex(newClass, &field, &newClass->sfields[i]);
@@ -2002,7 +2003,8 @@ void dvmFreeClassInnards(ClassObject* clazz)
     NULL_AND_LINEAR_FREE(clazz->ifviPool);
 
     clazz->sfieldCount = -1;
-    NULL_AND_FREE(clazz->sfields);
+    /* The sfields are attached to the ClassObject, and will be freed
+     * with it. */
 
     clazz->ifieldCount = -1;
     NULL_AND_LINEAR_FREE(clazz->ifields);

@@ -320,6 +320,45 @@ struct InitiatingLoaderList {
 };
 
 /*
+ * Generic field header.  We pass this around when we want a generic Field
+ * pointer (e.g. for reflection stuff).  Testing the accessFlags for
+ * ACC_STATIC allows a proper up-cast.
+ */
+struct Field {
+    ClassObject*    clazz;          /* class in which the field is declared */
+    const char*     name;
+    const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
+    u4              accessFlags;
+#ifdef PROFILE_FIELD_ACCESS
+    u4              gets;
+    u4              puts;
+#endif
+};
+
+/*
+ * Static field.
+ */
+struct StaticField {
+    Field           field;          /* MUST be first item */
+    JValue          value;          /* initially set from DEX for primitives */
+};
+
+/*
+ * Instance field.
+ */
+struct InstField {
+    Field           field;          /* MUST be first item */
+
+    /*
+     * This field indicates the byte offset from the beginning of the
+     * (Object *) to the actual instance data; e.g., byteOffset==0 is
+     * the same as the object pointer (bug!), and byteOffset==4 is 4
+     * bytes farther.
+     */
+    int             byteOffset;
+};
+
+/*
  * This defines the amount of space we leave for field slots in the
  * java.lang.Class definition.  If we alter the class to have more than
  * this many fields, the VM will abort at startup.
@@ -443,10 +482,6 @@ struct ClassObject {
     int             ifviPoolCount;
     int*            ifviPool;
 
-    /* static fields */
-    int             sfieldCount;
-    StaticField*    sfields;
-
     /* instance fields
      *
      * These describe the layout of the contents of a DataObject-compatible
@@ -467,6 +502,10 @@ struct ClassObject {
 
     /* source file name, if known */
     const char*     sourceFile;
+
+    /* static fields */
+    int             sfieldCount;
+    StaticField     sfields[]; /* MUST be last item */
 };
 
 /*
@@ -553,45 +592,6 @@ struct Method {
 #ifdef WITH_PROFILER
     bool            inProfile;
 #endif
-};
-
-/*
- * Generic field header.  We pass this around when we want a generic Field
- * pointer (e.g. for reflection stuff).  Testing the accessFlags for
- * ACC_STATIC allows a proper up-cast.
- */
-struct Field {
-    ClassObject*    clazz;          /* class in which the field is declared */
-    const char*     name;
-    const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
-    u4              accessFlags;
-#ifdef PROFILE_FIELD_ACCESS
-    u4              gets;
-    u4              puts;
-#endif
-};
-
-/*
- * Static field.
- */
-struct StaticField {
-    Field           field;          /* MUST be first item */
-    JValue          value;          /* initially set from DEX for primitives */
-};
-
-/*
- * Instance field.
- */
-struct InstField {
-    Field           field;          /* MUST be first item */
-
-    /*
-     * This field indicates the byte offset from the beginning of the
-     * (Object *) to the actual instance data; e.g., byteOffset==0 is
-     * the same as the object pointer (bug!), and byteOffset==4 is 4
-     * bytes farther.
-     */
-    int             byteOffset;
 };
 
 

@@ -361,7 +361,7 @@ static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
     int i;
 
     //TODO: Optimize this with a bit vector or something
-    f = clazz->sfields;
+    f = &clazz->sfields[0];
     for (i = 0; i < clazz->sfieldCount; i++) {
         char c = f->field.signature[0];
         if (c == '[' || c == 'L') {
@@ -469,7 +469,7 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     ClassObject *clazz;
 
     assert(dvmIsValidObject(obj));
-    LOGV_SCAN("0x%08x %s\n", (uint)obj, obj->clazz->name);
+    LOGV_SCAN("0x%08x %s\n", (uint)obj, obj->clazz->descriptor);
 
 #if WITH_HPROF
     if (gDvm.gcHeap->hprofContext != NULL) {
