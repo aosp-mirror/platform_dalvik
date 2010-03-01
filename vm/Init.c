@@ -1248,6 +1248,16 @@ int dvmStartup(int argc, const char* const argv[], bool ignoreUnrecognized,
     if (!dvmPrepMainThread())
         goto fail;
 
+    /*
+     * Make sure we haven't accumulated any tracked references.  The main
+     * thread should be starting with a clean slate.
+     */
+    if (dvmReferenceTableEntries(&dvmThreadSelf()->internalLocalRefTable) != 0)
+    {
+        LOGW("Warning: tracked references remain post-initialization\n");
+        dvmDumpReferenceTable(&dvmThreadSelf()->internalLocalRefTable, "MAIN");
+    }
+
     /* general debugging setup */
     if (!dvmDebuggerStartup())
         goto fail;
