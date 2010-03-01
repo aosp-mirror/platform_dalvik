@@ -14866,8 +14866,7 @@ OP_IF_LEZ_2f:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EC: /* 0xec */
-/* File: x86-atom/OP_UNUSED_EC.S */
+.L_OP_BREAKPOINT: /* 0xec */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14884,43 +14883,15 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_EC.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_BREAKPOINT      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
 .L_OP_THROW_VERIFICATION_ERROR: /* 0xed */
@@ -15011,8 +14982,7 @@ OP_IF_LEZ_2f:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EF: /* 0xef */
-/* File: x86-atom/OP_UNUSED_EF.S */
+.L_OP_EXECUTE_INLINE_RANGE: /* 0xef */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15029,43 +14999,15 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_EF.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_EXECUTE_INLINE_RANGE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_DIRECT_EMPTY: /* 0xf0 */

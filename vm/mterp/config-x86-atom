@@ -266,9 +266,6 @@ op-start x86-atom
 #op OP_UNUSED_E9 c
 #op OP_UNUSED_EA c
 #op OP_UNUSED_EB c
-#op OP_UNUSED_EC c
-#op OP_UNUSED_ED c
-#op OP_UNUSED_EF c
 #op OP_UNUSED_F1 c
 #op OP_UNUSED_FC c
 #op OP_UNUSED_FD c
@@ -285,6 +282,10 @@ op-start x86-atom
 #op OP_XOR_INT c
 #op OP_XOR_LONG_2ADDR c
 #op OP_XOR_LONG c
+
+# TODO: provide native implementations
+op OP_BREAKPOINT c
+op OP_EXECUTE_INLINE_RANGE c
 
 op-end
 
