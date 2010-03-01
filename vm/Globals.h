@@ -166,7 +166,7 @@ struct DvmGlobals {
     /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* unlinkedJavaLangClass;    // see unlinkedJavaLangClassObject
+    ClassObject* unlinkedJavaLangClass;
     ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
     ClassObject* classJavaLangError;
@@ -311,12 +311,6 @@ struct DvmGlobals {
      * VM-synthesized primitive classes, for arrays.
      */
     ClassObject* volatile primitiveClass[PRIM_MAX];
-
-    /*
-     * A placeholder ClassObject used during ClassObject
-     * construction.
-     */
-    ClassObject  unlinkedJavaLangClassObject;
 
     /*
      * Thread list.  This always has at least one element in it (main),

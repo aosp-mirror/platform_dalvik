@@ -290,8 +290,6 @@ static void linearAllocTests()
  */
 bool dvmClassStartup(void)
 {
-    ClassObject* unlinkedClass;
-
     /* make this a requirement -- don't currently support dirs in path */
     if (strcmp(gDvm.bootClassPathStr, ".") == 0) {
         LOGE("ERROR: must specify non-'.' bootclasspath\n");
@@ -328,18 +326,19 @@ bool dvmClassStartup(void)
      * loading/linking so those not in the know can still say
      * "obj->clazz->...".
      */
-    unlinkedClass = &gDvm.unlinkedJavaLangClassObject;
-
-    memset(unlinkedClass, 0, sizeof(*unlinkedClass));
+    gDvm.unlinkedJavaLangClass =
+        dvmMalloc(sizeof(ClassObject), ALLOC_DONT_TRACK);
+    if (gDvm.unlinkedJavaLangClass == NULL) {
+        LOGE("Unable to allocate gDvm.unlinkedJavaLangClass");
+        dvmAbort();
+    }
 
     /* Set obj->clazz to NULL so anyone who gets too interested
      * in the fake class will crash.
      */
-    DVM_OBJECT_INIT(&unlinkedClass->obj, NULL);
-    unlinkedClass->descriptor = "!unlinkedClass";
-    dvmSetClassSerialNumber(unlinkedClass);
-
-    gDvm.unlinkedJavaLangClass = unlinkedClass;
+    DVM_OBJECT_INIT(&gDvm.unlinkedJavaLangClass->obj, NULL);
+    gDvm.unlinkedJavaLangClass->descriptor = "!unlinkedClass";
+    dvmSetClassSerialNumber(gDvm.unlinkedJavaLangClass);
 
     /*
      * Process the bootstrap class path.  This means opening the specified
@@ -4864,6 +4863,9 @@ void dvmGcScanRootClassLoader()
 {
     /* dvmClassStartup() may not have been called before the first GC.
      */
+    if (gDvm.unlinkedJavaLangClass != NULL) {
+        dvmMarkObjectNonNull((Object *)gDvm.unlinkedJavaLangClass);
+    }
     if (gDvm.loadedClasses != NULL) {
         dvmHashTableLock(gDvm.loadedClasses);
         dvmHashForeach(gDvm.loadedClasses, markClassObject, NULL);
