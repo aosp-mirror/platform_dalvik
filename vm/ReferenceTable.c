@@ -188,12 +188,15 @@ static void logObject(Object* obj, int size, int identical, int equiv)
         return;
     }
 
+    /* handle "raw" dvmMalloc case */
+    const char* descriptor =
+        (obj->clazz != NULL) ? obj->clazz->descriptor : "(raw)";
+
     if (identical + equiv != 0) {
         LOGW("%5d of %s %dB (%d unique)\n", identical + equiv +1,
-            obj->clazz->descriptor, size, equiv +1);
+            descriptor, size, equiv +1);
     } else {
-        LOGW("%5d of %s %dB\n", identical + equiv +1,
-            obj->clazz->descriptor, size);
+        LOGW("%5d of %s %dB\n", identical + equiv +1, descriptor, size);
     }
 }
 
@@ -236,6 +239,9 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
             LOGW("%5d: %p cls=%s '%s' (%d bytes)\n", i, ref,
                 (refs[i] == NULL) ? "-" : ref->clazz->descriptor,
                 clazz->descriptor, size);
+        } else if (ref->clazz == NULL) {
+            /* should only be possible right after a plain dvmMalloc() */
+            LOGW("%5d: %p cls=(raw) (%d bytes)\n", i, ref, size);
         } else {
             LOGW("%5d: %p cls=%s (%d bytes)\n", i, ref,
                 (refs[i] == NULL) ? "-" : ref->clazz->descriptor, size);
@@ -282,7 +288,7 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
     total += size;
     logObject(refs[count-1], size, identical, equiv);
 
-    LOGW("Memory held directly by native code is %d bytes\n", total);
+    LOGW("Memory held directly by tracked refs is %d bytes\n", total);
     free(tableCopy);
 }
 
