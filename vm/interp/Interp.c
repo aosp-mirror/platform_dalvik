@@ -1227,10 +1227,11 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
     extern void dvmJitToInterpNoChain();
     extern void dvmJitToInterpPunt();
     extern void dvmJitToInterpSingleStep();
-    extern void dvmJitToTraceSelect();
+    extern void dvmJitToInterpTraceSelectNoChain();
+    extern void dvmJitToInterpTraceSelect();
     extern void dvmJitToPatchPredictedChain();
 #if defined(WITH_SELF_VERIFICATION)
-    extern void dvmJitToBackwardBranch();
+    extern void dvmJitToInterpBackwardBranch();
 #endif
 
     /*
@@ -1242,10 +1243,11 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         dvmJitToInterpNoChain,
         dvmJitToInterpPunt,
         dvmJitToInterpSingleStep,
-        dvmJitToTraceSelect,
+        dvmJitToInterpTraceSelectNoChain,
+        dvmJitToInterpTraceSelect,
         dvmJitToPatchPredictedChain,
 #if defined(WITH_SELF_VERIFICATION)
-        dvmJitToBackwardBranch,
+        dvmJitToInterpBackwardBranch,
 #endif
     };
 

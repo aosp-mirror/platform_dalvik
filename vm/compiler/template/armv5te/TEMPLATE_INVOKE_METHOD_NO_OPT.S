@@ -37,7 +37,7 @@
     bxne    lr                          @ bail to the interpreter
 #endif
 
-    ldr     r10, .LdvmJitToInterpNoChain
+    ldr     r10, .LdvmJitToInterpTraceSelectNoChain
     ldr     r3, [r9, #offClassObject_pDvmDex] @ r3<- method->clazz->pDvmDex
     ldr     r2, [rGLUE, #offGlue_self]      @ r2<- glue->self
 
@@ -51,4 +51,4 @@
 #if defined(EXIT_STATS)
     mov     r0, #kInlineCacheMiss
 #endif
-    mov     pc, r10                         @ dvmJitToInterpNoChain
+    mov     pc, r10                         @ dvmJitToInterpTraceSelectNoChain

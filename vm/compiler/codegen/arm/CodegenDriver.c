@@ -3094,7 +3094,7 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
                                   unsigned int offset)
 {
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                 jitToInterpEntries.dvmJitToTraceSelect), r0);
+                 jitToInterpEntries.dvmJitToInterpTraceSelect), r0);
     opReg(cUnit, kOpBlx, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
@@ -3106,7 +3106,8 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
 {
 #if defined(WITH_SELF_VERIFICATION)
     newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
-        offsetof(InterpState, jitToInterpEntries.dvmJitToBackwardBranch) >> 2);
+        offsetof(InterpState,
+                 jitToInterpEntries.dvmJitToInterpBackwardBranch) >> 2);
 #else
     newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
         offsetof(InterpState, jitToInterpEntries.dvmJitToInterpNormal) >> 2);
@@ -3121,7 +3122,7 @@ static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
                                               const Method *callee)
 {
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                 jitToInterpEntries.dvmJitToTraceSelect), r0);
+                 jitToInterpEntries.dvmJitToInterpTraceSelect), r0);
     opReg(cUnit, kOpBlx, r0);
     addWordData(cUnit, (int) (callee->insns), true);
 }

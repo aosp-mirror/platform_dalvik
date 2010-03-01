@@ -753,6 +753,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             switchInterp = !debugOrProfile;
             break;
         case kJitTSelectRequest:
+        case kJitTSelectRequestHot:
         case kJitTSelectAbort:
 #if defined(SHOW_TRACE)
             LOGD("TraceGen:  trace abort");
@@ -875,29 +876,36 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
     bool res = false;         /* Assume success */
     int i;
+    intptr_t filterKey = ((intptr_t) interpState->pc) >>
+                         JIT_TRACE_THRESH_FILTER_GRAN_LOG2;
+
     /*
      * If previous trace-building attempt failed, force it's head to be
      * interpret-only.
      */
     if (gDvmJit.pJitEntryTable != NULL) {
-        /* Two-level filtering scheme */
-        for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
-            if (interpState->pc == interpState->threshFilter[i]) {
-                break;
+        /* Bypass the filter for hot trace requests */
+        if (interpState->jitState != kJitTSelectRequestHot) {
+            /* Two-level filtering scheme */
+            for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
+                if (filterKey == interpState->threshFilter[i]) {
+                    break;
+                }
             }
-        }
-        if (i == JIT_TRACE_THRESH_FILTER_SIZE) {
-            /*
-             * Use random replacement policy - otherwise we could miss a large
-             * loop that contains more traces than the size of our filter array.
-             */
-            i = rand() % JIT_TRACE_THRESH_FILTER_SIZE;
-            interpState->threshFilter[i] = interpState->pc;
-            res = true;
-        }
+            if (i == JIT_TRACE_THRESH_FILTER_SIZE) {
+                /*
+                 * Use random replacement policy - otherwise we could miss a
+                 * large loop that contains more traces than the size of our
+                 * filter array.
+                 */
+                i = rand() % JIT_TRACE_THRESH_FILTER_SIZE;
+                interpState->threshFilter[i] = filterKey;
+                res = true;
+            }
 
-        /* If stress mode (threshold <= 6), always translate */
-        res &= (gDvmJit.threshold > 6);
+            /* If stress mode (threshold <= 6), always translate */
+            res &= (gDvmJit.threshold > 6);
+        }
 
         /*
          * If the compiler is backlogged, or if a debugger or profiler is
@@ -912,7 +920,8 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             if (interpState->jitState != kJitOff) {
                 interpState->jitState = kJitNormal;
             }
-        } else if (interpState->jitState == kJitTSelectRequest) {
+        } else if (interpState->jitState == kJitTSelectRequest ||
+                   interpState->jitState == kJitTSelectRequestHot) {
             JitEntry *slot = lookupAndAdd(interpState->pc, false);
             if (slot == NULL) {
                 /*
@@ -954,6 +963,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
         }
         switch (interpState->jitState) {
             case kJitTSelectRequest:
+            case kJitTSelectRequestHot:
                  interpState->jitState = kJitTSelect;
                  interpState->currTraceHead = interpState->pc;
                  interpState->currTraceRun = 0;

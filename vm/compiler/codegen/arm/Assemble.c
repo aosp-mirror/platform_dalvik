@@ -1597,7 +1597,7 @@ u4* dvmJitUnchain(void* codeAddr)
                 case kChainingCellHot:
                 case kChainingCellInvokeSingleton:
                     targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToTraceSelect);
+                          jitToInterpEntries.dvmJitToInterpTraceSelect);
                     break;
                 case kChainingCellInvokePredicted:
                     targetOffset = 0;
@@ -1614,7 +1614,7 @@ u4* dvmJitUnchain(void* codeAddr)
 #if defined(WITH_SELF_VERIFICATION)
                 case kChainingCellBackwardBranch:
                     targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToBackwardBranch);
+                          jitToInterpEntries.dvmJitToInterpBackwardBranch);
                     break;
 #elif defined(WITH_JIT_TUNING)
                 case kChainingCellBackwardBranch:
