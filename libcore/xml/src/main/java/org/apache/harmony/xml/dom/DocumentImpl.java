@@ -47,6 +47,7 @@ import org.w3c.dom.Text;
 public class DocumentImpl extends InnerNodeImpl implements Document {
 
     private DOMImplementation domImplementation;
+    private DOMConfiguration domConfiguration;
 
     /*
      * The default values of these fields are specified by the Document
@@ -361,7 +362,10 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
     }
 
     public DOMConfiguration getDomConfig() {
-        throw new UnsupportedOperationException(); // TODO
+        if (domConfiguration == null) {
+            domConfiguration = new DOMConfigurationImpl();
+        }
+        return domConfiguration;
     }
 
     public void normalizeDocument() {
