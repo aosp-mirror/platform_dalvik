@@ -840,7 +840,7 @@ public class Database {
 
     public static long long_from_julian(String s) throws SQLite.Exception {
 	try {
-	    double d = Double.valueOf(s).doubleValue();
+	    double d = Double.parseDouble(s); // android-changed: performance
 	    return long_from_julian(d);
 	} catch (java.lang.Exception ee) {
 	    throw new SQLite.Exception("not a julian date");
@@ -902,4 +902,3 @@ public class Database {
 	}
     }
 }
-

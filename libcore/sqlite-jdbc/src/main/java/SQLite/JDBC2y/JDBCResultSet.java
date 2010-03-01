@@ -261,7 +261,7 @@ public class JDBCResultSet implements java.sql.ResultSet {
 
     public boolean getBoolean(int columnIndex) throws SQLException {
 	return getInt(columnIndex) == 1 ||
-	    Boolean.valueOf(getString(columnIndex)).booleanValue();
+	    Boolean.parseBoolean(getString(columnIndex)); // android-changed: performance
     }
 
     public boolean getBoolean(String columnName) throws SQLException {
