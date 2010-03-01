@@ -1265,7 +1265,7 @@ public final class Formatter implements Closeable, Flushable {
             if (strFlags == null) {
                 strFlags = new StringBuilder(7); // There are seven possible flags.
             }
-            strFlags.append(ch);
+            strFlags.append((char) ch);
             return true;
         }
 
