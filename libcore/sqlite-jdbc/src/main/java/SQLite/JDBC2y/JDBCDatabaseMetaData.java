@@ -588,9 +588,11 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 				String tableNamePattern,
 				String columnNamePattern)
 	throws SQLException {
+	// BEGIN android-changed: add missing error check.
 	if (conn.db == null) {
 	    throw new SQLException("connection closed");
 	}
+	// END android-changed
 	JDBCStatement s = new JDBCStatement(conn);
 	JDBCResultSet rs0 = null;
 	try {
