@@ -78,6 +78,8 @@ int jniRegisterSystemMethods(JNIEnv* env)
     if (register_java_net_NetworkInterface(env) != 0)
         goto bail;
 
+    if (register_com_ibm_icu4jni_text_NativeNormalizer(env) != 0)
+        goto bail;
     if (register_com_ibm_icu4jni_text_NativeBreakIterator(env) != 0)
         goto bail;
     if (register_com_ibm_icu4jni_text_NativeDecimalFormat(env) != 0)

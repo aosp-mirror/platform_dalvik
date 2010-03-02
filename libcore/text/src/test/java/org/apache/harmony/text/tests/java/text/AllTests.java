@@ -51,6 +51,7 @@ public class AllTests {
         suite.addTestSuite(FormatTest.class);
         suite.addTestSuite(MessageFormatFieldTest.class);
         suite.addTestSuite(MessageFormatTest.class);
+        suite.addTestSuite(NormalizerTest.class);
         suite.addTestSuite(NumberFormatFieldTest.class);
         suite.addTestSuite(NumberFormatTest.class);
         suite.addTestSuite(ParseExceptionTest.class);
