@@ -32,7 +32,7 @@ import org.w3c.dom.DOMLocator;
  * @xsl.usage internal 
  */
 
-final class DOMErrorImpl implements DOMError {
+public final class DOMErrorImpl implements DOMError {
     
     /** private data members */
     
@@ -70,7 +70,7 @@ final class DOMErrorImpl implements DOMError {
      * @param message
      * @param type
      */
-    DOMErrorImpl(short severity, String message, String type) {
+    public DOMErrorImpl(short severity, String message, String type) {
         fSeverity = severity;
         fMessage = message;
         fType = type;
@@ -82,7 +82,7 @@ final class DOMErrorImpl implements DOMError {
      * @param type
      * @param exception
      */
-    DOMErrorImpl(short severity, String message, String type,
+    public DOMErrorImpl(short severity, String message, String type,
             Exception exception) {
         fSeverity = severity;
         fMessage = message;
@@ -98,7 +98,7 @@ final class DOMErrorImpl implements DOMError {
      * @param relatedData
      * @param location
      */
-    DOMErrorImpl(short severity, String message, String type,
+    public DOMErrorImpl(short severity, String message, String type,
             Exception exception, Object relatedData, DOMLocatorImpl location) {
         fSeverity = severity;
         fMessage = message;

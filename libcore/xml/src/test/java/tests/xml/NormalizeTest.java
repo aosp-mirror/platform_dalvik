@@ -17,6 +17,8 @@
 package tests.xml;
 
 import junit.framework.TestCase;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMError;
 import org.w3c.dom.DOMErrorHandler;
@@ -25,6 +27,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 
@@ -37,6 +40,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -61,26 +65,31 @@ public class NormalizeTest extends TestCase {
     }
 
     public void testCanonicalForm() {
+        assertEquals(false, domConfiguration.getParameter("canonical-form"));
         assertSupported("canonical-form", false);
         assertUnsupported("canonical-form", true);
     }
 
     public void testCdataSections() {
+        assertEquals(true, domConfiguration.getParameter("cdata-sections"));
         assertSupported("cdata-sections", false);
         assertSupported("cdata-sections", true);
     }
 
     public void testCheckCharacterNormalization() {
+        assertEquals(false, domConfiguration.getParameter("check-character-normalization"));
         assertSupported("check-character-normalization", false);
         assertUnsupported("check-character-normalization", true);
     }
 
     public void testComments() {
+        assertEquals(true, domConfiguration.getParameter("comments"));
         assertSupported("comments", false);
         assertSupported("comments", true);
     }
 
     public void testDatatypeNormalization() {
+        assertEquals(false, domConfiguration.getParameter("datatype-normalization"));
         assertSupported("datatype-normalization", false);
         assertSupported("datatype-normalization", true);
 
@@ -95,16 +104,19 @@ public class NormalizeTest extends TestCase {
     }
 
     public void testElementContentWhitespace() {
+        assertEquals(true, domConfiguration.getParameter("element-content-whitespace"));
         assertUnsupported("element-content-whitespace", false);
         assertSupported("element-content-whitespace", true);
     }
 
     public void testEntities() {
+        assertEquals(true, domConfiguration.getParameter("entities"));
         assertSupported("entities", false);
         assertSupported("entities", true);
     }
 
     public void testErrorHandler() {
+        assertEquals(null, domConfiguration.getParameter("error-handler"));
         assertSupported("error-handler", null);
         assertSupported("error-handler", new DOMErrorHandler() {
             public boolean handleError(DOMError error) {
@@ -114,6 +126,7 @@ public class NormalizeTest extends TestCase {
     }
 
     public void testInfoset() {
+        assertEquals(false, domConfiguration.getParameter("infoset"));
         assertSupported("infoset", false);
         assertSupported("infoset", true);
     }
@@ -162,21 +175,25 @@ public class NormalizeTest extends TestCase {
     }
 
     public void testNamespaces() {
+        assertEquals(true, domConfiguration.getParameter("namespaces"));
         assertSupported("namespaces", false);
         assertSupported("namespaces", true);
     }
 
     public void testNamespaceDeclarations() {
+        assertEquals(true, domConfiguration.getParameter("namespace-declarations"));
         assertUnsupported("namespace-declarations", false); // supported in RI 6
         assertSupported("namespace-declarations", true);
     }
 
     public void testNormalizeCharacters() {
+        assertEquals(false, domConfiguration.getParameter("normalize-characters"));
         assertSupported("normalize-characters", false);
         assertUnsupported("normalize-characters", true);
     }
 
     public void testSchemaLocation() {
+        assertEquals(null, domConfiguration.getParameter("schema-location"));
         assertSupported("schema-location", "http://foo");
         assertSupported("schema-location", null);
     }
@@ -190,26 +207,31 @@ public class NormalizeTest extends TestCase {
     }
 
     public void testSchemaTypeXmlSchema() {
+        assertEquals(null, domConfiguration.getParameter("schema-type"));
         assertSupported("schema-type", null);
         assertSupported("schema-type", "http://www.w3.org/2001/XMLSchema");
     }
 
     public void testSplitCdataSections() {
+        assertEquals(true, domConfiguration.getParameter("split-cdata-sections"));
         assertSupported("split-cdata-sections", false);
         assertSupported("split-cdata-sections", true);
     }
 
     public void testValidate() {
+        assertEquals(false, domConfiguration.getParameter("validate"));
         assertSupported("validate", false);
         assertSupported("validate", true);
     }
 
     public void testValidateIfSchema() {
+        assertEquals(false, domConfiguration.getParameter("validate-if-schema"));
         assertSupported("validate-if-schema", false);
         assertUnsupported("validate-if-schema", true);
     }
 
     public void testWellFormed() {
+        assertEquals(true, domConfiguration.getParameter("well-formed"));
         assertSupported("well-formed", false);
         assertSupported("well-formed", true);
     }
@@ -314,30 +336,26 @@ public class NormalizeTest extends TestCase {
 
     public void testCdataSectionsNotHonoredByNodeNormalize() throws Exception {
         String xml = "<foo>ABC<![CDATA[DEF]]>GHI</foo>";
-        document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                .parse(new InputSource(new StringReader(xml)));
-        document.getDomConfig().setParameter("cdata-sections", true);
+        parse(xml);
+        domConfiguration.setParameter("cdata-sections", true);
         document.getDocumentElement().normalize();
         assertEquals(xml, domToString(document));
 
-        document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                .parse(new InputSource(new StringReader(xml)));
-        document.getDomConfig().setParameter("cdata-sections", false);
+        parse(xml);
+        domConfiguration.setParameter("cdata-sections", false);
         document.getDocumentElement().normalize();
         assertEquals(xml, domToString(document));
     }
 
     public void testCdataSectionsHonoredByDocumentNormalize() throws Exception {
         String xml = "<foo>ABC<![CDATA[DEF]]>GHI</foo>";
-        document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                .parse(new InputSource(new StringReader(xml)));
-        document.getDomConfig().setParameter("cdata-sections", true);
+        parse(xml);
+        domConfiguration.setParameter("cdata-sections", true);
         document.normalizeDocument();
         assertEquals(xml, domToString(document));
 
-        document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                .parse(new InputSource(new StringReader(xml)));
-        document.getDomConfig().setParameter("cdata-sections", false);
+        parse(xml);
+        domConfiguration.setParameter("cdata-sections", false);
         document.normalizeDocument();
         String expected = xml.replace("<![CDATA[DEF]]>", "DEF");
         assertEquals(expected, domToString(document));
@@ -367,6 +385,170 @@ public class NormalizeTest extends TestCase {
         assertChildren(document.getDocumentElement(), "<br>", "<br>", "<br>");
     }
 
+    public void testRetainingComments() throws Exception {
+        String xml = "<foo>ABC<!-- bar -->DEF<!-- baz -->GHI</foo>";
+        parse(xml);
+        domConfiguration.setParameter("comments", true);
+        document.normalizeDocument();
+        assertEquals(xml, domToString(document));
+    }
+
+    public void testCommentContainingDoubleDash() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+        root.appendChild(document.createComment("ABC -- DEF"));
+        document.normalizeDocument();
+        errorRecorder.assertAllErrors(DOMError.SEVERITY_ERROR, "wf-invalid-character");
+    }
+
+    public void testStrippingComments() throws Exception {
+        String xml = "<foo>ABC<!-- bar -->DEF<!-- baz -->GHI</foo>";
+        parse(xml);
+        domConfiguration.setParameter("comments", false);
+        document.normalizeDocument();
+        assertChildren(document.getDocumentElement(), "ABCDEFGHI");
+    }
+
+    public void testSplittingCdataSectionsSplit() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("split-cdata-sections", true);
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+        root.appendChild(document.createCDATASection("ABC]]>DEF]]>GHI"));
+        document.normalizeDocument();
+        errorRecorder.assertAllErrors(DOMError.SEVERITY_WARNING, "cdata-sections-splitted");
+        assertChildren(root, "<![CDATA[ABC]]]]>", "<![CDATA[>DEF]]]]>", "<![CDATA[>GHI]]>");
+    }
+
+    public void testSplittingCdataSectionsReportError() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("split-cdata-sections", false);
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+        root.appendChild(document.createCDATASection("ABC]]>DEF"));
+        document.normalizeDocument();
+        errorRecorder.assertAllErrors(DOMError.SEVERITY_ERROR, "wf-invalid-character");
+    }
+
+    public void testInvalidCharactersCdata() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("cdata-sections", true);
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+        CDATASection cdata = document.createCDATASection("");
+        root.appendChild(cdata);
+
+        for (int c = 0; c <= Character.MAX_VALUE; c++) {
+            cdata.setData(new String(new char[]{ 'A', 'B', (char) c }));
+            document.normalizeDocument();
+            if (isValid((char) c)) {
+                assertEquals(Collections.<DOMError>emptyList(), errorRecorder.errors);
+            } else {
+                errorRecorder.assertAllErrors("For character " + c,
+                        DOMError.SEVERITY_ERROR, "wf-invalid-character");
+            }
+        }
+    }
+
+    public void testInvalidCharactersText() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+        Text text = document.createTextNode("");
+        root.appendChild(text);
+
+        for (int c = 0; c <= Character.MAX_VALUE; c++) {
+            text.setData(new String(new char[]{ 'A', 'B', (char) c }));
+            document.normalizeDocument();
+            if (isValid((char) c)) {
+                assertEquals(Collections.<DOMError>emptyList(), errorRecorder.errors);
+            } else {
+                errorRecorder.assertAllErrors("For character " + c,
+                        DOMError.SEVERITY_ERROR, "wf-invalid-character");
+            }
+        }
+    }
+
+    public void testInvalidCharactersAttribute() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+
+        for (int c = 0; c <= Character.MAX_VALUE; c++) {
+            root.setAttribute("bar", new String(new char[] { 'A', 'B', (char) c}));
+            document.normalizeDocument();
+            if (isValid((char) c)) {
+                assertEquals(Collections.<DOMError>emptyList(), errorRecorder.errors);
+            } else {
+                errorRecorder.assertAllErrors("For character " + c,
+                        DOMError.SEVERITY_ERROR, "wf-invalid-character");
+            }
+        }
+    }
+
+    public void testInvalidCharactersComment() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+        Comment comment = document.createComment("");
+        root.appendChild(comment);
+
+        for (int c = 0; c <= Character.MAX_VALUE; c++) {
+            comment.setData(new String(new char[] { 'A', 'B', (char) c}));
+            document.normalizeDocument();
+            if (isValid((char) c)) {
+                assertEquals(Collections.<DOMError>emptyList(), errorRecorder.errors);
+            } else {
+                errorRecorder.assertAllErrors("For character " + c,
+                        DOMError.SEVERITY_ERROR, "wf-invalid-character");
+            }
+        }
+    }
+
+    public void testInvalidCharactersProcessingInstructionData() throws Exception {
+        ErrorRecorder errorRecorder = new ErrorRecorder();
+        domConfiguration.setParameter("error-handler", errorRecorder);
+        domConfiguration.setParameter("namespaces", false);
+        Element root = document.createElement("foo");
+        document.appendChild(root);
+        ProcessingInstruction pi = document.createProcessingInstruction("foo", "");
+        root.appendChild(pi);
+
+        for (int c = 0; c <= Character.MAX_VALUE; c++) {
+            pi.setData(new String(new char[] { 'A', 'B', (char) c}));
+            document.normalizeDocument();
+            if (isValid((char) c)) {
+                assertEquals(Collections.<DOMError>emptyList(), errorRecorder.errors);
+            } else {
+                errorRecorder.assertAllErrors("For character " + c,
+                        DOMError.SEVERITY_ERROR, "wf-invalid-character");
+            }
+        }
+    }
+
+    // TODO: test for surrogates
+
+    private boolean isValid(char c) {
+        // as defined by http://www.w3.org/TR/REC-xml/#charsets.
+        return c == 0x9 || c == 0xA || c == 0xD || (c >= 0x20 && c <= 0xd7ff)
+                || (c >= 0xe000 && c <= 0xfffd);
+    }
+
     private Document createDocumentWithAdjacentTexts(String... texts) throws Exception {
         Document result = DocumentBuilderFactory.newInstance()
                 .newDocumentBuilder().newDocument();
@@ -387,11 +569,21 @@ public class NormalizeTest extends TestCase {
         NodeList nodes = element.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
-            actual.add(node.getNodeType() == Node.TEXT_NODE
-                    ? ((Text) node).getData()
-                    : "<" + node.getNodeName() + ">");
+            if (node.getNodeType() == Node.TEXT_NODE) {
+                actual.add(((Text) node).getData());
+            } else if (node.getNodeType() == Node.CDATA_SECTION_NODE) {
+                actual.add("<![CDATA[" + ((CDATASection) node).getData() + "]]>");
+            } else {
+                actual.add("<" + node.getNodeName() + ">");
+            }
         }
         assertEquals(Arrays.asList(texts), actual);
+    }
+
+    private void parse(String xml) throws Exception {
+        document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                .parse(new InputSource(new StringReader(xml)));
+        domConfiguration = document.getDomConfig();
     }
 
     private String domToString(Document document) throws TransformerException {
@@ -400,5 +592,27 @@ public class NormalizeTest extends TestCase {
                 .transform(new DOMSource(document), new StreamResult(writer));
         String xml = writer.toString();
         return xml.replaceFirst("<\\?xml[^?]*\\?>", "");
+    }
+
+    private class ErrorRecorder implements DOMErrorHandler {
+        private final List<DOMError> errors = new ArrayList<DOMError>();
+
+        public boolean handleError(DOMError error) {
+            errors.add(error);
+            return true;
+        }
+
+        public void assertAllErrors(int severity, String type) {
+            assertAllErrors("Expected one or more " + type + " errors", severity, type);
+        }
+
+        public void assertAllErrors(String message, int severity, String type) {
+            assertFalse(message, errors.isEmpty());
+            for (DOMError error : errors) {
+                assertEquals(message, severity, error.getSeverity());
+                assertEquals(message, type, error.getType());
+            }
+            errors.clear();
+        }
     }
 }

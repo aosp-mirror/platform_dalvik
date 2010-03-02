@@ -29,7 +29,7 @@ import org.w3c.dom.Node;
  * the DOM implementation can easily access them while maintaining the DOM tree
  * structure.
  */
-public class CommentImpl extends CharacterDataImpl implements Comment {
+public final class CommentImpl extends CharacterDataImpl implements Comment {
 
     CommentImpl(DocumentImpl document, String data) {
         super(document, data);
@@ -45,4 +45,11 @@ public class CommentImpl extends CharacterDataImpl implements Comment {
         return Node.COMMENT_NODE;
     }
 
+    /**
+     * Returns true if this comment contains the illegal character sequence
+     * "--". Such nodes may not be serialized.
+     */
+    public boolean containsDashDash() {
+        return buffer.indexOf("--") != -1;
+    }
 }

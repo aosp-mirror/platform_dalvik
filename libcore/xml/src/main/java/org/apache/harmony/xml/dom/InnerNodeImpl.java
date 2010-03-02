@@ -19,7 +19,6 @@ package org.apache.harmony.xml.dom;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -154,29 +153,14 @@ public abstract class InnerNodeImpl extends LeafNodeImpl {
      */
     @Override
     public final void normalize() {
-        Text next = null; // null if next doesn't exist or is not a TEXT_NODE
-        for (int i = children.size() - 1; i >= 0; i--) {
-            Node node = children.get(i);
+        Node next;
+        for (Node node = getFirstChild(); node != null; node = next) {
+            next = node.getNextSibling();
             node.normalize();
 
-            if (node.getNodeType() != Node.TEXT_NODE) {
-                next = null;
-                continue;
+            if (node.getNodeType() == Node.TEXT_NODE) {
+                ((TextImpl) node).minimize();
             }
-
-            Text text = (Text) node;
-
-            if (text.getLength() == 0) {
-                removeChild(text);
-                continue;
-            }
-
-            if (next != null) {
-                text.appendData(next.getData());
-                removeChild(next);
-            }
-
-            next = text;
         }
     }
 

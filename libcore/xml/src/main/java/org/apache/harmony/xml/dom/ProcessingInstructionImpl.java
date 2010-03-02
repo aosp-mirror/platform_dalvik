@@ -30,7 +30,7 @@ import org.w3c.dom.ProcessingInstruction;
  * the DOM implementation can easily access them while maintaining the DOM tree
  * structure.
  */
-public class ProcessingInstructionImpl extends LeafNodeImpl implements
+public final class ProcessingInstructionImpl extends LeafNodeImpl implements
         ProcessingInstruction {
 
     private String target;
@@ -39,7 +39,7 @@ public class ProcessingInstructionImpl extends LeafNodeImpl implements
 
     ProcessingInstructionImpl(DocumentImpl document, String target, String data) {
         super(document);
-        this.target = target;
+        this.target = target; // TODO: validate that target is well-formed
         this.data = data;
     }
 

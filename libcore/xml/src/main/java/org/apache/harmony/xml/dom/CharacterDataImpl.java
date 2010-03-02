@@ -32,7 +32,7 @@ import org.w3c.dom.DOMException;
 public abstract class CharacterDataImpl extends LeafNodeImpl implements
         CharacterData {
 
-    private StringBuffer buffer;
+    protected StringBuffer buffer;
 
     CharacterDataImpl(DocumentImpl document, String data) {
         super(document);

@@ -44,10 +44,10 @@ import org.w3c.dom.Text;
  * the DOM implementation can easily access them while maintaining the DOM tree
  * structure.
  */
-public class DocumentImpl extends InnerNodeImpl implements Document {
+public final class DocumentImpl extends InnerNodeImpl implements Document {
 
     private DOMImplementation domImplementation;
-    private DOMConfiguration domConfiguration;
+    private DOMConfigurationImpl domConfiguration;
 
     /*
      * The default values of these fields are specified by the Document
@@ -369,7 +369,12 @@ public class DocumentImpl extends InnerNodeImpl implements Document {
     }
 
     public void normalizeDocument() {
-        throw new UnsupportedOperationException(); // TODO
+        Element root = getDocumentElement();
+        if (root == null) {
+            return;
+        }
+
+        ((DOMConfigurationImpl) getDomConfig()).normalize(root);
     }
 
     public Node renameNode(Node n, String namespaceURI, String qualifiedName)
