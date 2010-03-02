@@ -18,6 +18,7 @@
 #define SCOPED_JAVA_UNICODE_STRING_H_included
 
 #include "JNIHelp.h"
+#include "unicode/unistr.h"
 
 // A smart pointer that provides access to an ICU UnicodeString given a JNI
 // jstring. We give ICU a direct pointer to the characters on the Java heap.
