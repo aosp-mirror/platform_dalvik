@@ -18,6 +18,7 @@
 # mmm dalvik/libcore/tools/runner
 
 android_root=`dirname $0`/../../../..
+cd ${android_root}
 
 classpath=${android_root}/out/host/linux-x86/framework/dalvik_runner.jar
 core_jar=${android_root}/out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar
