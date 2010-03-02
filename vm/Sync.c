@@ -411,14 +411,10 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
          * The JNI spec says that we should throw IllegalMonitorStateException
          * in this case.
          */
-        if (mon->owner == NULL) {
-            //LOGW("Unlock fat %p: not owned\n", mon->obj);
-        } else {
-            //LOGW("Unlock fat %p: id %d vs %d\n",
-            //    mon->obj, mon->owner->threadId, self->threadId);
-        }
-        dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
-            "unlock of unowned monitor");
+        dvmThrowExceptionFmt("Ljava/lang/IllegalMonitorStateException;",
+                             "unlock of unowned monitor, self=%d owner=%d",
+                             self->threadId, 
+                             mon->owner ? mon->owner->threadId : 0);
         return false;
     }
     return true;
