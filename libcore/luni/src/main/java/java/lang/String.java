@@ -1202,6 +1202,16 @@ public final class String implements Serializable, Comparable<String>,
     native public String intern();
 
     /**
+     * Returns true if the length of this string is 0.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public boolean isEmpty() {
+        return count == 0;
+    }
+
+    /**
      * Searches in this string for the last index of the specified character.
      * The search for the character starts at the end and moves towards the
      * beginning of this string.
