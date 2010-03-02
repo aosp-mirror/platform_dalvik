@@ -16,10 +16,14 @@
 
 package org.apache.harmony.xml.dom;
 
+import org.apache.xml.serializer.dom3.DOMErrorImpl;
 import org.w3c.dom.DOMConfiguration;
+import org.w3c.dom.DOMError;
 import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMStringList;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -367,5 +371,121 @@ public final class DOMConfigurationImpl implements DOMConfiguration {
                 return PARAMETERS.containsKey(str); // case-insensitive.
             }
         };
+    }
+
+    public void normalize(Node node) {
+        /*
+         * Since we don't validate, this code doesn't take into account the
+         * following "supported" parameters: datatype-normalization, entities,
+         * schema-location, schema-type, or validate.
+         *
+         * TODO: normalize namespaces
+         */
+
+        switch (node.getNodeType()) {
+            case Node.CDATA_SECTION_NODE:
+                CDATASectionImpl cdata = (CDATASectionImpl) node;
+                if (cdataSections) {
+                    if (cdata.needsSplitting()) {
+                        if (splitCdataSections) {
+                            cdata.split();
+                            report(DOMError.SEVERITY_WARNING, "cdata-sections-splitted");
+                        } else {
+                            report(DOMError.SEVERITY_ERROR, "wf-invalid-character");
+                        }
+                    }
+                    checkTextValidity(cdata.buffer);
+                    break;
+                }
+                node = cdata.replaceWithText();
+                // fall through
+
+            case Node.TEXT_NODE:
+                TextImpl text = (TextImpl) node;
+                text = text.minimize();
+                if (text != null) {
+                    checkTextValidity(text.buffer);
+                }
+                break;
+
+            case Node.COMMENT_NODE:
+                CommentImpl comment = (CommentImpl) node;
+                if (!comments) {
+                    comment.getParentNode().removeChild(comment);
+                    break;
+                }
+                if (comment.containsDashDash()) {
+                    report(DOMError.SEVERITY_ERROR, "wf-invalid-character");
+                }
+                checkTextValidity(comment.buffer);
+                break;
+
+            case Node.PROCESSING_INSTRUCTION_NODE:
+                checkTextValidity(((ProcessingInstructionImpl) node).getData());
+                break;
+
+            case Node.ATTRIBUTE_NODE:
+                checkTextValidity(((AttrImpl) node).getValue());
+                break;
+
+            case Node.ELEMENT_NODE:
+                ElementImpl element = (ElementImpl) node;
+                NamedNodeMap attributes = element.getAttributes();
+                for (int i = 0; i < attributes.getLength(); i++) {
+                    normalize(attributes.item(i));
+                }
+                // fall through
+
+            case Node.DOCUMENT_NODE:
+            case Node.DOCUMENT_FRAGMENT_NODE:
+                Node next;
+                for (Node child = node.getFirstChild(); child != null; child = next) {
+                    // lookup next eagerly because normalize() may remove its subject
+                    next = child.getNextSibling();
+                    normalize(child);
+                }
+                break;
+
+            case Node.NOTATION_NODE:
+            case Node.DOCUMENT_TYPE_NODE:
+            case Node.ENTITY_NODE:
+            case Node.ENTITY_REFERENCE_NODE:
+                break;
+
+            default:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Unsupported node type " + node.getNodeType());
+        }
+    }
+
+    private void checkTextValidity(CharSequence s) {
+        if (wellFormed && !isValid(s)) {
+            report(DOMError.SEVERITY_ERROR, "wf-invalid-character");
+        }
+    }
+
+    /**
+     * Returns true if all of the characters in the text are permitted for use
+     * in XML documents.
+     */
+    private boolean isValid(CharSequence text) {
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            // as defined by http://www.w3.org/TR/REC-xml/#charsets.
+            boolean valid = c == 0x9 || c == 0xA || c == 0xD
+                    || (c >= 0x20 && c <= 0xd7ff)
+                    || (c >= 0xe000 && c <= 0xfffd);
+            if (!valid) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void report(short severity, String type) {
+        if (errorHandler != null) {
+            // TODO: abort if handleError returns false
+            errorHandler.handleError(new DOMErrorImpl(severity, type, type));
+        }
     }
 }

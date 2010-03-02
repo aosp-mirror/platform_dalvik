@@ -140,4 +140,33 @@ public class TextImpl extends CharacterDataImpl implements Text {
                 ? (TextImpl) nextSibling
                 : null;
     }
+
+    /**
+     * Tries to remove this node using itself and the previous node as context.
+     * If this node's text is empty, this node is removed and null is returned.
+     * If the previous node exists and is a text node, this node's text will be
+     * appended to that node's text and this node will be removed.
+     *
+     * <p>Although this method alters the structure of the DOM tree, it does
+     * not alter the document's semantics.
+     *
+     * @return the node holding this node's text and the end of the operation.
+     *     Can be null if this node contained the empty string.
+     */
+    public final TextImpl minimize() {
+        if (getLength() == 0) {
+            parent.removeChild(this);
+            return null;
+        }
+
+        Node previous = getPreviousSibling();
+        if (previous == null || previous.getNodeType() != Node.TEXT_NODE) {
+            return this;
+        }
+
+        TextImpl previousText = (TextImpl) previous;
+        previousText.buffer.append(buffer);
+        parent.removeChild(this);
+        return previousText;
+    }
 }
