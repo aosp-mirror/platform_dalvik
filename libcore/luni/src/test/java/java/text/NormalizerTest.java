@@ -18,41 +18,27 @@ package java.text;
 
 public class NormalizerTest extends junit.framework.TestCase {
     public void testNormalize() {
-        String src;
-        String dst;
-        String target;
+        final String src = "\u03d3\u03D4\u1E9B";
 
-        src = new String(new char[] {0x03D3, 0x03D4, 0x1E9B});
         // Should already be canonical composed
-        dst = Normalizer.normalize(src, Normalizer.Form.NFC);
-        assertTrue(src.equals(dst));
+        assertEquals(src, Normalizer.normalize(src, Normalizer.Form.NFC));
 
         // Composed to canonical decomposed
-        target = new String(new char[] {0x03D2, 0x0301, 0x03D2, 0x0308, 0x017F, 0x0307});
-        dst = Normalizer.normalize(src, Normalizer.Form.NFD);
-        assertTrue(target.equals(dst));
+        assertEquals("\u03d2\u0301\u03d2\u0308\u017f\u0307",
+                Normalizer.normalize(src, Normalizer.Form.NFD));
 
         // Composed to compatibility composed
-        target = new String(new char[] {0x038E, 0x3AB, 0x1E61});
-        dst = Normalizer.normalize(src, Normalizer.Form.NFKC);
-        assertTrue(target.equals(dst));
+        assertEquals("\u038e\u03ab\u1e61", Normalizer.normalize(src, Normalizer.Form.NFKC));
 
         // Composed to compatibility decomposed
-        target = new String(new char[] {0x03A5, 0x0301, 0x03A5, 0x0308, 0x0073, 0x0307});
-        dst = Normalizer.normalize(src, Normalizer.Form.NFKD);
-        assertTrue(target.equals(dst));
+        assertEquals("\u03a5\u0301\u03a5\u0308\u0073\u0307",
+                Normalizer.normalize(src, Normalizer.Form.NFKD));
 
         // Decomposed to canonical composed
-        src = new String(new char[] {0x0065, 0x0301});
-        target = new String(new char[] {0x00E9});
-        dst = Normalizer.normalize(src, Normalizer.Form.NFC);
-        assertTrue(target.equals(dst));
+        assertEquals("\u00e9", Normalizer.normalize("\u0065\u0301", Normalizer.Form.NFC));
 
         // Decomposed to compatibility composed
-        src = new String(new char[] {0x1E9B, 0x0323});
-        target = new String(new char[] {0x1E69});
-        dst = Normalizer.normalize(src, Normalizer.Form.NFKC);
-        assertTrue(target.equals(dst));
+        assertEquals("\u1e69", Normalizer.normalize("\u1e9b\u0323", Normalizer.Form.NFKC));
 
         try {
             Normalizer.normalize(null, Normalizer.Form.NFC);
