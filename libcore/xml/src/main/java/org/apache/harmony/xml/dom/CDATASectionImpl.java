@@ -29,7 +29,7 @@ import org.w3c.dom.Node;
  * the DOM implementation can easily access them while maintaining the DOM tree
  * structure.
  */
-public class CDATASectionImpl extends TextImpl implements CDATASection {
+public final class CDATASectionImpl extends TextImpl implements CDATASection {
 
     public CDATASectionImpl(DocumentImpl document, String data) {
         super(document, data);
@@ -45,4 +45,43 @@ public class CDATASectionImpl extends TextImpl implements CDATASection {
         return Node.CDATA_SECTION_NODE;
     }
 
+    /**
+     * Splits this CDATA node into parts that do not contain a "]]>" sequence.
+     * Any newly created nodes will be inserted before this node.
+     */
+    public void split() {
+        if (!needsSplitting()) {
+            return;
+        }
+        
+        Node parent = getParentNode();
+        String[] parts = getData().split("\\]\\]>");
+        parent.insertBefore(new CDATASectionImpl(document, parts[0] + "]]"), this);
+        for (int p = 1; p < parts.length - 1; p++) {
+            parent.insertBefore(new CDATASectionImpl(document, ">" + parts[p] + "]]"), this);
+        }
+        setData(">" + parts[parts.length - 1]);
+    }
+
+    /**
+     * Returns true if this CDATA section contains the illegal character
+     * sequence "]]>". Such nodes must be {@link #split} before they are
+     * serialized.
+     */
+    public boolean needsSplitting() {
+        return buffer.indexOf("]]>") != -1;
+    }
+
+    /**
+     * Replaces this node with a semantically equivalent text node. This node
+     * will be removed from the DOM tree and the new node inserted in its place.
+     *
+     * @return the replacement node.
+     */
+    public TextImpl replaceWithText() {
+        TextImpl replacement = new TextImpl(document, getData());
+        parent.insertBefore(replacement, this);
+        parent.removeChild(this);
+        return replacement;
+    }
 }
