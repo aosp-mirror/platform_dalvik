@@ -681,6 +681,8 @@ void dvmSlayDaemons(void)
     dvmUnlockThreadList();
 
     if (doWait) {
+        bool complained = false;
+
         usleep(200 * 1000);
 
         dvmLockThreadList(self);
@@ -701,9 +703,10 @@ void dvmSlayDaemons(void)
                 }
 
                 if (target->status == THREAD_RUNNING && !target->isSuspended) {
-                    LOGD("threadid=%d not ready yet\n", target->threadId);
+                    if (!complained)
+                        LOGD("threadid=%d not ready yet\n", target->threadId);
                     allSuspended = false;
-                    break;
+                    /* keep going so we log each running daemon once */
                 }
 
                 target = target->next;
@@ -713,7 +716,12 @@ void dvmSlayDaemons(void)
                 LOGD("threadid=%d: all daemons have suspended\n", threadId);
                 break;
             } else {
-                LOGD("threadid=%d: waiting for daemons to suspend\n", threadId);
+                if (!complained) {
+                    complained = true;
+                    LOGD("threadid=%d: waiting briefly for daemon suspension\n",
+                        threadId);
+                    // TODO: JIT can get stuck, dvmJitUnchainAll doesn't help?
+                }
             }
 
             usleep(200 * 1000);
@@ -2473,35 +2481,104 @@ static void printBackTrace(void) {}
  */
 static void dumpWedgedThread(Thread* thread)
 {
-    char exePath[1024];
-
-    /*
-     * The "executablepath" function in libutils is host-side only.
-     */
-    strcpy(exePath, "-");
-#ifdef HAVE_GLIBC
-    {
-        char proc[100];
-        sprintf(proc, "/proc/%d/exe", getpid());
-        int len;
-
-        len = readlink(proc, exePath, sizeof(exePath)-1);
-        exePath[len] = '\0';
-    }
-#endif
-
-    LOGW("dumping state: process %s %d\n", exePath, getpid());
     dvmDumpThread(dvmThreadSelf(), false);
     printBackTrace();
 
     // dumping a running thread is risky, but could be useful
     dvmDumpThread(thread, true);
 
-
     // stop now and get a core dump
     //abort();
 }
 
+/* "change flags" values for next two functions */
+enum { kChangedPriority = 0x01, kChangedPolicy = 0x02 };
+
+/*
+ * If the thread is running at below-normal priority, temporarily elevate
+ * it to "normal".
+ *
+ * Returns zero if no changes were made.  Otherwise, returns bit flags
+ * indicating what was changed, storing the previous values in the
+ * provided locations.
+ */
+static int raiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
+    SchedPolicy* pSavedThreadPolicy)
+{
+    errno = 0;
+    *pSavedThreadPrio = getpriority(PRIO_PROCESS, thread->systemTid);
+    if (errno != 0) {
+        LOGW("Unable to get priority for threadid=%d sysTid=%d\n",
+            thread->threadId, thread->systemTid);
+        return 0;
+    }
+    if (get_sched_policy(thread->systemTid, pSavedThreadPolicy) != 0) {
+        LOGW("Unable to get policy for threadid=%d sysTid=%d\n",
+            thread->threadId, thread->systemTid);
+        return 0;
+    }
+
+    int changeFlags = 0;
+
+    /*
+     * Change the priority if we're in the background group.
+     */
+    if (*pSavedThreadPolicy == SP_BACKGROUND) {
+        if (set_sched_policy(thread->systemTid, SP_FOREGROUND) != 0) {
+            LOGW("Couldn't set fg policy on tid %d\n", thread->systemTid);
+        } else {
+            changeFlags |= kChangedPolicy;
+            LOGD("Temporarily moving tid %d to fg (was %d)\n",
+                thread->systemTid, *pSavedThreadPolicy);
+        }
+    }
+
+    /*
+     * getpriority() returns the "nice" value, so larger numbers indicate
+     * lower priority, with 0 being normal.
+     */
+    if (*pSavedThreadPrio > 0) {
+        const int kHigher = 0;
+        if (setpriority(PRIO_PROCESS, thread->systemTid, kHigher) != 0) {
+            LOGW("Couldn't raise priority on tid %d to %d\n",
+                thread->systemTid, kHigher);
+        } else {
+            changeFlags |= kChangedPriority;
+            LOGD("Temporarily raised priority on tid %d (%d -> %d)\n",
+                thread->systemTid, *pSavedThreadPrio, kHigher);
+        }
+    }
+
+    return changeFlags;
+}
+
+/*
+ * Reset the priority values for the thread in question.
+ */
+static void resetThreadPriority(Thread* thread, int changeFlags,
+    int savedThreadPrio, SchedPolicy savedThreadPolicy)
+{
+    if ((changeFlags & kChangedPolicy) != 0) {
+        if (set_sched_policy(thread->systemTid, savedThreadPolicy) != 0) {
+            LOGW("NOTE: couldn't reset tid %d to (%d)\n",
+                thread->systemTid, savedThreadPolicy);
+        } else {
+            LOGD("Restored policy of %d to %d\n",
+                thread->systemTid, savedThreadPolicy);
+        }
+    }
+
+    if ((changeFlags & kChangedPriority) != 0) {
+        if (setpriority(PRIO_PROCESS, thread->systemTid, savedThreadPrio) != 0)
+        {
+            LOGW("NOTE: couldn't reset priority on thread %d to %d\n",
+                thread->systemTid, savedThreadPrio);
+        } else {
+            LOGD("Restored priority on %d to %d\n",
+                thread->systemTid, savedThreadPrio);
+        }
+    }
+}
 
 /*
  * Wait for another thread to see the pending suspension and stop running.
@@ -2534,8 +2611,9 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
     const int kMaxRetries = 10;
     int spinSleepTime = FIRST_SLEEP;
     bool complained = false;
-    bool needPriorityReset = false;
+    int priChangeFlags = 0;
     int savedThreadPrio = -500;
+    SchedPolicy savedThreadPolicy = SP_FOREGROUND;
 
     int sleepIter = 0;
     int retryCount = 0;
@@ -2552,30 +2630,11 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
              * After waiting for a bit, check to see if the target thread is
              * running at a reduced priority.  If so, bump it up temporarily
              * to give it more CPU time.
-             *
-             * getpriority() returns the "nice" value, so larger numbers
-             * indicate lower priority.
-             *
-             * (Not currently changing the cgroup.  Wasn't necessary in some
-             * simple experiments.)
              */
             if (retryCount == 2) {
                 assert(thread->systemTid != 0);
-                errno = 0;
-                int threadPrio = getpriority(PRIO_PROCESS, thread->systemTid);
-                if (errno == 0 && threadPrio > 0) {
-                    const int kHigher = 0;
-                    if (setpriority(PRIO_PROCESS, thread->systemTid, kHigher) < 0)
-                    {
-                        LOGW("Couldn't raise priority on tid %d to %d\n",
-                            thread->systemTid, kHigher);
-                    } else {
-                        savedThreadPrio = threadPrio;
-                        needPriorityReset = true;
-                        LOGD("Temporarily raising priority on tid %d (%d -> %d)\n",
-                            thread->systemTid, threadPrio, kHigher);
-                    }
-                }
+                priChangeFlags = raiseThreadPriorityIfNeeded(thread,
+                    &savedThreadPrio, &savedThreadPolicy);
             }
         }
 
@@ -2588,7 +2647,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
          */
         if (gDvmJit.pJitEntryTable && retryCount > 0 &&
             gDvmJit.hasNewChain && thread->inJitCodeCache) {
-            LOGD("JIT unchain all for tid %d", thread->threadId);
+            LOGD("JIT unchain all for threadid=%d", thread->threadId);
             dvmJitUnchainAll();
         }
 #endif
@@ -2599,10 +2658,13 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
          */
         if (!dvmIterativeSleep(sleepIter++, spinSleepTime, startWhen)) {
             if (spinSleepTime != FIRST_SLEEP) {
-                LOGW("threadid=%d: spin on suspend #%d threadid=%d (h=%d)\n",
+                LOGW("threadid=%d: spin on suspend #%d threadid=%d (pcf=%d)\n",
                     self->threadId, retryCount,
-                    thread->threadId, (int)thread->handle);
-                dumpWedgedThread(thread);
+                    thread->threadId, priChangeFlags);
+                if (retryCount > 1) {
+                    /* stack trace logging is slow; skip on first iter */
+                    dumpWedgedThread(thread);
+                }
                 complained = true;
             }
 
@@ -2625,14 +2687,9 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
             (dvmGetRelativeTimeUsec() - firstStartWhen) / 1000);
         //dvmDumpThread(thread, false);   /* suspended, so dump is safe */
     }
-    if (needPriorityReset) {
-        if (setpriority(PRIO_PROCESS, thread->systemTid, savedThreadPrio) < 0) {
-            LOGW("NOTE: couldn't reset priority on thread %d to %d\n",
-                thread->systemTid, savedThreadPrio);
-        } else {
-            LOGV("Restored priority on %d to %d\n",
-                thread->systemTid, savedThreadPrio);
-        }
+    if (priChangeFlags != 0) {
+        resetThreadPriority(thread, priChangeFlags, savedThreadPrio,
+            savedThreadPolicy);
     }
 }
 
