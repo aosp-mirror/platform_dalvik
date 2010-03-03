@@ -115,8 +115,10 @@ typedef struct RegisterPool {
     BitVector *nullCheckedRegs; // Track which registers have been null-checked
     int numCoreTemps;
     RegisterInfo *coreTemps;
+    int nextCoreTemp;
     int numFPTemps;
     RegisterInfo *FPTemps;
+    int nextFPTemp;
     int numCoreRegs;
     RegisterInfo *coreRegs;
     int numFPRegs;
@@ -133,6 +135,10 @@ typedef enum ResourceEncodingPos {
     kCCode      = kRegEnd,
     kFPStatus,
     kDalvikReg,
+    kLiteral,
+    kFrameRef,
+    kHeapRef,
+    kLitPoolRef
 } ResourceEncodingPos;
 
 #define ENCODE_REG_LIST(N)      ((u8) N)
@@ -141,8 +147,20 @@ typedef enum ResourceEncodingPos {
 #define ENCODE_REG_PC           (1ULL << kRegPC)
 #define ENCODE_CCODE            (1ULL << kCCode)
 #define ENCODE_FP_STATUS        (1ULL << kFPStatus)
+
+    /* Must alias */
 #define ENCODE_DALVIK_REG       (1ULL << kDalvikReg)
+#define ENCODE_LITERAL          (1ULL << kLiteral)
+
+    /* May alias */
+#define ENCODE_FRAME_REF        (1ULL << kFrameRef)
+#define ENCODE_HEAP_REF         (1ULL << kHeapRef)
+#define ENCODE_LITPOOL_REF      (1ULL << kLitPoolRef)
+
 #define ENCODE_ALL              (~0ULL)
+#define ENCODE_MEM_DEF          (ENCODE_FRAME_REF | ENCODE_HEAP_REF)
+#define ENCODE_MEM_USE          (ENCODE_FRAME_REF | ENCODE_HEAP_REF \
+                                 | ENCODE_LITPOOL_REF)
 
 #define DECODE_ALIAS_INFO_REG(X)        (X & 0xffff)
 #define DECODE_ALIAS_INFO_WIDE(X)       ((X & 0x80000000) ? 1 : 0)
@@ -633,8 +651,12 @@ typedef enum ArmOpFeatureFlags {
     kIsIT,
     kSetsCCodes,
     kUsesCCodes,
+    kMemLoad,
+    kMemStore,
 } ArmOpFeatureFlags;
 
+#define IS_LOAD         (1 << kMemLoad)
+#define IS_STORE        (1 << kMemStore)
 #define IS_BRANCH       (1 << kIsBranch)
 #define REG_DEF0        (1 << kRegDef0)
 #define REG_DEF1        (1 << kRegDef1)
@@ -702,6 +724,11 @@ typedef struct ArmEncodingMap {
     int size;
 } ArmEncodingMap;
 
+/* Keys for target-specific scheduling and other optimization hints */
+typedef enum ArmTargetOptHints {
+    kMaxHoistDistance,
+} ArmTargetOptHints;
+
 extern ArmEncodingMap EncodingMap[kArmLast];
 
 /*
@@ -727,7 +754,7 @@ typedef struct ArmLIR {
                         // used to identify mem ops for self verification mode
     int age;            // default is 0, set lazily by the optimizer
     int size;           // 16-bit unit size (1 for thumb, 1 or 2 for thumb2)
-    int aliasInfo;      // For Dalvik register access disambiguation
+    int aliasInfo;      // For Dalvik register access & litpool disambiguation
     u8 useMask;         // Resource mask for use
     u8 defMask;         // Resource mask for def
 } ArmLIR;

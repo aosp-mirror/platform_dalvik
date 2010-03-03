@@ -75,6 +75,17 @@ static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = tDest;
     setupResourceMasks(loadPcRel);
+    /*
+     * Special case for literal loads with a link register target.
+     * Self-cosim mode will insert calls prior to heap references
+     * after optimization, and those will destroy r14.  The easy
+     * workaround is to treat literal loads into r14 as heap references
+     * to prevent them from being hoisted.  Use of r14 in this manner
+     * is currently rare.  Revist if that changes.
+     */
+    if (rDest != rlr)
+        setMemRefType(loadPcRel, true, kLiteral);
+    loadPcRel->aliasInfo = dataTarget->operands[0];
     res = loadPcRel;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
 
@@ -113,7 +124,7 @@ static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
             opCode = kThumbBUncond;
             break;
         default:
-            assert(0);
+            dvmAbort(); // FIXME: abort trace instead of VM
     }
     return newLIR0(cUnit, opCode);
 }
@@ -134,7 +145,7 @@ static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
             opCode = kThumbPop;
             break;
         default:
-            assert(0);
+            dvmAbort(); // FIXME: abort trace instead of VM
     }
     return newLIR1(cUnit, opCode, value);
 }
@@ -147,7 +158,7 @@ static ArmLIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc)
             opCode = kThumbBlxR;
             break;
         default:
-            assert(0);
+            dvmAbort(); // FIXME: abort trace instead of VM
     }
     return newLIR1(cUnit, opCode, rDestSrc);
 }
@@ -192,7 +203,7 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             }
             break;
         default:
-            assert(0);
+            dvmAbort();  // FIXME: abort trace instead of VM
             break;
     }
     if (shortForm)
@@ -312,7 +323,7 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
                 }
                 return res;
         default:
-            assert(0);
+            dvmAbort();  // FIXME - abort trace instead of VM
             break;
     }
     if (shortForm)
@@ -409,7 +420,7 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
              opRegRegImm(cUnit, kOpLsr, rDestSrc1, rDestSrc1, 16);
              return res;
         default:
-            assert(0);
+            dvmAbort();  // FIXME - abort trace instead of VM
             break;
     }
     return newLIR2(cUnit, opCode, rDestSrc1, rSrc2);
@@ -454,7 +465,7 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
             opCode = kThumbLdrsbRRR;
             break;
         default:
-            assert(0);
+            dvmAbort();  // FIXME: abort trace instead of VM
     }
     res = newLIR3(cUnit, opCode, rDest, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
@@ -491,7 +502,7 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
             opCode = kThumbStrbRRR;
             break;
         default:
-            assert(0);
+            dvmAbort();  // FIXME - abort trace instead of VM
     }
     res = newLIR3(cUnit, opCode, rSrc, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
@@ -608,7 +619,7 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
             opCode = kThumbLdrsbRRR;
             break;
         default:
-            assert(0);
+            dvmAbort();  // FIXME - abort trace instead of VM
     }
     if (shortForm) {
         load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
@@ -618,20 +629,13 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     } else {
         if (pair) {
             int rTmp = dvmCompilerAllocFreeTemp(cUnit);
-            if (rTmp < 0) {
-                //UNIMP: need to spill if no temps.
-                assert(0);
-            }
             res = opRegRegImm(cUnit, kOpAdd, rTmp, rBase, displacement);
-            //TUNING: how to mark loadPair if Dalvik access?
-            loadPair(cUnit, rTmp, rDest, rDestHi);
+            load = newLIR3(cUnit, kThumbLdrRRI5, rDest, rTmp, 0);
+            load2 = newLIR3(cUnit, kThumbLdrRRI5, rDestHi, rTmp, 1);
             dvmCompilerFreeTemp(cUnit, rTmp);
         } else {
-            int rTmp = (rBase == rDest) ? dvmCompilerAllocFreeTemp(cUnit) : rDest;
-            if (rTmp < 0) {
-                //UNIMP: need to spill if no temps.
-                assert(0);
-            }
+            int rTmp = (rBase == rDest) ? dvmCompilerAllocFreeTemp(cUnit)
+                                        : rDest;
             res = loadConstant(cUnit, rTmp, displacement);
             load = newLIR3(cUnit, opCode, rDest, rBase, rTmp);
             if (rBase == rFP)
@@ -640,6 +644,14 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
             if (rTmp != rDest)
                 dvmCompilerFreeTemp(cUnit, rTmp);
         }
+    }
+    if (rBase == rFP) {
+        if (load != NULL)
+            annotateDalvikRegAccess(load, displacement >> 2,
+                                    true /* isLoad */);
+        if (load2 != NULL)
+            annotateDalvikRegAccess(load2, (displacement >> 2) + 1,
+                                    true /* isLoad */);
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (load != NULL && cUnit->heapMemOp)
@@ -724,7 +736,7 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
             }
             break;
         default:
-            assert(0);
+            dvmAbort(); // FIXME - abort trace instead of VM
     }
     if (shortForm) {
         store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);
@@ -734,18 +746,22 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     } else {
         int rScratch = dvmCompilerAllocTemp(cUnit);
         if (pair) {
-            //TUNING: how to mark storePair as Dalvik access if it is?
             res = opRegRegImm(cUnit, kOpAdd, rScratch, rBase, displacement);
-            storePair(cUnit, rScratch, rSrc, rSrcHi);
+            store =  newLIR3(cUnit, kThumbStrRRI5, rSrc, rScratch, 0);
+            store2 = newLIR3(cUnit, kThumbStrRRI5, rSrcHi, rScratch, 1);
         } else {
             res = loadConstant(cUnit, rScratch, displacement);
             store = newLIR3(cUnit, opCode, rSrc, rBase, rScratch);
-            if (rBase == rFP) {
-                annotateDalvikRegAccess(store, displacement >> 2,
-                                        false /* isLoad */);
-            }
         }
         dvmCompilerFreeTemp(cUnit, rScratch);
+    }
+    if (rBase == rFP) {
+        if (store != NULL)
+            annotateDalvikRegAccess(store, displacement >> 2,
+                                    false /* isLoad */);
+        if (store2 != NULL)
+            annotateDalvikRegAccess(store2, (displacement >> 2) + 1,
+                                    false /* isLoad */);
     }
 #if defined(WITH_SELF_VERIFICATION)
     if (store != NULL && cUnit->heapMemOp)

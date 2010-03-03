@@ -68,6 +68,10 @@ static ArmLIR *loadFPConstantValue(CompilationUnit *cUnit, int rDest,
     loadPcRel->operands[0] = rDest;
     loadPcRel->operands[1] = rpc;
     setupResourceMasks(loadPcRel);
+    // Self-cosim workaround.
+    if (rDest != rlr)
+        setMemRefType(loadPcRel, true, kLiteral);
+    loadPcRel->aliasInfo = dataTarget->operands[0];
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
     return loadPcRel;
 }
@@ -168,6 +172,17 @@ static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
     loadPcRel->generic.target = (LIR *) dataTarget;
     loadPcRel->operands[0] = rDest;
     setupResourceMasks(loadPcRel);
+    /*
+     * Special case for literal loads with a link register target.
+     * Self-cosim mode will insert calls prior to heap references
+     * after optimization, and those will destroy r14.  The easy
+     * workaround is to treat literal loads into r14 as heap references
+     * to prevent them from being hoisted.  Use of r14 in this manner
+     * is currently rare.  Revisit if that changes.
+     */
+    if (rDest != rlr)
+        setMemRefType(loadPcRel, true, kLiteral);
+    loadPcRel->aliasInfo = dataTarget->operands[0];
     res = loadPcRel;
     dvmCompilerAppendLIR(cUnit, (LIR *) loadPcRel);
 

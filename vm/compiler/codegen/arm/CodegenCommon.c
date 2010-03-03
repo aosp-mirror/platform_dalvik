@@ -32,17 +32,45 @@ static intptr_t templateEntryOffsets[TEMPLATE_LAST_MARK];
 /* Track exercised opcodes */
 static int opcodeCoverage[256];
 
+static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
+{
+    u8 *maskPtr;
+    u8 mask;
+    assert( EncodingMap[lir->opCode].flags & (IS_LOAD | IS_STORE));
+    if (isLoad) {
+        maskPtr = &lir->useMask;
+        mask = ENCODE_MEM_USE;
+    } else {
+        maskPtr = &lir->defMask;
+        mask = ENCODE_MEM_DEF;
+    }
+    /* Clear out the memref flags */
+    *maskPtr &= ~mask;
+    /* ..and then add back the one we need */
+    switch(memType) {
+        case kLiteral:
+            assert(isLoad);
+            *maskPtr |= (ENCODE_LITERAL | ENCODE_LITPOOL_REF);
+            break;
+        case kDalvikReg:
+            *maskPtr |= (ENCODE_DALVIK_REG | ENCODE_FRAME_REF);
+            break;
+        case kHeapRef:
+            *maskPtr |= ENCODE_HEAP_REF;
+            break;
+        default:
+            LOGE("Jit: invalid memref kind - %d", memType);
+            dvmAbort();
+    }
+}
+
 /*
  * Mark load/store instructions that access Dalvik registers through rFP +
  * offset.
  */
 static void annotateDalvikRegAccess(ArmLIR *lir, int regId, bool isLoad)
 {
-    if (isLoad) {
-        lir->useMask |= ENCODE_DALVIK_REG;
-    } else {
-        lir->defMask |= ENCODE_DALVIK_REG;
-    }
+    setMemRefType(lir, isLoad, kDalvikReg);
 
     /*
      * Store the Dalvik register id in aliasInfo. Mark he MSB if it is a 64-bit
@@ -90,6 +118,11 @@ static void setupResourceMasks(ArmLIR *lir)
     flags = EncodingMap[lir->opCode].flags;
 
     /* Set up the mask for resources that are updated */
+    if (flags & (IS_LOAD | IS_STORE)) {
+        /* Default to heap - will catch specialized classes later */
+        setMemRefType(lir, flags & IS_LOAD, kHeapRef);
+    }
+
     if (flags & IS_BRANCH) {
         lir->defMask |= ENCODE_REG_PC;
         lir->useMask |= ENCODE_REG_PC;
