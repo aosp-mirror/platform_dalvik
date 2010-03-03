@@ -2959,6 +2959,86 @@ static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
 #endif
 }
 
+static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
+{
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);
+    rlObj = loadValue(cUnit, rlObj, kCoreReg);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+    genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset, NULL);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_count,
+                 rlResult.lowReg);
+    storeValue(cUnit, rlDest, rlResult);
+    return false;
+}
+
+static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
+{
+    int contents = offsetof(ArrayObject, contents);
+    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
+    RegLocation rlIdx = dvmCompilerGetSrc(cUnit, mir, 1);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);
+    RegLocation rlResult;
+    rlObj = loadValue(cUnit, rlObj, kCoreReg);
+    rlIdx = loadValue(cUnit, rlIdx, kCoreReg);
+    int regMax = dvmCompilerAllocTemp(cUnit);
+    int regOff = dvmCompilerAllocTemp(cUnit);
+    int regPtr = dvmCompilerAllocTemp(cUnit);
+    ArmLIR *pcrLabel = genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg,
+                                    mir->offset, NULL);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_count, regMax);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_offset, regOff);
+    loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_value, regPtr);
+    genBoundsCheck(cUnit, rlIdx.lowReg, regMax, mir->offset, pcrLabel);
+    dvmCompilerFreeTemp(cUnit, regMax);
+    opRegImm(cUnit, kOpAdd, regPtr, contents);
+    opRegReg(cUnit, kOpAdd, regOff, rlIdx.lowReg);
+    rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+    loadBaseIndexed(cUnit, regPtr, regOff, rlResult.lowReg, 1, kUnsignedHalf);
+    storeValue(cUnit, rlDest, rlResult);
+    return false;
+}
+
+static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
+{
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+    rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
+    RegLocation rlDest = inlinedTarget(cUnit, mir, false);;
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+    int signReg = dvmCompilerAllocTemp(cUnit);
+    /*
+     * abs(x) = y<=x>>31, (x+y)^y.
+     * Thumb2's IT block also yields 3 instructions, but imposes
+     * scheduling constraints.
+     */
+    opRegRegImm(cUnit, kOpAsr, signReg, rlSrc.lowReg, 31);
+    opRegRegReg(cUnit, kOpAdd, rlResult.lowReg, rlSrc.lowReg, signReg);
+    opRegReg(cUnit, kOpXor, rlResult.lowReg, signReg);
+    storeValue(cUnit, rlDest, rlResult);
+    return false;
+}
+
+static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
+{
+    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
+    RegLocation rlDest = inlinedTargetWide(cUnit, mir, false);
+    rlSrc = loadValueWide(cUnit, rlSrc, kCoreReg);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+    int signReg = dvmCompilerAllocTemp(cUnit);
+    /*
+     * abs(x) = y<=x>>31, (x+y)^y.
+     * Thumb2 IT block allows slightly shorter sequence,
+     * but introduces a scheduling barrier.  Stick with this
+     * mechanism for now.
+     */
+    opRegRegImm(cUnit, kOpAsr, signReg, rlSrc.highReg, 31);
+    opRegRegReg(cUnit, kOpAdd, rlResult.lowReg, rlSrc.lowReg, signReg);
+    opRegRegReg(cUnit, kOpAdc, rlResult.highReg, rlSrc.highReg, signReg);
+    opRegReg(cUnit, kOpXor, rlResult.lowReg, signReg);
+    opRegReg(cUnit, kOpXor, rlResult.highReg, signReg);
+    storeValueWide(cUnit, rlDest, rlResult);
+    return false;
+}
 
 /*
  * NOTE: Handles both range and non-range versions (arguments

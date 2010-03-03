@@ -123,7 +123,7 @@ static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg)
         }
     }
     LOGE("Tried to get info on a non-existant temp: r%d",reg);
-    dvmAbort();
+    dvmAbort();  // FIXME: abort translation intead of vm
     return NULL;
 }
 
@@ -218,29 +218,38 @@ extern void dvmCompilerClobberSReg(CompilationUnit *cUnit, int sReg)
 }
 
 static int allocTempBody(CompilationUnit *cUnit, RegisterInfo *p, int numTemps,
-                         bool required)
+                         int *nextTemp, bool required)
 {
     int i;
-    //Tuning: redo this to widen the live window on freed temps
+    int next = *nextTemp;
     for (i=0; i< numTemps; i++) {
-        if (!p[i].inUse && !p[i].live) {
-            dvmCompilerClobber(cUnit, p[i].reg);
-            p[i].inUse = true;
-            p[i].pair = false;
-            return p[i].reg;
+        if (next >= numTemps)
+            next = 0;
+        if (!p[next].inUse && !p[next].live) {
+            dvmCompilerClobber(cUnit, p[next].reg);
+            p[next].inUse = true;
+            p[next].pair = false;
+            *nextTemp = next + 1;
+            return p[next].reg;
         }
+        next++;
     }
+    next = *nextTemp;
     for (i=0; i< numTemps; i++) {
-        if (!p[i].inUse) {
-            dvmCompilerClobber(cUnit, p[i].reg);
-            p[i].inUse = true;
-            p[i].pair = false;
-            return p[i].reg;
+        if (next >= numTemps)
+            next = 0;
+        if (!p[next].inUse) {
+            dvmCompilerClobber(cUnit, p[next].reg);
+            p[next].inUse = true;
+            p[next].pair = false;
+            *nextTemp = next + 1;
+            return p[next].reg;
         }
+        next++;
     }
     if (required) {
         LOGE("No free temp registers");
-        assert(0);
+        dvmAbort();  // FIXME: abort translation instead of vm
     }
     return -1;  // No register available
 }
@@ -250,34 +259,46 @@ extern int dvmCompilerAllocTempDouble(CompilationUnit *cUnit)
 {
     RegisterInfo *p = cUnit->regPool->FPTemps;
     int numTemps = cUnit->regPool->numFPTemps;
+    int next = cUnit->regPool->nextFPTemp;
     int i;
 
     for (i=0; i < numTemps; i+=2) {
-        if ((!p[i].inUse && !p[i].live) &&
-            (!p[i+1].inUse && !p[i+1].live)) {
-            dvmCompilerClobber(cUnit, p[i].reg);
-            dvmCompilerClobber(cUnit, p[i+1].reg);
-            p[i].inUse = true;
-            p[i+1].inUse = true;
-            assert((p[i].reg+1) == p[i+1].reg);
-            assert((p[i].reg & 0x1) == 0);
-            return p[i].reg;
+        /* Cleanup - not all targets need aligned regs */
+        if (next & 1)
+            next++;
+        if (next >= numTemps)
+            next = 0;
+        if ((!p[next].inUse && !p[next].live) &&
+            (!p[next+1].inUse && !p[next+1].live)) {
+            dvmCompilerClobber(cUnit, p[next].reg);
+            dvmCompilerClobber(cUnit, p[next+1].reg);
+            p[next].inUse = true;
+            p[next+1].inUse = true;
+            assert((p[next].reg+1) == p[next+1].reg);
+            assert((p[next].reg & 0x1) == 0);
+            cUnit->regPool->nextFPTemp += 2;
+            return p[next].reg;
         }
+        next += 2;
     }
+    next = cUnit->regPool->nextFPTemp;
     for (i=0; i < numTemps; i+=2) {
-        if (!p[i].inUse && !p[i+1].inUse) {
-            dvmCompilerClobber(cUnit, p[i].reg);
-            dvmCompilerClobber(cUnit, p[i+1].reg);
-            p[i].inUse = true;
-            p[i+1].inUse = true;
-            assert((p[i].reg+1) == p[i+1].reg);
-            assert((p[i].reg & 0x1) == 0);
-            return p[i].reg;
+        if (next >= numTemps)
+            next = 0;
+        if (!p[next].inUse && !p[next+1].inUse) {
+            dvmCompilerClobber(cUnit, p[next].reg);
+            dvmCompilerClobber(cUnit, p[next+1].reg);
+            p[next].inUse = true;
+            p[next+1].inUse = true;
+            assert((p[next].reg+1) == p[next+1].reg);
+            assert((p[next].reg & 0x1) == 0);
+            cUnit->regPool->nextFPTemp += 2;
+            return p[next].reg;
         }
+        next += 2;
     }
     LOGE("No free temp registers");
-    *((int*)0) = 0;  //For development, die instantly.  Later abort translation
-    dvmAbort();
+    dvmAbort(); // FIXME: abort translation instead of vm
     return -1;
 }
 
@@ -285,19 +306,22 @@ extern int dvmCompilerAllocTempDouble(CompilationUnit *cUnit)
 extern int dvmCompilerAllocFreeTemp(CompilationUnit *cUnit)
 {
     return allocTempBody(cUnit, cUnit->regPool->coreTemps,
-                         cUnit->regPool->numCoreTemps, true);
+                         cUnit->regPool->numCoreTemps,
+                         &cUnit->regPool->nextCoreTemp, true);
 }
 
 extern int dvmCompilerAllocTemp(CompilationUnit *cUnit)
 {
     return allocTempBody(cUnit, cUnit->regPool->coreTemps,
-                         cUnit->regPool->numCoreTemps, true);
+                         cUnit->regPool->numCoreTemps,
+                         &cUnit->regPool->nextCoreTemp, true);
 }
 
 extern int dvmCompilerAllocTempFloat(CompilationUnit *cUnit)
 {
     return allocTempBody(cUnit, cUnit->regPool->FPTemps,
-                         cUnit->regPool->numFPTemps, true);
+                         cUnit->regPool->numFPTemps,
+                         &cUnit->regPool->nextFPTemp, true);
 }
 
 static RegisterInfo *allocLiveBody(RegisterInfo *p, int numTemps, int sReg)
@@ -335,8 +359,7 @@ static RegisterInfo *allocLive(CompilationUnit *cUnit, int sReg,
             break;
         default:
             LOGE("Invalid register type");
-            assert(0);
-            dvmAbort();
+            dvmAbort();    //FIXME: abort translation instead of vm
     }
     return res;
 }
@@ -363,10 +386,13 @@ extern void dvmCompilerFreeTemp(CompilationUnit *cUnit, int reg)
         }
     }
     LOGE("Tried to free a non-existant temp: r%d",reg);
-    dvmAbort();
+    dvmAbort();  // FIXME: abort translation instead of vm
 }
 
-//FIXME - this needs to also check the preserved pool.
+/*
+ * FIXME - this needs to also check the preserved pool once we start
+ * start using preserved registers.
+ */
 extern RegisterInfo *dvmCompilerIsLive(CompilationUnit *cUnit, int reg)
 {
     RegisterInfo *p = cUnit->regPool->coreTemps;
@@ -434,7 +460,7 @@ extern void dvmCompilerLockTemp(CompilationUnit *cUnit, int reg)
         }
     }
     LOGE("Tried to lock a non-existant temp: r%d",reg);
-    dvmAbort();
+    dvmAbort();  // FIXME: abort translation instead of vm
 }
 
 static void lockArgRegs(CompilationUnit *cUnit)

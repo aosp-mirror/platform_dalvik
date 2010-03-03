@@ -58,4 +58,7 @@ JitInstructionSetType dvmCompilerInstructionSet(void);
  */
 bool dvmCompilerArchVariantInit(void);
 
+/* Implemented in codegen/<target>/<target_variant>/ArchVariant.c */
+int dvmCompilerTargetOptHint(int key);
+
 #endif /* _DALVIK_VM_COMPILERCODEGEN_H_ */

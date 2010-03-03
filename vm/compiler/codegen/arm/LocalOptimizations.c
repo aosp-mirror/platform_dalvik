@@ -26,12 +26,18 @@ ArmLIR* dvmCompilerGenCopy(CompilationUnit *cUnit, int rDest, int rSrc);
 /* Is this a Dalvik register access? */
 static inline bool isDalvikLoad(ArmLIR *lir)
 {
-    return (lir->useMask != ~0ULL) && (lir->useMask & ENCODE_DALVIK_REG);
+    return (lir->useMask != ENCODE_ALL) && (lir->useMask & ENCODE_DALVIK_REG);
+}
+
+/* Is this a load from the literal pool? */
+static inline bool isLiteralLoad(ArmLIR *lir)
+{
+    return (lir->useMask != ENCODE_ALL) && (lir->useMask & ENCODE_LITERAL);
 }
 
 static inline bool isDalvikStore(ArmLIR *lir)
 {
-    return (lir->defMask != ~0ULL) && (lir->defMask & ENCODE_DALVIK_REG);
+    return (lir->defMask != ENCODE_ALL) && (lir->defMask & ENCODE_DALVIK_REG);
 }
 
 static inline bool isDalvikRegisterClobbered(ArmLIR *lir1, ArmLIR *lir2)
@@ -169,6 +175,12 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                               ArmLIR *tailLIR)
 {
     ArmLIR *thisLIR;
+    /*
+     * Don't want to hoist in front of first load following a barrier (or
+     * first instruction of the block.
+     */
+    bool firstLoad = true;
+    int maxHoist = dvmCompilerTargetOptHint(kMaxHoistDistance);
 
     cUnit->optRound++;
     for (thisLIR = headLIR;
@@ -179,6 +191,18 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
             thisLIR->isNop == true) {
             continue;
         }
+
+        if (firstLoad && (EncodingMap[thisLIR->opCode].flags & IS_LOAD)) {
+            /*
+             * Ensure nothing will be hoisted in front of this load because
+             * it's result will likely be needed soon.
+             */
+            thisLIR->defMask |= ENCODE_MEM_USE;
+            firstLoad = false;
+        }
+
+        firstLoad |= (thisLIR->defMask == ENCODE_ALL);
+
         if (isDalvikLoad(thisLIR)) {
             int dRegId = DECODE_ALIAS_INFO_REG(thisLIR->aliasInfo);
             int dRegIdHi = dRegId + DECODE_ALIAS_INFO_WIDE(thisLIR->aliasInfo);
@@ -186,8 +210,8 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
             ArmLIR *checkLIR;
             int hoistDistance = 0;
             u8 stopUseMask = (ENCODE_REG_PC | thisLIR->useMask) &
-                             ~ENCODE_DALVIK_REG;
-            u8 stopDefMask = thisLIR->defMask & ~ENCODE_DALVIK_REG;
+                             ~ENCODE_FRAME_REF;
+            u8 stopDefMask = thisLIR->defMask & ~ENCODE_FRAME_REF;
 
             /* First check if the load can be completely elinimated */
             for (checkLIR = PREV_LIR(thisLIR);
@@ -243,8 +267,15 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
 
                 if (checkLIR->isNop) continue;
 
-                /* Check if the current load is redundant */
-                if ((isDalvikLoad(checkLIR) || isDalvikStore(checkLIR)) &&
+                /*
+                 * Check if the "thisLIR" load is redundant
+                 * NOTE: At one point, we also triggered if the checkLIR
+                 * instruction was a load.  However, that tended to insert
+                 * a load/use dependency because the full scheduler is
+                 * not yet complete.  When it is, we chould also trigger
+                 * on loads.
+                 */
+                if (isDalvikStore(checkLIR) &&
                     (checkLIR->aliasInfo == thisLIR->aliasInfo) &&
                     (REGTYPE(checkLIR->operands[0]) == REGTYPE(nativeRegId))) {
                     /* Insert a move to replace the load */
@@ -301,6 +332,9 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                         }
                     }
 
+                    /* Don't go too far */
+                    stopHere |= (hoistDistance >= maxHoist);
+
                     /* Found a new place to put the load - move it here */
                     if (stopHere == true) {
                         DEBUG_OPT(dumpDependentInsnPair(thisLIR, checkLIR,
@@ -329,6 +363,108 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                     if (!isPseudoOpCode(checkLIR->opCode)) {
                         hoistDistance++;
                     }
+                }
+            }
+        } else if (isLiteralLoad(thisLIR)) {
+            int litVal = thisLIR->aliasInfo;
+            int nativeRegId = thisLIR->operands[0];
+            ArmLIR *checkLIR;
+            int hoistDistance = 0;
+            u8 stopUseMask = (ENCODE_REG_PC | thisLIR->useMask) &
+                             ~ENCODE_LITPOOL_REF;
+            u8 stopDefMask = thisLIR->defMask & ~ENCODE_LITPOOL_REF;
+
+            /* First check if the load can be completely elinimated */
+            for (checkLIR = PREV_LIR(thisLIR);
+                 checkLIR != headLIR;
+                 checkLIR = PREV_LIR(checkLIR)) {
+
+                if (checkLIR->isNop) continue;
+
+                /* Reloading same literal into same tgt reg? Eliminate if so */
+                if (isLiteralLoad(checkLIR) &&
+                    (checkLIR->aliasInfo == litVal) &&
+                    (checkLIR->operands[0] == nativeRegId)) {
+                    thisLIR->isNop = true;
+                    break;
+                }
+
+                /*
+                 * No earlier use/def can reach this load if:
+                 * 1) Head instruction is reached
+                 * 2) load target register is clobbered
+                 * 3) A branch is seen (stopUseMask has the PC bit set).
+                 */
+                if ((checkLIR == headLIR) ||
+                    (stopUseMask | stopDefMask) & checkLIR->defMask) {
+                    break;
+                }
+            }
+
+            /* The load has been eliminated */
+            if (thisLIR->isNop) continue;
+
+            /*
+             * The load cannot be eliminated. See if it can be hoisted to an
+             * earlier spot.
+             */
+            for (checkLIR = PREV_LIR(thisLIR);
+                 /* empty by intention */;
+                 checkLIR = PREV_LIR(checkLIR)) {
+
+                if (checkLIR->isNop) continue;
+
+                /*
+                 * TUNING: once a full scheduler exists, check here
+                 * for conversion of a redundant load into a copy similar
+                 * to the way redundant loads are handled above.
+                 */
+
+                /* Find out if the load can be yanked past the checkLIR */
+
+                /* Last instruction reached */
+                bool stopHere = (checkLIR == headLIR);
+
+                /* Base address is clobbered by checkLIR */
+                stopHere |= ((stopUseMask & checkLIR->defMask) != 0);
+
+                /* Load target clobbers use/def in checkLIR */
+                stopHere |= ((stopDefMask &
+                             (checkLIR->useMask | checkLIR->defMask)) != 0);
+
+                /* Avoid re-ordering literal pool loads */
+                stopHere |= isLiteralLoad(checkLIR);
+
+                /* Don't go too far */
+                stopHere |= (hoistDistance >= maxHoist);
+
+                /* Found a new place to put the load - move it here */
+                if (stopHere == true) {
+                    DEBUG_OPT(dumpDependentInsnPair(thisLIR, checkLIR,
+                                                    "HOIST LOAD"));
+                    /* The store can be hoisted for at least one cycle */
+                    if (hoistDistance != 0) {
+                        ArmLIR *newLoadLIR =
+                            dvmCompilerNew(sizeof(ArmLIR), true);
+                        *newLoadLIR = *thisLIR;
+                        newLoadLIR->age = cUnit->optRound;
+                        /*
+                         * Insertion is guaranteed to succeed since checkLIR
+                         * is never the first LIR on the list
+                         */
+                        dvmCompilerInsertLIRAfter((LIR *) checkLIR,
+                                                  (LIR *) newLoadLIR);
+                        thisLIR->isNop = true;
+                    }
+                    break;
+                }
+
+                /*
+                 * Saw a real instruction that hosting the load is
+                 * beneficial
+                 */
+                if (!isPseudoOpCode(checkLIR->opCode)) {
+                    hoistDistance++;
                 }
             }
         }
