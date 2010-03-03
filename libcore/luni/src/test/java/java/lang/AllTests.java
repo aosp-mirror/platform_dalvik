@@ -24,6 +24,7 @@ public class AllTests {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(java.lang.FloatTest.class);
         suite.addTestSuite(java.lang.ProcessBuilderTest.class);
+        suite.addTestSuite(SystemTest.class);
         return suite;
     }
 }
