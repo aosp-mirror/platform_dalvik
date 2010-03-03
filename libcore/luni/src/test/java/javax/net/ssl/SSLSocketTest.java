@@ -275,6 +275,7 @@ public class SSLSocketTest extends TestCase {
         });
         thread.start();
         final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        final boolean[] handshakeCompletedListenerCalled = new boolean[1];
         client.addHandshakeCompletedListener(new HandshakeCompletedListener() {
             public void handshakeCompleted(HandshakeCompletedEvent event) {
                 try {
@@ -320,8 +321,7 @@ public class SSLSocketTest extends TestCase {
                         } else if (c.keyStore.isKeyEntry(alias)) {
                             assertNull(key);
                             key = c.keyStore.getKey(alias, c.keyStorePassword);
-                        }
-                        else {
+                        } else {
                             fail();
                         }
                     }
@@ -353,6 +353,7 @@ public class SSLSocketTest extends TestCase {
                     assertNotNull(socket);
                     assertSame(client, socket);
 
+                    handshakeCompletedListenerCalled[0] = true;
                 } catch (RuntimeException e) {
                     throw e;
                 } catch (Exception e) {
@@ -361,6 +362,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         client.startHandshake();
+        assertTrue(handshakeCompletedListenerCalled[0]);
         thread.join();
     }
 
