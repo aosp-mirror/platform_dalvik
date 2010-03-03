@@ -84,7 +84,7 @@ public class Resources {
         } else if (country.length() > 0) {
             result.overrideWithDataFrom(getLocaleData(new Locale(language, "", "")));
         } else if (language.length() > 0) {
-            result.overrideWithDataFrom(getLocaleData(new Locale("", "", "")));
+            result.overrideWithDataFrom(getLocaleData(Locale.ROOT));
         }
         // Override with data from this locale.
         result.overrideWithDataFrom(initLocaleData(locale));

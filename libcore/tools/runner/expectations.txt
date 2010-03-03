@@ -685,10 +685,6 @@ pattern .*got java\.lang\.StringIndexOutOfBoundsException: null - FAILED.*
 
 
 # We don't expose Java 6 APIs
-test java.lang.String.IsEmpty
-result COMPILE_FAILED
-pattern .*cannot find symbol.*method isEmpty\(\).*
-
 test java.lang.String.Exceptions
 result COMPILE_FAILED
 pattern .*cannot find symbol.*new String.*
