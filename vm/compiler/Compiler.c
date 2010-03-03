@@ -97,7 +97,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->info = info;
     newOrder->result.codeAddress = NULL;
     newOrder->result.discardResult =
-        (kind == kWorkOrderTraceDebug) ?  true : false;
+        (kind == kWorkOrderTraceDebug) ? true : false;
     newOrder->result.requestingThread = dvmThreadSelf();
 
     gDvmJit.compilerWorkEnqueueIndex++;

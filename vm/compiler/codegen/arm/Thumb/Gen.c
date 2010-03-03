@@ -153,66 +153,6 @@ static void genCmpLong(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
     storeValue(cUnit, rlDest, rlResult);
 }
 
-static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
-{
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int offset = offsetof(InterpState, retval);
-    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
-    int regObj = loadValue(cUnit, rlObj, kCoreReg).lowReg;
-    int reg1 = dvmCompilerAllocTemp(cUnit);
-    genNullCheck(cUnit, dvmCompilerSSASrc(mir, 0), regObj, mir->offset, NULL);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, reg1);
-    storeWordDisp(cUnit, rGLUE, offset, reg1);
-    return false;
-}
-
-static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
-{
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
-    int offset = offsetof(InterpState, retval);
-    int contents = offsetof(ArrayObject, contents);
-    RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
-    RegLocation rlIdx = dvmCompilerGetSrc(cUnit, mir, 1);
-    int regObj = loadValue(cUnit, rlObj, kCoreReg).lowReg;
-    int regIdx = loadValue(cUnit, rlIdx, kCoreReg).lowReg;
-    int regMax = dvmCompilerAllocTemp(cUnit);
-    int regOff = dvmCompilerAllocTemp(cUnit);
-    ArmLIR * pcrLabel = genNullCheck(cUnit, dvmCompilerSSASrc(mir, 0),
-                                     regObj, mir->offset, NULL);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_count, regMax);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_offset, regOff);
-    loadWordDisp(cUnit, regObj, gDvm.offJavaLangString_value, regObj);
-    genBoundsCheck(cUnit, regIdx, regMax, mir->offset, pcrLabel);
-
-    newLIR2(cUnit, kThumbAddRI8, regObj, contents);
-    newLIR3(cUnit, kThumbAddRRR, regIdx, regIdx, regOff);
-    newLIR3(cUnit, kThumbAddRRR, regIdx, regIdx, regIdx);
-    newLIR3(cUnit, kThumbLdrhRRR, regMax, regObj, regIdx);
-    dvmCompilerFreeTemp(cUnit, regOff);
-    storeWordDisp(cUnit, rGLUE, offset, regMax);
-//FIXME: rewrite this to not clobber
-    dvmCompilerClobber(cUnit, regObj);
-    dvmCompilerClobber(cUnit, regIdx);
-    return false;
-}
-
-static bool genInlinedAbsInt(CompilationUnit *cUnit, MIR *mir)
-{
-    int offset = offsetof(InterpState, retval);
-    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
-    int reg0 = loadValue(cUnit, rlSrc, kCoreReg).lowReg;
-    int sign = dvmCompilerAllocTemp(cUnit);
-    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
-    newLIR3(cUnit, kThumbAsrRRI5, sign, reg0, 31);
-    newLIR3(cUnit, kThumbAddRRR, reg0, reg0, sign);
-    newLIR2(cUnit, kThumbEorRR, reg0, sign);
-    dvmCompilerFreeTemp(cUnit, sign);
-    storeWordDisp(cUnit, rGLUE, offset, reg0);
-//FIXME: rewrite this to not clobber
-    dvmCompilerClobber(cUnit, reg0);
-    return false;
-}
-
 static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
 {
     int offset = offsetof(InterpState, retval);
@@ -223,7 +163,7 @@ static bool genInlinedAbsFloat(CompilationUnit *cUnit, MIR *mir)
     newLIR2(cUnit, kThumbAndRR, reg0, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
     storeWordDisp(cUnit, rGLUE, offset, reg0);
-//FIXME: rewrite this to not clobber
+    //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reg0);
     return true;
 }
@@ -241,7 +181,7 @@ static bool genInlinedAbsDouble(CompilationUnit *cUnit, MIR *mir)
     newLIR2(cUnit, kThumbAndRR, reghi, signMask);
     dvmCompilerFreeTemp(cUnit, signMask);
     storeWordDisp(cUnit, rGLUE, offset + 4, reghi);
-//FIXME: rewrite this to not clobber
+    //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit, reghi);
     return true;
 }
@@ -262,31 +202,8 @@ static bool genInlinedMinMaxInt(CompilationUnit *cUnit, MIR *mir, bool isMin)
     target->defMask = ENCODE_ALL;
     newLIR3(cUnit, kThumbStrRRI5, reg0, rGLUE, offset >> 2);
     branch1->generic.target = (LIR *)target;
-//FIXME: rewrite this to not clobber
+    //TUNING: rewrite this to not clobber
     dvmCompilerClobber(cUnit,reg0);
-    return false;
-}
-
-static bool genInlinedAbsLong(CompilationUnit *cUnit, MIR *mir)
-{
-    int offset = offsetof(InterpState, retval);
-    RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
-    RegLocation regSrc = loadValueWide(cUnit, rlSrc, kCoreReg);
-    int oplo = regSrc.lowReg;
-    int ophi = regSrc.highReg;
-    int sign = dvmCompilerAllocTemp(cUnit);
-    /* abs(x) = y<=x>>31, (x+y)^y.  Shorter in ARM/THUMB2, no skip in THUMB */
-    newLIR3(cUnit, kThumbAsrRRI5, sign, ophi, 31);
-    newLIR3(cUnit, kThumbAddRRR, oplo, oplo, sign);
-    newLIR2(cUnit, kThumbAdcRR, ophi, sign);
-    newLIR2(cUnit, kThumbEorRR, oplo, sign);
-    newLIR2(cUnit, kThumbEorRR, ophi, sign);
-    dvmCompilerFreeTemp(cUnit, sign);
-    storeWordDisp(cUnit, rGLUE, offset, oplo);
-    storeWordDisp(cUnit, rGLUE, offset + 4, ophi);
-//FIXME: rewrite this to not clobber
-    dvmCompilerClobber(cUnit, oplo);
-    dvmCompilerClobber(cUnit, ophi);
     return false;
 }
 

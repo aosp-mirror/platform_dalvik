@@ -77,3 +77,17 @@ bool dvmCompilerArchVariantInit(void)
     assert(offsetof(InterpState, jitToInterpEntries) < 108);
     return true;
 }
+
+int dvmCompilerTargetOptHint(int key)
+{
+    int res;
+    switch (key) {
+        case kMaxHoistDistance:
+            res = 2;
+            break;
+        default:
+            LOGE("Unknown target optimization hint key: %d",key);
+            res = 0;
+    }
+    return res;
+}
