@@ -605,7 +605,7 @@ public final class Formatter implements Closeable, Flushable {
      *            then no localization will be used.
      */
     public Formatter(Appendable a, Locale l) {
-        if (null == a) {
+        if (a == null) {
             out = new StringBuilder();
         } else {
             out = a;
@@ -867,7 +867,7 @@ public final class Formatter implements Closeable, Flushable {
      *            be raised.
      */
     public Formatter(PrintStream ps) {
-        if (null == ps) {
+        if (ps == null) {
             throw new NullPointerException();
         }
         out = ps;
@@ -1107,7 +1107,7 @@ public final class Formatter implements Closeable, Flushable {
             throw new MissingFormatArgumentException("<"); //$NON-NLS-1$
         }
 
-        if (null == args) {
+        if (args == null) {
             return null;
         }
 
@@ -1123,7 +1123,7 @@ public final class Formatter implements Closeable, Flushable {
     }
 
     private static void closeOutputStream(OutputStream os) {
-        if (null == os) {
+        if (os == null) {
             return;
         }
         try {
@@ -1171,26 +1171,12 @@ public final class Formatter implements Closeable, Flushable {
 
         // Tests whether there were no flags, no width, and no precision specified.
         boolean isDefault() {
-            // TODO: call hasDefaultFlags when the JIT can inline it.
             return !flagAdd && !flagComma && !flagMinus && !flagParenthesis && !flagSharp &&
                     !flagSpace && !flagZero && width == UNSET && precision == UNSET;
         }
 
-        boolean hasDefaultFlags() {
-            return !flagAdd && !flagComma && !flagMinus && !flagParenthesis && !flagSharp &&
-                    !flagSpace && !flagZero;
-        }
-
         boolean isPrecisionSet() {
             return precision != UNSET;
-        }
-
-        boolean isWidthSet() {
-            return width != UNSET;
-        }
-
-        boolean hasArg() {
-            return argIndex != UNSET;
         }
 
         int getArgIndex() {
@@ -1289,21 +1275,132 @@ public final class Formatter implements Closeable, Flushable {
             return conversionType != '%' && conversionType != 'n';
         }
 
-        void checkMissingWidth() {
-            if (flagMinus && width == UNSET) {
+        void checkFlags(Object arg) {
+            // Work out which flags are allowed.
+            boolean allowAdd = false;
+            boolean allowComma = false;
+            boolean allowMinus = true;
+            boolean allowParenthesis = false;
+            boolean allowSharp = false;
+            boolean allowSpace = false;
+            boolean allowZero = false;
+            // Precision and width?
+            boolean allowPrecision = true;
+            boolean allowWidth = true;
+            // Argument?
+            boolean allowArgument = true;
+            switch (conversionType) {
+            // Character and date/time.
+            case 'c': case 'C': case 't': case 'T':
+                // Only '-' is allowed.
+                allowPrecision = false;
+                break;
+
+            // String.
+            case 's': case 'S':
+                if (arg instanceof Formattable) {
+                    allowSharp = true;
+                }
+                break;
+
+            // Floating point.
+            case 'g': case 'G':
+                allowAdd = allowComma = allowParenthesis = allowSpace = allowZero = true;
+                break;
+            case 'f':
+                allowAdd = allowComma = allowParenthesis = allowSharp = allowSpace = allowZero = true;
+                break;
+            case 'e': case 'E':
+                allowAdd = allowParenthesis = allowSharp = allowSpace = allowZero = true;
+                break;
+            case 'a': case 'A':
+                allowAdd = allowSharp = allowSpace = allowZero = true;
+                break;
+
+            // Integral.
+            case 'd':
+                allowAdd = allowComma = allowParenthesis = allowSpace = allowZero = true;
+                allowPrecision = false;
+                break;
+            case 'o': case 'x': case 'X':
+                allowSharp = allowZero = true;
+                if (arg == null || arg instanceof BigInteger) {
+                    allowAdd = allowParenthesis = allowSpace = true;
+                }
+                allowPrecision = false;
+                break;
+
+            // Special.
+            case 'n':
+                // Nothing is allowed.
+                allowMinus = false;
+                allowArgument = allowPrecision = allowWidth = false;
+                break;
+            case '%':
+                // The only flag allowed is '-', and no argument or precision is allowed.
+                allowArgument = false;
+                allowPrecision = false;
+                break;
+
+            // Booleans and hash codes.
+            case 'b': case 'B': case 'h': case 'H':
+                break;
+
+            default:
+                throw new AssertionError(conversionType);
+            }
+            
+            // Check for disallowed flags.
+            String mismatch = null;
+            if (!allowAdd && flagAdd) {
+                mismatch = "+";
+            } else if (!allowComma && flagComma) {
+                mismatch = ",";
+            } else if (!allowMinus && flagMinus) {
+                mismatch = "-";
+            } else if (!allowParenthesis && flagParenthesis) {
+                mismatch = "(";
+            } else if (!allowSharp && flagSharp) {
+                mismatch = "#";
+            } else if (!allowSpace && flagSpace) {
+                mismatch = " ";
+            } else if (!allowZero && flagZero) {
+                mismatch = "0";
+            }
+            if (mismatch != null) {
+                if (conversionType == 'n') {
+                    // For no good reason, %n is a special case...
+                    throw new IllegalFormatFlagsException(mismatch);
+                } else {
+                    throw new FormatFlagsConversionMismatchException(mismatch, conversionType);
+                }
+            }
+            
+            // Check for a missing width with flags that require a width.
+            if ((flagMinus || flagZero) && width == UNSET) {
                 throw new MissingFormatWidthException("-" + conversionType);
             }
-        }
-
-        void ensureOnlyMinus() {
-            if (flagAdd || flagComma || flagParenthesis || flagSharp || flagSpace || flagZero) {
-                throw new FormatFlagsConversionMismatchException(getStrFlags(), conversionType);
+            
+            // Check that no-argument conversion types don't have an argument.
+            // Note: the RI doesn't enforce this.
+            if (!allowArgument && argIndex != UNSET) {
+                throw new IllegalFormatFlagsException(getStrFlags());
             }
-        }
-
-        void ensureNoPrecision() {
-            if (isPrecisionSet()) {
+            
+            // Check that we don't have a precision or width where they're not allowed.
+            if (!allowPrecision && precision != UNSET) {
                 throw new IllegalFormatPrecisionException(precision);
+            }
+            if (!allowWidth && width != UNSET) {
+                throw new IllegalFormatWidthException(width);
+            }
+            
+            // Some combinations make no sense...
+            if (flagAdd && flagSpace) {
+                throw new IllegalFormatFlagsException("the '+' and ' ' flags are incompatible");
+            }
+            if (flagMinus && flagZero) {
+                throw new IllegalFormatFlagsException("the '-' and '0' flags are incompatible");
             }
         }
     }
@@ -1329,7 +1426,7 @@ public final class Formatter implements Closeable, Flushable {
 
         Transformer(Formatter formatter, Locale locale) {
             this.formatter = formatter;
-            this.locale = (null == locale ? Locale.US : locale);
+            this.locale = (locale == null ? Locale.US : locale);
         }
 
         private NumberFormat getNumberFormat() {
@@ -1378,6 +1475,7 @@ public final class Formatter implements Closeable, Flushable {
                 }
             }
 
+            formatToken.checkFlags(arg);
             CharSequence result;
             switch (token.getConversionType()) {
                 case 'B':
@@ -1404,7 +1502,7 @@ public final class Formatter implements Closeable, Flushable {
                 case 'o':
                 case 'x':
                 case 'X': {
-                    if (null == arg || arg instanceof BigInteger) {
+                    if (arg == null || arg instanceof BigInteger) {
                         result = transformFromBigInteger();
                     } else {
                         result = transformFromInteger();
@@ -1457,8 +1555,6 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms the Boolean argument to a formatted string.
          */
         private CharSequence transformFromBoolean() {
-            formatToken.checkMissingWidth();
-            formatToken.ensureOnlyMinus();
             CharSequence result;
             if (arg instanceof Boolean) {
                 result = arg.toString();
@@ -1474,8 +1570,6 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms the hash code of the argument to a formatted string.
          */
         private CharSequence transformFromHashCode() {
-            formatToken.checkMissingWidth();
-            formatToken.ensureOnlyMinus();
             CharSequence result;
             if (arg == null) {
                 result = "null"; //$NON-NLS-1$
@@ -1489,23 +1583,18 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms the String to a formatted string.
          */
         private CharSequence transformFromString() {
-            formatToken.checkMissingWidth();
             if (arg instanceof Formattable) {
-                // only minus and sharp flag is valid
-                if (formatToken.flagAdd || formatToken.flagComma || formatToken.flagParenthesis || formatToken.flagSpace || formatToken.flagZero) {
-                    throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-                }
-                int flag = 0;
+                int flags = 0;
                 if (formatToken.flagMinus) {
-                    flag |= FormattableFlags.LEFT_JUSTIFY;
+                    flags |= FormattableFlags.LEFT_JUSTIFY;
                 }
                 if (formatToken.flagSharp) {
-                    flag |= FormattableFlags.ALTERNATE;
+                    flags |= FormattableFlags.ALTERNATE;
                 }
                 if (Character.isUpperCase(formatToken.getConversionType())) {
-                    flag |= FormattableFlags.UPPERCASE;
+                    flags |= FormattableFlags.UPPERCASE;
                 }
-                ((Formattable) arg).formatTo(formatter, flag, formatToken.getWidth(),
+                ((Formattable) arg).formatTo(formatter, flags, formatToken.getWidth(),
                         formatToken.getPrecision());
                 // all actions have been taken out in the
                 // Formattable.formatTo, thus there is nothing to do, just
@@ -1513,8 +1602,6 @@ public final class Formatter implements Closeable, Flushable {
                 // output.
                 return null;
             }
-            // only '-' is valid for flags if the argument is not an instance of Formattable
-            formatToken.ensureOnlyMinus();
             CharSequence result = arg != null ? arg.toString() : "null";
             return padding(result, 0);
         }
@@ -1523,10 +1610,6 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms the Character to a formatted string.
          */
         private CharSequence transformFromCharacter() {
-            formatToken.checkMissingWidth();
-            formatToken.ensureOnlyMinus();
-            formatToken.ensureNoPrecision();
-
             if (arg == null) {
                 return padding("null", 0);
             }
@@ -1551,12 +1634,6 @@ public final class Formatter implements Closeable, Flushable {
          * Precision and arguments are illegal.
          */
         private CharSequence transformFromPercent() {
-            formatToken.checkMissingWidth();
-            formatToken.ensureOnlyMinus();
-            formatToken.ensureNoPrecision();
-            if (formatToken.hasArg()) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-            }
             return padding("%", 0);
         }
 
@@ -1565,16 +1642,6 @@ public final class Formatter implements Closeable, Flushable {
          * precision or argument is illegal.
          */
         private CharSequence transformFromLineSeparator() {
-            formatToken.ensureNoPrecision();
-
-            if (formatToken.isWidthSet()) {
-                throw new IllegalFormatWidthException(formatToken.getWidth());
-            }
-
-            if (!formatToken.hasDefaultFlags() || formatToken.hasArg()) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-            }
-
             if (lineSeparator == null) {
                 lineSeparator = AccessController.doPrivileged(new PrivilegedAction<String>() {
                     public String run() {
@@ -1660,16 +1727,6 @@ public final class Formatter implements Closeable, Flushable {
             StringBuilder result = new StringBuilder();
             char currentConversionType = formatToken.getConversionType();
 
-            if (formatToken.flagMinus || formatToken.flagZero) {
-                if (!formatToken.isWidthSet()) {
-                    throw new MissingFormatWidthException(formatToken.getStrFlags());
-                }
-            }
-            // Combination of '+' and ' ' is illegal.
-            if (formatToken.flagAdd && formatToken.flagSpace) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-            }
-            formatToken.ensureNoPrecision();
             long value;
             if (arg instanceof Long) {
                 value = ((Long) arg).longValue();
@@ -1682,29 +1739,15 @@ public final class Formatter implements Closeable, Flushable {
             } else {
                 throw badArgumentType();
             }
-            if ('d' != currentConversionType) {
-                if (formatToken.flagAdd || formatToken.flagSpace || formatToken.flagComma ||
-                        formatToken.flagParenthesis) {
-                    throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                            formatToken.getConversionType());
-                }
-            }
 
             if (formatToken.flagSharp) {
-                if ('d' == currentConversionType) {
-                    throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                            formatToken.getConversionType());
-                } else if ('o' == currentConversionType) {
+                if (currentConversionType == 'o') {
                     result.append("0"); //$NON-NLS-1$
                     startIndex += 1;
                 } else {
                     result.append("0x"); //$NON-NLS-1$
                     startIndex += 2;
                 }
-            }
-
-            if (formatToken.flagMinus && formatToken.flagZero) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
             }
 
             if ('d' == currentConversionType) {
@@ -1798,34 +1841,6 @@ public final class Formatter implements Closeable, Flushable {
             BigInteger bigInt = (BigInteger) arg;
             char currentConversionType = formatToken.getConversionType();
 
-            if (formatToken.flagMinus || formatToken.flagZero) {
-                if (!formatToken.isWidthSet()) {
-                    throw new MissingFormatWidthException(formatToken.getStrFlags());
-                }
-            }
-
-            // Combination of '+' & ' ' is illegal.
-            if (formatToken.flagAdd && formatToken.flagSpace) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-            }
-
-            // Combination of '-' & '0' is illegal.
-            if (formatToken.flagZero && formatToken.flagMinus) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-            }
-
-            formatToken.ensureNoPrecision();
-
-            if ('d' != currentConversionType && formatToken.flagComma) {
-                throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                        currentConversionType);
-            }
-
-            if (formatToken.flagSharp && 'd' == currentConversionType) {
-                throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                        currentConversionType);
-            }
-
             if (bigInt == null) {
                 return transformFromNull();
             }
@@ -1884,38 +1899,7 @@ public final class Formatter implements Closeable, Flushable {
             int startIndex = 0;
             char currentConversionType = formatToken.getConversionType();
 
-            if (formatToken.flagMinus || formatToken.flagZero) {
-                if (!formatToken.isWidthSet()) {
-                    throw new MissingFormatWidthException(formatToken.getStrFlags());
-                }
-            }
-
-            if (formatToken.flagAdd && formatToken.flagSpace) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-            }
-
-            if (formatToken.flagMinus && formatToken.flagZero) {
-                throw new IllegalFormatFlagsException(formatToken.getStrFlags());
-            }
-
-            if (currentConversionType == 'e' || currentConversionType == 'E') {
-                if (formatToken.flagComma) {
-                    throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                            currentConversionType);
-                }
-            } else if (currentConversionType == 'g' || currentConversionType == 'G') {
-                if (formatToken.flagSharp) {
-                    throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                            currentConversionType);
-                }
-            } else if (currentConversionType == 'a' || currentConversionType == 'A') {
-                if (formatToken.flagComma || formatToken.flagParenthesis) {
-                    throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                            currentConversionType);
-                }
-            }
-
-            if (null == arg) {
+            if (arg == null) {
                 return transformFromNull();
             }
 
@@ -1972,21 +1956,7 @@ public final class Formatter implements Closeable, Flushable {
          * Transforms a Date to a formatted string.
          */
         private CharSequence transformFromDateTime() {
-            formatToken.ensureNoPrecision();
-
-            char currentConversionType = formatToken.getConversionType();
-
-            if (formatToken.flagSharp) {
-                throw new FormatFlagsConversionMismatchException(formatToken.getStrFlags(),
-                        currentConversionType);
-            }
-
-            if (formatToken.flagMinus && formatToken.getWidth() == FormatToken.UNSET) {
-                throw new MissingFormatWidthException("-" //$NON-NLS-1$
-                        + currentConversionType);
-            }
-
-            if (null == arg) {
+            if (arg == null) {
                 return transformFromNull();
             }
 
@@ -2006,7 +1976,7 @@ public final class Formatter implements Closeable, Flushable {
                 calendar.setTime(date);
             }
 
-            if (null == dateTimeUtil) {
+            if (dateTimeUtil == null) {
                 dateTimeUtil = new DateTimeUtil(locale);
             }
             StringBuilder result = new StringBuilder();
@@ -2016,6 +1986,7 @@ public final class Formatter implements Closeable, Flushable {
         }
     }
 
+    // TODO: merge this into Transformer; the distinction is not obviously useful.
     private static class FloatUtil {
         private final StringBuilder result;
         private final DecimalFormat decimalFormat;
@@ -2188,14 +2159,11 @@ public final class Formatter implements Closeable, Flushable {
             if (argument instanceof Float) {
                 Float F = (Float) argument;
                 result.append(Float.toHexString(F.floatValue()));
-
             } else if (argument instanceof Double) {
                 Double D = (Double) argument;
                 result.append(Double.toHexString(D.doubleValue()));
             } else {
-                // BigInteger is not supported.
-                throw new IllegalFormatConversionException(
-                        formatToken.getConversionType(), argument.getClass());
+                throw badArgumentType();
             }
 
             if (!formatToken.isPrecisionSet()) {
@@ -2219,6 +2187,11 @@ public final class Formatter implements Closeable, Flushable {
                 return;
             }
             result.delete(indexOfFirstFractionalDigit + precision, indexOfP);
+        }
+
+        private IllegalFormatConversionException badArgumentType() {
+            throw new IllegalFormatConversionException(formatToken.getConversionType(),
+                    argument.getClass());
         }
     }
 
@@ -2592,7 +2565,7 @@ public final class Formatter implements Closeable, Flushable {
         }
 
         private DateFormatSymbols getDateFormatSymbols() {
-            if (null == dateFormatSymbols) {
+            if (dateFormatSymbols == null) {
                 dateFormatSymbols = new DateFormatSymbols(locale);
             }
             return dateFormatSymbols;
@@ -2638,11 +2611,15 @@ public final class Formatter implements Closeable, Flushable {
 
         private char advance() {
             if (i >= length) {
-                throw new UnknownFormatConversionException(getFormatSpecifierText());
+                throw unknownFormatConversionException();
             }
             return format.charAt(i++);
         }
-
+        
+        private UnknownFormatConversionException unknownFormatConversionException() {
+            throw new UnknownFormatConversionException(getFormatSpecifierText());
+        }
+        
         private FormatToken parseArgumentIndexAndFlags(FormatToken token) {
             // Parse the argument index, if there is one.
             int position = i;
@@ -2708,7 +2685,7 @@ public final class Formatter implements Closeable, Flushable {
                 return parseConversionType(token);
             } else {
                 // The precision is required but not given by the format string.
-                throw new UnknownFormatConversionException(getFormatSpecifierText());
+                throw unknownFormatConversionException();
             }
         }
 
