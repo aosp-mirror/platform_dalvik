@@ -3277,50 +3277,74 @@ void dvmDumpThread(Thread* thread, bool isRunning)
 /*
  * Try to get the scheduler group.
  *
- * The data from /proc/<pid>/cgroup looks like:
+ * The data from /proc/<pid>/cgroup looks (something) like:
  *  2:cpu:/bg_non_interactive
+ *  1:cpuacct:/
  *
  * We return the part after the "/", which will be an empty string for
  * the default cgroup.  If the string is longer than "bufLen", the string
  * will be truncated.
+ *
+ * TODO: this is cloned from a static function in libcutils; expose that?
  */
-static bool getSchedulerGroup(Thread* thread, char* buf, size_t bufLen)
+static int getSchedulerGroup(int tid, char* buf, size_t bufLen)
 {
 #ifdef HAVE_ANDROID_OS
     char pathBuf[32];
-    char readBuf[256];
-    ssize_t count;
-    int fd;
+    char lineBuf[256];
+    FILE *fp;
 
-    snprintf(pathBuf, sizeof(pathBuf), "/proc/%d/cgroup", thread->systemTid);
-    if ((fd = open(pathBuf, O_RDONLY)) < 0) {
-        LOGV("open(%s) failed: %s\n", pathBuf, strerror(errno));
-        return false;
+    snprintf(pathBuf, sizeof(pathBuf), "/proc/%d/cgroup", tid);
+    if (!(fp = fopen(pathBuf, "r"))) {
+        return -1;
     }
 
-    count = read(fd, readBuf, sizeof(readBuf));
-    if (count <= 0) {
-        LOGV("read(%s) failed (%d): %s\n",
-            pathBuf, (int) count, strerror(errno));
-        close(fd);
-        return false;
+    while(fgets(lineBuf, sizeof(lineBuf) -1, fp)) {
+        char *next = lineBuf;
+        char *subsys;
+        char *grp;
+        size_t len;
+
+        /* Junk the first field */
+        if (!strsep(&next, ":")) {
+            goto out_bad_data;
+        }
+
+        if (!(subsys = strsep(&next, ":"))) {
+            goto out_bad_data;
+        }
+
+        if (strcmp(subsys, "cpu")) {
+            /* Not the subsys we're looking for */
+            continue;
+        }
+
+        if (!(grp = strsep(&next, ":"))) {
+            goto out_bad_data;
+        }
+        grp++; /* Drop the leading '/' */
+        len = strlen(grp);
+        grp[len-1] = '\0'; /* Drop the trailing '\n' */
+
+        if (bufLen <= len) {
+            len = bufLen - 1;
+        }
+        strncpy(buf, grp, len);
+        buf[len] = '\0';
+        fclose(fp);
+        return 0;
     }
-    close(fd);
 
-    readBuf[--count] = '\0';    /* remove the '\n', now count==strlen */
-
-    char* cp = strchr(readBuf, '/');
-    if (cp == NULL) {
-        readBuf[sizeof(readBuf)-1] = '\0';
-        LOGV("no '/' in '%s' (file=%s count=%d)\n",
-            readBuf, pathBuf, (int) count);
-        return false;
-    }
-
-    memcpy(buf, cp+1, count);   /* count-1 for cp+1, count+1 for NUL */
-    return true;
+    LOGE("Failed to find cpu subsys");
+    fclose(fp);
+    return -1;
+ out_bad_data:
+    LOGE("Bad cgroup data {%s}", lineBuf);
+    fclose(fp);
+    return -1;
 #else
-    return false;
+    errno = ENOSYS;
+    return -1;
 #endif
 }
 
@@ -3381,7 +3405,8 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         policy = -1;
         sp.sched_priority = -1;
     }
-    if (!getSchedulerGroup(thread, schedulerGroupBuf,sizeof(schedulerGroupBuf)))
+    if (getSchedulerGroup(thread->systemTid, schedulerGroupBuf,
+            sizeof(schedulerGroupBuf)) != 0)
     {
         strcpy(schedulerGroupBuf, "unknown");
     } else if (schedulerGroupBuf[0] == '\0') {
