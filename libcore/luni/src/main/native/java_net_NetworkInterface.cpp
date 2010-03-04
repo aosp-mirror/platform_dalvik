@@ -64,27 +64,34 @@ static void jniThrowSocketException(JNIEnv* env) {
             jniStrError(errno, buf, sizeof(buf)));
 }
 
-static jobject makeInterfaceAddress(JNIEnv* env, jint interfaceIndex, const char* name, sockaddr_storage* ss) {
+static jobject makeInterfaceAddress(JNIEnv* env, jint interfaceIndex, ifaddrs* ifa) {
     jclass clazz = env->FindClass("java/net/InterfaceAddress");
     if (clazz == NULL) {
         return NULL;
     }
-    jmethodID constructor = env->GetMethodID(clazz, "<init>", "(ILjava/lang/String;Ljava/net/InetAddress;)V");
+    jmethodID constructor = env->GetMethodID(clazz, "<init>",
+            "(ILjava/lang/String;Ljava/net/InetAddress;Ljava/net/InetAddress;)V");
     if (constructor == NULL) {
         return NULL;
     }
-    jobject javaName = env->NewStringUTF(name);
+    jobject javaName = env->NewStringUTF(ifa->ifa_name);
     if (javaName == NULL) {
         return NULL;
     }
-    jobject javaAddress = socketAddressToInetAddress(env, ss);
+    sockaddr_storage* addr = reinterpret_cast<sockaddr_storage*>(ifa->ifa_addr);
+    jobject javaAddress = socketAddressToInetAddress(env, addr);
     if (javaAddress == NULL) {
         return NULL;
     }
-    return env->NewObject(clazz, constructor, interfaceIndex, javaName, javaAddress);
+    sockaddr_storage* mask = reinterpret_cast<sockaddr_storage*>(ifa->ifa_netmask);
+    jobject javaMask = socketAddressToInetAddress(env, mask);
+    if (javaMask == NULL) {
+        return NULL;
+    }
+    return env->NewObject(clazz, constructor, interfaceIndex, javaName, javaAddress, javaMask);
 }
 
-static jobjectArray getInterfaceAddresses(JNIEnv* env, jclass) {
+static jobjectArray getAllInterfaceAddressesImpl(JNIEnv* env, jclass) {
     // Get the list of interface addresses.
     ScopedInterfaceAddresses addresses;
     if (!addresses.init()) {
@@ -128,8 +135,7 @@ static jobjectArray getInterfaceAddresses(JNIEnv* env, jclass) {
             continue;
         }
         // Make a new InterfaceAddress, and insert it into the array.
-        sockaddr_storage* ss = reinterpret_cast<sockaddr_storage*>(ifa->ifa_addr);
-        jobject element = makeInterfaceAddress(env, interfaceIndex, ifa->ifa_name, ss);
+        jobject element = makeInterfaceAddress(env, interfaceIndex, ifa);
         if (element == NULL) {
             return NULL;
         }
@@ -142,9 +148,89 @@ static jobjectArray getInterfaceAddresses(JNIEnv* env, jclass) {
     return result;
 }
 
+static bool doIoctl(JNIEnv* env, jstring name, int request, ifreq& ifr) {
+    // Copy the name into the ifreq structure, if there's room...
+    jsize nameLength = env->GetStringLength(name);
+    if (nameLength >= IFNAMSIZ) {
+        errno = ENAMETOOLONG;
+        jniThrowSocketException(env);
+        return false;
+    }
+    memset(&ifr, 0, sizeof(ifr));
+    env->GetStringUTFRegion(name, 0, nameLength, ifr.ifr_name);
+
+    // ...and do the ioctl.
+    ScopedFd fd(socket(AF_INET, SOCK_DGRAM, 0));
+    if (fd.get() == -1) {
+        jniThrowSocketException(env);
+        return false;
+    }
+    int rc = ioctl(fd.get(), request, &ifr);
+    if (rc == -1) {
+        jniThrowSocketException(env);
+        return false;
+    }
+    return true;
+}
+
+static jboolean hasFlag(JNIEnv* env, jstring name, int flag) {
+    ifreq ifr;
+    doIoctl(env, name, SIOCGIFFLAGS, ifr); // May throw.
+    return (ifr.ifr_flags & flag) != 0;
+}
+
+static jbyteArray getHardwareAddressImpl(JNIEnv* env, jclass, jstring name, jint index) {
+    ifreq ifr;
+    if (!doIoctl(env, name, SIOCGIFHWADDR, ifr)) {
+        return NULL;
+    }
+    jbyte bytes[IFHWADDRLEN];
+    bool isEmpty = true;
+    for (int i = 0; i < IFHWADDRLEN; ++i) {
+        bytes[i] = ifr.ifr_hwaddr.sa_data[i];
+        if (bytes[i] != 0) {
+            isEmpty = false;
+        }
+    }
+    if (isEmpty) {
+        return NULL;
+    }
+    jbyteArray result = env->NewByteArray(IFHWADDRLEN);
+    env->SetByteArrayRegion(result, 0, IFHWADDRLEN, bytes);
+    return result;
+}
+
+static jint getMTUImpl(JNIEnv* env, jclass, jstring name, jint index) {
+    ifreq ifr;
+    doIoctl(env, name, SIOCGIFMTU, ifr); // May throw.
+    return ifr.ifr_mtu;
+}
+
+static jboolean isLoopbackImpl(JNIEnv* env, jclass, jstring name, jint index) {
+    return hasFlag(env, name, IFF_LOOPBACK);
+}
+
+static jboolean isPointToPointImpl(JNIEnv* env, jclass, jstring name, jint index) {
+    return hasFlag(env, name, IFF_POINTOPOINT); // Unix API typo!
+}
+
+static jboolean isUpImpl(JNIEnv* env, jclass, jstring name, jint index) {
+    return hasFlag(env, name, IFF_UP);
+}
+
+static jboolean supportsMulticastImpl(JNIEnv* env, jclass, jstring name, jint index) {
+    return hasFlag(env, name, IFF_MULTICAST);
+}
+
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "getInterfaceAddresses", "()[Ljava/net/InterfaceAddress;", (void*) getInterfaceAddresses },
+    { "getAllInterfaceAddressesImpl", "()[Ljava/net/InterfaceAddress;", (void*) getAllInterfaceAddressesImpl },
+    { "getHardwareAddressImpl", "(Ljava/lang/String;I)[B", (void*) getHardwareAddressImpl },
+    { "getMTUImpl", "(Ljava/lang/String;I)I", (void*) getMTUImpl },
+    { "isLoopbackImpl", "(Ljava/lang/String;I)Z", (void*) isLoopbackImpl },
+    { "isPointToPointImpl", "(Ljava/lang/String;I)Z", (void*) isPointToPointImpl },
+    { "isUpImpl", "(Ljava/lang/String;I)Z", (void*) isUpImpl },
+    { "supportsMulticastImpl", "(Ljava/lang/String;I)Z", (void*) supportsMulticastImpl },
 };
 int register_java_net_NetworkInterface(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "java/net/NetworkInterface",
