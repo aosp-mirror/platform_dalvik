@@ -78,4 +78,6 @@ public final class Normalizer {
     public static String normalize(CharSequence src, Form form) {
         return NativeNormalizer.normalize(src, form);
     }
+
+    private Normalizer() {}
 }
