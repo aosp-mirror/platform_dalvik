@@ -200,7 +200,8 @@ public class File implements Serializable, Comparable<File> {
         // Keep a copy of the cleaned-up string path.
         this.path = fixSlashes(dirtyPath);
         // Cache the UTF-8 bytes we need for the JNI.
-        if (isAbsolute()) {
+        // TODO: we shouldn't do this caching at all; the RI demonstrably doesn't.
+        if (path.length() > 0 && path.charAt(0) == separatorChar) { // http://b/2486943
             this.pathBytes = newCString(path);
             return;
         }

@@ -115,4 +115,21 @@ public class FileTest extends junit.framework.TestCase {
         assertEquals(new File(cwd), f.getCanonicalFile());
         assertEquals(cwd, f.getCanonicalPath());
     }
+
+    // http://b/2486943 - between eclair and froyo, we added a call to
+    // isAbsolute from the File constructor, potentially breaking subclasses.
+    public void test_subclassing() throws Exception {
+        class MyFile extends File {
+            private String field;
+            MyFile(String s) {
+                super(s);
+                field = "";
+            }
+            @Override public boolean isAbsolute() {
+                field.length();
+                return super.isAbsolute();
+            }
+        }
+        new MyFile("");
+    }
 }
