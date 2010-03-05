@@ -58,7 +58,7 @@ ifeq ($(WITH_JIT),true)
 
     # Enable assertions and JIT-tuning
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
-				    -DWITH_JIT_TUNING -DEXIT_STATS
+				    -DWITH_JIT_TUNING -DJIT_STATS
     LOCAL_MODULE := libdvm_assert
     include $(BUILD_SHARED_LIBRARY)
 

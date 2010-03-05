@@ -9590,7 +9590,7 @@ dvmJitToInterpNoChain:
 dvmJitToInterpPunt:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    rPC, r0
-#ifdef EXIT_STATS
+#ifdef JIT_STATS
     mov    r0,lr
     bl     dvmBumpPunt;
 #endif
@@ -9631,7 +9631,7 @@ dvmJitToInterpSingleStep:
  */
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
-#ifdef EXIT_STATS
+#ifdef JIT_STATS
     bl     dvmBumpNoChain
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
@@ -9697,7 +9697,7 @@ dvmJitToInterpNormal:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
-#ifdef EXIT_STATS
+#ifdef JIT_STATS
     bl     dvmBumpNormal
 #endif
     mov    r0,rPC
@@ -9719,7 +9719,7 @@ dvmJitToInterpNormal:
  */
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
-#ifdef EXIT_STATS
+#ifdef JIT_STATS
     bl     dvmBumpNoChain
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self

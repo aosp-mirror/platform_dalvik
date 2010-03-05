@@ -50,7 +50,7 @@
     @ continue executing the next instruction through the interpreter
     ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1
