@@ -38,7 +38,7 @@
     str     r9, [r3, #offThread_inJitCodeCache] @ in code cache or not
     cmp     r9, #0                      @ chaining cell exists?
     blxne   r9                          @ jump to the chaining cell
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1                      @ callsite is interpreted

@@ -457,6 +457,9 @@ static void *compilerThreadStart(void *arg)
             do {
                 CompilerWorkOrder work = workDequeue();
                 dvmUnlockMutex(&gDvmJit.compilerLock);
+#if defined(JIT_STATS)
+                u8 startTime = dvmGetRelativeTimeUsec();
+#endif
                 /*
                  * Check whether there is a suspend request on me.  This
                  * is necessary to allow a clean shutdown.
@@ -486,6 +489,9 @@ static void *compilerThreadStart(void *arg)
                     }
                 }
                 free(work.info);
+#if defined(JIT_STATS)
+                gDvmJit.jitTime += dvmGetRelativeTimeUsec() - startTime;
+#endif
                 dvmLockMutex(&gDvmJit.compilerLock);
             } while (workQueueLength() != 0);
         }

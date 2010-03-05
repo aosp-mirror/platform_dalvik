@@ -48,7 +48,7 @@
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
 
     @ Start executing the callee
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
     mov     r0, #kInlineCacheMiss
 #endif
     mov     pc, r10                         @ dvmJitToInterpTraceSelectNoChain

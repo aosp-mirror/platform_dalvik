@@ -728,10 +728,11 @@ struct DvmJitGlobals {
     int                normalExit;
     int                puntExit;
     int                translationChains;
-    int                invokeChain;
-    int                invokePredictedChain;
+    int                invokeMonomorphic;
+    int                invokePolymorphic;
     int                invokeNative;
     int                returnOp;
+    u8                 jitTime;
 
     /* Compiled code cache */
     void* codeCache;
