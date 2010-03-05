@@ -840,7 +840,7 @@ static ArmLIR *genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target)
 static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
 {
     genDispatchToHandler(cUnit, TEMPLATE_RETURN);
-#if defined(INVOKE_STATS)
+#if defined(JIT_STATS)
     gDvmJit.returnOp++;
 #endif
     int dPC = (int) (cUnit->method->insns + mir->offset);
@@ -1010,13 +1010,13 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
      */
     if (dvmIsNativeMethod(calleeMethod)) {
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NATIVE);
-#if defined(INVOKE_STATS)
+#if defined(JIT_STATS)
         gDvmJit.invokeNative++;
 #endif
     } else {
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_CHAIN);
-#if defined(INVOKE_STATS)
-        gDvmJit.invokeChain++;
+#if defined(JIT_STATS)
+        gDvmJit.invokeMonomorphic++;
 #endif
         /* Branch to the chaining cell */
         genUnconditionalBranch(cUnit, &labelList[bb->taken->id]);
@@ -1137,8 +1137,8 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      * r4PC = callsiteDPC,
      */
     genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
-#if defined(INVOKE_STATS)
-    gDvmJit.invokePredictedChain++;
+#if defined(JIT_STATS)
+    gDvmJit.invokePolymorphic++;
 #endif
     /* Handle exceptions using the interpreter */
     genTrap(cUnit, mir->offset, pcrLabel);
@@ -2829,8 +2829,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              * r4PC = callsiteDPC,
              */
             genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
-#if defined(INVOKE_STATS)
-            gDvmJit.invokePredictedChain++;
+#if defined(JIT_STATS)
+            gDvmJit.invokePolymorphic++;
 #endif
             /* Handle exceptions using the interpreter */
             genTrap(cUnit, mir->offset, pcrLabel);
@@ -3823,7 +3823,7 @@ gen_fallthrough:
                      jitToInterpEntries.dvmJitToInterpNoChain), r2);
         opRegReg(cUnit, kOpAdd, r1, r1);
         opRegRegReg(cUnit, kOpAdd, r4PC, r0, r1);
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
         loadConstant(cUnit, r0, kSwitchOverflow);
 #endif
         opReg(cUnit, kOpBlx, r2);

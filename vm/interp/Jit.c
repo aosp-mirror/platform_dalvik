@@ -367,7 +367,7 @@ void dvmJitStopTranslationRequests()
     gDvmJit.pProfTable = NULL;
 }
 
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
 /* Convenience function to increment counter from assembly code */
 void dvmBumpNoChain(int from)
 {
@@ -409,11 +409,14 @@ void dvmJitStats()
             if (gDvmJit.pJitEntryTable[i].u.info.chain != gDvmJit.jitTableSize)
                 chains++;
         }
+        LOGD("size if %d, entries used is %d",
+             gDvmJit.jitTableSize,  gDvmJit.jitTableEntriesUsed);
         LOGD(
-         "JIT: %d traces, %d slots, %d chains, %d maxQ, %d thresh, %s",
-         hit, not_hit + hit, chains, gDvmJit.compilerMaxQueued,
-         gDvmJit.threshold, gDvmJit.blockingMode ? "Blocking" : "Non-blocking");
-#if defined(EXIT_STATS)
+         "JIT: %d traces, %d slots, %d chains, %d thresh, %s",
+         hit, not_hit + hit, chains, gDvmJit.threshold,
+         gDvmJit.blockingMode ? "Blocking" : "Non-blocking");
+
+#if defined(JIT_STATS)
         LOGD(
          "JIT: Lookups: %d hits, %d misses; %d normal, %d punt",
          gDvmJit.addrLookupsFound, gDvmJit.addrLookupsNotFound,
@@ -423,15 +426,17 @@ void dvmJitStats()
          gDvmJit.noChainExit[kInlineCacheMiss],
          gDvmJit.noChainExit[kCallsiteInterpreted],
          gDvmJit.noChainExit[kSwitchOverflow]);
+
+        LOGD("JIT: Invoke: %d mono, %d poly, %d native, %d return",
+             gDvmJit.invokeMonomorphic, gDvmJit.invokePolymorphic,
+             gDvmJit.invokeNative, gDvmJit.returnOp);
+        LOGD("JIT: Total compilation time: %llu ms", gDvmJit.jitTime / 1000);
+        LOGD("JIT: Avg unit compilation time: %llu us",
+             gDvmJit.jitTime / gDvmJit.numCompilations);
 #endif
+
         LOGD("JIT: %d Translation chains, %d interp stubs",
              gDvmJit.translationChains, stubs);
-#if defined(INVOKE_STATS)
-        LOGD("JIT: Invoke: %d chainable, %d pred. chain, %d native, "
-             "%d return",
-             gDvmJit.invokeChain, gDvmJit.invokePredictedChain,
-             gDvmJit.invokeNative, gDvmJit.returnOp);
-#endif
         if (gDvmJit.profile) {
             dvmCompilerSortAndPrintTraceProfiles();
         }
@@ -818,7 +823,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
                                (gDvmJit.pProfTable == NULL);
 
         if (npc == dPC) {
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
             gDvmJit.addrLookupsFound++;
 #endif
             return hideTranslation ?
@@ -828,7 +833,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
                 idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
                 if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
                     gDvmJit.addrLookupsFound++;
 #endif
                     return hideTranslation ?
@@ -837,7 +842,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
             }
         }
     }
-#if defined(EXIT_STATS)
+#if defined(JIT_STATS)
     gDvmJit.addrLookupsNotFound++;
 #endif
     return NULL;
@@ -914,9 +919,9 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
         if (res || (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater)
             || gDvm.debuggerActive || self->suspendCount
 #if defined(WITH_PROFILER)
-                 || gDvm.activeProfilers
+            || gDvm.activeProfilers
 #endif
-                                             ) {
+           ) {
             if (interpState->jitState != kJitOff) {
                 interpState->jitState = kJitNormal;
             }
