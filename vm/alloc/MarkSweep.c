@@ -164,7 +164,6 @@ _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
 
 #if GC_DEBUG(GC_DEBUG_PARANOID)
 //TODO: make sure we're locked
-    assert(obj != (Object *)gDvm.unlinkedJavaLangClass);
     assert(dvmIsValidObject(obj));
 #endif
 
@@ -482,19 +481,17 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
      */
     clazz = obj->clazz;
     if (clazz == NULL) {
-        /* This can happen if we catch an object between
-         * dvmMalloc() and DVM_OBJECT_INIT().  The object
-         * won't contain any references yet, so we can
-         * just skip it.
+        /* This can happen if we catch an object between dvmMalloc()
+         * and DVM_OBJECT_INIT().  The object won't contain any
+         * references yet, so we can just skip it.  It can also mean
+         * that this object is unlinkedJavaLangClass, which has its
+         * clazz explicitly set to NULL.
          */
         return;
     } else if (clazz == gDvm.unlinkedJavaLangClass) {
         /* This class hasn't been linked yet.  We're guaranteed
          * that the object doesn't contain any references that
          * aren't already tracked, so we can skip scanning it.
-         *
-         * NOTE: unlinkedJavaLangClass is not on the heap, so
-         * it's very important that we don't try marking it.
          */
         return;
     }
