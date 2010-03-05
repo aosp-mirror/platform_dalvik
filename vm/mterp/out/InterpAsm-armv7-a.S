@@ -2858,11 +2858,16 @@ dalvik_inst:
     cmp     r0, #0                      @ is resolved entry null?
     beq     .LOP_SGET_WIDE_resolve         @ yes, do resolve
 .LOP_SGET_WIDE_finish:
-    mov     r1, rINST, lsr #8           @ r1<- AA
-    ldrd    r2, [r0, #offStaticField_value] @ r2/r3<- field value (aligned)
-    add     r1, rFP, r1, lsl #2         @ r1<- &fp[AA]
+    mov     r9, rINST, lsr #8           @ r9<- AA
+    .if 0
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
+    ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    .endif
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    stmia   r1, {r2-r3}                 @ vAA/vAA+1<- r2/r3
+    stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3028,20 +3033,25 @@ dalvik_inst:
      * 64-bit SPUT handler.
      */
     /* sput-wide vAA, field@BBBB */
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    ldr     r0, [rGLUE, #offGlue_methodClassDex]  @ r0<- DvmDex
     FETCH(r1, 1)                        @ r1<- field ref BBBB
-    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
     mov     r9, rINST, lsr #8           @ r9<- AA
-    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    ldr     r2, [r0, r1, lsl #2]        @ r2<- resolved StaticField ptr
     add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
-    cmp     r0, #0                      @ is resolved entry null?
+    cmp     r2, #0                      @ is resolved entry null?
     beq     .LOP_SPUT_WIDE_resolve         @ yes, do resolve
-.LOP_SPUT_WIDE_finish: @ field ptr in r0, AA in r9
+.LOP_SPUT_WIDE_finish: @ field ptr in r2, AA in r9
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    ldmia   r9, {r2-r3}                 @ r2/r3<- vAA/vAA+1
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    strd    r2, [r0, #offStaticField_value] @ field<- vAA/vAA+1
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    ldmia   r9, {r0-r1}                 @ r0/r1<- vAA/vAA+1
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 0
+    add     r2, r2, #offStaticField_value @ r2<- pointer to data
+    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
 
 /* ------------------------------ */
     .balign 64
@@ -7257,11 +7267,16 @@ dalvik_inst:
     cmp     r0, #0                      @ is resolved entry null?
     beq     .LOP_SGET_WIDE_VOLATILE_resolve         @ yes, do resolve
 .LOP_SGET_WIDE_VOLATILE_finish:
-    mov     r1, rINST, lsr #8           @ r1<- AA
-    ldrd    r2, [r0, #offStaticField_value] @ r2/r3<- field value (aligned)
-    add     r1, rFP, r1, lsl #2         @ r1<- &fp[AA]
+    mov     r9, rINST, lsr #8           @ r9<- AA
+    .if 1
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
+    ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    .endif
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    stmia   r1, {r2-r3}                 @ vAA/vAA+1<- r2/r3
+    stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -7275,20 +7290,25 @@ dalvik_inst:
      * 64-bit SPUT handler.
      */
     /* sput-wide vAA, field@BBBB */
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    ldr     r0, [rGLUE, #offGlue_methodClassDex]  @ r0<- DvmDex
     FETCH(r1, 1)                        @ r1<- field ref BBBB
-    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
     mov     r9, rINST, lsr #8           @ r9<- AA
-    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    ldr     r2, [r0, r1, lsl #2]        @ r2<- resolved StaticField ptr
     add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
-    cmp     r0, #0                      @ is resolved entry null?
+    cmp     r2, #0                      @ is resolved entry null?
     beq     .LOP_SPUT_WIDE_VOLATILE_resolve         @ yes, do resolve
-.LOP_SPUT_WIDE_VOLATILE_finish: @ field ptr in r0, AA in r9
+.LOP_SPUT_WIDE_VOLATILE_finish: @ field ptr in r2, AA in r9
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    ldmia   r9, {r2-r3}                 @ r2/r3<- vAA/vAA+1
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    strd    r2, [r0, #offStaticField_value] @ field<- vAA/vAA+1
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    ldmia   r9, {r0-r1}                 @ r0/r1<- vAA/vAA+1
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 1
+    add     r2, r2, #offStaticField_value @ r2<- pointer to data
+    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
 
 
 /* ------------------------------ */
@@ -8483,6 +8503,8 @@ dvmAsmSisterStart:
     /*
      * Continuation if the field has not yet been resolved.
      *  r1: BBBB field ref
+     *
+     * Returns StaticField pointer in r0.
      */
 .LOP_SGET_WIDE_resolve:
     ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
@@ -8596,6 +8618,8 @@ dvmAsmSisterStart:
      * Continuation if the field has not yet been resolved.
      *  r1: BBBB field ref
      *  r9: &fp[AA]
+     *
+     * Returns StaticField pointer in r2.
      */
 .LOP_SPUT_WIDE_resolve:
     ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
@@ -8603,6 +8627,7 @@ dvmAsmSisterStart:
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
     cmp     r0, #0                      @ success?
+    mov     r2, r0                      @ copy to r2
     bne     .LOP_SPUT_WIDE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
@@ -8988,10 +9013,15 @@ d2l_doconv:
     cmp     r9, #0                      @ check object for null
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
-    mov     r2, rINST, lsr #8           @ r2<- A+
+    .if 1
+    add     r0, r9, r3                  @ r0<- address of field
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
-    and     r2, r2, #15                 @ r2<- A
+    .endif
+    mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    and     r2, r2, #15                 @ r2<- A
     add     r3, rFP, r2, lsl #2         @ r3<- &fp[A]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1
@@ -9014,9 +9044,14 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldmia   r2, {r0-r1}                 @ r0/r1<- fp[A]
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 1
+    add     r2, r9, r3                  @ r2<- target address
+    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
 
 
 /* continuation for OP_SGET_WIDE_VOLATILE */
@@ -9024,6 +9059,8 @@ d2l_doconv:
     /*
      * Continuation if the field has not yet been resolved.
      *  r1: BBBB field ref
+     *
+     * Returns StaticField pointer in r0.
      */
 .LOP_SGET_WIDE_VOLATILE_resolve:
     ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
@@ -9041,6 +9078,8 @@ d2l_doconv:
      * Continuation if the field has not yet been resolved.
      *  r1: BBBB field ref
      *  r9: &fp[AA]
+     *
+     * Returns StaticField pointer in r2.
      */
 .LOP_SPUT_WIDE_VOLATILE_resolve:
     ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
@@ -9048,6 +9087,7 @@ d2l_doconv:
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
     cmp     r0, #0                      @ success?
+    mov     r2, r0                      @ copy to r2
     bne     .LOP_SPUT_WIDE_VOLATILE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 

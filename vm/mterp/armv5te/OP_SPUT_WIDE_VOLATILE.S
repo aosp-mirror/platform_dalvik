@@ -1,2 +1,2 @@
 %verify "executed"
-%include "armv5te/OP_SPUT_WIDE.S"
+%include "armv5te/OP_SPUT_WIDE.S" {"volatile":"1"}

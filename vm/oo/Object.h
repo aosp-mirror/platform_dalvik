@@ -21,6 +21,8 @@
 #ifndef _DALVIK_OO_OBJECT
 #define _DALVIK_OO_OBJECT
 
+#include <Atomic.h>
+
 #include <stddef.h>
 
 /* fwd decl */
@@ -713,6 +715,10 @@ INLINE double dvmGetFieldDouble(const Object* obj, int offset) {
 INLINE Object* dvmGetFieldObject(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset))->l;
 }
+INLINE s8 dvmGetFieldLongVolatile(const Object* obj, int offset) {
+    const s8* addr = BYTE_OFFSET(obj, offset);
+    return android_quasiatomic_read_64((s8*)addr);
+}
 
 INLINE void dvmSetFieldBoolean(Object* obj, int offset, bool val) {
     ((JValue*)BYTE_OFFSET(obj, offset))->i = val;
@@ -740,6 +746,10 @@ INLINE void dvmSetFieldDouble(Object* obj, int offset, double val) {
 }
 INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
     ((JValue*)BYTE_OFFSET(obj, offset))->l = val;
+}
+INLINE void dvmSetFieldLongVolatile(Object* obj, int offset, s8 val) {
+    s8* addr = BYTE_OFFSET(obj, offset);
+    android_quasiatomic_swap_64(val, addr);
 }
 
 /*
@@ -776,6 +786,10 @@ INLINE double dvmGetStaticFieldDouble(const StaticField* sfield) {
 INLINE Object* dvmGetStaticFieldObject(const StaticField* sfield) {
     return sfield->value.l;
 }
+INLINE s8 dvmGetStaticFieldLongVolatile(const StaticField* sfield) {
+    const s8* addr = &sfield->value.j;
+    return android_quasiatomic_read_64((s8*)addr);
+}
 
 INLINE void dvmSetStaticFieldBoolean(StaticField* sfield, bool val) {
     sfield->value.i = val;
@@ -803,6 +817,10 @@ INLINE void dvmSetStaticFieldDouble(StaticField* sfield, double val) {
 }
 INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
     sfield->value.l = val;
+}
+INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
+    s8* addr = &sfield->value.j;
+    android_quasiatomic_swap_64(val, addr);
 }
 
 /*
@@ -858,6 +876,9 @@ INLINE bool dvmIsStaticField(const Field* field) {
 }
 INLINE bool dvmIsFinalField(const Field* field) {
     return (field->accessFlags & ACC_FINAL) != 0;
+}
+INLINE bool dvmIsVolatileField(const Field* field) {
+    return (field->accessFlags & ACC_VOLATILE) != 0;
 }
 
 INLINE bool dvmIsInterfaceClass(const ClassObject* clazz) {

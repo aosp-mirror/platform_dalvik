@@ -1,3 +1,4 @@
+%default {"volatile":"0"}
 %verify "executed"
 %verify "null object"
 %verify "field already resolved"
@@ -33,10 +34,15 @@
     cmp     r9, #0                      @ check object for null
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
-    mov     r2, rINST, lsr #8           @ r2<- A+
+    .if $volatile
+    add     r0, r9, r3                  @ r0<- address of field
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
-    and     r2, r2, #15                 @ r2<- A
+    .endif
+    mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    and     r2, r2, #15                 @ r2<- A
     add     r3, rFP, r2, lsl #2         @ r3<- &fp[A]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1

@@ -35,6 +35,9 @@
  *
  * (To save space in the binary we could generate a static table with a
  * command-line utility.)
+ *
+ * TODO: it doesn't look like we're using the negative values anymore.
+ * Consider switching to only positive values.
  */
 InstructionWidth* dexCreateInstrWidthTable(void)
 {

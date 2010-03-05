@@ -616,9 +616,6 @@ ClassObject* dvmFindPrimitiveClass(char type)
 /*
  * Synthesize a primitive class.
  *
- * The spec for java.lang.Class.isPrimitive describes the names to
- * be used for these classes.
- *
  * Just creates the class and returns it (does not add it to the class list).
  */
 static ClassObject* createPrimitiveClass(int idx)

@@ -1667,7 +1667,7 @@ static bool optimizeMethod(Method* method, const InlineSub* inlineSubs)
             u4 len = insns[2] | (((u4)insns[3]) << 16);
             width = 4 + (elemWidth * len + 1) / 2;
         } else {
-            width = dexGetInstrWidth(gDvm.instrWidth, inst);
+            width = dexGetInstrWidthAbs(gDvm.instrWidth, inst);
         }
         assert(width > 0);
 

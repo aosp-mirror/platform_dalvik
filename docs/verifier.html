@@ -45,6 +45,10 @@ Why do it all, when our system relies on UNIX processes for security?
     it's very helpful to start with the assumption that the bytecode
     is valid.
 </ol>
+<p>
+It's also a convenient framework to deal with certain situations, notably
+replacement of instructions that access volatile 64-bit fields with
+more rigorous versions that guarantee atomicity.
 
 
 <h2>Verifier Differences</h2>
