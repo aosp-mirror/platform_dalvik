@@ -7250,38 +7250,101 @@ dalvik_inst:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E8: /* 0xe8 */
-/* File: armv5te/OP_UNUSED_E8.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
+/* File: armv5te/OP_IGET_WIDE_VOLATILE.S */
+/* File: armv5te/OP_IGET_WIDE.S */
+    /*
+     * Wide 32-bit instance field get.
+     */
+    /* iget-wide vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_WIDE_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0
+    bne     .LOP_IGET_WIDE_VOLATILE_finish
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E9: /* 0xe9 */
-/* File: armv5te/OP_UNUSED_E9.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
+/* File: armv5te/OP_IPUT_WIDE_VOLATILE.S */
+/* File: armv5te/OP_IPUT_WIDE.S */
+    /* iput-wide vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_WIDE_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_IPUT_WIDE_VOLATILE_finish          @ yes, finish up
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EA: /* 0xea */
-/* File: armv5te/OP_UNUSED_EA.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_SGET_WIDE_VOLATILE: /* 0xea */
+/* File: armv5te/OP_SGET_WIDE_VOLATILE.S */
+/* File: armv5te/OP_SGET_WIDE.S */
+    /*
+     * 64-bit SGET handler.
+     */
+    /* sget-wide vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_WIDE_VOLATILE_resolve         @ yes, do resolve
+.LOP_SGET_WIDE_VOLATILE_finish:
+    mov     r1, rINST, lsr #8           @ r1<- AA
+    ldrd    r2, [r0, #offStaticField_value] @ r2/r3<- field value (aligned)
+    add     r1, rFP, r1, lsl #2         @ r1<- &fp[AA]
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    stmia   r1, {r2-r3}                 @ vAA/vAA+1<- r2/r3
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EB: /* 0xeb */
-/* File: armv5te/OP_UNUSED_EB.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
+/* File: armv5te/OP_SPUT_WIDE_VOLATILE.S */
+/* File: armv5te/OP_SPUT_WIDE.S */
+    /*
+     * 64-bit SPUT handler.
+     */
+    /* sput-wide vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    mov     r9, rINST, lsr #8           @ r9<- AA
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_WIDE_VOLATILE_resolve         @ yes, do resolve
+.LOP_SPUT_WIDE_VOLATILE_finish: @ field ptr in r0, AA in r9
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    ldmia   r9, {r2-r3}                 @ r2/r3<- vAA/vAA+1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    strd    r2, [r0, #offStaticField_value] @ field<- vAA/vAA+1
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
@@ -8976,6 +9039,81 @@ d2l_doconv:
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* continuation for OP_IGET_WIDE_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_WIDE_VOLATILE_finish:
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
+    and     r2, r2, #15                 @ r2<- A
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    add     r3, rFP, r2, lsl #2         @ r3<- &fp[A]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* continuation for OP_IPUT_WIDE_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_WIDE_VOLATILE_finish:
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    cmp     r9, #0                      @ check object for null
+    and     r2, r2, #15                 @ r2<- A
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    add     r2, rFP, r2, lsl #2         @ r3<- &fp[A]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    ldmia   r2, {r0-r1}                 @ r0/r1<- fp[A]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* continuation for OP_SGET_WIDE_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SGET_WIDE_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_WIDE_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+
+/* continuation for OP_SPUT_WIDE_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     *  r9: &fp[AA]
+     */
+.LOP_SPUT_WIDE_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_WIDE_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
 
 
 /* continuation for OP_EXECUTE_INLINE */

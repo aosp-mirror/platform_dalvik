@@ -5420,6 +5420,10 @@ sput_1nr_common:
     case OP_IPUT_QUICK:
     case OP_IPUT_WIDE_QUICK:
     case OP_IPUT_OBJECT_QUICK:
+    case OP_IGET_WIDE_VOLATILE:
+    case OP_IPUT_WIDE_VOLATILE:
+    case OP_SGET_WIDE_VOLATILE:
+    case OP_SPUT_WIDE_VOLATILE:
     case OP_INVOKE_VIRTUAL_QUICK:
     case OP_INVOKE_VIRTUAL_QUICK_RANGE:
     case OP_INVOKE_SUPER_QUICK:
@@ -5442,10 +5446,6 @@ sput_1nr_common:
     case OP_UNUSED_E5:
     case OP_UNUSED_E6:
     case OP_UNUSED_E7:
-    case OP_UNUSED_E8:
-    case OP_UNUSED_E9:
-    case OP_UNUSED_EA:
-    case OP_UNUSED_EB:
     case OP_BREAKPOINT:
     case OP_UNUSED_F1:
     case OP_UNUSED_FC:

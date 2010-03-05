@@ -1192,6 +1192,22 @@ GOTO_TARGET_DECL(exceptionThrown);
     FINISH(2);
 
 
+/* File: c/OP_IGET_WIDE_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_WIDE_VOLATILE,    "-wide-volatile", Long, _WIDE)
+OP_END
+
+/* File: c/OP_IPUT_WIDE_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_WIDE_VOLATILE,    "-wide-volatile", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SGET_WIDE_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_WIDE_VOLATILE,    "-wide-volatile", Long, _WIDE)
+OP_END
+
+/* File: c/OP_SPUT_WIDE_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_WIDE_VOLATILE,    "-wide-volatile", Long, _WIDE)
+OP_END
+
 /* File: c/OP_BREAKPOINT.c */
 HANDLE_OPCODE(OP_BREAKPOINT)
 #if (INTERP_TYPE == INTERP_DBG) && defined(WITH_DEBUGGER)

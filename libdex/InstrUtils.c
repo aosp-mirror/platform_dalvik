@@ -294,6 +294,10 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+        case OP_IGET_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
         case OP_THROW_VERIFICATION_ERROR:
             width = -2;
             break;
@@ -322,10 +326,6 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_UNUSED_E5:
         case OP_UNUSED_E6:
         case OP_UNUSED_E7:
-        case OP_UNUSED_E8:
-        case OP_UNUSED_E9:
-        case OP_UNUSED_EA:
-        case OP_UNUSED_EB:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
@@ -625,6 +625,10 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+        case OP_IGET_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
             flags = kInstrCanContinue | kInstrCanThrow;
             break;
 
@@ -651,10 +655,6 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_E5:
         case OP_UNUSED_E6:
         case OP_UNUSED_E7:
-        case OP_UNUSED_E8:
-        case OP_UNUSED_E9:
-        case OP_UNUSED_EA:
-        case OP_UNUSED_EB:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:
@@ -966,6 +966,12 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_THROW_VERIFICATION_ERROR:
             fmt = kFmt20bc;
             break;
+        case OP_IGET_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
+            fmt = kFmt22c;
+            break;
         case OP_IGET_QUICK:
         case OP_IGET_WIDE_QUICK:
         case OP_IGET_OBJECT_QUICK:
@@ -1007,10 +1013,6 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_UNUSED_E5:
         case OP_UNUSED_E6:
         case OP_UNUSED_E7:
-        case OP_UNUSED_E8:
-        case OP_UNUSED_E9:
-        case OP_UNUSED_EA:
-        case OP_UNUSED_EB:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
         case OP_UNUSED_FC:

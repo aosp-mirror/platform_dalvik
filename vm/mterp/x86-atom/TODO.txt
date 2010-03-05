@@ -7,4 +7,5 @@ Items requiring attention:
 
 (lo) Implement OP_BREAKPOINT
 (lo) Implement OP_EXECUTE_INLINE_RANGE
+(lo) Implement OP_*_WIDE_VOLATILE
 
