@@ -75,9 +75,38 @@ public class Deflater {
      */
     public static final int NO_COMPRESSION = 0;
 
-    private static final int Z_NO_FLUSH = 0;
+    /**
+     * Use buffering for best compression.
+     *
+     * @hide
+     * @since 1.7
+     */
+    public static final int NO_FLUSH = 0;
 
-    private static final int Z_FINISH = 4;
+    /**
+     * Flush buffers so recipients can immediately decode the data sent thus
+     * far. This mode may degrade compression.
+     *
+     * @hide
+     * @since 1.7
+     */
+    public static final int SYNC_FLUSH = 2;
+
+    /**
+     * Flush buffers so recipients can immediately decode the data sent thus
+     * far. The compression state is also reset to permit random access and
+     * recovery for clients who have discarded or damaged their own copy. This
+     * mode may degrade compression.
+     *
+     * @hide
+     * @since 1.7
+     */
+    public static final int FULL_FLUSH = 3;
+
+    /**
+     * Flush buffers and mark the end of the datastream.
+     */
+    private static final int FINISH = 4;
 
     // Fill in the JNI id caches
     private static native void oneTimeInitialization();
@@ -90,7 +119,7 @@ public class Deflater {
         oneTimeInitialization();
     }
 
-    private int flushParm = Z_NO_FLUSH;
+    private int flushParm = NO_FLUSH;
 
     private boolean finished;
 
@@ -175,19 +204,45 @@ public class Deflater {
      * @return the number of bytes of compressed data written to {@code buf}.
      */
     public synchronized int deflate(byte[] buf, int off, int nbytes) {
+        return deflateImpl(buf, off, nbytes, flushParm);
+    }
+
+    /**
+     * Deflates data (previously passed to {@code setInput}) into a specific
+     * region within the supplied buffer, optionally flushing the input buffer.
+     *
+     * @param buf the buffer to write compressed data to.
+     * @param off the offset within {@code buf} at which to start writing to.
+     * @param nbytes maximum number of bytes of compressed data to be written.
+     * @param flush one of {@link #NO_FLUSH}, {@link #SYNC_FLUSH} or
+     *      {@link #FULL_FLUSH}.
+     * @return the number of compressed bytes written to {@code buf}. If this
+     *      equals {@code nbytes}, the number of bytes of input to be flushed
+     *      may have exceeded the output buffer's capacity. In this case,
+     *      finishing a flush will require the output buffer to be drained
+     *      and additional calls to {@link #deflate} to be made.
+     * @hide
+     * @since 1.7
+     */
+    public synchronized int deflate(byte[] buf, int off, int nbytes, int flush) {
+        if (flush != NO_FLUSH && flush != SYNC_FLUSH && flush != FULL_FLUSH) {
+            throw new IllegalArgumentException();
+        }
+        return deflateImpl(buf, off, nbytes, flush);
+    }
+
+    private synchronized int deflateImpl(
+            byte[] buf, int off, int nbytes, int flush) {
         if (streamHandle == -1) {
             throw new IllegalStateException();
         }
-        // avoid int overflow, check null buf
-        if (off <= buf.length && nbytes >= 0 && off >= 0
-                && buf.length - off >= nbytes) {
-            // put a stub buffer, no effect.
-            if (null == inputBuffer) {
-                setInput(STUB_INPUT_BUFFER);
-            }
-            return deflateImpl(buf, off, nbytes, streamHandle, flushParm);
+        if (off > buf.length || nbytes < 0 || off < 0 || buf.length - off < nbytes) {
+            throw new ArrayIndexOutOfBoundsException();
         }
-        throw new ArrayIndexOutOfBoundsException();
+        if (inputBuffer == null) {
+            setInput(STUB_INPUT_BUFFER);
+        }
+        return deflateImpl(buf, off, nbytes, streamHandle, flush);
     }
 
     private synchronized native int deflateImpl(byte[] buf, int off,
@@ -229,7 +284,7 @@ public class Deflater {
      * @see #finished
      */
     public synchronized void finish() {
-        flushParm = Z_FINISH;
+        flushParm = FINISH;
     }
 
     /**
@@ -325,7 +380,7 @@ public class Deflater {
             throw new NullPointerException();
         }
 
-        flushParm = Z_NO_FLUSH;
+        flushParm = NO_FLUSH;
         finished = false;
         resetImpl(streamHandle);
         inputBuffer = null;

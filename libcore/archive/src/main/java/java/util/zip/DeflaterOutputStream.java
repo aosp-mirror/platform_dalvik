@@ -45,6 +45,8 @@ public class DeflaterOutputStream extends FilterOutputStream {
 
     boolean done = false;
 
+    private final boolean syncFlush;
+
     /**
      * This constructor lets you pass the {@code Deflater} specifying the
      * compression algorithm.
@@ -57,7 +59,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
      *            data.
      */
     public DeflaterOutputStream(OutputStream os, Deflater def) {
-        this(os, def, BUF_SIZE);
+        this(os, def, BUF_SIZE, false);
     }
 
     /**
@@ -71,7 +73,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
      *            is the OutputStream where to write the compressed data to.
      */
     public DeflaterOutputStream(OutputStream os) {
-        this(os, new Deflater());
+        this(os, new Deflater(), BUF_SIZE, false);
     }
 
     /**
@@ -88,6 +90,30 @@ public class DeflaterOutputStream extends FilterOutputStream {
      *            is the size to be used for the internal buffer.
      */
     public DeflaterOutputStream(OutputStream os, Deflater def, int bsize) {
+        this(os, def, bsize, false);
+    }
+
+    /**
+     * @hide
+     * @since 1.7
+     */
+    public DeflaterOutputStream(OutputStream os, boolean syncFlush) {
+        this(os, new Deflater(), BUF_SIZE, syncFlush);
+    }
+
+    /**
+     * @hide
+     * @since 1.7
+     */
+    public DeflaterOutputStream(OutputStream os, Deflater def, boolean syncFlush) {
+        this(os, def, BUF_SIZE, syncFlush);
+    }
+
+    /**
+     * @hide
+     * @since 1.7
+     */
+    public DeflaterOutputStream(OutputStream os, Deflater def, int bsize, boolean syncFlush) {
         super(os);
         if (os == null || def == null) {
             throw new NullPointerException();
@@ -96,6 +122,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
             throw new IllegalArgumentException();
         }
         this.def = def;
+        this.syncFlush = syncFlush;
         buf = new byte[bsize];
     }
 
@@ -191,5 +218,22 @@ public class DeflaterOutputStream extends FilterOutputStream {
         } else {
             throw new ArrayIndexOutOfBoundsException();
         }
+    }
+
+    /**
+     * Flushes the underlying stream. This flushes only the bytes that can be
+     * compressed at the highest level.
+     *
+     * <p>For deflater output streams constructed with Java 7's
+     * {@code syncFlush} parameter set to true (not yet available on Android),
+     * this first flushes all outstanding data so that it may be immediately
+     * read by its recipient. Doing so may degrade compression.
+     */
+    @Override public void flush() throws IOException {
+        if (syncFlush) {
+            int count = def.deflate(buf, 0, buf.length, Deflater.SYNC_FLUSH);
+            out.write(buf, 0, count);
+        }
+        out.flush();
     }
 }
