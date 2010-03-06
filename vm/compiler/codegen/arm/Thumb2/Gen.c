@@ -190,12 +190,14 @@ static ArmLIR *genExportPC(CompilationUnit *cUnit, MIR *mir)
  * preserved.
  *
  */
-static void genMonitor(CompilationUnit *cUnit, MIR *mir)
+static void genMonitorEnter(CompilationUnit *cUnit, MIR *mir)
 {
     RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
     bool enter = (mir->dalvikInsn.opCode == OP_MONITOR_ENTER);
     ArmLIR *target;
+    ArmLIR *hopTarget;
     ArmLIR *branch;
+    ArmLIR *hopBranch;
 
     assert(LW_SHAPE_THIN == 0);
     loadValueDirectFixed(cUnit, rlSrc, r1);  // Get obj
@@ -208,67 +210,106 @@ static void genMonitor(CompilationUnit *cUnit, MIR *mir)
             offsetof(Object, lock) >> 2); // Get object->lock
     opRegImm(cUnit, kOpLsl, r3, LW_LOCK_OWNER_SHIFT); // Align owner
     // Is lock unheld on lock or held by us (==threadId) on unlock?
-    if (enter) {
-        newLIR4(cUnit, kThumb2Bfi, r3, r2, 0, LW_LOCK_OWNER_SHIFT - 1);
-        newLIR3(cUnit, kThumb2Bfc, r2, LW_HASH_STATE_SHIFT,
-                 LW_LOCK_OWNER_SHIFT - 1);
-        opRegImm(cUnit, kOpCmp, r2, 0);
-    } else {
-        opRegRegImm(cUnit, kOpAnd, r7, r2,
-                (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT));
-        newLIR3(cUnit, kThumb2Bfc, r2, LW_HASH_STATE_SHIFT,
-                 LW_LOCK_OWNER_SHIFT - 1);
-        opRegReg(cUnit, kOpSub, r2, r3);
-    }
-    // Note: start of IT block.  If last sub result != clear, else strex
-    genIT(cUnit, kArmCondNe, "E");
-    newLIR0(cUnit, kThumb2Clrex);
-    if (enter) {
-        newLIR4(cUnit, kThumb2Strex, r2, r3, r1,
-                offsetof(Object, lock) >> 2);
-    } else {
-        newLIR4(cUnit, kThumb2Strex, r2, r7, r1,
-                offsetof(Object, lock) >> 2);
-    }
-    // Note: end of IT block
+    newLIR4(cUnit, kThumb2Bfi, r3, r2, 0, LW_LOCK_OWNER_SHIFT - 1);
+    newLIR3(cUnit, kThumb2Bfc, r2, LW_HASH_STATE_SHIFT,
+            LW_LOCK_OWNER_SHIFT - 1);
+    hopBranch = newLIR2(cUnit, kThumb2Cbnz, r2, 0);
+    newLIR4(cUnit, kThumb2Strex, r2, r3, r1, offsetof(Object, lock) >> 2);
     branch = newLIR2(cUnit, kThumb2Cbz, r2, 0);
+
+    hopTarget = newLIR0(cUnit, kArmPseudoTargetLabel);
+    hopTarget->defMask = ENCODE_ALL;
+    hopBranch->generic.target = (LIR *)hopTarget;
+
+    // Clear the lock
+    ArmLIR *inst = newLIR0(cUnit, kThumb2Clrex);
+    // ...and make it a scheduling barrier
+    inst->defMask = ENCODE_ALL;
 
     // Export PC (part 1)
     loadConstant(cUnit, r3, (int) (cUnit->method->insns + mir->offset));
 
-    if (enter) {
-        /* Get dPC of next insn */
-        loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
+    /* Get dPC of next insn */
+    loadConstant(cUnit, r4PC, (int)(cUnit->method->insns + mir->offset +
                  dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_ENTER)));
-        // Export PC (part 2)
-        newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
-                sizeof(StackSaveArea) -
-                offsetof(StackSaveArea, xtra.currentPc));
-        /* Call template, and don't return */
-        genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER);
-    } else {
-        loadConstant(cUnit, r7, (int)dvmUnlockObject);
-        // Export PC (part 2)
-        newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
-                sizeof(StackSaveArea) -
-                offsetof(StackSaveArea, xtra.currentPc));
-        opReg(cUnit, kOpBlx, r7);
-        opRegImm(cUnit, kOpCmp, r0, 0); /* Did we throw? */
-        ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
-        loadConstant(cUnit, r0,
-                     (int) (cUnit->method->insns + mir->offset +
-                     dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_EXIT)));
-        genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
-        ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
-        target->defMask = ENCODE_ALL;
-        branchOver->generic.target = (LIR *) target;
-        dvmCompilerClobberCallRegs(cUnit);
-    }
+    // Export PC (part 2)
+    newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
+            sizeof(StackSaveArea) -
+            offsetof(StackSaveArea, xtra.currentPc));
+    /* Call template, and don't return */
+    genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER);
+    // Resume here
+    target = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target->defMask = ENCODE_ALL;
+    branch->generic.target = (LIR *)target;
+}
+
+/*
+ * For monitor unlock, we don't have to use ldrex/strex.  Once
+ * we've determined that the lock is thin and that we own it with
+ * a zero recursion count, it's safe to punch it back to the
+ * initial, unlock thin state with a store word.
+ */
+static void genMonitorExit(CompilationUnit *cUnit, MIR *mir)
+{
+    RegLocation rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
+    ArmLIR *target;
+    ArmLIR *branch;
+    ArmLIR *hopTarget;
+    ArmLIR *hopBranch;
+
+    assert(LW_SHAPE_THIN == 0);
+    loadValueDirectFixed(cUnit, rlSrc, r1);  // Get obj
+    dvmCompilerLockAllTemps(cUnit);  // Prepare for explicit register usage
+    dvmCompilerFreeTemp(cUnit, r4PC);  // Free up r4 for general use
+    loadWordDisp(cUnit, rGLUE, offsetof(InterpState, self), r0); // Get self
+    genNullCheck(cUnit, rlSrc.sRegLow, r1, mir->offset, NULL);
+    loadWordDisp(cUnit, r1, offsetof(Object, lock), r2); // Get object->lock
+    loadWordDisp(cUnit, r0, offsetof(Thread, threadId), r3); // Get threadId
+    // Is lock unheld on lock or held by us (==threadId) on unlock?
+    opRegRegImm(cUnit, kOpAnd, r7, r2,
+                (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT));
+    opRegImm(cUnit, kOpLsl, r3, LW_LOCK_OWNER_SHIFT); // Align owner
+    newLIR3(cUnit, kThumb2Bfc, r2, LW_HASH_STATE_SHIFT,
+            LW_LOCK_OWNER_SHIFT - 1);
+    opRegReg(cUnit, kOpSub, r2, r3);
+    hopBranch = opCondBranch(cUnit, kArmCondNe);
+    storeWordDisp(cUnit, r1, offsetof(Object, lock), r7);
+    branch = opNone(cUnit, kOpUncondBr);
+
+    hopTarget = newLIR0(cUnit, kArmPseudoTargetLabel);
+    hopTarget->defMask = ENCODE_ALL;
+    hopBranch->generic.target = (LIR *)hopTarget;
+
+    // Export PC (part 1)
+    loadConstant(cUnit, r3, (int) (cUnit->method->insns + mir->offset));
+
+    loadConstant(cUnit, r7, (int)dvmUnlockObject);
+    // Export PC (part 2)
+    newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
+            sizeof(StackSaveArea) -
+            offsetof(StackSaveArea, xtra.currentPc));
+    opReg(cUnit, kOpBlx, r7);
+    opRegImm(cUnit, kOpCmp, r0, 0); /* Did we throw? */
+    ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+    loadConstant(cUnit, r0,
+                 (int) (cUnit->method->insns + mir->offset +
+                 dexGetInstrWidthAbs(gDvm.instrWidth, OP_MONITOR_EXIT)));
+    genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
 
     // Resume here
     target = newLIR0(cUnit, kArmPseudoTargetLabel);
     target->defMask = ENCODE_ALL;
     branch->generic.target = (LIR *)target;
+    branchOver->generic.target = (LIR *) target;
+}
+
+static void genMonitor(CompilationUnit *cUnit, MIR *mir)
+{
+    if (mir->dalvikInsn.opCode == OP_MONITOR_ENTER)
+        genMonitorEnter(cUnit, mir);
+    else
+        genMonitorExit(cUnit, mir);
 }
 
 /*
