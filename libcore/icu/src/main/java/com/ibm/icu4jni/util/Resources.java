@@ -18,12 +18,12 @@ package com.ibm.icu4jni.util;
 
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.ListResourceBundle;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -33,8 +33,8 @@ import java.util.logging.Logger;
  */
 public class Resources {
     // A cache for the locale-specific data.
-    private static final ConcurrentHashMap<String, LocaleData> localeDataCache =
-            new ConcurrentHashMap<String, LocaleData>();
+    private static final HashMap<String, LocaleData> localeDataCache =
+            new HashMap<String, LocaleData>();
 
     /**
      * Cache for ISO language names.
@@ -64,13 +64,21 @@ public class Resources {
             locale = Locale.getDefault();
         }
         String localeName = locale.toString();
-        LocaleData localeData = localeDataCache.get(localeName);
-        if (localeData != null) {
-            return localeData;
+        synchronized (localeDataCache) {
+            LocaleData localeData = localeDataCache.get(localeName);
+            if (localeData != null) {
+                return localeData;
+            }
         }
-        localeData = makeLocaleData(locale);
-        boolean absent = (localeDataCache.putIfAbsent(localeName, localeData) == null);
-        return absent ? localeData : localeDataCache.get(localeName);
+        LocaleData newLocaleData = makeLocaleData(locale);
+        synchronized (localeDataCache) {
+            LocaleData localeData = localeDataCache.get(localeName);
+            if (localeData != null) {
+                return localeData;
+            }
+            localeDataCache.put(localeName, newLocaleData);
+            return newLocaleData;
+        }
     }
 
     private static LocaleData makeLocaleData(Locale locale) {
