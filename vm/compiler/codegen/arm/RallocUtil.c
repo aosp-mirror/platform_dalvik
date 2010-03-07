@@ -123,7 +123,7 @@ static RegisterInfo *getRegInfo(CompilationUnit *cUnit, int reg)
         }
     }
     LOGE("Tried to get info on a non-existant temp: r%d",reg);
-    dvmAbort();  // FIXME: abort translation intead of vm
+    dvmCompilerAbort(cUnit);
     return NULL;
 }
 
@@ -249,7 +249,7 @@ static int allocTempBody(CompilationUnit *cUnit, RegisterInfo *p, int numTemps,
     }
     if (required) {
         LOGE("No free temp registers");
-        dvmAbort();  // FIXME: abort translation instead of vm
+        dvmCompilerAbort(cUnit);
     }
     return -1;  // No register available
 }
@@ -298,7 +298,7 @@ extern int dvmCompilerAllocTempDouble(CompilationUnit *cUnit)
         next += 2;
     }
     LOGE("No free temp registers");
-    dvmAbort(); // FIXME: abort translation instead of vm
+    dvmCompilerAbort(cUnit);
     return -1;
 }
 
@@ -359,7 +359,7 @@ static RegisterInfo *allocLive(CompilationUnit *cUnit, int sReg,
             break;
         default:
             LOGE("Invalid register type");
-            dvmAbort();    //FIXME: abort translation instead of vm
+            dvmCompilerAbort(cUnit);
     }
     return res;
 }
@@ -386,7 +386,7 @@ extern void dvmCompilerFreeTemp(CompilationUnit *cUnit, int reg)
         }
     }
     LOGE("Tried to free a non-existant temp: r%d",reg);
-    dvmAbort();  // FIXME: abort translation instead of vm
+    dvmCompilerAbort(cUnit);
 }
 
 /*
@@ -460,7 +460,7 @@ extern void dvmCompilerLockTemp(CompilationUnit *cUnit, int reg)
         }
     }
     LOGE("Tried to lock a non-existant temp: r%d",reg);
-    dvmAbort();  // FIXME: abort translation instead of vm
+    dvmCompilerAbort(cUnit);
 }
 
 static void lockArgRegs(CompilationUnit *cUnit)

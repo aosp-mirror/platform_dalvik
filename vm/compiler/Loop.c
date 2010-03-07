@@ -314,7 +314,8 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
                     break;
                 default:
                     refIdx = 0;
-                    dvmAbort();
+                    LOGE("Jit: bad case in doLoopBodyCodeMotion");
+                    dvmCompilerAbort(cUnit);
             }
 
             int useIdx = refIdx + 1;
@@ -449,7 +450,8 @@ static void genHoistedChecks(CompilationUnit *cUnit)
                     dvmCompilerAppendMIR(entry, boundCheckMIR);
                 }
             } else {
-                dvmAbort();
+                LOGE("Jit: bad case in genHoistedChecks");
+                dvmCompilerAbort(cUnit);
             }
         }
 

@@ -60,7 +60,8 @@ static void setMemRefType(ArmLIR *lir, bool isLoad, int memType)
             break;
         default:
             LOGE("Jit: invalid memref kind - %d", memType);
-            dvmAbort();
+            assert(0);  // Bail if debug build, set worst-case in the field
+            *maskPtr |= ENCODE_ALL;
     }
 }
 

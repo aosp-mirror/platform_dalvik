@@ -286,7 +286,7 @@ bool filterMethodByCallGraph(Thread *thread, const char *curMethodName)
  * bytecode into machine code.
  */
 bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
-                     JitTranslationInfo *info)
+                     JitTranslationInfo *info, jmp_buf *bailPtr)
 {
     const DexCode *dexCode = dvmGetMethodCode(desc->method);
     const JitTraceRun* currRun = &desc->trace[0];
@@ -315,6 +315,9 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
     /* Locate the entry to store compilation statistics for this method */
     methodStats = analyzeMethodBody(desc->method);
 #endif
+
+    /* Set the recover buffer pointer */
+    cUnit.bailPtr = bailPtr;
 
     /* Initialize the printMe flag */
     cUnit.printMe = gDvmJit.printMe;
@@ -760,7 +763,7 @@ bool dvmCompileTrace(JitTraceDescription *desc, int numMaxInsts,
 
     /* Halve the instruction count and retry again */
     } else {
-        return dvmCompileTrace(desc, cUnit.numInsts / 2, info);
+        return dvmCompileTrace(desc, cUnit.numInsts / 2, info, bailPtr);
     }
 }
 
@@ -896,7 +899,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
 
     if (numBlocks != cUnit.numBlocks) {
         LOGE("Expect %d vs %d basic blocks\n", numBlocks, cUnit.numBlocks);
-        dvmAbort();
+        dvmCompilerAbort(&cUnit);
     }
 
     /* Connect the basic blocks through the taken links */
@@ -930,7 +933,7 @@ bool dvmCompileMethod(const Method *method, JitTranslationInfo *info)
             if (j == numBlocks && !isInvoke) {
                 LOGE("Target not found for insn %x: expect target %x\n",
                      curBB->lastMIRInsn->offset, target);
-                dvmAbort();
+                dvmCompilerAbort(&cUnit);
             }
         }
     }

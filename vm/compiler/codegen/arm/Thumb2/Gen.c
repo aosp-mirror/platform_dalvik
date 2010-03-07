@@ -142,8 +142,8 @@ static ArmLIR *genIT(CompilationUnit *cUnit, ArmConditionCode code,
         case 0:
             break;
         default:
-            assert(0);
-            dvmAbort();
+            LOGE("Jit: bad case in genIT");
+            dvmCompilerAbort(cUnit);
     }
     mask = (mask3 << 3) | (mask2 << 2) | (mask1 << 1) |
            (1 << (3 - strlen(guide)));
