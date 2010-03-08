@@ -331,38 +331,70 @@ jobject socketAddressToInetAddress(JNIEnv* env, sockaddr_storage* sockAddress) {
     return byteArrayToInetAddress(env, byteArray);
 }
 
-/**
- * Converts an IPv4 address to an IPv4-mapped IPv6 address if fd is an IPv6
- * socket.
- * @param fd the socket.
- * @param sin_ss the address.
- * @param sin6_ss scratch space where we can store the mapped address if necessary.
- * @param mapUnspecified if true, convert 0.0.0.0 to ::ffff:0:0; if false, to ::
- * @return either sin_ss or sin6_ss, depending on which the caller should use.
- */
-static const sockaddr* convertIpv4ToMapped(int fd,
-        const sockaddr_storage* sin_ss, sockaddr_storage* sin6_ss, bool mapUnspecified) {
-    // We need to map if we have an IPv4 address but an IPv6 socket.
-    bool needsMapping = (sin_ss->ss_family == AF_INET && getSocketAddressFamily(fd) == AF_INET6);
-    if (!needsMapping) {
-        return reinterpret_cast<const sockaddr*>(sin_ss);
+// Handles translating between IPv4 and IPv6 addresses so -- where possible --
+// we can use either class of address with either an IPv4 or IPv6 socket.
+class CompatibleSocketAddress {
+public:
+    // Constructs an address corresponding to 'ss' that's compatible with 'fd'.
+    CompatibleSocketAddress(int fd, const sockaddr_storage& ss, bool mapUnspecified) {
+        const int desiredFamily = getSocketAddressFamily(fd);
+        if (ss.ss_family == AF_INET6) {
+            if (desiredFamily == AF_INET6) {
+                // Nothing to do.
+                mCompatibleAddress = reinterpret_cast<const sockaddr*>(&ss);
+            } else {
+                sockaddr_in* sin = reinterpret_cast<sockaddr_in*>(&mTmp);
+                const sockaddr_in6* sin6 = reinterpret_cast<const sockaddr_in6*>(&ss);
+                memset(sin, 0, sizeof(*sin));
+                sin->sin_family = AF_INET;
+                sin->sin_port = sin6->sin6_port;
+                if (IN6_IS_ADDR_V4COMPAT(&sin6->sin6_addr)) {
+                    // We have an IPv6-mapped IPv4 address, but need plain old IPv4.
+                    // Unmap the mapped address in ss into an IPv6 address in mTmp.
+                    memcpy(&sin->sin_addr.s_addr, &sin6->sin6_addr.s6_addr[12], 4);
+                    mCompatibleAddress = reinterpret_cast<const sockaddr*>(&mTmp);
+                } else if (IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr)) {
+                    // Translate the IPv6 loopback address to the IPv4 one.
+                    sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+                    mCompatibleAddress = reinterpret_cast<const sockaddr*>(&mTmp);
+                } else {
+                    // We can't help you. We return what you gave us, and assume you'll
+                    // get a sensible error when you use the address.
+                    mCompatibleAddress = reinterpret_cast<const sockaddr*>(&ss);
+                }
+            }
+        } else /* ss.ss_family == AF_INET */ {
+            if (desiredFamily == AF_INET) {
+                // Nothing to do.
+                mCompatibleAddress = reinterpret_cast<const sockaddr*>(&ss);
+            } else {
+                // We have IPv4 and need IPv6.
+                // Map the IPv4 address in ss into an IPv6 address in mTmp.
+                const sockaddr_in* sin = reinterpret_cast<const sockaddr_in*>(&ss);
+                sockaddr_in6* sin6 = reinterpret_cast<sockaddr_in6*>(&mTmp);
+                memset(sin6, 0, sizeof(*sin6));
+                sin6->sin6_family = AF_INET6;
+                sin6->sin6_port = sin->sin_port;
+                // TODO: mapUnspecified was introduced because kernels < 2.6.31 don't allow
+                // you to bind to ::ffff:0.0.0.0. When we move to something >= 2.6.31, we
+                // should make the code behave as if mapUnspecified were always true, and
+                // remove the parameter.
+                if (sin->sin_addr.s_addr != 0 || mapUnspecified) {
+                    memset(&(sin6->sin6_addr.s6_addr[10]), 0xff, 2);
+                }
+                memcpy(&sin6->sin6_addr.s6_addr[12], &sin->sin_addr.s_addr, 4);
+                mCompatibleAddress = reinterpret_cast<const sockaddr*>(&mTmp);
+            }
+        }
     }
-    // Map the IPv4 address in sin_ss into an IPv6 address in sin6_ss.
-    const sockaddr_in* sin = reinterpret_cast<const sockaddr_in*>(sin_ss);
-    sockaddr_in6* sin6 = reinterpret_cast<sockaddr_in6*>(sin6_ss);
-    memset(sin6, 0, sizeof(*sin6));
-    sin6->sin6_family = AF_INET6;
-    sin6->sin6_port = sin->sin_port;
-    // TODO: mapUnspecified was introduced because kernels < 2.6.31 don't allow
-    // you to bind to ::ffff:0.0.0.0. When we move to something >= 2.6.31, we
-    // should make the code behave as if mapUnspecified were always true, and
-    // remove the parameter.
-    if (sin->sin_addr.s_addr != 0 || mapUnspecified) {
-        memset(&(sin6->sin6_addr.s6_addr[10]), 0xff, 2);
+    // Returns a pointer to an address compatible with the socket.
+    const sockaddr* get() const {
+        return mCompatibleAddress;
     }
-    memcpy(&sin6->sin6_addr.s6_addr[12], &sin->sin_addr.s_addr, 4);
-    return reinterpret_cast<const sockaddr*>(sin6_ss);
-}
+private:
+    const sockaddr* mCompatibleAddress;
+    sockaddr_storage mTmp;
+};
 
 /**
  * Converts an InetAddress object and port number to a native address structure.
@@ -926,9 +958,8 @@ static int pollSelectWait(JNIEnv *env, jobject fileDescriptor, int timeout) {
  * @param socketAddress the address to connect to
  */
 static int doConnect(int fd, const sockaddr_storage* socketAddress) {
-    sockaddr_storage tmp;
-    const sockaddr* realAddress = convertIpv4ToMapped(fd, socketAddress, &tmp, true);
-    return TEMP_FAILURE_RETRY(connect(fd, realAddress, sizeof(sockaddr_storage)));
+    const CompatibleSocketAddress compatibleAddress(fd, *socketAddress, true);
+    return TEMP_FAILURE_RETRY(connect(fd, compatibleAddress.get(), sizeof(sockaddr_storage)));
 }
 
 /**
@@ -1442,12 +1473,12 @@ static int createSocketFileDescriptor(JNIEnv* env, jobject fileDescriptor,
         return -1;
     }
 
-    int sock;
-    sock = socket(PF_INET6, type, 0);
-    if (sock < 0 && errno == EAFNOSUPPORT) {
+    // Try IPv6 but fall back to IPv4...
+    int sock = socket(PF_INET6, type, 0);
+    if (sock == -1 && errno == EAFNOSUPPORT) {
         sock = socket(PF_INET, type, 0);
     }
-    if (sock < 0) {
+    if (sock == -1) {
         jniThrowSocketException(env, errno);
         return sock;
     }
@@ -1774,9 +1805,8 @@ static void osNetworkSystem_socketBindImpl(JNIEnv* env, jclass clazz,
         return;
     }
 
-    sockaddr_storage tmp;
-    const sockaddr* realAddress = convertIpv4ToMapped(fd, &socketAddress, &tmp, false);
-    int rc = TEMP_FAILURE_RETRY(bind(fd, realAddress, sizeof(sockaddr_storage)));
+    const CompatibleSocketAddress compatibleAddress(fd, socketAddress, false);
+    int rc = TEMP_FAILURE_RETRY(bind(fd, compatibleAddress.get(), sizeof(sockaddr_storage)));
     if (rc == -1) {
         jniThrowBindException(env, errno);
     }
@@ -1936,12 +1966,14 @@ static void osNetworkSystem_disconnectDatagramImpl(JNIEnv* env, jclass,
         return;
     }
 
-    sockaddr_storage sockAddr;
-    memset(&sockAddr, 0, sizeof(sockAddr));
-    sockAddr.ss_family = AF_UNSPEC;
-
-    int result = doConnect(fd, &sockAddr);
-    if (result < 0) {
+    // To disconnect a datagram socket, we connect to a bogus address with
+    // the family AF_UNSPEC.
+    sockaddr_storage ss;
+    memset(&ss, 0, sizeof(ss));
+    ss.ss_family = AF_UNSPEC;
+    const sockaddr* sa = reinterpret_cast<const sockaddr*>(&ss);
+    int rc = TEMP_FAILURE_RETRY(connect(fd, sa, sizeof(ss)));
+    if (rc == -1) {
         jniThrowSocketException(env, errno);
     }
 }
