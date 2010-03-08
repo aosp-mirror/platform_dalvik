@@ -544,6 +544,10 @@ void dvmCompilerShutdown(void)
 {
     void *threadReturn;
 
+    /* Disable new translation requests */
+    gDvmJit.pProfTable = NULL;
+    gDvmJit.pProfTableCopy = NULL;
+
     if (gDvm.verboseShutdown) {
         dvmCompilerDumpStats();
         while (gDvmJit.compilerQueueLength)
@@ -564,20 +568,16 @@ void dvmCompilerShutdown(void)
             LOGD("Compiler thread has shut down\n");
     }
 
-    dvmDestroyMutex(&gDvmJit.tableLock);
-    dvmDestroyMutex(&gDvmJit.compilerLock);
-    dvmDestroyMutex(&gDvmJit.compilerICPatchLock);
+    /* Break loops within the translation cache */
+    dvmJitUnchainAll();
 
-    if (gDvmJit.pJitEntryTable) {
-        free(gDvmJit.pJitEntryTable);
-        gDvmJit.pJitEntryTable = NULL;
-    }
-
-    if (gDvmJit.pProfTable) {
-        free(gDvmJit.pProfTable);
-        gDvmJit.pProfTable = NULL;
-    }
-
+    /*
+     * NOTE: our current implementatation doesn't allow for the compiler
+     * thread to be restarted after it exits here.  We aren't freeing
+     * the JitTable or the ProfTable because threads which still may be
+     * running or in the process of shutting down may hold references to
+     * them.
+     */
 }
 
 void dvmCompilerStateRefresh()

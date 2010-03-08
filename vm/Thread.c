@@ -720,7 +720,6 @@ void dvmSlayDaemons(void)
                     complained = true;
                     LOGD("threadid=%d: waiting briefly for daemon suspension\n",
                         threadId);
-                    // TODO: JIT can get stuck, dvmJitUnchainAll doesn't help?
                 }
             }
 
