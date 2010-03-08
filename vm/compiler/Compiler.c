@@ -479,11 +479,17 @@ static void *compilerThreadStart(void *arg)
                 if (gDvmJit.haltCompilerThread) {
                     LOGD("Compiler shutdown in progress - discarding request");
                 } else if (!gDvmJit.codeCacheFull) {
-                    /* If compilation failed, use interpret-template */
-                    if (!dvmCompilerDoWork(&work)) {
-                        work.result.codeAddress = gDvmJit.interpretTemplate;
+                    bool compileOK = false;
+                    jmp_buf jmpBuf;
+                    work.bailPtr = &jmpBuf;
+                    bool aborted = setjmp(jmpBuf);
+                    if (!aborted) {
+                        compileOK = dvmCompilerDoWork(&work);
                     }
-                    if (!work.result.discardResult) {
+                    if (aborted || !compileOK) {
+                        dvmCompilerArenaReset();
+                        work.result.codeAddress = gDvmJit.interpretTemplate;
+                    } else if (!work.result.discardResult) {
                         dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
                                           work.result.instructionSet);
                     }

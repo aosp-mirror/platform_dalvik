@@ -163,7 +163,7 @@ static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
         return res;
     }
     /* No shortcut - go ahead and use literal pool */
-    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 255);
+    ArmLIR *dataTarget = scanLiteralPool(cUnit, value, 0);
     if (dataTarget == NULL) {
         dataTarget = addWordData(cUnit, value, false);
     }

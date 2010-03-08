@@ -124,7 +124,8 @@ static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
             opCode = kThumbBUncond;
             break;
         default:
-            dvmAbort(); // FIXME: abort trace instead of VM
+            LOGE("Jit: bad case in opNone");
+            dvmCompilerAbort(cUnit);
     }
     return newLIR0(cUnit, opCode);
 }
@@ -145,7 +146,8 @@ static ArmLIR *opImm(CompilationUnit *cUnit, OpKind op, int value)
             opCode = kThumbPop;
             break;
         default:
-            dvmAbort(); // FIXME: abort trace instead of VM
+            LOGE("Jit: bad case in opCondBranch");
+            dvmCompilerAbort(cUnit);
     }
     return newLIR1(cUnit, opCode, value);
 }
@@ -158,7 +160,8 @@ static ArmLIR *opReg(CompilationUnit *cUnit, OpKind op, int rDestSrc)
             opCode = kThumbBlxR;
             break;
         default:
-            dvmAbort(); // FIXME: abort trace instead of VM
+            LOGE("Jit: bad case in opReg");
+            dvmCompilerAbort(cUnit);
     }
     return newLIR1(cUnit, opCode, rDestSrc);
 }
@@ -203,7 +206,8 @@ static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
             }
             break;
         default:
-            dvmAbort();  // FIXME: abort trace instead of VM
+            LOGE("Jit: bad case in opRegImm");
+            dvmCompilerAbort(cUnit);
             break;
     }
     if (shortForm)
@@ -323,7 +327,8 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
                 }
                 return res;
         default:
-            dvmAbort();  // FIXME - abort trace instead of VM
+            LOGE("Jit: bad case in opRegRegImm");
+            dvmCompilerAbort(cUnit);
             break;
     }
     if (shortForm)
@@ -420,7 +425,8 @@ static ArmLIR *opRegReg(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
              opRegRegImm(cUnit, kOpLsr, rDestSrc1, rDestSrc1, 16);
              return res;
         default:
-            dvmAbort();  // FIXME - abort trace instead of VM
+            LOGE("Jit: bad case in opRegReg");
+            dvmCompilerAbort(cUnit);
             break;
     }
     return newLIR2(cUnit, opCode, rDestSrc1, rSrc2);
@@ -465,7 +471,8 @@ static ArmLIR *loadBaseIndexed(CompilationUnit *cUnit, int rBase,
             opCode = kThumbLdrsbRRR;
             break;
         default:
-            dvmAbort();  // FIXME: abort trace instead of VM
+            LOGE("Jit: bad case in loadBaseIndexed");
+            dvmCompilerAbort(cUnit);
     }
     res = newLIR3(cUnit, opCode, rDest, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
@@ -502,7 +509,8 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
             opCode = kThumbStrbRRR;
             break;
         default:
-            dvmAbort();  // FIXME - abort trace instead of VM
+            LOGE("Jit: bad case in storeBaseIndexed");
+            dvmCompilerAbort(cUnit);
     }
     res = newLIR3(cUnit, opCode, rSrc, rBase, rNewIndex);
 #if defined(WITH_SELF_VERIFICATION)
@@ -619,7 +627,8 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
             opCode = kThumbLdrsbRRR;
             break;
         default:
-            dvmAbort();  // FIXME - abort trace instead of VM
+            LOGE("Jit: bad case in loadBaseIndexedBody");
+            dvmCompilerAbort(cUnit);
     }
     if (shortForm) {
         load = res = newLIR3(cUnit, opCode, rDest, rBase, encodedDisp);
@@ -736,7 +745,8 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
             }
             break;
         default:
-            dvmAbort(); // FIXME - abort trace instead of VM
+            LOGE("Jit: bad case in storeBaseIndexedBody");
+            dvmCompilerAbort(cUnit);
     }
     if (shortForm) {
         store = res = newLIR3(cUnit, opCode, rSrc, rBase, encodedDisp);

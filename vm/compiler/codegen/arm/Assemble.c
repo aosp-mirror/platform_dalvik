@@ -934,7 +934,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             int delta = target - pc;
             if (delta & 0x3) {
                 LOGE("PC-rel distance is not multiples of 4: %d\n", delta);
-                dvmAbort();
+                dvmCompilerAbort(cUnit);
             }
             if ((lir->opCode == kThumb2LdrPcRel12) && (delta > 4091)) {
                 return true;
@@ -978,7 +978,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
             int delta = target - pc;
             if (delta > 2046 || delta < -2048) {
                 LOGE("Unconditional branch distance out of range: %d\n", delta);
-                dvmAbort();
+                dvmCompilerAbort(cUnit);
             }
             lir->operands[0] = delta >> 1;
         } else if (lir->opCode == kThumbBlx1) {
@@ -1626,7 +1626,7 @@ u4* dvmJitUnchain(void* codeAddr)
                 default:
                     targetOffset = 0; // make gcc happy
                     LOGE("Unexpected chaining type: %d", i);
-                    dvmAbort();
+                    dvmAbort();  // dvmAbort OK here - can't safely recover
             }
             COMPILER_TRACE_CHAINING(
                 LOGD("Jit Runtime: unchaining 0x%x", (int)pChainCells));

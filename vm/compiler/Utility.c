@@ -66,11 +66,7 @@ retry:
          * could go above the limit we need to enhance the allocation
          * mechanism.
          */
-        if (size > ARENA_DEFAULT_SIZE) {
-            LOGE("Requesting %d bytes which exceed the maximal size allowed\n",
-                 size);
-            dvmAbort();
-        }
+        assert(size <= ARENA_DEFAULT_SIZE);
         /* Time to allocate a new arena */
         ArenaMemBlock *newArena = (ArenaMemBlock *)
             malloc(sizeof(ArenaMemBlock) + ARENA_DEFAULT_SIZE);
@@ -280,4 +276,16 @@ void dvmDebugBitVector(char *msg, const BitVector *bv, int length)
             LOGE("Bit %d is set", i);
         }
     }
+}
+
+void dvmCompilerAbort(CompilationUnit *cUnit)
+{
+    LOGE("Jit: aborting trace compilation, reverting to interpreter");
+    /* Force a traceback in debug builds */
+    assert(0);
+    /*
+     * Abort translation and force to interpret-only for this trace
+     * Matching setjmp in compiler thread work loop in Compiler.c.
+     */
+    longjmp(*cUnit->bailPtr, 1);
 }

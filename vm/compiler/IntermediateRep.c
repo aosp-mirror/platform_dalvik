@@ -81,8 +81,7 @@ void dvmCompilerAppendLIR(CompilationUnit *cUnit, LIR *lir)
  */
 void dvmCompilerInsertLIRBefore(LIR *currentLIR, LIR *newLIR)
 {
-    if (currentLIR->prev == NULL)
-        dvmAbort();
+    assert(currentLIR->prev != NULL);
     LIR *prevLIR = currentLIR->prev;
 
     prevLIR->next = newLIR;

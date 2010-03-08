@@ -612,7 +612,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         }
         default:
             LOGE("Invalid long arith op");
-            dvmAbort();
+            dvmCompilerAbort(cUnit);
     }
     if (!callOut) {
         genLong3Addr(cUnit, firstOp, secondOp, rlDest, rlSrc1, rlSrc2);
@@ -716,7 +716,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
         default:
             LOGE("Invalid word arith op: 0x%x(%d)",
                  mir->dalvikInsn.opCode, mir->dalvikInsn.opCode);
-            dvmAbort();
+            dvmCompilerAbort(cUnit);
     }
     if (!callOut) {
         rlSrc1 = loadValue(cUnit, rlSrc1, kCoreReg);
@@ -1836,7 +1836,7 @@ static bool handleFmt21t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
         default:
             cond = 0;
             LOGE("Unexpected opcode (%d) for Fmt21t\n", dalvikOpCode);
-            dvmAbort();
+            dvmCompilerAbort(cUnit);
     }
     genConditionalBranch(cUnit, cond, &labelList[bb->taken->id]);
     /* This mostly likely will be optimized away in a later phase */
@@ -2234,7 +2234,7 @@ static bool handleFmt22t(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
         default:
             cond = 0;
             LOGE("Unexpected opcode (%d) for Fmt22t\n", dalvikOpCode);
-            dvmAbort();
+            dvmCompilerAbort(cUnit);
     }
     genConditionalBranch(cUnit, cond, &labelList[bb->taken->id]);
     /* This mostly likely will be optimized away in a later phase */
@@ -3106,7 +3106,7 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
                 case INLINE_MATH_SIN:
                     break;   /* Handle with C routine */
                 default:
-                    dvmAbort();
+                    dvmCompilerAbort(cUnit);
             }
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             dvmCompilerClobberCallRegs(cUnit);
@@ -3723,7 +3723,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                      mir->offset,
                      dalvikOpCode, getOpcodeName(dalvikOpCode),
                      dalvikFormat);
-                dvmAbort();
+                dvmCompilerAbort(cUnit);
                 break;
             }
         }
@@ -3804,8 +3804,7 @@ gen_fallthrough:
 #endif
                 default:
                     LOGE("Bad blocktype %d", blockList[blockId]->blockType);
-                    dvmAbort();
-                    break;
+                    dvmCompilerAbort(cUnit);
             }
         }
     }
@@ -3851,19 +3850,22 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
             break;
         case kWorkOrderTrace:
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result);
+            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+                                  work->bailPtr);
             break;
         case kWorkOrderTraceDebug: {
             bool oldPrintMe = gDvmJit.printMe;
             gDvmJit.printMe = true;
             /* Start compilation with maximally allowed trace length */
-            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result);
+            res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
+                                  work->bailPtr);
             gDvmJit.printMe = oldPrintMe;;
             break;
         }
         default:
             res = false;
-            dvmAbort();
+            LOGE("Jit: unknown work order type");
+            assert(0);  // Bail if debug build, discard oteherwise
     }
     return res;
 }
@@ -3923,7 +3925,7 @@ bool dvmCompilerArchInit()
         if (EncodingMap[i].opCode != i) {
             LOGE("Encoding order for %s is wrong: expecting %d, seeing %d",
                  EncodingMap[i].name, i, EncodingMap[i].opCode);
-            dvmAbort();
+            dvmAbort();  // OK to dvmAbort - build error
         }
     }
 

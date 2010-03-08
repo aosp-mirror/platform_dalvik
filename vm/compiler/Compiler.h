@@ -15,6 +15,7 @@
  */
 
 #include <Thread.h>
+#include <setjmp.h>
 
 #ifndef _DALVIK_VM_COMPILER
 #define _DALVIK_VM_COMPILER
@@ -56,6 +57,7 @@ typedef struct CompilerWorkOrder {
     WorkOrderKind kind;
     void* info;
     JitTranslationInfo result;
+    jmp_buf *bailPtr;
 } CompilerWorkOrder;
 
 /* Chain cell for predicted method invocation */
@@ -152,7 +154,7 @@ bool dvmCompilerWorkEnqueue(const u2* pc, WorkOrderKind kind, void* info);
 void *dvmCheckCodeCache(void *method);
 bool dvmCompileMethod(const Method *method, JitTranslationInfo *info);
 bool dvmCompileTrace(JitTraceDescription *trace, int numMaxInsts,
-                     JitTranslationInfo *info);
+                     JitTranslationInfo *info, jmp_buf *bailPtr);
 void dvmCompilerDumpStats(void);
 void dvmCompilerDrainQueue(void);
 void dvmJitUnchainAll(void);
@@ -185,5 +187,4 @@ void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
 void dvmCompilerStateRefresh(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
-
 #endif /* _DALVIK_VM_COMPILER */

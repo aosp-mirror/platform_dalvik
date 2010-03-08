@@ -157,6 +157,7 @@ typedef struct CompilationUnit {
     LIR *chainingCellBottom;
     struct RegisterPool *regPool;
     int optRound;                       // round number to tell an LIR's age
+    jmp_buf *bailPtr;
     JitInstructionSetType instructionSet;
     /* Number of total regs used in the whole cUnit after SSA transformation */
     int numSSARegs;
@@ -194,6 +195,8 @@ void dvmCompilerAppendLIR(CompilationUnit *cUnit, LIR *lir);
 void dvmCompilerInsertLIRBefore(LIR *currentLIR, LIR *newLIR);
 
 void dvmCompilerInsertLIRAfter(LIR *currentLIR, LIR *newLIR);
+
+void dvmCompilerAbort(CompilationUnit *cUnit);
 
 /* Debug Utilities */
 void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit);
