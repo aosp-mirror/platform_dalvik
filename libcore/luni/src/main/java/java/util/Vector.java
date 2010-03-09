@@ -23,20 +23,18 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 
 /**
- * Vector is a variable size contiguous indexable array of objects. The size of
- * the vector is the number of objects it contains. The capacity of the vector
- * is the number of objects it can hold.
- * <p>
- * Objects may be inserted at any position up to the size of the vector, thus
- * increasing the size of the vector. Objects at any position in the vector may
- * be removed, thus shrinking the size of the Vector. Objects at any position in
- * the Vector may be replaced, which does not affect the vector's size.
- * <p>
- * The capacity of a vector may be specified when the vector is created. If the
- * capacity of the vector is exceeded, the capacity is increased (doubled by
- * default).
- *
- * @see java.lang.StringBuffer
+ * Vector is an implementation of {@link List}, backed by an array and synchronized.
+ * All optional operations including adding, removing, and replacing elements are supported.
+ * 
+ * <p>All elements are permitted, including null.
+ * 
+ * <p>This class is equivalent to {@link ArrayList} with synchronized operations. This has a
+ * performance cost, and the synchronization is not necessarily meaningful to your application:
+ * synchronizing each call to {@code get}, for example, is not equivalent to synchronizing on the
+ * list and iterating over it (which is probably what you intended). If you do need very highly
+ * concurrent access, you should also consider {@link CopyOnWriteArrayList}.
+ * 
+ * @param <E> The element type of this list.
  */
 public class Vector<E> extends AbstractList<E> implements List<E>,
         RandomAccess, Cloneable, Serializable {

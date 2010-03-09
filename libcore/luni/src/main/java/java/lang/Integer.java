@@ -610,15 +610,20 @@ public final class Integer extends Number implements Comparable<Integer> {
     }
 
     /**
-     * Converts the specified integer into a string representation based on the
+     * Converts the specified signed integer into a string representation based on the
      * specified radix. The returned string is a concatenation of a minus sign
      * if the number is negative and characters from '0' to '9' and 'a' to 'z',
      * depending on the radix. If {@code radix} is not in the interval defined
      * by {@code Character.MIN_RADIX} and {@code Character.MAX_RADIX} then 10 is
      * used as the base for the conversion.
+     * 
+     * <p>This method treats its argument as signed. If you want to convert an
+     * unsigned value to one of the common non-decimal bases, you may find
+     * {@link #toBinaryString}, {@code #toHexString}, or {@link #toOctalString}
+     * more convenient.
      *
      * @param i
-     *            the integer to convert.
+     *            the signed integer to convert.
      * @param radix
      *            the base to use for the conversion.
      * @return the string representation of {@code i}.

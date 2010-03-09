@@ -29,10 +29,18 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 
 /**
- * ArrayList is an implementation of {@link List}, backed by an array. All
- * optional operations adding, removing, and replacing are supported. The
- * elements can be any objects.
- *
+ * ArrayList is an implementation of {@link List}, backed by an array.
+ * All optional operations including adding, removing, and replacing elements are supported.
+ * 
+ * <p>All elements are permitted, including null.
+ * 
+ * <p>This class is a good choice as your default {@code List} implementation.
+ * {@link Vector} synchronizes all operations, but not necessarily in a way that's
+ * meaningful to your application: synchronizing each call to {@code get}, for example, is not
+ * equivalent to synchronizing the list and iterating over it (which is probably what you intended).
+ * {@link java.util.concurrent.CopyOnWriteArrayList} is intended for the special case of very high
+ * concurrency, frequent traversals, and very rare mutations.
+ * 
  * @param <E> The element type of this list.
  * @since 1.2
  */

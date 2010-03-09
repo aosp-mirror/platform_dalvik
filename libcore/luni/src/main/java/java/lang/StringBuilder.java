@@ -24,20 +24,21 @@ import java.io.Serializable;
 
 /**
  * A modifiable {@link CharSequence sequence of characters} for use in creating
- * and modifying Strings. This class is intended as a direct replacement of
+ * strings. This class is intended as a direct replacement of
  * {@link StringBuffer} for non-concurrent use; unlike {@code StringBuffer} this
- * class is not synchronized for thread safety.
- * <p>
- * The majority of the modification methods on this class return {@code
- * StringBuilder}, so that, like {@code StringBuffer}s, they can be used in
- * chaining method calls together. For example, {@code new StringBuilder("One
- * should ").append("always strive ").append("to achieve Harmony")}.
+ * class is not synchronized.
+ * 
+ * <p>For particularly complex string-building needs, consider {@link java.util.Formatter}.
+ * 
+ * <p>The majority of the modification methods on this class return {@code
+ * this} so that method calls can be chained together. For example:
+ * {@code new StringBuilder("a").append("b").append("c").toString()}.
  * 
  * @see CharSequence
  * @see Appendable
  * @see StringBuffer
  * @see String
- * 
+ * @see String.format
  * @since 1.5
  */
 public final class StringBuilder extends AbstractStringBuilder implements

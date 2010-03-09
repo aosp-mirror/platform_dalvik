@@ -22,28 +22,28 @@
 package java.util;
 
 /**
- * LinkedHashMap is a variant of HashMap. Its entries are kept in a
- * doubly-linked list. The iteration order is, by default, the order in which
- * keys were inserted. Reinserting an already existing key doesn't change the
- * order. A key is existing if a call to {@code containsKey} would return true.
- * <p>
- * If the three argument constructor is used, and {@code order} is specified as
+ * LinkedHashMap is an implementation of {@link Map} that guarantees iteration order.
+ * All optional operations are supported.
+ * 
+ * <p>All elements are permitted as keys or values, including null.
+ * 
+ * <p>Entries are kept in a doubly-linked list. The iteration order is, by default, the
+ * order in which keys were inserted. Reinserting an already-present key doesn't change the
+ * order. If the three argument constructor is used, and {@code accessOrder} is specified as
  * {@code true}, the iteration will be in the order that entries were accessed.
- * The access order gets affected by put(), get(), putAll() operations, but not
- * by operations on the collection views.
- * <p>
- * Null elements are allowed, and all the optional map operations are supported.
- * <p>
- * <b>Note:</b> The implementation of {@code LinkedHashMap} is not synchronized.
+ * The access order is affected by {@code put}, {@code get}, and {@code putAll} operations,
+ * but not by operations on the collection views.
+ * 
+ * <p>Note: the implementation of {@code LinkedHashMap} is not synchronized.
  * If one thread of several threads accessing an instance modifies the map
  * structurally, access to the map needs to be synchronized. For
  * insertion-ordered instances a structural modification is an operation that
  * removes or adds an entry. Access-ordered instances also are structurally
- * modified by put(), get() and putAll() since these methods change the order of
- * the entries. Changes in the value of an entry are not structural changes.
- * <p>
- * The Iterator that can be created by calling the {@code iterator} method
- * throws a {@code ConcurrentModificationException} if the map is structurally
+ * modified by {@code put}, {@code get}, and {@code putAll} since these methods
+ * change the order of the entries. Changes in the value of an entry are not structural changes.
+ * 
+ * <p>The {@code Iterator} created by calling the {@code iterator} method
+ * may throw a {@code ConcurrentModificationException} if the map is structurally
  * changed while an iterator is used to iterate over the elements. Only the
  * {@code remove} method that is provided by the iterator allows for removal of
  * elements during iteration. It is not possible to guarantee that this

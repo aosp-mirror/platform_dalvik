@@ -233,12 +233,17 @@ public abstract class FloatBuffer extends Buffer implements
     public abstract FloatBuffer duplicate();
 
     /**
-     * Checks whether this float buffer is equal to another object.
-     * <p>
-     * If {@code other} is not a float buffer then {@code false} is returned.
-     * Two float buffers are equal if and only if their remaining floats are
-     * exactly the same. Position, limit, capacity and mark are not considered.
-     *
+     * Checks whether this float buffer is equal to another object. If {@code
+     * other} is not a {@code FloatBuffer} then {@code false} is returned.
+     * 
+     * <p>Two float buffers are equal if their remaining floats are equal.
+     * Position, limit, capacity and mark are not considered.
+     * 
+     * <p>This method considers two floats {@code a} and {@code b} to be equal
+     * if {@code a == b} or if {@code a} and {@code b} are both {@code NaN}.
+     * Unlike {@link Float#equals}, this method considers {@code -0.0} and
+     * {@code +0.0} to be equal.
+     * 
      * @param other
      *            the object to compare with this float buffer.
      * @return {@code true} if this float buffer is equal to {@code other},
@@ -259,7 +264,9 @@ public abstract class FloatBuffer extends Buffer implements
         int otherPosition = otherBuffer.position;
         boolean equalSoFar = true;
         while (equalSoFar && (myPosition < limit)) {
-            equalSoFar = get(myPosition++) == otherBuffer.get(otherPosition++);
+            float a = get(myPosition++);
+            float b = otherBuffer.get(otherPosition++);
+            equalSoFar = a == b || (a != a && b != b);
         }
 
         return equalSoFar;

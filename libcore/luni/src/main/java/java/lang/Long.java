@@ -583,15 +583,20 @@ public final class Long extends Number implements Comparable<Long> {
     }
 
     /**
-     * Converts the specified long value into a string representation based on
+     * Converts the specified signed long value into a string representation based on
      * the specified radix. The returned string is a concatenation of a minus
      * sign if the number is negative and characters from '0' to '9' and 'a' to
      * 'z', depending on the radix. If {@code radix} is not in the interval
      * defined by {@code Character.MIN_RADIX} and {@code Character.MAX_RADIX}
      * then 10 is used as the base for the conversion.
+     * 
+     * <p>This method treats its argument as signed. If you want to convert an
+     * unsigned value to one of the common non-decimal bases, you may find
+     * {@link #toBinaryString}, {@code #toHexString}, or {@link #toOctalString}
+     * more convenient.
      *
      * @param v
-     *            the long to convert.
+     *            the signed long to convert.
      * @param radix
      *            the base to use for the conversion.
      * @return the string representation of {@code v}.

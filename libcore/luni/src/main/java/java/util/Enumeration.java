@@ -18,15 +18,19 @@
 package java.util;
 
 /**
- * An Enumeration is used to sequence over a collection of objects.
- * <p>
- * Preferably an {@link Iterator} should be used. {@code Iterator} replaces the
+ * A legacy iteration interface.
+ * 
+ * <p>New code should use {@link Iterator} instead. {@code Iterator} replaces the
  * enumeration interface and adds a way to remove elements from a collection.
- *
- * @see Hashtable
- * @see Properties
- * @see Vector
+ * 
+ * <p>If you <i>have</i> an {@code Enumeration} and want a {@code Collection}, you
+ * can use {@link Collections#list} to get a {@code List}.
+ * 
+ * <p>If you <i>need</i> an {@code Enumeration} for a legacy API and have a
+ * {@code Collection}, you can use {@link Collections#enumeration}.
+ * 
  * @version 1.0
+ * @see Iterator
  */
 public interface Enumeration<E> {
 
