@@ -267,16 +267,11 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
     clazz = obj->clazz;
 
     if (clazz == NULL) {
-        /* This object was probably just allocated and hasn't been
-         * initialized yet.  Add an instance entry to make a note of
-         * it;  there's not much else that we can do.
+        /* This object will bother HprofReader, because it has a NULL
+         * class, so just don't dump it. It could be
+         * gDvm.unlinkedJavaLangClass or it could be an object just
+         * allocated which hasn't been initialized yet.
          */
-        hprofAddU1ToRecord(rec, HPROF_INSTANCE_DUMP);
-
-        hprofAddIdToRecord(rec, (hprof_object_id)obj);
-        hprofAddU4ToRecord(rec, stackTraceSerialNumber(obj));
-        hprofAddIdToRecord(rec, (hprof_class_object_id)clazz);  // NULL
-        hprofAddIdToRecord(rec, 0);    // no instance data
     } else if (clazz == gDvm.unlinkedJavaLangClass) {
         /* obj is a ClassObject that hasn't been linked yet.
          */
