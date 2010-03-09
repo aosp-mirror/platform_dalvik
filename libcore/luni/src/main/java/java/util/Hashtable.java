@@ -29,22 +29,15 @@ import java.io.ObjectStreamField;
 import java.io.Serializable;
 
 /**
- * Hashtable associates keys with values. Both keys and values cannot be null.
- * The size of the Hashtable is the number of key/value pairs it contains. The
- * capacity is the number of key/value pairs the Hashtable can hold. The load
- * factor is a float value which determines how full the Hashtable gets before
- * expanding the capacity. If the load factor of the Hashtable is exceeded, the
- * capacity is doubled.
- *
+ * Hashtable is a synchronized implementation of {@link Map}. All optional operations are supported.
+ * 
+ * <p>Neither keys nor values can be null. (Use {@code HashMap} or {@code LinkedHashMap} if you
+ * need null keys or values.)
+ * 
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
- *
- * @see Enumeration
- * @see java.io.Serializable
- * @see java.lang.Object#equals
- * @see java.lang.Object#hashCode
+ * @see HashMap
  */
-
 public class Hashtable<K, V> extends Dictionary<K, V>
         implements Map<K, V>, Cloneable, Serializable {
     /**
@@ -70,7 +63,7 @@ public class Hashtable<K, V> extends Dictionary<K, V>
     /**
      * The default load factor. Note that this implementation ignores the
      * load factor, but cannot do away with it entirely because it's
-     * metioned in the API.
+     * mentioned in the API.
      *
      * <p>Note that this constant has no impact on the behavior of the program,
      * but it is emitted as part of the serialized form. The load factor of
@@ -166,7 +159,7 @@ public class Hashtable<K, V> extends Dictionary<K, V>
 
         /*
          * Note that this implementation ignores loadFactor; it always uses
-         * a load facator of 3/4. This simplifies the code and generally
+         * a load factor of 3/4. This simplifies the code and generally
          * improves performance.
          */
     }
@@ -185,7 +178,7 @@ public class Hashtable<K, V> extends Dictionary<K, V>
 
     /**
      * Inserts all of the elements of map into this Hashtable in a manner
-     * suitable for use by constructors and pseudocostructors (i.e., clone,
+     * suitable for use by constructors and pseudo-constructors (i.e., clone,
      * readObject).
      */
     private void constructorPutAll(Map<? extends K, ? extends V> map) {
@@ -665,7 +658,7 @@ public class Hashtable<K, V> extends Dictionary<K, V>
     /**
      * Note: technically the methods of this class should synchronize the
      * backing map.  However, this would require them to have a reference
-     * to it, which would cause consiserable bloat.  Moreover, the RI
+     * to it, which would cause considerable bloat.  Moreover, the RI
      * behaves the same way.
      */
     private static class HashtableEntry<K, V> implements Entry<K, V> {

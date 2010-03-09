@@ -233,12 +233,17 @@ public abstract class DoubleBuffer extends Buffer implements
     public abstract DoubleBuffer duplicate();
 
     /**
-     * Checks whether this double buffer is equal to another object.
-     * <p>
-     * If {@code other} is not a double buffer then {@code false} is returned.
-     * Two double buffers are equal if and only if their remaining doubles are
-     * exactly the same. Position, limit, capacity and mark are not considered.
-     *
+     * Checks whether this double buffer is equal to another object. If {@code
+     * other} is not a {@code DoubleBuffer} then {@code false} is returned.
+     * 
+     * <p>Two double buffers are equal if their remaining doubles are equal.
+     * Position, limit, capacity and mark are not considered.
+     * 
+     * <p>This method considers two doubles {@code a} and {@code b} to be equal
+     * if {@code a == b} or if {@code a} and {@code b} are both {@code NaN}.
+     * Unlike {@link Double#equals}, this method considers {@code -0.0} and
+     * {@code +0.0} to be equal.
+     * 
      * @param other
      *            the object to compare with this double buffer.
      * @return {@code true} if this double buffer is equal to {@code other},
@@ -259,7 +264,9 @@ public abstract class DoubleBuffer extends Buffer implements
         int otherPosition = otherBuffer.position;
         boolean equalSoFar = true;
         while (equalSoFar && (myPosition < limit)) {
-            equalSoFar = get(myPosition++) == otherBuffer.get(otherPosition++);
+            double a = get(myPosition++);
+            double b = otherBuffer.get(otherPosition++);
+            equalSoFar = a == b || (a != a && b != b);
         }
 
         return equalSoFar;

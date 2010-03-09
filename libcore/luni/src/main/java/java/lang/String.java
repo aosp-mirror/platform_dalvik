@@ -2192,8 +2192,16 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Returns a formatted string, using the supplied format and arguments,
-     * using the default locale.
+     * Returns a localized formatted string, using the supplied format and arguments,
+     * using the user's default locale.
+     * 
+     * <p>Note that this method can be dangerous: the user's default locale may
+     * not be the locale you tested in, and this may have unexpected effects on
+     * the output. In particular, floating point numbers may be output with
+     * ',' instead of '.' as the decimal separator if that's what the user's
+     * locale dictates. If you're formatting a string other than for human
+     * consumption, you should use {@link #format(Locale,String,Object...}) and
+     * supply {@code Locale.US}.
      * 
      * @param format
      *            a format string.

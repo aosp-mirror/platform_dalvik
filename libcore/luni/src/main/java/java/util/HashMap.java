@@ -29,14 +29,31 @@ import java.io.ObjectStreamField;
 import java.io.Serializable;
 
 /**
- * HashMap is an implementation of Map. All optional operations (adding and
- * removing) are supported. Keys and values can be any objects.
- *
+ * HashMap is an implementation of {@link Map}. All optional operations are supported.
+ * 
+ * <p>All elements are permitted as keys or values, including null.
+ * 
+ * <p>Note that the iteration order for HashMap is non-deterministic. If you want
+ * deterministic iteration, use {@link LinkedHashMap}.
+ * 
+ * <p>Note: the implementation of {@code HashMap} is not synchronized.
+ * If one thread of several threads accessing an instance modifies the map
+ * structurally, access to the map needs to be synchronized. A structural
+ * modification is an operation that adds or removes an entry. Changes in
+ * the value of an entry are not structural changes.
+ * 
+ * <p>The {@code Iterator} created by calling the {@code iterator} method
+ * may throw a {@code ConcurrentModificationException} if the map is structurally
+ * changed while an iterator is used to iterate over the elements. Only the
+ * {@code remove} method that is provided by the iterator allows for removal of
+ * elements during iteration. It is not possible to guarantee that this
+ * mechanism works in all cases of unsynchronized concurrent modification. It
+ * should only be used for debugging purposes.
+ * 
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
-public class HashMap<K, V> extends AbstractMap<K, V>
-        implements Cloneable, Serializable {
+public class HashMap<K, V> extends AbstractMap<K, V> implements Cloneable, Serializable {
     /**
      * Min capacity (other than zero) for a HashMap. Must be a power of two
      * greater than 1 (and less than 1 << 30).
@@ -60,7 +77,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     /**
      * The default load factor. Note that this implementation ignores the
      * load factor, but cannot do away with it entirely because it's
-     * metioned in the API.
+     * mentioned in the API.
      *
      * <p>Note that this constant has no impact on the behavior of the program,
      * but it is emitted as part of the serialized form. The load factor of
@@ -165,7 +182,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
 
         /*
          * Note that this implementation ignores loadFactor; it always uses
-         * a load facator of 3/4. This simplifies the code and generally
+         * a load factor of 3/4. This simplifies the code and generally
          * improves performance.
          */
     }
@@ -184,7 +201,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
 
     /**
      * Inserts all of the elements of map into this HashMap in a manner
-     * suitable for use by constructors and pseudocostructors (i.e., clone,
+     * suitable for use by constructors and pseudo-constructors (i.e., clone,
      * readObject). Also used by LinkedHashMap.
      */
     final void constructorPutAll(Map<? extends K, ? extends V> map) {
@@ -239,7 +256,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     /**
      * This method is called from the pseudo-constructors (clone and readObject)
      * prior to invoking constructorPut/constructorPutAll, which invoke the
-     * overriden constructorNewEntry method. Normally it is a VERY bad idea to
+     * overridden constructorNewEntry method. Normally it is a VERY bad idea to
      * invoke an overridden method from a pseudo-constructor (Effective Java
      * Item 17). In this cases it is unavoidable, and the init method provides a
      * workaround.
@@ -411,7 +428,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
-     * Give LinkedHashMap a chance to take action when we modify an exisitng
+     * Give LinkedHashMap a chance to take action when we modify an existing
      * entry.
      *
      * @param e the entry we're about to modify.
@@ -879,7 +896,7 @@ public class HashMap<K, V> extends AbstractMap<K, V>
         return o1 == o2 || (o1 != null && o1.equals(o2));
     }
 
-    // Subclass (LinkedHashMap) overrrides these for correct iteration order
+    // Subclass (LinkedHashMap) overrides these for correct iteration order
     Iterator<K> newKeyIterator() { return new KeyIterator();   }
     Iterator<V> newValueIterator() { return new ValueIterator(); }
     Iterator<Entry<K, V>> newEntryIterator() { return new EntryIterator(); }
