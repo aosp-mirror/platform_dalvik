@@ -46,7 +46,7 @@ public final class DOMImplementationImpl implements DOMImplementation {
 
     public DocumentType createDocumentType(String qualifiedName,
             String publicId, String systemId) throws DOMException {
-        return new DocumentTypeImpl(this, qualifiedName, publicId, systemId);
+        return new DocumentTypeImpl(null, qualifiedName, publicId, systemId);
     }
 
     public boolean hasFeature(String feature, String version) {

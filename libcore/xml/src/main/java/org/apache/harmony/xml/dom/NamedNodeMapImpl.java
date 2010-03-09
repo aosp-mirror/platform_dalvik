@@ -121,7 +121,7 @@ public class NamedNodeMapImpl implements NamedNodeMap {
         
         // All nodes in the map must belong to the same document.
         if (list.size() != 0) {
-            Document document = list.get(0).getOwnerDocument();
+            Document document = list.get(0).document;
 
             if (document != null && arg.getOwnerDocument() != document) {
                 throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, null);
@@ -151,7 +151,7 @@ public class NamedNodeMapImpl implements NamedNodeMap {
         
         // All nodes in the map must belong to the same document.
         if (list.size() != 0) {
-            Document document = list.get(0).getOwnerDocument();
+            Document document = list.get(0).document;
 
             if (document != null && arg.getOwnerDocument() != document) {
                 throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, null);
