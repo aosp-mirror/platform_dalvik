@@ -24,10 +24,16 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 
 /**
- * LinkedList is an implementation of List, backed by a linked list. All
- * optional operations (adding, removing and replacing) are supported. The
- * elements can be any objects.
- *
+ * LinkedList is an implementation of {@link List}, backed by a doubly-linked list.
+ * All optional operations including adding, removing, and replacing elements are supported.
+ * 
+ * <p>All elements are permitted, including null.
+ * 
+ * <p>This class is primarily useful if you need queue-like behavior. It may also be useful
+ * as a list if you expect your lists to contain zero or one element, but still require the
+ * ability to scale to slightly larger numbers of elements. In general, though, you should
+ * probably use {@link ArrayList} if you don't need the queue-like behavior.
+ * 
  * @since 1.2
  */
 public class LinkedList<E> extends AbstractSequentialList<E> implements

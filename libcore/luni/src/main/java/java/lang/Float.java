@@ -144,10 +144,13 @@ public final class Float extends Number implements Comparable<Float> {
     }
 
     /**
-     * Compares this instance with the specified object and indicates if they
-     * are equal. In order to be equal, {@code object} must be an instance of
-     * {@code Float} and have the same float value as this object.
-     *
+     * Tests this double for equality with {@code object}.
+     * To be equal, {@code object} must be an instance of {@code Float} and
+     * {@code floatToIntBits} must give the same value for both objects.
+     * 
+     * <p>Note that, unlike {@code ==}, {@code -0.0} and {@code +0.0} compare
+     * unequal, and {@code NaN}s compare equal by this method.
+     * 
      * @param object
      *            the object to compare this float with.
      * @return {@code true} if the specified object is equal to this

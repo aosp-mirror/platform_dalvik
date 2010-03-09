@@ -24,21 +24,22 @@ import java.io.ObjectStreamField;
 import java.io.Serializable;
 
 /**
- * StringBuffer is a variable size contiguous indexable array of characters. The
- * length of the StringBuffer is the number of characters it contains. The
- * capacity of the StringBuffer is the number of characters it can hold.
- * <p>
- * Characters may be inserted at any position up to the length of the
- * StringBuffer, increasing the length of the StringBuffer. Characters at any
- * position in the StringBuffer may be replaced, which does not affect the
- * StringBuffer length.
- * <p>
- * The capacity of a StringBuffer may be specified when the StringBuffer is
- * created. If the capacity of the StringBuffer is exceeded, the capacity is
- * increased.
+ * A modifiable {@link CharSequence sequence of characters} for use in creating
+ * strings, where all accesses are synchronized. This class has mostly been replaced
+ * by {@link StringBuilder} because this synchronization is rarely useful. This
+ * class is mainly used to interact with legacy APIs that expose it.
  * 
- * @see String
+ * <p>For particularly complex string-building needs, consider {@link java.util.Formatter}.
+ * 
+ * <p>The majority of the modification methods on this class return {@code
+ * this} so that method calls can be chained together. For example:
+ * {@code new StringBuffer("a").append("b").append("c").toString()}.
+ * 
+ * @see CharSequence
+ * @see Appendable
  * @see StringBuilder
+ * @see String
+ * @see String.format
  * @since 1.0
  */
 public final class StringBuffer extends AbstractStringBuilder implements
