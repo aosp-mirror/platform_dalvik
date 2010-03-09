@@ -25,6 +25,7 @@ import javax.xml.parsers.DocumentBuilder;
 
 import org.apache.harmony.xml.dom.CDATASectionImpl;
 import org.apache.harmony.xml.dom.DocumentImpl;
+import org.apache.harmony.xml.dom.DocumentTypeImpl;
 import org.apache.harmony.xml.dom.TextImpl;
 import org.kxml2.io.KXmlParser;
 import org.w3c.dom.Attr;
@@ -242,8 +243,8 @@ class DocumentBuilderImpl extends DocumentBuilder {
                     if (sysid != null && sysid.length() >= 2 && sysid.startsWith("\"") && sysid.endsWith("\"")) {
                         sysid = sysid.substring(1, sysid.length() - 1);
                     }
-                    
-                    document.appendChild(dom.createDocumentType(name, pubid, sysid));
+
+                    document.appendChild(new DocumentTypeImpl(document, name, pubid, sysid));
                 }
                 
             } else if (token == XmlPullParser.COMMENT) {

@@ -43,7 +43,7 @@ public abstract class InnerNodeImpl extends LeafNodeImpl {
     // Maintained by LeafNodeImpl and ElementImpl.
     List<LeafNodeImpl> children = new ArrayList<LeafNodeImpl>();
 
-    public InnerNodeImpl(DocumentImpl document) {
+    protected InnerNodeImpl(DocumentImpl document) {
         super(document);
     }
 

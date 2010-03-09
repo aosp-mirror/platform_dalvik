@@ -47,7 +47,7 @@ public class TextImpl extends CharacterDataImpl implements Text {
     }
 
     public final Text splitText(int offset) throws DOMException {
-        Text newText = getOwnerDocument().createTextNode(
+        Text newText = document.createTextNode(
                 substringData(offset, getLength() - offset));
         deleteData(0, offset);
 

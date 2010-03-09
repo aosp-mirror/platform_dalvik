@@ -315,7 +315,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
     public Attr setAttributeNode(Attr newAttr) throws DOMException {
         AttrImpl newAttrImpl = (AttrImpl) newAttr;
         
-        if (newAttrImpl.document != this.getOwnerDocument()) {
+        if (newAttrImpl.document != this.document) {
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, null);
         }
 
@@ -340,7 +340,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
     public Attr setAttributeNodeNS(Attr newAttr) throws DOMException {
         AttrImpl newAttrImpl = (AttrImpl) newAttr;
 
-        if (newAttrImpl.document != this.getOwnerDocument()) {
+        if (newAttrImpl.document != this.document) {
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, null);
         }
 

@@ -31,6 +31,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Notation;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
+import org.w3c.dom.UserDataHandler;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -44,7 +45,11 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import static org.w3c.dom.UserDataHandler.NODE_CLONED;
 
 /**
  * Construct a DOM and then interrogate it.
@@ -87,6 +92,7 @@ public class DomTest extends TestCase {
     private Element name;
     private Attr standard;
     private Attr deluxe;
+    private Text waffles;
     private Element description;
     private Text descriptionText1;
     private CDATASection descriptionText2;
@@ -128,6 +134,7 @@ public class DomTest extends TestCase {
         name = (Element) item.getChildNodes().item(1);
         standard = name.getAttributeNode("a:standard");
         deluxe = name.getAttributeNode("deluxe");
+        waffles = (Text) name.getChildNodes().item(0);
         description = (Element) item.getChildNodes().item(3);
         descriptionText1 = (Text) description.getChildNodes().item(0);
         descriptionText2 = (CDATASection) description.getChildNodes().item(1);
@@ -153,7 +160,7 @@ public class DomTest extends TestCase {
         }
 
         allNodes.addAll(Arrays.asList(document, doctype, menu, item, itemXmlns,
-                itemXmlnsA, name, standard, deluxe, description,
+                itemXmlnsA, name, standard, deluxe, waffles, description,
                 descriptionText1, descriptionText2, descriptionText3, option1,
                 option2, option2Reference, wafflemaker, nutrition, vitamins,
                 vitaminsXmlnsA, comment, vitaminc, vitamincText));
@@ -738,6 +745,87 @@ public class DomTest extends TestCase {
         assertNull(vitamincText.replaceWholeText(""));
         String expected = original.replaceFirst(">.*</a:vitaminc>", "/>");
         assertEquals(expected, domToString(document));
+    }
+
+    public void testUserDataAttachments() {
+        Object a = new Object();
+        Object b = new Object();
+        for (Node node : allNodes) {
+            node.setUserData("a", a, null);
+            node.setUserData("b", b, null);
+        }
+        for (Node node : allNodes) {
+            assertSame(a, node.getUserData("a"));
+            assertSame(b, node.getUserData("b"));
+            assertEquals(null, node.getUserData("c"));
+            assertEquals(null, node.getUserData("A"));
+        }
+    }
+
+    public void testUserDataRejectsNullKey() {
+        try {
+            menu.setUserData(null, "apple", null);
+            fail();
+        } catch (NullPointerException e) {
+        }
+        try {
+            menu.getUserData(null);
+            fail();
+        } catch (NullPointerException e) {
+        }
+    }
+
+    /**
+     * A shallow clone requires cloning the attributes but not the child nodes.
+     */
+    public void testUserDataHandlerNotifiedOfShallowClones() {
+        RecordingHandler handler = new RecordingHandler();
+        name.setUserData("a", "apple", handler);
+        name.setUserData("b", "banana", handler);
+        standard.setUserData("c", "cat", handler);
+        waffles.setUserData("d", "dog", handler);
+
+        Element clonedName = (Element) name.cloneNode(false);
+        Attr clonedStandard = clonedName.getAttributeNode("a:standard");
+
+        Set<String> expected = new HashSet<String>();
+        expected.add(notification(NODE_CLONED, "a", "apple", name, clonedName));
+        expected.add(notification(NODE_CLONED, "b", "banana", name, clonedName));
+        expected.add(notification(NODE_CLONED, "c", "cat", standard, clonedStandard));
+        assertEquals(expected, handler.calls);
+    }
+
+    /**
+     * A deep clone requires cloning both the attributes and the child nodes.
+     */
+    public void testUserDataHandlerNotifiedOfDeepClones() {
+        RecordingHandler handler = new RecordingHandler();
+        name.setUserData("a", "apple", handler);
+        name.setUserData("b", "banana", handler);
+        standard.setUserData("c", "cat", handler);
+        waffles.setUserData("d", "dog", handler);
+
+        Element clonedName = (Element) name.cloneNode(true);
+        Attr clonedStandard = clonedName.getAttributeNode("a:standard");
+        Text clonedWaffles = (Text) clonedName.getChildNodes().item(0);
+
+        Set<String> expected = new HashSet<String>();
+        expected.add(notification(NODE_CLONED, "a", "apple", name, clonedName));
+        expected.add(notification(NODE_CLONED, "b", "banana", name, clonedName));
+        expected.add(notification(NODE_CLONED, "c", "cat", standard, clonedStandard));
+        expected.add(notification(NODE_CLONED, "d", "dog", waffles, clonedWaffles));
+        assertEquals(expected, handler.calls);
+    }
+
+    private class RecordingHandler implements UserDataHandler {
+        final Set<String> calls = new HashSet<String>();
+        public void handle(short operation, String key, Object data, Node src, Node dst) {
+            calls.add(notification(operation, key, data, src, dst));
+        }
+    }
+
+    private String notification(short operation, String key, Object data, Node src, Node dst) {
+        return "op:" + operation + " key:" + key + " data:" + data + " src:" + src + " dst:" + dst;
     }
 
     private String domToString(Document document) throws TransformerException {

@@ -33,6 +33,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
+import org.w3c.dom.UserDataHandler;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Provides a straightforward implementation of the corresponding W3C DOM
@@ -60,14 +66,26 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
     private boolean xmlStandalone = false;
     private boolean strictErrorChecking = true;
 
+    /**
+     * A lazily initialized map of user data values for this document's own
+     * nodes. The map is weak because the document may live longer than its
+     * nodes.
+     *
+     * <p>Attaching user data directly to the corresponding node would cost a
+     * field per node. Under the assumption that user data is rarely needed, we
+     * attach user data to the document to save those fields. Xerces also takes
+     * this approach.
+     */
+    private WeakHashMap<Node, Map<String, UserData>> nodeToUserData;
+
     public DocumentImpl(DOMImplementationImpl impl, String namespaceURI,
             String qualifiedName, DocumentType doctype, String inputEncoding) {
         super(null);
 
         this.domImplementation = impl;
         this.inputEncoding = inputEncoding;
-        // this.document = this;
-        
+        this.document = this;
+
         if (doctype != null) {
             appendChild(doctype);
         }
@@ -113,8 +131,6 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
      * @return The new node.
      */
     Node cloneNode(Node node, boolean deep) throws DOMException {
-        // TODO: callback the UserDataHandler with a NODE_CLONED event
-
         Node target;
         
         switch (node.getNodeType()) {
@@ -191,10 +207,12 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
                 target.appendChild(child);
             }
         }
-        
+
+        notifyUserDataHandlers(UserDataHandler.NODE_CLONED, node, target);
+
         return target;
     }
-    
+
     public AttrImpl createAttribute(String name) throws DOMException {
         return new AttrImpl(this, name);
     }
@@ -381,5 +399,49 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
             throws DOMException {
         // TODO: callback the UserDataHandler with a NODE_RENAMED event
         throw new UnsupportedOperationException(); // TODO
+    }
+
+    /**
+     * Returns a map with the user data objects attached to the specified node.
+     * This map is readable and writable.
+     */
+    Map<String, UserData> getUserDataMap(Node node) {
+        if (nodeToUserData == null) {
+            nodeToUserData = new WeakHashMap<Node, Map<String, UserData>>();
+        }
+        Map<String, UserData> userDataMap = nodeToUserData.get(node);
+        if (userDataMap == null) {
+            userDataMap = new HashMap<String, UserData>();
+            nodeToUserData.put(node, userDataMap);
+        }
+        return userDataMap;
+    }
+
+    /**
+     * Returns a map with the user data objects attached to the specified node.
+     * The returned map may be read-only.
+     */
+    Map<String, UserData> getUserDataMapForRead(Node node) {
+        if (nodeToUserData == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, UserData> userDataMap = nodeToUserData.get(node);
+        return userDataMap == null
+                ? Collections.<String, UserData>emptyMap()
+                : userDataMap;
+    }
+
+    /**
+     * Calls {@link UserDataHandler#handle} on each of the source node's
+     * value/handler pairs.
+     */
+    private void notifyUserDataHandlers(short operation, Node src, Node dst) {
+        for (Map.Entry<String, UserData> entry : getUserDataMapForRead(src).entrySet()) {
+            UserData userData = entry.getValue();
+            if (userData.handler != null) {
+                userData.handler.handle(
+                        operation, entry.getKey(), userData.value, src, dst);
+            }
+        }
     }
 }

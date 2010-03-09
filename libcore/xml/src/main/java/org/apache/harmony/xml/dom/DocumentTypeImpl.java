@@ -31,7 +31,7 @@ import org.w3c.dom.Node;
  * the DOM implementation can easily access them while maintaining the DOM tree
  * structure.
  */
-public class DocumentTypeImpl extends LeafNodeImpl implements DocumentType {
+public final class DocumentTypeImpl extends LeafNodeImpl implements DocumentType {
 
     private String qualifiedName;
 
@@ -39,9 +39,9 @@ public class DocumentTypeImpl extends LeafNodeImpl implements DocumentType {
 
     private String systemId;
 
-    DocumentTypeImpl(DOMImplementationImpl impl, String qualifiedName,
+    public DocumentTypeImpl(DocumentImpl document, String qualifiedName,
             String publicId, String systemId) {
-        super(null);
+        super(document);
 
         if (qualifiedName == null || "".equals(qualifiedName)) {
             throw new DOMException(DOMException.NAMESPACE_ERR, qualifiedName);
