@@ -778,71 +778,86 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
  */
 void dvmLockObject(Thread* self, Object *obj)
 {
-    volatile u4 *thinp = &obj->lock;
-    u4 hashState;
-    u4 thin;
-    u4 threadId = self->threadId;
+    volatile u4 *thinp;
     Monitor *mon;
+    ThreadStatus oldStatus;
+    useconds_t sleepDelay;
+    const useconds_t maxSleepDelay = 1 << 20;
+    u4 thin, newThin, threadId;
 
-    /* First, try to grab the lock as if it's thin;
-     * this is the common case and will usually succeed.
-     */
-    hashState = LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
-    thin = threadId << LW_LOCK_OWNER_SHIFT;
-    thin |= hashState;
-    if (!ATOMIC_CMP_SWAP((int32_t *)thinp,
-                         hashState,
-                         (int32_t)thin)) {
-        /* The lock is either a thin lock held by someone (possibly 'self'),
-         * or a fat lock.
+    assert(self != NULL);
+    assert(obj != NULL);
+    threadId = self->threadId;
+    thinp = &obj->lock;
+retry:
+    thin = *thinp;
+    if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
+        /*
+         * The lock is a thin lock.  The owner field is used to
+         * determine the acquire method, ordered by cost.
          */
-        if (LW_LOCK_OWNER(*thinp) == threadId) {
-            /* 'self' is already holding the thin lock; we can just
-             * bump the count.  Atomic operations are not necessary
-             * because only the thread holding the lock is allowed
-             * to modify the Lock field.
+        if (LW_LOCK_OWNER(thin) == threadId) {
+            /*
+             * The calling thread owns the lock.  Increment the
+             * value of the recursion count field.
              */
-            *thinp += 1 << LW_LOCK_COUNT_SHIFT;
+            obj->lock += 1 << LW_LOCK_COUNT_SHIFT;
+        } else if (LW_LOCK_OWNER(thin) == 0) {
+            /*
+             * The lock is unowned.  Install the thread id of the
+             * calling thread into the owner field.  This is the
+             * common case.  In performance critical code the JIT
+             * will have tried this before calling out to the VM.
+             */
+            newThin = thin | (threadId << LW_LOCK_OWNER_SHIFT);
+            if (!ATOMIC_CMP_SWAP((int32_t *)thinp, thin, newThin)) {
+                /*
+                 * The acquire failed.  Try again.
+                 */
+                goto retry;
+            }
         } else {
-            /* If this is a thin lock we need to spin on it, if it's fat
-             * we need to acquire the monitor.
+            LOG_THIN("(%d) spin on lock %p: %#x (%#x) %#x",
+                     threadId, &obj->lock, 0, *thinp, thin);
+            /*
+             * The lock is owned by another thread.  Notify the VM
+             * that we are about to wait.
              */
-            if (LW_SHAPE(*thinp) == LW_SHAPE_THIN) {
-                ThreadStatus oldStatus;
-                static const unsigned long maxSleepDelay = 1 * 1024 * 1024;
-                unsigned long sleepDelay;
-
-                LOG_THIN("(%d) spin on lock 0x%08x: 0x%08x (0x%08x) 0x%08x\n",
-                         threadId, (uint)&obj->lock,
-                         hashState, *thinp, thin);
-
-                /* The lock is still thin, but some other thread is
-                 * holding it.  Let the VM know that we're about
-                 * to wait on another thread.
+            oldStatus = dvmChangeStatus(self, THREAD_MONITOR);
+            /*
+             * Spin until the thin lock is released or inflated.
+             */
+            sleepDelay = 0;
+            for (;;) {
+                thin = *thinp;
+                /*
+                 * Check the shape of the lock word.  Another thread
+                 * may have inflated the lock while we were waiting.
                  */
-                oldStatus = dvmChangeStatus(self, THREAD_MONITOR);
-
-                /* Spin until the other thread lets go.
-                 */
-                sleepDelay = 0;
-                do {
-                    /* In addition to looking for an unlock,
-                     * we need to watch out for some other thread
-                     * fattening the lock behind our back.
-                     */
-                    while (LW_LOCK_OWNER(*thinp) != 0) {
-                        if (LW_SHAPE(*thinp) == LW_SHAPE_FAT) {
-                            /* The lock has been fattened already.
+                if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
+                    if (LW_LOCK_OWNER(thin) == 0) {
+                        /*
+                         * The lock has been released.  Install the
+                         * thread id of the calling thread into the
+                         * owner field.
+                         */
+                        newThin = thin | (threadId << LW_LOCK_OWNER_SHIFT);
+                        if (ATOMIC_CMP_SWAP((int32_t *)thinp,
+                                            thin, newThin)) {
+                            /*
+                             * The acquire succeed.  Break out of the
+                             * loop and proceed to inflate the lock.
                              */
-                            LOG_THIN("(%d) lock 0x%08x surprise-fattened\n",
-                                     threadId, (uint)&obj->lock);
-                            dvmChangeStatus(self, oldStatus);
-                            goto fat_lock;
+                            break;
                         }
-
+                    } else {
+                        /*
+                         * The lock has not been released.  Yield so
+                         * the owning thread can run.
+                         */
                         if (sleepDelay == 0) {
                             sched_yield();
-                            sleepDelay = 1 * 1000;
+                            sleepDelay = 1000;
                         } else {
                             usleep(sleepDelay);
                             if (sleepDelay < maxSleepDelay / 2) {
@@ -850,46 +865,44 @@ void dvmLockObject(Thread* self, Object *obj)
                             }
                         }
                     }
-                    hashState = LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
-                    thin = threadId << LW_LOCK_OWNER_SHIFT;
-                    thin |= hashState;
-                } while (!ATOMIC_CMP_SWAP((int32_t *)thinp,
-                                          (int32_t)hashState,
-                                          (int32_t)thin));
-                LOG_THIN("(%d) spin on lock done 0x%08x: "
-                         "0x%08x (0x%08x) 0x%08x\n",
-                         threadId, (uint)&obj->lock,
-                         hashState, *thinp, thin);
-
-                /* We've got the thin lock; let the VM know that we're
-                 * done waiting.
-                 */
-                dvmChangeStatus(self, oldStatus);
-
-                /* Fatten the lock.  Note this relinquishes ownership.
-                 * We could also create the monitor in an "owned" state
-                 * to avoid "re-locking" it in fat_lock.
-                 */
-                mon = dvmCreateMonitor(obj);
-                hashState = LW_HASH_STATE(*thinp) << LW_HASH_STATE_SHIFT;
-                obj->lock = (u4)mon | hashState | LW_SHAPE_FAT;
-                LOG_THIN("(%d) lock 0x%08x fattened\n",
-                         threadId, (uint)&obj->lock);
-
-                /* Fall through to acquire the newly fat lock.
-                 */
+                } else {
+                    /*
+                     * The thin lock was inflated by another thread.
+                     * Let the VM know we are no longer waiting and
+                     * try again.
+                     */
+                    LOG_THIN("(%d) lock %p surprise-fattened",
+                             threadId, &obj->lock);
+                    dvmChangeStatus(self, oldStatus);
+                    goto retry;
+                }
             }
-
-            /* The lock is already fat, which means
-             * that obj->lock is a regular (Monitor *).
+            LOG_THIN("(%d) spin on lock done %p: %#x (%#x) %#x",
+                     threadId, &obj->lock, 0, *thinp, thin);
+            /*
+             * We have acquired the thin lock.  Let the VM know that
+             * we are no longer waiting.
              */
-        fat_lock:
-            assert(LW_MONITOR(obj->lock) != NULL);
-            lockMonitor(self, LW_MONITOR(obj->lock));
+            dvmChangeStatus(self, oldStatus);
+            /*
+             * Fatten the lock.
+             */
+            mon = dvmCreateMonitor(obj);
+            lockMonitor(self, mon);
+            thin = *thinp;
+            thin &= LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT;
+            thin |= (u4)mon | LW_SHAPE_FAT;
+            MEM_BARRIER();
+            obj->lock = thin;
+            LOG_THIN("(%d) lock %p fattened", threadId, &obj->lock);
         }
+    } else {
+        /*
+         * The lock is a fat lock.
+         */
+        assert(LW_MONITOR(obj->lock) != NULL);
+        lockMonitor(self, LW_MONITOR(obj->lock));
     }
-    // else, the lock was acquired with the ATOMIC_CMP_SWAP().
-
 #ifdef WITH_DEADLOCK_PREDICTION
     /*
      * See if we were allowed to grab the lock at this time.  We do it
@@ -949,19 +962,16 @@ void dvmLockObject(Thread* self, Object *obj)
  */
 bool dvmUnlockObject(Thread* self, Object *obj)
 {
-    volatile u4 *thinp;
     u4 thin;
 
     assert(self != NULL);
     assert(self->status == THREAD_RUNNING);
     assert(obj != NULL);
-
-    thinp = &obj->lock;
     /*
      * Cache the lock word as its value can change while we are
      * examining its state.
      */
-    thin = *thinp;
+    thin = obj->lock;
     if (LW_SHAPE(thin) == LW_SHAPE_THIN) {
         /*
          * The lock is thin.  We must ensure that the lock is owned
@@ -978,13 +988,13 @@ bool dvmUnlockObject(Thread* self, Object *obj)
                  * case.  Unlock by clearing all bits except for the
                  * hash state.
                  */
-                *thinp &= (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
+                obj->lock &= (LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT);
             } else {
                 /*
                  * The object was recursively acquired.  Decrement the
                  * lock recursion count field.
                  */
-                *thinp -= 1 << LW_LOCK_COUNT_SHIFT;
+                obj->lock -= 1 << LW_LOCK_COUNT_SHIFT;
             }
         } else {
             /*
@@ -1058,9 +1068,10 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
 
         /* Make the monitor public now that it's in the right state.
          */
+        thin &= LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT;
+        thin |= (u4)mon | LW_SHAPE_FAT;
         MEM_BARRIER();
-        hashState = LW_HASH_STATE(thin) << LW_HASH_STATE_SHIFT;
-        obj->lock = (u4)mon | hashState | LW_SHAPE_FAT;
+        obj->lock = thin;
     }
 
     waitMonitor(self, mon, msec, nsec, interruptShouldThrow);
