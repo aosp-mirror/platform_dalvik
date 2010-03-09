@@ -27,8 +27,10 @@ import java.io.Serializable;
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.harmony.luni.net.NetUtil;
@@ -114,40 +116,12 @@ public class InetAddress implements Serializable {
         super();
     }
 
-    // BEGIN android-removed
-    /**
-     * Constructs an {@code InetAddress}, representing the {@code address} and
-     * {@code hostName}.
-     *
-     * @param address
-     *            the network address.
-     */
-    // InetAddress(byte[] address) {
-    //     super();
-    //     this.ipaddress = address;
-    // }
+    // BEGIN android-removed: use Inet4Address/Inet6Address instead, as appropriate.
+    // InetAddress(byte[] address) { ... }
     // END android-removed
 
-    // BEGIN android-removed
-    /**
-     * Constructs an {@code InetAddress}, representing the {@code address} and
-     * {@code hostName}.
-     *
-     * @param address
-     *            the network address.
-     *
-     */
-    // InetAddress(byte[] address, String hostName) {
-    //     super();
-    //     this.ipaddress = address;
-    //     this.hostName = hostName;
-    // }
-    // END android-removed
-
-    // BEGIN android-removed
-    // CacheElement cacheElement() {
-    //     return new CacheElement();
-    // }
+    // BEGIN android-removed: use Inet4Address/Inet6Address instead, as appropriate.
+    // InetAddress(byte[] address, String hostName) { ... }
     // END android-removed
 
     /**
@@ -744,7 +718,7 @@ public class InetAddress implements Serializable {
      * ICMP <i>(ICMP ECHO REQUEST)</i>. When first step fails, a TCP connection
      * on port 7 (Echo) of the remote host is established.
      *
-     * @param netif
+     * @param networkInterface
      *            the network interface on which to connection should be
      *            established.
      * @param ttl
@@ -759,36 +733,16 @@ public class InetAddress implements Serializable {
      * @throws IllegalArgumentException
      *             if ttl or timeout is less than zero.
      */
-    public boolean isReachable(NetworkInterface netif, final int ttl,
+    public boolean isReachable(NetworkInterface networkInterface, final int ttl,
             final int timeout) throws IOException {
-        if (0 > ttl || 0 > timeout) {
+        if (ttl < 0 || timeout < 0) {
             throw new IllegalArgumentException(Msg.getString("K0051")); //$NON-NLS-1$
         }
-        boolean reachable = false;
-        if (null == netif) {
-            // network interface is null, binds to no address
-            // BEGIN android-changed
-            // reachable = NETIMPL.isReachableByICMP(this, null, ttl, timeout);
-            // if (!reachable) {
-                reachable = isReachableByTCP(this, null, timeout);
-            // }
-            // END android-changed
+        if (networkInterface == null) {
+            return isReachableByTCP(this, null, timeout);
         } else {
-            // Not Bind to any address
-            if (null == netif.addresses) {
-                return false;
-            }
-            // binds to all address on this NetworkInterface, tries ICMP ping
-            // first
-            // BEGIN android-changed
-            // reachable = isReachableByICMPUseMultiThread(netif, ttl, timeout);
-            // if (!reachable) {
-                // tries TCP echo if ICMP ping fails
-                reachable = isReachableByMultiThread(netif, ttl, timeout);
-            // }
-            // END adnroid-changed
+            return isReachableByMultiThread(networkInterface, ttl, timeout);
         }
-        return reachable;
     }
 
     /*
@@ -800,16 +754,14 @@ public class InetAddress implements Serializable {
             final int ttl, final int timeout)
     // END android-changed
             throws IOException {
-        if (null == netif.addresses) {
+        List<InetAddress> addresses = Collections.list(netif.getInetAddresses());
+        if (addresses.isEmpty()) {
             return false;
         }
-        Enumeration<InetAddress> addresses = netif.getInetAddresses();
         reached = false;
-        addrCount = netif.addresses.length;
+        addrCount = addresses.size();
         boolean needWait = false;
-        while (addresses.hasMoreElements()) {
-            final InetAddress addr = addresses.nextElement();
-
+        for (final InetAddress addr : addresses) {
             // loopback interface can only reach to local addresses
             if (addr.isLoopbackAddress()) {
                 Enumeration<NetworkInterface> NetworkInterfaces = NetworkInterface

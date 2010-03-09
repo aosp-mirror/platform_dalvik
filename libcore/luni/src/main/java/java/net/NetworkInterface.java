@@ -17,9 +17,12 @@
 
 package java.net;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -37,48 +40,44 @@ public final class NetworkInterface extends Object {
     private static final int CHECK_CONNECT_NO_PORT = -1;
 
     static final int NO_INTERFACE_INDEX = 0;
-
     static final int UNSET_INTERFACE_INDEX = -1;
 
-    private String name;
+    private final String name;
+    private final String displayName;
+    private final List<InterfaceAddress> interfaceAddresses = new LinkedList<InterfaceAddress>();
 
-    private String displayName;
-
-    InetAddress addresses[];
+    private final List<InetAddress> addresses = new LinkedList<InetAddress>();
 
     // The interface index is a positive integer which is non-negative. Where
     // value is zero then we do not have an index for the interface (which
     // occurs in systems which only support IPV4)
     private int interfaceIndex;
 
-    private int hashCode;
+    private NetworkInterface parent = null;
+
+    private final List<NetworkInterface> children = new LinkedList<NetworkInterface>();
 
     // BEGIN android-changed: we pay this extra complexity on the Java side
     // in return for vastly simpler native code.
-    private static native InterfaceAddress[] getInterfaceAddresses() throws SocketException;
+    private static native InterfaceAddress[] getAllInterfaceAddressesImpl() throws SocketException;
 
     private static NetworkInterface[] getNetworkInterfacesImpl() throws SocketException {
         Map<String, NetworkInterface> networkInterfaces = new LinkedHashMap<String, NetworkInterface>();
-        for (InterfaceAddress ia : getInterfaceAddresses()) {
+        for (InterfaceAddress ia : getAllInterfaceAddressesImpl()) {
             if (ia != null) { // The array may contain harmless null elements.
                 String name = ia.name;
                 NetworkInterface ni = networkInterfaces.get(name);
                 if (ni == null) {
                     ni = new NetworkInterface(name, name, new InetAddress[] { ia.address }, ia.index);
+                    ni.interfaceAddresses.add(ia);
                     networkInterfaces.put(name, ni);
                 } else {
-                    ni.addInterfaceAddress(ia.address);
+                    ni.addresses.add(ia.address);
+                    ni.interfaceAddresses.add(ia);
                 }
             }
         }
         return networkInterfaces.values().toArray(new NetworkInterface[networkInterfaces.size()]);
-    }
-
-    private void addInterfaceAddress(InetAddress address) {
-        InetAddress[] newAddresses = new InetAddress[addresses.length + 1];
-        System.arraycopy(addresses, 0, newAddresses, 0, addresses.length);
-        newAddresses[addresses.length] = address;
-        addresses = newAddresses;
     }
     // END android-changed
 
@@ -96,12 +95,16 @@ public final class NetworkInterface extends Object {
      *            an index for the interface. Only set for platforms that
      *            support IPV6.
      */
-    NetworkInterface(String name, String displayName, InetAddress addresses[],
+    NetworkInterface(String name, String displayName, InetAddress[] addresses,
             int interfaceIndex) {
         this.name = name;
         this.displayName = displayName;
-        this.addresses = addresses;
         this.interfaceIndex = interfaceIndex;
+        if (addresses != null) {
+            for (InetAddress address : addresses) {
+                this.addresses.add(address);
+            }
+        }
     }
 
     /**
@@ -122,8 +125,8 @@ public final class NetworkInterface extends Object {
      * @return the first address if one exists, otherwise null.
      */
     InetAddress getFirstAddress() {
-        if ((addresses != null) && (addresses.length >= 1)) {
-            return addresses[0];
+        if (addresses.size() >= 1) {
+            return addresses.get(0);
         }
         return null;
     }
@@ -143,63 +146,21 @@ public final class NetworkInterface extends Object {
      * @return the address list of the represented network interface.
      */
     public Enumeration<InetAddress> getInetAddresses() {
-        /*
-         * create new vector from which Enumeration to be returned can be
-         * generated set the initial capacity to be the number of addresses for
-         * the network interface which is the maximum required size
-         */
-
-        /*
-         * return an empty enumeration if there are no addresses associated with
-         * the interface
-         */
-        if (addresses == null) {
-            return new Vector<InetAddress>(0).elements();
+        SecurityManager sm = System.getSecurityManager();
+        if (sm == null || addresses.isEmpty()) {
+            return Collections.enumeration(addresses);
         }
-
-        /*
-         * for those configuration that support the security manager we only
-         * return addresses for which checkConnect returns true
-         */
-        Vector<InetAddress> accessibleAddresses = new Vector<InetAddress>(
-                addresses.length);
-
-        /*
-         * get the security manager. If one does not exist just return the full
-         * list
-         */
-        SecurityManager security = System.getSecurityManager();
-        if (security == null) {
-            return (new Vector<InetAddress>(Arrays.asList(addresses)))
-                    .elements();
-        }
-
-        /*
-         * ok security manager exists so check each address and return those
-         * that pass
-         */
-        for (InetAddress element : addresses) {
-            if (security != null) {
-                try {
-                    /*
-                     * since we don't have a port in this case we pass in
-                     * NO_PORT
-                     */
-                    security.checkConnect(element.getHostName(),
-                            CHECK_CONNECT_NO_PORT);
-                    accessibleAddresses.add(element);
-                } catch (SecurityException e) {
-                }
+        // TODO: Android should ditch SecurityManager and the associated pollution.
+        List<InetAddress> result = new ArrayList<InetAddress>(addresses.size());
+        for (InetAddress address : addresses) {
+            try {
+                sm.checkConnect(address.getHostName(), CHECK_CONNECT_NO_PORT);
+            } catch (SecurityException e) {
+                continue;
             }
+            result.add(address);
         }
-
-        Enumeration<InetAddress> theAccessibleElements = accessibleAddresses
-                .elements();
-        if (theAccessibleElements.hasMoreElements()) {
-            return accessibleAddresses.elements();
-        }
-
-        return new Vector<InetAddress>(0).elements();
+        return Collections.enumeration(result);
     }
 
     /**
@@ -232,24 +193,13 @@ public final class NetworkInterface extends Object {
      * @throws NullPointerException
      *             if the given interface's name is {@code null}.
      */
-    public static NetworkInterface getByName(String interfaceName)
-            throws SocketException {
-
+    public static NetworkInterface getByName(String interfaceName) throws SocketException {
         if (interfaceName == null) {
             throw new NullPointerException(Msg.getString("K0330")); //$NON-NLS-1$
         }
-
-        /*
-         * get the list of interfaces, and then loop through the list to look
-         * for one with a matching name
-         */
-        Enumeration<NetworkInterface> interfaces = getNetworkInterfaces();
-        if (interfaces != null) {
-            while (interfaces.hasMoreElements()) {
-                NetworkInterface netif = interfaces.nextElement();
-                if (netif.getName().equals(interfaceName)) {
-                    return netif;
-                }
+        for (NetworkInterface networkInterface : getNetworkInterfacesList()) {
+            if (networkInterface.name.equals(interfaceName)) {
+                return networkInterface;
             }
         }
         return null;
@@ -268,38 +218,13 @@ public final class NetworkInterface extends Object {
      * @throws NullPointerException
      *             if the given interface address is invalid.
      */
-    public static NetworkInterface getByInetAddress(InetAddress address)
-            throws SocketException {
-
+    public static NetworkInterface getByInetAddress(InetAddress address) throws SocketException {
         if (address == null) {
             throw new NullPointerException(Msg.getString("K0331")); //$NON-NLS-1$
         }
-
-        /*
-         * get the list of interfaces, and then loop through the list. For each
-         * interface loop through the associated set of internet addresses and
-         * see if one matches. If so return that network interface
-         */
-        Enumeration<NetworkInterface> interfaces = getNetworkInterfaces();
-        if (interfaces != null) {
-            while (interfaces.hasMoreElements()) {
-                NetworkInterface netif = interfaces.nextElement();
-                /*
-                 * to be compatible use the raw addresses without any security
-                 * filtering
-                 */
-                // Enumeration netifAddresses = netif.getInetAddresses();
-                if ((netif.addresses != null) && (netif.addresses.length != 0)) {
-                    Enumeration<InetAddress> netifAddresses = (new Vector<InetAddress>(
-                            Arrays.asList(netif.addresses))).elements();
-                    if (netifAddresses != null) {
-                        while (netifAddresses.hasMoreElements()) {
-                            if (address.equals(netifAddresses.nextElement())) {
-                                return netif;
-                            }
-                        }
-                    }
-                }
+        for (NetworkInterface networkInterface : getNetworkInterfacesList()) {
+            if (networkInterface.addresses.contains(address)) {
+                return networkInterface;
             }
         }
         return null;
@@ -315,32 +240,53 @@ public final class NetworkInterface extends Object {
      *             if an error occurs while getting the network interface
      *             information.
      */
-    public static Enumeration<NetworkInterface> getNetworkInterfaces()
-            throws SocketException {
+    public static Enumeration<NetworkInterface> getNetworkInterfaces() throws SocketException {
+        return Collections.enumeration(getNetworkInterfacesList());
+    }
+
+    private static List<NetworkInterface> getNetworkInterfacesList() throws SocketException {
         NetworkInterface[] interfaces = getNetworkInterfacesImpl();
-        if (interfaces == null) {
-            return null;
-        }
 
         for (NetworkInterface netif : interfaces) {
             // Ensure that current NetworkInterface is bound to at least
             // one InetAddress before processing
-            if (netif.addresses != null) {
-                for (InetAddress addr : netif.addresses) {
-                    if (16 == addr.ipaddress.length) {
-                        if (addr.isLinkLocalAddress()
-                                || addr.isSiteLocalAddress()) {
-                            ((Inet6Address) addr).scopedIf = netif;
-                            ((Inet6Address) addr).ifname = netif.name;
-                            ((Inet6Address) addr).scope_ifname_set = true;
-                        }
+            for (InetAddress addr : netif.addresses) {
+                if (addr.ipaddress.length == 16) {
+                    if (addr.isLinkLocalAddress() || addr.isSiteLocalAddress()) {
+                        ((Inet6Address) addr).scopedIf = netif;
+                        ((Inet6Address) addr).ifname = netif.name;
+                        ((Inet6Address) addr).scope_ifname_set = true;
                     }
                 }
             }
         }
 
-        return (new Vector<NetworkInterface>(Arrays.asList(interfaces)))
-                .elements();
+        List<NetworkInterface> result = new ArrayList<NetworkInterface>();
+        boolean[] peeked = new boolean[interfaces.length];
+        for (int counter = 0; counter < interfaces.length; counter++) {
+            // If this interface has been touched, continue.
+            if (peeked[counter]) {
+                continue;
+            }
+            int counter2 = counter;
+            // Checks whether the following interfaces are children.
+            for (; counter2 < interfaces.length; counter2++) {
+                if (peeked[counter2]) {
+                    continue;
+                }
+                if (interfaces[counter2].name.startsWith(interfaces[counter].name + ":")) {
+                    // Tagged as peeked
+                    peeked[counter2] = true;
+                    interfaces[counter].children.add(interfaces[counter2]);
+                    interfaces[counter2].parent = interfaces[counter];
+                    interfaces[counter].addresses.addAll(interfaces[counter2].addresses);
+                }
+            }
+            // Tagged as peeked
+            result.add(interfaces[counter]);
+            peeked[counter] = true;
+        }
+        return result;
     }
 
     /**
@@ -357,77 +303,27 @@ public final class NetworkInterface extends Object {
      */
     @Override
     public boolean equals(Object obj) {
-        // Return true if it is the exact same object.
         if (obj == this) {
             return true;
         }
-
-        // Ensure it is the right type.
         if (!(obj instanceof NetworkInterface)) {
             return false;
         }
-
-        /*
-         * Make sure that some simple checks pass. If the name is not the same
-         * then we are sure it is not the same one. We don't check the hashcode
-         * as it is generated from the name which we check
-         */
-        NetworkInterface netif = (NetworkInterface) obj;
-
-        if (netif.getIndex() != interfaceIndex) {
-            return false;
-        }
-
-        if (!(name.equals("")) && (!netif.getName().equals(name))) { //$NON-NLS-1$
-            return false;
-        }
-
-        if ((name.equals("")) && (!netif.getName().equals(displayName))) { //$NON-NLS-1$
-            return false;
-        }
-
-        // Now check that the collection of internet addresses are equal.
-        Enumeration<InetAddress> netifAddresses = netif.getInetAddresses();
-        Enumeration<InetAddress> localifAddresses = getInetAddresses();
-
-        // Check for both null (same), or one null (not same).
-        if (netifAddresses == null) {
-            return localifAddresses == null;
-        }
-        if (localifAddresses == null) {
-            return false;
-        }
-
-        // Both are not null, check InetAddress elements.
-        while (netifAddresses.hasMoreElements()
-                && localifAddresses.hasMoreElements()) {
-            if (!(localifAddresses.nextElement()).equals(
-                    netifAddresses.nextElement())) {
-                return false;
-            }
-        }
-
-        /*
-         * Now make sure that they had the same number of addresses, if not they
-         * are not the same interface.
-         */
-        return !netifAddresses.hasMoreElements()
-                && !localifAddresses.hasMoreElements();
+        NetworkInterface rhs = (NetworkInterface) obj;
+        // TODO: should the order of the addresses matter (we use List.equals)?
+        return interfaceIndex == rhs.interfaceIndex &&
+                name.equals(rhs.name) && displayName.equals(rhs.displayName) &&
+                addresses.equals(rhs.addresses);
     }
 
     /**
-     * Gets the hashcode for this {@code NetworkInterface} instance. Since the
-     * name should be unique for each network interface the hashcode is
+     * Returns the hash code for this {@code NetworkInterface}. Since the
+     * name should be unique for each network interface the hash code is
      * generated using this name.
-     * 
-     * @return the hashcode value for this {@code NetworkInterface} instance.
      */
     @Override
     public int hashCode() {
-        if (hashCode == 0) {
-            hashCode = name.hashCode();
-        }
-        return hashCode;
+        return name.hashCode();
     }
 
     /**
@@ -463,5 +359,175 @@ public final class NetworkInterface extends Object {
             }
         }
         return string.toString();
+    }
+
+    /**
+     * Returns a List the InterfaceAddresses for this network interface.
+     * <p>
+     * If there is a security manager, its checkConnect method is called with
+     * the InetAddress for each InterfaceAddress. Only InterfaceAddresses where
+     * the checkConnect doesn't throw a SecurityException will be returned.
+     * 
+     * @return a List of the InterfaceAddresses for this network interface.
+     * @since 1.6
+     * @hide
+     */
+    public List<InterfaceAddress> getInterfaceAddresses() {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm == null) {
+            return Collections.unmodifiableList(interfaceAddresses);
+        }
+        // TODO: Android should ditch SecurityManager and the associated pollution.
+        List<InterfaceAddress> result = new ArrayList<InterfaceAddress>(interfaceAddresses.size());
+        for (InterfaceAddress ia : interfaceAddresses) {
+            try {
+                sm.checkConnect(ia.getAddress().getHostName(), CHECK_CONNECT_NO_PORT);
+            } catch (SecurityException e) {
+                continue;
+            }
+            result.add(ia);
+        }
+        return result;
+    }
+
+    /**
+     * Returns an {@code Enumeration} of all the sub-interfaces of this network interface.
+     * Sub-interfaces are also known as virtual interfaces.
+     * <p>
+     * For example, {@code eth0:1} would be a sub-interface of {@code eth0}.
+     * 
+     * @return an Enumeration of all the sub-interfaces of this network interface
+     * @since 1.6
+     * @hide
+     */
+    public Enumeration<NetworkInterface> getSubInterfaces() {
+        return Collections.enumeration(children);
+    }
+
+    /**
+     * Returns the parent NetworkInterface of this interface if this is a
+     * sub-interface, or null if it's a physical (non virtual) interface.
+     * 
+     * @return the NetworkInterface this interface is attached to.
+     * @since 1.6
+     * @hide
+     */
+    public NetworkInterface getParent() {
+        return parent;
+    }
+
+    /**
+     * Returns true if this network interface is up.
+     * 
+     * @return true if the interface is up.
+     * @throws SocketException if an I/O error occurs.
+     * @since 1.6
+     * @hide
+     */
+    public boolean isUp() throws SocketException {
+        if (addresses.isEmpty()) {
+            return false;
+        }
+        return isUpImpl(name, interfaceIndex);
+    }
+    private static native boolean isUpImpl(String n, int index) throws SocketException;
+
+    /**
+     * Returns true if this network interface is a loopback interface.
+     * 
+     * @return true if the interface is a loopback interface.
+     * @throws SocketException if an I/O error occurs.
+     * @since 1.6
+     * @hide
+     */
+    public boolean isLoopback() throws SocketException {
+        if (addresses.isEmpty()) {
+            return false;
+        }
+        return isLoopbackImpl(name, interfaceIndex);
+    }
+    private static native boolean isLoopbackImpl(String n, int index) throws SocketException;
+
+    /**
+     * Returns true if this network interface is a point-to-point interface.
+     * (For example, a PPP connection using a modem.)
+     * 
+     * @return true if the interface is point-to-point.
+     * @throws SocketException if an I/O error occurs.
+     * @since 1.6
+     * @hide
+     */
+    public boolean isPointToPoint() throws SocketException {
+        if (addresses.isEmpty()) {
+            return false;
+        }
+        return isPointToPointImpl(name, interfaceIndex);
+    }
+    private static native boolean isPointToPointImpl(String n, int index) throws SocketException;
+
+    /**
+     * Returns true if this network interface supports multicast.
+     * 
+     * @throws SocketException if an I/O error occurs.
+     * @since 1.6
+     * @hide
+     */
+    public boolean supportsMulticast() throws SocketException {
+        if (addresses.isEmpty()) {
+            return false;
+        }
+        return supportsMulticastImpl(name, interfaceIndex);
+    }
+    private static native boolean supportsMulticastImpl(String n, int index) throws SocketException;
+
+    /**
+     * Returns the hardware address of the interface, if it has one, and the
+     * user has the necessary privileges to access the address.
+     * 
+     * @return a byte array containing the address or null if the address
+     *         doesn't exist or is not accessible.
+     * @throws SocketException if an I/O error occurs.
+     * @since 1.6
+     * @hide
+     */
+    public byte[] getHardwareAddress() throws SocketException {
+        if (addresses.isEmpty()) {
+            return new byte[0];
+        }
+        return getHardwareAddressImpl(name, interfaceIndex);
+    }
+    private static native byte[] getHardwareAddressImpl(String n, int index) throws SocketException;
+
+    /**
+     * Returns the Maximum Transmission Unit (MTU) of this interface.
+     * 
+     * @return the value of the MTU for the interface.
+     * @throws SocketException if an I/O error occurs.
+     * @since 1.6
+     * @hide
+     */
+    public int getMTU() throws SocketException {
+        if (addresses.isEmpty()) {
+            return 0;
+        }
+        return getMTUImpl(name, interfaceIndex);
+    }
+    private static native int getMTUImpl(String n, int index) throws SocketException;
+
+    /**
+     * Returns true if this interface is a virtual interface (also called
+     * a sub-interface). Virtual interfaces are, on some systems, interfaces
+     * created as a child of a physical interface and given different settings
+     * (like address or MTU). Usually the name of the interface will the name of
+     * the parent followed by a colon (:) and a number identifying the child,
+     * since there can be several virtual interfaces attached to a single
+     * physical interface.
+     * 
+     * @return true if this interface is a virtual interface.
+     * @since 1.6
+     * @hide
+     */
+    public boolean isVirtual() {
+        return parent != null;
     }
 }

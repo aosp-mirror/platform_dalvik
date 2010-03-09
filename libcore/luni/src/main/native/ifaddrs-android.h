@@ -17,8 +17,13 @@
 #ifndef IFADDRS_ANDROID_H_included
 #define IFADDRS_ANDROID_H_included
 
+#include <arpa/inet.h>
 #include <cstring>
+#include <errno.h>
+#include <net/if.h>
+#include <netinet/in.h>
 #include <new>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -43,11 +48,14 @@ struct ifaddrs {
     // Interface flags.
     unsigned int ifa_flags;
 
-    // Interface address.
+    // Interface network address.
     sockaddr* ifa_addr;
 
+    // Interface netmask.
+    sockaddr* ifa_netmask;
+
     ifaddrs(ifaddrs* next)
-    : ifa_next(next), ifa_name(NULL), ifa_flags(0), ifa_addr(NULL)
+    : ifa_next(next), ifa_name(NULL), ifa_flags(0), ifa_addr(NULL), ifa_netmask(NULL)
     {
     }
 
@@ -55,6 +63,7 @@ struct ifaddrs {
         delete ifa_next;
         delete[] ifa_name;
         delete ifa_addr;
+        delete ifa_netmask;
     }
 
     // Sadly, we can't keep the interface index for portability with BSD.
@@ -91,16 +100,41 @@ struct ifaddrs {
     // stitch the two bits together into the sockaddr that's part of
     // our portable interface.
     void setAddress(int family, void* data, size_t byteCount) {
+        // Set the address proper...
         sockaddr_storage* ss = new sockaddr_storage;
-        ss->ss_family = family;
-        if (family == AF_INET) {
-            void* dst = &reinterpret_cast<sockaddr_in*>(ss)->sin_addr;
-            memcpy(dst, data, byteCount);
-        } else if (family == AF_INET6) {
-            void* dst = &reinterpret_cast<sockaddr_in6*>(ss)->sin6_addr;
-            memcpy(dst, data, byteCount);
-        }
+        memset(ss, 0, sizeof(*ss));
         ifa_addr = reinterpret_cast<sockaddr*>(ss);
+        ss->ss_family = family;
+        uint8_t* dst = sockaddrBytes(family, ss);
+        memcpy(dst, data, byteCount);
+    }
+
+    // Netlink gives us the prefix length as a bit count. We need to turn
+    // that into a BSD-compatible netmask represented by a sockaddr*.
+    void setNetmask(int family, size_t prefixLength) {
+        // ...and work out the netmask from the prefix length.
+        sockaddr_storage* ss = new sockaddr_storage;
+        memset(ss, 0, sizeof(*ss));
+        ifa_netmask = reinterpret_cast<sockaddr*>(ss);
+        ss->ss_family = family;
+        uint8_t* dst = sockaddrBytes(family, ss);
+        memset(dst, 0xff, prefixLength / 8);
+        if ((prefixLength % 8) != 0) {
+            dst[prefixLength/8] = (0xff << (8 - (prefixLength % 8)));
+        }
+    }
+
+    // Returns a pointer to the first byte in the address data (which is
+    // stored in network byte order).
+    uint8_t* sockaddrBytes(int family, sockaddr_storage* ss) {
+        if (family == AF_INET) {
+            sockaddr_in* ss4 = reinterpret_cast<sockaddr_in*>(ss);
+            return reinterpret_cast<uint8_t*>(&ss4->sin_addr);
+        } else if (family == AF_INET6) {
+            sockaddr_in6* ss6 = reinterpret_cast<sockaddr_in6*>(ss);
+            return reinterpret_cast<uint8_t*>(&ss6->sin6_addr);
+        }
+        return NULL;
     }
 };
 
@@ -167,6 +201,7 @@ inline int getifaddrs(ifaddrs** result) {
                                     return -1;
                                 }
                                 (*result)->setAddress(family, RTA_DATA(rta), RTA_PAYLOAD(rta));
+                                (*result)->setNetmask(family, address->ifa_prefixlen);
                             }
                         }
                         rta = RTA_NEXT(rta, ifaPayloadLength);
