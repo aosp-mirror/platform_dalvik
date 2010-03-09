@@ -61,13 +61,7 @@ public class ServerSocket {
     }
 
     /**
-     * Unspecified constructor.
-     *
-     * Warning: this function is technically part of API#1.
-     * Hiding it for API#2 broke source compatibility.
-     * Removing it entirely would theoretically break binary compatibility,
-     *     and would be better done with some visibility over the extent
-     *     of the compatibility breakage (expected to be non-existent).
+     * Unspecified constructor needed by ServerSocketChannelImpl.ServerSocketAdapter.
      *
      * @hide
      */
