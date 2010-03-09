@@ -18,6 +18,7 @@
 #include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 #include "jni.h"
+#include "ScopedFd.h"
 
 #include <errno.h>
 #include <netinet/in.h>
