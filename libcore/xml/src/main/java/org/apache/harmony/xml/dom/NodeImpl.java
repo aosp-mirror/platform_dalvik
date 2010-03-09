@@ -29,6 +29,7 @@ import org.w3c.dom.UserDataHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A straightforward implementation of the corresponding W3C DOM node.
@@ -45,7 +46,6 @@ public abstract class NodeImpl implements Node {
 
     private static final NodeList EMPTY_LIST = new NodeListImpl();
     
-    // Maintained by InnerNodeImpl and ElementImpl.
     DocumentImpl document;
 
     NodeImpl(DocumentImpl document) {
@@ -98,8 +98,8 @@ public abstract class NodeImpl implements Node {
         return null;
     }
 
-    public Document getOwnerDocument() {
-        return document;
+    public final Document getOwnerDocument() {
+        return document == this ? null : document;
     }
 
     public Node getParentNode() {
@@ -308,7 +308,7 @@ public abstract class NodeImpl implements Node {
                 }
                 // create a text node to hold the given content
                 if (textContent != null && textContent.length() != 0) {
-                    appendChild(getOwnerDocument().createTextNode(textContent));
+                    appendChild(document.createTextNode(textContent));
                 }
                 return;
 
@@ -585,12 +585,32 @@ public abstract class NodeImpl implements Node {
         return isSupported(feature, version) ? this : null;
     }
 
-    public Object setUserData(String key, Object data,
-            UserDataHandler handler) {
-        throw new UnsupportedOperationException(); // TODO
+    public final Object setUserData(String key, Object data, UserDataHandler handler) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        Map<String, UserData> map = document.getUserDataMap(this);
+        UserData previous = data == null
+                ? map.remove(key)
+                : map.put(key, new UserData(data, handler));
+        return previous != null ? previous.value : null;
     }
 
-    public Object getUserData(String key) {
-        throw new UnsupportedOperationException(); // TODO
+    public final Object getUserData(String key) {
+        if (key == null) {
+            throw new NullPointerException();
+        }
+        Map<String, UserData> map = document.getUserDataMapForRead(this);
+        UserData userData = map.get(key);
+        return userData != null ? userData.value : null;
+    }
+
+    static class UserData {
+        final Object value;
+        final UserDataHandler handler;
+        UserData(Object value, UserDataHandler handler) {
+            this.value = value;
+            this.handler = handler;
+        }
     }
 }
