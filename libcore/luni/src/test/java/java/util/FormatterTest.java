@@ -16,6 +16,7 @@
 
 package java.util;
 
+import java.math.BigDecimal;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 

@@ -156,11 +156,7 @@ class BigInt
     }
 
     public void putDecString(String str) {
-        if (str == null) throw new NullPointerException();
-        if (str.length() == 0) {
-            // math.12=Zero length BigInteger
-            throw new NumberFormatException(Messages.getString("math.12")); //$NON-NLS-1$
-        }
+        checkString(str, 10);
         this.makeValid();
         int usedLen = NativeBN.BN_dec2bn(this.bignum, str);
         Check((usedLen > 0));
@@ -170,16 +166,37 @@ class BigInt
     }
 
     public void putHexString(String str) {
-        if (str == null) throw new NullPointerException();
-        if (str.length() == 0) {
-            // math.12=Zero length BigInteger
-            throw new NumberFormatException(Messages.getString("math.12")); //$NON-NLS-1$
-        }
+        checkString(str, 16);
         this.makeValid();
         int usedLen = NativeBN.BN_hex2bn(this.bignum, str);
         Check((usedLen > 0));
         if (usedLen < str.length()) {
             throw new NumberFormatException(str);
+        }
+    }
+
+    /**
+     * Throws if 's' doesn't match Java's rules for valid BigInteger strings.
+     * BN_dec2bn and BN_hex2bn do very little checking, so we need to manually
+     * ensure we comply with Java's rules.
+     * http://code.google.com/p/android/issues/detail?id=7036
+     */
+    public void checkString(String s, int radix) {
+        if (s == null) {
+            throw new NullPointerException();
+        }
+        // A valid big integer consists of an optional '-' followed by
+        // one or more digit characters appropriate to the given radix,
+        // and no other characters.
+        final int charCount = s.length();
+        int i = (charCount > 0 && s.charAt(0) == '-') ? 1 : 0;
+        if (charCount - i == 0) {
+            throw new NumberFormatException(s);
+        }
+        for (; i < charCount; ++i) {
+            if (Character.digit(s.charAt(i), radix) == -1) {
+                throw new NumberFormatException(s);
+            }
         }
     }
 
