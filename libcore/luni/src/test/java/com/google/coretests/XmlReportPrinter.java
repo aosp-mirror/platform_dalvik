@@ -225,7 +225,7 @@ public class XmlReportPrinter {
                 serializer.attribute(ns, ATTR_MESSAGE, t.getMessage());
             }
             serializer.attribute(ns, ATTR_TYPE, t.getClass().getName());
-            serializer.text(BaseTestRunner.getFilteredTrace(t));
+            serializer.text(sanitize(BaseTestRunner.getFilteredTrace(t)));
             serializer.endTag(ns, type);
 
             serializer.endTag(ns, TESTCASE);
@@ -245,6 +245,13 @@ public class XmlReportPrinter {
 
         @Override public int hashCode() {
             return name.hashCode() ^ className.hashCode();
+        }
+
+        /**
+         * Returns the text in a format that is safe for use in an XML document.
+         */
+        private static String sanitize(String text) {
+            return text.replace("\0", "<\\0>");
         }
     }
 }
