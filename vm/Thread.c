@@ -30,8 +30,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <cutils/sched_policy.h>
-
 #if defined(HAVE_PRCTL)
 #include <sys/prctl.h>
 #endif
@@ -2490,9 +2488,6 @@ static void dumpWedgedThread(Thread* thread)
     //abort();
 }
 
-/* "change flags" values for next two functions */
-enum { kChangedPriority = 0x01, kChangedPolicy = 0x02 };
-
 /*
  * If the thread is running at below-normal priority, temporarily elevate
  * it to "normal".
@@ -2501,7 +2496,7 @@ enum { kChangedPriority = 0x01, kChangedPolicy = 0x02 };
  * indicating what was changed, storing the previous values in the
  * provided locations.
  */
-static int raiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
+int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
     SchedPolicy* pSavedThreadPolicy)
 {
     errno = 0;
@@ -2554,7 +2549,7 @@ static int raiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
 /*
  * Reset the priority values for the thread in question.
  */
-static void resetThreadPriority(Thread* thread, int changeFlags,
+void dvmResetThreadPriority(Thread* thread, int changeFlags,
     int savedThreadPrio, SchedPolicy savedThreadPolicy)
 {
     if ((changeFlags & kChangedPolicy) != 0) {
@@ -2632,7 +2627,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
              */
             if (retryCount == 2) {
                 assert(thread->systemTid != 0);
-                priChangeFlags = raiseThreadPriorityIfNeeded(thread,
+                priChangeFlags = dvmRaiseThreadPriorityIfNeeded(thread,
                     &savedThreadPrio, &savedThreadPolicy);
             }
         }
@@ -2687,7 +2682,7 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
         //dvmDumpThread(thread, false);   /* suspended, so dump is safe */
     }
     if (priChangeFlags != 0) {
-        resetThreadPriority(thread, priChangeFlags, savedThreadPrio,
+        dvmResetThreadPriority(thread, priChangeFlags, savedThreadPrio,
             savedThreadPolicy);
     }
 }
@@ -3156,6 +3151,27 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj)
     }
 
     return (Thread*) vmData;
+}
+
+/*
+ * Given a pthread handle, return the associated Thread*.
+ * Caller must NOT hold the thread list lock.
+ *
+ * Returns NULL if the thread was not found.
+ */
+Thread* dvmGetThreadByHandle(pthread_t handle)
+{
+    dvmLockThreadList(NULL);
+    Thread* thread = gDvm.threadList;
+    while (thread != NULL) {
+        if (thread->handle == handle)
+            break;
+
+        thread = thread->next;
+    }
+    dvmUnlockThreadList();
+
+    return thread;
 }
 
 

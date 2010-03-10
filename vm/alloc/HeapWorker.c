@@ -145,8 +145,29 @@ void dvmAssertHeapWorkerThreadRunning()
              * watchdog and just reset the timer.
              */
             LOGI("Debugger is attached -- suppressing HeapWorker watchdog\n");
-            heapWorkerInterpStartTime = now;        /* reset timer */
+            gDvm.gcHeap->heapWorkerInterpStartTime = now;   /* reset timer */
         } else if (delta > HEAP_WORKER_WATCHDOG_TIMEOUT) {
+            /*
+             * Before we give up entirely, see if maybe we're just not
+             * getting any CPU time because we're stuck in a background
+             * process group.  If we successfully move the thread into the
+             * foreground we'll just leave it there (it doesn't do anything
+             * if the process isn't GCing).
+             */
+            Thread* thread = dvmGetThreadByHandle(gDvm.heapWorkerHandle);
+            if (thread != NULL) {
+                int priChangeFlags, threadPrio;
+                SchedPolicy threadPolicy;
+                priChangeFlags = dvmRaiseThreadPriorityIfNeeded(thread,
+                        &threadPrio, &threadPolicy);
+                if (priChangeFlags != 0) {
+                    LOGI("HeapWorker watchdog expired, raising priority"
+                         " and retrying\n");
+                    gDvm.gcHeap->heapWorkerInterpStartTime = now;
+                    return;
+                }
+            }
+
             char* desc = dexProtoCopyMethodDescriptor(
                     &gDvm.gcHeap->heapWorkerCurrentMethod->prototype);
             LOGE("HeapWorker is wedged: %lldms spent inside %s.%s%s\n",
