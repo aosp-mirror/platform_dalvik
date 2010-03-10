@@ -32,7 +32,7 @@ import org.w3c.dom.TypeInfo;
  * the DOM implementation can easily access them while maintaining the DOM tree
  * structure.
  */
-public class AttrImpl extends NodeImpl implements Attr {
+public final class AttrImpl extends NodeImpl implements Attr {
 
     // Maintained by ElementImpl.
     ElementImpl ownerElement;

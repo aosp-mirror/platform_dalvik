@@ -56,8 +56,8 @@ public abstract class NodeImpl implements Node {
         throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, null);
     }
 
-    public Node cloneNode(boolean deep) {
-        return document.cloneNode(this, deep);
+    public final Node cloneNode(boolean deep) {
+        return document.cloneOrImportNode(UserDataHandler.NODE_CLONED, this, deep);
     }
 
     public NamedNodeMap getAttributes() {
