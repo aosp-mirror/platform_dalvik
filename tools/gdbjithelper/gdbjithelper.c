@@ -16,6 +16,11 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <malloc.h>
+#include <string.h>
+
+/* Currently debuggerd dumps 20 words each around PC and LR */
+#define NUM_DUMPED_WORDS 20
 
 volatile int done;
 
@@ -63,22 +68,39 @@ int codeLR[] = {
     0x4284aa7a, 0xf927f7b7, 0x40112268, 0x419da7f8,
 };
 
-void dumpCode()
+/* For example: 463ba1e4 & 0xfff */
+#define START_PC_PAGE_OFFSET 0x1e4
+
+/* For example: 463ba1a8 & 0xfff */
+#define START_LR_PAGE_OFFSET 0x1a8
+
+/* Each points to a two-page buffer */
+char *codePCCache, *codeLRCache;
+
+void dumpCode(int *pc, int *lr)
 {
     unsigned int i;
 
-    for (i = 0; i < sizeof(codePC)/sizeof(int); i++) {
-        printf("codePC[%d]: %#x\n", i, codePC[i]);
+    for (i = 0; i < NUM_DUMPED_WORDS; i++) {
+        printf("%p codePC[%d]: %#010x\n", pc + i, i, pc[i]);
     }
 
-    for (i = 0; i < sizeof(codeLR)/sizeof(int); i++) {
-        printf("codeLR[%d]: %#x\n", i, codeLR[i]);
+    for (i = 0; i < NUM_DUMPED_WORDS; i++) {
+        printf("%p codeLR[%d]: %#010x\n", lr + i, i, lr[i]);
     }
 }
 
 int main()
 {
-    dumpCode();
+    codePCCache = memalign(4096, 8192);
+    codeLRCache = memalign(4096, 8192);
+
+    memcpy(codePCCache + START_PC_PAGE_OFFSET, codePC, 4 * NUM_DUMPED_WORDS);
+    memcpy(codeLRCache + START_LR_PAGE_OFFSET, codeLR, 4 * NUM_DUMPED_WORDS);
+
+    dumpCode((int *) (codePCCache + START_PC_PAGE_OFFSET),
+             (int *) (codeLRCache + START_LR_PAGE_OFFSET));
+
     while (!done) {
         sleep(1000);
     }
