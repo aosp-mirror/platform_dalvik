@@ -17,17 +17,14 @@
 package org.apache.harmony.xml.dom;
 
 import org.w3c.dom.Attr;
-import org.w3c.dom.CDATASection;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
-import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
-import org.w3c.dom.EntityReference;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -76,7 +73,7 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
      * attach user data to the document to save those fields. Xerces also takes
      * this approach.
      */
-    private WeakHashMap<Node, Map<String, UserData>> nodeToUserData;
+    private WeakHashMap<NodeImpl, Map<String, UserData>> nodeToUserData;
 
     public DocumentImpl(DOMImplementationImpl impl, String namespaceURI,
             String qualifiedName, DocumentType doctype, String inputEncoding) {
@@ -120,147 +117,232 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         
         return true;
     }
-    
-    /**
-     * Clones a node and (if requested) its children. The source node(s) may
-     * have been created by a different DocumentImpl or even DOM implementation.
-     * 
-     * @param node The node to clone.
-     * @param deep If true, a deep copy is created (including all child nodes).
-     * 
-     * @return The new node.
-     */
-    Node cloneNode(Node node, boolean deep) throws DOMException {
-        Node target;
-        
-        switch (node.getNodeType()) {
-            case Node.ATTRIBUTE_NODE: {
-                Attr source = (Attr)node;
-                target = createAttributeNS(source.getNamespaceURI(), source.getLocalName());
-                target.setPrefix(source.getPrefix());
-                target.setNodeValue(source.getNodeValue());
-                break;
-            }
-            case Node.CDATA_SECTION_NODE: {
-                CharacterData source = (CharacterData)node;
-                target = createCDATASection(source.getData());
-                break;
-            }
-            case Node.COMMENT_NODE: {
-                Comment source = (Comment)node;
-                target = createComment(source.getData());
-                break;
-            }
-            case Node.DOCUMENT_FRAGMENT_NODE: {
-                // Source is irrelevant in this case.
-                target = createDocumentFragment();
-                break;
-            }
-            case Node.DOCUMENT_NODE: {
-                throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Cannot clone a Document node");
-            }
-            case Node.DOCUMENT_TYPE_NODE: {
-                throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Cannot clone a DocumentType node");
-            }
-            case Node.ELEMENT_NODE: {
-                Element source = (Element)node;
-                target = createElementNS(source.getNamespaceURI(), source.getLocalName());
-                target.setPrefix(source.getPrefix());
 
-                NamedNodeMap map = source.getAttributes();
-                for (int i = 0; i < map.getLength(); i++) {
-                    Attr attr = (Attr)map.item(i);
-                    ((Element)target).setAttributeNodeNS((Attr)cloneNode(attr, deep));
+    /**
+     * Returns a shallow copy of the given node. If the node is an element node,
+     * its attributes are always copied.
+     *
+     * @param node a node belonging to any document or DOM implementation.
+     * @param operation the operation type to use when notifying user data
+     *     handlers of copied element attributes. It is the caller's
+     *     responsibility to notify user data handlers of the returned node.
+     * @return a new node whose document is this document and whose DOM
+     *     implementation is this DOM implementation.
+     */
+    private NodeImpl shallowCopy(short operation, Node node) {
+        switch (node.getNodeType()) {
+            case Node.ATTRIBUTE_NODE:
+                Attr attr = (Attr) node;
+                AttrImpl attrCopy = createAttributeNS(attr.getNamespaceURI(), attr.getLocalName());
+                attrCopy.setPrefix(attr.getPrefix());
+                attrCopy.setNodeValue(attr.getNodeValue());
+                return attrCopy;
+
+            case Node.CDATA_SECTION_NODE:
+                return createCDATASection(((CharacterData) node).getData());
+
+            case Node.COMMENT_NODE:
+                return createComment(((Comment) node).getData());
+
+            case Node.DOCUMENT_FRAGMENT_NODE:
+                return createDocumentFragment();
+
+            case Node.DOCUMENT_NODE:
+            case Node.DOCUMENT_TYPE_NODE:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Cannot copy node of type " + node.getNodeType());
+
+            case Node.ELEMENT_NODE:
+                Element element = (Element) node;
+                ElementImpl elementCopy = createElementNS(
+                        element.getNamespaceURI(), element.getLocalName());
+                elementCopy.setPrefix(element.getPrefix());
+                NamedNodeMap attributes = element.getAttributes();
+                for (int i = 0; i < attributes.getLength(); i++) {
+                    Node elementAttr = attributes.item(i);
+                    AttrImpl elementAttrCopy = (AttrImpl) shallowCopy(operation, elementAttr);
+                    notifyUserDataHandlers(operation, elementAttr, elementAttrCopy);
+                    elementCopy.setAttributeNodeNS(elementAttrCopy);
                 }
-                break;
-            }
-            case Node.ENTITY_NODE: {
-                throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Cannot clone an Entity node");
-            }
-            case Node.ENTITY_REFERENCE_NODE: {
-                EntityReference source = (EntityReference)node;
-                target = createEntityReference(source.getNodeName());
-                break;
-            }
-            case Node.NOTATION_NODE: {
-                throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Cannot clone a Notation node");
-            }
-            case Node.PROCESSING_INSTRUCTION_NODE: {
-                ProcessingInstruction source = (ProcessingInstruction)node;
-                target = createProcessingInstruction(source.getTarget(), source.getData());
-                break;
-            }
-            case Node.TEXT_NODE: {
-                Text source = (Text)node;
-                target = createTextNode(source.getData());
-                break;
-            }
-            default: {
-                throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Cannot clone unknown node type " + node.getNodeType() + " (" + node.getClass().getSimpleName() + ")");
-            }
+                return elementCopy;
+
+            case Node.ENTITY_NODE:
+            case Node.NOTATION_NODE:
+                // TODO: implement this when we support these node types
+                throw new UnsupportedOperationException();
+
+            case Node.ENTITY_REFERENCE_NODE:
+                /*
+                 * When we support entities in the doctype, this will need to
+                 * behave differently for clones vs. imports. Clones copy
+                 * entities by value, copying the referenced subtree from the
+                 * original document. Imports copy entities by reference,
+                 * possibly referring to a different subtree in the new
+                 * document.
+                 */
+                return createEntityReference(node.getNodeName());
+
+            case Node.PROCESSING_INSTRUCTION_NODE:
+                ProcessingInstruction pi = (ProcessingInstruction) node;
+                return createProcessingInstruction(pi.getTarget(), pi.getData());
+
+            case Node.TEXT_NODE:
+                return createTextNode(((Text) node).getData());
+
+            default:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Unsupported node type " + node.getNodeType());
         }
+    }
+
+    /**
+     * Returns a copy of the given node or subtree with this document as its
+     * owner.
+     *
+     * @param operation either {@link UserDataHandler#NODE_CLONED} or
+     *      {@link UserDataHandler#NODE_IMPORTED}.
+     * @param node a node belonging to any document or DOM implementation.
+     * @param deep true to recursively copy any child nodes; false to do no such
+     *      copying and return a node with no children.
+     */
+    Node cloneOrImportNode(short operation, Node node, boolean deep) {
+        NodeImpl copy = shallowCopy(operation, node);
 
         if (deep) {
             NodeList list = node.getChildNodes();
             for (int i = 0; i < list.getLength(); i++) {
-                Node child = cloneNode(list.item(i), deep);
-                target.appendChild(child);
+                copy.appendChild(cloneOrImportNode(operation, list.item(i), deep));
             }
         }
 
-        notifyUserDataHandlers(UserDataHandler.NODE_CLONED, node, target);
-
-        return target;
+        notifyUserDataHandlers(operation, node, copy);
+        return copy;
     }
 
-    public AttrImpl createAttribute(String name) throws DOMException {
+    public Node importNode(Node importedNode, boolean deep) {
+        return cloneOrImportNode(UserDataHandler.NODE_IMPORTED, importedNode, deep);
+    }
+
+    /**
+     * Detaches the node from its parent (if any) and changes its document to
+     * this document. The node's subtree and attributes will remain attached,
+     * but their document will be changed to this document.
+     */
+    public Node adoptNode(Node node) {
+        if (!(node instanceof NodeImpl)) {
+            return null; // the API specifies this quiet failure
+        }
+        NodeImpl nodeImpl = (NodeImpl) node;
+        switch (nodeImpl.getNodeType()) {
+            case Node.ATTRIBUTE_NODE:
+                AttrImpl attr = (AttrImpl) node;
+                if (attr.ownerElement != null) {
+                    attr.ownerElement.removeAttributeNode(attr);
+                }
+                break;
+
+            case Node.DOCUMENT_FRAGMENT_NODE:
+            case Node.ENTITY_REFERENCE_NODE:
+            case Node.PROCESSING_INSTRUCTION_NODE:
+            case Node.TEXT_NODE:
+            case Node.CDATA_SECTION_NODE:
+            case Node.COMMENT_NODE:
+            case Node.ELEMENT_NODE:
+                break;
+
+            case Node.DOCUMENT_NODE:
+            case Node.DOCUMENT_TYPE_NODE:
+            case Node.ENTITY_NODE:
+            case Node.NOTATION_NODE:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Cannot adopt nodes of type " + nodeImpl.getNodeType());
+
+            default:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Unsupported node type " + node.getNodeType());
+        }
+
+        Node parent = nodeImpl.getParentNode();
+        if (parent != null) {
+            parent.removeChild(nodeImpl);
+        }
+
+        changeDocumentToThis(nodeImpl);
+        notifyUserDataHandlers(UserDataHandler.NODE_ADOPTED, node, null);
+        return nodeImpl;
+    }
+
+    /**
+     * Recursively change the document of {@code node} without also changing its
+     * parent node. Only adoptNode() should invoke this method, otherwise nodes
+     * will be left in an inconsistent state.
+     */
+    private void changeDocumentToThis(NodeImpl node) {
+        Map<String, UserData> userData = node.document.getUserDataMapForRead(node);
+        if (!userData.isEmpty()) {
+            getUserDataMap(node).putAll(userData);
+        }
+        node.document = this;
+
+        // change the document on all child nodes
+        NodeList list = node.getChildNodes();
+        for (int i = 0; i < list.getLength(); i++) {
+            changeDocumentToThis((NodeImpl) list.item(i));
+        }
+
+        // change the document on all attribute nodes
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            NamedNodeMap attributes = node.getAttributes();
+            for (int i = 0; i < attributes.getLength(); i++) {
+                changeDocumentToThis((AttrImpl) attributes.item(i));
+            }
+        }
+    }
+
+    public AttrImpl createAttribute(String name) {
         return new AttrImpl(this, name);
     }
 
-    public Attr createAttributeNS(String namespaceURI, String qualifiedName)
-            throws DOMException {
+    public AttrImpl createAttributeNS(String namespaceURI, String qualifiedName) {
         return new AttrImpl(this, namespaceURI, qualifiedName);
     }
 
-    public CDATASection createCDATASection(String data) throws DOMException {
+    public CDATASectionImpl createCDATASection(String data) {
         return new CDATASectionImpl(this, data);
     }
 
-    public Comment createComment(String data) {
+    public CommentImpl createComment(String data) {
         return new CommentImpl(this, data);
     }
 
-    public DocumentFragment createDocumentFragment() {
+    public DocumentFragmentImpl createDocumentFragment() {
         return new DocumentFragmentImpl(this);
     }
 
-    public Element createElement(String tagName) throws DOMException {
+    public ElementImpl createElement(String tagName) {
         return new ElementImpl(this, tagName);
     }
 
-    public Element createElementNS(String namespaceURI, String qualifiedName)
-            throws DOMException {
+    public ElementImpl createElementNS(String namespaceURI, String qualifiedName) {
         return new ElementImpl(this, namespaceURI, qualifiedName);
     }
 
-    public EntityReference createEntityReference(String name)
-            throws DOMException {
+    public EntityReferenceImpl createEntityReference(String name) {
         return new EntityReferenceImpl(this, name);
     }
 
-    public ProcessingInstruction createProcessingInstruction(String target,
-            String data) throws DOMException {
+    public ProcessingInstructionImpl createProcessingInstruction(String target, String data) {
         return new ProcessingInstructionImpl(this, target, data);
     }
 
-    public Text createTextNode(String data) {
+    public TextImpl createTextNode(String data) {
         return new TextImpl(this, data);
     }
 
     public DocumentType getDoctype() {
-        for (int i = 0; i < children.size(); i++) {
-            if (children.get(i) instanceof DocumentType) {
-                return (DocumentType) children.get(i);
+        for (LeafNodeImpl child : children) {
+            if (child instanceof DocumentType) {
+                return (DocumentType) child;
             }
         }
 
@@ -268,9 +350,9 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
     }
 
     public Element getDocumentElement() {
-        for (int i = 0; i < children.size(); i++) {
-            if (children.get(i) instanceof Element) {
-                return (Element) children.get(i);
+        for (LeafNodeImpl child : children) {
+            if (child instanceof Element) {
+                return (Element) child;
             }
         }
 
@@ -311,13 +393,8 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         return Node.DOCUMENT_NODE;
     }
 
-    public Node importNode(Node importedNode, boolean deep) throws DOMException {
-        // TODO: callback the UserDataHandler with a NODE_IMPORTED event
-        return cloneNode(importedNode, deep);
-    }
-
     @Override
-    public Node insertChildAt(Node newChild, int index) throws DOMException {
+    public Node insertChildAt(Node newChild, int index) {
         // Make sure we have at most one root element and one DTD element.
         if (newChild instanceof Element && getDocumentElement() != null) {
             throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR,
@@ -330,7 +407,7 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         return super.insertChildAt(newChild, index);
     }
 
-    @Override public String getTextContent() throws DOMException {
+    @Override public String getTextContent() {
         return null;
     }
 
@@ -346,7 +423,7 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         return xmlStandalone;
     }
 
-    public void setXmlStandalone(boolean xmlStandalone) throws DOMException {
+    public void setXmlStandalone(boolean xmlStandalone) {
         this.xmlStandalone = xmlStandalone;
     }
 
@@ -354,7 +431,7 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         return xmlVersion;
     }
 
-    public void setXmlVersion(String xmlVersion) throws DOMException {
+    public void setXmlVersion(String xmlVersion) {
         this.xmlVersion = xmlVersion;
     }
 
@@ -374,11 +451,6 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         this.documentUri = documentUri;
     }
 
-    public Node adoptNode(Node source) throws DOMException {
-        // TODO: callback the UserDataHandler with a NODE_ADOPTED event
-        throw new UnsupportedOperationException(); // TODO
-    }
-
     public DOMConfiguration getDomConfig() {
         if (domConfiguration == null) {
             domConfiguration = new DOMConfigurationImpl();
@@ -395,8 +467,7 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         ((DOMConfigurationImpl) getDomConfig()).normalize(root);
     }
 
-    public Node renameNode(Node n, String namespaceURI, String qualifiedName)
-            throws DOMException {
+    public Node renameNode(Node n, String namespaceURI, String qualifiedName) {
         // TODO: callback the UserDataHandler with a NODE_RENAMED event
         throw new UnsupportedOperationException(); // TODO
     }
@@ -405,9 +476,9 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
      * Returns a map with the user data objects attached to the specified node.
      * This map is readable and writable.
      */
-    Map<String, UserData> getUserDataMap(Node node) {
+    Map<String, UserData> getUserDataMap(NodeImpl node) {
         if (nodeToUserData == null) {
-            nodeToUserData = new WeakHashMap<Node, Map<String, UserData>>();
+            nodeToUserData = new WeakHashMap<NodeImpl, Map<String, UserData>>();
         }
         Map<String, UserData> userDataMap = nodeToUserData.get(node);
         if (userDataMap == null) {
@@ -421,7 +492,7 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
      * Returns a map with the user data objects attached to the specified node.
      * The returned map may be read-only.
      */
-    Map<String, UserData> getUserDataMapForRead(Node node) {
+    Map<String, UserData> getUserDataMapForRead(NodeImpl node) {
         if (nodeToUserData == null) {
             return Collections.emptyMap();
         }
@@ -434,13 +505,28 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
     /**
      * Calls {@link UserDataHandler#handle} on each of the source node's
      * value/handler pairs.
+     *
+     * <p>If the source node comes from another DOM implementation, user data
+     * handlers will <strong>not</strong> be notified. The DOM API provides no
+     * mechanism to inspect a foreign node's user data.
      */
-    private void notifyUserDataHandlers(short operation, Node src, Node dst) {
-        for (Map.Entry<String, UserData> entry : getUserDataMapForRead(src).entrySet()) {
+    private static void notifyUserDataHandlers(
+            short operation, Node source, NodeImpl destination) {
+        if (!(source instanceof NodeImpl)) {
+            return;
+        }
+
+        NodeImpl srcImpl = (NodeImpl) source;
+        if (srcImpl.document == null) {
+            return;
+        }
+
+        for (Map.Entry<String, UserData> entry
+                : srcImpl.document.getUserDataMapForRead(srcImpl).entrySet()) {
             UserData userData = entry.getValue();
             if (userData.handler != null) {
                 userData.handler.handle(
-                        operation, entry.getKey(), userData.value, src, dst);
+                        operation, entry.getKey(), userData.value, source, destination);
             }
         }
     }

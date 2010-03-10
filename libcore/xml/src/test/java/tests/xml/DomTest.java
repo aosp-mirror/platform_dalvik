@@ -16,6 +16,7 @@
 
 package tests.xml;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
@@ -27,7 +28,9 @@ import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.Entity;
 import org.w3c.dom.EntityReference;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.Notation;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
@@ -36,6 +39,7 @@ import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -48,8 +52,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static org.w3c.dom.UserDataHandler.NODE_ADOPTED;
 import static org.w3c.dom.UserDataHandler.NODE_CLONED;
+import static org.w3c.dom.UserDataHandler.NODE_IMPORTED;
 
 /**
  * Construct a DOM and then interrogate it.
@@ -111,6 +119,7 @@ public class DomTest extends TestCase {
 
     @Override protected void setUp() throws Exception {
         transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         builder = factory.newDocumentBuilder();
@@ -817,6 +826,186 @@ public class DomTest extends TestCase {
         assertEquals(expected, handler.calls);
     }
 
+    /**
+     * A shallow import requires importing the attributes but not the child
+     * nodes.
+     */
+    public void testUserDataHandlerNotifiedOfShallowImports() {
+        RecordingHandler handler = new RecordingHandler();
+        name.setUserData("a", "apple", handler);
+        name.setUserData("b", "banana", handler);
+        standard.setUserData("c", "cat", handler);
+        waffles.setUserData("d", "dog", handler);
+
+        Document newDocument = builder.newDocument();
+        Element importedName = (Element) newDocument.importNode(name, false);
+        Attr importedStandard = importedName.getAttributeNode("a:standard");
+
+        Set<String> expected = new HashSet<String>();
+        expected.add(notification(NODE_IMPORTED, "a", "apple", name, importedName));
+        expected.add(notification(NODE_IMPORTED, "b", "banana", name, importedName));
+        expected.add(notification(NODE_IMPORTED, "c", "cat", standard, importedStandard));
+        assertEquals(expected, handler.calls);
+    }
+
+    /**
+     * A deep import requires cloning both the attributes and the child nodes.
+     */
+    public void testUserDataHandlerNotifiedOfDeepImports() {
+        RecordingHandler handler = new RecordingHandler();
+        name.setUserData("a", "apple", handler);
+        name.setUserData("b", "banana", handler);
+        standard.setUserData("c", "cat", handler);
+        waffles.setUserData("d", "dog", handler);
+
+        Document newDocument = builder.newDocument();
+        Element importedName = (Element) newDocument.importNode(name, true);
+        Attr importedStandard = importedName.getAttributeNode("a:standard");
+        Text importedWaffles = (Text) importedName.getChildNodes().item(0);
+
+        Set<String> expected = new HashSet<String>();
+        expected.add(notification(NODE_IMPORTED, "a", "apple", name, importedName));
+        expected.add(notification(NODE_IMPORTED, "b", "banana", name, importedName));
+        expected.add(notification(NODE_IMPORTED, "c", "cat", standard, importedStandard));
+        expected.add(notification(NODE_IMPORTED, "d", "dog", waffles, importedWaffles));
+        assertEquals(expected, handler.calls);
+    }
+
+    public void testImportNodeDeep() throws TransformerException {
+        String original = domToStringStripElementWhitespace(document);
+
+        Document newDocument = builder.newDocument();
+        Element importedItem = (Element) newDocument.importNode(item, true);
+        assertDetached(item.getParentNode(), importedItem);
+
+        newDocument.appendChild(importedItem);
+        String expected = original.replaceAll("</?menu>", "");
+        assertEquals(expected, domToStringStripElementWhitespace(newDocument));
+    }
+
+    public void testImportNodeShallow() throws TransformerException {
+        Document newDocument = builder.newDocument();
+        Element importedItem = (Element) newDocument.importNode(item, false);
+        assertDetached(item.getParentNode(), importedItem);
+
+        newDocument.appendChild(importedItem);
+        assertEquals("<item xmlns=\"http://food\" xmlns:a=\"http://addons\"/>",
+                domToString(newDocument));
+    }
+
+    public void testNodeAdoption() throws Exception {
+        for (Node node : allNodes) {
+            if (node == document || node == doctype || node == sp || node == png) {
+                assertNotAdoptable(node);
+            } else {
+                adoptAndCheck(node);
+            }
+        }
+    }
+
+    private void assertNotAdoptable(Node node) {
+        try {
+            builder.newDocument().adoptNode(node);
+            fail();
+        } catch (DOMException e) {
+        }
+    }
+
+    /**
+     * Adopts the node into another document, then adopts the root element, and
+     * then attaches the adopted node in the proper place. The net result should
+     * be that the document's entire contents have moved to another document.
+     */
+    private void adoptAndCheck(Node node) throws Exception {
+        String original = domToString(document);
+        Document newDocument = builder.newDocument();
+
+        // remember where to insert the node in the new document
+        boolean isAttribute = node.getNodeType() == Node.ATTRIBUTE_NODE;
+        Node parent = isAttribute
+                ? ((Attr) node).getOwnerElement() : node.getParentNode();
+        Node nextSibling = node.getNextSibling();
+
+        // move the node and make sure it was detached
+        assertSame(node, newDocument.adoptNode(node));
+        assertDetached(parent, node);
+
+        // move the rest of the document and wire the adopted back into place
+        assertSame(menu, newDocument.adoptNode(menu));
+        newDocument.appendChild(menu);
+        if (isAttribute) {
+            ((Element) parent).setAttributeNodeNS((Attr) node);
+        } else if (nextSibling != null) {
+            parent.insertBefore(node, nextSibling);
+        } else if (parent != document) {
+            parent.appendChild(node);
+        }
+
+        assertEquals(original, domToString(newDocument));
+        document = newDocument;
+    }
+
+    private void assertDetached(Node formerParent, Node node) {
+        assertNull(node.getParentNode());
+        NodeList children = formerParent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            assertTrue(children.item(i) != node);
+        }
+        if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
+            assertNull(((Attr) node).getOwnerElement());
+            NamedNodeMap attributes = formerParent.getAttributes();
+            for (int i = 0; i < attributes.getLength(); i++) {
+                assertTrue(attributes.item(i) != node);
+            }
+        }
+    }
+
+    public void testAdoptionImmediatelyAfterParsing() throws Exception {
+        Document newDocument = builder.newDocument();
+        try {
+            assertSame(name, newDocument.adoptNode(name));
+            assertSame(newDocument, name.getOwnerDocument());
+            assertSame(newDocument, standard.getOwnerDocument());
+            assertSame(newDocument, waffles.getOwnerDocument());
+        } catch (Throwable e) {
+            AssertionFailedError failure = new AssertionFailedError(
+                    "This implementation fails to adopt nodes before the "
+                            + "document has been traversed");
+            failure.initCause(e);
+            throw failure;
+        }
+    }
+
+    /**
+     * There should be notifications for adopted node itself but none of its
+     * children. The DOM spec is vague on this, so we're consistent with the RI.
+     */
+    public void testUserDataHandlerNotifiedOfOnlyShallowAdoptions() throws Exception {
+        /*
+         * Force a traversal of the document, otherwise this test may fail for
+         * an unrelated reason on version 5 of the RI. That behavior is
+         * exercised by testAdoptionImmediatelyAfterParsing().
+         */
+        domToString(document);
+
+        RecordingHandler handler = new RecordingHandler();
+        name.setUserData("a", "apple", handler);
+        name.setUserData("b", "banana", handler);
+        standard.setUserData("c", "cat", handler);
+        waffles.setUserData("d", "dog", handler);
+
+        Document newDocument = builder.newDocument();
+        assertSame(name, newDocument.adoptNode(name));
+        assertSame(newDocument, name.getOwnerDocument());
+        assertSame(newDocument, standard.getOwnerDocument());
+        assertSame(newDocument, waffles.getOwnerDocument());
+
+        Set<String> expected = new HashSet<String>();
+        expected.add(notification(NODE_ADOPTED, "a", "apple", name, null));
+        expected.add(notification(NODE_ADOPTED, "b", "banana", name, null));
+        assertEquals(expected, handler.calls);
+    }
+
     private class RecordingHandler implements UserDataHandler {
         final Set<String> calls = new HashSet<String>();
         public void handle(short operation, String key, Object data, Node src, Node dst) {
@@ -831,6 +1020,29 @@ public class DomTest extends TestCase {
     private String domToString(Document document) throws TransformerException {
         StringWriter writer = new StringWriter();
         transformer.transform(new DOMSource(document), new StreamResult(writer));
-        return writer.toString();
+        String result = writer.toString();
+
+        /*
+         * Hack: swap <name>'s a:standard attribute and deluxe attribute if
+         * they're out of order. Some document transformations reorder the
+         * attributes, which causes pain when we try to use String comparison on
+         * them.
+         */
+        Matcher attributeMatcher = Pattern.compile(" a:standard=\"[^\"]+\"").matcher(result);
+        if (attributeMatcher.find()) {
+            result = result.substring(0, attributeMatcher.start())
+                    + result.substring(attributeMatcher.end());
+            int insertionPoint = result.indexOf(" deluxe=\"");
+            result = result.substring(0, insertionPoint)
+                    + attributeMatcher.group()
+                    + result.substring(insertionPoint);
+        }
+
+        return result;
+    }
+
+    private String domToStringStripElementWhitespace(Document document)
+            throws TransformerException {
+        return domToString(document).replaceAll("(?m)>\\s+<", "><");
     }
 }

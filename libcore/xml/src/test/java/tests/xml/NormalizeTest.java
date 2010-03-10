@@ -32,6 +32,8 @@ import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -588,10 +590,10 @@ public class NormalizeTest extends TestCase {
 
     private String domToString(Document document) throws TransformerException {
         StringWriter writer = new StringWriter();
-        TransformerFactory.newInstance().newTransformer()
-                .transform(new DOMSource(document), new StreamResult(writer));
-        String xml = writer.toString();
-        return xml.replaceFirst("<\\?xml[^?]*\\?>", "");
+        Transformer transformer = TransformerFactory.newInstance() .newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(new DOMSource(document), new StreamResult(writer));
+        return writer.toString();
     }
 
     private class ErrorRecorder implements DOMErrorHandler {
