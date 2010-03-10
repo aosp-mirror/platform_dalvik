@@ -148,6 +148,7 @@ public class XmlReportPrinter {
                     try {
                         stream.close();
                     } catch (IOException ignored) {
+                        ignored.printStackTrace();
                     }
                 }
             }
