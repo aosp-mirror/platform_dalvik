@@ -42,4 +42,32 @@ public class FormatterTest extends junit.framework.TestCase {
         // ...without screwing up conversions that don't take an argument.
         assertEquals("%", String.format(Locale.US, "%%"));
     }
+    
+    // Alleged regression tests for historical bugs. (It's unclear whether the bugs were in
+    // BigDecimal or Formatter.)
+    public void test_BigDecimalFormatting() throws Exception {
+        BigDecimal[] input = new BigDecimal[] {
+            new BigDecimal("20.00000"),
+            new BigDecimal("20.000000"),
+            new BigDecimal(".2"),
+            new BigDecimal("2"),
+            new BigDecimal("-2"),
+            new BigDecimal("200000000000000000000000"),
+            new BigDecimal("20000000000000000000000000000000000000000000000000")
+        };
+        String[] output = new String[] {
+            "20.00",
+            "20.00",
+            "0.20",
+            "2.00",
+            "-2.00",
+            "200000000000000000000000.00",
+            "20000000000000000000000000000000000000000000000000.00"
+        };
+        for (int i = 0; i < input.length; ++i) {
+            String result = String.format("%.2f", input[i]);
+            assertEquals("input=\"" + input[i] + "\", " + ",expected=" + output[i] + ",actual=" + result,
+                    output[i], result);
+        }
+    }
 }

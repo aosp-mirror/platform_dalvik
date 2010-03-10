@@ -79,11 +79,11 @@ public class Package implements AnnotatedElement {
      * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
-    public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+    public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
         Annotation[] list = getAnnotations();
         for (int i = 0; i < list.length; i++) {
             if (annotationType.isInstance(list[i])) {
-                return (T)list[i];
+                return (A) list[i];
             }
         }
         

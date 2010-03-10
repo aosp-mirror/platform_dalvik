@@ -51,14 +51,40 @@ public final class Double extends Number implements Comparable<Double> {
     public static final double NaN = 0.0 / 0.0;
 
     /**
-     * Constant for the Positive Infinity value of the {@code double} type.
+     * Constant for the positive infinity value of the {@code double} type.
      */
     public static final double POSITIVE_INFINITY = 1.0 / 0.0;
 
     /**
-     * Constant for the Negative Infinity value of the {@code double} type.
+     * Constant for the negative infinity value of the {@code double} type.
      */
     public static final double NEGATIVE_INFINITY = -1.0 / 0.0;
+
+    /**
+     * Constant for the smallest positive normal value of the {@code double} type.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public static final double MIN_NORMAL = 2.2250738585072014E-308;
+
+    /**
+     * Maximum exponent that a finite value of the {@code double} type may have.
+     * Equal to {@code Math.getExponent(Double.MAX_VALUE)}.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public static final int MAX_EXPONENT = 1023;
+
+    /**
+     * Minimum exponent that a normal value of the {@code double} type may have.
+     * Equal to {@code Math.getExponent(Double.MIN_NORMAL)}.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public static final int MIN_EXPONENT = -1022;
 
     /**
      * The {@link Class} object that represents the primitive type {@code

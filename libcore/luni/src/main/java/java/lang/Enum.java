@@ -191,6 +191,16 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
         // END android-changed
     }
 
+    /**
+     * Enum types may not have finalizers.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    @Override
+    protected final void finalize() {
+    }
+
     /*
      * Helper to invoke the values() static method on T and answer the result.
      * Returns null if there is a problem.

@@ -430,6 +430,84 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
+     * Converts the byte array to a String using the specified encoding.
+     * 
+     * @param data
+     *            the byte array to convert to a String
+     * @param start
+     *            the starting offset in the byte array
+     * @param length
+     *            the number of bytes to convert
+     * @param encoding
+     *            the encoding
+     * 
+     * @throws IndexOutOfBoundsException
+     *             when <code>length &lt; 0, start &lt; 0</code> or
+     *             <code>start + length &gt; data.length</code>
+     * @throws NullPointerException
+     *             when data is null
+     * 
+     * @see #getBytes()
+     * @see #getBytes(int, int, byte[], int)
+     * @see #getBytes(String)
+     * @see #valueOf(boolean)
+     * @see #valueOf(char)
+     * @see #valueOf(char[])
+     * @see #valueOf(char[], int, int)
+     * @see #valueOf(double)
+     * @see #valueOf(float)
+     * @see #valueOf(int)
+     * @see #valueOf(long)
+     * @see #valueOf(Object)
+     * @since 1.6
+     * @hide
+     */
+    public String(byte[] data, int start, int length, final Charset encoding) {
+        if (encoding == null) {
+            throw new NullPointerException();
+        }
+        if (start < 0 || length < 0 || length > data.length - start) {
+            throw new StringIndexOutOfBoundsException();
+        }
+        CharBuffer cb = encoding.decode(ByteBuffer.wrap(data, start, length));
+        this.lastCharset = encoding;
+        this.offset = 0;
+        this.count = cb.length();
+        this.value = new char[count];
+        System.arraycopy(cb.array(), 0, value, 0, count);
+    }
+
+    /**
+     * Converts the byte array to a String using the specified encoding.
+     * 
+     * @param data
+     *            the byte array to convert to a String
+     * @param encoding
+     *            the encoding
+     * 
+     * @throws NullPointerException
+     *             when data is null
+     * 
+     * @see #getBytes()
+     * @see #getBytes(int, int, byte[], int)
+     * @see #getBytes(String)
+     * @see #valueOf(boolean)
+     * @see #valueOf(char)
+     * @see #valueOf(char[])
+     * @see #valueOf(char[], int, int)
+     * @see #valueOf(double)
+     * @see #valueOf(float)
+     * @see #valueOf(int)
+     * @see #valueOf(long)
+     * @see #valueOf(Object)
+     * @since 1.6
+     * @hide
+     */
+    public String(byte[] data, Charset encoding) {
+        this(data, 0, data.length, encoding);
+    }
+    
+    /**
      * Initializes this string to contain the characters in the specified
      * character array. Modifying the character array after creating the string
      * has no effect on the string.
@@ -900,11 +978,7 @@ public final class String implements Serializable, Comparable<String>,
      * @return the byte array encoding of this string.
      */
     public byte[] getBytes() {
-        ByteBuffer buffer = defaultCharset().encode(
-                CharBuffer.wrap(this.value, this.offset, this.count));
-        byte[] bytes = new byte[buffer.limit()];
-        buffer.get(bytes);
-        return bytes;
+        return getBytes(defaultCharset());
     }
 
     /**
@@ -952,11 +1026,7 @@ public final class String implements Serializable, Comparable<String>,
      *             if the encoding is not supported.
      */
     public byte[] getBytes(String encoding) throws UnsupportedEncodingException {
-        ByteBuffer buffer = getCharset(encoding).encode(
-                CharBuffer.wrap(this.value, this.offset, this.count));
-        byte[] bytes = new byte[buffer.limit()];
-        buffer.get(bytes);
-        return bytes;
+        return getBytes(getCharset(encoding));
     }
 
     private Charset getCharset(final String encoding)
@@ -975,6 +1045,23 @@ public final class String implements Serializable, Comparable<String>,
             lastCharset = charset;
         }
         return charset;
+    }
+
+    /**
+     * Returns a new byte array containing the characters of this string encoded in the
+     * given charset.
+     * 
+     * @param encoding the encoding
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public byte[] getBytes(Charset encoding) {
+        CharBuffer chars = CharBuffer.wrap(this.value, this.offset, this.count);
+        ByteBuffer buffer = encoding.encode(chars.asReadOnlyBuffer());
+        byte[] bytes = new byte[buffer.limit()];
+        buffer.get(bytes);
+        return bytes;
     }
 
     /**

@@ -1425,8 +1425,7 @@ public final class Class<T> implements Serializable, AnnotatedElement, GenericDe
      *             if a security manager exists and it does not allow creating
      *             new instances.
      */
-    public T newInstance() throws IllegalAccessException,
-            InstantiationException {
+    public T newInstance() throws InstantiationException, IllegalAccessException {
         checkPublicMemberAccess();        
         return newInstanceImpl();
     }

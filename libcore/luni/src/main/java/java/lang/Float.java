@@ -48,14 +48,40 @@ public final class Float extends Number implements Comparable<Float> {
     public static final float NaN = 0.0f / 0.0f;
 
     /**
-     * Constant for the Positive Infinity value of the {@code float} type.
+     * Constant for the positive infinity value of the {@code float} type.
      */
     public static final float POSITIVE_INFINITY = 1.0f / 0.0f;
 
     /**
-     * Constant for the Negative Infinity value of the {@code float} type.
+     * Constant for the negative infinity value of the {@code float} type.
      */
     public static final float NEGATIVE_INFINITY = -1.0f / 0.0f;
+
+    /**
+     * Constant for the smallest positive normal value of the {@code float} type.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public static final float MIN_NORMAL = 1.1754943508222875E-38f;
+
+    /**
+     * Maximum exponent that a finite value of the {@code float} type may have.
+     * Equal to {@code Math.getExponent(Float.MAX_VALUE)}.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public static final int MAX_EXPONENT = 127;
+
+    /**
+     * Minimum exponent that a normal value of the {@code float} type may have.
+     * Equal to {@code Math.getExponent(Float.MIN_NORMAL)}.
+     * 
+     * @since 1.6
+     * @hide
+     */
+    public static final int MIN_EXPONENT = -126;
 
     /**
      * The {@link Class} object that represents the primitive type {@code
