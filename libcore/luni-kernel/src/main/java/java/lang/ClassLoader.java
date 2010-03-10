@@ -1040,7 +1040,7 @@ class BootClassLoader extends ClassLoader {
 
     static BootClassLoader instance;
 
-    public static BootClassLoader getInstance() {
+    public static synchronized BootClassLoader getInstance() {
         if (instance == null) {
             instance = new BootClassLoader();
         }

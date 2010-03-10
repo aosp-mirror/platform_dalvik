@@ -357,7 +357,7 @@ static void markInterfaces(const ClassObject *clazz, GcMarkContext *ctx)
  */
 static void scanStaticFields(const ClassObject *clazz, GcMarkContext *ctx)
 {
-    StaticField *f;
+    const StaticField *f;
     int i;
 
     //TODO: Optimize this with a bit vector or something
