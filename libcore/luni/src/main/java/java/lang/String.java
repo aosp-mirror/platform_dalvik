@@ -2210,7 +2210,7 @@ public final class String implements Serializable, Comparable<String>,
      * the output. In particular, floating point numbers may be output with
      * ',' instead of '.' as the decimal separator if that's what the user's
      * locale dictates. If you're formatting a string other than for human
-     * consumption, you should use {@link #format(Locale,String,Object...)} and
+     * consumption, you should use {@link #format(java.util.Locale, java.lang.String, java.lang.Object...)} and
      * supply {@code Locale.US}.
      * 
      * @param format
