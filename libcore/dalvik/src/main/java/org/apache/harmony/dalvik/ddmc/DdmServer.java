@@ -155,7 +155,6 @@ public class DdmServer {
 
                 if (!mRegistrationComplete) {
                     /* timed out, don't wait again */
-                    System.out.println("DDM dispatch reg wait timeout");
                     mRegistrationTimedOut = true;
                 }
             }
@@ -165,8 +164,6 @@ public class DdmServer {
         //System.out.println(" dispatch cont");
 
         if (handler == null) {
-            System.err.println("Can't dispatch DDM chunk "
-                + Integer.toHexString(type) + ": no handler defined");
             return null;
         }
 
