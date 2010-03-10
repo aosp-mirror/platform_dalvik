@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * This is a thread that catches signals and does something useful.  For
  * example, when a SIGQUIT (Ctrl-\) arrives, suspend the VM and dump the
@@ -28,6 +29,8 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <errno.h>
+
+#include <cutils/open_memstream.h>
 
 static void* signalCatcherThreadStart(void* arg);
 
@@ -93,87 +96,150 @@ bail:
 }
 
 /*
- * Dump the stack traces for all threads to the log or to a file.  If it's
- * to a file we have a little setup to do.
+ * Dump the stack traces for all threads to the supplied file, putting
+ * a timestamp header on it.
  */
-static void logThreadStacks(void)
+static void logThreadStacks(FILE* fp)
 {
     DebugOutputTarget target;
 
+    dvmCreateFileOutputTarget(&target, fp);
+
+    pid_t pid = getpid();
+    time_t now = time(NULL);
+    struct tm* ptm;
+#ifdef HAVE_LOCALTIME_R
+    struct tm tmbuf;
+    ptm = localtime_r(&now, &tmbuf);
+#else
+    ptm = localtime(&now);
+#endif
+    dvmPrintDebugMessage(&target,
+        "\n\n----- pid %d at %04d-%02d-%02d %02d:%02d:%02d -----\n",
+        pid, ptm->tm_year + 1900, ptm->tm_mon+1, ptm->tm_mday,
+        ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+    printProcessName(&target);
+    dvmPrintDebugMessage(&target, "\n");
+    dvmDumpAllThreadsEx(&target, true);
+    fprintf(fp, "----- end %d -----\n", pid);
+}
+
+
+/*
+ * Respond to a SIGQUIT by dumping the thread stacks.  Optionally dump
+ * a few other things while we're at it.
+ *
+ * Thread stacks can either go to the log or to a file designated for holding
+ * ANR traces.  If we're writing to a file, we want to do it in one shot,
+ * so we can use a single O_APPEND write instead of contending for exclusive
+ * access with flock().  There may be an advantage in resuming the VM
+ * before doing the file write, so we don't stall the VM if disk I/O is
+ * bottlenecked.
+ *
+ * If JIT tuning is compiled in, dump compiler stats as well.
+ */
+static void handleSigQuit(void)
+{
+    char* traceBuf = NULL;
+    size_t traceLen;
+
+    dvmSuspendAllThreads(SUSPEND_FOR_STACK_DUMP);
+
+    dvmDumpLoaderStats("sig");
+
     if (gDvm.stackTraceFile == NULL) {
-        /* just dump to log file */
+        /* just dump to log */
+        DebugOutputTarget target;
         dvmCreateLogOutputTarget(&target, ANDROID_LOG_INFO, LOG_TAG);
         dvmDumpAllThreadsEx(&target, true);
     } else {
-        FILE* fp = NULL;
-        int cc, fd;
+        /* write to memory buffer */
+        FILE* memfp = open_memstream(&traceBuf, &traceLen);
+        if (memfp == NULL) {
+            LOGE("Unable to create memstream for stack traces\n");
+            traceBuf = NULL;        /* make sure it didn't touch this */
+            /* continue on */
+        } else {
+            logThreadStacks(memfp);
+            fclose(memfp);
+        }
+    }
 
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+    dvmCompilerDumpStats();
+#endif
+
+    if (false) {
+        dvmLockMutex(&gDvm.jniGlobalRefLock);
+        dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
+        dvmUnlockMutex(&gDvm.jniGlobalRefLock);
+    }
+    if (false) dvmDumpTrackedAllocations(true);
+
+    dvmResumeAllThreads(SUSPEND_FOR_STACK_DUMP);
+
+    if (traceBuf != NULL) {
         /*
          * Open the stack trace output file, creating it if necessary.  It
          * needs to be world-writable so other processes can write to it.
          */
-        fd = open(gDvm.stackTraceFile, O_WRONLY | O_APPEND | O_CREAT, 0666);
+        int fd = open(gDvm.stackTraceFile, O_WRONLY | O_APPEND | O_CREAT, 0666);
         if (fd < 0) {
             LOGE("Unable to open stack trace file '%s': %s\n",
                 gDvm.stackTraceFile, strerror(errno));
-            return;
-        }
-
-        /* gain exclusive access to the file */
-        cc = flock(fd, LOCK_EX | LOCK_UN);
-        if (cc != 0) {
-            LOGV("Sleeping on flock(%s)\n", gDvm.stackTraceFile);
-            cc = flock(fd, LOCK_EX);
-        }
-        if (cc != 0) {
-            LOGE("Unable to lock stack trace file '%s': %s\n",
-                gDvm.stackTraceFile, strerror(errno));
+        } else {
+            ssize_t actual = write(fd, traceBuf, traceLen);
+            if (actual != (ssize_t) traceLen) {
+                LOGE("Failed to write stack traces to %s (%d of %zd): %s\n",
+                    gDvm.stackTraceFile, (int) actual, traceLen,
+                    strerror(errno));
+            } else {
+                LOGI("Wrote stack traces to '%s'\n", gDvm.stackTraceFile);
+            }
             close(fd);
-            return;
         }
 
-        fp = fdopen(fd, "a");
-        if (fp == NULL) {
-            LOGE("Unable to fdopen '%s' (%d): %s\n",
-                gDvm.stackTraceFile, fd, strerror(errno));
-            flock(fd, LOCK_UN);
-            close(fd);
-            return;
-        }
-
-        dvmCreateFileOutputTarget(&target, fp);
-
-        pid_t pid = getpid();
-        time_t now = time(NULL);
-        struct tm* ptm;
-#ifdef HAVE_LOCALTIME_R
-        struct tm tmbuf;
-        ptm = localtime_r(&now, &tmbuf);
-#else
-        ptm = localtime(&now);
-#endif
-        dvmPrintDebugMessage(&target,
-            "\n\n----- pid %d at %04d-%02d-%02d %02d:%02d:%02d -----\n",
-            pid, ptm->tm_year + 1900, ptm->tm_mon+1, ptm->tm_mday,
-            ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
-        printProcessName(&target);
-        dvmPrintDebugMessage(&target, "\n");
-        fflush(fp);     /* emit at least the header if we crash during dump */
-        dvmDumpAllThreadsEx(&target, true);
-        fprintf(fp, "----- end %d -----\n", pid);
-
-        /*
-         * Unlock and close the file, flushing pending data before we unlock
-         * it.  The fclose() will close the underyling fd.
-         */
-        fflush(fp);
-        flock(fd, LOCK_UN);
-        fclose(fp);
-
-        LOGI("Wrote stack trace to '%s'\n", gDvm.stackTraceFile);
+        free(traceBuf);
     }
 }
 
+/*
+ * Respond to a SIGUSR1 by forcing a GC.  If we were built with HPROF
+ * support, generate an HPROF dump file.
+ *
+ * (The HPROF dump generation is not all that useful now that we have
+ * better ways to generate it.  Consider removing this in a future release.)
+ */
+static void handleSigUsr1(void)
+{
+#if WITH_HPROF
+    LOGI("SIGUSR1 forcing GC and HPROF dump\n");
+    hprofDumpHeap(NULL, false);
+#else
+    LOGI("SIGUSR1 forcing GC (no HPROF)\n");
+    dvmCollectGarbage(false);
+#endif
+}
+
+#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
+/*
+ * Respond to a SIGUSR2 by dumping some JIT stats and possibly resetting
+ * the code cache.
+ */
+static void handleSigUsr2(void)
+{
+    static int codeCacheResetCount = 0;
+    if ((--codeCacheResetCount & 7) == 0) {
+        gDvmJit.codeCacheFull = true;
+    } else {
+        dvmCompilerDumpStats();
+        /* Stress-test unchain all */
+        dvmJitUnchainAll();
+        LOGD("Send %d more signals to rest the code cache",
+             codeCacheResetCount & 7);
+    }
+}
+#endif
 
 /*
  * Sleep in sigwait() until a signal arrives.
@@ -207,11 +273,8 @@ static void* signalCatcherThreadStart(void* arg)
          * is met.  When the signal hits, we wake up, without any signal
          * handlers being invoked.
          *
-         * We want to suspend all other threads, so that it's safe to
-         * traverse their stacks.
-         *
-         * When running under GDB we occasionally return with EINTR (e.g.
-         * when other threads exit).
+         * When running under GDB we occasionally return from sigwait()
+         * with EINTR (e.g. when other threads exit).
          */
 loop:
         cc = sigwait(&mask, &rcvd);
@@ -234,47 +297,21 @@ loop:
         if (gDvm.haltSignalCatcher)
             break;
 
-        if (rcvd == SIGQUIT) {
-            dvmSuspendAllThreads(SUSPEND_FOR_STACK_DUMP);
-            dvmDumpLoaderStats("sig");
-
-            logThreadStacks();
-
+        switch (rcvd) {
+        case SIGQUIT:
+            handleSigQuit();
+            break;
+        case SIGUSR1:
+            handleSigUsr1();
+            break;
 #if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
-            dvmCompilerDumpStats();
+        case SIGUSR2:
+            handleSigUsr2();
+            break;
 #endif
-
-            if (false) {
-                dvmLockMutex(&gDvm.jniGlobalRefLock);
-                //dvmDumpReferenceTable(&gDvm.jniGlobalRefTable, "JNI global");
-                dvmUnlockMutex(&gDvm.jniGlobalRefLock);
-            }
-
-            //dvmDumpTrackedAllocations(true);
-            dvmResumeAllThreads(SUSPEND_FOR_STACK_DUMP);
-        } else if (rcvd == SIGUSR1) {
-#if WITH_HPROF
-            LOGI("SIGUSR1 forcing GC and HPROF dump\n");
-            hprofDumpHeap(NULL, false);
-#else
-            LOGI("SIGUSR1 forcing GC (no HPROF)\n");
-            dvmCollectGarbage(false);
-#endif
-#if defined(WITH_JIT) && defined(WITH_JIT_TUNING)
-        } else if (rcvd == SIGUSR2) {
-            static int codeCacheResetCount = 0;
-            if ((--codeCacheResetCount & 7) == 0) {
-                gDvmJit.codeCacheFull = true;
-            } else {
-                dvmCompilerDumpStats();
-                /* Stress-test unchain all */
-                dvmJitUnchainAll();
-                LOGD("Send %d more signals to rest the code cache",
-                     codeCacheResetCount & 7);
-            }
-#endif
-        } else {
+        default:
             LOGE("unexpected signal %d\n", rcvd);
+            break;
         }
     }
 
