@@ -23,8 +23,10 @@ public class AllTests {
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(JSONArrayTest.class);
+        suite.addTestSuite(JSONObjectTest.class);
         suite.addTestSuite(JSONStringerTest.class);
-        suite.addTestSuite(JSONStringerTest.class);
+        suite.addTestSuite(JSONTokenerTest.class);
+        suite.addTestSuite(SelfUseTest.class);
         return suite;
     }
 }

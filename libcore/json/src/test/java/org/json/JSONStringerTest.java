@@ -213,6 +213,7 @@ public class JSONStringerTest extends TestCase {
                 new JSONStringer().object().key("a").value(original).endObject().toString());
         assertEquals("[\"" + escaped + "\"]",
                 new JSONStringer().array().value(original).endArray().toString());
+        assertEquals("\"" + escaped + "\"", JSONObject.quote(original));
     }
 
     public void testJSONArrayAsValue() throws JSONException {
