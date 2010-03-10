@@ -156,6 +156,14 @@ bool dvmCompilerSetupCodeCache(void)
            (void *) dvmCompilerTemplateStart,
            templateSize);
 
+    /*
+     * Work around a CPU bug by keeping the 32-bit ARM handler code in its own
+     * page.
+     */
+    if (dvmCompilerInstructionSet() == DALVIK_JIT_THUMB2) {
+        templateSize = (templateSize + 4095) & ~4095;
+    }
+
     gDvmJit.templateSize = templateSize;
     gDvmJit.codeCacheByteUsed = templateSize;
 

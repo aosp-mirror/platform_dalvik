@@ -409,23 +409,21 @@ void dvmJitStats()
             if (gDvmJit.pJitEntryTable[i].u.info.chain != gDvmJit.jitTableSize)
                 chains++;
         }
-        LOGD("size if %d, entries used is %d",
+        LOGD("JIT: table size is %d, entries used is %d",
              gDvmJit.jitTableSize,  gDvmJit.jitTableEntriesUsed);
-        LOGD(
-         "JIT: %d traces, %d slots, %d chains, %d thresh, %s",
-         hit, not_hit + hit, chains, gDvmJit.threshold,
-         gDvmJit.blockingMode ? "Blocking" : "Non-blocking");
+        LOGD("JIT: %d traces, %d slots, %d chains, %d thresh, %s",
+             hit, not_hit + hit, chains, gDvmJit.threshold,
+             gDvmJit.blockingMode ? "Blocking" : "Non-blocking");
 
 #if defined(JIT_STATS)
-        LOGD(
-         "JIT: Lookups: %d hits, %d misses; %d normal, %d punt",
-         gDvmJit.addrLookupsFound, gDvmJit.addrLookupsNotFound,
-         gDvmJit.normalExit, gDvmJit.puntExit);
-        LOGD(
-         "JIT: noChainExit: %d IC miss, %d interp callsite, %d switch overflow",
-         gDvmJit.noChainExit[kInlineCacheMiss],
-         gDvmJit.noChainExit[kCallsiteInterpreted],
-         gDvmJit.noChainExit[kSwitchOverflow]);
+        LOGD("JIT: Lookups: %d hits, %d misses; %d normal, %d punt",
+             gDvmJit.addrLookupsFound, gDvmJit.addrLookupsNotFound,
+             gDvmJit.normalExit, gDvmJit.puntExit);
+        LOGD("JIT: noChainExit: %d IC miss, %d interp callsite, "
+             "%d switch overflow",
+             gDvmJit.noChainExit[kInlineCacheMiss],
+             gDvmJit.noChainExit[kCallsiteInterpreted],
+             gDvmJit.noChainExit[kSwitchOverflow]);
 
         LOGD("JIT: Invoke: %d mono, %d poly, %d native, %d return",
              gDvmJit.invokeMonomorphic, gDvmJit.invokePolymorphic,
