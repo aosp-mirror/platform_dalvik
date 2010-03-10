@@ -22,6 +22,9 @@
 
 #include "jni.h"
 
+#include <cutils/sched_policy.h>
+
+
 #if defined(CHECK_MUTEX) && !defined(__USE_UNIX98)
 /* glibc lacks this unless you #define __USE_UNIX98 */
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
@@ -437,6 +440,14 @@ Object* dvmGetSystemThreadGroup(void);
 Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj);
 
 /*
+ * Given a pthread handle, return the associated Thread*.
+ * Caller must NOT hold the thread list lock.
+ *
+ * Returns NULL if the thread was not found.
+ */
+Thread* dvmGetThreadByHandle(pthread_t handle);
+
+/*
  * Sleep in a thread.  Returns when the sleep timer returns or the thread
  * is interrupted.
  */
@@ -468,6 +479,25 @@ INLINE void dvmSetThreadJNIEnv(Thread* self, JNIEnv* env) { self->jniEnv = env;}
  * Update the priority value of the underlying pthread.
  */
 void dvmChangeThreadPriority(Thread* thread, int newPriority);
+
+/* "change flags" values for raise/reset thread priority calls */
+#define kChangedPriority    0x01
+#define kChangedPolicy      0x02
+
+/*
+ * If necessary, raise the thread's priority to nice=0 cgroup=fg.
+ *
+ * Returns bit flags indicating changes made (zero if nothing was done).
+ */
+int dvmRaiseThreadPriorityIfNeeded(Thread* thread, int* pSavedThreadPrio,
+    SchedPolicy* pSavedThreadPolicy);
+
+/*
+ * Drop the thread priority to what it was before an earlier call to
+ * dvmRaiseThreadPriorityIfNeeded().
+ */
+void dvmResetThreadPriority(Thread* thread, int changeFlags,
+    int savedThreadPrio, SchedPolicy savedThreadPolicy);
 
 /*
  * Debug: dump information about a single thread.
