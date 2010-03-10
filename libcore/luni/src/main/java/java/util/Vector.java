@@ -32,7 +32,7 @@ import java.lang.reflect.Array;
  * performance cost, and the synchronization is not necessarily meaningful to your application:
  * synchronizing each call to {@code get}, for example, is not equivalent to synchronizing on the
  * list and iterating over it (which is probably what you intended). If you do need very highly
- * concurrent access, you should also consider {@link CopyOnWriteArrayList}.
+ * concurrent access, you should also consider {@link java.util.concurrent.CopyOnWriteArrayList}.
  * 
  * @param <E> The element type of this list.
  */
