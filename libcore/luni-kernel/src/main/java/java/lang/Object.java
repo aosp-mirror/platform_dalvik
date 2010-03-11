@@ -148,10 +148,10 @@ public class Object {
     }
 
     /**
-     * Returns the unique instance of {@link Class} which represents this
+     * Returns the unique instance of {@link Class} that represents this
      * object's class. Note that {@code getClass()} is a special case in that it
      * actually returns {@code Class<? extends Foo>} where {@code Foo} is the
-     * erasure of the type of expression {@code getClass()} was called upon.
+     * erasure of the type of the expression {@code getClass()} was called upon.
      * <p>
      * As an example, the following code actually compiles, although one might
      * think it shouldn't:
@@ -162,9 +162,8 @@ public class Object {
      * </pre>
      * 
      * @return this object's {@code Class} instance.
-     * @since Android 1.0
      */
-    public final native Class<? extends Object> getClass();
+    public final native Class<?> getClass();
 
     /**
      * Returns an integer hash code for this object. By contract, any two
