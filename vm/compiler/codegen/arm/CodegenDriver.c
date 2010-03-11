@@ -1226,6 +1226,10 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     int flagsToCheck = kInstrCanBranch | kInstrCanSwitch | kInstrCanReturn |
                        kInstrCanThrow;
 
+    //If already optimized out, just ignore
+    if (mir->dalvikInsn.opCode == OP_NOP)
+        return;
+
     //Ugly, but necessary.  Flush all Dalvik regs so Interp can find them
     dvmCompilerFlushAllRegs(cUnit);
 
