@@ -85,6 +85,9 @@ public class TestRunner {
     }
 
     public static void main(String[] args) {
+        if (args.length != 0) {
+            throw new RuntimeException("TestRunner doesn't take arguments");
+        }
         System.out.println(TestProperties.result(new TestRunner().run()));
     }
 }
