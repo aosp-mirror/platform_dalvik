@@ -16,6 +16,8 @@
 
 package org.apache.harmony.xml.dom;
 
+import org.apache.xml.serializer.utils.SystemIDResolver;
+import org.apache.xml.utils.URI;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.DOMException;
@@ -27,6 +29,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.UserDataHandler;
 
+import javax.xml.transform.TransformerException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -244,35 +247,83 @@ public abstract class NodeImpl implements Node {
         return matchesName(namespaceURI, getNamespaceURI(), wildcard) && matchesName(localName, getLocalName(), wildcard);
     }
 
-    public String getBaseURI() {
-        /*
-         * TODO: implement. For reference, here's Xerces' behaviour:
-         *
-         * In all cases, the returned URI should be sanitized before it is
-         * returned. If the URI is malformed, null should be returned instead.
-         *
-         * For document nodes, this should return a member field that's
-         * initialized by the parser.
-         *
-         * For element nodes, this should first look for the xml:base attribute.
-         *   if that exists and is absolute, it should be returned.
-         *   if that exists and is relative, it should be resolved to the parent's base URI
-         *   if it doesn't exist, the parent's baseURI should be returned
-         *
-         * For entity nodes, if a base URI exists that should be returned.
-         * Otherwise the document's base URI should be returned
-         *
-         * For entity references, if a base URI exists that should be returned
-         * otherwise it dereferences the entity (via the document) and uses the
-         * entity's base URI.
-         *
-         * For notations, it returns the base URI field.
-         *
-         * For processing instructions, it returns the parent's base URI.
-         *
-         * For all other node types, it returns null.
-         */
-        return null;
+    public final String getBaseURI() {
+        switch (getNodeType()) {
+            case DOCUMENT_NODE:
+                return sanitizeUri(((Document) this).getDocumentURI());
+
+            case ELEMENT_NODE:
+                Element element = (Element) this;
+                String uri = element.getAttributeNS(
+                        "http://www.w3.org/XML/1998/namespace", "base"); // or "xml:base"
+
+                // if this node has no base URI, return the parent's.
+                if (uri == null || uri.length() == 0) {
+                    return getParentBaseUri();
+                }
+
+                // if this node's URI is absolute, return that
+                if (SystemIDResolver.isAbsoluteURI(uri)) {
+                    return uri;
+                }
+
+                // this node has a relative URI. Try to resolve it against the
+                // parent, but if that doesn't work just give up and return null.
+                String parentUri = getParentBaseUri();
+                if (parentUri == null) {
+                    return null;
+                }
+                try {
+                    return SystemIDResolver.getAbsoluteURI(uri, parentUri);
+                } catch (TransformerException e) {
+                    return null; // the spec requires that we swallow exceptions
+                }
+
+            case PROCESSING_INSTRUCTION_NODE:
+                return getParentBaseUri();
+
+            case NOTATION_NODE:
+            case ENTITY_NODE:
+                // When we support these node types, the parser should
+                // initialize a base URI field on these nodes.
+                return null;
+
+            case ENTITY_REFERENCE_NODE:
+                // TODO: get this value from the parser, falling back to the
+                // referenced entity's baseURI if that doesn't exist
+                return null;
+
+            case DOCUMENT_TYPE_NODE:
+            case DOCUMENT_FRAGMENT_NODE:
+            case ATTRIBUTE_NODE:
+            case TEXT_NODE:
+            case CDATA_SECTION_NODE:
+            case COMMENT_NODE:
+                return null;
+
+            default:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Unsupported node type " + getNodeType());
+        }
+    }
+
+    private String getParentBaseUri() {
+        Node parentNode = getParentNode();
+        return parentNode != null ? parentNode.getBaseURI() : null;
+    }
+
+    /**
+     * Returns the sanitized input if it is a URI, or {@code null} otherwise.
+     */
+    private String sanitizeUri(String uri) {
+        if (uri == null || uri.length() == 0) {
+            return null;
+        }
+        try {
+            return new URI(uri).toString();
+        } catch (URI.MalformedURIException e) {
+            return null;
+        }
     }
 
     public short compareDocumentPosition(Node other)
