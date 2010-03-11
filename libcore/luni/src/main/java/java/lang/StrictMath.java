@@ -96,9 +96,7 @@ public final class StrictMath {
      * @return the absolute value of the argument.
      */
     public static double abs(double d) {
-        long bits = Double.doubleToLongBits(d);
-        bits &= 0x7fffffffffffffffL;
-        return Double.longBitsToDouble(bits);
+        return Math.abs(d);
     }
 
     /**
@@ -118,9 +116,7 @@ public final class StrictMath {
      *         argument.
      */
     public static float abs(float f) {
-        int bits = Float.floatToIntBits(f);
-        bits &= 0x7fffffff;
-        return Float.intBitsToFloat(bits);
+        return Math.abs(f);
     }
 
     /**
@@ -135,7 +131,7 @@ public final class StrictMath {
      *         argument.
      */
     public static int abs(int i) {
-        return i >= 0 ? i : -i;
+        return Math.abs(i);
     }
 
     /**
@@ -150,7 +146,7 @@ public final class StrictMath {
      *         argument.
      */
     public static long abs(long l) {
-        return l >= 0 ? l : -l;
+        return Math.abs(l);
     }
 
     /**
@@ -567,7 +563,7 @@ public final class StrictMath {
      * @return the larger of {@code i1} and {@code i2}.
      */
     public static int max(int i1, int i2) {
-        return i1 > i2 ? i1 : i2;
+        return Math.max(i1, i2);
     }
 
     /**
@@ -581,7 +577,7 @@ public final class StrictMath {
      * @return the larger of {@code l1} and {@code l2}.
      */
     public static long max(long l1, long l2) {
-        return l1 > l2 ? l1 : l2;
+        return Math.max(l1, l2);
     }
 
     /**
@@ -661,7 +657,7 @@ public final class StrictMath {
      * @return the smaller of {@code i1} and {@code i2}.
      */
     public static int min(int i1, int i2) {
-        return i1 < i2 ? i1 : i2;
+        return Math.min(i1, i2);
     }
 
     /**
@@ -675,7 +671,7 @@ public final class StrictMath {
      * @return the smaller of {@code l1} and {@code l2}.
      */
     public static long min(long l1, long l2) {
-        return l1 < l2 ? l1 : l2;
+        return Math.min(l1, l2);
     }
 
     /**
@@ -725,9 +721,7 @@ public final class StrictMath {
      * @return a pseudo-random number.
      */
     public static double random() {
-        if (random == null)
-            random = new Random();
-        return random.nextDouble();
+        return Math.random();
     }
 
     /**
@@ -769,10 +763,7 @@ public final class StrictMath {
      * @return the closest integer to the argument.
      */
     public static long round(double d) {
-        // check for NaN
-        if (d != d)
-            return 0L;
-        return (long) Math.floor(d + 0.5d);
+        return Math.round(d);
     }
 
     /**
@@ -795,10 +786,7 @@ public final class StrictMath {
      * @return the closest integer to the argument.
      */
     public static int round(float f) {
-        // check for NaN
-        if (f != f)
-            return 0;
-        return (int) Math.floor(f + 0.5f);
+        return Math.round(f);
     }
     
     /**
@@ -821,16 +809,7 @@ public final class StrictMath {
      * @return the value of the signum function.
      */
     public static double signum(double d){
-        if(Double.isNaN(d)){
-            return Double.NaN;
-        }
-        double sig = d;
-        if(d > 0){
-            sig = 1.0;
-        }else if (d < 0){
-            sig = -1.0;
-        }
-        return sig;
+        return Math.signum(d);
     }
     
     /**
@@ -853,16 +832,7 @@ public final class StrictMath {
      * @return the value of the signum function.
      */
     public static float signum(float f){
-        if(Float.isNaN(f)){
-            return Float.NaN;
-        }
-        float sig = f;
-        if(f > 0){
-            sig = 1.0f;
-        }else if (f < 0){
-            sig = -1.0f;
-        }
-        return sig;
+        return Math.signum(f);
     }
 
     /**
@@ -934,7 +904,7 @@ public final class StrictMath {
      * </ul>
      *
      * @param d
-     *            the angle whose tangens has to be computed, in radians.
+     *            the angle whose tangent has to be computed, in radians.
      * @return the tangent of the argument.
      */
     public static native double tan(double d);
@@ -976,7 +946,7 @@ public final class StrictMath {
      * @return the degree measure of the angle.
      */
     public static double toDegrees(double angrad) {
-        return angrad * 180d / PI;
+        return Math.toDegrees(angrad);
     }
 
     /**
@@ -997,7 +967,7 @@ public final class StrictMath {
      * @return the radian measure of the angle.
      */
     public static double toRadians(double angdeg) {
-        return angdeg / 180d * PI;
+        return Math.toRadians(angdeg);
     }
     
     /**
@@ -1010,8 +980,8 @@ public final class StrictMath {
      * <ul>
      * <li>{@code ulp(+0.0) = Double.MIN_VALUE}</li>
      * <li>{@code ulp(-0.0) = Double.MIN_VALUE}</li>
-     * <li>{@code ulp(+infintiy) = infinity}</li>
-     * <li>{@code ulp(-infintiy) = infinity}</li>
+     * <li>{@code ulp(+infinity) = infinity}</li>
+     * <li>{@code ulp(-infinity) = infinity}</li>
      * <li>{@code ulp(NaN) = NaN}</li>
      * </ul>
      *
@@ -1040,8 +1010,8 @@ public final class StrictMath {
      * <ul>
      * <li>{@code ulp(+0.0) = Float.MIN_VALUE}</li>
      * <li>{@code ulp(-0.0) = Float.MIN_VALUE}</li>
-     * <li>{@code ulp(+infintiy) = infinity}</li>
-     * <li>{@code ulp(-infintiy) = infinity}</li>
+     * <li>{@code ulp(+infinity) = infinity}</li>
+     * <li>{@code ulp(-infinity) = infinity}</li>
      * <li>{@code ulp(NaN) = NaN}</li>
      * </ul>
      *
@@ -1068,40 +1038,38 @@ public final class StrictMath {
     
     /**
      * Answers a result of the magnitude of the first given double value and the
-     * sign of the seconde given double value.
+     * sign of the second given double value.
      * 
      * @param magnitude
      *            the double value whose magnitude should be used
      * @param sign
      *            the double value whose sign should be used
      * @return a result of the magnitude of the first given double value and the
-     *         sign of the seconde given double value.
+     *         sign of the second given double value.
      *         
      * @since 1.6
+     * @hide
      */
     public static double copySign(double magnitude, double sign) {
-        long mbits = Double.doubleToRawLongBits(magnitude);
-        long sbits = Double.doubleToLongBits(sign);
-        return Double.longBitsToDouble((mbits & ~DOUBLE_SIGN_MASK) | (sbits & DOUBLE_SIGN_MASK) );
+        return Math.copySign(magnitude, sign);
     }
 
     /**
      * Answers a result of the magnitude of the first given float value and the
-     * sign of the seconde given float value.
+     * sign of the second given float value.
      * 
      * @param magnitude
      *            the float value whose magnitude should be used
      * @param sign
      *            the float value whose sign should be used
      * @return a result with the magnitude of the first given float value and
-     *         the sign of the seconde given float value.
+     *         the sign of the second given float value.
      *         
      * @since 1.6
+     * @hide
      */
     public static float copySign(float magnitude, float sign) {
-        int mbits = Float.floatToRawIntBits(magnitude);
-        int sbits = Float.floatToIntBits(sign);
-        return Float.intBitsToFloat((mbits & ~FLOAT_SIGN_MASK)| (sbits & FLOAT_SIGN_MASK) );
+        return Math.copySign(magnitude, sign);
     }
     
     /**
@@ -1112,11 +1080,10 @@ public final class StrictMath {
      * @return the exponent of the float.
      * 
      * @since 1.6
+     * @hide
      */
-    public static int getExponent(float f){
-    	int bits = Float.floatToRawIntBits(f);
-        bits = (bits & FLOAT_EXPONENT_MASK) >> FLOAT_MANTISSA_BITS;
-        return bits - FLOAT_EXPONENT_BIAS;
+    public static int getExponent(float f) {
+        return Math.getExponent(f);
     }
     
     /**
@@ -1127,11 +1094,10 @@ public final class StrictMath {
      * @return the exponent of the double.
      * 
      * @since 1.6
+     * @hide
      */
     public static int getExponent(double d){
-    	long bits = Double.doubleToRawLongBits(d);
-        bits = (bits & DOUBLE_EXPONENT_MASK) >> DOUBLE_MANTISSA_BITS;
-        return (int) bits - DOUBLE_EXPONENT_BIAS;
+        return Math.getExponent(d);
     }
     
     /**
@@ -1146,9 +1112,10 @@ public final class StrictMath {
      *         the second given double.
      *         
      * @since 1.6
+     * @hide
      */
     public static double nextAfter(double start, double direction) {
-        if (0 == start && 0 == direction) {
+        if (start == 0 && direction == 0) {
             return direction;
         }
         return nextafter(start, direction);
@@ -1166,46 +1133,10 @@ public final class StrictMath {
      *         the second given double.
      *         
      * @since 1.6
+     * @hide
      */
-    @SuppressWarnings("boxing")
     public static float nextAfter(float start, double direction) {
-        if (Float.isNaN(start) || Double.isNaN(direction)) {
-            return Float.NaN;
-        }
-        if (0 == start && 0 == direction) {
-            return new Float(direction);
-        }
-        if ((start == Float.MIN_VALUE && direction < start)
-                || (start == -Float.MIN_VALUE && direction > start)) {
-            return (start > 0 ? 0f : -0f);
-        }
-        if (Float.isInfinite(start) && (direction != start)) {
-            return (start > 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
-        }
-        if ((start == Float.MAX_VALUE && direction > start)
-                || (start == -Float.MAX_VALUE && direction < start)) {
-            return (start > 0 ? Float.POSITIVE_INFINITY
-                    : Float.NEGATIVE_INFINITY);
-        }
-        if (direction > start) {
-            if (start > 0) {
-                return Float.intBitsToFloat(Float.floatToIntBits(start) + 1);
-            }
-            if (start < 0) {
-                return Float.intBitsToFloat(Float.floatToIntBits(start) - 1);
-            }
-            return +Float.MIN_VALUE;
-        }
-        if (direction < start) {
-            if (start > 0) {
-                return Float.intBitsToFloat(Float.floatToIntBits(start) - 1);
-            }
-            if (start < 0) {
-                return Float.intBitsToFloat(Float.floatToIntBits(start) + 1);
-            }
-            return -Float.MIN_VALUE;
-        }
-        return Double.valueOf(direction).floatValue();
+        return Math.nextAfter(start, direction);
     }
 
     /**
@@ -1216,21 +1147,10 @@ public final class StrictMath {
      * @return the next larger double value of d.
      * 
      * @since 1.6
+     * @hide
      */
     public static double nextUp(double d) {
-        if (Double.isNaN(d)) {
-            return Double.NaN;
-        }
-        if ((d == Double.POSITIVE_INFINITY)) {
-            return Double.POSITIVE_INFINITY;
-        }
-        if (0 == d) {
-            return Double.MIN_VALUE;
-        } else if (0 < d) {
-            return Double.longBitsToDouble(Double.doubleToLongBits(d) + 1);
-        } else {
-            return Double.longBitsToDouble(Double.doubleToLongBits(d) - 1);
-        }
+        return Math.nextUp(d);
     }
     
     /**
@@ -1241,21 +1161,10 @@ public final class StrictMath {
      * @return the next larger float value of d.
      * 
      * @since 1.6
+     * @hide
      */
     public static float nextUp(float f) {
-        if (Float.isNaN(f)) {
-            return Float.NaN;
-        }
-        if ((f == Float.POSITIVE_INFINITY)) {
-            return Float.POSITIVE_INFINITY;
-        }
-        if (0 == f) {
-            return Float.MIN_VALUE;
-        } else if (0 < f) {
-            return Float.intBitsToFloat(Float.floatToIntBits(f) + 1);
-        } else {
-            return Float.intBitsToFloat(Float.floatToIntBits(f) - 1);
-        }
+        return Math.nextUp(f);
     }
     
     /**
@@ -1268,21 +1177,21 @@ public final class StrictMath {
      * @return d 2^scaleFactor
      * 
      * @since 1.6
+     * @hide
      */
-    @SuppressWarnings("boxing")
     public static double scalb(double d, int scaleFactor) {
-        if (Double.isNaN(d) || Double.isInfinite(d) || 0 == d) {
+        if (Double.isNaN(d) || Double.isInfinite(d) || d == 0) {
             return d;
         }
         // change double to long for calculation
         long bits = Double.doubleToLongBits(d);
         // the sign of the results must be the same of given d
-        Long sign = bits & DOUBLE_SIGN_MASK;
+        long sign = bits & DOUBLE_SIGN_MASK;
         // calculates the factor of the result
-        long factor = (int) ((Double.doubleToLongBits(d) & DOUBLE_EXPONENT_MASK) >> DOUBLE_MANTISSA_BITS)
+        long factor = (int) ((bits & DOUBLE_EXPONENT_MASK) >> DOUBLE_MANTISSA_BITS)
                 - DOUBLE_EXPONENT_BIAS + scaleFactor;
 
-        // calcutes the factor of sub-normal values
+        // calculates the factor of sub-normal values
         int subNormalFactor = Long.numberOfLeadingZeros(bits
                 & ~DOUBLE_SIGN_MASK)
                 - DOUBLE_EXPONENT_BITS;
@@ -1334,16 +1243,17 @@ public final class StrictMath {
      * @return d 2^scaleFactor
      * 
      * @since 1.6
+     * @hide
      */
     public static float scalb(float d, int scaleFactor) {
-        if (Float.isNaN(d) || Float.isInfinite(d) || 0 == d) {
+        if (Float.isNaN(d) || Float.isInfinite(d) || d == 0) {
             return d;
         }
         int bits = Float.floatToIntBits(d);
         int sign = bits & FLOAT_SIGN_MASK;
-        int factor = ((Float.floatToIntBits(d) & FLOAT_EXPONENT_MASK) >> FLOAT_MANTISSA_BITS)
+        int factor = ((bits & FLOAT_EXPONENT_MASK) >> FLOAT_MANTISSA_BITS)
                 - FLOAT_EXPONENT_BIAS + scaleFactor;
-        // calcutes the factor of sub-normal values
+        // calculates the factor of sub-normal values
         int subNormalFactor = Integer.numberOfLeadingZeros(bits
                 & ~FLOAT_SIGN_MASK)
                 - FLOAT_EXPONENT_BITS;

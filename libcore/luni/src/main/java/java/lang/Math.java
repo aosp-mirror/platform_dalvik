@@ -520,7 +520,7 @@ public final class Math {
             return Double.NaN;
         }
         /* max(+0.0,-0.0) == +0.0 */
-        /* 0 == Double.doubleToRawLongBits(0.0d) */
+        /* Double.doubleToRawLongBits(0.0d) == 0 */
         if (Double.doubleToRawLongBits(d1) != 0) {
             return d2;
         }
@@ -557,7 +557,7 @@ public final class Math {
             return Float.NaN;
         }
         /* max(+0.0,-0.0) == +0.0 */
-        /* 0 == Float.floatToRawIntBits(0.0f) */
+        /* Float.floatToRawIntBits(0.0f) == 0*/
         if (Float.floatToRawIntBits(f1) != 0) {
             return f2;
         }
@@ -762,8 +762,8 @@ public final class Math {
      * <li>{@code round(-0.0) = +0.0}</li>
      * <li>{@code round((anything > Long.MAX_VALUE) = Long.MAX_VALUE}</li>
      * <li>{@code round((anything < Long.MIN_VALUE) = Long.MIN_VALUE}</li>
-     * <li>{@code round(+infintiy) = Long.MAX_VALUE}</li>
-     * <li>{@code round(-infintiy) = Long.MIN_VALUE}</li>
+     * <li>{@code round(+infinity) = Long.MAX_VALUE}</li>
+     * <li>{@code round(-infinity) = Long.MIN_VALUE}</li>
      * <li>{@code round(NaN) = +0.0}</li>
      * </ul>
      * 
@@ -826,7 +826,16 @@ public final class Math {
      * @return the value of the signum function.
      */
     public static double signum(double d) {
-        return StrictMath.signum(d);
+        if (Double.isNaN(d)) {
+            return Double.NaN;
+        }
+        double sig = d;
+        if (d > 0) {
+            sig = 1.0;
+        } else if (d < 0) {
+            sig = -1.0;
+        }
+        return sig;
     }
 
     /**
@@ -849,7 +858,16 @@ public final class Math {
      * @return the value of the signum function.
      */
     public static float signum(float f) {
-        return StrictMath.signum(f);
+        if (Float.isNaN(f)) {
+            return Float.NaN;
+        }
+        float sig = f;
+        if (f > 0) {
+            sig = 1.0f;
+        } else if (f < 0) {
+            sig = -1.0f;
+        }
+        return sig;
     }
 
     /**
@@ -926,7 +944,7 @@ public final class Math {
      * </ul>
      * 
      * @param d
-     *            the angle whose tangens has to be computed, in radians.
+     *            the angle whose tangent has to be computed, in radians.
      * @return the tangent of the argument.
      */
     public static native double tan(double d);
@@ -1086,12 +1104,12 @@ public final class Math {
      *         sign of the second given double value .
      * 
      * @since 1.6
+     * @hide
      */
     public static double copySign(double magnitude, double sign) {
         long mbits = Double.doubleToRawLongBits(magnitude);
         long sbits = Double.doubleToRawLongBits(sign);
-        return Double.longBitsToDouble((mbits & ~DOUBLE_SIGN_MASK)
-                | (sbits & DOUBLE_SIGN_MASK));
+        return Double.longBitsToDouble((mbits & ~DOUBLE_SIGN_MASK) | (sbits & DOUBLE_SIGN_MASK));
     }
 
     /**
@@ -1106,12 +1124,12 @@ public final class Math {
      *         the sign of the second given float value .
      * 
      * @since 1.6
+     * @hide
      */
     public static float copySign(float magnitude, float sign) {
         int mbits = Float.floatToRawIntBits(magnitude);
         int sbits = Float.floatToRawIntBits(sign);
-        return Float.intBitsToFloat((mbits & ~FLOAT_SIGN_MASK)
-                | (sbits & FLOAT_SIGN_MASK));
+        return Float.intBitsToFloat((mbits & ~FLOAT_SIGN_MASK) | (sbits & FLOAT_SIGN_MASK));
     }
     
     /**
@@ -1122,6 +1140,7 @@ public final class Math {
      * @return the exponent of the float.
      * 
      * @since 1.6
+     * @hide
      */
     public static int getExponent(float f) {
         int bits = Float.floatToRawIntBits(f);
@@ -1137,6 +1156,7 @@ public final class Math {
      * @return the exponent of the double.
      * 
      * @since 1.6
+     * @hide
      */
     public static int getExponent(double d) {
         long bits = Double.doubleToRawLongBits(d);
@@ -1156,9 +1176,10 @@ public final class Math {
      *         the second given double.
      * 
      * @since 1.6
+     * @hide
      */
     public static double nextAfter(double start, double direction) {
-        if (0 == start && 0 == direction) {
+        if (start == 0 && direction == 0) {
             return direction;
         }
         return nextafter(start, direction);
@@ -1176,14 +1197,14 @@ public final class Math {
      *         the second given double.
      * 
      * @since 1.6
+     * @hide
      */
-    @SuppressWarnings("boxing")
     public static float nextAfter(float start, double direction) {
         if (Float.isNaN(start) || Double.isNaN(direction)) {
             return Float.NaN;
         }
-        if (0 == start && 0 == direction) {       	
-            return new Float(direction);
+        if (start == 0 && direction == 0) {
+            return (float) direction;
         }
         if ((start == Float.MIN_VALUE && direction < start)
                 || (start == -Float.MIN_VALUE && direction > start)) {
@@ -1215,7 +1236,7 @@ public final class Math {
             }
             return -Float.MIN_VALUE;
         }
-        return new Float(direction);
+        return (float) direction;
     }
     
     /**
@@ -1226,17 +1247,18 @@ public final class Math {
      * @return the next larger double value of d.
      * 
      * @since 1.6
+     * @hide
      */
     public static double nextUp(double d) {
         if (Double.isNaN(d)) {
             return Double.NaN;
         }
-        if ((d == Double.POSITIVE_INFINITY)) {
+        if (d == Double.POSITIVE_INFINITY) {
             return Double.POSITIVE_INFINITY;
         }
-        if (0 == d) {
+        if (d == 0) {
             return Double.MIN_VALUE;
-        } else if (0 < d) {
+        } else if (d > 0) {
             return Double.longBitsToDouble(Double.doubleToLongBits(d) + 1);
         } else {
             return Double.longBitsToDouble(Double.doubleToLongBits(d) - 1);
@@ -1251,17 +1273,18 @@ public final class Math {
      * @return the next larger float value of d.
      * 
      * @since 1.6
+     * @hide
      */
     public static float nextUp(float f) {
         if (Float.isNaN(f)) {
             return Float.NaN;
         }
-        if ((f == Float.POSITIVE_INFINITY)) {
+        if (f == Float.POSITIVE_INFINITY) {
             return Float.POSITIVE_INFINITY;
         }
-        if (0 == f) {
+        if (f == 0) {
             return Float.MIN_VALUE;
-        } else if (0 < f) {
+        } else if (f > 0) {
             return Float.intBitsToFloat(Float.floatToIntBits(f) + 1);
         } else {
             return Float.intBitsToFloat(Float.floatToIntBits(f) - 1);
@@ -1278,10 +1301,10 @@ public final class Math {
      * @return d * 2^scaleFactor
      * 
      * @since 1.6
+     * @hide
      */
-    @SuppressWarnings("boxing")
     public static double scalb(double d, int scaleFactor) {
-        if (Double.isNaN(d) || Double.isInfinite(d) || 0 == d) {
+        if (Double.isNaN(d) || Double.isInfinite(d) || d == 0) {
             return d;
         }
         // change double to long for calculation
@@ -1292,7 +1315,7 @@ public final class Math {
         long factor = ((bits & DOUBLE_EXPONENT_MASK) >> DOUBLE_MANTISSA_BITS)
                 - DOUBLE_EXPONENT_BIAS + scaleFactor;
 
-        // calcutes the factor of sub-normal values
+        // calculates the factor of sub-normal values
         int subNormalFactor = Long.numberOfLeadingZeros(bits
                 & ~DOUBLE_SIGN_MASK)
                 - DOUBLE_NON_MANTISSA_BITS;
@@ -1343,9 +1366,10 @@ public final class Math {
      * @return d * 2^scaleFactor
      * 
      * @since 1.6
+     * @hide
      */
     public static float scalb(float d, int scaleFactor) {
-        if (Float.isNaN(d) || Float.isInfinite(d) || 0 == d) {
+        if (Float.isNaN(d) || Float.isInfinite(d) || d == 0) {
             return d;
         }
         int bits = Float.floatToIntBits(d);
