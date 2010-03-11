@@ -1347,7 +1347,7 @@ public final class Formatter implements Closeable, Flushable {
                 break;
 
             default:
-                throw new AssertionError(conversionType);
+                throw new UnknownFormatConversionException(String.valueOf(conversionType));
             }
             
             // Check for disallowed flags.
