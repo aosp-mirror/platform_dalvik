@@ -38,6 +38,8 @@ public final class AttrImpl extends NodeImpl implements Attr {
     ElementImpl ownerElement;
 
     private boolean namespaceAware;
+
+    boolean isId;
     
     private String namespaceURI;
 
@@ -159,10 +161,11 @@ public final class AttrImpl extends NodeImpl implements Attr {
     }
 
     public TypeInfo getSchemaTypeInfo() {
-        throw new UnsupportedOperationException(); // TODO
+        // TODO: populate this when we support XML Schema
+        return NULL_TYPE_INFO;
     }
 
     public boolean isId() {
-        throw new UnsupportedOperationException(); // TODO
+        return isId;
     }
 }

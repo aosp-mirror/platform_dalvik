@@ -136,7 +136,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
         return attr.getValue();
     }
 
-    public Attr getAttributeNode(String name) {
+    public AttrImpl getAttributeNode(String name) {
         int i = indexOfAttribute(name);
         
         if (i == -1) {
@@ -146,7 +146,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
         return attributes.get(i);
     }
 
-    public Attr getAttributeNodeNS(String namespaceURI, String localName) {
+    public AttrImpl getAttributeNodeNS(String namespaceURI, String localName) {
         int i = indexOfAttributeNS(namespaceURI, localName);
         
         if (i == -1) {
@@ -160,8 +160,25 @@ public class ElementImpl extends InnerNodeImpl implements Element {
     public NamedNodeMap getAttributes() {
         return new ElementAttrNamedNodeMapImpl();
     }
-    
+
+    /**
+     * This implementation walks the entire document looking for an element
+     * with the given ID attribute. We should consider adding an index to speed
+     * navigation of large documents.
+     */
     Element getElementById(String name) {
+        for (Attr attr : attributes) {
+            if (attr.isId() && name.equals(attr.getValue())) {
+                return this;
+            }
+        }
+
+        /*
+         * TODO: Remove this behavior.
+         * The spec explicitly says that this is a bad idea. From
+         * Document.getElementById(): "Attributes with the name "ID"
+         * or "id" are not of type ID unless so defined.
+         */
         if (name.equals(getAttribute("id"))) {
             return this;
         }
@@ -432,20 +449,30 @@ public class ElementImpl extends InnerNodeImpl implements Element {
     }
 
     public TypeInfo getSchemaTypeInfo() {
-        throw new UnsupportedOperationException(); // TODO
+        // TODO: populate this when we support XML Schema
+        return NULL_TYPE_INFO;
     }
 
     public void setIdAttribute(String name, boolean isId) throws DOMException {
-        throw new UnsupportedOperationException(); // TODO
+        AttrImpl attr = getAttributeNode(name);
+        if (attr == null) {
+            throw new DOMException(DOMException.NOT_FOUND_ERR,
+                    "No such attribute: " + name);
+        }
+        attr.isId = isId;
     }
 
     public void setIdAttributeNS(String namespaceURI, String localName,
             boolean isId) throws DOMException {
-        throw new UnsupportedOperationException(); // TODO
+        AttrImpl attr = getAttributeNodeNS(namespaceURI, localName);
+        if (attr == null) {
+            throw new DOMException(DOMException.NOT_FOUND_ERR,
+                    "No such attribute: " + namespaceURI +  " " + localName);
+        }
+        attr.isId = isId;
     }
 
-    public void setIdAttributeNode(Attr idAttr, boolean isId)
-            throws DOMException {
-        throw new UnsupportedOperationException(); // TODO
+    public void setIdAttributeNode(Attr idAttr, boolean isId) throws DOMException {
+        ((AttrImpl) idAttr).isId = isId;
     }
 }

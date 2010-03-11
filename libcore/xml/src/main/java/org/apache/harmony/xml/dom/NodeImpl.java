@@ -27,6 +27,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
+import org.w3c.dom.TypeInfo;
 import org.w3c.dom.UserDataHandler;
 
 import javax.xml.transform.TransformerException;
@@ -48,7 +49,20 @@ import java.util.Map;
 public abstract class NodeImpl implements Node {
 
     private static final NodeList EMPTY_LIST = new NodeListImpl();
-    
+
+    static final TypeInfo NULL_TYPE_INFO = new TypeInfo() {
+        public String getTypeName() {
+            return null;
+        }
+        public String getTypeNamespace() {
+            return null;
+        }
+        public boolean isDerivedFrom(
+                String typeNamespaceArg, String typeNameArg, int derivationMethod) {
+            return false;
+        }
+    };
+
     DocumentImpl document;
 
     NodeImpl(DocumentImpl document) {
