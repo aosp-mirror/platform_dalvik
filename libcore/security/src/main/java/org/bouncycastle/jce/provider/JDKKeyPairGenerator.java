@@ -397,9 +397,9 @@ public abstract class JDKKeyPairGenerator
 //        static {
 //            ecParameters = new Hashtable();
 //
-//            ecParameters.put(new Integer(192), new ECGenParameterSpec("prime192v1"));
-//            ecParameters.put(new Integer(239), new ECGenParameterSpec("prime239v1"));
-//            ecParameters.put(new Integer(256), new ECGenParameterSpec("prime256v1"));
+//            ecParameters.put(Integer.valueOf(192), new ECGenParameterSpec("prime192v1"));
+//            ecParameters.put(Integer.valueOf(239), new ECGenParameterSpec("prime239v1"));
+//            ecParameters.put(Integer.valueOf(256), new ECGenParameterSpec("prime256v1"));
 //        }
 //
 //        public EC()
@@ -421,7 +421,7 @@ public abstract class JDKKeyPairGenerator
 //        {
 //            this.strength = strength;
 //            this.random = random;
-//            this.ecParams = (ECGenParameterSpec)ecParameters.get(new Integer(strength));
+//            this.ecParams = (ECGenParameterSpec)ecParameters.get(Integer.valueOf(strength));
 //
 //            if (ecParams != null)
 //            {

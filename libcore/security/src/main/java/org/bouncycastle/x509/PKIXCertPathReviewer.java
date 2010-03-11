@@ -662,7 +662,7 @@ public class PKIXCertPathReviewer extends CertPathValidatorUtilities
         }
 
         ErrorBundle msg = new ErrorBundle(RESOURCE_NAME,"CertPathReviewer.totalPathLength",
-                new Object[] {new Integer(totalPathLength)});
+                new Object[] {Integer.valueOf(totalPathLength)});
         
         addNotification(msg);
     }
@@ -697,7 +697,7 @@ public class PKIXCertPathReviewer extends CertPathValidatorUtilities
                 // conflicting trust anchors                
                 ErrorBundle msg = new ErrorBundle(RESOURCE_NAME,
                         "CertPathReviewer.conflictingTrustAnchors",
-                        new Object[] {new Integer(trustColl.size()),
+                        new Object[] {Integer.valueOf(trustColl.size()),
                                       new UntrustedInput(cert.getIssuerX500Principal())});
                 addError(msg);
             }
@@ -706,7 +706,7 @@ public class PKIXCertPathReviewer extends CertPathValidatorUtilities
                 ErrorBundle msg = new ErrorBundle(RESOURCE_NAME,
                         "CertPathReviewer.noTrustAnchorFound",
                         new Object[] {new UntrustedInput(cert.getIssuerX500Principal()),
-                                      new Integer(pkixParams.getTrustAnchors().size())});
+                                Integer.valueOf(pkixParams.getTrustAnchors().size())});
                 addError(msg);
             }
             else
@@ -1883,7 +1883,7 @@ public class PKIXCertPathReviewer extends CertPathValidatorUtilities
                     else
                     {
                         msg = new ErrorBundle(RESOURCE_NAME,"CertPathReviewer.QcLimitValueNum",
-                                new Object[] {new Integer(limit.getCurrency().getNumeric()),
+                                new Object[] {Integer.valueOf(limit.getCurrency().getNumeric()),
                                               new Double(value),
                                               limit});
                     }
@@ -1978,7 +1978,7 @@ public class PKIXCertPathReviewer extends CertPathValidatorUtilities
                         "CertPathReviewer.noCrlInCertstore",
                         new Object[] {new UntrustedInput(crlselect.getIssuers()),
                                       new UntrustedInput(nonMatchingCrlNames),
-                                      new Integer(numbOfCrls)});
+                                      Integer.valueOf(numbOfCrls)});
                 addNotification(msg,index);
             }
 

@@ -227,7 +227,7 @@ public class Stmt {
     public Object column(int col) throws SQLite.Exception {
         switch (column_type(col)) {
 	case Constants.SQLITE_INTEGER:
-	    return new Long(column_long(col));
+            return Long.valueOf(column_long(col)); // android-changed: performance
 	case Constants.SQLITE_FLOAT:
 	    return new Double(column_double(col));
 	case Constants.SQLITE_BLOB:

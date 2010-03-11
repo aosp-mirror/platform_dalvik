@@ -751,7 +751,6 @@ public class X509CertSelector implements CertSelector {
         ArrayList result = new ArrayList();
         for (int tag=0; tag<9; tag++) {
             if (subjectAltNames[tag] != null) {
-                Integer teg = new Integer(tag);
                 for (int name=0; name<subjectAltNames[tag].size(); name++) {
                     Object neim = subjectAltNames[tag].get(name);
                     if (neim instanceof byte[]) {
@@ -760,7 +759,7 @@ public class X509CertSelector implements CertSelector {
                         System.arraycopy(arr_neim, 0, neim, 0, arr_neim.length);
                     }
                     List list = new ArrayList(2);
-                    list.add(teg);
+                    list.add(Integer.valueOf(tag)); // android-changed
                     list.add(neim);
                     result.add(list);
                 }
@@ -1431,4 +1430,3 @@ public class X509CertSelector implements CertSelector {
         return result;
     }
 }
-

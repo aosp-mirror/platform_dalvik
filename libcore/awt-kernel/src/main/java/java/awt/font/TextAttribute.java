@@ -137,13 +137,13 @@ public final class TextAttribute extends Attribute {
      * The Constant RUN_DIRECTION_LTR indicates left-to-right run 
      * direction. 
      */
-    public static final Boolean RUN_DIRECTION_LTR = new Boolean(false);
+    public static final Boolean RUN_DIRECTION_LTR = false;
 
     /** 
      * The Constant RUN_DIRECTION_RTL indicates right-to-left run
      * direction. 
      */
-    public static final Boolean RUN_DIRECTION_RTL = new Boolean(true);
+    public static final Boolean RUN_DIRECTION_RTL = true;
 
     /** The SIZE text attribute. */
     public static final TextAttribute SIZE = new TextAttribute("size"); //$NON-NLS-1$
@@ -152,16 +152,16 @@ public final class TextAttribute extends Attribute {
     public static final TextAttribute STRIKETHROUGH = new TextAttribute("strikethrough"); //$NON-NLS-1$
 
     /** The Constant STRIKETHROUGH_ON indicates a single strikethrough. */
-    public static final Boolean STRIKETHROUGH_ON = new Boolean(true);
+    public static final Boolean STRIKETHROUGH_ON = true;
 
     /** The SUPERSCRIPT text attribute. */
     public static final TextAttribute SUPERSCRIPT = new TextAttribute("superscript"); //$NON-NLS-1$
 
     /** The Constant SUPERSCRIPT_SUB indicates a standard subscript. */
-    public static final Integer SUPERSCRIPT_SUB = new Integer(-1);
+    public static final Integer SUPERSCRIPT_SUB = -1;
 
     /** The Constant SUPERSCRIPT_SUPER indicates a standard superscript. */
-    public static final Integer SUPERSCRIPT_SUPER = new Integer(1);
+    public static final Integer SUPERSCRIPT_SUPER = 1;
 
     /** The SWAP_COLORS text attribute. */
     public static final TextAttribute SWAP_COLORS = new TextAttribute("swap_colors"); //$NON-NLS-1$
@@ -170,7 +170,7 @@ public final class TextAttribute extends Attribute {
      * The Constant SWAP_COLORS_ON indicates a swap of foreground 
      * and background.
      */
-    public static final Boolean SWAP_COLORS_ON = new Boolean(true);
+    public static final Boolean SWAP_COLORS_ON = true;
 
     /** The TRANSFORM text attribute. */
     public static final TextAttribute TRANSFORM = new TextAttribute("transform"); //$NON-NLS-1$
@@ -182,37 +182,37 @@ public final class TextAttribute extends Attribute {
      * The Constant UNDERLINE_ON indicates a standard underline 
      * at the roman baseline for roman text.
      */
-    public static final Integer UNDERLINE_ON = new Integer(0);
+    public static final Integer UNDERLINE_ON = 0;
 
     /** 
      * The Constant UNDERLINE_LOW_ONE_PIXEL indicates a single 
      * pixel solid low underline. 
      */
-    public static final Integer UNDERLINE_LOW_ONE_PIXEL = new Integer(1);
+    public static final Integer UNDERLINE_LOW_ONE_PIXEL = 1;
 
     /** 
      * The Constant UNDERLINE_LOW_TWO_PIXEL indicates a double 
      * pixel solid low underline. 
      */
-    public static final Integer UNDERLINE_LOW_TWO_PIXEL = new Integer(2);
+    public static final Integer UNDERLINE_LOW_TWO_PIXEL = 2;
 
     /** 
      * The Constant UNDERLINE_LOW_DOTTED indicates a 
      * single pixel dotted low underline. 
      */
-    public static final Integer UNDERLINE_LOW_DOTTED = new Integer(3);
+    public static final Integer UNDERLINE_LOW_DOTTED = 3;
 
     /** 
      * The Constant UNDERLINE_LOW_GRAY indicates double pixel 
      * gray low underline. 
      */
-    public static final Integer UNDERLINE_LOW_GRAY = new Integer(4);
+    public static final Integer UNDERLINE_LOW_GRAY = 4;
 
     /** 
      * The Constant UNDERLINE_LOW_DASHED indicates single pixel dashed 
      * low underline. 
      */
-    public static final Integer UNDERLINE_LOW_DASHED = new Integer(5);
+    public static final Integer UNDERLINE_LOW_DASHED = 5;
 
     /** The WEIGHT text attribute. */
     public static final TextAttribute WEIGHT = new TextAttribute("weight"); //$NON-NLS-1$

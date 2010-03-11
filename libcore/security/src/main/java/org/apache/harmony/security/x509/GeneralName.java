@@ -463,7 +463,7 @@ public class GeneralName {
      */
     public List getAsList() {
         ArrayList result = new ArrayList();
-        result.add(new Integer(tag));
+        result.add(Integer.valueOf(tag)); // android-changed
         switch (tag) {
             case OTHER_NAME:
                 result.add(((OtherName) name).getEncoded());

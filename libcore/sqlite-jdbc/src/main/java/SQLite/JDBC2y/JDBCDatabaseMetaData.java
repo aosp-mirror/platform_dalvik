@@ -637,7 +637,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 	if (rs0 != null && rs0.tr != null && rs0.tr.nrows > 0) {
 	    Hashtable<String, Integer> h = new Hashtable<String, Integer>();
 	    for (int i = 0; i < rs0.tr.ncolumns; i++) {
-		h.put(rs0.tr.column[i], new Integer(i));
+		h.put(rs0.tr.column[i], Integer.valueOf(i)); // android-changed
 	    }
 	    if (columnNamePattern != null &&
 		columnNamePattern.charAt(0) == '%') {
@@ -672,8 +672,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 		row[14] = "0";
 		row[15] = "65536";
 		col = ((Integer) h.get("cid")).intValue();
-		Integer cid = new Integer(r0[col]);
-		row[16] = "" + (cid.intValue() + 1);
+		row[16] = Integer.toString(Integer.parseInt(r0[col]) + 1); // android-changed
 		col = ((Integer) h.get("notnull")).intValue();
 		row[17] = (r0[col].charAt(0) == '0') ? "YES" : "NO";
 		row[10] = (r0[col].charAt(0) == '0') ? "" + columnNullable :
@@ -769,11 +768,11 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 	    rs1 != null && rs1.tr != null && rs1.tr.nrows > 0) {
 	    Hashtable<String, Integer> h0 = new Hashtable<String, Integer>();
 	    for (int i = 0; i < rs0.tr.ncolumns; i++) {
-		h0.put(rs0.tr.column[i], new Integer(i));
+		h0.put(rs0.tr.column[i], Integer.valueOf(i)); // android-changed
 	    }
 	    Hashtable<String, Integer> h1 = new Hashtable<String, Integer>();
 	    for (int i = 0; i < rs1.tr.ncolumns; i++) {
-		h1.put(rs1.tr.column[i], new Integer(i));
+		h1.put(rs1.tr.column[i], Integer.valueOf(i)); // android-changed
 	    }
 	    for (int i = 0; i < rs0.tr.nrows; i++) {
 		String r0[] = (String [])(rs0.tr.rows.elementAt(i));
@@ -800,7 +799,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 		Hashtable<String, Integer> h2 =
 		    new Hashtable<String, Integer>();
 		for (int k = 0; k < rs2.tr.ncolumns; k++) {
-		    h2.put(rs2.tr.column[k], new Integer(k));
+		    h2.put(rs2.tr.column[k], Integer.valueOf(k)); // android-changed
 		}
 		for (int k = 0; k < rs2.tr.nrows; k++) {
 		    String r2[] = (String [])(rs2.tr.rows.elementAt(k));
@@ -892,7 +891,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 	if (rs0 != null && rs0.tr != null && rs0.tr.nrows > 0) {
 	    Hashtable<String, Integer> h0 = new Hashtable<String, Integer>();
 	    for (int i = 0; i < rs0.tr.ncolumns; i++) {
-		h0.put(rs0.tr.column[i], new Integer(i));
+		h0.put(rs0.tr.column[i], Integer.valueOf(i)); // android-changed
 	    }
 	    for (int i = 0; i < rs0.tr.nrows; i++) {
 		String r0[] = (String [])(rs0.tr.rows.elementAt(i));
@@ -919,7 +918,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 		Hashtable<String, Integer> h1 =
 		    new Hashtable<String, Integer>();
 		for (int k = 0; k < rs1.tr.ncolumns; k++) {
-		    h1.put(rs1.tr.column[k], new Integer(k));
+		    h1.put(rs1.tr.column[k], Integer.valueOf(k)); // android-changed
 		}
 		for (int k = 0; k < rs1.tr.nrows; k++) {
 		    String r1[] = (String [])(rs1.tr.rows.elementAt(k));
@@ -952,7 +951,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 	if (rs0 != null && rs0.tr != null && rs0.tr.nrows > 0) {
 	    Hashtable<String, Integer> h0 = new Hashtable<String, Integer>();
 	    for (int i = 0; i < rs0.tr.ncolumns; i++) {
-		h0.put(rs0.tr.column[i], new Integer(i));
+		h0.put(rs0.tr.column[i], Integer.valueOf(i)); // android-changed
 	    }
 	    for (int i = 0; i < rs0.tr.nrows; i++) {
 		String r0[] = (String [])(rs0.tr.rows.elementAt(i));
@@ -985,7 +984,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 				      JDBCResultSet in, TableResultX out) {
 	Hashtable<String, Integer> h0 = new Hashtable<String, Integer>();
 	for (int i = 0; i < in.tr.ncolumns; i++) {
-	    h0.put(in.tr.column[i], new Integer(i));
+	    h0.put(in.tr.column[i], Integer.valueOf(i)); // android-changed
 	}
 	for (int i = 0; i < in.tr.nrows; i++) {
 	    String r0[] = (String [])(in.tr.rows.elementAt(i));
@@ -1312,7 +1311,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 	if (rs0 != null && rs0.tr != null && rs0.tr.nrows > 0) {
 	    Hashtable<String, Integer> h0 = new Hashtable<String, Integer>();
 	    for (int i = 0; i < rs0.tr.ncolumns; i++) {
-		h0.put(rs0.tr.column[i], new Integer(i));
+		h0.put(rs0.tr.column[i], Integer.valueOf(i)); // android-changed
 	    }
 	    for (int i = 0; i < rs0.tr.nrows; i++) {
 		String r0[] = (String [])(rs0.tr.rows.elementAt(i));
@@ -1339,7 +1338,7 @@ public class JDBCDatabaseMetaData implements DatabaseMetaData {
 		Hashtable<String, Integer> h1 =
 		    new Hashtable<String, Integer>();
 		for (int k = 0; k < rs1.tr.ncolumns; k++) {
-		    h1.put(rs1.tr.column[k], new Integer(k));
+		    h1.put(rs1.tr.column[k], Integer.valueOf(k)); // android-changed
 		}
 		for (int k = 0; k < rs1.tr.nrows; k++) {
 		    String r1[] = (String [])(rs1.tr.rows.elementAt(k));

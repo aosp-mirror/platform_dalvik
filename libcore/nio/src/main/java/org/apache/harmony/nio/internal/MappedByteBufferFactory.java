@@ -56,7 +56,7 @@ class MappedByteBufferFactory {
          * than Integer.MAX_VALUE, so long to int cast is safe here.
          */
         return (MappedByteBuffer) constructor.newInstance(new Object[] { addr,
-                new Integer((int) size), new Integer(offset),
-                new Integer(mapmode) });
+                Integer.valueOf((int) size), Integer.valueOf(offset),
+                Integer.valueOf(mapmode) });
     }
 }

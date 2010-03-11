@@ -226,7 +226,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  *
  * <pre>
  * Object[] arguments = {
- *         new Integer(7), new Date(System.currentTimeMillis()),
+ *         Integer.valueOf(7), new Date(System.currentTimeMillis()),
  *         "a disturbance in the Force"};
  * String result = MessageFormat.format(
  *         "At {1,time} on {1,date}, there was {2} on planet {0,number,integer}.",
@@ -245,7 +245,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  * Example 2: <blockquote>
  *
  * <pre>
- * Object[] testArgs = {new Long(3), "MyDisk"};
+ * Object[] testArgs = {Long.valueOf(3), "MyDisk"};
  * MessageFormat form = new MessageFormat("The disk \"{1}\" contains {0} file(s).");
  * System.out.println(form.format(testArgs));
  * <em>
@@ -269,7 +269,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  * String[] filepart = {"no files","one file","{0,number} files"};
  * ChoiceFormat fileform = new ChoiceFormat(filelimits, filepart);
  * form.setFormatByArgumentIndex(0, fileform);
- * Object[] testArgs = {new Long(12373), "MyDisk"};
+ * Object[] testArgs = {Long.valueOf(12373), "MyDisk"};
  * System.out.println(form.format(testArgs));
  * <em>
  * Output (with different testArgs):
@@ -621,21 +621,14 @@ public class MessageFormat extends Format {
 
     /**
      * Adds a new FieldContainer with MessageFormat.Field.ARGUMENT field,
-     * argnumber, begin and end index to the fields vector, or sets the
+     * argIndex, begin and end index to the fields vector, or sets the
      * position's begin and end index if it has MessageFormat.Field.ARGUMENT as
      * its field attribute.
-     * 
-     * @param begin
-     * @param end
-     * @param argnumber
-     * @param position
-     * @param fields
      */
-    private void handleArgumentField(int begin, int end, int argnumber,
+    private void handleArgumentField(int begin, int end, int argIndex,
             FieldPosition position, Vector<FieldContainer> fields) {
         if (fields != null) {
-            fields.add(new FieldContainer(begin, end, Field.ARGUMENT,
-                    new Integer(argnumber)));
+            fields.add(new FieldContainer(begin, end, Field.ARGUMENT, Integer.valueOf(argIndex)));
         } else {
             if (position != null
                     && position.getFieldAttribute() == Field.ARGUMENT

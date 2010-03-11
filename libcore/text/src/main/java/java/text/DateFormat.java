@@ -874,9 +874,8 @@ public abstract class DateFormat extends Format {
         protected Field(String fieldName, int calendarField) {
             super(fieldName);
             this.calendarField = calendarField;
-            if (calendarField != -1
-                    && table.get(new Integer(calendarField)) == null) {
-                table.put(new Integer(calendarField), this);
+            if (calendarField != -1 && table.get(Integer.valueOf(calendarField)) == null) {
+                table.put(Integer.valueOf(calendarField), this);
             }
         }
 
@@ -906,7 +905,7 @@ public abstract class DateFormat extends Format {
                 throw new IllegalArgumentException();
             }
 
-            return table.get(new Integer(calendarField));
+            return table.get(Integer.valueOf(calendarField));
         }
 
         /**
