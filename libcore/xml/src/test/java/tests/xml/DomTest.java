@@ -45,6 +45,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -1004,6 +1006,136 @@ public class DomTest extends TestCase {
         expected.add(notification(NODE_ADOPTED, "a", "apple", name, null));
         expected.add(notification(NODE_ADOPTED, "b", "banana", name, null));
         assertEquals(expected, handler.calls);
+    }
+
+    public void testBaseUriRelativeUriResolution() throws Exception {
+        File file = File.createTempFile("DomTest.java", "xml");
+        File parentFile = file.getParentFile();
+        FileWriter writer = new FileWriter(file);
+        writer.write("<a>"
+                + "  <b xml:base=\"b1/b2\">"
+                + "    <c>"
+                + "      <d xml:base=\"../d1/d2\"><e/></d>"
+                + "    </c>"
+                + "  </b>"
+                + "  <h xml:base=\"h1/h2/\">"
+                + "    <i xml:base=\"../i1/i2\"/>"
+                + "  </h>"
+                + "</a>");
+        writer.close();
+        document = builder.parse(file);
+
+        assertFileUriEquals("", file.getPath(), document.getBaseURI());
+        assertFileUriEquals("", file.getPath(), document.getDocumentURI());
+        Element a = document.getDocumentElement();
+        assertFileUriEquals("", file.getPath(), a.getBaseURI());
+
+        String message = "This implementation's getBaseURI() doesn't handle relative URIs";
+        Element b = (Element) a.getChildNodes().item(1);
+        Element c = (Element) b.getChildNodes().item(1);
+        Element d = (Element) c.getChildNodes().item(1);
+        Element e = (Element) d.getChildNodes().item(0);
+        Element h = (Element) a.getChildNodes().item(3);
+        Element i = (Element) h.getChildNodes().item(1);
+        assertFileUriEquals(message, parentFile + "/b1/b2", b.getBaseURI());
+        assertFileUriEquals(message, parentFile + "/b1/b2", c.getBaseURI());
+        assertFileUriEquals(message, parentFile + "/d1/d2", d.getBaseURI());
+        assertFileUriEquals(message, parentFile + "/d1/d2", e.getBaseURI());
+        assertFileUriEquals(message, parentFile + "/h1/h2/", h.getBaseURI());
+        assertFileUriEquals(message, parentFile + "/h1/i1/i2", i.getBaseURI());
+    }
+
+    /**
+     * Regrettably both "file:/tmp/foo.txt" and "file:///tmp/foo.txt" are
+     * legal URIs, and different implementations emit different forms.
+     */
+    private void assertFileUriEquals(
+            String message, String expectedFile, String actual) {
+        if (!("file:" + expectedFile).equals(actual)
+                && !("file://" + expectedFile).equals(actual)) {
+            fail("Expected URI for: " + expectedFile
+                    + " but was " + actual + ". " + message);
+        }
+    }
+
+    /**
+     * According to the <a href="http://www.w3.org/TR/xmlbase/">XML Base</a>
+     * spec, fragments (like "#frag" or "") should not be dereferenced.
+     */
+    public void testBaseUriResolutionWithHashes() throws Exception {
+        document = builder.parse(new InputSource(new StringReader(
+                "<a xml:base=\"http://a1/a2\">"
+                        + "  <b xml:base=\"b1#b2\"/>"
+                        + "  <c xml:base=\"#c1\">"
+                        + "    <d xml:base=\"\"/>"
+                        + "  </c>"
+                        + "  <e xml:base=\"\"/>"
+                        + "</a>")));
+        Element a = document.getDocumentElement();
+        assertEquals("http://a1/a2", a.getBaseURI());
+
+        String message = "This implementation's getBaseURI() doesn't handle "
+                + "relative URIs with hashes";
+        Element b = (Element) a.getChildNodes().item(1);
+        Element c = (Element) a.getChildNodes().item(3);
+        Element d = (Element) c.getChildNodes().item(1);
+        Element e = (Element) a.getChildNodes().item(5);
+        assertEquals(message, "http://a1/b1#b2", b.getBaseURI());
+        assertEquals(message, "http://a1/a2#c1", c.getBaseURI());
+        assertEquals(message, "http://a1/a2#c1", d.getBaseURI());
+        assertEquals(message, "http://a1/a2", e.getBaseURI());
+    }
+
+    public void testBaseUriInheritedForProcessingInstructions() {
+        document.setDocumentURI("http://d1/d2");
+        assertEquals("http://d1/d2", wafflemaker.getBaseURI());
+    }
+
+    public void testBaseUriInheritedForEntities() {
+        if (sp == null) {
+            return;
+        }
+        document.setDocumentURI("http://d1/d2");
+        assertEquals("http://d1/d2", sp.getBaseURI());
+    }
+
+    public void testBaseUriNotInheritedForNotations() {
+        if (png == null) {
+            return;
+        }
+        document.setDocumentURI("http://d1/d2");
+        assertNull(png.getBaseURI());
+    }
+
+    public void testBaseUriNotInheritedForDoctypes() {
+        document.setDocumentURI("http://d1/d2");
+        assertNull(doctype.getBaseURI());
+    }
+
+    public void testBaseUriNotInheritedForAttributes() {
+        document.setDocumentURI("http://d1/d2");
+        assertNull(itemXmlns.getBaseURI());
+        assertNull(itemXmlnsA.getBaseURI());
+        assertNull(standard.getBaseURI());
+        assertNull(vitaminsXmlnsA.getBaseURI());
+    }
+
+    public void testBaseUriNotInheritedForTextsOrCdatas() {
+        document.setDocumentURI("http://d1/d2");
+        assertNull(descriptionText1.getBaseURI());
+        assertNull(descriptionText2.getBaseURI());
+        assertNull(option2Reference.getBaseURI());
+    }
+
+    public void testBaseUriNotInheritedForComments() {
+        document.setDocumentURI("http://d1/d2");
+        assertNull(descriptionText1.getBaseURI());
+        assertNull(descriptionText2.getBaseURI());
+    }
+
+    public void testBaseUriNotInheritedForEntityReferences() {
+        document.setDocumentURI("http://d1/d2");
+        assertNull(option2Reference.getBaseURI());
     }
 
     private class RecordingHandler implements UserDataHandler {
