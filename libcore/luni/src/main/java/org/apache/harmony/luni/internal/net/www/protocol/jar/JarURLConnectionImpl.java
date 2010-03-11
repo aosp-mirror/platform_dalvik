@@ -150,24 +150,32 @@ public class JarURLConnectionImpl extends JarURLConnection {
                 jar = AccessController
                         .doPrivileged(new PrivilegedAction<JarFile>() {
                             public JarFile run() {
+                                FileOutputStream fos = null;
+                                JarFile result = null;
                                 try {
-                                    File tempJar = File.createTempFile(
-                                            "hyjar_", ".tmp", null);
+                                    File tempJar = File.createTempFile("hyjar_", ".tmp", null);
                                     tempJar.deleteOnExit();
-                                    FileOutputStream fos = new FileOutputStream(
-                                            tempJar);
+                                    fos = new FileOutputStream(tempJar);
                                     byte[] buf = new byte[4096];
                                     int nbytes = 0;
                                     while ((nbytes = is.read(buf)) > -1) {
                                         fos.write(buf, 0, nbytes);
                                     }
                                     fos.close();
-                                    return new JarFile(tempJar, true,
-                                            ZipFile.OPEN_READ
-                                                    | ZipFile.OPEN_DELETE);
+                                    result = new JarFile(tempJar, true,
+                                            ZipFile.OPEN_READ | ZipFile.OPEN_DELETE);
                                 } catch (IOException e) {
                                     return null;
+                                } finally {
+                                    if (fos != null) {
+                                        try {
+                                            fos.close();
+                                        } catch (IOException ex) {
+                                            result = null;
+                                        }
+                                    }
                                 }
+                                return result;
                             }
                         });
             } finally {

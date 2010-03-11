@@ -117,8 +117,6 @@ import static java.lang.ClassCache.findFieldByName;
  * <li>{@code [Ljava/lang/String;} representing the {@code String[]} type</li>
  * <li>{@code [[[C} representing the {@code char[][][]} type (three dimensions!)</li>
  * </ul>
- * 
- * @since Android 1.0
  */
 public final class Class<T> implements Serializable, AnnotatedElement, GenericDeclaration, Type {
 
