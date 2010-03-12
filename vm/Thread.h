@@ -438,11 +438,19 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj);
 
 /*
  * Given a pthread handle, return the associated Thread*.
- * Caller must NOT hold the thread list lock.
+ * Caller must hold the thread list lock.
  *
  * Returns NULL if the thread was not found.
  */
 Thread* dvmGetThreadByHandle(pthread_t handle);
+
+/*
+ * Given a thread ID, return the associated Thread*.
+ * Caller must hold the thread list lock.
+ *
+ * Returns NULL if the thread was not found.
+ */
+Thread* dvmGetThreadByThreadId(u4 threadId);
 
 /*
  * Sleep in a thread.  Returns when the sleep timer returns or the thread

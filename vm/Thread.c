@@ -3155,22 +3155,33 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj)
 
 /*
  * Given a pthread handle, return the associated Thread*.
- * Caller must NOT hold the thread list lock.
+ * Caller must hold the thread list lock.
  *
  * Returns NULL if the thread was not found.
  */
 Thread* dvmGetThreadByHandle(pthread_t handle)
 {
-    dvmLockThreadList(NULL);
-    Thread* thread = gDvm.threadList;
-    while (thread != NULL) {
+    Thread* thread;
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
         if (thread->handle == handle)
             break;
-
-        thread = thread->next;
     }
-    dvmUnlockThreadList();
+    return thread;
+}
 
+/*
+ * Given a threadId, return the associated Thread*.
+ * Caller must hold the thread list lock.
+ *
+ * Returns NULL if the thread was not found.
+ */
+Thread* dvmGetThreadByThreadId(u4 threadId)
+{
+    Thread* thread;
+    for (thread = gDvm.threadList; thread != NULL; thread = thread->next) {
+        if (thread->threadId == threadId)
+            break;
+    }
     return thread;
 }
 

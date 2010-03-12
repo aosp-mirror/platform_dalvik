@@ -258,6 +258,21 @@ static u4 lockOwner(Object* obj)
 }
 
 /*
+ * Get the thread that holds the lock on the specified object.  The
+ * object may be unlocked, thin-locked, or fat-locked.
+ *
+ * The caller must lock the thread list before calling here.
+ */
+Thread* dvmGetObjectLockHolder(Object* obj)
+{
+    u4 threadId = lockOwner(obj);
+
+    if (threadId == 0)
+        return NULL;
+    return dvmGetThreadByThreadId(threadId);
+}
+
+/*
  * Checks whether the given thread holds the given
  * objects's lock.
  */

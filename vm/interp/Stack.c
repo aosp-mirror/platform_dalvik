@@ -1093,6 +1093,85 @@ void dvmCleanupStackOverflow(Thread* self, const Object* exception)
 
 
 /*
+ * Extract the object that is the target of a monitor-enter instruction
+ * in the top stack frame of "thread".
+ *
+ * The other thread might be alive, so this has to work carefully.
+ *
+ * We assume the thread list lock is currently held.
+ *
+ * Returns "true" if we successfully recover the object.  "*pOwner" will
+ * be NULL if we can't determine the owner for some reason (e.g. race
+ * condition on ownership transfer).
+ */
+static bool extractMonitorEnterObject(Thread* thread, Object** pLockObj,
+    Thread** pOwner)
+{
+    void* framePtr = thread->curFrame;
+
+    if (framePtr == NULL || dvmIsBreakFrame(framePtr))
+        return false;
+
+    const StackSaveArea* saveArea = SAVEAREA_FROM_FP(framePtr);
+    const Method* method = saveArea->method;
+    const u2* currentPc = saveArea->xtra.currentPc;
+
+    /* check Method* */
+    if (!dvmLinearAllocContains(method, sizeof(Method))) {
+        LOGD("ExtrMon: method %p not valid\n", method);
+        return false;
+    }
+
+    /* check currentPc */
+    u4 insnsSize = dvmGetMethodInsnsSize(method);
+    if (currentPc < method->insns ||
+        currentPc >= method->insns + insnsSize)
+    {
+        LOGD("ExtrMon: insns %p not valid (%p - %p)\n",
+            currentPc, method->insns, method->insns + insnsSize);
+        return false;
+    }
+
+    /* check the instruction */
+    if ((*currentPc & 0xff) != OP_MONITOR_ENTER) {
+        LOGD("ExtrMon: insn at %p is not monitor-enter (0x%02x)\n",
+            currentPc, *currentPc & 0xff);
+        return false;
+    }
+
+    /* get and check the register index */
+    unsigned int reg = *currentPc >> 8;
+    if (reg >= method->registersSize) {
+        LOGD("ExtrMon: invalid register %d (max %d)\n",
+            reg, method->registersSize);
+        return false;
+    }
+
+    /* get and check the object in that register */
+    u4* fp = (u4*) framePtr;
+    Object* obj = (Object*) fp[reg];
+    if (!dvmIsValidObject(obj)) {
+        LOGD("ExtrMon: invalid object %p at %p[%d]\n", obj, fp, reg);
+        return false;
+    }
+    *pLockObj = obj;
+
+    /*
+     * Try to determine the object's lock holder; it's okay if this fails.
+     *
+     * We're assuming the thread list lock is already held by this thread.
+     * If it's not, we may be living dangerously if we have to scan through
+     * the thread list to find a match.  (The VM will generally be in a
+     * suspended state when executing here, so this is a minor concern
+     * unless we're dumping while threads are running, in which case there's
+     * a good chance of stuff blowing up anyway.)
+     */
+    *pOwner = dvmGetObjectLockHolder(obj);
+
+    return true;
+}
+
+/*
  * Dump stack frames, starting from the specified frame and moving down.
  *
  * Each frame holds a pointer to the currently executing method, and the
@@ -1151,21 +1230,44 @@ static void dumpFrames(const DebugOutputTarget* target, void* framePtr,
             }
             free(className);
 
-            if (first &&
-                (thread->status == THREAD_WAIT ||
-                 thread->status == THREAD_TIMED_WAIT))
-            {
-                /* warning: wait status not stable, even in suspend */
-                Monitor* mon = thread->waitMonitor;
-                Object* obj = dvmGetMonitorObject(mon);
-                if (obj != NULL) {
-                    className = dvmDescriptorToDot(obj->clazz->descriptor);
-                    dvmPrintDebugMessage(target,
-                        "  - waiting on <%p> (a %s)\n", mon, className);
-                    free(className);
+            if (first) {
+                /*
+                 * Decorate WAIT and MONITOR threads with some detail on
+                 * the first frame.
+                 *
+                 * warning: wait status not stable, even in suspend
+                 */
+                if (thread->status == THREAD_WAIT ||
+                    thread->status == THREAD_TIMED_WAIT)
+                {
+                    Monitor* mon = thread->waitMonitor;
+                    Object* obj = dvmGetMonitorObject(mon);
+                    if (obj != NULL) {
+                        className = dvmDescriptorToDot(obj->clazz->descriptor);
+                        dvmPrintDebugMessage(target,
+                            "  - waiting on <%p> (a %s)\n", obj, className);
+                        free(className);
+                    }
+                } else if (thread->status == THREAD_MONITOR) {
+                    Object* obj;
+                    Thread* owner;
+                    if (extractMonitorEnterObject(thread, &obj, &owner)) {
+                        className = dvmDescriptorToDot(obj->clazz->descriptor);
+                        if (owner != NULL) {
+                            char* threadName = dvmGetThreadName(owner);
+                            dvmPrintDebugMessage(target,
+                                "  - waiting to lock <%p> (a %s) held by threadid=%d (%s)\n",
+                                obj, className, owner->threadId, threadName);
+                            free(threadName);
+                        } else {
+                            dvmPrintDebugMessage(target,
+                                "  - waiting to lock <%p> (a %s) held by ???\n",
+                                obj, className);
+                        }
+                        free(className);
+                    }
                 }
             }
-
         }
 
         /*
