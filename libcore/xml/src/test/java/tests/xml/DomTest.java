@@ -34,6 +34,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Notation;
 import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.Text;
+import org.w3c.dom.TypeInfo;
 import org.w3c.dom.UserDataHandler;
 import org.xml.sax.InputSource;
 
@@ -1136,6 +1137,56 @@ public class DomTest extends TestCase {
     public void testBaseUriNotInheritedForEntityReferences() {
         document.setDocumentURI("http://d1/d2");
         assertNull(option2Reference.getBaseURI());
+    }
+
+    public void testProgrammaticElementIds() {
+        vitaminc.setAttribute("name", "c");
+        assertFalse(vitaminc.getAttributeNode("name").isId());
+        assertNull(document.getElementById("c"));
+
+        // set the ID attribute...
+        vitaminc.setIdAttribute("name", true);
+        assertTrue(vitaminc.getAttributeNode("name").isId());
+        assertSame(vitaminc, document.getElementById("c"));
+
+        // ... and then take it away
+        vitaminc.setIdAttribute("name", false);
+        assertFalse(vitaminc.getAttributeNode("name").isId());
+        assertNull(document.getElementById("c"));
+    }
+
+    public void testMultipleIdsOnOneElement() {
+        vitaminc.setAttribute("name", "c");
+        vitaminc.setIdAttribute("name", true);
+        vitaminc.setAttribute("atc", "a11g");
+        vitaminc.setIdAttribute("atc", true);
+
+        assertTrue(vitaminc.getAttributeNode("name").isId());
+        assertTrue(vitaminc.getAttributeNode("atc").isId());
+        assertSame(vitaminc, document.getElementById("c"));
+        assertSame(vitaminc, document.getElementById("a11g"));
+        assertNull(document.getElementById("g"));
+    }
+
+    public void testAttributeNamedIdIsNotAnIdByDefault() {
+        String message = "This implementation incorrectly interprets the "
+                + "\"id\" attribute as an identifier by default.";
+        vitaminc.setAttribute("id", "c");
+        assertNull(message, document.getElementById("c"));
+    }
+
+    public void testElementTypeInfo() {
+        TypeInfo typeInfo = description.getSchemaTypeInfo();
+        assertNull(typeInfo.getTypeName());
+        assertNull(typeInfo.getTypeNamespace());
+        assertFalse(typeInfo.isDerivedFrom("x", "y", TypeInfo.DERIVATION_UNION));
+    }
+
+    public void testAttributeTypeInfo() {
+        TypeInfo typeInfo = standard.getSchemaTypeInfo();
+        assertNull(typeInfo.getTypeName());
+        assertNull(typeInfo.getTypeNamespace());
+        assertFalse(typeInfo.isDerivedFrom("x", "y", TypeInfo.DERIVATION_UNION));
     }
 
     private class RecordingHandler implements UserDataHandler {
