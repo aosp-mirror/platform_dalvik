@@ -150,7 +150,10 @@ void dvmAssertHeapWorkerThreadRunning()
              * foreground we'll just leave it there (it doesn't do anything
              * if the process isn't GCing).
              */
+            dvmLockThreadList(NULL);
             Thread* thread = dvmGetThreadByHandle(gDvm.heapWorkerHandle);
+            dvmUnlockThreadList();
+
             if (thread != NULL) {
                 int priChangeFlags, threadPrio;
                 SchedPolicy threadPolicy;
