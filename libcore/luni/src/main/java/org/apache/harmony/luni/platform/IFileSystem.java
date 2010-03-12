@@ -112,7 +112,7 @@ public interface IFileSystem {
     // END android-deleted
     
     // BEGIN android-added
-    public int ioctlAvailable(int fileDescriptor) throws IOException;
+    public int ioctlAvailable(FileDescriptor fileDescriptor) throws IOException;
     // END android-added
     
 }

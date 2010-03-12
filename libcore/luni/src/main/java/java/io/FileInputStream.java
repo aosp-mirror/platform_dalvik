@@ -146,33 +146,7 @@ public class FileInputStream extends InputStream implements Closeable {
     @Override
     public int available() throws IOException {
         openCheck();
-
-        // BEGIN android-added
-
-        // Android always uses the ioctl() method of determining bytes
-        // available. See the long discussion in
-        // org_apache_harmony_luni_platform_OSFileSystem.cpp about its
-        // use.
-
-        return fileSystem.ioctlAvailable(fd.descriptor);
-        // END android-added
-
-        // BEGIN android-deleted
-        // synchronized (repositioningLock) {
-        //     // stdin requires special handling
-        //     if (fd == FileDescriptor.in) {
-        //         return (int) fileSystem.ttyAvailable();
-        //     }
-        //
-        //     long currentPosition = fileSystem.seek(fd.descriptor, 0L,
-        //             IFileSystem.SEEK_CUR);
-        //     long endOfFilePosition = fileSystem.seek(fd.descriptor, 0L,
-        //             IFileSystem.SEEK_END);
-        //     fileSystem.seek(fd.descriptor, currentPosition,
-        //             IFileSystem.SEEK_SET);
-        //     return (int) (endOfFilePosition - currentPosition);
-        // }
-        // END android-deleted
+        return fileSystem.ioctlAvailable(fd);
     }
 
     /**

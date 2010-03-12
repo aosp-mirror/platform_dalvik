@@ -182,6 +182,6 @@ class OSFileSystem implements IFileSystem {
     // END android-deleted
 
     // BEGIN android-added
-    public native int ioctlAvailable(int fileDescriptor) throws IOException;
+    public native int ioctlAvailable(FileDescriptor fileDescriptor) throws IOException;
     // END android-added
 }
