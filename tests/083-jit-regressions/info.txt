@@ -5,4 +5,6 @@ features might disrupt junit.
 
 This test covers JIT regressions
 
-http://b/issue?id=2296099 JIT shift bug
+2296099 JIT shift bug
+2302318 Crash during spin-on-suspend testing
+2487514 Missed exception in PriorityBlockingQueueTest.testToArray1_BadArg

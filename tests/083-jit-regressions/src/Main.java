@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import java.util.concurrent.*;
+
 /**
  * Test for Jit regressions.
  */
@@ -21,6 +23,7 @@ public class Main {
     public static void main(String args[]) throws Exception {
         b2296099Test();
         b2302318Test();
+        b2487514Test();
     }
 
     static void b2296099Test() throws Exception {
@@ -41,7 +44,7 @@ public class Main {
                throw new RuntimeException("Unexpected value: " + bl
                        + " after " + i + " iterations");
        }
-       System.out.println("b2296099 Passes");
+       System.out.println("b2296099 passes");
    }
 
     static int rotateLeft(int i, int distance) {
@@ -68,6 +71,39 @@ public class Main {
         System.gc();
 
         System.out.println("b2302318 passes");
+    }
+
+    static void b2487514Test() {
+        PriorityBlockingQueue q = new PriorityBlockingQueue(10);
+        int catchCount = 0;
+
+        q.offer(new Integer(0));
+        /*
+         * Warm up the code cache to have toArray() compiled. The key here is
+         * to pass a compatible type so that there are no exceptions when
+         * executing the method body (ie the APUT_OBJECT bytecode).
+         */
+        for (int i = 0; i < 1000; i++) {
+            Integer[] ints = (Integer[]) q.toArray(new Integer[5]);
+        }
+
+        /* Now pass an incompatible type which is guaranteed to throw */
+        for (int i = 0; i < 1000; i++) {
+            try {
+                Object[] obj = q.toArray(new String[5]);
+            }
+            catch (ArrayStoreException  success) {
+                catchCount++;
+            }
+        }
+
+        if (catchCount == 1000) {
+            System.out.println("b2487514 passes");
+        }
+        else {
+            System.out.println("b2487514 fails: catchCount is " + catchCount +
+                               " (expecting 1000)");
+        }
     }
 }
 
