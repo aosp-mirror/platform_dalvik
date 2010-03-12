@@ -60,7 +60,7 @@ dvmMterpStdRun:
 
     /* set up "named" registers, figure out entry point */
     mov     rGLUE, r0                   @ set rGLUE
-    ldrb    r1, [r0, #offGlue_entryPoint]   @ InterpEntry enum is char
+    ldr     r1, [r0, #offGlue_entryPoint]   @ enum is 4 bytes in aapcs-EABI
     LOAD_PC_FP_FROM_GLUE()              @ load rPC and rFP from "glue"
     adr     rIBASE, dvmAsmInstructionStart  @ set rIBASE
     cmp     r1, #kInterpEntryInstr      @ usual case?
@@ -102,7 +102,7 @@ dvmMterpStdRun:
     cmp     rPC,r2
     bne     .Lno_singleStep             @ must have branched, don't resume
     mov     r1, #kInterpEntryInstr
-    strb    r1, [rGLUE, #offGlue_entryPoint]
+    str     r1, [rGLUE, #offGlue_entryPoint]
     ldr     rINST, .LdvmCompilerTemplate
     bx      r0                          @ re-enter the translation
 .LdvmCompilerTemplate:

@@ -755,11 +755,6 @@ common_exceptionThrown:
     mov     r9, #0
     bl      common_periodicChecks
 
-#if defined(WITH_JIT)
-    mov     r2,#kJitTSelectAbort        @ abandon trace selection in progress
-    str     r2,[rGLUE,#offGlue_jitState]
-#endif
-
     ldr     r10, [rGLUE, #offGlue_self] @ r10<- glue->self
     ldr     r9, [r10, #offThread_exception] @ r9<- self->exception
     mov     r1, r10                     @ r1<- self
