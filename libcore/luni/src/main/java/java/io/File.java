@@ -311,6 +311,33 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
+     * Tests whether or not this process is allowed to execute this file.
+     * Note that this is a best-effort result; the only way to be certain is
+     * to actually attempt the operation.
+     *
+     * @return {@code true} if this file can be executed, {@code false} otherwise.
+     * @throws SecurityException
+     *             If a security manager exists and
+     *             SecurityManager.checkExec(java.lang.String) disallows read
+     *             permission to this file object
+     * @see java.lang.SecurityManager#checkExec(String)
+     *
+     * @since 1.6
+     * @hide
+     */
+    public boolean canExecute() {
+        if (path.length() == 0) {
+            return false;
+        }
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkExec(path); // Seems bogus, but this is what the RI does.
+        }
+        return canExecuteImpl(pathBytes);
+    }
+    private native boolean canExecuteImpl(byte[] filePath);
+
+    /**
      * Indicates whether the current context is allowed to read from this file.
      *
      * @return {@code true} if this file can be read, {@code false} otherwise.
@@ -326,10 +353,9 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkRead(path);
         }
-        return isReadableImpl(pathBytes);
+        return canReadImpl(pathBytes);
     }
-
-    private native boolean isReadableImpl(byte[] filePath);
+    private native boolean canReadImpl(byte[] filePath);
 
     /**
      * Indicates whether the current context is allowed to write to this file.
@@ -348,10 +374,9 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        return isWritableImpl(pathBytes);
+        return canWriteImpl(pathBytes);
     }
-
-    private native boolean isWritableImpl(byte[] filePath);
+    private native boolean canWriteImpl(byte[] filePath);
 
     /**
      * Returns the relative sort ordering of the paths for this file and the
@@ -756,7 +781,7 @@ public class File implements Serializable, Comparable<File> {
      * Indicates if this file's pathname is absolute. Whether a pathname is
      * absolute is platform specific. On Android, absolute paths start with
      * the character '/'.
-     * 
+     *
      * @return {@code true} if this file's pathname is absolute, {@code false}
      *         otherwise.
      * @see #getPath
@@ -887,16 +912,38 @@ public class File implements Serializable, Comparable<File> {
     private native boolean setLastModifiedImpl(byte[] path, long time);
 
     /**
-     * Marks this file or directory to be read-only as defined by the operating
-     * system.
+     * Equivalent to setWritable(false, false).
      *
-     * @return {@code true} if the operation is successful, {@code false}
-     *         otherwise.
-     * @throws SecurityException
-     *             if a {@code SecurityManager} is installed and it denies write
-     *             access to this file.
+     * @see #setWritable(boolean, boolean)
      */
     public boolean setReadOnly() {
+        return setWritable(false, false);
+    }
+
+    /**
+     * Manipulates the execute permissions for the abstract path designated by
+     * this file.
+     *
+     * @param executable
+     *            To allow execute permission if true, otherwise disallow
+     * @param ownerOnly
+     *            To manipulate execute permission only for owner if true,
+     *            otherwise for everyone. The manipulation will apply to
+     *            everyone regardless of this value if the underlying system
+     *            does not distinguish owner and other users.
+     * @return true if and only if the operation succeeded. If the user does not
+     *         have permission to change the access permissions of this abstract
+     *         pathname the operation will fail. If the underlying file system
+     *         does not support execute permission and the value of executable
+     *         is false, this operation will fail.
+     * @throws SecurityException -
+     *             If a security manager exists and
+     *             SecurityManager.checkWrite(java.lang.String) disallows write
+     *             permission to this file object
+     * @since 1.6
+     * @hide
+     */
+    public boolean setExecutable(boolean executable, boolean ownerOnly) {
         if (path.length() == 0) {
             return false;
         }
@@ -904,10 +951,141 @@ public class File implements Serializable, Comparable<File> {
         if (security != null) {
             security.checkWrite(path);
         }
-        return setReadOnlyImpl(pathBytes);
+        return setExecutableImpl(pathBytes, executable, ownerOnly);
     }
 
-    private native boolean setReadOnlyImpl(byte[] path);
+    /**
+     * Equivalent to setExecutable(executable, true).
+     *
+     * @param executable
+     *            To allow execute permission if true, otherwise disallow
+     * @return true if and only if the operation succeeded. If the user does not
+     *         have permission to change the access permissions of this abstract
+     *         pathname the operation will fail. If the underlying file system
+     *         does not support execute permission and the value of executable
+     *         is false, this operation will fail.
+     * @throws SecurityException -
+     *             If a security manager exists and
+     *             SecurityManager.checkWrite(java.lang.String) disallows write
+     *             permission to this file object
+     * @since 1.6
+     * @hide
+     */
+    public boolean setExecutable(boolean executable) {
+        return setExecutable(executable, true);
+    }
+
+    private native boolean setExecutableImpl(byte[] path, boolean executable, boolean ownerOnly);
+
+    /**
+     * Manipulates the read permissions for the abstract path designated by this
+     * file.
+     *
+     * @param readable
+     *            To allow read permission if true, otherwise disallow
+     * @param ownerOnly
+     *            To manipulate read permission only for owner if true,
+     *            otherwise for everyone. The manipulation will apply to
+     *            everyone regardless of this value if the underlying system
+     *            does not distinguish owner and other users.
+     * @return true if and only if the operation succeeded. If the user does not
+     *         have permission to change the access permissions of this abstract
+     *         pathname the operation will fail. If the underlying file system
+     *         does not support read permission and the value of readable is
+     *         false, this operation will fail.
+     * @throws SecurityException -
+     *             If a security manager exists and
+     *             SecurityManager.checkWrite(java.lang.String) disallows write
+     *             permission to this file object
+     * @since 1.6
+     * @hide
+     */
+    public boolean setReadable(boolean readable, boolean ownerOnly) {
+        if (path.length() == 0) {
+            return false;
+        }
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkWrite(path);
+        }
+        return setReadableImpl(pathBytes, readable, ownerOnly);
+    }
+
+    /**
+     * Equivalent to setReadable(readable, true).
+     *
+     * @param readable
+     *            To allow read permission if true, otherwise disallow
+     * @return true if and only if the operation succeeded. If the user does not
+     *         have permission to change the access permissions of this abstract
+     *         pathname the operation will fail. If the underlying file system
+     *         does not support read permission and the value of readable is
+     *         false, this operation will fail.
+     * @throws SecurityException -
+     *             If a security manager exists and
+     *             SecurityManager.checkWrite(java.lang.String) disallows write
+     *             permission to this file object
+     * @since 1.6
+     * @hide
+     */
+    public boolean setReadable(boolean readable) {
+        return setReadable(readable, true);
+    }
+
+    private native boolean setReadableImpl(byte[] path, boolean readable, boolean ownerOnly);
+
+    /**
+     * Manipulates the write permissions for the abstract path designated by this
+     * file.
+     *
+     * @param writable
+     *            To allow write permission if true, otherwise disallow
+     * @param ownerOnly
+     *            To manipulate write permission only for owner if true,
+     *            otherwise for everyone. The manipulation will apply to
+     *            everyone regardless of this value if the underlying system
+     *            does not distinguish owner and other users.
+     * @return true if and only if the operation succeeded. If the user does not
+     *         have permission to change the access permissions of this abstract
+     *         pathname the operation will fail.
+     * @throws SecurityException -
+     *             If a security manager exists and
+     *             SecurityManager.checkWrite(java.lang.String) disallows write
+     *             permission to this file object
+     * @since 1.6
+     * @hide
+     */
+    public boolean setWritable(boolean writable, boolean ownerOnly) {
+        if (path.length() == 0) {
+            return false;
+        }
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkWrite(path);
+        }
+        return setWritableImpl(pathBytes, writable, ownerOnly);
+    }
+
+    /**
+     * Equivalent to setWritable(writable, true).
+     *
+     * @param writable
+     *            To allow write permission if true, otherwise disallow
+     * @return true if and only if the operation succeeded. If the user does not
+     *         have permission to change the access permissions of this abstract
+     *         pathname the operation will fail.
+     * @throws SecurityException -
+     *             If a security manager exists and
+     *             SecurityManager.checkWrite(java.lang.String) disallows write
+     *             permission to this file object
+     * @since 1.6
+     * @hide
+     */
+    public boolean setWritable(boolean writable) {
+        return setWritable(writable, true);
+    }
+
+    private native boolean setWritableImpl(byte[] path, boolean writable, boolean ownerOnly);
 
     /**
      * Returns the length of this file in bytes.
@@ -1308,7 +1486,10 @@ public class File implements Serializable, Comparable<File> {
      * @return a URL for this file.
      * @throws java.net.MalformedURLException
      *             if the path cannot be transformed into a URL.
+     * @deprecated use {@link #toURI} and {@link java.net.URI#toURL} to get
+     * correct escaping of illegal characters.
      */
+    @Deprecated
     @SuppressWarnings("nls")
     public URL toURL() throws java.net.MalformedURLException {
         String name = getAbsoluteName();
@@ -1343,10 +1524,67 @@ public class File implements Serializable, Comparable<File> {
         stream.writeChar(separatorChar);
     }
 
-    private void readObject(ObjectInputStream stream) throws IOException,
-            ClassNotFoundException {
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
         char inSeparator = stream.readChar();
         init(path.replace(inSeparator, separatorChar));
     }
+
+    /**
+     * Returns the total size in bytes of the partition containing this path.
+     * Returns 0 if this path does not exist.
+     *
+     * @since 1.6
+     * @hide
+     */
+    public long getTotalSpace() {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkPermission(new RuntimePermission("getFileSystemAttributes"));
+        }
+        return getTotalSpaceImpl(pathBytes);
+    }
+    private native long getTotalSpaceImpl(byte[] filePath);
+
+    /**
+     * Returns the number of usable free bytes on the partition containing this path.
+     * Returns 0 if this path does not exist.
+     *
+     * <p>Note that this is likely to be an optimistic over-estimate and should not
+     * be taken as a guarantee your application can actually write this many bytes.
+     * On Android (and other Unix-based systems), this method returns the number of free bytes
+     * available to non-root users, regardless of whether you're actually running as root,
+     * and regardless of any quota or other restrictions that might apply to the user.
+     * (The {@code getFreeSpace} method returns the number of bytes potentially available to root.)
+     *
+     * @since 1.6
+     * @hide
+     */
+    public long getUsableSpace() {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkPermission(new RuntimePermission("getFileSystemAttributes"));
+        }
+        return getUsableSpaceImpl(pathBytes);
+    }
+    private native long getUsableSpaceImpl(byte[] filePath);
+
+    /**
+     * Returns the number of free bytes on the partition containing this path.
+     * Returns 0 if this path does not exist.
+     *
+     * <p>Note that this is likely to be an optimistic over-estimate and should not
+     * be taken as a guarantee your application can actually write this many bytes.
+     *
+     * @since 1.6
+     * @hide
+     */
+    public long getFreeSpace() {
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkPermission(new RuntimePermission("getFileSystemAttributes"));
+        }
+        return getFreeSpaceImpl(pathBytes);
+    }
+    private native long getFreeSpaceImpl(byte[] filePath);
 }

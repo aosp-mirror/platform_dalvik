@@ -18,16 +18,6 @@ result EXEC_FAILED
 pattern .*Test failed: should get token \[, but get -1.*
 
 
-# These tests rely on Java 6 APIs
-test java.util.Arrays.Big
-result COMPILE_FAILED
-pattern .*cannot find symbol.*
-
-test java.util.Arrays.CopyMethods
-result COMPILE_FAILED
-pattern .*cannot find symbol.*
-
-
 # Dalvik doesn't include the "SunJCE" crypto provider
 test com.sun.crypto.provider.Cipher.AES.Test4513830
 result EXEC_FAILED
@@ -682,48 +672,6 @@ pattern .*got java\.lang\.StringIndexOutOfBoundsException: null - FAILED.*
 test java.lang.StringBuffer.Exceptions
 result EXEC_FAILED
 pattern .*got java\.lang\.StringIndexOutOfBoundsException: null - FAILED.*
-
-
-# We don't expose Java 6 APIs
-test java.lang.String.Exceptions
-result COMPILE_FAILED
-pattern .*cannot find symbol.*new String.*
-
-test java.lang.String.Encodings
-result COMPILE_FAILED
-pattern .*cannot find symbol.*new String.*
-
-test java.io.File.GetXSpace
-result COMPILE_FAILED
-pattern .*cannot find symbol.*method getTotalSpace\(\).*
-
-test java.io.File.MaxPathLength
-result COMPILE_FAILED
-pattern .*cannot find symbol.*method getTotalSpace\(\).*
-
-test java.io.File.SetAccess (from File)
-result COMPILE_FAILED
-pattern .*method setWritable\(boolean,boolean\).*
-
-test java.io.PipedInputStream.Constructors
-result COMPILE_FAILED
-pattern .*constructor PipedInputStream\(int\).*
-
-test java.io.PipedReader.Constructors
-result COMPILE_FAILED
-pattern .*constructor PipedReader\(int\).*
-
-test java.io.File.SetAccess
-result COMPILE_FAILED
-pattern .*cannot find symbol.*method setWritable\(boolean,boolean\).*
-
-test java.io.PipedWriter.WriteAfterReaderClose
-result COMPILE_FAILED
-pattern .*cannot find symbol.*method clearError().*
-
-test java.io.PrintWriter.ClearErrorWriter
-result COMPILE_FAILED
-pattern .*cannot find symbol.*method clearError().*
 
 
 # A low-impact bug that we're ignoring: "Shared FileDescriptors get closed too early"
