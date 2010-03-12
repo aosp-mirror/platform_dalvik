@@ -27,11 +27,11 @@ import java.util.logging.Logger;
 final class DeviceDalvikVm extends Vm {
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
 
-    DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar, PrintStream tee,
-            File localTemp, List<String> additionalVmArgs,
-            boolean cleanBefore, boolean cleanAfter, File runnerDir) {
+    DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar, List<String> javacArgs,
+                   PrintStream tee, File localTemp, List<String> additionalVmArgs,
+                   boolean cleanBefore, boolean cleanAfter, File runnerDir) {
         super(new EnvironmentDevice(cleanBefore, cleanAfter, debugPort, localTemp, runnerDir),
-                timeoutSeconds, sdkJar, tee, additionalVmArgs);
+              timeoutSeconds, sdkJar, javacArgs, tee, additionalVmArgs);
     }
 
     private EnvironmentDevice getEnvironmentDevice() {

@@ -45,6 +45,7 @@ abstract class Mode {
     protected final Environment environment;
     protected final long timeoutSeconds;
     protected final File sdkJar;
+    protected final List<String> javacArgs;
     protected final PrintStream tee;
 
     /**
@@ -74,10 +75,11 @@ abstract class Mode {
             // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
             new File("out/target/common/obj/JAVA_LIBRARIES/core-tests-luni_intermediates/classes.jar").getAbsoluteFile());
 
-    Mode(Environment environment, long timeoutSeconds, File sdkJar, PrintStream tee) {
+    Mode(Environment environment, long timeoutSeconds, File sdkJar, List<String> javacArgs, PrintStream tee) {
         this.environment = environment;
         this.timeoutSeconds = timeoutSeconds;
         this.sdkJar = sdkJar;
+        this.javacArgs = javacArgs;
         this.tee = tee;
     }
 
@@ -120,6 +122,7 @@ abstract class Mode {
                 .classpath(classpath)
                 .sourcepath(DalvikRunner.HOME_JAVA)
                 .destination(base)
+                .extra(javacArgs)
                 .compile(testRunnerJava);
         postCompileTestRunner();
     }
@@ -191,6 +194,7 @@ abstract class Mode {
                 .classpath(classpath)
                 .sourcepath(testRun.getTestDirectory())
                 .destination(testClassesDir)
+                .extra(javacArgs)
                 .compile(sourceFiles);
         postCompileTest(testRun);
         return true;

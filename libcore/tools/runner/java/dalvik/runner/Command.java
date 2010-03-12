@@ -155,6 +155,9 @@ final class Command {
                         return gatherOutput();
                     }
                 });
+            if (timeoutSeconds == 0) {
+                return future.get();
+            }
             return future.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (IOException e) {
             throw new RuntimeException("Failed to execute process: " + args, e);

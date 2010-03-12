@@ -45,6 +45,7 @@ final class Driver {
     private final List<CodeFinder> codeFinders;
     private final Mode mode;
     private final File xmlReportsDirectory;
+    private final String indent;
     private final Map<String, ExpectedResult> expectedResults = new HashMap<String, ExpectedResult>();
 
     /**
@@ -54,11 +55,12 @@ final class Driver {
     private int unsupportedTests = 0;
 
     public Driver(File localTemp, Mode mode, Set<File> expectationFiles,
-            File xmlReportsDirectory, List<CodeFinder> codeFinders) {
+                  File xmlReportsDirectory, String indent, List<CodeFinder> codeFinders) {
         this.localTemp = localTemp;
         this.expectationFiles = expectationFiles;
         this.mode = mode;
         this.xmlReportsDirectory = xmlReportsDirectory;
+        this.indent = indent;
         this.codeFinders = codeFinders;
     }
 
@@ -219,16 +221,18 @@ final class Driver {
         if (testRun.isExpectedResult()) {
             logger.info("OK " + testRun.getQualifiedName() + " (" + testRun.getResult() + ")");
             // In --verbose mode, show the output even on success.
-            logger.fine("  " + testRun.getFailureMessage().replace("\n", "\n  "));
+            logger.fine(indent + testRun.getFailureMessage().replace("\n", "\n" + indent));
             return;
         }
 
         logger.info("FAIL " + testRun.getQualifiedName() + " (" + testRun.getResult() + ")");
         String description = testRun.getDescription();
         if (description != null) {
-            logger.info("  \"" + description + "\"");
+            logger.info(indent + "\"" + description + "\"");
         }
 
-        logger.info("  " + testRun.getFailureMessage().replace("\n", "\n  "));
+        // Don't mess with compiler error output for tools (such as
+        // Emacs) that are trying to parse it with regexps
+        logger.info(indent + testRun.getFailureMessage().replace("\n", "\n" + indent));
     }
 }

@@ -28,11 +28,11 @@ final class JavaVm extends Vm {
 
     private final File javaHome;
 
-    JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, PrintStream tee,
-            File localTemp, File javaHome, List<String> additionalVmArgs,
-            boolean cleanBefore, boolean cleanAfter) {
+    JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, List<String> javacArgs,
+           PrintStream tee, File localTemp, File javaHome, List<String> additionalVmArgs,
+           boolean cleanBefore, boolean cleanAfter) {
         super(new EnvironmentHost(cleanBefore, cleanAfter, debugPort, localTemp),
-                timeoutSeconds, sdkJar, tee, additionalVmArgs);
+              timeoutSeconds, sdkJar, javacArgs, tee, additionalVmArgs);
         this.javaHome = javaHome;
     }
 
