@@ -1,11 +1,11 @@
-/**
- * Copyright (C) 2010 Google Inc.
+/*
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 package org.json;
 
@@ -32,10 +31,10 @@ public class JSONObjectTest extends TestCase {
         JSONObject object = new JSONObject();
         assertEquals(0, object.length());
 
-        // bogus (but documented) behaviour: returns null rather than the empty object
+        // bogus (but documented) behaviour: returns null rather than the empty object!
         assertNull(object.names());
 
-        // bogus behaviour: returns null rather than an empty array
+        // returns null rather than an empty array!
         assertNull(object.toJSONArray(new JSONArray()));
         assertEquals("{}", object.toString());
         assertEquals("{}", object.toString(5));
@@ -246,13 +245,14 @@ public class JSONObjectTest extends TestCase {
         object.put("quux", -0d);
         assertEquals(4, object.length());
 
-        assertTrue(object.toString().contains("\"foo\":4.9E-324"));
-        assertTrue(object.toString().contains("\"bar\":9223372036854775806"));
-        assertTrue(object.toString().contains("\"baz\":1.7976931348623157E308"));
+        String toString = object.toString();
+        assertTrue(toString, toString.contains("\"foo\":4.9E-324"));
+        assertTrue(toString, toString.contains("\"bar\":9223372036854775806"));
+        assertTrue(toString, toString.contains("\"baz\":1.7976931348623157E308"));
 
-        // bogus behaviour: toString() and getString() return different values for -0d
-        assertTrue(object.toString().contains("\"quux\":-0}") // no trailing decimal point
-                || object.toString().contains("\"quux\":-0,"));
+        // toString() and getString() return different values for -0d!
+        assertTrue(toString, toString.contains("\"quux\":-0}") // no trailing decimal point
+                || toString.contains("\"quux\":-0,"));
 
         assertEquals(Double.MIN_VALUE, object.get("foo"));
         assertEquals(9223372036854775806L, object.get("bar"));
@@ -310,13 +310,13 @@ public class JSONObjectTest extends TestCase {
     public void testOtherNumbers() throws JSONException {
         Number nan = new Number() {
             public int intValue() {
-                return 0;
+                throw new UnsupportedOperationException();
             }
             public long longValue() {
-                return 1L;
+                throw new UnsupportedOperationException();
             }
             public float floatValue() {
-                return 2;
+                throw new UnsupportedOperationException();
             }
             public double doubleValue() {
                 return Double.NaN;
@@ -326,10 +326,12 @@ public class JSONObjectTest extends TestCase {
             }
         };
 
-        // bogus behaviour: foreign object types should be rejected!
         JSONObject object = new JSONObject();
-        object.put("foo", nan);
-        assertEquals("{\"foo\":x}", object.toString());
+        try {
+            object.put("foo", nan);
+            fail("Object.put() accepted a NaN (via a custom Number class)");
+        } catch (JSONException e) {
+        }
     }
 
     public void testForeignObjects() throws JSONException {
@@ -339,7 +341,7 @@ public class JSONObjectTest extends TestCase {
             }
         };
 
-        // bogus behaviour: foreign object types should be rejected and not treated as Strings
+        // foreign object types are accepted and treated as Strings!
         JSONObject object = new JSONObject();
         object.put("foo", foreign);
         assertEquals("{\"foo\":\"x\"}", object.toString());
@@ -527,7 +529,7 @@ public class JSONObjectTest extends TestCase {
         names.put(false);
         names.put("foo");
 
-        // bogus behaviour: array elements are converted to Strings
+        // array elements are converted to strings to do name lookups on the map!
         JSONArray array = object.toJSONArray(names);
         assertEquals(3, array.length());
         assertEquals(10, array.get(0));
@@ -590,7 +592,7 @@ public class JSONObjectTest extends TestCase {
     }
 
     public void testToStringWithUnsupportedNumbers() {
-        // bogus behaviour: when the object contains an unsupported number, toString returns null
+        // when the object contains an unsupported number, toString returns null!
         JSONObject object = new JSONObject(Collections.singletonMap("foo", Double.NaN));
         assertEquals(null, object.toString());
     }
@@ -607,8 +609,97 @@ public class JSONObjectTest extends TestCase {
         Map<Object, Object> contents = new HashMap<Object, Object>();
         contents.put(5, 5);
 
-        // bogus behaviour: the constructor doesn't validate its input
-        new JSONObject(contents);
+        try {
+            new JSONObject(contents);
+            fail("JSONObject constructor doesn't validate its input!");
+        } catch (Exception e) {
+        }
+    }
+
+    public void testTokenerConstructor() throws JSONException {
+        JSONObject object = new JSONObject(new JSONTokener("{\"foo\": false}"));
+        assertEquals(1, object.length());
+        assertEquals(false, object.get("foo"));
+    }
+
+    public void testTokenerConstructorWrongType() throws JSONException {
+        try {
+            new JSONObject(new JSONTokener("[\"foo\", false]"));
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+
+    public void testTokenerConstructorNull() throws JSONException {
+        try {
+            new JSONObject((JSONTokener) null);
+            fail();
+        } catch (NullPointerException e) {
+        }
+    }
+
+    public void testTokenerConstructorParseFail() {
+        try {
+            new JSONObject(new JSONTokener("{"));
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+
+    public void testStringConstructor() throws JSONException {
+        JSONObject object = new JSONObject("{\"foo\": false}");
+        assertEquals(1, object.length());
+        assertEquals(false, object.get("foo"));
+    }
+
+    public void testStringConstructorWrongType() throws JSONException {
+        try {
+            new JSONObject("[\"foo\", false]");
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+
+    public void testStringConstructorNull() throws JSONException {
+        try {
+            new JSONObject((String) null);
+            fail();
+        } catch (NullPointerException e) {
+        }
+    }
+
+    public void testStringonstructorParseFail() {
+        try {
+            new JSONObject("{");
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+
+    public void testCopyConstructor() throws JSONException {
+        JSONObject source = new JSONObject();
+        source.put("a", JSONObject.NULL);
+        source.put("b", false);
+        source.put("c", 5);
+
+        JSONObject copy = new JSONObject(source, new String[] { "a", "c" });
+        assertEquals(2, copy.length());
+        assertEquals(JSONObject.NULL, copy.get("a"));
+        assertEquals(5, copy.get("c"));
+        assertEquals(null, copy.opt("b"));
+    }
+
+    public void testCopyConstructorMissingName() throws JSONException {
+        JSONObject source = new JSONObject();
+        source.put("a", JSONObject.NULL);
+        source.put("b", false);
+        source.put("c", 5);
+
+        JSONObject copy = new JSONObject(source, new String[]{ "a", "c", "d" });
+        assertEquals(2, copy.length());
+        assertEquals(JSONObject.NULL, copy.get("a"));
+        assertEquals(5, copy.get("c"));
+        assertEquals(0, copy.optInt("b"));
     }
 
     public void testAccumulateMutatesInPlace() throws JSONException {
@@ -658,7 +749,7 @@ public class JSONObjectTest extends TestCase {
         object.put("foo", JSONObject.NULL);
         object.put("bar", null);
 
-        // bogus behaviour: there's 2 ways to represent null; each behaves differently!
+        // there are two ways to represent null; each behaves differently!
         assertTrue(object.has("foo"));
         assertFalse(object.has("bar"));
         assertTrue(object.isNull("foo"));
@@ -767,7 +858,11 @@ public class JSONObjectTest extends TestCase {
     }
 
     public void testQuote() {
-        // covered by JSONStringerTest.testEscaping()
+        // covered by JSONStringerTest.testEscaping
+    }
+
+    public void testQuoteNull() throws JSONException {
+        assertEquals("\"\"", JSONObject.quote(null));
     }
 
     public void testNumberToString() throws JSONException {

@@ -1,11 +1,11 @@
-/**
+/*
  * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,9 @@ package org.json;
 import junit.framework.TestCase;
 
 /**
- * These tests checks self use; ie. when methods delegate to non-final methods.
- * For the most part we doesn't attempt to cover self-use, except in those cases
- * where our clean room implementation does it.
+ * These tests checks self use calls. For the most part we doesn't attempt to
+ * cover self-use, except in those cases where our clean room implementation
+ * does it.
  *
  * <p>This black box test was written without inspecting the non-free org.json
  * sourcecode.
@@ -36,6 +36,8 @@ public class SelfUseTest extends TestCase {
     private int arrayGetCalls = 0;
     private int arrayOptCalls = 0;
     private int arrayOptTypeCalls = 0;
+    private int tokenerNextCalls = 0;
+    private int tokenerNextValueCalls = 0;
 
     private final JSONObject object = new JSONObject() {
         @Override public JSONObject put(String name, Object value) throws JSONException {
@@ -106,6 +108,18 @@ public class SelfUseTest extends TestCase {
             return super.optInt(index, fallback);
         }
     };
+
+    private final JSONTokener tokener = new JSONTokener("{\"foo\": [true]}") {
+        @Override public char next() {
+            tokenerNextCalls++;
+            return super.next();
+        }
+        @Override public Object nextValue() throws JSONException {
+            tokenerNextValueCalls++;
+            return super.nextValue();
+        }
+    };
+
 
     public void testObjectPut() throws JSONException {
         object.putOpt("foo", "bar");
@@ -201,4 +215,15 @@ public class SelfUseTest extends TestCase {
         assertEquals(0, arrayOptTypeCalls);
     }
 
+    public void testNextExpecting() throws JSONException {
+        tokener.next('{');
+        assertEquals(1, tokenerNextCalls);
+        tokener.next('\"');
+        assertEquals(2, tokenerNextCalls);
+    }
+
+    public void testNextValue() throws JSONException {
+        tokener.nextValue();
+        assertEquals(4, tokenerNextValueCalls);
+    }
 }

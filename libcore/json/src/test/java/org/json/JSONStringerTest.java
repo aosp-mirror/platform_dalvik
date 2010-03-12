@@ -1,11 +1,11 @@
-/**
+/*
  * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 public class JSONStringerTest extends TestCase {
 
     public void testEmptyStringer() {
-        // bogus behaviour: why isn't this the empty string?
+        // why isn't this the empty string?
         assertNull(new JSONStringer().toString());
     }
 
@@ -60,6 +60,16 @@ public class JSONStringerTest extends TestCase {
         stringer.value(null);
         stringer.endArray();
         assertEquals("[false,5,5,\"five\",null]", stringer.toString());
+    }
+
+    public void testValueObjectMethods() throws JSONException {
+        JSONStringer stringer = new JSONStringer();
+        stringer.array();
+        stringer.value(Boolean.FALSE);
+        stringer.value(Double.valueOf(5.0));
+        stringer.value(Long.valueOf(5L));
+        stringer.endArray();
+        assertEquals("[false,5,5]", stringer.toString());
     }
 
     public void testKeyValue() throws JSONException {
@@ -187,26 +197,27 @@ public class JSONStringerTest extends TestCase {
 
     public void testEscaping() throws JSONException {
         assertEscapedAllWays("a", "a");
-        assertEscapedAllWays("a\"", "a\\\"");
-        assertEscapedAllWays("\"", "\\\"");
+        assertEscapedAllWays("a\\\"", "a\"");
+        assertEscapedAllWays("\\\"", "\"");
         assertEscapedAllWays(":", ":");
         assertEscapedAllWays(",", ",");
-        assertEscapedAllWays("\n", "\\n");
-        assertEscapedAllWays("\t", "\\t");
+        assertEscapedAllWays("\\b", "\b");
+        assertEscapedAllWays("\\f", "\f");
+        assertEscapedAllWays("\\n", "\n");
+        assertEscapedAllWays("\\r", "\r");
+        assertEscapedAllWays("\\t", "\t");
         assertEscapedAllWays(" ", " ");
-        assertEscapedAllWays("\\", "\\\\");
+        assertEscapedAllWays("\\\\", "\\");
         assertEscapedAllWays("{", "{");
         assertEscapedAllWays("}", "}");
         assertEscapedAllWays("[", "[");
         assertEscapedAllWays("]", "]");
-
-        // how does it decide which characters to escape?
-        assertEscapedAllWays("\0", "\\u0000");
-        assertEscapedAllWays("\u0019", "\\u0019");
-        assertEscapedAllWays("\u0020", " ");
+        assertEscapedAllWays("\\u0000", "\0");
+        assertEscapedAllWays("\\u0019", "\u0019");
+        assertEscapedAllWays(" ", "\u0020");
     }
 
-    private void assertEscapedAllWays(String original, String escaped) throws JSONException {
+    private void assertEscapedAllWays(String escaped, String original) throws JSONException {
         assertEquals("{\"" + escaped + "\":false}",
                 new JSONStringer().object().key(original).value(false).endObject().toString());
         assertEquals("{\"a\":\"" + escaped + "\"}",
@@ -236,7 +247,7 @@ public class JSONStringerTest extends TestCase {
         assertEquals("{\"b\":{\"a\":false}}", stringer.toString());
     }
 
-    public void testArrayNestingMaxDepthIs20() throws JSONException {
+    public void testArrayNestingMaxDepthSupports20() throws JSONException {
         JSONStringer stringer = new JSONStringer();
         for (int i = 0; i < 20; i++) {
             stringer.array();
@@ -250,14 +261,9 @@ public class JSONStringerTest extends TestCase {
         for (int i = 0; i < 20; i++) {
             stringer.array();
         }
-        try {
-            stringer.array();
-            fail();
-        } catch (JSONException e) {
-        }
     }
 
-    public void testObjectNestingMaxDepthIs20() throws JSONException {
+    public void testObjectNestingMaxDepthSupports20() throws JSONException {
         JSONStringer stringer = new JSONStringer();
         for (int i = 0; i < 20; i++) {
             stringer.object();
@@ -276,14 +282,9 @@ public class JSONStringerTest extends TestCase {
             stringer.object();
             stringer.key("a");
         }
-        try {
-            stringer.object();
-            fail();
-        } catch (JSONException e) {
-        }
     }
 
-    public void testMixedMaxDepth() throws JSONException {
+    public void testMixedMaxDepthSupports20() throws JSONException {
         JSONStringer stringer = new JSONStringer();
         for (int i = 0; i < 20; i+=2) {
             stringer.array();
@@ -304,11 +305,6 @@ public class JSONStringerTest extends TestCase {
             stringer.array();
             stringer.object();
             stringer.key("a");
-        }
-        try {
-            stringer.array();
-            fail();
-        } catch (JSONException e) {
         }
     }
 
