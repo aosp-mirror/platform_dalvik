@@ -73,24 +73,6 @@ final class OSNetworkSystem implements INetworkSystem {
             SocketImpl newSocket, FileDescriptor fdnewSocket, int timeout)
             throws IOException;
 
-    // BEGIN android-removed
-    // public void acceptStreamSocket(FileDescriptor fdServer,
-    //         SocketImpl newSocket, FileDescriptor fdnewSocket, int timeout)
-    //         throws IOException {
-    //     acceptStreamSocketImpl(fdServer, newSocket, fdnewSocket, timeout);
-    // }
-
-    // static native void acceptStreamSocketImpl(FileDescriptor fdServer,
-    //         SocketImpl newSocket, FileDescriptor fdnewSocket, int timeout)
-    //         throws IOException;
-    // END android-removed
-
-    public int availableStream(FileDescriptor fd) throws SocketException {
-        return availableStreamImpl(fd);
-    }
-
-    static native int availableStreamImpl(FileDescriptor aFD) throws SocketException;
-
     /**
      * Associates a local address with a socket.
      *

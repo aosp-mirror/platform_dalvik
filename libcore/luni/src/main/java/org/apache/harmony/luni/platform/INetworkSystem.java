@@ -142,8 +142,6 @@ public interface INetworkSystem {
 
     public void sendUrgentData(FileDescriptor fd, byte value);
 
-    public int availableStream(FileDescriptor aFD) throws SocketException;
-
     // BEGIN android-removed
     // public void acceptStreamSocket(FileDescriptor fdServer,
     //         SocketImpl newSocket, FileDescriptor fdnewSocket, int timeout)

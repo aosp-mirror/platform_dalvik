@@ -1828,40 +1828,6 @@ static void osNetworkSystem_listenStreamSocketImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static jint osNetworkSystem_availableStreamImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor) {
-    // LOGD("ENTER availableStreamImpl");
-
-    int handle;
-    if (!jniGetFd(env, fileDescriptor, handle)) {
-        return 0;
-    }
-
-    int result;
-    do {
-        result = selectWait(handle, 1);
-
-        if (SOCKERR_TIMEOUT == result) {
-            // The read operation timed out, so answer 0 bytes available
-            return 0;
-        } else if (SOCKERR_INTERRUPTED == result) {
-            continue;
-        } else if (0 > result) {
-            throwSocketException(env, result);
-            return 0;
-        }
-    } while (SOCKERR_INTERRUPTED == result);
-
-    char message[2048];
-    result = recv(handle, (jbyte *) message, sizeof(message), MSG_PEEK);
-
-    if (0 > result) {
-        jniThrowSocketException(env, errno);
-        return 0;
-    }
-    return result;
-}
-
 static void osNetworkSystem_acceptSocketImpl(JNIEnv* env, jclass,
         jobject serverFileDescriptor,
         jobject newSocket, jobject clientFileDescriptor, jint timeout) {
@@ -2962,7 +2928,6 @@ static JNINativeMethod gMethods[] = {
     { "connectStreamWithTimeoutSocketImpl","(Ljava/io/FileDescriptor;IIILjava/net/InetAddress;)V",                     (void*) osNetworkSystem_connectStreamWithTimeoutSocketImpl },
     { "socketBindImpl",                    "(Ljava/io/FileDescriptor;ILjava/net/InetAddress;)V",                       (void*) osNetworkSystem_socketBindImpl                     },
     { "listenStreamSocketImpl",            "(Ljava/io/FileDescriptor;I)V",                                             (void*) osNetworkSystem_listenStreamSocketImpl             },
-    { "availableStreamImpl",               "(Ljava/io/FileDescriptor;)I",                                              (void*) osNetworkSystem_availableStreamImpl                },
     { "acceptSocketImpl",                  "(Ljava/io/FileDescriptor;Ljava/net/SocketImpl;Ljava/io/FileDescriptor;I)V",(void*) osNetworkSystem_acceptSocketImpl                   },
     { "supportsUrgentDataImpl",            "(Ljava/io/FileDescriptor;)Z",                                              (void*) osNetworkSystem_supportsUrgentDataImpl             },
     { "sendUrgentDataImpl",                "(Ljava/io/FileDescriptor;B)V",                                             (void*) osNetworkSystem_sendUrgentDataImpl                 },

@@ -176,7 +176,7 @@ public class PlainSocketImpl extends SocketImpl {
         if (shutdownInput == true) {
             return 0;
         }
-        return netImpl.availableStream(fd);
+        return Platform.getFileSystem().ioctlAvailable(fd);
     }
 
     @Override

@@ -450,7 +450,7 @@ static jint harmony_io_openImpl(JNIEnv* env, jobject, jbyteArray pathByteArray,
     return rc;
 }
 
-static jint harmony_io_ioctlAvailable(JNIEnv*env, jobject, jint fd) {
+static jint harmony_io_ioctlAvailable(JNIEnv*env, jobject, jobject fileDescriptor) {
     /*
      * On underlying platforms Android cares about (read "Linux"),
      * ioctl(fd, FIONREAD, &avail) is supposed to do the following:
@@ -476,6 +476,10 @@ static jint harmony_io_ioctlAvailable(JNIEnv*env, jobject, jint fd) {
      * actually read some amount of data and caused the cursor to be
      * advanced.
      */
+    int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);
+    if (fd == -1) {
+        return -1;
+    }
     int avail = 0;
     int rc = ioctl(fd, FIONREAD, &avail);
     if (rc >= 0) {
@@ -505,7 +509,7 @@ static JNINativeMethod gMethods[] = {
     { "close",              "(I)V",       (void*) harmony_io_close },
     { "fflush",             "(IZ)V",      (void*) harmony_io_fflush },
     { "getAllocGranularity","()I",        (void*) harmony_io_getAllocGranularity },
-    { "ioctlAvailable",     "(I)I",       (void*) harmony_io_ioctlAvailable },
+    { "ioctlAvailable", "(Ljava/io/FileDescriptor;)I", (void*) harmony_io_ioctlAvailable },
     { "lockImpl",           "(IJJIZ)I",   (void*) harmony_io_lockImpl },
     { "openImpl",           "([BI)I",     (void*) harmony_io_openImpl },
     { "readDirect",         "(IIII)J",    (void*) harmony_io_readDirect },
