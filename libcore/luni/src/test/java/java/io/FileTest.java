@@ -78,6 +78,7 @@ public class FileTest extends junit.framework.TestCase {
         // The behavior of the empty filename is an odd mixture.
         File f = new File("");
         // Mostly it behaves like an invalid path...
+        assertFalse(f.canExecute());
         assertFalse(f.canRead());
         assertFalse(f.canWrite());
         try {
@@ -107,7 +108,10 @@ public class FileTest extends junit.framework.TestCase {
         assertFalse(f.mkdirs());
         assertFalse(f.renameTo(f));
         assertFalse(f.setLastModified(123));
+        assertFalse(f.setExecutable(true));
         assertFalse(f.setReadOnly());
+        assertFalse(f.setReadable(true));
+        assertFalse(f.setWritable(true));
         // ...but sometimes it behaves like "user.dir".
         String cwd = System.getProperty("user.dir");
         assertEquals(new File(cwd), f.getAbsoluteFile());
