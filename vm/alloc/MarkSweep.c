@@ -134,7 +134,7 @@ destroyMarkStack(GcMarkStack *stack)
     } while (false)
 
 bool
-dvmHeapBeginMarkStep()
+dvmHeapBeginMarkStep(GcMode mode)
 {
     GcMarkContext *mc = &gDvm.gcHeap->markContext;
 
@@ -142,6 +142,7 @@ dvmHeapBeginMarkStep()
         return false;
     }
     mc->finger = NULL;
+    mc->immuneLimit = dvmHeapSourceGetImmuneLimit(mode);
     return true;
 }
 
@@ -167,6 +168,10 @@ _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
     assert(dvmIsValidObject(obj));
 #endif
 
+    if ((char *)obj < ctx->immuneLimit) {
+        assert(isMarked(obj, ctx));
+        return;
+    }
     if (!setAndReturnMarkBit(ctx, obj)) {
         /* This object was not previously marked.
          */
@@ -265,6 +270,9 @@ void dvmHeapMarkRootSet()
     gcHeap = gDvm.gcHeap;
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_STICKY_CLASS, 0);
+
+    LOG_SCAN("immune objects");
+    dvmMarkImmuneObjects();
 
     LOG_SCAN("root class loader\n");
     dvmGcScanRootClassLoader();
@@ -1108,13 +1116,13 @@ static int isUnmarkedObject(void *object)
  * marked and free them.
  */
 void
-dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed)
+dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
 {
     HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
     HeapBitmap objBits[HEAP_SOURCE_MAX_HEAP_COUNT];
     size_t origObjectsAllocated;
     size_t origBytesAllocated;
-    size_t numBitmaps;
+    size_t numBitmaps, numSweepBitmaps;
 
     /* All reachable objects have been marked.
      * Detach any unreachable interned strings before
@@ -1131,7 +1139,13 @@ dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed)
 
     numBitmaps = dvmHeapSourceGetNumHeaps();
     dvmHeapSourceGetObjectBitmaps(objBits, markBits, numBitmaps);
-    dvmHeapBitmapXorWalkLists(markBits, objBits, numBitmaps,
+    if (mode == GC_PARTIAL) {
+        numSweepBitmaps = 1;
+        assert(gDvm.gcHeap->markContext.immuneLimit == objBits[0].base);
+    } else {
+        numSweepBitmaps = numBitmaps;
+    }
+    dvmHeapBitmapXorWalkLists(markBits, objBits, numSweepBitmaps,
                               sweepBitmapCallback, NULL);
 
     *numFreed = origObjectsAllocated -

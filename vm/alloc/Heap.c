@@ -737,7 +737,7 @@ void dvmHeapSuspendAndVerify()
  * way to enforce this is to refuse to GC on an allocation made by the
  * JDWP thread -- we have to expand the heap or fail.
  */
-void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
+void dvmCollectGarbageInternal(bool collectSoftReferences, GcReason reason)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
     Object *softReferences;
@@ -749,6 +749,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
     s8 gcElapsedTime;
     int numFreed;
     size_t sizeFreed;
+    GcMode gcMode;
 
 #if DVM_TRACK_HEAP_MARKING
     /* Since weak and soft references are always cleared,
@@ -770,6 +771,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
         LOGW_HEAP("Attempted recursive GC\n");
         return;
     }
+    gcMode = (reason == GC_FOR_MALLOC) ? GC_PARTIAL : GC_FULL;
     gcHeap->gcRunning = true;
     now = dvmGetRelativeTimeUsec();
     if (gcHeap->gcStartTime != 0) {
@@ -895,7 +897,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
 
     /* Set up the marking context.
      */
-    if (!dvmHeapBeginMarkStep()) {
+    if (!dvmHeapBeginMarkStep(gcMode)) {
         LOGE_HEAP("dvmHeapBeginMarkStep failed; aborting\n");
         dvmAbort();
     }
@@ -997,7 +999,7 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
     dvmDumpMonitorInfo("before sweep");
 #endif
     LOGD_HEAP("Sweeping...");
-    dvmHeapSweepUnmarkedObjects(&numFreed, &sizeFreed);
+    dvmHeapSweepUnmarkedObjects(gcMode, &numFreed, &sizeFreed);
 #ifdef WITH_DEADLOCK_PREDICTION
     dvmDumpMonitorInfo("after sweep");
 #endif

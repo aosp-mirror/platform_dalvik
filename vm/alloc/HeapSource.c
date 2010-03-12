@@ -362,13 +362,14 @@ addNewHeap(HeapSource *hs, mspace msp, size_t mspAbsoluteMaxSize)
     } else {
         size_t overhead;
 
-        overhead = oldHeapOverhead(hs, true);
+        overhead = ALIGN_UP_TO_PAGE_SIZE(oldHeapOverhead(hs, true));
         if (overhead + HEAP_MIN_FREE >= hs->absoluteMaxSize) {
             LOGE_HEAP("No room to create any more heaps "
                     "(%zd overhead, %zd max)\n",
                     overhead, hs->absoluteMaxSize);
             return false;
         }
+        hs->heaps[0].absoluteMaxSize = overhead;
         heap.absoluteMaxSize = hs->absoluteMaxSize - overhead;
         base = contiguous_mspace_sbrk0(hs->heaps[0].msp);
         hs->heaps[0].limit = base;
@@ -426,7 +427,6 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
      * among the heaps managed by the garbage collector.
      */
     length = ALIGN_UP_TO_PAGE_SIZE(absoluteMaxSize);
-    length *= HEAP_SOURCE_MAX_HEAP_COUNT;
     fd = ashmem_create_region("the-java-heap", length);
     if (fd == -1) {
         return NULL;
@@ -617,7 +617,8 @@ static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
 
     dst->base = base;
     dst->max = max;
-    dst->bitsLen = max - base;
+    dst->bitsLen = HB_OFFSET_TO_BYTE_INDEX(max - base);
+    dst->allocLen = dst->bitsLen;
     offset = base - src->base;
     assert(HB_OFFSET_TO_MASK(offset) == 1 << 31);
     dst->bits = &src->bits[HB_OFFSET_TO_INDEX(offset)];
@@ -664,6 +665,34 @@ void dvmHeapSourceSwapBitmaps(void)
     gHs->objBits = gHs->markBits;
     gHs->markBits = tmp;
     dvmHeapBitmapZero(&gHs->markBits);
+}
+
+void dvmMarkImmuneObjects(void)
+{
+    char *dst, *src;
+    size_t i, offset, index, length;
+
+    /*
+     * Copy the contents of the live bit vector for immune object
+     * range into the mark bit vector.
+     */
+    assert(gHs->objBits.base == gHs->markBits.base);
+    assert(gHs->objBits.bitsLen == gHs->markBits.bitsLen);
+    for (i = 1; i < gHs->numHeaps; ++i) {
+        /* Compute the number of words to copy in the bitmap. */
+        index = HB_OFFSET_TO_INDEX((uintptr_t)gHs->heaps[i].base - gHs->objBits.base);
+        /* Compute the starting offset in the live and mark bits. */
+        src = (char *)(gHs->objBits.bits + index);
+        dst = (char *)(gHs->markBits.bits + index);
+        /* Compute the number of bytes of the live bitmap to copy. */
+        length = HB_OFFSET_TO_BYTE_INDEX(gHs->heaps[i].limit - gHs->heaps[i].base);
+        /* Do the copy. */
+        memcpy(dst, src, length);
+        /* Make sure max points to the address of the highest set bit. */
+        if (gHs->markBits.max < (uintptr_t)gHs->heaps[i].limit) {
+            gHs->markBits.max = (uintptr_t)gHs->heaps[i].limit;
+        }
+    }
 }
 
 /*
@@ -1658,4 +1687,13 @@ dvmGetExternalBytesAllocated()
     dvmUnlockHeap();
 
     return ret;
+}
+
+void *dvmHeapSourceGetImmuneLimit(GcMode mode)
+{
+    if (mode == GC_PARTIAL) {
+        return hs2heap(gHs)->base;
+    } else {
+        return NULL;
+    }
 }
