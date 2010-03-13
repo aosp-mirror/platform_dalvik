@@ -212,17 +212,11 @@ final class OSNetworkSystem implements INetworkSystem {
     // static native InetAddress getHostByNameImpl(String addr) throws UnknownHostException;
     // END android-removed
 
-    public int getSocketFlags() {
-        return getSocketFlagsImpl();
-    }
-
     public native String byteArrayToIpString(byte[] address)
             throws UnknownHostException;
 
     public native byte[] ipStringToByteArray(String address)
             throws UnknownHostException;
-
-    static native int getSocketFlagsImpl();
 
     public InetAddress getSocketLocalAddress(FileDescriptor fd) {
         return getSocketLocalAddressImpl(fd);

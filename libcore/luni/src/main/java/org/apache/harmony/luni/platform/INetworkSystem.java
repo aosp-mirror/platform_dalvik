@@ -234,8 +234,6 @@ public interface INetworkSystem {
     public void setSocketOption(FileDescriptor aFD, int opt, Object optVal)
             throws SocketException;
 
-    public int getSocketFlags();
-
     /*
      * Close the socket in the IP stack.
      * 
