@@ -2886,13 +2886,6 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static jint osNetworkSystem_getSocketFlagsImpl(JNIEnv* env, jclass clazz) {
-    // LOGD("ENTER getSocketFlagsImpl");
-
-    // Not implemented by harmony
-    return 0;
-}
-
 static void osNetworkSystem_socketCloseImpl(JNIEnv* env, jclass clazz,
         jobject fileDescriptor) {
     // LOGD("ENTER socketCloseImpl");
@@ -2951,7 +2944,6 @@ static JNINativeMethod gMethods[] = {
     { "getSocketLocalPortImpl",            "(Ljava/io/FileDescriptor;)I",                                              (void*) osNetworkSystem_getSocketLocalPortImpl             },
     { "getSocketOptionImpl",               "(Ljava/io/FileDescriptor;I)Ljava/lang/Object;",                            (void*) osNetworkSystem_getSocketOptionImpl                },
     { "setSocketOptionImpl",               "(Ljava/io/FileDescriptor;ILjava/lang/Object;)V",                           (void*) osNetworkSystem_setSocketOptionImpl                },
-    { "getSocketFlagsImpl",                "()I",                                                                      (void*) osNetworkSystem_getSocketFlagsImpl                 },
     { "socketCloseImpl",                   "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_socketCloseImpl                    },
     { "setInetAddressImpl",                "(Ljava/net/InetAddress;[B)V",                                              (void*) osNetworkSystem_setInetAddressImpl                 },
     { "inheritedChannel",                  "()Ljava/nio/channels/Channel;",                                            (void*) osNetworkSystem_inheritedChannel                   },

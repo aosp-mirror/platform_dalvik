@@ -45,16 +45,6 @@ import org.apache.harmony.luni.util.Msg;
  */
 public class PlainSocketImpl extends SocketImpl {
 
-    // Const copy from socket
-
-    static final int MULTICAST_IF = 1;
-
-    static final int MULTICAST_TTL = 2;
-
-    static final int TCP_NODELAY = 4;
-
-    static final int FLAG_SHUTDOWN = 8;
-
     // For SOCKS support. A SOCKS bind() uses the last
     // host connected to in its request.
     static private InetAddress lastConnectedAddress;
@@ -64,8 +54,6 @@ public class PlainSocketImpl extends SocketImpl {
     private static Field fdField;
 
     private static Field localportField;
-
-    private boolean tcpNoDelay = true;
 
     /**
      * used to store the trafficClass value which is simply returned as the
@@ -195,12 +183,6 @@ public class PlainSocketImpl extends SocketImpl {
     protected void close() throws IOException {
         synchronized (fd) {
             if (fd.valid()) {
-                if ((netImpl.getSocketFlags() & FLAG_SHUTDOWN) != 0) {
-                    try {
-                        shutdownOutput();
-                    } catch (Exception e) {
-                    }
-                }
                 netImpl.socketClose(fd);
                 fd = new FileDescriptor();
             }
@@ -289,14 +271,7 @@ public class PlainSocketImpl extends SocketImpl {
         } else if (optID == SocketOptions.IP_TOS) {
             return Integer.valueOf(trafficClass);
         } else {
-            // Call the native first so there will be
-            // an exception if the socket if closed.
-            Object result = netImpl.getSocketOption(fd, optID);
-            if (optID == SocketOptions.TCP_NODELAY
-                    && (netImpl.getSocketFlags() & TCP_NODELAY) != 0) {
-                return Boolean.valueOf(tcpNoDelay);
-            }
-            return result;
+            return netImpl.getSocketOption(fd, optID);
         }
     }
 
@@ -325,10 +300,6 @@ public class PlainSocketImpl extends SocketImpl {
         } else {
             try {
                 netImpl.setSocketOption(fd, optID, val);
-                if (optID == SocketOptions.TCP_NODELAY
-                        && (netImpl.getSocketFlags() & TCP_NODELAY) != 0) {
-                    tcpNoDelay = ((Boolean) val).booleanValue();
-                }
             } catch (SocketException e) {
                 // we don't throw an exception for IP_TOS even if the platform
                 // won't let us set the requested value

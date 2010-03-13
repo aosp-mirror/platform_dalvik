@@ -75,8 +75,6 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
 
     private byte[] ipaddress = { 0, 0, 0, 0 };
 
-    private int ttl = 1;
-
     private INetworkSystem netImpl = Platform.getNetworkSystem();
 
     private volatile boolean isNativeConnected;
@@ -160,41 +158,18 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
         } else if (optID == SocketOptions.IP_TOS) {
             return Integer.valueOf(trafficClass);
         } else {
-            // Call the native first so there will be
-            // an exception if the socket if closed.
-            Object result = netImpl.getSocketOption(fd, optID);
-            if (optID == SocketOptions.IP_MULTICAST_IF
-                    && (netImpl.getSocketFlags() & MULTICAST_IF) != 0) {
-                try {
-                    return InetAddress.getByAddress(ipaddress);
-                } catch (UnknownHostException e) {
-                    return null;
-                }
-            }
-            return result;
+            return netImpl.getSocketOption(fd, optID);
         }
     }
 
     @Override
     public int getTimeToLive() throws IOException {
-        // Call the native first so there will be an exception if the socket if
-        // closed.
-        int result = (((Byte) getOption(IP_MULTICAST_TTL)).byteValue()) & 0xFF;
-        if ((netImpl.getSocketFlags() & MULTICAST_TTL) != 0) {
-            return ttl;
-        }
-        return result;
+        return getTTL() & 0xff;
     }
 
     @Override
     public byte getTTL() throws IOException {
-        // Call the native first so there will be an exception if the socket if
-        // closed.
-        byte result = ((Byte) getOption(IP_MULTICAST_TTL)).byteValue();
-        if ((netImpl.getSocketFlags() & MULTICAST_TTL) != 0) {
-            return (byte) ttl;
-        }
-        return result;
+        return ((Byte) getOption(IP_MULTICAST_TTL)).byteValue();
     }
 
     @Override
@@ -293,36 +268,16 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
         if (optID == SocketOptions.SO_REUSEADDR) {
             optID = REUSEADDR_AND_REUSEPORT;
         }
-
         if (optID == SocketOptions.SO_TIMEOUT) {
             receiveTimeout = ((Integer) val).intValue();
         } else {
-            int flags = netImpl.getSocketFlags();
             try {
-                netImpl.setSocketOption(fd, optID | (flags << 16), val);
+                netImpl.setSocketOption(fd, optID, val);
             } catch (SocketException e) {
                 // we don't throw an exception for IP_TOS even if the platform
                 // won't let us set the requested value
                 if (optID != SocketOptions.IP_TOS) {
                     throw e;
-                }
-            }
-            if (optID == SocketOptions.IP_MULTICAST_IF && (flags & MULTICAST_IF) != 0) {
-                InetAddress inet = (InetAddress) val;
-                if (NetUtil.bytesToInt(inet.getAddress(), 0) == 0 || inet.isLoopbackAddress()) {
-                    ipaddress = ((InetAddress) val).getAddress();
-                } else {
-                    InetAddress local = null;
-                    try {
-                        local = InetAddress.getLocalHost();
-                    } catch (UnknownHostException e) {
-                        throw new SocketException("getLocalHost(): " + e.toString());
-                    }
-                    if (inet.equals(local)) {
-                        ipaddress = ((InetAddress) val).getAddress();
-                    } else {
-                        throw new SocketException(val + " != getLocalHost(): " + local);
-                    }
                 }
             }
             /*
@@ -341,20 +296,13 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
     }
 
     @Override
-    public void setTimeToLive(int ttl) throws java.io.IOException {
-        // BEGIN android-changed: native code wants an int anyway
+    public void setTimeToLive(int ttl) throws IOException {
         setOption(IP_MULTICAST_TTL, Integer.valueOf(ttl));
-        // END android-changed
-        if ((netImpl.getSocketFlags() & MULTICAST_TTL) != 0) {
-            this.ttl = ttl;
-        }
     }
 
     @Override
-    public void setTTL(byte ttl) throws java.io.IOException {
-        // BEGIN android-changed: remove duplication
+    public void setTTL(byte ttl) throws IOException {
         setTimeToLive(ttl);
-        // END android-changed
     }
 
     @Override
