@@ -26,6 +26,7 @@ public class AllTests {
         suite.addTestSuite(JSONObjectTest.class);
         suite.addTestSuite(JSONStringerTest.class);
         suite.addTestSuite(JSONTokenerTest.class);
+        suite.addTestSuite(ParsingTest.class);
         suite.addTestSuite(SelfUseTest.class);
         return suite;
     }
