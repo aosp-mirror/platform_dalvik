@@ -359,6 +359,14 @@ public final class VMDebug {
      */
     public static native void crash();
 
+    /**
+     * Together with gdb, provide a handy way to stop the VM at user-tagged
+     * locations.
+     *
+     * @hide
+     */
+    public static native void infopoint(int id);
+
     /*
      * Fake method, inserted into dmtrace output when the garbage collector
      * runs.  Not actually called.
