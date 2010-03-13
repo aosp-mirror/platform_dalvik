@@ -873,6 +873,23 @@ static void Dalvik_dalvik_system_VMDebug_crash(const u4* args,
     dvmAbort();
 }
 
+/*
+ * static void infopoint(int id)
+ *
+ * Provide a hook for gdb to hang to so that the VM can be stopped when
+ * user-tagged source locations are being executed.
+ */
+static void Dalvik_dalvik_system_VMDebug_infopoint(const u4* args,
+    JValue* pResult)
+{
+    gDvm.nativeDebuggerActive = true;
+
+    LOGD("VMDebug infopoint %d hit", args[0]);
+
+    gDvm.nativeDebuggerActive = false;
+    RETURN_VOID();
+}
+
 const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
     { "getVmFeatureList",           "()[Ljava/lang/String;",
         Dalvik_dalvik_system_VMDebug_getVmFeatureList },
@@ -928,6 +945,7 @@ const DalvikNativeMethod dvm_dalvik_system_VMDebug[] = {
         Dalvik_dalvik_system_VMDebug_dumpReferenceTables },
     { "crash",                      "()V",
         Dalvik_dalvik_system_VMDebug_crash },
+    { "infopoint",                 "(I)V",
+        Dalvik_dalvik_system_VMDebug_infopoint },
     { NULL, NULL, NULL },
 };
-
