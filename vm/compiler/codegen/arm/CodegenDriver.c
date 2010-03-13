@@ -241,6 +241,16 @@ static void selfVerificationBranchInsertPass(CompilationUnit *cUnit)
 }
 #endif
 
+/* Generate conditional branch instructions */
+static ArmLIR *genConditionalBranch(CompilationUnit *cUnit,
+                                    ArmConditionCode cond,
+                                    ArmLIR *target)
+{
+    ArmLIR *branch = opCondBranch(cUnit, cond);
+    branch->generic.target = (LIR *) target;
+    return branch;
+}
+
 /* Generate a unconditional branch to go to the interpreter */
 static inline ArmLIR *genTrap(CompilationUnit *cUnit, int dOffset,
                                   ArmLIR *pcrLabel)
@@ -498,6 +508,81 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
         cUnit->heapMemOp = false;
 #endif
     }
+}
+
+/*
+ * Generate array object store
+ * Must use explicit register allocation here because of
+ * call-out to dvmCanPutArrayElement
+ */
+static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
+                              RegLocation rlArray, RegLocation rlIndex,
+                              RegLocation rlSrc, int scale)
+{
+    int lenOffset = offsetof(ArrayObject, length);
+    int dataOffset = offsetof(ArrayObject, contents);
+
+    dvmCompilerFlushAllRegs(cUnit);
+
+    int regLen = r0;
+    int regPtr = r4PC;  /* Preserved across call */
+    int regArray = r1;
+    int regIndex = r7;  /* Preserved across call */
+
+    loadValueDirectFixed(cUnit, rlArray, regArray);
+    loadValueDirectFixed(cUnit, rlIndex, regIndex);
+
+    /* null object? */
+    ArmLIR * pcrLabel = NULL;
+
+    if (!(mir->OptimizationFlags & MIR_IGNORE_NULL_CHECK)) {
+        pcrLabel = genNullCheck(cUnit, rlArray.sRegLow, regArray,
+                                mir->offset, NULL);
+    }
+
+    if (!(mir->OptimizationFlags & MIR_IGNORE_RANGE_CHECK)) {
+        /* Get len */
+        loadWordDisp(cUnit, regArray, lenOffset, regLen);
+        /* regPtr -> array data */
+        opRegRegImm(cUnit, kOpAdd, regPtr, regArray, dataOffset);
+        genBoundsCheck(cUnit, regIndex, regLen, mir->offset,
+                       pcrLabel);
+    } else {
+        /* regPtr -> array data */
+        opRegRegImm(cUnit, kOpAdd, regPtr, regArray, dataOffset);
+    }
+
+    /* Get object to store */
+    loadValueDirectFixed(cUnit, rlSrc, r0);
+    loadConstant(cUnit, r2, (int)dvmCanPutArrayElement);
+
+    /* Are we storing null?  If so, avoid check */
+    opRegImm(cUnit, kOpCmp, r0, 0);
+    ArmLIR *branchOver = opCondBranch(cUnit, kArmCondEq);
+
+    /* Make sure the types are compatible */
+    loadWordDisp(cUnit, regArray, offsetof(Object, clazz), r1);
+    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r0);
+    opReg(cUnit, kOpBlx, r2);
+    dvmCompilerClobberCallRegs(cUnit);
+    /* Bad? - roll back and re-execute if so */
+    genRegImmCheck(cUnit, kArmCondEq, r0, 0, mir->offset, pcrLabel);
+
+    /* Resume here - must reload element, regPtr & index preserved */
+    loadValueDirectFixed(cUnit, rlSrc, r0);
+
+    ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target->defMask = ENCODE_ALL;
+    branchOver->generic.target = (LIR *) target;
+
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = true;
+#endif
+    storeBaseIndexed(cUnit, regPtr, regIndex, r0,
+                     scale, kWord);
+#if defined(WITH_SELF_VERIFICATION)
+    cUnit->heapMemOp = false;
+#endif
 }
 
 static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir,
@@ -816,16 +901,6 @@ static bool genArithOp(CompilationUnit *cUnit, MIR *mir)
         return genArithOpDouble(cUnit,mir, rlDest, rlSrc1, rlSrc2);
     }
     return true;
-}
-
-/* Generate conditional branch instructions */
-static ArmLIR *genConditionalBranch(CompilationUnit *cUnit,
-                                    ArmConditionCode cond,
-                                    ArmLIR *target)
-{
-    ArmLIR *branch = opCondBranch(cUnit, cond);
-    branch->generic.target = (LIR *) target;
-    return branch;
 }
 
 /* Generate unconditional branch instructions */
@@ -2345,8 +2420,10 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
             genArrayPut(cUnit, mir, kLong, rlSrc1, rlSrc2, rlDest, 3);
             break;
         case OP_APUT:
-        case OP_APUT_OBJECT:
             genArrayPut(cUnit, mir, kWord, rlSrc1, rlSrc2, rlDest, 2);
+            break;
+        case OP_APUT_OBJECT:
+            genArrayObjectPut(cUnit, mir, rlSrc1, rlSrc2, rlDest, 2);
             break;
         case OP_APUT_SHORT:
         case OP_APUT_CHAR:
