@@ -1010,7 +1010,7 @@ const RegisterMap* dvmGetExpandedRegisterMap0(Method* method)
     /* sanity check to ensure this isn't called w/o external locking */
     /* (if we use this at a time other than during GC, fix/remove this test) */
     if (true) {
-        if (!gDvm.zygote && pthread_mutex_trylock(&gDvm.gcHeapLock) == 0) {
+        if (!gDvm.zygote && dvmTryLockMutex(&gDvm.gcHeapLock) == 0) {
             LOGE("GLITCH: dvmGetExpandedRegisterMap not called at GC time\n");
             dvmAbort();
         }

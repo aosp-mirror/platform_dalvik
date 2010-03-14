@@ -22,6 +22,7 @@
 
 #include "jni.h"
 
+#include <errno.h>
 #include <cutils/sched_policy.h>
 
 
@@ -387,7 +388,9 @@ INLINE void dvmLockMutex(pthread_mutex_t* pMutex)
  */
 INLINE int dvmTryLockMutex(pthread_mutex_t* pMutex)
 {
-    return pthread_mutex_trylock(pMutex);
+    int cc = pthread_mutex_trylock(pMutex);
+    assert(cc == 0 || cc == EBUSY);
+    return cc;
 }
 
 /*

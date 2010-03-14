@@ -447,8 +447,7 @@ static inline void lockThreadSuspendCount(void)
      * This lock is always held for very brief periods, so as long as
      * mutex ordering is respected we shouldn't stall.
      */
-    int cc = pthread_mutex_lock(&gDvm.threadSuspendCountLock);
-    assert(cc == 0);
+    dvmLockMutex(&gDvm.threadSuspendCountLock);
 }
 
 /*
@@ -492,8 +491,7 @@ void dvmLockThreadList(Thread* self)
         oldStatus = -1;         // shut up gcc
     }
 
-    int cc = pthread_mutex_lock(&gDvm.threadListLock);
-    assert(cc == 0);
+    dvmLockMutex(&gDvm.threadListLock);
 
     if (self != NULL)
         self->status = oldStatus;
@@ -504,8 +502,7 @@ void dvmLockThreadList(Thread* self)
  */
 void dvmUnlockThreadList(void)
 {
-    int cc = pthread_mutex_unlock(&gDvm.threadListLock);
-    assert(cc == 0);
+    dvmUnlockMutex(&gDvm.threadListLock);
 }
 
 /*
@@ -545,7 +542,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
     int cc;
 
     do {
-        cc = pthread_mutex_trylock(&gDvm._threadSuspendLock);
+        cc = dvmTryLockMutex(&gDvm._threadSuspendLock);
         if (cc != 0) {
             if (!dvmCheckSuspendPending(NULL)) {
                 /*
@@ -596,8 +593,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
  */
 static inline void unlockThreadSuspend(void)
 {
-    int cc = pthread_mutex_unlock(&gDvm._threadSuspendLock);
-    assert(cc == 0);
+    dvmUnlockMutex(&gDvm._threadSuspendLock);
 }
 
 

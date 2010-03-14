@@ -172,10 +172,9 @@ void dvmThrowBadAllocException(const char* msg)
  */
 bool dvmLockHeap()
 {
-    if (pthread_mutex_trylock(&gDvm.gcHeapLock) != 0) {
+    if (dvmTryLockMutex(&gDvm.gcHeapLock) != 0) {
         Thread *self;
         ThreadStatus oldStatus;
-        int cc;
 
         self = dvmThreadSelf();
         if (self != NULL) {
@@ -184,10 +183,7 @@ bool dvmLockHeap()
             LOGI("ODD: waiting on heap lock, no self\n");
             oldStatus = -1; // shut up gcc
         }
-
-        cc = pthread_mutex_lock(&gDvm.gcHeapLock);
-        assert(cc == 0);
-
+        dvmLockMutex(&gDvm.gcHeapLock);
         if (self != NULL) {
             dvmChangeStatus(self, oldStatus);
         }

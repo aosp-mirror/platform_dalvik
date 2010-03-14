@@ -310,8 +310,8 @@ static void freeObjectMonitor(Object* obj)
      * the object, in which case we've got some bad
      * native code somewhere.
      */
-    assert(pthread_mutex_trylock(&mon->lock) == 0);
-    pthread_mutex_destroy(&mon->lock);
+    assert(dvmTryLockMutex(&mon->lock) == 0);
+    dvmDestroyMutex(&mon->lock);
 #ifdef WITH_DEADLOCK_PREDICTION
     expandObjClear(&mon->historyChildren);
     expandObjClear(&mon->historyParents);
@@ -351,18 +351,15 @@ void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*))
  */
 static void lockMonitor(Thread* self, Monitor* mon)
 {
-    int cc;
-
     if (mon->owner == self) {
         mon->lockCount++;
     } else {
         ThreadStatus oldStatus;
 
-        if (pthread_mutex_trylock(&mon->lock) != 0) {
+        if (dvmTryLockMutex(&mon->lock) != 0) {
             /* mutex is locked, switch to wait status and sleep on it */
             oldStatus = dvmChangeStatus(self, THREAD_MONITOR);
-            cc = pthread_mutex_lock(&mon->lock);
-            assert(cc == 0);
+            dvmLockMutex(&mon->lock);
             dvmChangeStatus(self, oldStatus);
         }
 
@@ -378,14 +375,11 @@ static void lockMonitor(Thread* self, Monitor* mon)
  */
 static bool tryLockMonitor(Thread* self, Monitor* mon)
 {
-    int cc;
-
     if (mon->owner == self) {
         mon->lockCount++;
         return true;
     } else {
-        cc = pthread_mutex_trylock(&mon->lock);
-        if (cc == 0) {
+        if (dvmTryLockMutex(&mon->lock) == 0) {
             mon->owner = self;
             assert(mon->lockCount == 0);
             return true;
@@ -412,10 +406,8 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
          * We own the monitor, so nobody else can be in here.
          */
         if (mon->lockCount == 0) {
-            int cc;
             mon->owner = NULL;
-            cc = pthread_mutex_unlock(&mon->lock);
-            assert(cc == 0);
+            dvmUnlockMutex(&mon->lock);
         } else {
             mon->lockCount--;
         }
@@ -643,8 +635,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     else
         dvmChangeStatus(self, THREAD_WAIT);
 
-    ret = pthread_mutex_lock(&self->waitMutex);
-    assert(ret == 0);
+    dvmLockMutex(&self->waitMutex);
 
     /*
      * Set waitMonitor to the monitor object we will be waiting on.
@@ -661,7 +652,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     if (self->interrupted) {
         wasInterrupted = true;
         self->waitMonitor = NULL;
-        pthread_mutex_unlock(&self->waitMutex);
+        dvmUnlockMutex(&self->waitMutex);
         goto done;
     }
 
@@ -669,7 +660,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
      * Release the monitor lock and wait for a notification or
      * a timeout to occur.
      */
-    pthread_mutex_unlock(&mon->lock);
+    dvmUnlockMutex(&mon->lock);
 
     if (!timed) {
         ret = pthread_cond_wait(&self->waitCond, &self->waitMutex);
@@ -689,7 +680,7 @@ static void waitMonitor(Thread* self, Monitor* mon, s8 msec, s4 nsec,
     self->interrupted = false;
     self->waitMonitor = NULL;
 
-    pthread_mutex_unlock(&self->waitMutex);
+    dvmUnlockMutex(&self->waitMutex);
 
     /* Reacquire the monitor lock. */
     lockMonitor(self, mon);
@@ -743,14 +734,14 @@ static void notifyMonitor(Thread* self, Monitor* mon)
         thread = mon->waitSet;
         mon->waitSet = thread->waitNext;
         thread->waitNext = NULL;
-        pthread_mutex_lock(&thread->waitMutex);
+        dvmLockMutex(&thread->waitMutex);
         /* Check to see if the thread is still waiting. */
         if (thread->waitMonitor != NULL) {
             pthread_cond_signal(&thread->waitCond);
-            pthread_mutex_unlock(&thread->waitMutex);
+            dvmUnlockMutex(&thread->waitMutex);
             return;
         }
-        pthread_mutex_unlock(&thread->waitMutex);
+        dvmUnlockMutex(&thread->waitMutex);
     }
 }
 
@@ -775,12 +766,12 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
         thread = mon->waitSet;
         mon->waitSet = thread->waitNext;
         thread->waitNext = NULL;
-        pthread_mutex_lock(&thread->waitMutex);
+        dvmLockMutex(&thread->waitMutex);
         /* Check to see if the thread is still waiting. */
         if (thread->waitMonitor != NULL) {
             pthread_cond_signal(&thread->waitCond);
         }
-        pthread_mutex_unlock(&thread->waitMutex);
+        dvmUnlockMutex(&thread->waitMutex);
     }
 }
 
@@ -1186,14 +1177,14 @@ void dvmThreadInterrupt(Thread* thread)
 {
     assert(thread != NULL);
 
-    pthread_mutex_lock(&thread->waitMutex);
+    dvmLockMutex(&thread->waitMutex);
 
     /*
      * If the interrupted flag is already set no additional action is
      * required.
      */
     if (thread->interrupted == true) {
-        pthread_mutex_unlock(&thread->waitMutex);
+        dvmUnlockMutex(&thread->waitMutex);
         return;
     }
 
@@ -1216,7 +1207,7 @@ void dvmThreadInterrupt(Thread* thread)
         pthread_cond_signal(&thread->waitCond);
     }
 
-    pthread_mutex_unlock(&thread->waitMutex);
+    dvmUnlockMutex(&thread->waitMutex);
 }
 
 #ifndef WITH_COPYING_GC
