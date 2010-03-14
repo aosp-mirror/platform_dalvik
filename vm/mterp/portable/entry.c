@@ -48,6 +48,11 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
 #if defined(WITH_SELF_VERIFICATION)
          (interpState->jitState != kJitSelfVerification) &&
 #endif
+         /*
+          * Don't bail out of the dbg interpreter if the entry reason is to
+          * deal with a thrown exception.
+          */
+         (interpState->entryPoint != kInterpEntryThrow) &&
          !gDvm.debuggerActive &&
 #if defined(WITH_PROFILER)
          (gDvm.activeProfilers == 0) &&
