@@ -770,6 +770,32 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
 }
 
 /*
+ * Changes the shape of a monitor from thin to fat, preserving the
+ * internal lock state.  The calling thread must own the lock.
+ */
+static void inflateMonitor(Thread *self, Object *obj)
+{
+    Monitor *mon;
+    u4 thin;
+
+    assert(self != NULL);
+    assert(obj != NULL);
+    assert(LW_SHAPE(obj->lock) == LW_SHAPE_THIN);
+    assert(LW_LOCK_OWNER(obj->lock) == self->threadId);
+    /* Allocate and acquire a new monitor. */
+    mon = dvmCreateMonitor(obj);
+    lockMonitor(self, mon);
+    /* Propagate the lock state. */
+    thin = obj->lock;
+    mon->lockCount = LW_LOCK_COUNT(thin);
+    thin &= LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT;
+    thin |= (u4)mon | LW_SHAPE_FAT;
+    /* Publish the updated lock word. */
+    MEM_BARRIER();
+    obj->lock = thin;
+}
+
+/*
  * Implements monitorenter for "synchronized" stuff.
  *
  * This does not fail or throw an exception (unless deadlock prediction
@@ -778,7 +804,6 @@ static void notifyAllMonitor(Thread* self, Monitor* mon)
 void dvmLockObject(Thread* self, Object *obj)
 {
     volatile u4 *thinp;
-    Monitor *mon;
     ThreadStatus oldStatus;
     useconds_t sleepDelay;
     const useconds_t maxSleepDelay = 1 << 20;
@@ -886,13 +911,7 @@ retry:
             /*
              * Fatten the lock.
              */
-            mon = dvmCreateMonitor(obj);
-            lockMonitor(self, mon);
-            thin = *thinp;
-            thin &= LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT;
-            thin |= (u4)mon | LW_SHAPE_FAT;
-            MEM_BARRIER();
-            obj->lock = thin;
+            inflateMonitor(self, obj);
             LOG_THIN("(%d) lock %p fattened", threadId, &obj->lock);
         }
     } else {
@@ -1034,8 +1053,7 @@ bool dvmUnlockObject(Thread* self, Object *obj)
 void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
     bool interruptShouldThrow)
 {
-    Monitor* mon = LW_MONITOR(obj->lock);
-    u4 hashState;
+    Monitor* mon;
     u4 thin = obj->lock;
 
     /* If the lock is still thin, we need to fatten it.
@@ -1054,25 +1072,11 @@ void dvmObjectWait(Thread* self, Object *obj, s8 msec, s4 nsec,
          * field yet, because 'self' needs to acquire the lock before
          * any other thread gets a chance.
          */
-        mon = dvmCreateMonitor(obj);
-
-        /* 'self' has actually locked the object one or more times;
-         * make sure that the monitor reflects this.
-         */
-        lockMonitor(self, mon);
-        mon->lockCount = LW_LOCK_COUNT(thin);
-        LOG_THIN("(%d) lock 0x%08x fattened by wait() to count %d\n",
-                 self->threadId, (uint)&obj->lock, mon->lockCount);
-
-
-        /* Make the monitor public now that it's in the right state.
-         */
-        thin &= LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT;
-        thin |= (u4)mon | LW_SHAPE_FAT;
-        MEM_BARRIER();
-        obj->lock = thin;
+        inflateMonitor(self, obj);
+        LOG_THIN("(%d) lock %p fattened by wait() to count %d",
+                 self->threadId, &obj->lock, mon->lockCount);
     }
-
+    mon = LW_MONITOR(obj->lock);
     waitMonitor(self, mon, msec, nsec, interruptShouldThrow);
 }
 
@@ -1803,11 +1807,7 @@ static void updateDeadlockPrediction(Thread* self, Object* acqObj)
     if (!IS_LOCK_FAT(&acqObj->lock)) {
         LOGVV("fattening lockee %p (recur=%d)\n",
             acqObj, LW_LOCK_COUNT(acqObj->lock.thin));
-        Monitor* newMon = dvmCreateMonitor(acqObj);
-        lockMonitor(self, newMon);      // can't stall, don't need VMWAIT
-        newMon->lockCount += LW_LOCK_COUNT(acqObj->lock);
-        u4 hashState = LW_HASH_STATE(acqObj->lock) << LW_HASH_STATE_SHIFT;
-        acqObj->lock = (u4)newMon | hashState | LW_SHAPE_FAT;
+        inflateMonitor(self, acqObj);
     }
 
     /* if we don't have a stack trace for this monitor, establish one */
@@ -1851,11 +1851,7 @@ static void updateDeadlockPrediction(Thread* self, Object* acqObj)
     if (!IS_LOCK_FAT(&mrl->obj->lock)) {
         LOGVV("fattening parent %p f/b/o child %p (recur=%d)\n",
             mrl->obj, acqObj, LW_LOCK_COUNT(mrl->obj->lock));
-        Monitor* newMon = dvmCreateMonitor(mrl->obj);
-        lockMonitor(self, newMon);      // can't stall, don't need VMWAIT
-        newMon->lockCount += LW_LOCK_COUNT(mrl->obj->lock);
-        u4 hashState = LW_HASH_STATE(mrl->obj->lock) << LW_HASH_STATE_SHIFT;
-        mrl->obj->lock = (u4)newMon | hashState | LW_SHAPE_FAT;
+        inflateMonitor(self, mrl->obj);
     }
 
     /*
