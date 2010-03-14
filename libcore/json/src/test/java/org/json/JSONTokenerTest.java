@@ -1,11 +1,11 @@
-/**
+/*
  * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
 package org.json;
 
 import junit.framework.TestCase;
+import junit.framework.AssertionFailedError;
 
 /**
  * This black box test was written without inspecting the non-free org.json sourcecode.
@@ -24,7 +25,7 @@ import junit.framework.TestCase;
 public class JSONTokenerTest extends TestCase {
 
     public void testNulls() throws JSONException {
-        // bogus behaviour: JSONTokener accepts null, only to fail later on almost all APIs.
+        // JSONTokener accepts null, only to fail later on almost all APIs!
         new JSONTokener(null).back();
 
         try {
@@ -147,12 +148,6 @@ public class JSONTokenerTest extends TestCase {
         }
         assertEquals('E', abcdeTokener.nextClean());
         assertEquals('\0', abcdeTokener.next());
-        try {
-            // bogus behaviour: returning an empty string should be valid
-            abcdeTokener.next(0);
-            fail();
-        } catch (JSONException e) {
-        }
         assertFalse(abcdeTokener.more());
         abcdeTokener.back();
         assertTrue(abcdeTokener.more());
@@ -174,7 +169,7 @@ public class JSONTokenerTest extends TestCase {
         abcTokener.back();
         abcTokener.back();
         abcTokener.back();
-        abcTokener.back(); // bogus behaviour: you can back up before the beginning of a String
+        abcTokener.back(); // you can back up before the beginning of a String!
         assertEquals('A', abcTokener.next());
     }
 
@@ -209,26 +204,31 @@ public class JSONTokenerTest extends TestCase {
             fail();
         } catch (JSONException e) {
         }
+    }
+
+    public void testNextNWithAllRemaining() throws JSONException {
+        JSONTokener tokener = new JSONTokener("ABCDEF");
+        tokener.next(3);
         try {
-            // bogus behaviour: there should be 3 characters left, but there must be an off-by-one
-            // error in the implementation.
-            assertEquals("DEF", abcdeTokener.next(3));
-            fail();
+            tokener.next(3);
         } catch (JSONException e) {
+            AssertionFailedError error = new AssertionFailedError("off-by-one error?");
+            error.initCause(e);
+            throw error;
         }
-        assertEquals("DE", abcdeTokener.next(2));
-        assertEquals('F', abcdeTokener.next());
+    }
+
+    public void testNext0() throws JSONException {
+        JSONTokener tokener = new JSONTokener("ABCDEF");
+        tokener.next(5);
+        tokener.next();
         try {
-            // bogus behaviour: returning an empty string should be valid
-            abcdeTokener.next(0);
-            fail();
+            tokener.next(0);
         } catch (JSONException e) {
+            Error error = new AssertionFailedError("Returning an empty string should be valid");
+            error.initCause(e);
+            throw error;
         }
-        abcdeTokener.back();
-        abcdeTokener.back();
-        abcdeTokener.back();
-        assertEquals("DE", abcdeTokener.next(2));
-        assertEquals('F', abcdeTokener.next());
     }
 
     public void testNextCleanComments() throws JSONException {
@@ -239,6 +239,24 @@ public class JSONTokenerTest extends TestCase {
         assertEquals('C', tokener.nextClean());
         assertEquals('D', tokener.nextClean());
         assertEquals('\0', tokener.nextClean());
+    }
+
+    public void testNextCleanNestedCStyleComments() throws JSONException {
+        JSONTokener tokener = new JSONTokener("A /* B /* C */ D */ E");
+        assertEquals('A', tokener.nextClean());
+        assertEquals('D', tokener.nextClean());
+        assertEquals('*', tokener.nextClean());
+        assertEquals('/', tokener.nextClean());
+        assertEquals('E', tokener.nextClean());
+    }
+
+    public void testNextCleanCommentsTrailingSingleSlash() throws JSONException {
+        JSONTokener tokener = new JSONTokener(" / S /");
+        assertEquals('/', tokener.nextClean());
+        assertEquals('S', tokener.nextClean());
+        assertEquals('/', tokener.nextClean());
+        assertEquals("nextClean doesn't consume a trailing slash",
+                '\0', tokener.nextClean());
     }
 
     public void testNextCleanTrailingOpenComment() throws JSONException {
@@ -256,55 +274,54 @@ public class JSONTokenerTest extends TestCase {
         assertEquals('B', new JSONTokener("  // \r  B ").nextClean());
     }
 
+    public void testNextCleanSkippedWhitespace() throws JSONException {
+        assertEquals("character tabulation", 'A', new JSONTokener("\tA").nextClean());
+        assertEquals("line feed",            'A', new JSONTokener("\nA").nextClean());
+        assertEquals("carriage return",      'A', new JSONTokener("\rA").nextClean());
+        assertEquals("space",                'A', new JSONTokener(" A").nextClean());
+    }
+
     /**
      * Tests which characters tokener treats as ignorable whitespace. See Kevin Bourrillion's
      * <a href="https://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ">list
      * of whitespace characters</a>.
      */
-    public void testNextCleanWhitespace() throws JSONException {
-        // This behaviour contradicts the JSON spec. It claims the only space
-        // characters are space, tab, newline and carriage return. But it treats
-        // many characters like whitespace! These are the same whitespace
-        // characters used by String.trim(), with the exception of '\0'.
-        assertEquals("character tabulation",      'A', new JSONTokener("\u0009A").nextClean());
-        assertEquals("line feed",                 'A', new JSONTokener("\nA").nextClean());
-        assertEquals("line tabulation",           'A', new JSONTokener("\u000bA").nextClean());
-        assertEquals("form feed",                 'A', new JSONTokener("\u000cA").nextClean());
-        assertEquals("carriage return",           'A', new JSONTokener("\rA").nextClean());
-        assertEquals("information separator 4",   'A', new JSONTokener("\u001cA").nextClean());
-        assertEquals("information separator 3",   'A', new JSONTokener("\u001dA").nextClean());
-        assertEquals("information separator 2",   'A', new JSONTokener("\u001eA").nextClean());
-        assertEquals("information separator 1",   'A', new JSONTokener("\u001fA").nextClean());
-        assertEquals("space",                     'A', new JSONTokener("\u0020A").nextClean());
-        for (char c = '\u0002'; c < ' '; c++) {
-            assertEquals('A', new JSONTokener(new String(new char[] { ' ', c, 'A' })).nextClean());
-        }
+    public void testNextCleanRetainedWhitespace() throws JSONException {
+        assertNotClean("null",                      '\u0000');
+        assertNotClean("next line",                 '\u0085');
+        assertNotClean("non-breaking space",        '\u00a0');
+        assertNotClean("ogham space mark",          '\u1680');
+        assertNotClean("mongolian vowel separator", '\u180e');
+        assertNotClean("en quad",                   '\u2000');
+        assertNotClean("em quad",                   '\u2001');
+        assertNotClean("en space",                  '\u2002');
+        assertNotClean("em space",                  '\u2003');
+        assertNotClean("three-per-em space",        '\u2004');
+        assertNotClean("four-per-em space",         '\u2005');
+        assertNotClean("six-per-em space",          '\u2006');
+        assertNotClean("figure space",              '\u2007');
+        assertNotClean("punctuation space",         '\u2008');
+        assertNotClean("thin space",                '\u2009');
+        assertNotClean("hair space",                '\u200a');
+        assertNotClean("zero-width space",          '\u200b');
+        assertNotClean("left-to-right mark",        '\u200e');
+        assertNotClean("right-to-left mark",        '\u200f');
+        assertNotClean("line separator",            '\u2028');
+        assertNotClean("paragraph separator",       '\u2029');
+        assertNotClean("narrow non-breaking space", '\u202f');
+        assertNotClean("medium mathematical space", '\u205f');
+        assertNotClean("ideographic space",         '\u3000');
+        assertNotClean("line tabulation",           '\u000b');
+        assertNotClean("form feed",                 '\u000c');
+        assertNotClean("information separator 4",   '\u001c');
+        assertNotClean("information separator 3",   '\u001d');
+        assertNotClean("information separator 2",   '\u001e');
+        assertNotClean("information separator 1",   '\u001f');
+    }
 
-        // These characters are neither whitespace in the JSON spec nor the implementation
-        assertEquals("null",                      '\u0000', new JSONTokener("\u0000A").nextClean());
-        assertEquals("next line",                 '\u0085', new JSONTokener("\u0085A").nextClean());
-        assertEquals("non-breaking space",        '\u00a0', new JSONTokener("\u00a0A").nextClean());
-        assertEquals("ogham space mark",          '\u1680', new JSONTokener("\u1680A").nextClean());
-        assertEquals("mongolian vowel separator", '\u180e', new JSONTokener("\u180eA").nextClean());
-        assertEquals("en quad",                   '\u2000', new JSONTokener("\u2000A").nextClean());
-        assertEquals("em quad",                   '\u2001', new JSONTokener("\u2001A").nextClean());
-        assertEquals("en space",                  '\u2002', new JSONTokener("\u2002A").nextClean());
-        assertEquals("em space",                  '\u2003', new JSONTokener("\u2003A").nextClean());
-        assertEquals("three-per-em space",        '\u2004', new JSONTokener("\u2004A").nextClean());
-        assertEquals("four-per-em space",         '\u2005', new JSONTokener("\u2005A").nextClean());
-        assertEquals("six-per-em space",          '\u2006', new JSONTokener("\u2006A").nextClean());
-        assertEquals("figure space",              '\u2007', new JSONTokener("\u2007A").nextClean());
-        assertEquals("punctuation space",         '\u2008', new JSONTokener("\u2008A").nextClean());
-        assertEquals("thin space",                '\u2009', new JSONTokener("\u2009A").nextClean());
-        assertEquals("hair space",                '\u200a', new JSONTokener("\u200aA").nextClean());
-        assertEquals("zero-width space",          '\u200b', new JSONTokener("\u200bA").nextClean());
-        assertEquals("left-to-right mark",        '\u200e', new JSONTokener("\u200eA").nextClean());
-        assertEquals("right-to-left mark",        '\u200f', new JSONTokener("\u200fA").nextClean());
-        assertEquals("line separator",            '\u2028', new JSONTokener("\u2028A").nextClean());
-        assertEquals("paragraph separator",       '\u2029', new JSONTokener("\u2029A").nextClean());
-        assertEquals("narrow non-breaking space", '\u202f', new JSONTokener("\u202fA").nextClean());
-        assertEquals("medium mathematical space", '\u205f', new JSONTokener("\u205fA").nextClean());
-        assertEquals("ideographic space",         '\u3000', new JSONTokener("\u3000A").nextClean());
+    private void assertNotClean(String name, char c) throws JSONException {
+        assertEquals("The character " + name + " is not whitespace according to the JSON spec.",
+                c, new JSONTokener(new String(new char[] { c, 'A' })).nextClean());
     }
 
     public void testNextString() throws JSONException {
@@ -374,6 +391,7 @@ public class JSONTokenerTest extends TestCase {
         try {
             new JSONTokener("abc\\u002\"").nextString('"');
             fail();
+        } catch (NumberFormatException e) {
         } catch (JSONException e) {
         }
         try {
@@ -433,21 +451,38 @@ public class JSONTokenerTest extends TestCase {
         assertEquals("ABC", tokener.nextTo("\n"));
         assertEquals("", tokener.nextTo("\n"));
 
-        // Bogus behaviour: the tokener stops after \0 always
-        tokener = new JSONTokener(" \0\t \fABC \n DEF");
-        assertEquals("", tokener.nextTo("D"));
-        assertEquals('\t', tokener.next());
-        assertEquals("ABC", tokener.nextTo("D"));
-        tokener = new JSONTokener("ABC\0DEF");
-        assertEquals("ABC", tokener.nextTo("\0"));
-        assertEquals("DEF", tokener.nextTo("\0"));
-
         tokener = new JSONTokener("");
         try {
             tokener.nextTo(null);
             fail();
         } catch (NullPointerException e) {
         }
+    }
+
+    public void testNextToTrimming() {
+        assertEquals("ABC", new JSONTokener("\t ABC \tDEF").nextTo("DE"));
+        assertEquals("ABC", new JSONTokener("\t ABC \tDEF").nextTo('D'));
+    }
+
+    public void testNextToTrailing() {
+        assertEquals("ABC DEF", new JSONTokener("\t ABC DEF \t").nextTo("G"));
+        assertEquals("ABC DEF", new JSONTokener("\t ABC DEF \t").nextTo('G'));
+    }
+
+    public void testNextToDoesntStopOnNull() {
+        String message = "nextTo() shouldn't stop after \\0 characters";
+        JSONTokener tokener = new JSONTokener(" \0\t \fABC \n DEF");
+        assertEquals(message, "ABC", tokener.nextTo("D"));
+        assertEquals(message, '\n', tokener.next());
+        assertEquals(message, "", tokener.nextTo("D"));
+    }
+
+    public void testNextToConsumesNull() {
+        String message = "nextTo shouldn't consume \\0.";
+        JSONTokener tokener = new JSONTokener("ABC\0DEF");
+        assertEquals(message, "ABC", tokener.nextTo("\0"));
+        assertEquals(message, '\0', tokener.next());
+        assertEquals(message, "DEF", tokener.nextTo("\0"));
     }
 
     public void testSkipPast() {
@@ -509,11 +544,6 @@ public class JSONTokenerTest extends TestCase {
         tokener.skipTo('A');
         assertEquals('F', tokener.next());
 
-        tokener = new JSONTokener("ABC\0DEF");
-        tokener.skipTo('F');
-        // bogus behaviour: skipTo gives up when it sees '\0'
-        assertEquals('A', tokener.next());
-
         tokener = new JSONTokener("ABC\nDEF");
         tokener.skipTo('F');
         assertEquals('F', tokener.next());
@@ -525,6 +555,12 @@ public class JSONTokenerTest extends TestCase {
         tokener = new JSONTokener("ABC/* DEF */");
         tokener.skipTo('D');
         assertEquals('D', tokener.next());
+    }
+
+    public void testSkipToStopsOnNull() {
+        JSONTokener tokener = new JSONTokener("ABC\0DEF");
+        tokener.skipTo('F');
+        assertEquals("skipTo shouldn't stop when it sees '\\0'", 'F', tokener.next());
     }
 
     public void testDehexchar() {
@@ -557,9 +593,5 @@ public class JSONTokenerTest extends TestCase {
             }
             assertEquals("dehexchar " + c, -1, JSONTokener.dehexchar((char) c));
         }
-    }
-
-    public void testNextValue() {
-        fail("TODO");
     }
 }
