@@ -118,7 +118,13 @@ void dvmCompilerDrainQueue(void)
     int oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
     dvmLockMutex(&gDvmJit.compilerLock);
     while (workQueueLength() != 0 && !gDvmJit.haltCompilerThread) {
-        pthread_cond_wait(&gDvmJit.compilerQueueEmpty, &gDvmJit.compilerLock);
+        /*
+         * Use timed wait here - more than one mutator threads may be blocked
+         * but the compiler thread will only signal once when the queue is
+         * emptied. Furthermore, the compiler thread may have been shutdown
+         * so the blocked thread may never get the wakeup signal.
+         */
+        dvmRelativeCondWait(&gDvmJit.compilerQueueEmpty, &gDvmJit.compilerLock,                             1000, 0);
     }
     dvmUnlockMutex(&gDvmJit.compilerLock);
     dvmChangeStatus(NULL, oldStatus);
