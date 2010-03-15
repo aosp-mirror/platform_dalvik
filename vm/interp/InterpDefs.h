@@ -246,7 +246,7 @@ static inline bool dvmDebuggerOrProfilerActive(void)
  */
 static inline bool dvmJitDebuggerOrProfilerActive()
 {
-    return gDvmJit.pJitEntryTable != NULL
+    return gDvmJit.pProfTable != NULL
 #if defined(WITH_PROFILER)
         || gDvm.activeProfilers != 0
 #endif
