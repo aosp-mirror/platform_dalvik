@@ -61,6 +61,7 @@ import java.util.regex.Pattern;
 import static org.w3c.dom.UserDataHandler.NODE_ADOPTED;
 import static org.w3c.dom.UserDataHandler.NODE_CLONED;
 import static org.w3c.dom.UserDataHandler.NODE_IMPORTED;
+import static org.w3c.dom.UserDataHandler.NODE_RENAMED;
 
 /**
  * Construct a DOM and then interrogate it.
@@ -512,25 +513,25 @@ public class DomTest extends TestCase {
     }
 
     public void testCoreFeature() {
-        assertTrue(domImplementation.hasFeature("Core", null));
-        assertTrue(domImplementation.hasFeature("Core", ""));
-        assertTrue(domImplementation.hasFeature("Core", "1.0"));
-        assertTrue(domImplementation.hasFeature("Core", "2.0"));
-        assertTrue(domImplementation.hasFeature("Core", "3.0"));
-        assertTrue(domImplementation.hasFeature("CORE", "3.0"));
-        assertTrue(domImplementation.hasFeature("+Core", "3.0"));
-        assertFalse(domImplementation.hasFeature("Core", "4.0"));
+        assertFeature("Core", null);
+        assertFeature("Core", "");
+        assertFeature("Core", "1.0");
+        assertFeature("Core", "2.0");
+        assertFeature("Core", "3.0");
+        assertFeature("CORE", "3.0");
+        assertFeature("+Core", "3.0");
+        assertNoFeature("Core", "4.0");
     }
 
     public void testXmlFeature() {
-        assertTrue(domImplementation.hasFeature("XML", null));
-        assertTrue(domImplementation.hasFeature("XML", ""));
-        assertTrue(domImplementation.hasFeature("XML", "1.0"));
-        assertTrue(domImplementation.hasFeature("XML", "2.0"));
-        assertTrue(domImplementation.hasFeature("XML", "3.0"));
-        assertTrue(domImplementation.hasFeature("Xml", "3.0"));
-        assertTrue(domImplementation.hasFeature("+XML", "3.0"));
-        assertFalse(domImplementation.hasFeature("XML", "4.0"));
+        assertFeature("XML", null);
+        assertFeature("XML", "");
+        assertFeature("XML", "1.0");
+        assertFeature("XML", "2.0");
+        assertFeature("XML", "3.0");
+        assertFeature("Xml", "3.0");
+        assertFeature("+XML", "3.0");
+        assertNoFeature("XML", "4.0");
     }
 
     /**
@@ -538,26 +539,35 @@ public class DomTest extends TestCase {
      * http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/core.html#Document3-version
      */
     public void testXmlVersionFeature() {
-        String message = "This implementation does not support the XMLVersion feature";
-        assertTrue(message, domImplementation.hasFeature("XMLVersion", null));
-        assertTrue(message, domImplementation.hasFeature("XMLVersion", ""));
-        assertTrue(message, domImplementation.hasFeature("XMLVersion", "1.0"));
-        assertTrue(message, domImplementation.hasFeature("XMLVersion", "1.1"));
-        assertTrue(message, domImplementation.hasFeature("XMLVERSION", "1.1"));
-        assertTrue(message, domImplementation.hasFeature("+XMLVersion", "1.1"));
-        assertFalse(domImplementation.hasFeature("XMLVersion", "1.2"));
-        assertFalse(domImplementation.hasFeature("XMLVersion", "2.0"));
-        assertFalse(domImplementation.hasFeature("XMLVersion", "2.0"));
+        assertFeature("XMLVersion", null);
+        assertFeature("XMLVersion", "");
+        assertFeature("XMLVersion", "1.0");
+        assertFeature("XMLVersion", "1.1");
+        assertFeature("XMLVERSION", "1.1");
+        assertFeature("+XMLVersion", "1.1");
+        assertNoFeature("XMLVersion", "1.2");
+        assertNoFeature("XMLVersion", "2.0");
+        assertNoFeature("XMLVersion", "2.0");
     }
 
     public void testLsFeature() {
-        assertTrue("This implementation does not support the LS feature",
-                domImplementation.hasFeature("LS", "3.0"));
+        assertFeature("LS", "3.0");
     }
 
     public void testElementTraversalFeature() {
-        assertTrue("This implementation does not support the ElementTraversal feature",
-                domImplementation.hasFeature("ElementTraversal", "1.0"));
+        assertFeature("ElementTraversal", "1.0");
+    }
+
+    private void assertFeature(String feature, String version) {
+        String message = "This implementation is expected to support "
+                + feature + " v. " + version + " but does not.";
+        assertTrue(message, domImplementation.hasFeature(feature, version));
+        assertNotNull(message, domImplementation.getFeature(feature, version));
+    }
+
+    private void assertNoFeature(String feature, String version) {
+        assertFalse(domImplementation.hasFeature(feature, version));
+        assertNull(domImplementation.getFeature(feature, version));
     }
 
     public void testIsSupported() {
@@ -1187,6 +1197,118 @@ public class DomTest extends TestCase {
         assertNull(typeInfo.getTypeName());
         assertNull(typeInfo.getTypeNamespace());
         assertFalse(typeInfo.isDerivedFrom("x", "y", TypeInfo.DERIVATION_UNION));
+    }
+
+    public void testRenameElement() {
+        document.renameNode(description, null, "desc");
+        assertEquals("desc", description.getTagName());
+        assertEquals("desc", description.getLocalName());
+        assertEquals(null, description.getPrefix());
+        assertEquals(null, description.getNamespaceURI());
+    }
+
+    public void testRenameElementWithPrefix() {
+        try {
+            document.renameNode(description, null, "a:desc");
+            fail();
+        } catch (DOMException e) {
+        }
+    }
+
+    public void testRenameElementWithNamespace() {
+        document.renameNode(description, "http://sales", "desc");
+        assertEquals("desc", description.getTagName());
+        assertEquals("desc", description.getLocalName());
+        assertEquals(null, description.getPrefix());
+        assertEquals("http://sales", description.getNamespaceURI());
+    }
+
+    public void testRenameElementWithPrefixAndNamespace() {
+        document.renameNode(description, "http://sales", "a:desc");
+        assertEquals("a:desc", description.getTagName());
+        assertEquals("desc", description.getLocalName());
+        assertEquals("a", description.getPrefix());
+        assertEquals("http://sales", description.getNamespaceURI());
+    }
+
+    public void testRenameAttribute() {
+        document.renameNode(deluxe, null, "special");
+        assertEquals("special", deluxe.getName());
+        assertEquals("special", deluxe.getLocalName());
+        assertEquals(null, deluxe.getPrefix());
+        assertEquals(null, deluxe.getNamespaceURI());
+    }
+
+    public void testRenameAttributeWithPrefix() {
+        try {
+            document.renameNode(deluxe, null, "a:special");
+            fail();
+        } catch (DOMException e) {
+        }
+    }
+
+    public void testRenameAttributeWithNamespace() {
+        document.renameNode(deluxe, "http://sales", "special");
+        assertEquals("special", deluxe.getName());
+        assertEquals("special", deluxe.getLocalName());
+        assertEquals(null, deluxe.getPrefix());
+        assertEquals("http://sales", deluxe.getNamespaceURI());
+    }
+
+    public void testRenameAttributeWithPrefixAndNamespace() {
+        document.renameNode(deluxe, "http://sales", "a:special");
+        assertEquals("a:special", deluxe.getName());
+        assertEquals("special", deluxe.getLocalName());
+        assertEquals("a", deluxe.getPrefix());
+        assertEquals("http://sales", deluxe.getNamespaceURI());
+    }
+
+    public void testUserDataHandlerNotifiedOfRenames() {
+        RecordingHandler handler = new RecordingHandler();
+        description.setUserData("a", "apple", handler);
+        deluxe.setUserData("b", "banana", handler);
+        standard.setUserData("c", "cat", handler);
+
+        document.renameNode(deluxe, null, "special");
+        document.renameNode(description, null, "desc");
+
+        Set<String> expected = new HashSet<String>();
+        expected.add(notification(NODE_RENAMED, "a", "apple", description, null));
+        expected.add(notification(NODE_RENAMED, "b", "banana", deluxe, null));
+        assertEquals(expected, handler.calls);
+    }
+
+    public void testRenameToInvalid() {
+        try {
+            document.renameNode(description, null, "xmlns:foo");
+            fail();
+        } catch (DOMException e) {
+        }
+        try {
+            document.renameNode(description, null, "xml:foo");
+            fail();
+        } catch (DOMException e) {
+        }
+        try {
+            document.renameNode(deluxe, null, "xmlns");
+            fail();
+        } catch (DOMException e) {
+        }
+    }
+
+    public void testRenameNodeOtherThanElementOrAttribute() {
+        for (Node node : allNodes) {
+            if (node.getNodeType() == Node.ATTRIBUTE_NODE
+                    || node.getNodeType() == Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            try {
+                document.renameNode(node, null, "foo");
+                fail();
+            } catch (DOMException e) {
+            }
+        }
     }
 
     private class RecordingHandler implements UserDataHandler {

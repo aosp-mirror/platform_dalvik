@@ -85,6 +85,6 @@ public final class DOMImplementationImpl implements DOMImplementation {
     }
 
     public Object getFeature(String feature, String version) {
-        throw new UnsupportedOperationException(); // TODO
+        return hasFeature(feature, version) ? this : null;
     }
 }

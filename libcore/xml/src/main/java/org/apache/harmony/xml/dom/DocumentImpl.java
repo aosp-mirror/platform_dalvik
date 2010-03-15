@@ -299,6 +299,16 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         }
     }
 
+    public Node renameNode(Node node, String namespaceURI, String qualifiedName) {
+        if (node.getOwnerDocument() != this) {
+            throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, null);
+        }
+
+        setNameNS((NodeImpl) node, namespaceURI, qualifiedName);
+        notifyUserDataHandlers(UserDataHandler.NODE_RENAMED, node, null);
+        return node;
+    }
+
     public AttrImpl createAttribute(String name) {
         return new AttrImpl(this, name);
     }
@@ -465,11 +475,6 @@ public final class DocumentImpl extends InnerNodeImpl implements Document {
         }
 
         ((DOMConfigurationImpl) getDomConfig()).normalize(root);
-    }
-
-    public Node renameNode(Node n, String namespaceURI, String qualifiedName) {
-        // TODO: callback the UserDataHandler with a NODE_RENAMED event
-        throw new UnsupportedOperationException(); // TODO
     }
 
     /**

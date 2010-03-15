@@ -39,37 +39,16 @@ import java.util.List;
  */
 public class ElementImpl extends InnerNodeImpl implements Element {
 
-    private boolean namespaceAware;
-    
-    private String namespaceURI;
-
-    private String prefix;
-    
-    private String localName;
+    boolean namespaceAware;
+    String namespaceURI;
+    String prefix;
+    String localName;
 
     private List<AttrImpl> attributes = new ArrayList<AttrImpl>();
 
     ElementImpl(DocumentImpl document, String namespaceURI, String qualifiedName) {
         super(document);
-
-        this.namespaceAware = true;
-        this.namespaceURI = namespaceURI;
-
-        if (qualifiedName == null || "".equals(qualifiedName)) {
-            throw new DOMException(DOMException.NAMESPACE_ERR, qualifiedName);
-        }
-        
-        int p = qualifiedName.lastIndexOf(":");
-        if (p != -1) {
-            setPrefix(qualifiedName.substring(0, p));
-            qualifiedName = qualifiedName.substring(p + 1);
-        }
-        
-        if (!DocumentImpl.isXMLIdentifier(qualifiedName)) {
-            throw new DOMException(DOMException.INVALID_CHARACTER_ERR, qualifiedName);
-        }
-            
-        this.localName = qualifiedName;
+        setNameNS(this, namespaceURI, qualifiedName);
     }
 
     ElementImpl(DocumentImpl document, String name) {
@@ -383,7 +362,7 @@ public class ElementImpl extends InnerNodeImpl implements Element {
     public void setPrefix(String prefix) {
         this.prefix = validatePrefix(prefix, namespaceAware, namespaceURI);
     }
-    
+
     public class ElementAttrNamedNodeMapImpl implements NamedNodeMap {
 
         public int getLength() {

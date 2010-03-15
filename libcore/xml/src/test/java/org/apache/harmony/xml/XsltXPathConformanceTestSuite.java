@@ -74,7 +74,7 @@ import java.util.List;
  *         suite zip file from the OASIS project site.</li>
  *     <li>Unzip.
  *     <li>Copy the files to a device: <code>adb shell mkdir /data/oasis ;
- *         adb push ./XSLT-Conformance-TC /data/oasis</code>.
+ *         adb push ./XSLT-Conformance-TC/data/oasis</code>.
  *     <li>Invoke this class' main method, passing the on-device path to the test
  *         suite's <code>catalog.xml</code> file as an argument.
  * </ul>
