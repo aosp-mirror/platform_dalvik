@@ -168,7 +168,10 @@ public class JSR166TestCase extends TestCase {
      * be reimplemented to use for example a Property.
      */
     protected long getShortDelay() {
-        return 50;
+        // BEGIN android-changed
+        // original value is 50
+        return 250;
+        // END android-changed
     }
 
 
