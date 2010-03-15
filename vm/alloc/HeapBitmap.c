@@ -78,46 +78,6 @@ dvmHeapBitmapInit(HeapBitmap *hb, const void *base, size_t maxSize,
 }
 
 /*
- * Initialize <hb> so that it covers the same extent as <templateBitmap>.
- */
-bool
-dvmHeapBitmapInitFromTemplate(HeapBitmap *hb, const HeapBitmap *templateBitmap,
-        const char *name)
-{
-    return dvmHeapBitmapInit(hb,
-            (void *)templateBitmap->base, HB_MAX_OFFSET(templateBitmap), name);
-}
-
-/*
- * Initialize the bitmaps in <out> so that they cover the same extent as
- * the corresponding bitmaps in <templates>.
- */
-bool
-dvmHeapBitmapInitListFromTemplates(HeapBitmap out[], HeapBitmap templates[],
-    size_t numBitmaps, const char *name)
-{
-    size_t i;
-    char fullName[PATH_MAX];
-
-    fullName[sizeof(fullName)-1] = '\0';
-    for (i = 0; i < numBitmaps; i++) {
-        bool ok;
-
-        /* If two ashmem regions have the same name, only one gets
-         * the name when looking at the maps.
-         */
-        snprintf(fullName, sizeof(fullName)-1, "%s/%zd", name, i);
-        
-        ok = dvmHeapBitmapInitFromTemplate(&out[i], &templates[i], fullName);
-        if (!ok) {
-            dvmHeapBitmapDeleteList(out, i);
-            return false;
-        }
-    }
-    return true;
-}
-
-/*
  * Clean up any resources associated with the bitmap.
  */
 void
@@ -129,19 +89,6 @@ dvmHeapBitmapDelete(HeapBitmap *hb)
         munmap((char *)hb->bits, hb->allocLen);
     }
     memset(hb, 0, sizeof(*hb));
-}
-
-/*
- * Clean up any resources associated with the bitmaps.
- */
-void
-dvmHeapBitmapDeleteList(HeapBitmap hbs[], size_t numBitmaps)
-{
-    size_t i;
-
-    for (i = 0; i < numBitmaps; i++) {
-        dvmHeapBitmapDelete(&hbs[i]);
-    }
 }
 
 /*
@@ -379,36 +326,4 @@ dvmHeapBitmapWalk(const HeapBitmap *hb,
     emptyHb.bits = (void *)1;       // non-NULL but intentionally bad
 
     return dvmHeapBitmapXorWalk(hb, &emptyHb, callback, callbackArg);
-}
-
-/*
- * Similar to dvmHeapBitmapXorWalkList(), but visit the set bits
- * in a single list of bitmaps.  Regardless of the order of the array,
- * the bitmaps will be visited in address order, so that finger will
- * increase monotonically.
- */
-bool dvmHeapBitmapWalkList(const HeapBitmap hbs[], size_t numBitmaps,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg)
-{
-    size_t indexList[numBitmaps];
-    size_t i;
-
-    /* Sort the bitmaps by address.
-     */
-    createSortedBitmapIndexList(hbs, numBitmaps, indexList);
-
-    /* Walk each bitmap, lowest address first.
-     */
-    for (i = 0; i < numBitmaps; i++) {
-        bool ok;
-
-        ok = dvmHeapBitmapWalk(&hbs[indexList[i]], callback, callbackArg);
-        if (!ok) {
-            return false;
-        }
-    }
-
-    return true;
 }
