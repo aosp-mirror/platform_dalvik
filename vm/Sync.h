@@ -141,6 +141,14 @@ void dvmFreeMonitorList(void);
 struct Object* dvmGetMonitorObject(Monitor* mon);
 
 /*
+ * Get the thread that holds the lock on the specified object.  The
+ * object may be unlocked, thin-locked, or fat-locked.
+ *
+ * The caller must lock the thread list before calling here.
+ */
+struct Thread* dvmGetObjectLockHolder(struct Object* obj);
+
+/*
  * Checks whether the object is held by the specified thread.
  */
 bool dvmHoldsLock(struct Thread* thread, struct Object* obj);
