@@ -798,6 +798,12 @@ struct DvmJitGlobals {
     /* Framework requests to disable the JIT for good */
     bool disableJit;
 
+#if defined(SIGNATURE_BREAKPOINT)
+    /* Signature breakpoint */
+    u4 signatureBreakpointSize;         // # of words
+    u4 *signatureBreakpoint;            // Signature content
+#endif
+
     /* Place arrays at the end to ease the display in gdb sessions */
 
     /* Work order queue for compilations */
