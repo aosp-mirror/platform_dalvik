@@ -517,6 +517,12 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
 void dvmDumpAllThreads(bool grabLock);
 void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock);
 
+/*
+ * Debug: kill a thread to get a debuggerd stack trace.  Leaves the VM
+ * in an uncertain state.
+ */
+void dvmNukeThread(Thread* thread);
+
 #ifdef WITH_MONITOR_TRACKING
 /*
  * Track locks held by the current thread, along with the stack trace at
