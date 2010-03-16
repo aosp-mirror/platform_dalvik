@@ -23,10 +23,6 @@ import java.io.File;
  */
 class MainFinder extends NamingPatternCodeFinder {
 
-    @Override protected boolean matches(File file) {
-        return file.getName().endsWith(".java");
-    }
-
     @Override protected String testName(File file) {
         return "main";
     }

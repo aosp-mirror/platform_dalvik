@@ -24,7 +24,7 @@ import java.io.File;
 class JUnitFinder extends NamingPatternCodeFinder {
 
     @Override protected boolean matches(File file) {
-        return file.getName().endsWith("Test.java");
+        return super.matches(file) && file.getName().endsWith("Test.java");
     }
 
     // TODO: try to get names for each method?
