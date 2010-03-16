@@ -300,6 +300,7 @@ typedef enum SuspendCause {
     SUSPEND_FOR_DEBUG_EVENT,
     SUSPEND_FOR_STACK_DUMP,
     SUSPEND_FOR_DEX_OPT,
+    SUSPEND_FOR_VERIFY,
 #if defined(WITH_JIT)
     SUSPEND_FOR_TBL_RESIZE,  // jit-table resize
     SUSPEND_FOR_IC_PATCH,    // polymorphic callsite inline-cache patch

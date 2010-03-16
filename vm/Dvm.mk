@@ -136,6 +136,7 @@ LOCAL_SRC_FILES := \
 	alloc/Heap.c.arm \
 	alloc/MarkSweep.c.arm \
 	alloc/DdmHeap.c \
+	alloc/Verify.c \
 	analysis/CodeVerify.c \
 	analysis/DexOptimize.c \
 	analysis/DexVerify.c \

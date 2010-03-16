@@ -761,6 +761,40 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     return true;
 }
 
+static size_t arrayElementWidth(const ArrayObject *array)
+{
+    const char *descriptor;
+
+    if (dvmIsObjectArray(array)) {
+        return sizeof(Object *);
+    } else {
+        descriptor = array->obj.clazz->descriptor;
+        switch (descriptor[1]) {
+        case 'B': return 1;  /* byte */
+        case 'C': return 2;  /* char */
+        case 'D': return 8;  /* double */
+        case 'F': return 4;  /* float */
+        case 'I': return 4;  /* int */
+        case 'J': return 8;  /* long */
+        case 'S': return 2;  /* short */
+        case 'Z': return 1;  /* boolean */
+        }
+    }
+    LOGE("object %p has an unhandled descriptor '%s'", array, descriptor);
+    dvmDumpThread(dvmThreadSelf(), false);
+    dvmAbort();
+    return 0;  /* Quiet the compiler. */
+}
+
+size_t dvmArrayObjectLength(const ArrayObject *array)
+{
+    size_t length;
+
+    length = offsetof(ArrayObject, contents);
+    length += array->length * arrayElementWidth(array);
+    return length;
+}
+
 /*
  * Add all primitive classes to the root set of objects.
 TODO: do these belong to the root class loader?

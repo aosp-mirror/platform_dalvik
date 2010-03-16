@@ -152,4 +152,6 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
 bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     ClassObject* dstElemClass);
 
+size_t dvmArrayObjectLength(const ArrayObject *array);
+
 #endif /*_DALVIK_OO_ARRAY*/

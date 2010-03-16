@@ -518,6 +518,7 @@ static const char* getSuspendCauseStr(SuspendCause why)
     case SUSPEND_FOR_DEBUG:         return "debug";
     case SUSPEND_FOR_DEBUG_EVENT:   return "debug-event";
     case SUSPEND_FOR_STACK_DUMP:    return "stack-dump";
+    case SUSPEND_FOR_VERIFY:        return "verify";
 #if defined(WITH_JIT)
     case SUSPEND_FOR_TBL_RESIZE:    return "table-resize";
     case SUSPEND_FOR_IC_PATCH:      return "inline-cache-patch";
