@@ -23,7 +23,40 @@ import java.util.List;
 // Note: this class was written without inspecting the non-free org.json sourcecode.
 
 /**
+ * Implements {@link JSONObject#toString()} and {@link JSONArray#toString}. Most
+ * application developers should use those methods directly and disregard this
+ * API. For example:<pre>
+ * JSONObject object = ...
+ * String json = object.toString();</pre>
  *
+ * <p>Stringers only encode well-formed JSON strings. In particular:
+ * <ul>
+ *   <li>The stringer must have exactly one top-level array or object.
+ *   <li>Lexical scopes must be balanced: every call to {@link #array()} must
+ *       have a matching call to {@link #endArray()} and every call to {@link
+ *       #object()} must have a matching call to {@link #endObject()}.
+ *   <li>Arrays may not contain keys (property names).
+ *   <li>Objects must alternate keys (property names) and values.
+ *   <li>Values are inserted with either literal {@link #value(Object) value}
+ *       calls, or by nesting arrays or objects.
+ * </ul>
+ * Calls that would result in a malformed JSON string will fail with a
+ * {@link JSONException}.
+ *
+ * <p>This class provides no facility for pretty-printing (ie. indenting)
+ * output. To encode indented output, use {@link JSONObject#toString(int)} or
+ * {@link JSONArray#toString(int)}.
+ *
+ * <p>Some implementations of the API support at most 20 levels of nesting.
+ * Attempts to create more than 20 levels of nesting may fail with a {@link
+ * JSONException}.
+ *
+ * <p>Each stringer may be used to encode a single top level value. Instances of
+ * this class are not thread safe. Although this class is nonfinal, it was not
+ * designed for inheritance and should not be subclassed. In particular,
+ * self-use by overridable methods is not specified. See <i>Effective Java</i>
+ * Item 17, "Design and Document or inheritance or else prohibit it" for further
+ * information.
  */
 public class JSONStringer {
 
@@ -96,18 +129,40 @@ public class JSONStringer {
         indent = new String(indentChars);
     }
 
+    /**
+     * Begins encoding a new array. Each call to this method must be paired with
+     * a call to {@link #endArray()}.
+     *
+     * @return this stringer.
+     */
     public JSONStringer array() throws JSONException {
         return open(Scope.EMPTY_ARRAY, "[");
     }
 
+    /**
+     * Ends encoding the current array.
+     *
+     * @return this stringer.
+     */
     public JSONStringer endArray() throws JSONException {
         return close(Scope.EMPTY_ARRAY, Scope.NONEMPTY_ARRAY, "]");
     }
 
+    /**
+     * Begins encoding a new object. Each call to this method must be paired
+     * with a call to {@link #endObject()}.
+     *
+     * @return this stringer.
+     */
     public JSONStringer object() throws JSONException {
         return open(Scope.EMPTY_OBJECT, "{");
     }
 
+    /**
+     * Ends encoding the current object.
+     *
+     * @return this stringer.
+     */
     public JSONStringer endObject() throws JSONException {
         return close(Scope.EMPTY_OBJECT, Scope.NONEMPTY_OBJECT, "}");
     }
@@ -161,6 +216,14 @@ public class JSONStringer {
         stack.set(stack.size() - 1, topOfStack);
     }
 
+    /**
+     * Encodes {@code value}.
+     *
+     * @param value a {@link JSONObject}, {@link JSONArray}, String, Boolean,
+     *     Integer, Long, Double or null. May not be {@link Double#isNaN() NaNs}
+     *     or {@link Double#isInfinite() infinities}.
+     * @return this stringer.
+     */
     public JSONStringer value(Object value) throws JSONException {
         if (stack.isEmpty()) {
             throw new JSONException("Nesting problem");
@@ -192,6 +255,11 @@ public class JSONStringer {
         return this;
     }
 
+    /**
+     * Encodes {@code value} to this stringer.
+     *
+     * @return this stringer.
+     */
     public JSONStringer value(boolean value) throws JSONException {
         if (stack.isEmpty()) {
             throw new JSONException("Nesting problem");
@@ -201,6 +269,13 @@ public class JSONStringer {
         return this;
     }
 
+    /**
+     * Encodes {@code value} to this stringer.
+     *
+     * @param value a finite value. May not be {@link Double#isNaN() NaNs} or
+     *     {@link Double#isInfinite() infinities}.
+     * @return this stringer.
+     */
     public JSONStringer value(double value) throws JSONException {
         if (stack.isEmpty()) {
             throw new JSONException("Nesting problem");
@@ -210,6 +285,11 @@ public class JSONStringer {
         return this;
     }
 
+    /**
+     * Encodes {@code value} to this stringer.
+     *
+     * @return this stringer.
+     */
     public JSONStringer value(long value) throws JSONException {
         if (stack.isEmpty()) {
             throw new JSONException("Nesting problem");
@@ -281,6 +361,12 @@ public class JSONStringer {
         }
     }
 
+    /**
+     * Encodes the key (property name) to this stringer.
+     *
+     * @param name the name of the forthcoming value. May not be null.
+     * @return this stringer.
+     */
     public JSONStringer key(String name) throws JSONException {
         if (name == null) {
             throw new JSONException("Names must be non-null");
@@ -331,8 +417,14 @@ public class JSONStringer {
     }
 
     /**
-     * Although it contradicts the general contract of {@link Object#toString},
-     * this method returns null if the stringer contains no data.
+     * Returns the encoded JSON string.
+     *
+     * <p>If invoked with unterminated arrays or unclosed objects, this method's
+     * return value is undefined.
+     *
+     * <p><strong>Warning:</strong> although it contradicts the general contract
+     * of {@link Object#toString}, this method returns null if the stringer
+     * contains no data.
      */
     @Override public String toString() {
         return out.length() == 0 ? null : out.toString();
