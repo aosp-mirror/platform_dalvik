@@ -44,13 +44,7 @@ import org.apache.harmony.luni.util.PriviAction;
  */
 public class PlainDatagramSocketImpl extends DatagramSocketImpl {
 
-    static final int MULTICAST_IF = 1;
-
-    static final int MULTICAST_TTL = 2;
-
     static final int TCP_NODELAY = 4;
-
-    static final int FLAG_SHUTDOWN = 8;
 
     private final static int SO_BROADCAST = 32;
 

@@ -46,15 +46,6 @@ import org.apache.harmony.luni.platform.Platform;
 public class ServerSocketChannelImpl extends ServerSocketChannel implements
         FileDescriptorHandler {
 
-    // status un-init, not initialized.
-    private static final int SERVER_STATUS_UNINIT = -1;
-
-    // status after open and before closed.
-    private static final int SERVER_STATUS_OPEN = 0;
-
-    // status closed.
-    private static final int SERVER_STATUS_CLOSED = 1;
-
     // The fd to interact with native code
     private final FileDescriptor fd;
 
@@ -62,8 +53,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
     private final ServerSocket socket;
 
     private final SocketImpl impl;
-
-    int status = SERVER_STATUS_UNINIT;
 
     // whether the socket is bound
     boolean isBound = false;
@@ -77,7 +66,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
      */
     public ServerSocketChannelImpl(SelectorProvider sp) throws IOException {
         super(sp);
-        status = SERVER_STATUS_OPEN;
         fd = new FileDescriptor();
         Platform.getNetworkSystem().createStreamSocket(fd,
                 NetUtil.preferIPv4Stack());
@@ -89,7 +77,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
     @SuppressWarnings("unused")
     private ServerSocketChannelImpl() throws IOException {
         super(SelectorProvider.provider());
-        status = SERVER_STATUS_OPEN;
         fd = new FileDescriptor();
         impl = new PlainServerSocketImpl(fd);
         socket = new ServerSocketAdapter(impl, this);
@@ -175,7 +162,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
      * @see java.nio.channels.spi.AbstractSelectableChannel#implCloseSelectableChannel()
      */
     synchronized protected void implCloseSelectableChannel() throws IOException {
-        status = SERVER_STATUS_CLOSED;
         if (!socket.isClosed()) {
             socket.close();
         }
@@ -296,7 +282,6 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
                 } else {
                     super.close();
                 }
-                channelImpl.status = SERVER_STATUS_CLOSED;
             }
         }
     }

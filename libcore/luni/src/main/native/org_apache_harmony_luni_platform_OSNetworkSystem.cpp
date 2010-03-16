@@ -456,7 +456,7 @@ static bool inetAddressToSocketAddress(JNIEnv *env, jobject inetaddress,
  *
  * @return a string with the textual representation of the address.
  */
-static jstring osNetworkSystem_byteArrayToIpString(JNIEnv* env, jclass,
+static jstring osNetworkSystem_byteArrayToIpString(JNIEnv* env, jobject,
         jbyteArray byteArray) {
     if (byteArray == NULL) {
         jniThrowNullPointerException(env, NULL);
@@ -510,7 +510,7 @@ static jstring osNetworkSystem_byteArrayToIpString(JNIEnv* env, jclass,
  *
  * @throws UnknownHostException the IP address was invalid.
  */
-static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv* env, jclass,
+static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv* env, jobject,
         jstring javaString) {
     if (javaString == NULL) {
         jniThrowNullPointerException(env, NULL);
@@ -1486,22 +1486,16 @@ static int createSocketFileDescriptor(JNIEnv* env, jobject fileDescriptor,
     return sock;
 }
 
-static void osNetworkSystem_createStreamSocketImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jboolean preferIPv4Stack) {
-    // LOGD("ENTER createSocketImpl");
+static void osNetworkSystem_createStreamSocket(JNIEnv* env, jobject, jobject fileDescriptor, jboolean) {
     createSocketFileDescriptor(env, fileDescriptor, SOCK_STREAM);
 }
 
-static void osNetworkSystem_createDatagramSocketImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jboolean preferIPv4Stack) {
-    // LOGD("ENTER createDatagramSocketImpl");
-    createSocketFileDescriptor(env, fileDescriptor, SOCK_DGRAM);
+static void osNetworkSystem_createDatagramSocket(JNIEnv* env, jobject, jobject fd, jboolean) {
+    createSocketFileDescriptor(env, fd, SOCK_DGRAM);
 }
 
-static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_readDirect(JNIEnv* env, jobject,
         jobject fileDescriptor, jint address, jint count, jint timeout) {
-    // LOGD("ENTER readSocketDirectImpl");
-
     int fd;
     if (!jniGetFd(env, fileDescriptor, fd)) {
         return 0;
@@ -1543,16 +1537,14 @@ static jint osNetworkSystem_readSocketImpl(JNIEnv* env, jclass clazz,
     }
     jint address =
             static_cast<jint>(reinterpret_cast<uintptr_t>(bytes + offset));
-    int result = osNetworkSystem_readSocketDirectImpl(env, clazz,
+    int result = osNetworkSystem_readDirect(env, NULL,
             fileDescriptor, address, count, timeout);
     env->ReleaseByteArrayElements(byteArray, bytes, 0);
     return result;
 }
 
-static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_writeDirect(JNIEnv* env, jobject,
         jobject fileDescriptor, jint address, jint offset, jint count) {
-    // LOGD("ENTER writeSocketDirectImpl");
-
     if (count <= 0) {
         return 0;
     }
@@ -1577,25 +1569,21 @@ static jint osNetworkSystem_writeSocketDirectImpl(JNIEnv* env, jclass clazz,
     return bytesSent;
 }
 
-static jint osNetworkSystem_writeSocketImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_write(JNIEnv* env, jobject,
         jobject fileDescriptor, jbyteArray byteArray, jint offset, jint count) {
-    // LOGD("ENTER writeSocketImpl");
-
     jbyte* bytes = env->GetByteArrayElements(byteArray, NULL);
     if (bytes == NULL) {
         return -1;
     }
     jint address = static_cast<jint>(reinterpret_cast<uintptr_t>(bytes));
-    int result = osNetworkSystem_writeSocketDirectImpl(env, clazz,
+    int result = osNetworkSystem_writeDirect(env, NULL,
             fileDescriptor, address, offset, count);
     env->ReleaseByteArrayElements(byteArray, bytes, 0);
     return result;
 }
 
-static void osNetworkSystem_setNonBlockingImpl(JNIEnv* env, jclass clazz,
+static void osNetworkSystem_setNonBlocking(JNIEnv* env, jobject,
         jobject fileDescriptor, jboolean nonblocking) {
-    // LOGD("ENTER setNonBlockingImpl");
-
     int handle;
     if (!jniGetFd(env, fileDescriptor, handle)) {
         return;
@@ -1608,11 +1596,9 @@ static void osNetworkSystem_setNonBlockingImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static jint osNetworkSystem_connectWithTimeoutSocketImpl(JNIEnv* env,
-        jclass clazz, jobject fileDescriptor, jint timeout, jint trafficClass,
+static jint osNetworkSystem_connectWithTimeout(JNIEnv* env,
+        jobject, jobject fileDescriptor, jint timeout, jint trafficClass,
         jobject inetAddr, jint port, jint step, jbyteArray passContext) {
-    // LOGD("ENTER connectWithTimeoutSocketImpl");
-
     sockaddr_storage address;
     if (!inetAddressToSocketAddress(env, inetAddr, port, &address)) {
         return -1;
@@ -1657,11 +1643,9 @@ static jint osNetworkSystem_connectWithTimeoutSocketImpl(JNIEnv* env,
     return result;
 }
 
-static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
-        jclass clazz, jobject fileDescriptor, jint remotePort, jint timeout,
+static void osNetworkSystem_connectStreamWithTimeoutSocket(JNIEnv* env,
+        jobject, jobject fileDescriptor, jint remotePort, jint timeout,
         jint trafficClass, jobject inetAddr) {
-    // LOGD("ENTER connectStreamWithTimeoutSocketImpl");
-
     int result = 0;
     struct sockaddr_storage address;
     jbyte *context = NULL;
@@ -1791,10 +1775,8 @@ bail:
     }
 }
 
-static void osNetworkSystem_socketBindImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor, jint port, jobject inetAddress) {
-    // LOGD("ENTER socketBindImpl");
-
+static void osNetworkSystem_bind(JNIEnv* env, jobject, jobject fileDescriptor,
+        jobject inetAddress, jint port) {
     sockaddr_storage socketAddress;
     if (!inetAddressToSocketAddress(env, inetAddress, port, &socketAddress)) {
         return;
@@ -1812,10 +1794,8 @@ static void osNetworkSystem_socketBindImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static void osNetworkSystem_listenStreamSocketImpl(JNIEnv* env, jclass clazz,
+static void osNetworkSystem_listenStreamSocket(JNIEnv* env, jobject,
         jobject fileDescriptor, jint backlog) {
-    // LOGD("ENTER listenStreamSocketImpl");
-
     int handle;
     if (!jniGetFd(env, fileDescriptor, handle)) {
         return;
@@ -1828,7 +1808,7 @@ static void osNetworkSystem_listenStreamSocketImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static void osNetworkSystem_acceptSocketImpl(JNIEnv* env, jclass,
+static void osNetworkSystem_accept(JNIEnv* env, jobject,
         jobject serverFileDescriptor,
         jobject newSocket, jobject clientFileDescriptor, jint timeout) {
     // LOGD("ENTER acceptSocketImpl");
@@ -1879,19 +1859,15 @@ static void osNetworkSystem_acceptSocketImpl(JNIEnv* env, jclass,
     jniSetFileDescriptorOfFD(env, clientFileDescriptor, clientFd);
 }
 
-static jboolean osNetworkSystem_supportsUrgentDataImpl(JNIEnv* env,
-        jclass clazz, jobject fileDescriptor) {
-    // LOGD("ENTER supportsUrgentDataImpl");
-
+static jboolean osNetworkSystem_supportsUrgentData(JNIEnv* env,
+        jobject, jobject fileDescriptor) {
     // TODO(enh): do we really need to exclude the invalid file descriptor case?
     int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);
     return (fd == -1) ? JNI_FALSE : JNI_TRUE;
 }
 
-static void osNetworkSystem_sendUrgentDataImpl(JNIEnv* env, jclass clazz,
+static void osNetworkSystem_sendUrgentData(JNIEnv* env, jobject,
         jobject fileDescriptor, jbyte value) {
-    // LOGD("ENTER sendUrgentDataImpl");
-
     int handle;
     if (!jniGetFd(env, fileDescriptor, handle)) {
         return;
@@ -1903,10 +1879,8 @@ static void osNetworkSystem_sendUrgentDataImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static void osNetworkSystem_connectDatagramImpl2(JNIEnv* env, jclass,
+static void osNetworkSystem_connectDatagram(JNIEnv* env, jobject,
         jobject fileDescriptor, jint port, jint trafficClass, jobject inetAddress) {
-    // LOGD("ENTER connectDatagramImpl2");
-
     sockaddr_storage sockAddr;
     if (!inetAddressToSocketAddress(env, inetAddress, port, &sockAddr)) {
         return;
@@ -1923,10 +1897,8 @@ static void osNetworkSystem_connectDatagramImpl2(JNIEnv* env, jclass,
     }
 }
 
-static void osNetworkSystem_disconnectDatagramImpl(JNIEnv* env, jclass,
+static void osNetworkSystem_disconnectDatagram(JNIEnv* env, jobject,
         jobject fileDescriptor) {
-    // LOGD("ENTER disconnectDatagramImpl");
-
     int fd;
     if (!jniGetFd(env, fileDescriptor, fd)) {
         return;
@@ -1944,17 +1916,13 @@ static void osNetworkSystem_disconnectDatagramImpl(JNIEnv* env, jclass,
     }
 }
 
-static void osNetworkSystem_setInetAddressImpl(JNIEnv* env, jobject,
+static void osNetworkSystem_setInetAddress(JNIEnv* env, jobject,
         jobject sender, jbyteArray address) {
-    // LOGD("ENTER setInetAddressImpl");
-    
     env->SetObjectField(sender, gCachedFields.iaddr_ipaddress, address);
 }
 
-static jint osNetworkSystem_peekDatagramImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_peekDatagram(JNIEnv* env, jobject,
         jobject fileDescriptor, jobject sender, jint receiveTimeout) {
-    // LOGD("ENTER peekDatagramImpl");
-
     int result = pollSelectWait(env, fileDescriptor, receiveTimeout);
     if (result < 0) {
         return 0;
@@ -1981,15 +1949,13 @@ static jint osNetworkSystem_peekDatagramImpl(JNIEnv* env, jclass clazz,
     if (sender == NULL) {
         return -1;
     }
-    osNetworkSystem_setInetAddressImpl(env, NULL, sender, senderAddressArray);
+    osNetworkSystem_setInetAddress(env, NULL, sender, senderAddressArray);
     return getSocketAddressPort(&sockAddr);
 }
 
-static jint osNetworkSystem_receiveDatagramDirectImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_receiveDatagramDirect(JNIEnv* env, jobject,
         jobject fileDescriptor, jobject packet, jint address, jint offset,
         jint length, jint receiveTimeout, jboolean peek) {
-    // LOGD("ENTER receiveDatagramDirectImpl");
-
     int result = pollSelectWait(env, fileDescriptor, receiveTimeout);
     if (result < 0) {
         return 0;
@@ -2029,11 +1995,9 @@ static jint osNetworkSystem_receiveDatagramDirectImpl(JNIEnv* env, jclass clazz,
     return (jint) actualLength;
 }
 
-static jint osNetworkSystem_receiveDatagramImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_receiveDatagram(JNIEnv* env, jobject,
         jobject fd, jobject packet, jbyteArray data, jint offset, jint length,
         jint receiveTimeout, jboolean peek) {
-    // LOGD("ENTER receiveDatagramImpl");
-
     int localLength = (length < 65536) ? length : 65536;
     jbyte *bytes = (jbyte*) malloc(localLength);
     if (bytes == NULL) {
@@ -2042,7 +2006,7 @@ static jint osNetworkSystem_receiveDatagramImpl(JNIEnv* env, jclass clazz,
         return 0;
     }
 
-    int actualLength = osNetworkSystem_receiveDatagramDirectImpl(env, clazz, fd,
+    int actualLength = osNetworkSystem_receiveDatagramDirect(env, NULL, fd,
             packet, (jint)bytes, 0, localLength, receiveTimeout, peek);
 
     if (actualLength > 0) {
@@ -2053,11 +2017,10 @@ static jint osNetworkSystem_receiveDatagramImpl(JNIEnv* env, jclass clazz,
     return actualLength;
 }
 
-static jint osNetworkSystem_recvConnectedDatagramDirectImpl(JNIEnv* env,
-        jclass clazz, jobject fileDescriptor, jobject packet,
+static jint osNetworkSystem_recvConnectedDatagramDirect(JNIEnv* env,
+        jobject, jobject fileDescriptor, jobject packet,
         jint address, jint offset, jint length,
         jint receiveTimeout, jboolean peek) {
-    // LOGD("ENTER receiveConnectedDatagramDirectImpl");
 
     int result = pollSelectWait(env, fileDescriptor, receiveTimeout);
     if (result < 0) {
@@ -2083,11 +2046,9 @@ static jint osNetworkSystem_recvConnectedDatagramDirectImpl(JNIEnv* env,
     return actualLength;
 }
 
-static jint osNetworkSystem_recvConnectedDatagramImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_recvConnectedDatagram(JNIEnv* env, jobject,
         jobject fd, jobject packet, jbyteArray data, jint offset, jint length,
         jint receiveTimeout, jboolean peek) {
-    // LOGD("ENTER receiveConnectedDatagramImpl");
-
     int localLength = (length < 65536) ? length : 65536;
     jbyte *bytes = (jbyte*) malloc(localLength);
     if (bytes == NULL) {
@@ -2096,8 +2057,8 @@ static jint osNetworkSystem_recvConnectedDatagramImpl(JNIEnv* env, jclass clazz,
         return 0;
     }
 
-    int actualLength = osNetworkSystem_recvConnectedDatagramDirectImpl(env,
-            clazz, fd, packet, (jint)bytes, 0, localLength,
+    int actualLength = osNetworkSystem_recvConnectedDatagramDirect(env,
+            NULL, fd, packet, (jint)bytes, 0, localLength,
             receiveTimeout, peek);
 
     if (actualLength > 0) {
@@ -2108,12 +2069,10 @@ static jint osNetworkSystem_recvConnectedDatagramImpl(JNIEnv* env, jclass clazz,
     return actualLength;
 }
 
-static jint osNetworkSystem_sendDatagramDirectImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_sendDatagramDirect(JNIEnv* env, jobject,
         jobject fileDescriptor, jint address, jint offset, jint length,
         jint port,
         jboolean bindToDevice, jint trafficClass, jobject inetAddress) {
-    // LOGD("ENTER sendDatagramDirectImpl");
-
     int fd;
     if (!jniGetFd(env, fileDescriptor, fd)) {
         return -1;
@@ -2139,26 +2098,21 @@ static jint osNetworkSystem_sendDatagramDirectImpl(JNIEnv* env, jclass clazz,
     return bytesSent;
 }
 
-static jint osNetworkSystem_sendDatagramImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_sendDatagram(JNIEnv* env, jobject,
         jobject fd, jbyteArray data, jint offset, jint length, jint port,
         jboolean bindToDevice, jint trafficClass, jobject inetAddress) {
-    // LOGD("ENTER sendDatagramImpl");
-
     jbyte *bytes = env->GetByteArrayElements(data, NULL);
-    int actualLength = osNetworkSystem_sendDatagramDirectImpl(env, clazz, fd,
+    int actualLength = osNetworkSystem_sendDatagramDirect(env, NULL, fd,
             (jint)bytes, offset, length, port, bindToDevice, trafficClass,
             inetAddress);
     env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
-
     return actualLength;
 }
 
-static jint osNetworkSystem_sendConnectedDatagramDirectImpl(JNIEnv* env,
-        jclass clazz, jobject fileDescriptor,
+static jint osNetworkSystem_sendConnectedDatagramDirect(JNIEnv* env,
+        jobject, jobject fileDescriptor,
         jint address, jint offset, jint length,
         jboolean bindToDevice) {
-    // LOGD("ENTER sendConnectedDatagramDirectImpl");
-
     int fd;
     if (!jniGetFd(env, fileDescriptor, fd)) {
         return 0;
@@ -2177,30 +2131,25 @@ static jint osNetworkSystem_sendConnectedDatagramDirectImpl(JNIEnv* env,
     return bytesSent;
 }
 
-static jint osNetworkSystem_sendConnectedDatagramImpl(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_sendConnectedDatagram(JNIEnv* env, jobject,
         jobject fd, jbyteArray data, jint offset, jint length,
         jboolean bindToDevice) {
-    // LOGD("ENTER sendConnectedDatagramImpl");
-
     jbyte *bytes = env->GetByteArrayElements(data, NULL);
-    int actualLength = osNetworkSystem_sendConnectedDatagramDirectImpl(env,
-            clazz, fd, (jint)bytes, offset, length, bindToDevice);
+    int actualLength = osNetworkSystem_sendConnectedDatagramDirect(env,
+            NULL, fd, (jint)bytes, offset, length, bindToDevice);
     env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
 
     return actualLength;
 }
 
-static void osNetworkSystem_createServerStreamSocketImpl(JNIEnv* env,
-        jclass clazz, jobject fileDescriptor, jboolean preferIPv4Stack) {
-    // LOGD("ENTER createServerStreamSocketImpl");
-
-    int handle = createSocketFileDescriptor(env, fileDescriptor, SOCK_STREAM);
-    if (handle < 0) {
-        return;
+static void osNetworkSystem_createServerStreamSocket(JNIEnv* env, jobject,
+        jobject fileDescriptor, jboolean) {
+    int fd = createSocketFileDescriptor(env, fileDescriptor, SOCK_STREAM);
+    if (fd != -1) {
+        // TODO: we could actually do this in Java. (and check for errors!)
+        int value = 1;
+        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int));
     }
-
-    int value = 1;
-    setsockopt(handle, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int));
 }
 
 static void doShutdown(JNIEnv* env, jobject fileDescriptor, int how) {
@@ -2214,21 +2163,17 @@ static void doShutdown(JNIEnv* env, jobject fileDescriptor, int how) {
     }
 }
 
-static void osNetworkSystem_shutdownInputImpl(JNIEnv* env, jobject,
-        jobject fileDescriptor) {
-    doShutdown(env, fileDescriptor, SHUT_RD);
+static void osNetworkSystem_shutdownInput(JNIEnv* env, jobject, jobject fd) {
+    doShutdown(env, fd, SHUT_RD);
 }
 
-static void osNetworkSystem_shutdownOutputImpl(JNIEnv* env, jobject,
-        jobject fileDescriptor) {
-    doShutdown(env, fileDescriptor, SHUT_WR);
+static void osNetworkSystem_shutdownOutput(JNIEnv* env, jobject, jobject fd) {
+    doShutdown(env, fd, SHUT_WR);
 }
 
-static jint osNetworkSystem_sendDatagramImpl2(JNIEnv* env, jclass clazz,
+static jint osNetworkSystem_sendDatagram2(JNIEnv* env, jobject,
         jobject fileDescriptor, jbyteArray data, jint offset, jint length,
         jint port, jobject inetAddress) {
-    // LOGD("ENTER sendDatagramImpl2");
-
     sockaddr_storage sockAddr;
     if (inetAddress != NULL) {
         if (!inetAddressToSocketAddress(env, inetAddress, port, &sockAddr)) {
@@ -2316,7 +2261,7 @@ static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set
     return true;
 }
 
-static jboolean osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
+static jboolean osNetworkSystem_selectImpl(JNIEnv* env, jclass,
         jobjectArray readFDArray, jobjectArray writeFDArray, jint countReadC,
         jint countWriteC, jintArray outFlags, jlong timeoutMs) {
     // LOGD("ENTER selectImpl");
@@ -2367,10 +2312,8 @@ static jboolean osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
     return okay;
 }
 
-static jobject osNetworkSystem_getSocketLocalAddressImpl(JNIEnv* env,
-        jclass, jobject fileDescriptor) {
-    // LOGD("ENTER getSocketLocalAddressImpl");
-
+static jobject osNetworkSystem_getSocketLocalAddress(JNIEnv* env,
+        jobject, jobject fileDescriptor) {
     int fd;
     if (!jniGetFd(env, fileDescriptor, fd)) {
         return NULL;
@@ -2390,10 +2333,8 @@ static jobject osNetworkSystem_getSocketLocalAddressImpl(JNIEnv* env,
     return socketAddressToInetAddress(env, &addr);
 }
 
-static jint osNetworkSystem_getSocketLocalPortImpl(JNIEnv* env, jclass,
+static jint osNetworkSystem_getSocketLocalPort(JNIEnv* env, jobject,
         jobject fileDescriptor) {
-    // LOGD("ENTER getSocketLocalPortImpl");
-
     int fd;
     if (!jniGetFd(env, fileDescriptor, fd)) {
         return 0;
@@ -2413,10 +2354,8 @@ static jint osNetworkSystem_getSocketLocalPortImpl(JNIEnv* env, jclass,
     return getSocketAddressPort(&addr);
 }
 
-static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
+static jobject osNetworkSystem_getSocketOption(JNIEnv* env, jobject,
         jobject fileDescriptor, jint anOption) {
-    // LOGD("ENTER getSocketOptionImpl");
-
     int intValue = 0;
     socklen_t intSize = sizeof(int);
     int result;
@@ -2628,10 +2567,8 @@ static jobject osNetworkSystem_getSocketOptionImpl(JNIEnv* env, jclass clazz,
 
 }
 
-static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
+static void osNetworkSystem_setSocketOption(JNIEnv* env, jobject,
         jobject fileDescriptor, jint anOption, jobject optVal) {
-    // LOGD("ENTER setSocketOptionImpl");
-
     int result;
     int intVal;
     socklen_t intSize = sizeof(int);
@@ -2886,10 +2823,7 @@ static void osNetworkSystem_setSocketOptionImpl(JNIEnv* env, jclass clazz,
     }
 }
 
-static void osNetworkSystem_socketCloseImpl(JNIEnv* env, jclass clazz,
-        jobject fileDescriptor) {
-    // LOGD("ENTER socketCloseImpl");
-
+static void osNetworkSystem_socketClose(JNIEnv* env, jobject, jobject fileDescriptor) {
     int fd;
     if (!jniGetFd(env, fileDescriptor, fd)) {
         return;
@@ -2900,55 +2834,49 @@ static void osNetworkSystem_socketCloseImpl(JNIEnv* env, jclass clazz,
     close(fd);
 }
 
-static jobject osNetworkSystem_inheritedChannel(JNIEnv* env, jobject obj) {
-    // Android never has stdin/stdout connected to a socket.
-    return NULL;
-}
-
 /*
  * JNI registration.
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "createStreamSocketImpl",            "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createStreamSocketImpl             },
-    { "createDatagramSocketImpl",          "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createDatagramSocketImpl           },
-    { "readSocketImpl",                    "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_readSocketImpl                     },
-    { "readSocketDirectImpl",              "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_readSocketDirectImpl               },
-    { "writeSocketImpl",                   "(Ljava/io/FileDescriptor;[BII)I",                                          (void*) osNetworkSystem_writeSocketImpl                    },
-    { "writeSocketDirectImpl",             "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_writeSocketDirectImpl              },
-    { "setNonBlockingImpl",                "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_setNonBlockingImpl                 },
-    { "connectWithTimeoutSocketImpl",      "(Ljava/io/FileDescriptor;IILjava/net/InetAddress;II[B)I",                  (void*) osNetworkSystem_connectWithTimeoutSocketImpl       },
-    { "connectStreamWithTimeoutSocketImpl","(Ljava/io/FileDescriptor;IIILjava/net/InetAddress;)V",                     (void*) osNetworkSystem_connectStreamWithTimeoutSocketImpl },
-    { "socketBindImpl",                    "(Ljava/io/FileDescriptor;ILjava/net/InetAddress;)V",                       (void*) osNetworkSystem_socketBindImpl                     },
-    { "listenStreamSocketImpl",            "(Ljava/io/FileDescriptor;I)V",                                             (void*) osNetworkSystem_listenStreamSocketImpl             },
-    { "acceptSocketImpl",                  "(Ljava/io/FileDescriptor;Ljava/net/SocketImpl;Ljava/io/FileDescriptor;I)V",(void*) osNetworkSystem_acceptSocketImpl                   },
-    { "supportsUrgentDataImpl",            "(Ljava/io/FileDescriptor;)Z",                                              (void*) osNetworkSystem_supportsUrgentDataImpl             },
-    { "sendUrgentDataImpl",                "(Ljava/io/FileDescriptor;B)V",                                             (void*) osNetworkSystem_sendUrgentDataImpl                 },
-    { "connectDatagramImpl2",              "(Ljava/io/FileDescriptor;IILjava/net/InetAddress;)V",                      (void*) osNetworkSystem_connectDatagramImpl2               },
-    { "disconnectDatagramImpl",            "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_disconnectDatagramImpl             },
-    { "peekDatagramImpl",                  "(Ljava/io/FileDescriptor;Ljava/net/InetAddress;I)I",                       (void*) osNetworkSystem_peekDatagramImpl                   },
-    { "receiveDatagramImpl",               "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;[BIIIZ)I",               (void*) osNetworkSystem_receiveDatagramImpl                },
-    { "receiveDatagramDirectImpl",         "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;IIIIZ)I",                (void*) osNetworkSystem_receiveDatagramDirectImpl          },
-    { "recvConnectedDatagramImpl",         "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;[BIIIZ)I",               (void*) osNetworkSystem_recvConnectedDatagramImpl          },
-    { "recvConnectedDatagramDirectImpl",   "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;IIIIZ)I",                (void*) osNetworkSystem_recvConnectedDatagramDirectImpl    },
-    { "sendDatagramImpl",                  "(Ljava/io/FileDescriptor;[BIIIZILjava/net/InetAddress;)I",                 (void*) osNetworkSystem_sendDatagramImpl                   },
-    { "sendDatagramDirectImpl",            "(Ljava/io/FileDescriptor;IIIIZILjava/net/InetAddress;)I",                  (void*) osNetworkSystem_sendDatagramDirectImpl             },
-    { "sendConnectedDatagramImpl",         "(Ljava/io/FileDescriptor;[BIIZ)I",                                         (void*) osNetworkSystem_sendConnectedDatagramImpl          },
-    { "sendConnectedDatagramDirectImpl",   "(Ljava/io/FileDescriptor;IIIZ)I",                                          (void*) osNetworkSystem_sendConnectedDatagramDirectImpl    },
-    { "createServerStreamSocketImpl",      "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createServerStreamSocketImpl       },
-    { "shutdownInputImpl",                 "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownInputImpl                  },
-    { "shutdownOutputImpl",                "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownOutputImpl                 },
-    { "sendDatagramImpl2",                 "(Ljava/io/FileDescriptor;[BIIILjava/net/InetAddress;)I",                   (void*) osNetworkSystem_sendDatagramImpl2                  },
-    { "selectImpl",                        "([Ljava/io/FileDescriptor;[Ljava/io/FileDescriptor;II[IJ)Z",               (void*) osNetworkSystem_selectImpl                         },
-    { "getSocketLocalAddressImpl",         "(Ljava/io/FileDescriptor;)Ljava/net/InetAddress;",                         (void*) osNetworkSystem_getSocketLocalAddressImpl          },
-    { "getSocketLocalPortImpl",            "(Ljava/io/FileDescriptor;)I",                                              (void*) osNetworkSystem_getSocketLocalPortImpl             },
-    { "getSocketOptionImpl",               "(Ljava/io/FileDescriptor;I)Ljava/lang/Object;",                            (void*) osNetworkSystem_getSocketOptionImpl                },
-    { "setSocketOptionImpl",               "(Ljava/io/FileDescriptor;ILjava/lang/Object;)V",                           (void*) osNetworkSystem_setSocketOptionImpl                },
-    { "socketCloseImpl",                   "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_socketCloseImpl                    },
-    { "setInetAddressImpl",                "(Ljava/net/InetAddress;[B)V",                                              (void*) osNetworkSystem_setInetAddressImpl                 },
-    { "inheritedChannel",                  "()Ljava/nio/channels/Channel;",                                            (void*) osNetworkSystem_inheritedChannel                   },
-    { "byteArrayToIpString",               "([B)Ljava/lang/String;",                                                   (void*) osNetworkSystem_byteArrayToIpString                },
-    { "ipStringToByteArray",               "(Ljava/lang/String;)[B",                                                   (void*) osNetworkSystem_ipStringToByteArray                },
+    { "accept",                            "(Ljava/io/FileDescriptor;Ljava/net/SocketImpl;Ljava/io/FileDescriptor;I)V",(void*) osNetworkSystem_accept },
+    { "bind",                              "(Ljava/io/FileDescriptor;Ljava/net/InetAddress;I)V",                       (void*) osNetworkSystem_bind },
+    { "byteArrayToIpString",               "([B)Ljava/lang/String;",                                                   (void*) osNetworkSystem_byteArrayToIpString },
+    { "connectDatagram",                   "(Ljava/io/FileDescriptor;IILjava/net/InetAddress;)V",                      (void*) osNetworkSystem_connectDatagram },
+    { "connectStreamWithTimeoutSocket",    "(Ljava/io/FileDescriptor;IIILjava/net/InetAddress;)V",                     (void*) osNetworkSystem_connectStreamWithTimeoutSocket },
+    { "connectWithTimeout",                "(Ljava/io/FileDescriptor;IILjava/net/InetAddress;II[B)I",                  (void*) osNetworkSystem_connectWithTimeout },
+    { "createDatagramSocket",              "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createDatagramSocket },
+    { "createServerStreamSocket",          "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createServerStreamSocket },
+    { "createStreamSocket",                "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_createStreamSocket },
+    { "disconnectDatagram",                "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_disconnectDatagram },
+    { "getSocketLocalAddress",             "(Ljava/io/FileDescriptor;)Ljava/net/InetAddress;",                         (void*) osNetworkSystem_getSocketLocalAddress },
+    { "getSocketLocalPort",                "(Ljava/io/FileDescriptor;)I",                                              (void*) osNetworkSystem_getSocketLocalPort },
+    { "getSocketOption",                   "(Ljava/io/FileDescriptor;I)Ljava/lang/Object;",                            (void*) osNetworkSystem_getSocketOption },
+    { "ipStringToByteArray",               "(Ljava/lang/String;)[B",                                                   (void*) osNetworkSystem_ipStringToByteArray },
+    { "listenStreamSocket",                "(Ljava/io/FileDescriptor;I)V",                                             (void*) osNetworkSystem_listenStreamSocket },
+    { "peekDatagram",                      "(Ljava/io/FileDescriptor;Ljava/net/InetAddress;I)I",                       (void*) osNetworkSystem_peekDatagram },
+    { "readDirect",                        "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_readDirect },
+    { "readSocketImpl",                    "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_readSocketImpl },
+    { "receiveDatagramDirect",             "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;IIIIZ)I",                (void*) osNetworkSystem_receiveDatagramDirect },
+    { "receiveDatagram",                   "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;[BIIIZ)I",               (void*) osNetworkSystem_receiveDatagram },
+    { "recvConnectedDatagramDirect",       "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;IIIIZ)I",                (void*) osNetworkSystem_recvConnectedDatagramDirect },
+    { "recvConnectedDatagram",             "(Ljava/io/FileDescriptor;Ljava/net/DatagramPacket;[BIIIZ)I",               (void*) osNetworkSystem_recvConnectedDatagram },
+    { "selectImpl",                        "([Ljava/io/FileDescriptor;[Ljava/io/FileDescriptor;II[IJ)Z",               (void*) osNetworkSystem_selectImpl },
+    { "sendConnectedDatagramDirect",       "(Ljava/io/FileDescriptor;IIIZ)I",                                          (void*) osNetworkSystem_sendConnectedDatagramDirect },
+    { "sendConnectedDatagram",             "(Ljava/io/FileDescriptor;[BIIZ)I",                                         (void*) osNetworkSystem_sendConnectedDatagram },
+    { "sendDatagramDirect",                "(Ljava/io/FileDescriptor;IIIIZILjava/net/InetAddress;)I",                  (void*) osNetworkSystem_sendDatagramDirect },
+    { "sendDatagram",                      "(Ljava/io/FileDescriptor;[BIIIZILjava/net/InetAddress;)I",                 (void*) osNetworkSystem_sendDatagram },
+    { "sendDatagram2",                     "(Ljava/io/FileDescriptor;[BIIILjava/net/InetAddress;)I",                   (void*) osNetworkSystem_sendDatagram2 },
+    { "sendUrgentData",                    "(Ljava/io/FileDescriptor;B)V",                                             (void*) osNetworkSystem_sendUrgentData },
+    { "setInetAddress",                    "(Ljava/net/InetAddress;[B)V",                                              (void*) osNetworkSystem_setInetAddress },
+    { "setNonBlocking",                    "(Ljava/io/FileDescriptor;Z)V",                                             (void*) osNetworkSystem_setNonBlocking },
+    { "setSocketOption",                   "(Ljava/io/FileDescriptor;ILjava/lang/Object;)V",                           (void*) osNetworkSystem_setSocketOption },
+    { "shutdownInput",                     "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownInput },
+    { "shutdownOutput",                    "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_shutdownOutput },
+    { "socketClose",                       "(Ljava/io/FileDescriptor;)V",                                              (void*) osNetworkSystem_socketClose },
+    { "supportsUrgentData",                "(Ljava/io/FileDescriptor;)Z",                                              (void*) osNetworkSystem_supportsUrgentData },
+    { "writeDirect",                       "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_writeDirect },
+    { "write",                             "(Ljava/io/FileDescriptor;[BII)I",                                          (void*) osNetworkSystem_write },
 };
 
 int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env) {
