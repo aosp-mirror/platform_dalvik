@@ -19,7 +19,28 @@ package org.json;
 // Note: this class was written without inspecting the non-free org.json sourcecode.
 
 /**
+ * Parses a JSON (<a href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a>)
+ * encoded string into the corresponding object. Most clients of
+ * this class will use only need the {@link #JSONTokener(String) constructor}
+ * and {@link #nextValue} method. Example usage: <pre>
+ * String json = "{"
+ *         + "  \"query\": \"Pizza\", "
+ *         + "  \"locations\": [ 94043, 90210 ] "
+ *         + "}";
  *
+ * JSONObject object = (JSONObject) new JSONTokener(json).nextValue();
+ * String query = object.getString("query");
+ * JSONArray locations = object.getJSONArray("locations");</pre>
+ *
+ * <p>This parser is lenient. A successful parse does not necessarily indicate
+ * that the input string is valid JSON.
+ *
+ * <p>Each tokener may be used to parse a single JSON string. Instances of this
+ * class are not thread safe. Although this class is nonfinal, it was not
+ * designed for inheritance and should not be subclassed. In particular,
+ * self-use by overridable methods is not specified. See <i>Effective Java</i>
+ * Item 17, "Design and Document or inheritance or else prohibit it" for further
+ * information.
  */
 public class JSONTokener {
 
@@ -32,10 +53,22 @@ public class JSONTokener {
      */
     private int pos;
 
+    /**
+     * @param in JSON encoded string. Null is not permitted and will yield a
+     *     tokener that throws {@code NullPointerExceptions} when methods are
+     *     called.
+     */
     public JSONTokener(String in) {
         this.in = in;
     }
 
+    /**
+     * Returns the next value from the input.
+     *
+     * @return a {@link JSONObject}, {@link JSONArray}, String, Boolean,
+     *     Integer, Long, Double or {@link JSONObject#NULL}.
+     * @throws JSONException if the input is malformed.
+     */
     public Object nextValue() throws JSONException {
         int c = nextCleanInternal();
         switch (c) {
@@ -121,8 +154,12 @@ public class JSONTokener {
     }
 
     /**
+     * Returns the string up to but not including {@code quote}, unescaping any
+     * character escape sequences encountered along the way. The opening quote
+     * should have already been read. This consumes the closing quote, but does
+     * not include it in the returned string.
      *
-     *
+     * @param quote either ' or ".
      * @throws NumberFormatException if any unicode escape sequences are
      *     malformed.
      */
@@ -264,9 +301,8 @@ public class JSONTokener {
     }
 
     /**
-     * Returns text from the current position until the first of any of the
-     * given characters or a newline character, excluding that character. The
-     * position is advanced to the excluded character.
+     * Returns the string up to but not including any of the given characters or
+     * a newline character. This does not consume the excluded character.
      */
     private String nextToInternal(String excluded) {
         int start = pos;
@@ -378,10 +414,17 @@ public class JSONTokener {
         }
     }
 
-    public JSONException syntaxError(String text) {
-        return new JSONException(text + this);
+    /**
+     * Returns an exception containing the given message plus the current
+     * position and the entire input string.
+     */
+    public JSONException syntaxError(String message) {
+        return new JSONException(message + this);
     }
 
+    /**
+     * Returns the current position and the entire input string.
+     */
     @Override public String toString() {
         // consistent with the original implementation
         return " at character " + pos + " of " + in;
@@ -395,14 +438,26 @@ public class JSONTokener {
      * implementation and may be used by some clients.
      */
 
+    /**
+     * Returns true until the input has been exhausted.
+     */
     public boolean more() {
         return pos < in.length();
     }
 
+    /**
+     * Returns the next available character, or the null character '\0' if all
+     * input has been exhausted. The return value of this method is ambiguous
+     * for JSON strings that contain the character '\0'.
+     */
     public char next() {
         return pos < in.length() ? in.charAt(pos++) : '\0';
     }
 
+    /**
+     * Returns the next available character if it equals {@code c}. Otherwise an
+     * exception is thrown.
+     */
     public char next(char c) throws JSONException {
         char result = next();
         if (result != c) {
@@ -411,13 +466,27 @@ public class JSONTokener {
         return result;
     }
 
+    /**
+     * Returns the next character that is not whitespace and does not belong to
+     * a comment. If the input is exhausted before such a character can be
+     * found, the null character '\0' is returned. The return value of this
+     * method is ambiguous for JSON strings that contain the character '\0'.
+     */
     public char nextClean() throws JSONException {
         int nextCleanInt = nextCleanInternal();
         return nextCleanInt == -1 ? '\0' : (char) nextCleanInt;
     }
 
     /**
-     * TODO: note about how this method returns a substring, and could cause a memory leak
+     * Returns the next {@code length} characters of the input.
+     *
+     * <p>The returned string shares its backing character array with this
+     * tokener's input string. If a reference to the returned string may be held
+     * indefinitely, you should {@link String(String) copy} it first to avoid
+     * memory leaks.
+     *
+     * @throws JSONException if the remaining input is not long enough to
+     *     satisfy this request.
      */
     public String next(int length) throws JSONException {
         if (pos + length > in.length()) {
@@ -429,7 +498,20 @@ public class JSONTokener {
     }
 
     /**
-     * TODO: note about how this method returns a substring, and could cause a memory leak
+     * Returns the {@link String#trim trimmed} string holding the characters up
+     * to but not including the first of:
+     * <ul>
+     *   <li>any character in {@code excluded}
+     *   <li>a newline character '\n'
+     *   <li>a carriage return '\r'
+     * </ul>
+     *
+     * <p>The returned string shares its backing character array with this
+     * tokener's input string. If a reference to the returned string may be held
+     * indefinitely, you should {@link String(String) copy} it first to avoid
+     * memory leaks.
+     *
+     * @return a possibly-empty string
      */
     public String nextTo(String excluded) {
         if (excluded == null) {
@@ -439,33 +521,54 @@ public class JSONTokener {
     }
 
     /**
-     * TODO: note about how this method returns a substring, and could cause a memory leak
+     * Equivalent to {@code nextTo(String.valueOf(excluded))}.
      */
     public String nextTo(char excluded) {
         return nextToInternal(String.valueOf(excluded)).trim();
     }
 
+    /**
+     * Advances past all input up to and including the next occurrence of
+     * {@code thru}. If the remaining input doesn't contain {@code thru}, the
+     * input is exhausted.
+     */
     public void skipPast(String thru) {
         int thruStart = in.indexOf(thru, pos);
         pos = thruStart == -1 ? in.length() : (thruStart + thru.length());
     }
 
+    /**
+     * Advances past all input up to but not including the next occurrence of
+     * {@code to}. If the remaining input doesn't contain {@code to}, the input
+     * is unchanged.
+     */
     public char skipTo(char to) {
-        for (int i = pos, length = in.length(); i < length; i++) {
-            if (in.charAt(i) == to) {
-                pos = i;
-                return to;
-            }
+        int index = in.indexOf(to, pos);
+        if (index != -1) {
+            pos = index;
+            return to;
+        } else {
+            return '\0';
         }
-        return '\0';
     }
 
+    /**
+     * Unreads the most recent character of input. If no input characters have
+     * been read, the input is unchanged.
+     */
     public void back() {
         if (--pos == -1) {
             pos = 0;
         }
     }
 
+    /**
+     * Returns the integer [0..15] value for the given hex character, or -1
+     * for non-hex input.
+     *
+     * @param hex a character in the ranges [0-9], [A-F] or [a-f]. Any other
+     *     character will yield a -1 result.
+     */
     public static int dehexchar(char hex) {
         if (hex >= '0' && hex <= '9') {
             return hex - '0';
