@@ -176,6 +176,9 @@ void dvmAssertHeapWorkerThreadRunning()
             free(desc);
             dvmDumpAllThreads(true);
 
+            /* try to get a debuggerd dump from the target thread */
+            dvmNukeThread(thread);
+
             /* abort the VM */
             dvmAbort();
         } else if (delta > HEAP_WORKER_WATCHDOG_TIMEOUT / 2) {

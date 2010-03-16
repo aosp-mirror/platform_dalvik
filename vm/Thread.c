@@ -25,8 +25,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/mman.h>
+#include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
 
@@ -2663,9 +2665,16 @@ static void waitForThreadSuspend(Thread* self, Thread* thread)
             spinSleepTime = MORE_SLEEP;
 
             if (retryCount++ == kMaxRetries) {
+                LOGE("Fatal spin-on-suspend, dumping threads\n");
+                dvmDumpAllThreads(false);
+
+                /* log this after -- long traces will scroll off log */
                 LOGE("threadid=%d: stuck on threadid=%d, giving up\n",
                     self->threadId, thread->threadId);
-                dvmDumpAllThreads(false);
+
+                /* try to get a debuggerd dump from the spinning thread */
+                dvmNukeThread(thread);
+                /* abort the VM */
                 dvmAbort();
             }
         }
@@ -3565,6 +3574,44 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
 
     if (grabLock)
         dvmUnlockThreadList();
+}
+
+/*
+ * Nuke the target thread from orbit.
+ *
+ * The idea is to send a "crash" signal to the target thread so that
+ * debuggerd will take notice and dump an appropriate stack trace.
+ * Because of the way debuggerd works, we have to throw the same signal
+ * at it twice.
+ *
+ * This does not necessarily cause the entire process to stop, but once a
+ * thread has been nuked the rest of the system is likely to be unstable.
+ * This returns so that some limited set of additional operations may be
+ * performed, but it's advisable to abort soon.  (This is NOT a way to
+ * simply cancel a thread.)
+ */
+void dvmNukeThread(Thread* thread)
+{
+    pid_t tid = thread->systemTid;
+
+    /*
+     * Send the signals, separated by a brief interval to allow debuggerd to
+     * work its magic.  SIGFPE could be used to make it stand out a little
+     * in the crash dump.  (Observed behavior: with SIGFPE, debuggerd will
+     * dump the target thread and then the thread that calls dvmAbort.
+     * With SIGSEGV, you don't get the second stack trace.  The position in
+     * the current thread is generally know, so we're using SIGSEGV for now
+     * to reduce log volume.)
+     *
+     * The thread can continue to execute between the two signals.  (The
+     * first just causes debuggerd to attach.)
+     */
+    LOGD("Sending two SIGSEGVs to tid=%d to cause debuggerd dump\n", tid);
+    kill(tid, SIGSEGV);
+    usleep(750 * 1000);
+    kill(tid, SIGSEGV);
+    usleep(1000 * 1000);
+    LOGD("Continuing\n");
 }
 
 #ifdef WITH_MONITOR_TRACKING
