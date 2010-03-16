@@ -482,8 +482,8 @@ public class JSONTokener {
      *
      * <p>The returned string shares its backing character array with this
      * tokener's input string. If a reference to the returned string may be held
-     * indefinitely, you should {@link String(String) copy} it first to avoid
-     * memory leaks.
+     * indefinitely, you should use {@code new String(result)} to copy it first
+     * to avoid memory leaks.
      *
      * @throws JSONException if the remaining input is not long enough to
      *     satisfy this request.
@@ -508,8 +508,8 @@ public class JSONTokener {
      *
      * <p>The returned string shares its backing character array with this
      * tokener's input string. If a reference to the returned string may be held
-     * indefinitely, you should {@link String(String) copy} it first to avoid
-     * memory leaks.
+     * indefinitely, you should use {@code new String(result)} to copy it first
+     * to avoid memory leaks.
      *
      * @return a possibly-empty string
      */
