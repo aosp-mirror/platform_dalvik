@@ -565,6 +565,16 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
     loadWordDisp(cUnit, r0, offsetof(Object, clazz), r0);
     opReg(cUnit, kOpBlx, r2);
     dvmCompilerClobberCallRegs(cUnit);
+
+    /*
+     * Using fixed registers here, and counting on r4 and r7 being
+     * preserved across the above call.  Tell the register allocation
+     * utilities about the regs we are using directly
+     */
+    dvmCompilerLockTemp(cUnit, regPtr);   // r4PC
+    dvmCompilerLockTemp(cUnit, regIndex); // r7
+    dvmCompilerLockTemp(cUnit, r0);
+
     /* Bad? - roll back and re-execute if so */
     genRegImmCheck(cUnit, kArmCondEq, r0, 0, mir->offset, pcrLabel);
 
