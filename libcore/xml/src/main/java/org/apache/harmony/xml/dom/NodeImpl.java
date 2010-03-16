@@ -198,7 +198,7 @@ public abstract class NodeImpl implements Node {
      * @param namespaceAware whether this node is namespace aware
      * @param namespaceURI this node's namespace URI
      */
-    protected String validatePrefix(String prefix, boolean namespaceAware, String namespaceURI) {
+    static String validatePrefix(String prefix, boolean namespaceAware, String namespaceURI) {
         if (!namespaceAware) {
             throw new DOMException(DOMException.NAMESPACE_ERR, prefix);
         }
@@ -213,6 +213,58 @@ public abstract class NodeImpl implements Node {
         }
 
         return prefix;
+    }
+
+    /**
+     * Sets the element or attribute node to be namespace-aware and assign it
+     * the specified name and namespace URI.
+     *
+     * @param node an AttrImpl or ElementImpl node.
+     * @param namespaceURI this node's namespace URI. May be null.
+     * @param qualifiedName a possibly-prefixed name like "img" or "html:img".
+     */
+    static void setNameNS(NodeImpl node, String namespaceURI, String qualifiedName) {
+        if (qualifiedName == null) {
+            throw new DOMException(DOMException.NAMESPACE_ERR, qualifiedName);
+        }
+
+        String prefix = null;
+        int p = qualifiedName.lastIndexOf(":");
+        if (p != -1) {
+            prefix = validatePrefix(qualifiedName.substring(0, p), true, namespaceURI);
+            qualifiedName = qualifiedName.substring(p + 1);
+        }
+
+        if (!DocumentImpl.isXMLIdentifier(qualifiedName)) {
+            throw new DOMException(DOMException.INVALID_CHARACTER_ERR, qualifiedName);
+        }
+
+        switch (node.getNodeType()) {
+            case ATTRIBUTE_NODE:
+                if ("xmlns".equals(qualifiedName)
+                        && !"http://www.w3.org/2000/xmlns/".equals(namespaceURI)) {
+                    throw new DOMException(DOMException.NAMESPACE_ERR, qualifiedName);
+                }
+
+                AttrImpl attr = (AttrImpl) node;
+                attr.namespaceAware = true;
+                attr.namespaceURI = namespaceURI;
+                attr.prefix = prefix;
+                attr.localName = qualifiedName;
+                break;
+
+            case ELEMENT_NODE:
+                ElementImpl element = (ElementImpl) node;
+                element.namespaceAware = true;
+                element.namespaceURI = namespaceURI;
+                element.prefix = prefix;
+                element.localName = qualifiedName;
+                break;
+
+            default:
+                throw new DOMException(DOMException.NOT_SUPPORTED_ERR,
+                        "Cannot rename nodes of type " + node.getNodeType());
+        }
     }
 
     /**

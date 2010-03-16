@@ -36,49 +36,19 @@ public final class AttrImpl extends NodeImpl implements Attr {
 
     // Maintained by ElementImpl.
     ElementImpl ownerElement;
-
-    private boolean namespaceAware;
-
     boolean isId;
-    
-    private String namespaceURI;
 
-    private String localName;
+    boolean namespaceAware;
+    String namespaceURI;
+    String prefix;
+    String localName;
 
-    private String prefix;
-    
     private String value;
 
     AttrImpl(DocumentImpl document, String namespaceURI, String qualifiedName) {
         super(document);
 
-        namespaceAware = true;
-        this.namespaceURI = namespaceURI;
-
-        if (qualifiedName == null || "".equals(qualifiedName)) {
-            throw new DOMException(DOMException.NAMESPACE_ERR, qualifiedName);
-        }
-        
-        int prefixSeparator = qualifiedName.lastIndexOf(":");
-        if (prefixSeparator != -1) {
-            setPrefix(qualifiedName.substring(0, prefixSeparator));
-            qualifiedName = qualifiedName.substring(prefixSeparator + 1);
-        }
-
-        localName = qualifiedName;
-        
-        if ("".equals(localName)) {
-            throw new DOMException(DOMException.NAMESPACE_ERR, localName);
-        }
-        
-        if ("xmlns".equals(localName) && !"http://www.w3.org/2000/xmlns/".equals(namespaceURI)) {
-            throw new DOMException(DOMException.NAMESPACE_ERR, localName);
-        }
-            
-        if (!DocumentImpl.isXMLIdentifier(localName)) {
-            throw new DOMException(DOMException.INVALID_CHARACTER_ERR, localName);
-        }
-            
+        setNameNS(this, namespaceURI, qualifiedName);
         value = "";
     }
 
