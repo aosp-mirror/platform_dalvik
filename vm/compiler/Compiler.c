@@ -391,6 +391,106 @@ bool compilerThreadStartup(void)
     /* Signal running threads to refresh their cached pJitTable pointers */
     dvmSuspendAllThreads(SUSPEND_FOR_REFRESH);
     dvmResumeAllThreads(SUSPEND_FOR_REFRESH);
+
+    /* Enable signature breakpoints by customizing the following code */
+#if defined(SIGNATURE_BREAKPOINT)
+    /*
+     * Suppose one sees the following native crash in the bugreport:
+     * I/DEBUG   ( 1638): Build fingerprint: 'unknown'
+     * I/DEBUG   ( 1638): pid: 2468, tid: 2507  >>> com.google.android.gallery3d
+     * I/DEBUG   ( 1638): signal 11 (SIGSEGV), fault addr 00001400
+     * I/DEBUG   ( 1638):  r0 44ea7190  r1 44e4f7b8  r2 44ebc710  r3 00000000
+     * I/DEBUG   ( 1638):  r4 00000a00  r5 41862dec  r6 4710dc10  r7 00000280
+     * I/DEBUG   ( 1638):  r8 ad010f40  r9 46a37a12  10 001116b0  fp 42a78208
+     * I/DEBUG   ( 1638):  ip 00000090  sp 4710dbc8  lr ad060e67  pc 46b90682
+     * cpsr 00000030
+     * I/DEBUG   ( 1638):  #00  pc 46b90682 /dev/ashmem/dalvik-jit-code-cache
+     * I/DEBUG   ( 1638):  #01  pc 00060e62  /system/lib/libdvm.so
+     *
+     * I/DEBUG   ( 1638): code around pc:
+     * I/DEBUG   ( 1638): 46b90660 6888d01c 34091dcc d2174287 4a186b68
+     * I/DEBUG   ( 1638): 46b90670 d0052800 68006809 28004790 6b68d00e
+     * I/DEBUG   ( 1638): 46b90680 512000bc 37016eaf 6ea866af 6f696028
+     * I/DEBUG   ( 1638): 46b90690 682a6069 429a686b e003da08 6df1480b
+     * I/DEBUG   ( 1638): 46b906a0 1c2d4788 47806d70 46a378fa 47806d70
+     *
+     * Clearly it is a JIT bug. To find out which translation contains the
+     * offending code, the content of the memory dump around the faulting PC
+     * can be pasted into the gDvmJit.signatureBreakpoint[] array and next time
+     * when a similar compilation is being created, the JIT compiler replay the
+     * trace in the verbose mode and one can investigate the instruction
+     * sequence in details.
+     *
+     * The length of the signature may need additional experiments to determine.
+     * The rule of thumb is don't include PC-relative instructions in the
+     * signature since it may be affected by the alignment of the compiled code.
+     * However, a signature that's too short might increase the chance of false
+     * positive matches. Using gdbjithelper to disassembly the memory content
+     * first might be a good companion approach.
+     *
+     * For example, if the next 4 words starting from 46b90680 is pasted into
+     * the data structure:
+     */
+
+    gDvmJit.signatureBreakpointSize = 4;
+    gDvmJit.signatureBreakpoint =
+        malloc(sizeof(u4) * gDvmJit.signatureBreakpointSize);
+    gDvmJit.signatureBreakpoint[0] = 0x512000bc;
+    gDvmJit.signatureBreakpoint[1] = 0x37016eaf;
+    gDvmJit.signatureBreakpoint[2] = 0x6ea866af;
+    gDvmJit.signatureBreakpoint[3] = 0x6f696028;
+
+    /*
+     * The following log will be printed when a match is found in subsequent
+     * testings:
+     *
+     * D/dalvikvm( 2468): Signature match starting from offset 0x34 (4 words)
+     * D/dalvikvm( 2468): --------
+     * D/dalvikvm( 2468): Compiler: Building trace for computeVisibleItems,
+     * offset 0x1f7
+     * D/dalvikvm( 2468): 0x46a37a12: 0x0090 add-int v42, v5, v26
+     * D/dalvikvm( 2468): 0x46a37a16: 0x004d aput-object v13, v14, v42
+     * D/dalvikvm( 2468): 0x46a37a1a: 0x0028 goto, (#0), (#0)
+     * D/dalvikvm( 2468): 0x46a3794e: 0x00d8 add-int/lit8 v26, v26, (#1)
+     * D/dalvikvm( 2468): 0x46a37952: 0x0028 goto, (#0), (#0)
+     * D/dalvikvm( 2468): 0x46a378ee: 0x0002 move/from16 v0, v26, (#0)
+     * D/dalvikvm( 2468): 0x46a378f2: 0x0002 move/from16 v1, v29, (#0)
+     * D/dalvikvm( 2468): 0x46a378f6: 0x0035 if-ge v0, v1, (#10)
+     * D/dalvikvm( 2468): TRACEINFO (554): 0x46a37624
+     * Lcom/cooliris/media/GridLayer;computeVisibleItems 0x1f7 14 of 934, 8
+     * blocks
+     *     :
+     *     :
+     * D/dalvikvm( 2468): 0x20 (0020): ldr     r0, [r5, #52]
+     * D/dalvikvm( 2468): 0x22 (0022): ldr     r2, [pc, #96]
+     * D/dalvikvm( 2468): 0x24 (0024): cmp     r0, #0
+     * D/dalvikvm( 2468): 0x26 (0026): beq     0x00000034
+     * D/dalvikvm( 2468): 0x28 (0028): ldr     r1, [r1, #0]
+     * D/dalvikvm( 2468): 0x2a (002a): ldr     r0, [r0, #0]
+     * D/dalvikvm( 2468): 0x2c (002c): blx     r2
+     * D/dalvikvm( 2468): 0x2e (002e): cmp     r0, #0
+     * D/dalvikvm( 2468): 0x30 (0030): beq     0x00000050
+     * D/dalvikvm( 2468): 0x32 (0032): ldr     r0, [r5, #52]
+     * D/dalvikvm( 2468): 0x34 (0034): lsls    r4, r7, #2
+     * D/dalvikvm( 2468): 0x36 (0036): str     r0, [r4, r4]
+     * D/dalvikvm( 2468): -------- dalvik offset: 0x01fb @ goto, (#0), (#0)
+     * D/dalvikvm( 2468): L0x0195:
+     * D/dalvikvm( 2468): -------- dalvik offset: 0x0195 @ add-int/lit8 v26,
+     * v26, (#1)
+     * D/dalvikvm( 2468): 0x38 (0038): ldr     r7, [r5, #104]
+     * D/dalvikvm( 2468): 0x3a (003a): adds    r7, r7, #1
+     * D/dalvikvm( 2468): 0x3c (003c): str     r7, [r5, #104]
+     * D/dalvikvm( 2468): -------- dalvik offset: 0x0197 @ goto, (#0), (#0)
+     * D/dalvikvm( 2468): L0x0165:
+     * D/dalvikvm( 2468): -------- dalvik offset: 0x0165 @ move/from16 v0, v26,
+     * (#0)
+     * D/dalvikvm( 2468): 0x3e (003e): ldr     r0, [r5, #104]
+     * D/dalvikvm( 2468): 0x40 (0040): str     r0, [r5, #0]
+     *
+     * The "str r0, [r4, r4]" is indeed the culprit of the native crash.
+     */
+#endif
+
     return true;
 
 fail:
