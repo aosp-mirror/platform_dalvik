@@ -2246,6 +2246,12 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
         case OP_IPUT_BOOLEAN:
             genIPut(cUnit, mir, kUnsignedByte, fieldOffset);
             break;
+        case OP_IGET_WIDE_VOLATILE:
+        case OP_IPUT_WIDE_VOLATILE:
+        case OP_SGET_WIDE_VOLATILE:
+        case OP_SPUT_WIDE_VOLATILE:
+            genInterpSingleStep(cUnit, mir);
+            break;
         default:
             return true;
     }
