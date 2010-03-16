@@ -44,7 +44,8 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
      * Returns true if {@code file} contains a test class of this type.
      */
     protected boolean matches(File file) {
-        return file.getName().endsWith(".java");
+        return (!file.getName().startsWith(".")
+                && file.getName().endsWith(".java"));
     }
 
     protected abstract String testName(File file);

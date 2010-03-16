@@ -25,7 +25,7 @@ import java.io.File;
 class CaliperFinder extends NamingPatternCodeFinder {
 
     @Override protected boolean matches(File file) {
-        return file.getName().endsWith("Benchmark.java");
+        return super.matches(file) && file.getName().endsWith("Benchmark.java");
     }
 
     @Override protected String testName(File file) {
