@@ -1,6 +1,39 @@
 #!/bin/bash
+#
+# Copyright (C) 2009 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# certimport.sh recreates the cacerts.bks file from the x509 CA
+# certificates in the cacerts directory.
+# 
+# By convention, the filenames in the cacerts directory are in the
+# format of <hash>.<n> where "hash" is the subject hash produced by:
+# 
+#     openssl x509 -subject_hash -in filename
+#
+# and the "n" is the the depth of the certificate along a chain, i.e.
+# .0 for roots, .1 for an intermediate one level deep, etc.
+#
+# The filename itself is not important, and is around just for convention sake.
+#
+# usage is simply running ./certimport.sh from the scripts directory
+# 
 # java version >= 1.6 is required for this script.
+# 
 # This script was tested to work with bouncycastle 1.32.
+#
 
 set -x
 set -e
