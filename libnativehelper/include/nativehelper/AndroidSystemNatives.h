@@ -42,6 +42,7 @@ int register_dalvik_system_TouchDex(JNIEnv* env);
 
 int register_org_apache_harmony_xml_ExpatParser(JNIEnv *env);
 
+int register_java_io_Console(JNIEnv* env);
 int register_java_io_File(JNIEnv* env);
 int register_java_io_FileDescriptor(JNIEnv* env);
 int register_java_io_ObjectOutputStream(JNIEnv* env);
