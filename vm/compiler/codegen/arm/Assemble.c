@@ -1105,6 +1105,7 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
     return false;
 }
 
+#if defined(SIGNATURE_BREAKPOINT)
 /* Inspect the assembled instruction stream to find potential matches */
 static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
                                      unsigned int size)
@@ -1132,6 +1133,7 @@ static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
         }
     }
 }
+#endif
 
 /*
  * Translation layout in the code cache.  Note that the codeAddress pointer
