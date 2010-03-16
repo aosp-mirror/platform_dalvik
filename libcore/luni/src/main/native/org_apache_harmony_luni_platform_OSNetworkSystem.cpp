@@ -525,7 +525,7 @@ static jbyteArray osNetworkSystem_ipStringToByteArray(JNIEnv* env, jobject,
 
     // Accept IPv6 addresses (only) in square brackets for compatibility.
     if (ipString[0] == '[' && ipString[byteCount - 1] == ']' &&
-            index(ipString, ':') != NULL) {
+            strchr(ipString, ':') != NULL) {
         memmove(ipString, ipString + 1, byteCount - 2);
         ipString[byteCount - 2] = '\0';
     }
