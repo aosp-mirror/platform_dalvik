@@ -1105,6 +1105,34 @@ static bool assembleInstructions(CompilationUnit *cUnit, intptr_t startAddr)
     return false;
 }
 
+/* Inspect the assembled instruction stream to find potential matches */
+static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
+                                     unsigned int size)
+{
+    unsigned int i, j;
+    u4 *ptr = (u4 *) cUnit->codeBuffer;
+
+    for (i = 0; i < size - gDvmJit.signatureBreakpointSize + 1; i++) {
+        if (ptr[i] == gDvmJit.signatureBreakpoint[0]) {
+            for (j = 1; j < gDvmJit.signatureBreakpointSize; j++) {
+                if (ptr[i+j] != gDvmJit.signatureBreakpoint[j]) {
+                    break;
+                }
+            }
+            if (j == gDvmJit.signatureBreakpointSize) {
+                LOGD("Signature match starting from offset %#x (%d words)",
+                     i*4, gDvmJit.signatureBreakpointSize);
+                int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
+                JitTraceDescription *newCopy =
+                    (JitTraceDescription *) malloc(descSize);
+                memcpy(newCopy, cUnit->traceDesc, descSize);
+                dvmCompilerWorkEnqueue(NULL, kWorkOrderTraceDebug, newCopy);
+                break;
+            }
+        }
+    }
+}
+
 /*
  * Translation layout in the code cache.  Note that the codeAddress pointer
  * in JitTable will point directly to the code body (field codeAddress).  The
@@ -1242,6 +1270,13 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
         cUnit->halveInstCount = true;
         return;
     }
+
+#if defined(SIGNATURE_BREAKPOINT)
+    if (info->discardResult == false && gDvmJit.signatureBreakpoint != NULL &&
+        chainCellOffset/4 >= gDvmJit.signatureBreakpointSize) {
+        matchSignatureBreakpoint(cUnit, chainCellOffset/4);
+    }
+#endif
 
     /* Don't go all the way if the goal is just to get the verbose output */
     if (info->discardResult) return;
