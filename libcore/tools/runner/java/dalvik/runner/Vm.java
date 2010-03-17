@@ -40,9 +40,9 @@ public abstract class Vm extends Mode {
 
     protected final List<String> additionalVmArgs;
 
-    Vm(Environment environment, long timeoutSeconds, File sdkJar,
+    Vm(Environment environment, long timeoutSeconds, File sdkJar, List<String> javacArgs,
            PrintStream tee, List<String> additionalVmArgs) {
-        super(environment, timeoutSeconds, sdkJar, tee);
+        super(environment, timeoutSeconds, sdkJar, javacArgs,tee);
         this.additionalVmArgs = additionalVmArgs;
     }
 

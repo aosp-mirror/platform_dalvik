@@ -38,11 +38,12 @@ final class ActivityMode extends Mode {
 
     private static final String TEST_ACTIVITY_CLASS   = "dalvik.runner.TestActivity";
 
-    ActivityMode(Integer debugPort, long timeoutSeconds, File sdkJar, PrintStream tee, File localTemp,
-            boolean cleanBefore, boolean cleanAfter, File deviceRunnerDir) {
+    ActivityMode(Integer debugPort, long timeoutSeconds, File sdkJar, List<String> javacArgs,
+                 PrintStream tee, File localTemp, boolean cleanBefore, boolean cleanAfter,
+                 File deviceRunnerDir) {
         super(new EnvironmentDevice(cleanBefore, cleanAfter,
                 debugPort, localTemp, deviceRunnerDir),
-                timeoutSeconds, sdkJar, tee);
+                timeoutSeconds, sdkJar, javacArgs, tee);
     }
 
     private EnvironmentDevice getEnvironmentDevice() {

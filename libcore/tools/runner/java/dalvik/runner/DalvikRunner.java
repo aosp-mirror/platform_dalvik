@@ -73,6 +73,9 @@ public final class DalvikRunner {
         @Option(names = { "--xml-reports-directory" })
         private File xmlReportsDirectory;
 
+        @Option(names = { "--indent" })
+        private String indent = "  ";
+
         @Option(names = { "--verbose" })
         private boolean verbose;
 
@@ -91,6 +94,9 @@ public final class DalvikRunner {
 
         @Option(names = { "--java-home" })
         private File javaHome;
+
+        @Option(names = { "--javac-arg" })
+        private List<String> javacArgs = new ArrayList<String>();
 
         @Option(names = { "--sdk" })
         private File sdkJar = new File("/home/dalvik-prebuild/android-sdk-linux/platforms/android-2.0/android.jar");
@@ -128,11 +134,16 @@ public final class DalvikRunner {
             System.out.println("      Specify '-' for stdout.");
             System.out.println();
             System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
-            System.out.println("      test before the runner aborts it.");
+            System.out.println("      test before the runner aborts it. Specifying zero seconds");
+            System.out.println("      or using --debug-port will disable the execution timeout");
             System.out.println("      Default is: " + timeoutSeconds);
             System.out.println();
             System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
             System.out.println("      XML test results.");
+            System.out.println();
+            System.out.println("  --ident: amount to indent test result output. Can be set to ''");
+            System.out.println("      (aka empty string) to simplify output parsing.");
+            System.out.println("      Default is: '" + indent + "'");
             System.out.println();
             System.out.println("  --verbose: turn on verbose output");
             System.out.println();
@@ -140,7 +151,7 @@ public final class DalvikRunner {
             System.out.println();
             System.out.println("  --debug <port>: enable Java debugging on the specified port.");
             System.out.println("      This port must be free both on the device and on the local");
-            System.out.println("      system.");
+            System.out.println("      system. Disables the timeout specified by --timeout-seconds.");
             System.out.println();
             System.out.println("  --device-runner-dir <directory>: use the specified directory for");
             System.out.println("      on-device temporary files and code.");
@@ -164,6 +175,9 @@ public final class DalvikRunner {
             System.out.println("      where <SDK> is the path to an Android SDK path and <X.X> is");
             System.out.println("      a release version like 1.5.");
             System.out.println("      Default is: " + sdkJar);
+            System.out.println();
+            System.out.println("  --javac-arg <argument>: include the specified argument when invoking");
+            System.out.println("      javac. Examples: --javac-arg -Xmaxerrs --javac-arg 1");
             System.out.println();
         }
 
@@ -242,6 +256,11 @@ public final class DalvikRunner {
             // Post-processing arguments
             //
 
+            // disable timeout when debugging
+            if (debugPort != null) {
+                timeoutSeconds = 0;
+            }
+
             for (String testFilename : testFilenames) {
                 testFiles.add(new File(testFilename));
             }
@@ -293,6 +312,7 @@ public final class DalvikRunner {
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
+                    options.javacArgs,
                     options.tee,
                     localTemp,
                     options.vmArgs,
@@ -304,6 +324,7 @@ public final class DalvikRunner {
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
+                    options.javacArgs,
                     options.tee,
                     localTemp,
                     options.javaHome,
@@ -315,6 +336,7 @@ public final class DalvikRunner {
                     options.debugPort,
                     options.timeoutSeconds,
                     options.sdkJar,
+                    options.javacArgs,
                     options.tee,
                     localTemp,
                     options.cleanBefore,
@@ -335,6 +357,7 @@ public final class DalvikRunner {
                 mode,
                 options.expectationFiles,
                 options.xmlReportsDirectory,
+                options.indent,
                 codeFinders);
         try {
             driver.loadExpectations();

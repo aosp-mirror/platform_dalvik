@@ -29,7 +29,7 @@ final class Javac {
     private final Command.Builder builder = new Command.Builder();
 
     Javac() {
-        builder.args("javac", "-Xmaxerrs", "1");
+        builder.args("javac");
     }
 
     public Javac bootClasspath(File... path) {
@@ -53,6 +53,11 @@ final class Javac {
 
     public Javac destination(File directory) {
         builder.args("-d", directory.toString());
+        return this;
+    }
+
+    public Javac extra(List<String> extra) {
+        builder.args(extra);
         return this;
     }
 
