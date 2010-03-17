@@ -58,7 +58,7 @@ class JSON {
             return ((Number) value).intValue();
         } else if (value instanceof String) {
             try {
-                return Double.valueOf((String) value).intValue();
+                return (int) Double.parseDouble((String) value);
             } catch (NumberFormatException e) {
             }
         }
@@ -72,7 +72,7 @@ class JSON {
             return ((Number) value).longValue();
         } else if (value instanceof String) {
             try {
-                return Double.valueOf((String) value).longValue();
+                return (long) Double.parseDouble((String) value);
             } catch (NumberFormatException e) {
             }
         }
