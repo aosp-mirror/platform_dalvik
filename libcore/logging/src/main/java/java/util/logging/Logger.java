@@ -39,18 +39,23 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Loggers are used to log records to certain outputs, including file, console,
- * etc. They use various handlers to actually do the output-dependent
+ * Loggers are used to log records to a variety of destinations such as log files or
+ * the console. They use instances of {@link Handler} to actually do the destination-specific
  * operations.
- * <p>
- * Client applications can get named loggers by calling the {@code getLogger}
+ *
+ * <p>Client applications can get named loggers by calling the {@code getLogger}
  * methods. They can also get anonymous loggers by calling the
  * {@code getAnonymousLogger} methods. Named loggers are organized in a
  * namespace hierarchy managed by a log manager. The naming convention is
- * usually the same as java package's naming convention, that is using
- * dot-separated strings. Anonymous loggers do not belong to any namespace.
- * <p>
- * Loggers "inherit" log level setting from their parent if their own level is
+ * usually the Java package naming convention. Anonymous loggers do not belong to any namespace.
+ *
+ * <p>Developers should use named loggers to enable logging to be controlled on a
+ * per-{@code Logger} granularity. The recommended idiom is to create and assign the logger to
+ * a {@code static final} field. This ensures that there's always a strong reference to the logger,
+ * preventing it from being garbage collected. In particular, {@link LogManager#addLogger(Logger)}
+ * will <i>not</i> keep your logger live.
+ *
+ * <p>Loggers "inherit" log level setting from their parent if their own level is
  * set to {@code null}. This is also true for the resource bundle. The logger's
  * resource bundle is used to localize the log messages if no resource bundle
  * name is given when a log method is called. If {@code getUseParentHandlers()}
@@ -60,9 +65,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * {@code null}.
  * <p>
  * When loading a given resource bundle, the logger first tries to use the
- * context classloader. If that fails, it tries the system classloader. And if
+ * context {@code ClassLoader}. If that fails, it tries the system {@code ClassLoader}. And if
  * that still fails, it searches up the class stack and uses each class's
- * classloader to try to locate the resource bundle.
+ * {@code ClassLoader} to try to locate the resource bundle.
  * <p>
  * Some log methods accept log requests that do not specify the source class and
  * source method. In these cases, the logging framework will automatically infer
@@ -90,8 +95,22 @@ public class Logger {
     };
     // END android-only
 
-    /** The global logger is provided as convenience for casual use. */
-    public final static Logger global = new Logger("global", null); //$NON-NLS-1$
+    /**
+     * The name of the global logger. Before using this, see the discussion of how to use
+     * {@code Logger} in the class documentation.
+     * @since 1.6
+     * @hide
+     */
+    public static final String GLOBAL_LOGGER_NAME = "global";
+
+    /**
+     * The global logger is provided as convenience for casual use.
+     * @deprecated deadlock-prone. Use {@code Logger.getLogger(Logger.GLOBAL_LOGGER_NAME)} as
+     * a direct replacement, but see the discussion of how to use {@code Logger} in the class
+     * documentation.
+     */
+    @Deprecated
+    public final static Logger global = new Logger(GLOBAL_LOGGER_NAME, null);
 
     /**
      * When converting the concurrent collection of handlers to an array, we
