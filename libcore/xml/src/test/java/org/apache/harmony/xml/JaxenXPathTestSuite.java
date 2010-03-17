@@ -20,7 +20,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -56,16 +55,6 @@ public class JaxenXPathTestSuite {
 
     private static final File DEFAULT_JAXEN_HOME
             = new File("/home/dalvik-prebuild/jaxen");
-
-    public static void main(String[] args) throws Exception {
-        if (args.length != 1) {
-            System.out.println("Usage: JaxenXPathTestSuite <jaxen-home>");
-            return;
-        }
-
-        File jaxenHome = new File(args[0]);
-        TestRunner.run(suite(jaxenHome));
-    }
 
     public static Test suite() throws Exception {
         return suite(DEFAULT_JAXEN_HOME);
