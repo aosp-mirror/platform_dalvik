@@ -59,7 +59,7 @@ public class PipedInputStream extends InputStream {
      * {@code in == out}. Writing when the buffer is full will block until free
      * space is available.
      */
-    protected byte buffer[];
+    protected byte[] buffer;
 
     /**
      * The index in {@code buffer} where the next byte will be written.
@@ -99,6 +99,40 @@ public class PipedInputStream extends InputStream {
      *             if this stream or {@code out} are already connected.
      */
     public PipedInputStream(PipedOutputStream out) throws IOException {
+        connect(out);
+    }
+
+    /**
+     * Constructs a new unconnected {@code PipedInputStream} with the given
+     * buffer size. The resulting stream must be connected to a
+     * {@code PipedOutputStream} before data may be read from it.
+     * 
+     * @param pipeSize the size of the buffer in bytes.
+     * @throws IllegalArgumentException if pipeSize is less than or equal to zero.
+     * @since 1.6
+     * @hide
+     */
+    public PipedInputStream(int pipeSize) {
+        if (pipeSize <= 0) {
+            throw new IllegalArgumentException("pipe size " + pipeSize + " too small");
+        }
+        buffer = new byte[pipeSize];
+    }
+
+    /**
+     * Constructs a new {@code PipedInputStream} connected to the given {@code PipedOutputStream},
+     * with the given buffer size. Any data written to the output stream can be read from this
+     * input stream.
+     * 
+     * @param out the {@code PipedOutputStream} to connect to.
+     * @param pipeSize the size of the buffer in bytes.
+     * @throws IOException if an I/O error occurs.
+     * @throws IllegalArgumentException if pipeSize is less than or equal to zero.
+     * @since 1.6
+     * @hide
+     */
+    public PipedInputStream(PipedOutputStream out, int pipeSize) throws IOException {
+        this(pipeSize);
         connect(out);
     }
 
@@ -156,7 +190,9 @@ public class PipedInputStream extends InputStream {
         if (isConnected) {
             throw new IOException(Msg.getString("K007a")); //$NON-NLS-1$
         }
-        buffer = new byte[PipedInputStream.PIPE_SIZE];
+        if (buffer == null) { // We may already have allocated the buffer.
+            buffer = new byte[PipedInputStream.PIPE_SIZE];
+        }
         isConnected = true;
     }
 

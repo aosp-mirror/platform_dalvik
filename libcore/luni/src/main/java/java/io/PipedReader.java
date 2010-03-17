@@ -103,6 +103,40 @@ public class PipedReader extends Reader {
     }
 
     /**
+     * Constructs a new unconnected {@code PipedReader} with the given buffer size.
+     * The resulting reader must be connected to a {@code PipedWriter} before
+     * data may be read from it.
+     * 
+     * @param pipeSize the size of the buffer in chars.
+     * @throws IllegalArgumentException if pipeSize is less than or equal to zero.
+     * @since 1.6
+     * @hide
+     */
+    public PipedReader(int pipeSize) {
+        if (pipeSize <= 0) {
+            throw new IllegalArgumentException("pipe size " + pipeSize + " too small");
+        }
+        buffer = new char[pipeSize];
+    }
+
+    /**
+     * Constructs a new {@code PipedReader} connected to the given {@code PipedWriter},
+     * with the given buffer size. Any data written to the writer can be read from
+     * this reader.
+     * 
+     * @param out the {@code PipedWriter} to connect to.
+     * @param pipeSize the size of the buffer in chars.
+     * @throws IOException if an I/O error occurs
+     * @throws IllegalArgumentException if pipeSize is less than or equal to zero.
+     * @since 1.6
+     * @hide
+     */
+    public PipedReader(PipedWriter out, int pipeSize) throws IOException {
+        this(pipeSize);
+        connect(out);
+    }
+
+    /**
      * Closes this reader. This implementation releases the buffer used for
      * the pipe and notifies all threads waiting to read or write.
      *
@@ -112,6 +146,7 @@ public class PipedReader extends Reader {
     @Override
     public synchronized void close() throws IOException {
         buffer = null;
+        isClosed = true;
         notifyAll();
     }
 
@@ -139,7 +174,9 @@ public class PipedReader extends Reader {
         if (isConnected) {
             throw new IOException(Msg.getString("K007a")); //$NON-NLS-1$
         }
-        buffer = new char[PIPE_SIZE];
+        if (buffer == null) { // We may already have allocated the buffer.
+            buffer = new char[PIPE_SIZE];
+        }
         isConnected = true;
     }
 
