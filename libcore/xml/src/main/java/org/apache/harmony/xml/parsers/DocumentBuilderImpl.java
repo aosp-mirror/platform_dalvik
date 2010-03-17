@@ -257,11 +257,11 @@ class DocumentBuilderImpl extends DocumentBuilder {
                 }
             } else if (token == XmlPullParser.IGNORABLE_WHITESPACE) {
                 /*
-                 * Found some ignorable whitespace. We simply take the token
-                 * text, but we only create a node if the client wants to see
-                 * whitespace at all.
+                 * Found some ignorable whitespace. We only add it if the client
+                 * wants to see whitespace. Whitespace before and after the
+                 * document element is always ignored.
                  */
-                if (!ignoreElementContentWhitespace) {
+                if (!ignoreElementContentWhitespace && document != node) {
                     appendText(document, node, token, parser.getText());
                 }
             } else if (token == XmlPullParser.TEXT || token == XmlPullParser.CDSECT) {

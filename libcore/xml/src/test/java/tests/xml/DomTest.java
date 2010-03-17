@@ -37,6 +37,7 @@ import org.w3c.dom.Text;
 import org.w3c.dom.TypeInfo;
 import org.w3c.dom.UserDataHandler;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -48,6 +49,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -1308,6 +1310,25 @@ public class DomTest extends TestCase {
                 fail();
             } catch (DOMException e) {
             }
+        }
+    }
+
+    public void testDocumentDoesNotHaveWhitespaceChildren()
+            throws IOException, SAXException {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>  \n"
+                + "   <foo/>\n"
+                + "  \n";
+        document = builder.parse(new InputSource(new StringReader(xml)));
+        assertEquals("Document nodes shouldn't have text children",
+                1, document.getChildNodes().getLength());
+    }
+
+    public void testDocumentAddChild()
+            throws IOException, SAXException {
+        try {
+            document.appendChild(document.createTextNode("   "));
+            fail("Document nodes shouldn't accept child nodes");
+        } catch (DOMException e) {
         }
     }
 
