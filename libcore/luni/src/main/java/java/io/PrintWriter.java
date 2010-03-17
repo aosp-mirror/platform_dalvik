@@ -249,6 +249,17 @@ public class PrintWriter extends Writer {
     }
 
     /**
+     * Sets the error state of the stream to false.
+     * @since 1.6
+     * @hide
+     */
+    protected void clearError() {
+        synchronized (lock) {
+            ioError = false;
+        }
+    }
+
+    /**
      * Closes this print writer. Flushes this writer and then closes the target.
      * If an I/O error occurs, this writer's error flag is set to {@code true}.
      */
@@ -635,7 +646,7 @@ public class PrintWriter extends Writer {
     }
 
     /**
-     * Sets the error flag of this writer to {@code true}.
+     * Sets the error flag of this writer to true.
      */
     protected void setError() {
         synchronized (lock) {
