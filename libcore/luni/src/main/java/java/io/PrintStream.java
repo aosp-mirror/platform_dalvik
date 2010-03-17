@@ -242,6 +242,15 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     }
 
     /**
+     * Sets the error state of the stream to false.
+     * @since 1.6
+     * @hide
+     */
+    protected void clearError() {
+        ioError = false;
+    }
+
+    /**
      * Closes this print stream. Flushes this stream and then closes the target
      * stream. If an I/O error occurs, this stream's error state is set to
      * {@code true}.
@@ -643,7 +652,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
     }
 
     /**
-     * Sets the error flag of this print stream to {@code true}.
+     * Sets the error flag of this print stream to true.
      */
     protected void setError() {
         ioError = true;
