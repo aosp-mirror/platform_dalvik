@@ -17,17 +17,21 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestTargets;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargetClass;
-
+import java.io.File;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.ObjectStreamClass;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
+import java.net.URL;                                                                                                                 
+import java.net.URLClassLoader; 
+import java.lang.reflect.Proxy;
 
-@TestTargetClass(ObjectStreamClass.class) 
-public class ObjectStreamClassTest extends junit.framework.TestCase {
+import junit.framework.TestCase;
+
+public class ObjectStreamClassTest extends TestCase {
 
     static class DummyClass implements Serializable {
         private static final long serialVersionUID = 999999999999999L;
@@ -36,44 +40,29 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
 
         int ham = 9999;
 
-        public static long getUID() {
-            return serialVersionUID;
-        }
-    }
-
+		public static long getUID() {
+			return serialVersionUID;
+		}
+	}
+    
     /**
      * @tests java.io.ObjectStreamClass#forClass()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "forClass",
-        args = {}
-    )      
     public void test_forClass() {
-        // Test for method java.lang.Class java.io.ObjectStreamClass.forClass()
         // Need to test during serialization to be sure an instance is
         // returned
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
-        assertTrue("forClass returned an object: " + osc.forClass(), osc
-                .forClass().equals(DummyClass.class));
+        assertEquals("forClass returned an object: " + osc.forClass(),
+                DummyClass.class, osc.forClass()); 
     }
 
     /**
      * @tests java.io.ObjectStreamClass#getField(java.lang.String)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getField",
-        args = {java.lang.String.class}
-    )     
     public void test_getFieldLjava_lang_String() {
-        // Test for method java.io.ObjectStreamField
-        // java.io.ObjectStreamClass.getField(java.lang.String)
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
-        assertEquals("getField did not return correct field", 'J', osc.getField("bam")
-                .getTypeCode());
+        assertEquals("getField did not return correct field", 'J', osc
+                .getField("bam").getTypeCode());
         assertNull("getField did not null for non-existent field", osc
                 .getField("wham"));
     }
@@ -81,15 +70,7 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#getFields()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getFields",
-        args = {}
-    )     
     public void test_getFields() {
-        // Test for method java.io.ObjectStreamField []
-        // java.io.ObjectStreamClass.getFields()
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
         ObjectStreamField[] osfArray = osc.getFields();
         assertTrue(
@@ -100,31 +81,18 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#getName()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getName",
-        args = {}
-    )    
     public void test_getName() {
-        // Test for method java.lang.String java.io.ObjectStreamClass.getName()
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
-        assertTrue("getName returned incorrect name: " + osc.getName(), osc
-                .getName().equals(
-                        "tests.api.java.io.ObjectStreamClassTest$DummyClass"));
+        assertEquals(
+                "getName returned incorrect name: " + osc.getName(),
+                "tests.api.java.io.ObjectStreamClassTest$DummyClass", // android-changed
+                osc.getName());
     }
 
     /**
      * @tests java.io.ObjectStreamClass#getSerialVersionUID()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getSerialVersionUID",
-        args = {}
-    )    
     public void test_getSerialVersionUID() {
-        // Test for method long java.io.ObjectStreamClass.getSerialVersionUID()
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
         assertTrue("getSerialversionUID returned incorrect uid: "
                 + osc.getSerialVersionUID() + " instead of "
@@ -132,114 +100,164 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
                 .getUID());
     }
 
+    static class SyntheticTest implements Serializable {
+        private int i;
+
+        private class X implements Serializable {
+            public int get() {
+                return i;
+            }
+        }
+
+        public X foo() {
+            return new X();
+        }
+    }
+
+    /**
+     * @tests java.io.ObjectStreamClass#getSerialVersionUID()
+     */
+    public void test_getSerialVersionUID_inner_private_class() {
+        ObjectStreamClass osc1 = ObjectStreamClass.lookup(SyntheticTest.class);
+        assertEquals("SyntheticTest unexpected UID: "
+                + osc1.getSerialVersionUID(), -7784078941584535183L, osc1
+                .getSerialVersionUID());
+
+        ObjectStreamClass osc2 = ObjectStreamClass
+                .lookup(SyntheticTest.X.class);
+        assertEquals("SyntheticTest.X unexpected UID: "
+                + osc2.getSerialVersionUID(), -7703000075736397332L, osc2
+                .getSerialVersionUID());
+    }
+
+    /**
+     * @tests java.io.ObjectStreamClass#getSerialVersionUID()
+     */
+    public void test_getSerialVersionUID_classloader() throws Exception {
+        File file = new File(
+                "resources/org/apache/harmony/luni/tests/ObjectStreamClassTest.jar");
+        ClassLoader loader = new URLClassLoader(new URL[] { file.toURL() },
+                null);
+        Class cl1 = Class.forName("Test1$TestVarArgs", false, loader);
+        ObjectStreamClass osc1 = ObjectStreamClass.lookup(cl1);
+        assertEquals("Test1$TestVarArgs unexpected UID: "
+                + osc1.getSerialVersionUID(), -6051121963037986215L, osc1
+                .getSerialVersionUID());
+
+        Class cl2 = Class.forName("Test1$TestBridge", false, loader);
+        ObjectStreamClass osc2 = ObjectStreamClass.lookup(cl2);
+        assertEquals("Test1$TestBridge unexpected UID: "
+                + osc2.getSerialVersionUID(), 568585976855071180L, osc2
+                .getSerialVersionUID());
+    }
+
     /**
      * @tests java.io.ObjectStreamClass#lookup(java.lang.Class)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "lookup",
-        args = {java.lang.Class.class}
-    )        
     public void test_lookupLjava_lang_Class() {
-        // Test for method java.io.ObjectStreamClass
-        // java.io.ObjectStreamClass.lookup(java.lang.Class)
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
-        assertTrue("lookup returned wrong class: " + osc.getName(), osc
-                .getName().equals(
-                        "tests.api.java.io.ObjectStreamClassTest$DummyClass"));
+        assertEquals(
+                "lookup returned wrong class: " + osc.getName(),
+                "tests.api.java.io.ObjectStreamClassTest$DummyClass", // android-changed
+                osc.getName());
     }
 
     /**
      * @tests java.io.ObjectStreamClass#toString()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )    
     public void test_toString() {
-        // Test for method java.lang.String java.io.ObjectStreamClass.toString()
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
         String oscString = osc.toString();
+
         // The previous test was more specific than the spec so it was replaced
         // with the test below
         assertTrue("toString returned incorrect string: " + osc.toString(),
                 oscString.indexOf("serialVersionUID") >= 0
                         && oscString.indexOf("999999999999999L") >= 0);
-        ;
     }
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "lookup",
-        args = {java.lang.Class.class}
-    )    
+
     public void testSerialization() {
-        ObjectStreamClass osc = ObjectStreamClass.lookup(ObjectStreamClass.class);
+        ObjectStreamClass osc = ObjectStreamClass
+                .lookup(ObjectStreamClass.class);
         assertEquals(0, osc.getFields().length);
+    }
+
+    public void test_specialTypes() {
+        Class<?> proxyClass = Proxy.getProxyClass(this.getClass()
+                .getClassLoader(), new Class[] { Runnable.class });
+
+        ObjectStreamClass proxyStreamClass = ObjectStreamClass
+                .lookup(proxyClass);
+
+        assertEquals("Proxy classes should have zero serialVersionUID", 0,
+                proxyStreamClass.getSerialVersionUID());
+        ObjectStreamField[] proxyFields = proxyStreamClass.getFields();
+        assertEquals("Proxy classes should have no serialized fields", 0,
+                proxyFields.length);
+
+        ObjectStreamClass enumStreamClass = ObjectStreamClass
+                .lookup(Thread.State.class);
+
+        assertEquals("Enum classes should have zero serialVersionUID", 0,
+                enumStreamClass.getSerialVersionUID());
+        ObjectStreamField[] enumFields = enumStreamClass.getFields();
+        assertEquals("Enum classes should have no serialized fields", 0,
+                enumFields.length);
+    }
+    
+        /**
+     * @since 1.6 
+     */
+    static class NonSerialzableClass {
+        private static final long serialVersionUID = 1l;
+        public static long getUID() {
+            return serialVersionUID;
+        }
     }
     
     /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
+     * @since 1.6
      */
-    protected void setUp() {
-    }
+    static class ExternalizableClass implements Externalizable {
 
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
-    }
+        private static final long serialVersionUID = -4285635779249689129L;
 
-// BEGIN android-added
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Verifies serialization.",
-        method = "!Serialization",
-        args = {}
-    )
-    public void testFooSerialVersionUid() {
-        assertEquals(-5887964677443030867L, Foo.serialVersionUID());
-    }
-
-    /**
-     * An arbitrary class which deliberately tickles various factors affecting
-     * serialVersionUID calculation.
-     */
-    static abstract class Foo implements Cloneable, Serializable {
-
-        /** All fields except "private static|transient", which these aren't. */
-        private final String name = "foo";
-        static final long now;
-
-        /** Presence of static initializer has an affect. */
-        static {
-            now = System.currentTimeMillis();
+        public void readExternal(ObjectInput input) throws IOException, ClassNotFoundException {
+            throw new ClassNotFoundException();
         }
 
-        /** Non-private constructors. */
-        Foo() {}
-        protected Foo(int ignored) {}
-
-        /** Non-private methods. */
-        synchronized static int foo() { return 0; }
-        static int bar() { return 0; }
-        abstract void tee();
-        protected native synchronized boolean bob();
-        protected synchronized void tim() {}
-
-        /** Calculates Foo's default serialVersionUID. */
-        static long serialVersionUID() {
-            return ObjectStreamClass.lookup(Foo.class).getSerialVersionUID();
+        public void writeExternal(ObjectOutput output) throws IOException {
+            throw new IOException();
         }
-    }
+        
+	}
+	
+    /**
+     * @tests java.io.ObjectStreamClass#lookupAny(java.lang.Class)
+     * @since 1.6
+     */
+    public void test_lookupAnyLjava_lang_Class() {
+        // Test for method java.io.ObjectStreamClass
+        // java.io.ObjectStreamClass.lookupAny(java.lang.Class)
+        ObjectStreamClass osc = ObjectStreamClass.lookupAny(DummyClass.class);
+        assertEquals("lookup returned wrong class: " + osc.getName(),
+                "tests.api.java.io.ObjectStreamClassTest$DummyClass", osc  // android-changed
+                        .getName());
+        
+        osc = ObjectStreamClass.lookupAny(NonSerialzableClass.class);
+        assertEquals("lookup returned wrong class: " + osc.getName(),
+                "tests.api.java.io.ObjectStreamClassTest$NonSerialzableClass", // android-changed
+                osc.getName());
+        
+        osc = ObjectStreamClass.lookupAny(ExternalizableClass.class);        
+        assertEquals("lookup returned wrong class: " + osc.getName(),
+                "tests.api.java.io.ObjectStreamClassTest$ExternalizableClass", // android-changed
+                osc.getName());
 
-    public static void main(String[] args) {
-        System.out.println(Foo.serialVersionUID());
+        osc = ObjectStreamClass.lookup(NonSerialzableClass.class);
+        assertNull(osc);
+        
     }
-// END android-added
+    
+    
 }

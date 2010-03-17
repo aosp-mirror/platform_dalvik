@@ -957,15 +957,14 @@ public class ObjectStreamClass implements Serializable {
     }
 
     /**
-     * Returns the descriptor corresponding to the class {@code cl}. If the
-     * class is not serializable or externalizable then {@code null} is
-     * returned.
+     * Returns the descriptor for a serializable class.
+     * Returns null if the class doesn't implement {@code Serializable} or {@code Externalizable}.
      *
      * @param cl
-     *            a java.langClass for which to obtain the corresponding
+     *            a java.lang.Class for which to obtain the corresponding
      *            descriptor
-     * @return the corresponding descriptor if the {@code cl} is serializable or
-     *         externalizable; {@code null} otherwise.
+     * @return the corresponding descriptor if the class is serializable or
+     *         externalizable; null otherwise.
      */
     public static ObjectStreamClass lookup(Class<?> cl) {
         ObjectStreamClass osc = lookupStreamClass(cl);
@@ -975,6 +974,21 @@ public class ObjectStreamClass implements Serializable {
         }
 
         return null;
+    }
+
+    /**
+     * Returns the descriptor for any class, whether or not the class
+     * implements Serializable or Externalizable.
+     * 
+     * @param cl
+     *            a java.lang.Class for which to obtain the corresponding
+     *            descriptor
+     * @return the descriptor
+     * @since 1.6
+     * @hide
+     */
+    public static ObjectStreamClass lookupAny(Class<?> cl) {
+        return  lookupStreamClass(cl);
     }
 
     /**
