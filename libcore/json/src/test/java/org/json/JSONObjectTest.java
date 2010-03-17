@@ -453,6 +453,53 @@ public class JSONObjectTest extends TestCase {
         assertEquals(null, object.optJSONObject("foo"));
     }
 
+    public void testNullCoercionToString() throws JSONException {
+        JSONObject object = new JSONObject();
+        object.put("foo", JSONObject.NULL);
+        assertEquals("null", object.getString("foo"));
+    }
+
+    public void testArrayCoercion() throws JSONException {
+        JSONObject object = new JSONObject();
+        object.put("foo", "[true]");
+        try {
+            object.getJSONArray("foo");
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+    
+    public void testObjectCoercion() throws JSONException {
+        JSONObject object = new JSONObject();
+        object.put("foo", "{}");
+        try {
+            object.getJSONObject("foo");
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+
+    public void testAccumulateValueChecking() throws JSONException {
+        JSONObject object = new JSONObject();
+        try {
+            object.accumulate("foo", Double.NaN);
+            fail();
+        } catch (JSONException e) {
+        }
+        object.accumulate("foo", 1);
+        try {
+            object.accumulate("foo", Double.NaN);
+            fail();
+        } catch (JSONException e) {
+        }
+        object.accumulate("foo", 2);
+        try {
+            object.accumulate("foo", Double.NaN);
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+
     public void testToJSONArray() throws JSONException {
         JSONObject object = new JSONObject();
         Object value = new Object();
