@@ -42,4 +42,5 @@ exec dalvikvm \
      -Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks \
      -classpath $classpath \
      -Xcheck:jni \
-     -Xmx64M com.google.coretests.Main "$@"
+     -Xmx64M \
+     com.google.coretests.Main "$@"

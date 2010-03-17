@@ -1,18 +1,15 @@
 #!/bin/sh
 #
-# Run the core library tests.
+# Runs the core library tests on the Linux host.
 #
-# You can build and run the unit tests as follows (assuming sh/bash;
-# csh users should modify to suit):
+# To build:
+#  source build/envsetup.sh
+#  lunch sim-eng
+#  make -j14
+#  mmm dalvik  # this builds the tests themselves
+#  ./dalvik/run-core-tests.sh
 #
-#   $ cd <client>/device
-#   $ . envsetup.sh
-#   $ lunch 2
-#   $ make
-#   $ make CtsCoreTests
-#   $ ./dalvik/run-core-tests.sh
-#
-# Note: You may also specify a specific test as an argument.
+# Note: You may also specify a specific test as an argument to this script.
 
 datadir=/tmp/${USER}
 base=$OUT
@@ -55,7 +52,15 @@ export DYLD_LIBRARY_PATH=$base/system/lib
 
 exe=$base/system/bin/dalvikvm
 bpath=$framework/core.jar:$framework/ext.jar:$framework/framework.jar
-cpath=$framework/core-tests.jar
+
+# Build the classpath by putting together the jar file for each module.
+classpath="$framework/sqlite-jdbc.jar" # Bonus item for jdbc testing.
+modules="annotation archive concurrent crypto dom icu json \
+        logging luni-kernel luni math nio nio_char prefs regex security sql \
+        suncompat support text x-net xml"
+for module in $modules; do
+    classpath="$classpath:$framework/core-tests-$module.jar"
+done
 
 # Notes:
 # (1) The IO tests create lots of files in the current directory, so we change
@@ -70,9 +75,18 @@ cd $ANDROID_BUILD_TOP/dalvik
 cp -R libcore/xml/src/test/resources/* ${datadir}/xml_source
 
 cd $datadir
-exec $valgrind $exe \
-     -Duser.language=en -Duser.region=US -Djava.io.tmpdir=$datadir \
-     -Djavax.net.ssl.trustStore=$base/system/etc/security/cacerts.bks \
-     -Xmx512M -Xss32K \
-     -Xbootclasspath:$bpath -classpath $cpath $debug_opts \
-     com.google.coretests.Main "$@"
+echo $ANDROID_DATA
+echo $valgrind $exe \
+    -Duser.name=root \
+    -Duser.language=en \
+    -Duser.region=US \
+    -Duser.language=en \
+    -Duser.dir=$datadir \
+    -Duser.home=$datadir \
+    -Djava.io.tmpdir=$datadir \
+    -Djavax.net.ssl.trustStore=$base/system/etc/security/cacerts.bks \
+    -Xbootclasspath:$bpath \
+    -classpath $classpath \
+    $debug_opts \
+    -Xmx512M -Xss32K \
+    com.google.coretests.Main "$@"
