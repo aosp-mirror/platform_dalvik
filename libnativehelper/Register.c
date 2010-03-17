@@ -22,6 +22,8 @@ int jniRegisterSystemMethods(JNIEnv* env)
     if (register_org_apache_harmony_dalvik_NativeTestTarget(env) != 0)
         goto bail;
     
+    if (register_java_io_Console(env) != 0)
+        goto bail;
     if (register_java_io_File(env) != 0)
         goto bail;
     if (register_java_io_FileDescriptor(env) != 0)

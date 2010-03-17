@@ -3,6 +3,7 @@
 # or BUILD_*_LIBRARY.
 
 LOCAL_SRC_FILES := \
+	java_io_Console.cpp \
 	java_io_File.cpp \
 	java_io_FileDescriptor.c \
 	java_io_ObjectInputStream.c \

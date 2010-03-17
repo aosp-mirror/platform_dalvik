@@ -32,6 +32,7 @@
 
 package java.lang;
 
+import java.io.Console;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -493,6 +494,17 @@ public final class System {
             secMgr.checkPermission(new PropertyPermission(key, "write"));
         }
         return (String)internalGetProperties().remove(key);
+    }
+
+    /**
+     * Returns the {@link java.io.Console} associated with this VM, or null.
+     * Not all VMs will have an associated console. A console is typically only
+     * available for programs run from the command line.
+     * @since 1.6
+     * @hide
+     */
+    public static Console console() {
+        return Console.getConsole();
     }
 
     /**
