@@ -105,8 +105,13 @@ struct DvmGlobals {
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
 
+    /*
+     * GC option flags.
+     */
     bool        preciseGc;
     bool        overwriteFree;
+    bool        preVerify;
+    bool        postVerify;
     bool        generateRegisterMaps;
 
     int         assertionCtrlCount;

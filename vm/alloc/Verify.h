@@ -23,14 +23,8 @@
 void dvmVerifyObject(const Object *obj);
 
 /*
- * Verifies the object references in a heap bitmap.  Assumes the heap
- * is locked.
- */
-void dvmVerifyBitmapUnlocked(const HeapBitmap *bitmap);
-
-/*
- * Verifies the object references in a heap bitmap.  Suspends the VM
- * for the duration of verification.
+ * Verifies the object references in a heap bitmap. Assumes the VM is
+ * suspended.
  */
 void dvmVerifyBitmap(const HeapBitmap *bitmap);
 

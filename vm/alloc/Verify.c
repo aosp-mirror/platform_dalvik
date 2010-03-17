@@ -17,6 +17,7 @@
 #include "Dalvik.h"
 #include "alloc/HeapSource.h"
 #include "alloc/Verify.h"
+#include "alloc/HeapBitmap.h"
 
 /* comment everything, of course! */
 #define VERIFY_REFERENCE(x) do {                                \
@@ -173,31 +174,11 @@ static bool verifyBitmapCallback(size_t numPtrs, void **ptrs,
 }
 
 /*
- * Verifies the object references in a heap bitmap.  Assumes the heap
- * is locked.
- */
-void dvmVerifyBitmapUnlocked(const HeapBitmap *bitmap)
-{
-    /* TODO: check that locks are held and the VM is suspended. */
-    dvmHeapBitmapWalk(bitmap, verifyBitmapCallback, NULL);
-}
-
-/*
- * Verifies the object references in a heap bitmap.  Suspends the VM
- * for the duration of verification.
+ * Verifies the object references in a heap bitmap. Assumes the VM is
+ * suspended.
  */
 void dvmVerifyBitmap(const HeapBitmap *bitmap)
 {
-    /* Suspend the VM. */
-    dvmSuspendAllThreads(SUSPEND_FOR_VERIFY);
-    dvmLockMutex(&gDvm.heapWorkerLock);
-    dvmAssertHeapWorkerThreadRunning();
-    dvmLockMutex(&gDvm.heapWorkerListLock);
-
-    dvmVerifyBitmapUnlocked(bitmap);
-
-    /* Resume the VM. */
-    dvmUnlockMutex(&gDvm.heapWorkerListLock);
-    dvmUnlockMutex(&gDvm.heapWorkerLock);
-    dvmResumeAllThreads(SUSPEND_FOR_VERIFY);
+    /* TODO: check that locks are held and the VM is suspended. */
+    dvmHeapBitmapWalk(bitmap, verifyBitmapCallback, NULL);
 }

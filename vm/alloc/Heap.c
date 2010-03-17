@@ -17,6 +17,8 @@
  * Garbage-collecting memory allocator.
  */
 #include "Dalvik.h"
+#include "alloc/HeapBitmap.h"
+#include "alloc/Verify.h"
 #include "alloc/HeapTable.h"
 #include "alloc/Heap.h"
 #include "alloc/HeapInternal.h"
@@ -692,6 +694,36 @@ size_t dvmObjectSizeInHeap(const Object *obj)
 }
 
 /*
+ * Scan every live object in the heap, holding the locks.
+ */
+static void verifyHeap()
+{
+    // TODO: check the locks.
+    HeapBitmap *liveBits = dvmHeapSourceGetLiveBits();
+    dvmVerifyBitmap(liveBits);
+}
+
+/*
+ * Suspend the VM as for a GC, and assert-fail if any object has any
+ * corrupt references.
+ */
+void dvmHeapSuspendAndVerify()
+{
+    /* Suspend the VM. */
+    dvmSuspendAllThreads(SUSPEND_FOR_VERIFY);
+    dvmLockMutex(&gDvm.heapWorkerLock);
+    dvmAssertHeapWorkerThreadRunning();
+    dvmLockMutex(&gDvm.heapWorkerListLock);
+
+    verifyHeap();
+
+    /* Resume the VM. */
+    dvmUnlockMutex(&gDvm.heapWorkerListLock);
+    dvmUnlockMutex(&gDvm.heapWorkerLock);
+    dvmResumeAllThreads(SUSPEND_FOR_VERIFY);
+}
+
+/*
  * Initiate garbage collection.
  *
  * NOTES:
@@ -799,6 +831,11 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
      * we try to suspend.
      */
     dvmLockMutex(&gDvm.heapWorkerListLock);
+
+    if (gDvm.preVerify) {
+        LOGV_HEAP("Verifying heap before GC");
+        verifyHeap();
+    }
 
 #ifdef WITH_PROFILER
     dvmMethodTraceGCBegin();
@@ -1003,10 +1040,16 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, enum GcReason reason)
 #ifdef WITH_PROFILER
     dvmMethodTraceGCEnd();
 #endif
-    LOGV_HEAP("GC finished -- resuming threads\n");
+    LOGV_HEAP("GC finished");
+
+    if (gDvm.postVerify) {
+        LOGV_HEAP("Verifying heap after GC");
+        verifyHeap();
+    }
 
     gcHeap->gcRunning = false;
 
+    LOGV_HEAP("Resuming threads");
     dvmUnlockMutex(&gDvm.heapWorkerListLock);
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 

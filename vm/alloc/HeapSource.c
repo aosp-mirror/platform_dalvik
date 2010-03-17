@@ -647,6 +647,16 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
     }
 }
 
+/*
+ * Get the bitmap representing all live objects.
+ */
+HeapBitmap *dvmHeapSourceGetLiveBits()
+{
+    HS_BOILERPLATE();
+
+    return &gHs->objBits;
+}
+
 void dvmHeapSourceSwapBitmaps(void)
 {
     HeapBitmap tmp;
@@ -882,7 +892,6 @@ dvmHeapSourceContains(const void *ptr)
 
     if (dvmHeapBitmapCoversAddress(&gHs->objBits, ptr)) {
         return dvmHeapBitmapIsObjectBitSet(&gHs->objBits, ptr) != 0;
-        
     }
     return false;
 }

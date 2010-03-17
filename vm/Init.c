@@ -108,6 +108,8 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
     dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
+    dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
+    dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -957,6 +959,14 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.overwriteFree = true;
             else if (strcmp(argv[i] + 5, "nooverwritefree") == 0)
                 gDvm.overwriteFree = false;
+            else if (strcmp(argv[i] + 5, "preverify") == 0)
+                gDvm.preVerify = true;
+            else if (strcmp(argv[i] + 5, "nopreverify") == 0)
+                gDvm.preVerify = false;
+            else if (strcmp(argv[i] + 5, "postverify") == 0)
+                gDvm.postVerify = true;
+            else if (strcmp(argv[i] + 5, "nopostverify") == 0)
+                gDvm.postVerify = false;
             else {
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;

@@ -54,6 +54,11 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
                                    size_t numHeaps);
 
 /*
+ * Get the bitmap representing all live objects.
+ */
+HeapBitmap *dvmHeapSourceGetLiveBits();
+
+/*
  * Returns the requested value. If the per-heap stats are requested, fill
  * them as well.
  */
