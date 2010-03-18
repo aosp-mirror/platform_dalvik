@@ -25,10 +25,10 @@ import java.util.Map;
 
 /**
  * A modifiable set of name/value mappings. Names are unique, non-null strings.
- * Values may be other {@link JSONObject JSONObjects}, {@link JSONArray
+ * Values may be any mix of {@link JSONObject JSONObjects}, {@link JSONArray
  * JSONArrays}, Strings, Booleans, Integers, Longs, Doubles or {@link #NULL}.
- * Values may not be {@code null}, {@link Double#isNaN() NaNs} or {@link
- * Double#isInfinite() infinities}.
+ * Values may not be {@code null}, {@link Double#isNaN() NaNs}, {@link
+ * Double#isInfinite() infinities}, or of any type not listed here.
  *
  * <p>This class can coerce values to another type when requested.
  * <ul>
@@ -62,11 +62,10 @@ import java.util.Map;
  * </ul>
  *
  * <p><strong>Warning:</strong> this class represents null in two incompatible
- * ways: the standard Java {@code null} literal, and the sentinel value {@link
- * JSONObject#NULL JSONObject.NULL}. In particular, calling {@code
- * put(name, null)} removes the named entry from the object but {@code
- * put(name, JSONObject.NULL)} stores an entry whose value is {@code
- * JSONObject.NULL}.
+ * ways: the standard Java {@code null} reference, and the sentinel value {@link
+ * JSONObject#NULL}. In particular, calling {@code put(name, null)} removes the
+ * named entry from the object but {@code put(name, JSONObject.NULL)} stores an
+ * entry whose value is {@code JSONObject.NULL}.
  *
  * <p>Instances of this class are not thread safe. Although this class is
  * nonfinal, it was not designed for inheritance and should not be subclassed.
@@ -105,18 +104,18 @@ public class JSONObject {
     private final Map<String, Object> nameValuePairs;
 
     /**
-     * Creates a JSONObject with no name/value mappings.
+     * Creates a {@code JSONObject} with no name/value mappings.
      */
     public JSONObject() {
         nameValuePairs = new HashMap<String, Object>();
     }
 
     /**
-     * Creates a new JSONObject by copying all name/value mappings from the
-     * given map.
+     * Creates a new {@code JSONObject} by copying all name/value mappings from
+     * the given map.
      *
      * @param copyFrom a map whose keys are of type {@link String} and whose
-     *     values are of supported types. Values do not need to be homogeneous.
+     *     values are of supported types.
      * @throws NullPointerException if any of the map's keys are null.
      */
     /* (accept a raw type for API compatibility) */
@@ -137,11 +136,13 @@ public class JSONObject {
     }
 
     /**
-     * Creates a new JSONObject with name/value mappings from the next value in
-     * the tokenizer.
+     * Creates a new {@code JSONObject} with name/value mappings from the next
+     * object in the tokener.
      *
-     * @param readFrom a tokenizer whose nextValue() method will yield a JSONObject.
-     * @throws JSONException if the parse fails or doesn't yield a JSONObject.
+     * @param readFrom a tokener whose nextValue() method will yield a
+     *     {@code JSONObject}.
+     * @throws JSONException if the parse fails or doesn't yield a
+     *     {@code JSONObject}.
      */
     public JSONObject(JSONTokener readFrom) throws JSONException {
         /*
@@ -157,19 +158,21 @@ public class JSONObject {
     }
 
     /**
-     * Creates a new JSONObject with name/value mappings from the JSON string.
+     * Creates a new {@code JSONObject} with name/value mappings from the JSON
+     * string.
      *
      * @param json a JSON-encoded string containing an object.
-     * @throws JSONException if the parse fails or doesn't yield a JSONObject.
+     * @throws JSONException if the parse fails or doesn't yield a {@code
+     *     JSONObject}.
      */
     public JSONObject(String json) throws JSONException {
         this(new JSONTokener(json));
     }
 
     /**
-     * Creates a new JSONObject by copying mappings for the listed names from
-     * the given object. Names that aren't present in {@code copyFrom} will be
-     * skipped.
+     * Creates a new {@code JSONObject} by copying mappings for the listed names
+     * from the given object. Names that aren't present in {@code copyFrom} will
+     * be skipped.
      */
     public JSONObject(JSONObject copyFrom, String[] names) throws JSONException {
         this();
@@ -622,7 +625,7 @@ public class JSONObject {
     }
 
     /**
-     * Encodes this object as a compact JSON string, such as
+     * Encodes this object as a compact JSON string, such as:
      * <pre>{"query":"Pizza","locations":[94043,90210]}</pre>
      */
     @Override public String toString() {
@@ -637,7 +640,7 @@ public class JSONObject {
 
     /**
      * Encodes this object as a human readable JSON string for debugging, such
-     * as
+     * as:
      * <pre>
      * {
      *     "query": "Pizza",
