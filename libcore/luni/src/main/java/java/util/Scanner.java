@@ -2195,4 +2195,18 @@ public final class Scanner implements Iterator<String> {
         buffer.position(oldPosition);
         buffer.limit(oldLimit);
     }
+
+    /**
+     * Resets this scanner's delimiter, locale, and radix.
+     * 
+     * @return this scanner
+     * @since 1.6
+     * @hide
+     */
+    public Scanner reset() {
+        delimiter = DEFAULT_DELIMITER;
+        locale = Locale.getDefault();
+        integerRadix = 10;
+        return this;
+    }
 }

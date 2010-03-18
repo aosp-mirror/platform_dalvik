@@ -41,43 +41,43 @@ import org.apache.harmony.text.internal.nls.Messages;
  * The collation table is composed of a list of collation rules, where each rule
  * is of three forms:
  * <blockquote>
- *
  * <pre>
- * <modifier>
- * <relation> <text-argument>
- * <reset> <text-argument>
+ * &lt;modifier&gt;
+ * &lt;relation&gt; &lt;text-argument&gt;
+ * &lt;reset&gt; &lt;text-argument&gt;
  * </pre>
- *
  * </blockquote>
  * <p>
  * The rule elements are defined as follows:
  * <ul type="disc">
- * <li><strong>Text-Argument</strong>: A text-argument is any sequence of
- * characters, excluding special characters (that is, common whitespace
- * characters [0009-000D, 0020] and rule syntax characters [0021-002F,
- * 003A-0040, 005B-0060, 007B-007E]). If those characters are desired, you can
- * put them in single quotes (for example, use '&' for ampersand). Note that
- * unquoted white space characters are ignored; for example, {@code b c} is
- * treated as {@code bc}.</li>
  * <li><strong>Modifier</strong>: There is a single modifier which is used to
- * specify that all accents (secondary differences) are backwards.
- * <p>
- * '@' : Indicates that accents are sorted backwards, as in French.
+ * specify that all accents (secondary differences) are backwards:
+ * <ul type=square>
+ * <li>'@' : Indicates that accents are sorted backwards, as in French.
+ * </ul>
  * </li>
  * <li><strong>Relation</strong>: The relations are the following:
  * <ul type=square>
- * <li>'<' : Greater, as a letter difference (primary)
+ * <li>'&lt;' : Greater, as a letter difference (primary)
  * <li>';' : Greater, as an accent difference (secondary)
  * <li>',' : Greater, as a case difference (tertiary)
  * <li>'=' : Equal
  * </ul>
  * </li>
+ * <li><strong>Text-Argument</strong>: A text-argument is any sequence of
+ * characters, excluding special characters (that is, common whitespace
+ * characters [0009-000D, 0020] and rule syntax characters [0021-002F,
+ * 003A-0040, 005B-0060, 007B-007E]). If those characters are desired, you can
+ * put them in single quotes (for example, use '&amp;' for ampersand). Note that
+ * unquoted white space characters are ignored; for example, {@code b c} is
+ * treated as {@code bc}.</li>
  * <li><strong>Reset</strong>: There is a single reset which is used primarily
  * for contractions and expansions, but which can also be used to add a
- * modification at the end of a set of rules.
- * <p>
- * '&' : Indicates that the next rule follows the position to where the reset
+ * modification at the end of a set of rules:
+ * <ul type=square>
+ * <li>'&amp;' : Indicates that the next rule follows the position to where the reset
  * text-argument would be sorted.
+ * </ul>
  * </li>
  * </ul>
  * <p>
@@ -164,7 +164,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  *
  * <pre>
  * String Simple = "< a < b < c < d";
- *
  * RuleBasedCollator mySimple = new RuleBasedCollator(Simple);
  * </pre>
  *
@@ -179,7 +178,6 @@ import org.apache.harmony.text.internal.nls.Messages;
  *         + "< s,S< t,T< u,U< v,V< w,W< x,X< y,Y< z,Z"
  *         + "< \u00E5=a\u030A,\u00C5=A\u030A"
  *         + ";aa,AA< \u00E6,\u00C6< \u00F8,\u00D8";
- *
  * RuleBasedCollator myNorwegian = new RuleBasedCollator(Norwegian);
  * </pre>
  *
