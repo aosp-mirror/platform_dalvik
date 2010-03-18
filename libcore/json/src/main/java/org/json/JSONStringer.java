@@ -23,7 +23,7 @@ import java.util.List;
 // Note: this class was written without inspecting the non-free org.json sourcecode.
 
 /**
- * Implements {@link JSONObject#toString()} and {@link JSONArray#toString}. Most
+ * Implements {@link JSONObject#toString} and {@link JSONArray#toString}. Most
  * application developers should use those methods directly and disregard this
  * API. For example:<pre>
  * JSONObject object = ...
@@ -32,9 +32,9 @@ import java.util.List;
  * <p>Stringers only encode well-formed JSON strings. In particular:
  * <ul>
  *   <li>The stringer must have exactly one top-level array or object.
- *   <li>Lexical scopes must be balanced: every call to {@link #array()} must
- *       have a matching call to {@link #endArray()} and every call to {@link
- *       #object()} must have a matching call to {@link #endObject()}.
+ *   <li>Lexical scopes must be balanced: every call to {@link #array} must
+ *       have a matching call to {@link #endArray} and every call to {@link
+ *       #object} must have a matching call to {@link #endObject}.
  *   <li>Arrays may not contain keys (property names).
  *   <li>Objects must alternate keys (property names) and values.
  *   <li>Values are inserted with either literal {@link #value(Object) value}
@@ -131,7 +131,7 @@ public class JSONStringer {
 
     /**
      * Begins encoding a new array. Each call to this method must be paired with
-     * a call to {@link #endArray()}.
+     * a call to {@link #endArray}.
      *
      * @return this stringer.
      */
@@ -150,7 +150,7 @@ public class JSONStringer {
 
     /**
      * Begins encoding a new object. Each call to this method must be paired
-     * with a call to {@link #endObject()}.
+     * with a call to {@link #endObject}.
      *
      * @return this stringer.
      */

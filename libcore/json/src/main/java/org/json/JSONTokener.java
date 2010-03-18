@@ -48,7 +48,7 @@ public class JSONTokener {
     private final String in;
 
     /**
-     * The index of the next character to be returned by {@link #next()}. When
+     * The index of the next character to be returned by {@link #next}. When
      * the input is exhausted, this equals the input's length.
      */
     private int pos;
