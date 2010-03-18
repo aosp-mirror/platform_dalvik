@@ -35,7 +35,7 @@ import java.util.Collection;
  *
  * <p><strong>Warning:</strong> this class represents null in two incompatible
  * ways: the standard Java {@code null} reference, and the sentinel value {@link
- * JSONObject#NULL}. In particular, {@code get()} fails if the requested index
+ * JSONObject#NULL}. In particular, {@code get} fails if the requested index
  * holds the null reference, but succeeds if it holds {@code JSONObject.NULL}.
  *
  * <p>Instances of this class are not thread safe. Although this class is

@@ -35,14 +35,14 @@ import java.util.Map;
  *   <li>When the requested type is a boolean, strings will be coerced
  *       using {@link Boolean#valueOf(String)}.
  *   <li>When the requested type is a double, other {@link Number} types will
- *       be coerced using {@link Number#doubleValue() doubleValue()}. Strings
+ *       be coerced using {@link Number#doubleValue() doubleValue}. Strings
  *       that can be coerced using {@link Double#valueOf(String)} will be.
  *   <li>When the requested type is an int, other {@link Number} types will
- *       be coerced using {@link Number#intValue() intValue()}. Strings
+ *       be coerced using {@link Number#intValue() intValue}. Strings
  *       that can be coerced using {@link Double#valueOf(String)} will be,
  *       and then cast to int.
  *   <li>When the requested type is a long, other {@link Number} types will
- *       be coerced using {@link Number#longValue() longValue()}. Strings
+ *       be coerced using {@link Number#longValue() longValue}. Strings
  *       that can be coerced using {@link Double#valueOf(String)} will be,
  *       and then cast to long. This two-step conversion is lossy for very
  *       large values. For example, the string "9223372036854775806" yields the
@@ -81,8 +81,8 @@ public class JSONObject {
      * A sentinel value used to explicitly define a name with no value. Unlike
      * {@code null}, names with this value:
      * <ul>
-     *   <li>show up in the {@link #names()} array
-     *   <li>show up in the {@link #keys()} iterator
+     *   <li>show up in the {@link #names} array
+     *   <li>show up in the {@link #keys} iterator
      *   <li>return {@code true} for {@link #has(String)}
      *   <li>do not throw on {@link #get(String)}
      *   <li>are included in the encoded JSON string.
@@ -604,7 +604,7 @@ public class JSONObject {
 
     /**
      * Returns an iterator of the {@code String} names in this object. The
-     * returned iterator supports {@link Iterator#remove() remove()}, which will
+     * returned iterator supports {@link Iterator#remove() remove}, which will
      * remove the corresponding mapping from this object. If this object is
      * modified after the iterator is returned, the iterator's behavior is
      * undefined. The order of the keys is undefined.
