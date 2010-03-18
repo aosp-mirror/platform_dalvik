@@ -105,11 +105,13 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                         moveLIR = dvmCompilerRegCopyNoInsert(
                                     cUnit, checkLIR->operands[0], nativeRegId);
                         /*
-                         * Insertion is guaranteed to succeed since checkLIR
-                         * is never the first LIR on the list
+                         * Insert the converted checkLIR instruction after the
+                         * the original checkLIR since the optimization is
+                         * scannng in the top-down order and the new instruction
+                         * will need to be checked.
                          */
-                        dvmCompilerInsertLIRBefore((LIR *) checkLIR,
-                                                   (LIR *) moveLIR);
+                        dvmCompilerInsertLIRAfter((LIR *) checkLIR,
+                                                  (LIR *) moveLIR);
                     }
                     checkLIR->isNop = true;
                     continue;
