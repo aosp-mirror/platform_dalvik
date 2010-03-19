@@ -234,12 +234,6 @@ public abstract class BreakIterator implements Cloneable {
      */
     public static final int DONE = -1;
 
-    private static final int LONG_LENGTH = 8;
-
-    private static final int INT_LENGTH = 4;
-
-    private static final int SHORT_LENGTH = 2;
-
     // the wrapped ICU implementation
     NativeBreakIterator wrapped;
 
@@ -502,89 +496,5 @@ public abstract class BreakIterator implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new AssertionError(e); // android-changed
         }
-    }
-
-    /**
-     * Gets a long value from the given byte array, starting from the given
-     * offset.
-     * 
-     * @param buf
-     *            the bytes to be converted.
-     * @param offset
-     *            the start position of the conversion.
-     * @return the converted long value.
-     * @throws NullPointerException
-     *             if {@code buf} is {@code null}.
-     * @throws ArrayIndexOutOfBoundsException
-     *             if {@code offset < 0} or {@code offset + LONG_LENGTH} is
-     *             greater than the length of {@code buf}.
-     */
-    protected static long getLong(byte[] buf, int offset) {
-        // Force a buf null check first!
-        if (buf.length - offset < LONG_LENGTH || offset < 0) {
-            // text.1E=Offset out of bounds \: {0}
-            throw new ArrayIndexOutOfBoundsException(Messages.getString("text.1E", offset)); //$NON-NLS-1$
-        }
-        long result = 0;
-        for (int i = offset; i < offset + LONG_LENGTH; i++) {
-            result = (result << 8) | (buf[i] & 0xff);
-        }
-        return result;
-    }
-
-    /**
-     * Gets an int value from the given byte array, starting from the given
-     * offset.
-     * 
-     * @param buf
-     *            the bytes to be converted.
-     * @param offset
-     *            the start position of the conversion.
-     * @return the converted int value.
-     * @throws NullPointerException
-     *             if {@code buf} is {@code null}.
-     * @throws ArrayIndexOutOfBoundsException
-     *             if {@code offset < 0} or {@code offset + INT_LENGTH} is
-     *             greater than the length of {@code buf}.
-     */
-    protected static int getInt(byte[] buf, int offset) {
-        // Force buf null check first!
-        if (buf.length - INT_LENGTH < offset || offset < 0) {
-            // text.1E=Offset out of bounds \: {0}
-            throw new ArrayIndexOutOfBoundsException(Messages.getString("text.1E", offset)); //$NON-NLS-1$
-        }
-        int result = 0;
-        for (int i = offset; i < offset + INT_LENGTH; i++) {
-            result = (result << 8) | (buf[i] & 0xff);
-        }
-        return result;
-    }
-
-    /**
-     * Gets a short value from the given byte array, starting from the given
-     * offset.
-     * 
-     * @param buf
-     *            the bytes to be converted.
-     * @param offset
-     *            the start position of the conversion.
-     * @return the converted short value.
-     * @throws NullPointerException
-     *             if {@code buf} is {@code null}.
-     * @throws ArrayIndexOutOfBoundsException
-     *             if {@code offset < 0} or {@code offset + SHORT_LENGTH} is
-     *             greater than the length of {@code buf}.
-     */
-    protected static short getShort(byte[] buf, int offset) {
-        // Force buf null check first!
-        if (buf.length - SHORT_LENGTH < offset || offset < 0) {
-            // text.1E=Offset out of bounds \: {0}
-            throw new ArrayIndexOutOfBoundsException(Messages.getString("text.1E", offset)); //$NON-NLS-1$
-        }
-        short result = 0;
-        for (int i = offset; i < offset + SHORT_LENGTH; i++) {
-            result = (short) ((result << 8) | (buf[i] & 0xff));
-        }
-        return result;
     }
 }
