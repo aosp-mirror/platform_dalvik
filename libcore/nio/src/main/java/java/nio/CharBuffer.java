@@ -153,58 +153,15 @@ public abstract class CharBuffer extends Buffer implements
      */
     CharBuffer(int capacity) {
         super(capacity);
-        // BEGIN android-added
-        _elementSizeShift = 1;
-        // END android-added
     }
 
-    /**
-     * Returns the char array which this buffer is based on, if there is one.
-     * 
-     * @return the char array which this buffer is based on.
-     * @exception ReadOnlyBufferException
-     *                if this buffer is based on an array, but it is read-only.
-     * @exception UnsupportedOperationException
-     *                if this buffer is not based on an array.
-     */
     public final char[] array() {
         return protectedArray();
     }
 
-    /**
-     * Returns the offset of the char array which this buffer is based on, if
-     * there is one.
-     * <p>
-     * The offset is the index of the array corresponds to the zero position of
-     * the buffer.
-     *
-     * @return the offset of the char array which this buffer is based on.
-     * @exception ReadOnlyBufferException
-     *                if this buffer is based on an array but it is read-only.
-     * @exception UnsupportedOperationException
-     *                if this buffer is not based on an array.
-     */
     public final int arrayOffset() {
         return protectedArrayOffset();
     }
-
-    // BEGIN android-added
-    @Override
-    Object _array() {
-        if (hasArray()) {
-            return array();
-        }
-        return null;
-    }
-
-    @Override
-    int _arrayOffset() {
-        if (hasArray()) {
-            return arrayOffset();
-        }
-        return 0;
-    }
-    // END android-added
 
     /**
      * Returns a read-only buffer that shares its content with this buffer.
@@ -404,12 +361,6 @@ public abstract class CharBuffer extends Buffer implements
      */
     public abstract char get(int index);
 
-    /**
-     * Indicates whether this buffer is based on a char array and is read/write.
-     *
-     * @return {@code true} if this buffer is based on a byte array and provides
-     *         read/write access, {@code false} otherwise.
-     */
     public final boolean hasArray() {
         return protectedHasArray();
     }

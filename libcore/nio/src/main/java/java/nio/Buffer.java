@@ -52,7 +52,7 @@ public abstract class Buffer {
     final static int UNSET_MARK = -1;
 
     /**
-     * The capacity of this buffer, which never change.
+     * The capacity of this buffer, which never changes.
      */
     final int capacity;
 
@@ -77,43 +77,12 @@ public abstract class Buffer {
 
     // BEGIN android-added
     /**
-     * The log base 2 of the element size of this buffer.  Each typed subclass
-     * (ByteBuffer, CharBuffer, etc.) is responsible for initializing this
-     * value.  The value is used by native code to avoid the need for costly
-     * 'instanceof' tests.
-     *
-     */
-    int _elementSizeShift;
-
-    /**
-     * Returns the array associated with this buffer, or null if none exists.
-     * Each typed subclass (ByteBuffer, CharBuffer, etc.) overrides this method
-     * to call its array() method with appropriate checks.
-     *
-     * @return a primitive array or null
-     */
-    Object _array() {
-        return null;
-    }
-
-    /**
-     * Returns the offset into the backing array, if one exists, otherwise 0.
-     * Each typed subclass (ByteBuffer, CharBuffer, etc.) overrides this method
-     * to call its arrayOffset() method with appropriate checks.
-     *
-     * @return the array offset, or 0
-     */
-    int _arrayOffset() {
-        return 0;
-    }
-
-    /**
      * For direct buffers, the effective address of the data.  This is set
      * on first use.  If the field is zero, this is either not a direct
      * buffer or the field has not been initialized, and you need to issue
      * the getEffectiveAddress() call and use the result of that.
      *
-     * This is strictly an optimization.
+     * This is an optimization used by the GetDirectBufferAddress JNI call.
      */
     int effectiveDirectAddress = 0;
     // END android-added
@@ -131,6 +100,44 @@ public abstract class Buffer {
         }
         this.capacity = this.limit = capacity;
     }
+
+    /**
+     * Returns the array that backs this buffer (optional operation).
+     * The returned value is the actual array, not a copy, so modifications
+     * to the array write through to the buffer.
+     *
+     * <p>Subclasses should override this method with a covariant return type
+     * to provide the exact type of the array.
+     *
+     * <p>Use {@code hasArray} to ensure this method won't throw.
+     * (A separate call to {@code isReadOnly} is not necessary.)
+     *
+     * @return the array
+     * @throws ReadOnlyBufferException if the buffer is read-only
+     *         UnsupportedOperationException if the buffer does not expose an array
+     * @since 1.6
+     * @hide
+     */
+    public abstract Object array();
+
+    /**
+     * Returns the offset into the array returned by {@code array} of the first
+     * element of the buffer (optional operation). The backing array (if there is one)
+     * is not necessarily the same size as the buffer, and position 0 in the buffer is
+     * not necessarily the 0th element in the array. Use
+     * {@code buffer.array()[offset + buffer.arrayOffset()} to access element {@code offset}
+     * in {@code buffer}.
+     *
+     * <p>Use {@code hasArray} to ensure this method won't throw.
+     * (A separate call to {@code isReadOnly} is not necessary.)
+     *
+     * @return the offset
+     * @throws ReadOnlyBufferException if the buffer is read-only
+     *         UnsupportedOperationException if the buffer does not expose an array
+     * @since 1.6
+     * @hide
+     */
+    public abstract int arrayOffset();
 
     /**
      * Returns the capacity of this buffer.
@@ -176,6 +183,16 @@ public abstract class Buffer {
     }
 
     /**
+     * Returns true if {@code array} and {@code arrayOffset} won't throw. This method does not
+     * return true for buffers not backed by arrays because the other methods would throw
+     * {@code UnsupportedOperationException}, nor does it return true for buffers backed by
+     * read-only arrays, because the other methods would throw {@code ReadOnlyBufferException}.
+     * @since 1.6
+     * @hide
+     */
+    public abstract boolean hasArray();
+
+    /**
      * Indicates if there are elements remaining in this buffer, that is if
      * {@code position < limit}.
      * 
@@ -185,6 +202,13 @@ public abstract class Buffer {
     public final boolean hasRemaining() {
         return position < limit;
     }
+
+    /**
+     * Returns true if this is a direct buffer.
+     * @since 1.6
+     * @hide
+     */
+    public abstract boolean isDirect();
 
     /**
      * Indicates whether this buffer is read-only.
