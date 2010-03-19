@@ -121,6 +121,15 @@ static void verifyDataObject(const DataObject *obj)
             VERIFY_REFERENCE(((JValue *)addr)->l);
         }
     }
+    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
+        /*
+         * Reference.referent is not included in the above loop. See
+         * precacheReferenceOffsets in Class.c for details.
+         */
+        addr = BYTE_OFFSET((Object *)obj,
+                           gDvm.offJavaLangRefReference_referent);
+        VERIFY_REFERENCE(((JValue *)addr)->l);
+    }
     LOGV("Exiting verifyDataObject(obj=%p) %zx", obj, length);
 }
 
