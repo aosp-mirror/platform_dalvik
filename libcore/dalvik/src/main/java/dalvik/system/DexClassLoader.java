@@ -235,7 +235,6 @@ public class DexClassLoader extends ClassLoader {
             System.out.println("DexClassLoader " + this
                 + ": findClass '" + name + "'");
 
-        byte[] data = null;
         int length = mFiles.length;
 
         for (int i = 0; i < length; i++) {
