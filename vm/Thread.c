@@ -3593,8 +3593,6 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
  */
 void dvmNukeThread(Thread* thread)
 {
-    pid_t tid = thread->systemTid;
-
     /* suppress the heapworker watchdog to assist anyone using a debugger */
     gDvm.nativeDebuggerActive = true;
 
@@ -3610,11 +3608,12 @@ void dvmNukeThread(Thread* thread)
      * The target thread can continue to execute between the two signals.
      * (The first just causes debuggerd to attach to it.)
      */
-    LOGD("Sending two SIGSEGVs to tid=%d to cause debuggerd dump\n", tid);
-    kill(tid, SIGSEGV);
+    LOGD("Sending two SIGSEGVs to tid=%d to cause debuggerd dump\n",
+        thread->systemTid);
+    pthread_kill(thread->handle, SIGSEGV);
     usleep(2 * 1000 * 1000);    // TODO: timed-wait until debuggerd attaches
-    kill(tid, SIGSEGV);
-    LOGD("Sent, waiting to let debuggerd run\n");
+    pthread_kill(thread->handle, SIGSEGV);
+    LOGD("Sent, pausing to let debuggerd run\n");
     usleep(8 * 1000 * 1000);    // TODO: timed-wait until debuggerd finishes
     LOGD("Continuing\n");
 }
