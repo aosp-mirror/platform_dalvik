@@ -66,9 +66,9 @@ public abstract class Format implements Serializable, Cloneable {
     private static final long serialVersionUID = -299282585814624189L;
 
     /**
-     * Constructs a new {@code Format} instance.
+     * Used by subclasses. This was public in Java 5.
      */
-    public Format() {
+    protected Format() {
     }
 
     /**

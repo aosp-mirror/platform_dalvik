@@ -27,6 +27,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Currency;
 import java.util.Locale;
 
@@ -164,9 +165,9 @@ public abstract class NumberFormat extends Format {
             maximumFractionDigits = 3, minimumFractionDigits = 0;
 
     /**
-     * Constructs a new instance of {@code NumberFormat}.
+     * Used by subclasses. This was public in Java 5.
      */
-    public NumberFormat() {
+    protected NumberFormat() {
     }
 
     /**
@@ -896,4 +897,25 @@ public abstract class NumberFormat extends Format {
         }
     }
 
+    /**
+     * Returns the {@code RoundingMode} used by this {@code NumberFormat}. The default
+     * implementation in {@code NumberFormat} throws {@code UnsupportedOperationException}.
+     * Subclasses for which a rounding mode is meaningful are expected to override this method.
+     * @since 1.6
+     * @hide
+     */
+    public RoundingMode getRoundingMode() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Sets the {@code RoundingMode} used by this {@code NumberFormat}. The default
+     * implementation in {@code NumberFormat} throws {@code UnsupportedOperationException}.
+     * Subclasses for which a rounding mode is meaningful are expected to override this method.
+     * @since 1.6
+     * @hide
+     */
+    public void setRoundingMode(RoundingMode roundingMode) {
+        throw new UnsupportedOperationException();
+    }
 }

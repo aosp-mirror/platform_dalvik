@@ -103,8 +103,14 @@ static jint openDecimalFormatImpl(JNIEnv* env, jclass clazz, jstring pattern0,
     return static_cast<jint>(reinterpret_cast<uintptr_t>(fmt));
 }
 
-static void closeDecimalFormatImpl(JNIEnv *env, jclass clazz, jint addr) {
+static void closeDecimalFormatImpl(JNIEnv* env, jclass, jint addr) {
     delete toDecimalFormat(addr);
+}
+
+static void setRoundingMode(JNIEnv* env, jclass, jint addr, jint mode, jdouble increment) {
+    DecimalFormat* fmt = toDecimalFormat(addr);
+    fmt->setRoundingMode(static_cast<DecimalFormat::ERoundingMode>(mode));
+    fmt->setRoundingIncrement(increment);
 }
 
 static void setSymbol(JNIEnv* env, jclass, jint addr, jint symbol, jstring s) {
@@ -593,6 +599,7 @@ static JNINativeMethod gMethods[] = {
     {"setAttribute", "(III)V", (void*) setAttribute},
     {"setDecimalFormatSymbols", "(ILjava/lang/String;CCCLjava/lang/String;Ljava/lang/String;CCLjava/lang/String;CCCC)V", (void*) setDecimalFormatSymbols},
     {"setSymbol", "(IILjava/lang/String;)V", (void*) setSymbol},
+    {"setRoundingMode", "(IID)V", (void*) setRoundingMode},
     {"setTextAttribute", "(IILjava/lang/String;)V", (void*) setTextAttribute},
     {"toPatternImpl", "(IZ)Ljava/lang/String;", (void*) toPatternImpl},
 };

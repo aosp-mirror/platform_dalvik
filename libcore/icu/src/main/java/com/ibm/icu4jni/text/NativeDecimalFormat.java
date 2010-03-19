@@ -20,6 +20,7 @@ import com.ibm.icu4jni.util.LocaleData;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.text.DecimalFormatSymbols;
@@ -570,6 +571,21 @@ public class NativeDecimalFormat {
         }
     }
 
+    public void setRoundingMode(RoundingMode roundingMode, double roundingIncrement) {
+        final int nativeRoundingMode;
+        switch (roundingMode) {
+        case CEILING: nativeRoundingMode = 0; break;
+        case FLOOR: nativeRoundingMode = 1; break;
+        case DOWN: nativeRoundingMode = 2; break;
+        case UP: nativeRoundingMode = 3; break;
+        case HALF_EVEN: nativeRoundingMode = 4; break;
+        case HALF_DOWN: nativeRoundingMode = 5; break;
+        case HALF_UP: nativeRoundingMode = 6; break;
+        default: throw new AssertionError();
+        }
+        setRoundingMode(addr, nativeRoundingMode, roundingIncrement);
+    }
+
     private static native void applyPatternImpl(int addr, boolean localized, String pattern);
     private static native int cloneDecimalFormatImpl(int addr);
     private static native void closeDecimalFormatImpl(int addr);
@@ -589,6 +605,7 @@ public class NativeDecimalFormat {
             String nan, char patternSeparator, char percent, char perMill, char zeroDigit);
     private static native void setSymbol(int addr, int symbol, String str);
     private static native void setAttribute(int addr, int symbol, int i);
+    private static native void setRoundingMode(int addr, int roundingMode, double roundingIncrement);
     private static native void setTextAttribute(int addr, int symbol, String str);
     private static native String toPatternImpl(int addr, boolean localized);
 }
