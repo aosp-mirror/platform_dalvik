@@ -126,9 +126,6 @@ public abstract class ByteBuffer extends Buffer implements
      */
     ByteBuffer(int capacity) {
         super(capacity);
-        // BEGIN android-added
-        _elementSizeShift = 0;
-        // END android-added
     }
 
     /**
@@ -160,24 +157,6 @@ public abstract class ByteBuffer extends Buffer implements
     public final int arrayOffset() {
         return protectedArrayOffset();
     }
-
-    // BEGIN android-added
-    @Override
-    Object _array() {
-        if (hasArray()) {
-            return array();
-        }
-        return null;
-    }
-
-    @Override
-    int _arrayOffset() {
-        if (hasArray()) {
-            return arrayOffset();
-        }
-        return 0;
-    }
-    // END android-added
 
     /**
      * Returns a char buffer which is based on the remaining content of this
@@ -631,13 +610,6 @@ public abstract class ByteBuffer extends Buffer implements
      */
     public abstract short getShort(int index);
 
-    /**
-     * Indicates whether this buffer is based on a byte array and provides
-     * read/write access.
-     * 
-     * @return {@code true} if this buffer is based on a byte array and provides
-     *         read/write access, {@code false} otherwise.
-     */
     public final boolean hasArray() {
         return protectedHasArray();
     }
