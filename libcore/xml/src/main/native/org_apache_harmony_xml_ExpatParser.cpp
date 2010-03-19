@@ -628,8 +628,8 @@ static void startElement(void* data, const char* elementName,
     jobject javaParser = parsingContext->object;
 
     ExpatElementName e(env, parsingContext, elementName);
-    jstring uri = e.uri();
-    jstring localName = e.localName();
+    jstring uri = parsingContext->processNamespaces ? e.uri() : emptyString;
+    jstring localName = parsingContext->processNamespaces ? e.localName() : emptyString;
     jstring qName = e.qName();
 
     stringStackPush(parsingContext, qName);

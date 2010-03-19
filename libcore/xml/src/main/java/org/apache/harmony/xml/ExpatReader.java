@@ -244,7 +244,7 @@ public class ExpatReader implements XMLReader {
     }
 
     public void parse(InputSource input) throws IOException, SAXException {
-        if (processNamespacePrefixes == processNamespaces) {
+        if (processNamespacePrefixes && processNamespaces) {
             /*
              * Expat has XML_SetReturnNSTriplet, but that still doesn't
              * include xmlns attributes like this feature requires. We may
