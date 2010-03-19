@@ -18,7 +18,7 @@ package com.ibm.icu4jni.lang;
 
 import java.lang.Character.UnicodeBlock;
 
-public class UCharacter {
+public final class UCharacter {
 
     public static native boolean isDefined(int codePoint);
     public static native boolean isDigit(int codePoint);

@@ -21,17 +21,20 @@
 
 package java.text;
 
+import com.ibm.icu4jni.text.NativeBreakIterator;
+
 /*
- * Default implementation of BreakIterator, wrap
- * com.ibm.icu4jni.text.RuleBasedBreakIterator
- * 
+ * Default implementation of BreakIterator. Wraps com.ibm.icu4jni.text.NativeBreakIterator.
+ * We need this because BreakIterator.isBoundary and BreakIterator.preceding are non-abstract,
+ * and we don't have Java implementations of those methods (other than the current ones, which
+ * forward to the wrapped NativeBreakIterator).
  */
 class RuleBasedBreakIterator extends BreakIterator {
 
     /*
-     * Wrapping construction
+     * Wrapping constructor.
      */
-    RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator iterator) {
+    RuleBasedBreakIterator(NativeBreakIterator iterator) {
         super(iterator);
     }
 
@@ -201,9 +204,7 @@ class RuleBasedBreakIterator extends BreakIterator {
     @Override
     public Object clone() {
         RuleBasedBreakIterator cloned = (RuleBasedBreakIterator) super.clone();
-        cloned.wrapped = (com.ibm.icu4jni.text.RuleBasedBreakIterator) wrapped
-                .clone();
+        cloned.wrapped = (NativeBreakIterator) wrapped.clone();
         return cloned;
     }
-
 }

@@ -31,7 +31,7 @@ import java.text.ParsePosition;
 import java.util.Currency;
 import java.util.Locale;
 
-public class NativeDecimalFormat {
+public final class NativeDecimalFormat {
     /**
      * Constants corresponding to the native type UNumberFormatSymbol, for setSymbol.
      */

@@ -26,7 +26,7 @@ import java.util.Arrays;
  * in the case of arrays. If you ever expose any of these things to user code, you must give
  * them a clone rather than the original.
  */
-public class LocaleData {
+public final class LocaleData {
     public Integer firstDayOfWeek;
     public Integer minimalDaysInFirstWeek;
     

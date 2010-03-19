@@ -31,7 +31,7 @@ import java.util.logging.Logger;
  *
  * TODO: move the LocaleData stuff into LocaleData and rename this class.
  */
-public class Resources {
+public final class Resources {
     // A cache for the locale-specific data.
     private static final HashMap<String, LocaleData> localeDataCache =
             new HashMap<String, LocaleData>();

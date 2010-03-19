@@ -21,8 +21,8 @@
 
 package java.text;
 
+import com.ibm.icu4jni.text.NativeBreakIterator;
 import java.util.Locale;
-
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -241,7 +241,7 @@ public abstract class BreakIterator implements Cloneable {
     private static final int SHORT_LENGTH = 2;
 
     // the wrapped ICU implementation
-    com.ibm.icu4jni.text.BreakIterator wrapped;
+    NativeBreakIterator wrapped;
 
     /**
      * Default constructor, just for invocation by a subclass.
@@ -253,7 +253,7 @@ public abstract class BreakIterator implements Cloneable {
     /*
      * wrapping constructor
      */
-    BreakIterator(com.ibm.icu4jni.text.BreakIterator iterator) {
+    BreakIterator(NativeBreakIterator iterator) {
         wrapped = iterator;
     }
 
@@ -263,7 +263,7 @@ public abstract class BreakIterator implements Cloneable {
      * @return all supported locales.
      */
     public static Locale[] getAvailableLocales() {
-        return com.ibm.icu4jni.text.BreakIterator.getAvailableLocales();
+        return NativeBreakIterator.getAvailableLocales();
     }
 
     /**
@@ -273,8 +273,7 @@ public abstract class BreakIterator implements Cloneable {
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getCharacterInstance() {
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getCharacterInstance());
+        return getCharacterInstance(Locale.getDefault());
     }
 
     /**
@@ -286,12 +285,7 @@ public abstract class BreakIterator implements Cloneable {
      * @return a new instance of {@code BreakIterator} using the given locale.
      */
     public static BreakIterator getCharacterInstance(Locale where) {
-        if (where == null) {
-            throw new NullPointerException();
-        }
-
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getCharacterInstance(where));
+        return new RuleBasedBreakIterator(NativeBreakIterator.getCharacterInstance(where));
     }
 
     /**
@@ -301,8 +295,7 @@ public abstract class BreakIterator implements Cloneable {
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getLineInstance() {
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getLineInstance());
+        return getLineInstance(Locale.getDefault());
     }
 
     /**
@@ -315,12 +308,7 @@ public abstract class BreakIterator implements Cloneable {
      * @throws NullPointerException if {@code where} is {@code null}.
      */
     public static BreakIterator getLineInstance(Locale where) {
-        if (where == null) {
-            throw new NullPointerException();
-        }
-
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getLineInstance(where));
+        return new RuleBasedBreakIterator(NativeBreakIterator.getLineInstance(where));
     }
 
     /**
@@ -330,8 +318,7 @@ public abstract class BreakIterator implements Cloneable {
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getSentenceInstance() {
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getSentenceInstance());
+        return getSentenceInstance(Locale.getDefault());
     }
 
     /**
@@ -344,12 +331,7 @@ public abstract class BreakIterator implements Cloneable {
      * @throws NullPointerException if {@code where} is {@code null}.
      */
     public static BreakIterator getSentenceInstance(Locale where) {
-        if (where == null) {
-            throw new NullPointerException();
-        }
-
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getSentenceInstance(where));
+        return new RuleBasedBreakIterator(NativeBreakIterator.getSentenceInstance(where));
     }
 
     /**
@@ -359,8 +341,7 @@ public abstract class BreakIterator implements Cloneable {
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getWordInstance() {
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getWordInstance());
+        return getWordInstance(Locale.getDefault());
     }
 
     /**
@@ -373,12 +354,7 @@ public abstract class BreakIterator implements Cloneable {
      * @throws NullPointerException if {@code where} is {@code null}.
      */
     public static BreakIterator getWordInstance(Locale where) {
-        if (where == null) {
-            throw new NullPointerException();
-        }
-
-        return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
-                .getWordInstance(where));
+        return new RuleBasedBreakIterator(NativeBreakIterator.getWordInstance(where));
     }
 
     /**
@@ -521,7 +497,7 @@ public abstract class BreakIterator implements Cloneable {
     public Object clone() {
         try {
             BreakIterator cloned = (BreakIterator) super.clone();
-            cloned.wrapped = (com.ibm.icu4jni.text.BreakIterator) wrapped.clone();
+            cloned.wrapped = (NativeBreakIterator) wrapped.clone();
             return cloned;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError(e); // android-changed

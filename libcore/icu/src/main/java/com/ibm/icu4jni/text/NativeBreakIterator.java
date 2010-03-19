@@ -16,39 +16,146 @@
 
 package com.ibm.icu4jni.text;
 
-final class NativeBreakIterator {
-    private NativeBreakIterator() {
+import com.ibm.icu4jni.util.Resources;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.Locale;
+
+public final class NativeBreakIterator implements Cloneable {
+    // Acceptable values for the 'type' field.
+    private static final int BI_CHAR_INSTANCE = 1;
+    private static final int BI_WORD_INSTANCE = 2;
+    private static final int BI_LINE_INSTANCE = 3;
+    private static final int BI_SENT_INSTANCE = 4;
+
+    private final int addr;
+    private final int type;
+    private CharacterIterator charIter;
+
+    private NativeBreakIterator(int iterAddr, int type) {
+        this.addr = iterAddr;
+        this.type = type;
+        this.charIter = new StringCharacterIterator("");
     }
 
-    static native String[] getAvailableLocalesImpl();
+    @Override
+    public Object clone() {
+        int cloneAddr = cloneImpl(this.addr);
+        NativeBreakIterator clone = new NativeBreakIterator(cloneAddr, this.type);
+        // The RI doesn't clone the CharacterIterator.
+        clone.charIter = this.charIter;
+        return clone;
+    }
 
-    static native int getCharacterInstanceImpl(String locale);
-    
-    static native int getWordInstanceImpl(String locale);
-    
-    static native int getLineInstanceImpl(String locale);
-    
-    static native int getSentenceInstanceImpl(String locale);
+    @Override
+    public boolean equals(Object object) {
+        if (object == null || !(object instanceof NativeBreakIterator)) {
+            return false;
+        }
+        // TODO: is this sufficient? shouldn't we be checking the underlying rules?
+        NativeBreakIterator rhs = (NativeBreakIterator) object;
+        return type == rhs.type && charIter.equals(rhs.charIter);
+    }
 
-    static native void closeBreakIteratorImpl(int biaddress);
-    
-    static native void setTextImpl(int biaddress, String text);
-    
-    static native int cloneImpl(int biaddress);
-    
-    static native int precedingImpl(int biaddress, int offset);
+    @Override
+    public int hashCode() {
+        return 42; // No-one uses BreakIterator as a hash key.
+    }
 
-    static native boolean isBoundaryImpl(int biaddress, int offset);
+    @Override
+    protected void finalize() {
+        closeBreakIteratorImpl(this.addr);
+    }
 
-    static native int nextImpl(int biaddress, int n);
+    public int current() {
+        return currentImpl(this.addr);
+    }
 
-    static native int previousImpl(int biaddress);
+    public int first() {
+        return firstImpl(this.addr);
+    }
 
-    static native int currentImpl(int biaddress);
+    public int following(int offset) {
+        return followingImpl(this.addr, offset);
+    }
 
-    static native int firstImpl(int biaddress);
+    public CharacterIterator getText() {
+        int newLoc = currentImpl(this.addr);
+        this.charIter.setIndex(newLoc);
+        return this.charIter;
+    }
 
-    static native int followingImpl(int biaddress, int offset);
+    public int last() {
+        return lastImpl(this.addr);
+    }
 
-    static native int lastImpl(int biaddress);
+    public int next(int n) {
+        return nextImpl(this.addr, n);
+    }
+
+    public int next() {
+        return nextImpl(this.addr, 1);
+    }
+
+    public int previous() {
+        return previousImpl(this.addr);
+    }
+
+    public void setText(CharacterIterator newText) {
+        this.charIter = newText;
+        StringBuilder sb = new StringBuilder();
+        for (char c = newText.first(); c != CharacterIterator.DONE; c = newText.next()) {
+            sb.append(c);
+        }
+        setTextImpl(this.addr, sb.toString());
+    }
+
+    public void setText(String newText) {
+        setText(new StringCharacterIterator(newText));
+    }
+
+    public boolean isBoundary(int offset) {
+        return isBoundaryImpl(this.addr, offset);
+    }
+
+    public int preceding(int offset) {
+        return precedingImpl(this.addr, offset);
+    }
+
+    public static Locale[] getAvailableLocales() {
+        return Resources.localesFromStrings(getAvailableLocalesImpl());
+    }
+
+    public static NativeBreakIterator getCharacterInstance(Locale where) {
+        return new NativeBreakIterator(getCharacterInstanceImpl(where.toString()), BI_CHAR_INSTANCE);
+    }
+
+    public static NativeBreakIterator getLineInstance(Locale where) {
+        return new NativeBreakIterator(getLineInstanceImpl(where.toString()), BI_LINE_INSTANCE);
+    }
+
+    public static NativeBreakIterator getSentenceInstance(Locale where) {
+        return new NativeBreakIterator(getSentenceInstanceImpl(where.toString()), BI_SENT_INSTANCE);
+    }
+
+    public static NativeBreakIterator getWordInstance(Locale where) {
+        return new NativeBreakIterator(getWordInstanceImpl(where.toString()), BI_WORD_INSTANCE);
+    }
+
+    private static native String[] getAvailableLocalesImpl();
+    private static native int getCharacterInstanceImpl(String locale);
+    private static native int getWordInstanceImpl(String locale);
+    private static native int getLineInstanceImpl(String locale);
+    private static native int getSentenceInstanceImpl(String locale);
+    private static native void closeBreakIteratorImpl(int addr);
+    private static native void setTextImpl(int addr, String text);
+    private static native int cloneImpl(int addr);
+    private static native int precedingImpl(int addr, int offset);
+    private static native boolean isBoundaryImpl(int addr, int offset);
+    private static native int nextImpl(int addr, int n);
+    private static native int previousImpl(int addr);
+    private static native int currentImpl(int addr);
+    private static native int firstImpl(int addr);
+    private static native int followingImpl(int addr, int offset);
+    private static native int lastImpl(int addr);
 }
