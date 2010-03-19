@@ -30,6 +30,7 @@ public class AllTests {
         suite.addTestSuite(SimpleBuilderTest.class);
         suite.addTestSuite(NodeTest.class);
         suite.addTestSuite(NormalizeTest.class);
+        suite.addTestSuite(SaxTest.class);
 
         //suite.addTest(tests.org.w3c.dom.AllTests.suite());
         suite.addTest(tests.api.javax.xml.parsers.AllTests.suite());
