@@ -3595,23 +3595,27 @@ void dvmNukeThread(Thread* thread)
 {
     pid_t tid = thread->systemTid;
 
+    /* suppress the heapworker watchdog to assist anyone using a debugger */
+    gDvm.nativeDebuggerActive = true;
+
     /*
      * Send the signals, separated by a brief interval to allow debuggerd to
      * work its magic.  SIGFPE could be used to make it stand out a little
      * in the crash dump.  (Observed behavior: with SIGFPE, debuggerd will
      * dump the target thread and then the thread that calls dvmAbort.
      * With SIGSEGV, you don't get the second stack trace.  The position in
-     * the current thread is generally know, so we're using SIGSEGV for now
+     * the current thread is generally known, so we're using SIGSEGV for now
      * to reduce log volume.)
      *
-     * The thread can continue to execute between the two signals.  (The
-     * first just causes debuggerd to attach.)
+     * The target thread can continue to execute between the two signals.
+     * (The first just causes debuggerd to attach to it.)
      */
     LOGD("Sending two SIGSEGVs to tid=%d to cause debuggerd dump\n", tid);
     kill(tid, SIGSEGV);
-    usleep(750 * 1000);
+    usleep(2 * 1000 * 1000);    // TODO: timed-wait until debuggerd attaches
     kill(tid, SIGSEGV);
-    usleep(1000 * 1000);
+    LOGD("Sent, waiting to let debuggerd run\n");
+    usleep(8 * 1000 * 1000);    // TODO: timed-wait until debuggerd finishes
     LOGD("Continuing\n");
 }
 
