@@ -326,12 +326,13 @@ public class LogManager {
 
         // find children
         // TODO: performance can be improved here?
+        String nameDot = name + '.';
         Collection<Logger> allLoggers = loggers.values();
         for (final Logger child : allLoggers) {
             Logger oldParent = child.getParent();
             if (parent == oldParent
                     && (name.length() == 0 || child.getName().startsWith(
-                            name + '.'))) {
+                            nameDot))) {
                 final Logger thisLogger = logger;
                 AccessController.doPrivileged(new PrivilegedAction<Object>() {
                     public Object run() {
