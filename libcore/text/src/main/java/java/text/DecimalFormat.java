@@ -27,6 +27,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Currency;
@@ -553,6 +554,8 @@ public class DecimalFormat extends NumberFormat {
 
     private transient NativeDecimalFormat dform;
 
+    private transient RoundingMode roundingMode = RoundingMode.HALF_EVEN;
+
     /**
      * Constructs a new {@code DecimalFormat} for formatting and parsing numbers
      * for the default locale.
@@ -709,6 +712,21 @@ public class DecimalFormat extends NumberFormat {
 
     @Override
     public StringBuffer format(double value, StringBuffer buffer, FieldPosition position) {
+        // All float/double/Float/Double formatting ends up here...
+        if (roundingMode == RoundingMode.UNNECESSARY) {
+            // ICU4C doesn't support this rounding mode, so we have to fake it.
+            try {
+                setRoundingMode(RoundingMode.UP);
+                String upResult = format(value, new StringBuffer(), new FieldPosition(0)).toString();
+                setRoundingMode(RoundingMode.DOWN);
+                String downResult = format(value, new StringBuffer(), new FieldPosition(0)).toString();
+                if (!upResult.equals(downResult)) {
+                    throw new ArithmeticException("rounding mode UNNECESSARY but rounding required");
+                }
+            } finally {
+                setRoundingMode(RoundingMode.UNNECESSARY);
+            }
+        }
         return dform.format(value, buffer, position);
     }
 
@@ -1040,6 +1058,8 @@ public class DecimalFormat extends NumberFormat {
     public void setMaximumFractionDigits(int value) {
         super.setMaximumFractionDigits(value);
         dform.setMaximumFractionDigits(getMaximumFractionDigits());
+        // Changing the maximum fraction digits needs to update ICU4C's rounding configuration.
+        setRoundingMode(roundingMode);
     }
 
     /**
@@ -1176,11 +1196,10 @@ public class DecimalFormat extends NumberFormat {
             new ObjectStreamField("negSuffixPattern", String.class), //$NON-NLS-1$
             new ObjectStreamField("multiplier", int.class), //$NON-NLS-1$
             new ObjectStreamField("groupingSize", byte.class), //$NON-NLS-1$
-            // BEGIN android-added
             new ObjectStreamField("groupingUsed", boolean.class), //$NON-NLS-1$
-            // END android-added
             new ObjectStreamField("decimalSeparatorAlwaysShown", boolean.class), //$NON-NLS-1$
             new ObjectStreamField("parseBigDecimal", boolean.class), //$NON-NLS-1$
+            new ObjectStreamField("roundingMode", RoundingMode.class), //$NON-NLS-1$
             new ObjectStreamField("symbols", DecimalFormatSymbols.class), //$NON-NLS-1$
             new ObjectStreamField("useExponentialNotation", boolean.class), //$NON-NLS-1$
             new ObjectStreamField("minExponentDigits", byte.class), //$NON-NLS-1$
@@ -1220,6 +1239,7 @@ public class DecimalFormat extends NumberFormat {
         fields.put("decimalSeparatorAlwaysShown", dform
                 .isDecimalSeparatorAlwaysShown());
         fields.put("parseBigDecimal", parseBigDecimal);
+        fields.put("roundingMode", roundingMode);
         fields.put("symbols", symbols);
         fields.put("useExponentialNotation", false);
         fields.put("minExponentDigits", (byte) 0);
@@ -1227,7 +1247,7 @@ public class DecimalFormat extends NumberFormat {
         fields.put("minimumIntegerDigits", dform.getMinimumIntegerDigits());
         fields.put("maximumFractionDigits", dform.getMaximumFractionDigits());
         fields.put("minimumFractionDigits", dform.getMinimumFractionDigits());
-        fields.put("serialVersionOnStream", 3);
+        fields.put("serialVersionOnStream", 4);
         stream.writeFields();
     }
 
@@ -1243,9 +1263,7 @@ public class DecimalFormat extends NumberFormat {
      *             if some class of serialized objects or fields cannot be found
      */
     @SuppressWarnings("nls")
-    private void readObject(ObjectInputStream stream) throws IOException,
-            ClassNotFoundException {
-
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         // BEGIN android-changed
         ObjectInputStream.GetField fields = stream.readFields();
         this.symbols = (DecimalFormatSymbols) fields.get("symbols", null);
@@ -1259,6 +1277,8 @@ public class DecimalFormat extends NumberFormat {
         dform.setGroupingSize(fields.get("groupingSize", (byte) 3));
         dform.setGroupingUsed(fields.get("groupingUsed", true));
         dform.setDecimalSeparatorAlwaysShown(fields.get("decimalSeparatorAlwaysShown", false));
+
+        setRoundingMode((RoundingMode) fields.get("roundingMode", RoundingMode.HALF_EVEN));
 
         final int maximumIntegerDigits = fields.get("maximumIntegerDigits", 309);
         final int minimumIntegerDigits = fields.get("minimumIntegerDigits", 309);
@@ -1284,5 +1304,30 @@ public class DecimalFormat extends NumberFormat {
             setMinimumFractionDigits(super.getMinimumFractionDigits());
         }
         // END android-changed
+    }
+
+    /**
+     * Returns the {@code RoundingMode} used by this {@code NumberFormat}.
+     * @since 1.6
+     * @hide
+     */
+    public RoundingMode getRoundingMode() {
+        return roundingMode;
+    }
+
+    /**
+     * Sets the {@code RoundingMode} used by this {@code NumberFormat}.
+     * @since 1.6
+     * @hide
+     */
+    public void setRoundingMode(RoundingMode roundingMode) {
+        if (roundingMode == null) {
+            throw new NullPointerException();
+        }
+        this.roundingMode = roundingMode;
+        if (roundingMode != RoundingMode.UNNECESSARY) { // ICU4C doesn't support UNNECESSARY.
+            double roundingIncrement = 1.0 / Math.pow(10, Math.max(0, getMaximumFractionDigits()));
+            dform.setRoundingMode(roundingMode, roundingIncrement);
+        }
     }
 }

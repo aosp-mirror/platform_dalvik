@@ -35,6 +35,7 @@ import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.AttributedCharacterIterator;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -2563,119 +2564,321 @@ public class DecimalFormatTest extends TestCase {
         DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance();
         format.setDecimalFormatSymbols(null);
     }
-
-    private void assertBigDecimalWithFraction(
-            BigDecimal bd,
-            String expectedResult,
-            int fraction) {
-        NumberFormat pf = NumberFormat.getPercentInstance();
-        pf.setMaximumFractionDigits(fraction);
-        assertEquals(expectedResult, pf.format(bd));
-    }
-
-    private void assertDecFmtWithMultiplierAndFraction(
-            String value,
-            int multiplier,
-            int fraction,
-            String expectedResult) {
-
-        DecimalFormat df = (DecimalFormat)NumberFormat.getInstance();
-        df.setMultiplier(multiplier);
-        df.setMaximumFractionDigits(fraction);
-        BigDecimal d = new BigDecimal(value);
-        assertEquals(expectedResult, df.format(d));
-    }
-
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Regression test for some existing bugs and crashes",
-        method = "format",
-        args = { String.class, Object[].class }
-    )
-    public void testBigDecimalBug1897917() {
-        // Bug1897917 : BigDecimal does not take into account multiplier.
-        // So the BigDecimal 0.17 formatted in PercentInstance is 0% instead of 17%.
-
-        NumberFormat pf = NumberFormat.getPercentInstance();
-
-        // Test bug 1897917 case.
-        assertEquals("17%", pf.format(BigDecimal.valueOf(0.17)));
-
-        // Test long decimal formatted in PercentInstance with various fractions.
-        String longDec = "11.2345678901234567890123456789012345678901234567890";
-        BigDecimal bd = new BigDecimal(longDec);
-        assertBigDecimalWithFraction(bd, "1,123.46%", 2);
-        assertBigDecimalWithFraction(bd, "1,123.45678901%", 8);
-        assertBigDecimalWithFraction(bd, "1,123.4567890123%", 10);
-        assertBigDecimalWithFraction(bd, "1,123.45678901234567890123%", 20);
-        assertBigDecimalWithFraction(bd, "1,123.456789012345678901234567890123%", 30);
-
-        // Test trailing zeros.
-        assertDecFmtWithMultiplierAndFraction("3333.33333333", 3, 4, "10,000");
-        assertDecFmtWithMultiplierAndFraction("3333.33333333", -3, 4, "-10,000");
-        assertDecFmtWithMultiplierAndFraction("0.00333333", 3, 4, "0.01");
-        assertDecFmtWithMultiplierAndFraction("3330000000000000000000000000000000", 3, 4,
-                                               "9,990,000,000,000,000,000,000,000,000,000,000");
-    }
-
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Regression test for some existing bugs and crashes",
-        method = "format",
-        args = { String.class, Object[].class }
-    )
-    public void testBigDecimalTestBigIntWithMultiplier() {
-       // Big integer tests.
-       assertDecFmtWithMultiplierAndFraction("123456789012345", 10, 0, "1,234,567,890,123,450");
-       assertDecFmtWithMultiplierAndFraction("12345678901234567890", 10, 0,
-                                              "123,456,789,012,345,678,900");
-       assertDecFmtWithMultiplierAndFraction("98765432109876543210987654321", 10, 0,
-                                              "987,654,321,098,765,432,109,876,543,210");
-
-       assertDecFmtWithMultiplierAndFraction("123456789012345", -10, 0, "-1,234,567,890,123,450");
-       assertDecFmtWithMultiplierAndFraction("12345678901234567890", -10, 0,
-                                              "-123,456,789,012,345,678,900");
-       assertDecFmtWithMultiplierAndFraction("98765432109876543210987654321", -10, 0,
-                                              "-987,654,321,098,765,432,109,876,543,210");
-   }
-
-   @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        notes = "Regression test for some existing bugs and crashes",
-        method = "format",
-        args = { String.class, Object[].class }
-   )
-   public void testBigDecimalICUConsistency() {
-       DecimalFormat df = (DecimalFormat) NumberFormat.getInstance();
-       df.setMaximumFractionDigits(2);
-       df.setMultiplier(2);
-       assertEquals(df.format(BigDecimal.valueOf(0.16)),
-                    df.format(BigDecimal.valueOf(0.16).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(0.0293)),
-                    df.format(BigDecimal.valueOf(0.0293).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(0.006)),
-                    df.format(BigDecimal.valueOf(0.006).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(0.00283)),
-                    df.format(BigDecimal.valueOf(0.00283).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(1.60)),
-                    df.format(BigDecimal.valueOf(1.60).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(15)),
-                    df.format(BigDecimal.valueOf(15).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(170)),
-                    df.format(BigDecimal.valueOf(170).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(234.56)),
-                    df.format(BigDecimal.valueOf(234.56).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(0)),
-                    df.format(BigDecimal.valueOf(0).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(-1)),
-                    df.format(BigDecimal.valueOf(-1).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(-10000)),
-                    df.format(BigDecimal.valueOf(-10000).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(-0.001)),
-                    df.format(BigDecimal.valueOf(-0.001).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(1234567890.1234567)),
-                    df.format(BigDecimal.valueOf(1234567890.1234567).doubleValue()));
-       assertEquals(df.format(BigDecimal.valueOf(1.234567E100)),
-                    df.format(BigDecimal.valueOf(1.234567E100).doubleValue()));
+    
+    // BEGIN android-added: brought back from the harmony java6 branch.
+    public void test_SetRoudingMode_Ljava_math_RoundingMode() {
+        DecimalFormat decimalFormat = (DecimalFormat) DecimalFormat.getInstance(Locale.US);
+        // ignore the fraction part of a given value
+        decimalFormat.setMaximumFractionDigits(0);
+        
+        // set RoundingMode.HALF_DOWN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_DOWN);
+        String result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "11", result);
+        
+        result = decimalFormat.format(11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "11", result);
+        
+        result = decimalFormat.format(11.6);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "12", result);
+        
+        // set RoundingMode.CEILING of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.CEILING);
+        result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.CEILING", "12", result);
+        
+        result = decimalFormat.format(-11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.CEILING", "-11", result);
+        
+        // set RoundingMode.DOWN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.DOWN);
+        result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "11", result);
+        
+        result = decimalFormat.format(-11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "-11", result);
+        
+        result = decimalFormat.format(0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "0", result);
+        
+        // set RoundingMode.FLOOR of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.FLOOR);
+        result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "11", result);
+        
+        result = decimalFormat.format(-11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "-12", result);
+        
+        result = decimalFormat.format(0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "0", result);
+        
+        // set RoundingMode.HALF_EVEN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_EVEN);
+        result = decimalFormat.format(5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "6", result);
+        
+        result = decimalFormat.format(-5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "-6", result);
+        
+        result = decimalFormat.format(0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "0", result);
+        
+        // set RoundingMode.HALF_UP of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+        result = decimalFormat.format(5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "6", result);
+        
+        result = decimalFormat.format(-5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "-6", result);
+        
+        result = decimalFormat.format(0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "0", result);
+        
+        // BEGIN android-changed: we're RI-compatible.
+        // the following assertion will fail on RI implementation, since the
+        // implementation of ICU and RI are not identical.
+        result = decimalFormat.format(-0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "-0", result);
+        // END android-changed
+        
+        // set RoundingMode.UP of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.UP);
+        result = decimalFormat.format(5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "6", result);
+        
+        result = decimalFormat.format(-5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "-6", result);
+        
+        result = decimalFormat.format(0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "1", result);
+        
+        result = decimalFormat.format(-0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "-1", result);
+        
+        // set RoundingMode.UNNECESSARY of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.UNNECESSARY);
+        
+        try {
+            // when rounding is needed but RoundingMode is set to RoundingMode.UNNECESSARY, throw ArithmeticException
+            result = decimalFormat.format(5.5);
+            fail("ArithmeticException expected: RoundingMode.UNNECESSARY");
+        } catch (ArithmeticException e) {
+            // expected
+        }
+        
+        result = decimalFormat.format(1.0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UNNECESSARY", "1", result);
+        
+        result = decimalFormat.format(-1.0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UNNECESSARY", "-1", result);
+        
+        try {
+            // when the given RoundingMode is null, throw NullPointerException
+            decimalFormat.setRoundingMode(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        // set MaxFractionDigits to 3, test different DecimalFormat format
+        // function with differnt RoundingMode
+        decimalFormat.setMaximumFractionDigits(3);
+        
+        // set RoundingMode.HALF_DOWN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_DOWN);
+        result = decimalFormat.format(11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "11.565", result);
+        
+        result = decimalFormat.format(11.5655);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "11.565", result);
+        
+        result = decimalFormat.format(11.5656);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "11.566", result);
+        
+        // set RoundingMode.CEILING of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.CEILING);
+        result = decimalFormat.format(11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.CEILING", "11.566", result);
+        
+        result = decimalFormat.format(-11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.CEILING", "-11.565", result);
+        
+        // set RoundingMode.DOWN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.DOWN);
+        result = decimalFormat.format(11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "11.565", result);
+        
+        result = decimalFormat.format(-11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "-11.565", result);
+        
+        result = decimalFormat.format(0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "0", result);
+        
+        // set RoundingMode.FLOOR of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.FLOOR);
+        result = decimalFormat.format(11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "11.565", result);
+        
+        result = decimalFormat.format(-11.5655);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "-11.566", result);
+        
+        result = decimalFormat.format(0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "0", result);
+        
+        // set RoundingMode.HALF_EVEN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_EVEN);
+        result = decimalFormat.format(11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "11.565", result);
+        
+        result = decimalFormat.format(-11.5655);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "-11.566", result);
+        
+        result = decimalFormat.format(11.5656);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "11.566", result);
+        
+        // set RoundingMode.HALF_UP of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+        result = decimalFormat.format(11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "11.565", result);
+        
+        result = decimalFormat.format(-11.5655);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "-11.566", result);
+        
+        result = decimalFormat.format(11.5656);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "11.566", result);
+        
+        // set RoundingMode.UP of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.UP);
+        result = decimalFormat.format(11.5653);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "11.566", result);
+        
+        result = decimalFormat.format(-11.5655);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "-11.566", result);
+        
+        // set RoundingMode.UNNECESSARY of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.UNNECESSARY);
+        result = decimalFormat.format(-11.565);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UNNECESSARY", "-11.565", result);
+        
+        result = decimalFormat.format(11.565);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UNNECESSARY", "11.565", result);
+        
+        // when setting MaxFractionDigits to negative value -2, default it as
+        // zero, test different DecimalFormat format
+        // function with differnt RoundingMode
+        decimalFormat.setMaximumFractionDigits(-2);
+        
+        // set RoundingMode.HALF_DOWN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_DOWN);
+        result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "11", result);
+        
+        result = decimalFormat.format(11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "11", result);
+        
+        result = decimalFormat.format(11.6);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_DOWN", "12", result);
+        
+        // set RoundingMode.CEILING of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.CEILING);
+        result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.CEILING", "12", result);
+        
+        result = decimalFormat.format(-11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.CEILING", "-11", result);
+        
+        // set RoundingMode.DOWN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.DOWN);
+        result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "11", result);
+        
+        result = decimalFormat.format(-11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "-11", result);
+        
+        result = decimalFormat.format(0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.DOWN", "0", result);
+        
+        // set RoundingMode.FLOOR of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.FLOOR);
+        result = decimalFormat.format(11.3);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "11", result);
+        
+        result = decimalFormat.format(-11.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "-12", result);
+        
+        result = decimalFormat.format(0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.FLOOR", "0", result);
+        
+        // set RoundingMode.HALF_EVEN of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_EVEN);
+        result = decimalFormat.format(5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "6", result);
+        
+        result = decimalFormat.format(-5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "-6", result);
+        
+        result = decimalFormat.format(0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_EVEN", "0", result);
+        
+        // set RoundingMode.HALF_UP of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+        result = decimalFormat.format(5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "6", result);
+        
+        result = decimalFormat.format(-5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "-6", result);
+        
+        result = decimalFormat.format(0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "0", result);
+        
+        result = decimalFormat.format(-0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.HALF_UP", "-0", result);
+        
+        // set RoundingMode.UP of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.UP);
+        result = decimalFormat.format(5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "6", result);
+        
+        result = decimalFormat.format(-5.5);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "-6", result);
+        
+        result = decimalFormat.format(0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "1", result);
+        
+        result = decimalFormat.format(-0.2);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UP", "-1", result);
+        
+        // set RoundingMode.UNNECESSARY of this DecimalFormat and test its
+        // behavior
+        decimalFormat.setRoundingMode(RoundingMode.UNNECESSARY);
+        
+        result = decimalFormat.format(1.0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UNNECESSARY", "1", result);
+        
+        result = decimalFormat.format(-1.0);
+        assertEquals("Incorrect RoundingMode behavior: RoundingMode.UNNECESSARY", "-1", result);
     }
 }
