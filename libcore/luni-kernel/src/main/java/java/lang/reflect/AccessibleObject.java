@@ -54,8 +54,6 @@ import org.apache.harmony.kernel.vm.ReflectionAccess;
  * @see Constructor
  * @see Method
  * @see ReflectPermission
- * 
- * @since Android 1.0
  */
 public class AccessibleObject implements AnnotatedElement {
 
@@ -110,8 +108,6 @@ public class AccessibleObject implements AnnotatedElement {
      *             
      * @see #setAccessible(boolean)
      * @see ReflectPermission
-     * 
-     * @since Android 1.0
      */
     public static void setAccessible(AccessibleObject[] objects, boolean flag)
             throws SecurityException {
@@ -131,8 +127,6 @@ public class AccessibleObject implements AnnotatedElement {
      * Constructs a new {@code AccessibleObject} instance. {@code
      * AccessibleObject} instances can only be constructed by the virtual
      * machine.
-     * 
-     * @since Android 1.0
      */
     protected AccessibleObject() {
         super();
@@ -144,8 +138,6 @@ public class AccessibleObject implements AnnotatedElement {
      * 
      * @return {@code true} if this object is accessible without security
      *         checks, {@code false} otherwise
-     *         
-     * @since Android 1.0
      */
     public boolean isAccessible() {
         return flag;
@@ -164,8 +156,6 @@ public class AccessibleObject implements AnnotatedElement {
      *             if the request is denied
      *             
      * @see ReflectPermission
-     * 
-     * @since Android 1.0
      */
     public void setAccessible(boolean flag) throws SecurityException {
         SecurityManager smgr = System.getSecurityManager();

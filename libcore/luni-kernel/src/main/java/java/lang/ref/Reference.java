@@ -39,8 +39,6 @@ package java.lang.ref;
  * also not desirable to do so, since references require very close cooperation
  * with the system's garbage collector. The existing, specialized reference
  * classes should be used instead.
- * 
- * @since Android 1.0
  */
 public abstract class Reference<T> {
 
@@ -86,8 +84,6 @@ public abstract class Reference<T> {
     /**
      * Makes the referent {@code null}. This does not force the reference
      * object to be enqueued.
-     * 
-     * @since Android 1.0
      */
     public void clear() {
         referent = null;
@@ -103,8 +99,6 @@ public abstract class Reference<T> {
      * 
      * @return {@code true} if this call has caused the {@code Reference} to
      * become enqueued, or {@code false} otherwise
-     * 
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     private synchronized boolean enqueueInternal() {
@@ -128,8 +122,6 @@ public abstract class Reference<T> {
      * 
      * @return {@code true} if this call has caused the {@code Reference} to
      * become enqueued, or {@code false} otherwise
-     * 
-     * @since Android 1.0
      */
     public boolean enqueue() {
         return enqueueInternal();
@@ -140,8 +132,6 @@ public abstract class Reference<T> {
      * 
      * @return the referent to which reference refers, or {@code null} if the
      *         object has been cleared.
-     * 
-     * @since Android 1.0
      */
     public T get() {
         return referent;
@@ -152,8 +142,6 @@ public abstract class Reference<T> {
      * 
      * @return {@code true} if the {@code Reference} has been enqueued, {@code
      *         false} otherwise
-     * 
-     * @since Android 1.0
      */
     public boolean isEnqueued() {
         return queueNext != null;

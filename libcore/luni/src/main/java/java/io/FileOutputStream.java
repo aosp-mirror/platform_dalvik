@@ -34,8 +34,6 @@ import org.apache.harmony.nio.FileChannelFactory;
  *
  * @see BufferedOutputStream
  * @see FileInputStream
- *
- * @since Android 1.0
  */
 public class FileOutputStream extends OutputStream implements Closeable {
 

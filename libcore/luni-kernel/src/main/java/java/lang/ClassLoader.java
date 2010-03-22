@@ -60,8 +60,6 @@ import dalvik.system.VMStack;
  * applications may implement subclasses of {@code ClassLoader} to provide
  * special ways for loading classes.
  * </p>
- * 
- * @since Android 1.0
  * @see Class
  */
 public abstract class ClassLoader {
@@ -135,7 +133,6 @@ public abstract class ClassLoader {
      * @throws SecurityException
      *             if a security manager exists and it does not allow access to
      *             the system class loader.
-     * @since Android 1.0
      */
     public static ClassLoader getSystemClassLoader() {
         SecurityManager smgr = System.getSecurityManager();
@@ -158,7 +155,6 @@ public abstract class ClassLoader {
      * @param resName
      *            the name of the resource to find.
      * @see Class#getResource
-     * @since Android 1.0
      */
     public static URL getSystemResource(String resName) {
         return SystemClassLoader.loader.getResource(resName);
@@ -175,7 +171,6 @@ public abstract class ClassLoader {
      *            the name of the resource to find.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     public static Enumeration<URL> getSystemResources(String resName) throws IOException {
         return SystemClassLoader.loader.getResources(resName);
@@ -191,7 +186,6 @@ public abstract class ClassLoader {
      * @param resName
      *            the name of the resource to find.
      * @see Class#getResourceAsStream
-     * @since Android 1.0
      */
     public static InputStream getSystemResourceAsStream(String resName) {
         return SystemClassLoader.loader.getResourceAsStream(resName);
@@ -204,7 +198,6 @@ public abstract class ClassLoader {
      * @throws SecurityException
      *             if a security manager exists and it does not allow the
      *             creation of a new {@code ClassLoader}.
-     * @since Android 1.0
      */
     protected ClassLoader() {
         this(getSystemClassLoader(), false);
@@ -220,7 +213,6 @@ public abstract class ClassLoader {
      * @throws SecurityException
      *             if a security manager exists and it does not allow the
      *             creation of new a new {@code ClassLoader}.
-     * @since Android 1.0
      */
     protected ClassLoader(ClassLoader parentLoader) {
         this(parentLoader, false);
@@ -262,7 +254,6 @@ public abstract class ClassLoader {
      *             {@code offset + length} is greater than the length of
      *             {@code classRep}.
      * @deprecated Use {@link #defineClass(String, byte[], int, int)}
-     * @since Android 1.0
      */
     @Deprecated
     protected final Class<?> defineClass(byte[] classRep, int offset, int length)
@@ -292,7 +283,6 @@ public abstract class ClassLoader {
      *             if {@code offset < 0}, {@code length < 0} or if
      *             {@code offset + length} is greater than the length of
      *             {@code classRep}.
-     * @since Android 1.0
      */
     protected final Class<?> defineClass(String className, byte[] classRep, int offset, int length)
             throws ClassFormatError {
@@ -330,7 +320,6 @@ public abstract class ClassLoader {
      * @throws NoClassDefFoundError
      *             if {@code className} is not equal to the name of the class
      *             contained in {@code classRep}.
-     * @since Android 1.0
      */
     protected final Class<?> defineClass(String className, byte[] classRep, int offset, int length,
             ProtectionDomain protectionDomain) throws java.lang.ClassFormatError {
@@ -359,7 +348,6 @@ public abstract class ClassLoader {
      * @throws NoClassDefFoundError
      *             if {@code className} is not equal to the name of the class
      *             contained in {@code b}.
-     * @since Android 1.0
      */
     protected final Class<?> defineClass(String name, ByteBuffer b,
             ProtectionDomain protectionDomain) throws ClassFormatError {
@@ -379,7 +367,6 @@ public abstract class ClassLoader {
      * @return the {@code Class} object that is found.
      * @throws ClassNotFoundException
      *             if the class cannot be found.
-     * @since Android 1.0
      */
     protected Class<?> findClass(String className) throws ClassNotFoundException {
         throw new ClassNotFoundException(className);
@@ -393,7 +380,6 @@ public abstract class ClassLoader {
      *            the name of the class to look for.
      * @return the {@code Class} object or {@code null} if the requested class
      *         has not been loaded.
-     * @since Android 1.0
      */
     protected final Class<?> findLoadedClass(String className) {
         ClassLoader loader;
@@ -413,7 +399,6 @@ public abstract class ClassLoader {
      * @return the {@code Class} object with the requested {@code className}.
      * @throws ClassNotFoundException
      *             if the class can not be found.
-     * @since Android 1.0
      */
     protected final Class<?> findSystemClass(String className) throws ClassNotFoundException {
         return Class.forName(className, false, getSystemClassLoader());
@@ -426,7 +411,6 @@ public abstract class ClassLoader {
      * @throws SecurityException
      *             if a security manager exists and it does not allow to
      *             retrieve the parent class loader.
-     * @since Android 1.0
      */
     public final ClassLoader getParent() {
         SecurityManager smgr = System.getSecurityManager();
@@ -449,7 +433,6 @@ public abstract class ClassLoader {
      *         if either the resource can not be found or a security manager
      *         does not allow to access the resource.
      * @see Class#getResource
-     * @since Android 1.0
      */
     public URL getResource(String resName) {
         URL resource = null;
@@ -475,7 +458,6 @@ public abstract class ClassLoader {
      *            the name of the resource to find.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public Enumeration<URL> getResources(String resName) throws IOException {
@@ -497,7 +479,6 @@ public abstract class ClassLoader {
      * @param resName
      *            the name of the resource to find.
      * @see Class#getResourceAsStream
-     * @since Android 1.0
      */
     public InputStream getResourceAsStream(String resName) {
         try {
@@ -526,7 +507,6 @@ public abstract class ClassLoader {
      *            the name of the class to look for.
      * @throws ClassNotFoundException
      *             if the class can not be found.
-     * @since Android 1.0
      */
     public Class<?> loadClass(String className) throws ClassNotFoundException {
         return loadClass(className, false);
@@ -557,7 +537,6 @@ public abstract class ClassLoader {
      *            classes are not resolved.
      * @throws ClassNotFoundException
      *             if the class can not be found.
-     * @since Android 1.0
      */
     protected Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
         Class<?> clazz = findLoadedClass(className);
@@ -587,7 +566,6 @@ public abstract class ClassLoader {
      * 
      * @param clazz
      *            the class to link.
-     * @since Android 1.0
      */
     protected final void resolveClass(Class<?> clazz) {
         // no-op, doesn't make sense on android.
@@ -650,7 +628,6 @@ public abstract class ClassLoader {
      * @param resName
      *            the name of the resource to find.
      * @return the {@code URL} object for the requested resource.
-     * @since Android 1.0
      */
     protected URL findResource(String resName) {
         return null;
@@ -666,7 +643,6 @@ public abstract class ClassLoader {
      * @return an enumeration of {@code URL} objects for the requested resource.
      * @throws IOException
      *             if an I/O error occurs.
-     * @since Android 1.0
      */
     @SuppressWarnings( {
             "unchecked", "unused"
@@ -687,7 +663,6 @@ public abstract class ClassLoader {
      * @param libName
      *            the name of the library to find.
      * @return the absolute path of the library.
-     * @since Android 1.0
      */
     protected String findLibrary(String libName) {
         return null;
@@ -701,7 +676,6 @@ public abstract class ClassLoader {
      *            the name of the package to find.
      * @return the package with the requested name; {@code null} if the package
      *         can not be found.
-     * @since Android 1.0
      */
     protected Package getPackage(String name) {
         synchronized (packages) {
@@ -720,7 +694,6 @@ public abstract class ClassLoader {
      *            the name of the package to find.
      * @return the package with the requested name; {@code null} if the package
      *         can not be found.
-     * @since Android 1.0
      */
     static Package getPackage(ClassLoader loader, String name) {
         return loader.getPackage(name);
@@ -730,7 +703,6 @@ public abstract class ClassLoader {
      * Returns all the packages known to this class loader.
      * 
      * @return an array with all packages known to this class loader.
-     * @since Android 1.0
      */
     protected Package[] getPackages() {
         synchronized (packages) {
@@ -766,7 +738,6 @@ public abstract class ClassLoader {
      * @return the {@code Package} object that has been created.
      * @throws IllegalArgumentException
      *             if a package with the specified name already exists.
-     * @since Android 1.0
      */
     protected Package definePackage(String name, String specTitle, String specVersion,
             String specVendor, String implTitle, String implVersion, String implVendor, URL sealBase)
@@ -793,7 +764,6 @@ public abstract class ClassLoader {
      * @param c
      *            the {@code Class} object for which to get the signers.
      * @return signers the signers of {@code c}.
-     * @since Android 1.0
      */
     final Object[] getSigners(Class<?> c) {
         return null;
@@ -807,7 +777,6 @@ public abstract class ClassLoader {
      *            the {@code Class} object for which to set the signers.
      * @param signers
      *            the signers for {@code c}.
-     * @since Android 1.0
      */
     protected final void setSigners(Class<?> c, Object[] signers) {
         return;
@@ -910,7 +879,6 @@ public abstract class ClassLoader {
      *            the name of the class for which to set the assertion status.
      * @param enable
      *            the new assertion status.
-     * @since Android 1.0
      */
     public void setClassAssertionStatus(String cname, boolean enable) {
         return;
@@ -927,7 +895,6 @@ public abstract class ClassLoader {
      *            the name of the package for which to set the assertion status.
      * @param enable
      *            the new assertion status.
-     * @since Android 1.0
      */    
     public void setPackageAssertionStatus(String pname, boolean enable) {
         return;
@@ -942,7 +909,6 @@ public abstract class ClassLoader {
      * 
      * @param enable
      *            the new assertion status.
-     * @since Android 1.0
      */
     public void setDefaultAssertionStatus(boolean enable) {
         return;
@@ -955,8 +921,6 @@ public abstract class ClassLoader {
      * <strong>Note:</strong> This method does nothing in the Android reference
      * implementation.
      * </p>
-     * 
-     * @since Android 1.0
      */
     public void clearAssertionStatus() {
         return;

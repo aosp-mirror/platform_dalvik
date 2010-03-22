@@ -73,7 +73,6 @@ public final class AccessControlContext {
      *             not have permission to invoke this constructor
      * @throws NullPointerException
      *             if {@code acc} is {@code null}
-     * @since Android 1.0
      */
     public AccessControlContext(AccessControlContext acc,
             DomainCombiner combiner) {
@@ -96,7 +95,6 @@ public final class AccessControlContext {
      *            checks in the context of this {@code AccessControlContext}
      * @throws NullPointerException
      *             if {@code context} is {@code null}
-     * @since Android 1.0
      */
     public AccessControlContext(ProtectionDomain[] context) {
         if (context == null) {
@@ -185,7 +183,6 @@ public final class AccessControlContext {
      * @throws NullPointerException
      *             if the specified permission is {@code null}
      * @see AccessController#checkPermission(Permission)
-     * @since Android 1.0
      */
     public void checkPermission(Permission perm) throws AccessControlException {
         if (perm == null) {
@@ -215,7 +212,6 @@ public final class AccessControlContext {
      *            AccessControlContext}
      * @return {@code true} if the specified object is equal to this {@code
      *         AccessControlContext}, otherwise {@code false}
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -251,7 +247,6 @@ public final class AccessControlContext {
      * @throws SecurityException
      *             if a {@code SecurityManager} is installed and the caller does
      *             not have permission to invoke this method
-     * @since Android 1.0
      */
     public DomainCombiner getDomainCombiner() {
         SecurityManager sm = System.getSecurityManager();
@@ -271,7 +266,6 @@ public final class AccessControlContext {
      * @return the hash code value for this {@code AccessControlContext}
      * @see Object#equals(Object)
      * @see AccessControlContext#equals(Object)
-     * @since Android 1.0
      */
     public int hashCode() {
         int hash = 0;

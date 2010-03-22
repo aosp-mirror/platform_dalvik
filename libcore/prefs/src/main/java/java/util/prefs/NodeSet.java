@@ -6,10 +6,6 @@ import org.w3c.dom.NodeList;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-/**
- * 
- * @since Android 1.0
- */ 
 class NodeSet implements NodeList {
 
     ArrayList<Node> list = new ArrayList<Node>();

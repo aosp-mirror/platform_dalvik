@@ -82,8 +82,6 @@ package java.lang.ref;
  *     known to be weakly-referenced.  
  *   </li>
  * </ul>
- * 
- * @since Android 1.0
  */
 public class WeakReference<T> extends Reference<T> {
 
@@ -92,8 +90,6 @@ public class WeakReference<T> extends Reference<T> {
      * reference is not registered with any reference queue.
      * 
      * @param r the referent to track
-     * 
-     * @since Android 1.0
      */
     public WeakReference(T r) {
         super();
@@ -108,8 +104,6 @@ public class WeakReference<T> extends Reference<T> {
      * @param q the queue to register to the reference object with. A null value
      *          results in a weak reference that is not associated with any
      *          queue.
-     * 
-     * @since Android 1.0
      */
     public WeakReference(T r, ReferenceQueue<? super T> q) {
         super();

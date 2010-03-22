@@ -29,8 +29,6 @@ import java.util.Enumeration;
  * <p>
  * Note we don't directly open and read the DEX file here. They're memory-mapped
  * read-only by the VM.
- * 
- * @since Android 1.0
  */
 public final class DexFile {
     private final int mCookie;
@@ -40,7 +38,7 @@ public final class DexFile {
      * Opens a DEX file from a given File object. This will usually be a ZIP/JAR
      * file with a "classes.dex" inside.
      *
-     * The VM will generate the name of the coresponding file in
+     * The VM will generate the name of the corresponding file in
      * /data/dalvik-cache and open it, possibly creating or updating
      * it first if system permissions allow.  Don't pass in the name of
      * a file in /data/dalvik-cache, as the named file is expected to be
@@ -61,7 +59,7 @@ public final class DexFile {
      * Opens a DEX file from a given filename. This will usually be a ZIP/JAR
      * file with a "classes.dex" inside.
      *
-     * The VM will generate the name of the coresponding file in
+     * The VM will generate the name of the corresponding file in
      * /data/dalvik-cache and open it, possibly creating or updating
      * it first if system permissions allow.  Don't pass in the name of
      * a file in /data/dalvik-cache, as the named file is expected to be
@@ -288,4 +286,3 @@ public final class DexFile {
     native public static boolean isDexOptNeeded(String fileName)
             throws FileNotFoundException, IOException;
 }
-

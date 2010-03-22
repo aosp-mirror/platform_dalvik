@@ -75,7 +75,6 @@ public final class AccessController {
      * @return the result of executing the privileged action
      * @throws NullPointerException
      *             if the specified action is {@code null}
-     * @since Android 1.0
      */
     public static <T> T doPrivileged(PrivilegedAction<T> action) {
         if (action == null) {
@@ -103,7 +102,6 @@ public final class AccessController {
      * @return the result of executing the privileged action
      * @throws NullPointerException
      *             if the specified action is {@code null}
-     * @since Android 1.0
      */
     public static <T> T doPrivileged(PrivilegedAction<T> action,
             AccessControlContext context) {
@@ -134,7 +132,6 @@ public final class AccessController {
      *             if the action's run method throws any checked exception
      * @throws NullPointerException
      *             if the specified action is {@code null}
-     * @since Android 1.0
      */
     public static <T> T doPrivileged(PrivilegedExceptionAction<T> action)
             throws PrivilegedActionException {
@@ -168,7 +165,6 @@ public final class AccessController {
      *             if the action's run method throws any checked exception
      * @throws NullPointerException
      *             if the specified action is {@code null}
-     * @since Android 1.0
      */
     public static <T> T doPrivileged(PrivilegedExceptionAction<T> action,
             AccessControlContext context) throws PrivilegedActionException {
@@ -297,7 +293,6 @@ public final class AccessController {
      *             if the specified permission is {@code null}
      * @see AccessControlContext#checkPermission(Permission)
      * 
-     * @since Android 1.0
      */
     public static void checkPermission(Permission perm)
             throws AccessControlException {
@@ -327,7 +322,6 @@ public final class AccessController {
      * 
      * @return the {@code AccessControlContext} for the current {@code Thread}
      * @see Thread#currentThread
-     * @since Android 1.0
      */
     public static AccessControlContext getContext() {
 

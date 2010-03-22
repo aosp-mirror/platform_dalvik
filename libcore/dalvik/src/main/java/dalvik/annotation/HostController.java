@@ -25,8 +25,6 @@ import java.lang.annotation.Target;
  * Record the host side controller information for a test method,
  * so that the CTS host can locate correspond host side unit while running it.
  * {@hide pending API Council approval}
- * 
- * @since Android 1.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })

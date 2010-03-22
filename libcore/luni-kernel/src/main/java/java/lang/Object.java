@@ -45,15 +45,11 @@ package java.lang;
  * The {@link #wait()} and {@link #notify()} methods provide a foundation for
  * synchronization, acquiring and releasing an internal monitor associated with
  * each {@code Object}.
- * 
- * @since Android 1.0
  */
 public class Object {
 
     /**
      * Constructs a new instance of {@code Object}.
-     * 
-     * @since Android 1.0
      */
     public Object() {
     }
@@ -72,7 +68,6 @@ public class Object {
      * @throws CloneNotSupportedException
      *             if this object's class does not implement the {@code
      *             Cloneable} interface.
-     * @since Android 1.0
      */
     protected Object clone() throws CloneNotSupportedException {
         if (!(this instanceof Cloneable)) {
@@ -111,7 +106,6 @@ public class Object {
      * @return {@code true} if the specified object is equal to this {@code
      *         Object}; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     public boolean equals(Object o) {
         return this == o;
@@ -142,7 +136,6 @@ public class Object {
      * @throws Throwable
      *             any exception which is raised during finalization; these are
      *             ignored by the virtual machine.
-     * @since Android 1.0
      */
     protected void finalize() throws Throwable {
     }
@@ -173,7 +166,6 @@ public class Object {
      * 
      * @return this object's hash code.
      * @see #equals
-     * @since Android 1.0
      */
     public native int hashCode();
 
@@ -202,7 +194,6 @@ public class Object {
      * @see #wait(long)
      * @see #wait(long,int)
      * @see java.lang.Thread
-     * @since Android 1.0
      */
     public final native void notify();
 
@@ -248,7 +239,6 @@ public class Object {
      * </pre>
      * 
      * @return a printable representation of this object.
-     * @since Android 1.0
      */
     public String toString() {
         return getClass().getName() + '@' + Integer.toHexString(hashCode());
@@ -281,7 +271,6 @@ public class Object {
      * @see #wait(long)
      * @see #wait(long,int)
      * @see java.lang.Thread
-     * @since Android 1.0
      */
     public final void wait() throws InterruptedException {
         wait(0 ,0);
@@ -319,7 +308,6 @@ public class Object {
      * @see #wait()
      * @see #wait(long,int)
      * @see java.lang.Thread
-     * @since Android 1.0
      */
     public final void wait(long millis) throws InterruptedException {
         wait(millis, 0);
@@ -361,7 +349,6 @@ public class Object {
      * @see #wait()
      * @see #wait(long,int)
      * @see java.lang.Thread
-     * @since Android 1.0
      */
     public final native void wait(long millis, int nanos) throws InterruptedException;
 }

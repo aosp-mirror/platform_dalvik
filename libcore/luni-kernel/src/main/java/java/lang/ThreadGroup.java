@@ -32,8 +32,6 @@ package java.lang;
  * 
  * @see Thread
  * @see SecurityManager
- * 
- * @since Android 1.0
  */
 public class ThreadGroup implements Thread.UncaughtExceptionHandler {
 
@@ -396,7 +394,7 @@ public class ThreadGroup implements Thread.UncaughtExceptionHandler {
 
     /**
      * Iterates over all thread groups in this group (and, optionally, its
-     * sub-groups) and and stores the groups in the given array. Returns when
+     * sub-groups) and stores the groups in the given array. Returns when
      * the array is full or no more groups remain, whichever happens first.
      * 
      * @param groups the array into which the ThreadGroups will be copied

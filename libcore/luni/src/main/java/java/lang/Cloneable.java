@@ -26,7 +26,6 @@ package java.lang;
  * 
  * @see Object#clone
  * @see CloneNotSupportedException
- * @since Android 1.0
  */
 public interface Cloneable {
     // Marker interface

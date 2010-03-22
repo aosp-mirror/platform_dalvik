@@ -28,8 +28,6 @@ import dalvik.annotation.TestTargetNew;
  * that is being tested. The current assumption is that the test are somewhat
  * organized according to the API classes they test. Might be too strict for
  * some cases.
- * 
- * @since Android 1.0
  * @hide
  */
 @Retention(RetentionPolicy.RUNTIME)

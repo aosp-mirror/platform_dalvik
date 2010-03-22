@@ -44,8 +44,6 @@ import org.apache.harmony.luni.lang.reflect.Types;
 /**
  * This class represents a method. Information about the method can be accessed,
  * and the method can be invoked dynamically.
- * 
- * @since Android 1.0
  */
 public final class Method extends AccessibleObject implements GenericDeclaration, Member {
     
@@ -134,8 +132,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * the type parameters.
      *
      * @return the string representation of this method
-     * 
-     * @since Android 1.0
      */
     public String toGenericString() {
         StringBuilder sb = new StringBuilder(80);
@@ -194,8 +190,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * @throws MalformedParameterizedTypeException
      *             if any parameter type points to a type that cannot be
      *             instantiated for some reason
-     * 
-     * @since Android 1.0
      */
     public Type[] getGenericParameterTypes() {
         initGenericTypes();
@@ -215,8 +209,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * @throws MalformedParameterizedTypeException
      *             if any exception type points to a type that cannot be
      *             instantiated for some reason
-     * 
-     * @since Android 1.0
      */
     public Type[] getGenericExceptionTypes() {
         initGenericTypes();
@@ -235,8 +227,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * @throws MalformedParameterizedTypeException
      *             if the return type points to a type that cannot be
      *             instantiated for some reason
-     * 
-     * @since Android 1.0
      */
     public Type getGenericReturnType() {
         initGenericTypes();
@@ -270,8 +260,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * and array of empty arrays is returned.
      *
      * @return an array of arrays of {@code Annotation} instances
-     * 
-     * @since Android 1.0
      */
     public Annotation[][] getParameterAnnotations() {
         Annotation[][] parameterAnnotations
@@ -289,8 +277,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * Indicates whether or not this method takes a variable number argument.
      *
      * @return {@code true} if a vararg is declared, {@code false} otherwise
-     * 
-     * @since Android 1.0
      */
     public boolean isVarArgs() {
         int modifiers = getMethodModifiers(declaringClass, slot);
@@ -301,8 +287,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * Indicates whether or not this method is a bridge.
      *
      * @return {@code true} if this method is a bridge, {@code false} otherwise
-     * 
-     * @since Android 1.0
      */
     public boolean isBridge() {
         int modifiers = getMethodModifiers(declaringClass, slot);
@@ -313,8 +297,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * Indicates whether or not this method is synthetic.
      *
      * @return {@code true} if this method is synthetic, {@code false} otherwise
-     * 
-     * @since Android 1.0
      */
     public boolean isSynthetic() {
         int modifiers = getMethodModifiers(declaringClass, slot);
@@ -330,8 +312,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * @throws TypeNotPresentException
      *             if this annotation member is of type {@code Class} and no
      *             definition can be found
-     * 
-     * @since Android 1.0
      */
     public Object getDefaultValue() {
         return getDefaultValue(declaringClass, slot);
@@ -351,8 +331,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      *         method, {@code false} otherwise
      *         
      * @see #hashCode
-     * 
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -363,8 +341,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * Returns the class that declares this method.
      *
      * @return the declaring class
-     * 
-     * @since Android 1.0
      */
     public Class<?> getDeclaringClass() {
         return declaringClass;
@@ -375,8 +351,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * this method has no declared exceptions, an empty array is returned.
      * 
      * @return the declared exception classes
-     * 
-     * @since Android 1.0
      */
     public Class<?>[] getExceptionTypes() {
         if (exceptionTypes == null) {
@@ -393,8 +367,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * @return the modifiers for this method
      * 
      * @see Modifier
-     * 
-     * @since Android 1.0
      */
     public int getModifiers() {
         return getMethodModifiers(declaringClass, slot);
@@ -407,8 +379,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * instance.
      * 
      * @return the name of this method
-     * 
-     * @since Android 1.0
      */
     public String getName() {
         return name;
@@ -420,8 +390,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * empty array will be returned.
      * 
      * @return the parameter types
-     * 
-     * @since Android 1.0
      */
     public Class<?>[] getParameterTypes() {
         return parameterTypes.clone();
@@ -432,8 +400,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * method.
      * 
      * @return the return type
-     * 
-     * @since Android 1.0
      */
     public Class<?> getReturnType() {
         return returnType;
@@ -447,8 +413,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * @return hash code for this method
      * 
      * @see #equals
-     * 
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -508,8 +472,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      *             if an exception was thrown by the invoked method
      * 
      * @see AccessibleObject
-     * 
-     * @since Android 1.0
      */
     public Object invoke(Object receiver, Object... args)
             throws IllegalAccessException, IllegalArgumentException,
@@ -546,8 +508,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * ,InvocationTargetException}
      * 
      * @return a printable representation for this method
-     * 
-     * @since Android 1.0
      */
     @Override
     public String toString() {

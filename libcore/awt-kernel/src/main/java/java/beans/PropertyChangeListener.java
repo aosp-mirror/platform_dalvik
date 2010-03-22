@@ -22,8 +22,6 @@ import java.util.EventListener;
 /**
  * A PropertyChangeListener can subscribe with a event source. Whenever that
  * source raises a PropertyChangeEvent this listener will get notified.
- * 
- * @since Android 1.0
  */
 public interface PropertyChangeListener extends EventListener {
 

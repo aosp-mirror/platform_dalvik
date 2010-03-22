@@ -170,7 +170,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * @param arg0
      *            the {@code byte} to update this {@code MessageDigest} with
      * @see #reset()
-     * @since Android 1.0
      */
     public void update(byte arg0) {
         engineUpdate(arg0);
@@ -222,7 +221,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
      * 
      * @return the computed one way hash value
      * @see #reset
-     * @since Android 1.0
      */
     public byte[] digest() {
         return engineDigest();

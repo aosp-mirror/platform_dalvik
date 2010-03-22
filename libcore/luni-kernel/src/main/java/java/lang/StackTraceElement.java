@@ -25,7 +25,6 @@ import java.io.Serializable;
  * call stack at the time a {@code Throwable} gets thrown.
  * 
  * @see Throwable#getStackTrace()
- * @since Android 1.0
  */
 public final class StackTraceElement implements Serializable {
 
@@ -59,7 +58,6 @@ public final class StackTraceElement implements Serializable {
      *            method.
      * @throws NullPointerException
      *             if {@code cls} or {@code method} is {@code null}.
-     * @since Android 1.0
      */
     public StackTraceElement(String cls, String method, String file, int line) {
         super();
@@ -98,7 +96,6 @@ public final class StackTraceElement implements Serializable {
      * @return {@code true} if the specified object is equal to this
      *         {@code StackTraceElement}; {@code false} otherwise.
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -143,7 +140,6 @@ public final class StackTraceElement implements Serializable {
      * {@code StackTraceElement}.
      * 
      * @return the fully qualified type name of the class
-     * @since Android 1.0
      */
     public String getClassName() {
         return (declaringClass == null) ? "<unknown class>" : declaringClass;
@@ -155,7 +151,6 @@ public final class StackTraceElement implements Serializable {
      * 
      * @return the name of the file, or {@code null} if this information is not
      *         available.
-     * @since Android 1.0
      */
     public String getFileName() {
         return fileName;
@@ -167,7 +162,6 @@ public final class StackTraceElement implements Serializable {
      * 
      * @return the line number, or a negative number if this information is not
      *         available.
-     * @since Android 1.0
      */
     public int getLineNumber() {
         return lineNumber;
@@ -179,7 +173,6 @@ public final class StackTraceElement implements Serializable {
      * 
      * @return the name of the method, or "<unknown method>" if this information
      *         is not available.
-     * @since Android 1.0
      */
     public String getMethodName() {
         return (methodName == null) ? "<unknown method>" : methodName;
@@ -205,7 +198,6 @@ public final class StackTraceElement implements Serializable {
      * 
      * @return {@code true} if the method in which this stack trace element is
      *         executing is a native method; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isNativeMethod() {
         // BEGIN android-changed

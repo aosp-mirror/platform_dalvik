@@ -41,8 +41,6 @@ import java.io.PrintWriter;
  * @see Error
  * @see Exception
  * @see RuntimeException
- * 
- * @since Android 1.0
  */
 public class Throwable implements java.io.Serializable {
     private static final long serialVersionUID = -3042686055658047285L;
@@ -72,8 +70,6 @@ public class Throwable implements java.io.Serializable {
 
     /**
      * Constructs a new {@code Throwable} that includes the current stack trace.
-     * 
-     * @since Android 1.0
      */
     public Throwable() {
         super();
@@ -86,7 +82,6 @@ public class Throwable implements java.io.Serializable {
      * 
      * @param detailMessage
      *            the detail message for this {@code Throwable}.
-     * @since Android 1.0
      */
     public Throwable(String detailMessage) {
         this();
@@ -101,7 +96,6 @@ public class Throwable implements java.io.Serializable {
      *            the detail message for this {@code Throwable}.
      * @param throwable
      *            the cause of this {@code Throwable}.
-     * @since Android 1.0
      */
     public Throwable(String detailMessage, Throwable throwable) {
         this();
@@ -115,7 +109,6 @@ public class Throwable implements java.io.Serializable {
      * 
      * @param throwable
      *            the cause of this {@code Throwable}.
-     * @since Android 1.0
      */
     public Throwable(Throwable throwable) {
         this();
@@ -131,7 +124,6 @@ public class Throwable implements java.io.Serializable {
      * trace to represent the location where the exception was re-thrown.
      * 
      * @return this {@code Throwable} instance.
-     * @since Android 1.0
      */
     public Throwable fillInStackTrace() {
         // Fill in the intermediate representation
@@ -148,7 +140,6 @@ public class Throwable implements java.io.Serializable {
      * provided at creation time.
      * 
      * @return this {@code Throwable}'s detail message.
-     * @since Android 1.0
      */
     public String getMessage() {
         return detailMessage;
@@ -158,11 +149,9 @@ public class Throwable implements java.io.Serializable {
      * Returns the extra information message which was provided when this
      * {@code Throwable} was created. Returns {@code null} if no message was
      * provided at creation time. Subclasses may override this method to return
-     * localized text for the message. The Android reference implementation
-     * returns the unlocalized detail message.
+     * localized text for the message. Android returns the regular detail message.
      * 
      * @return this {@code Throwable}'s localized detail message.
-     * @since Android 1.0
      */
     public String getLocalizedMessage() {
         return getMessage();
@@ -178,7 +167,6 @@ public class Throwable implements java.io.Serializable {
      *         the call stack. Changes in the array obtained from this call will
      *         not change the call stack stored in this {@code Throwable}.
      * @see #printStackTrace()
-     * @since Android 1.0
      */
     public StackTraceElement[] getStackTrace() {
         return getInternalStackTrace().clone();
@@ -198,7 +186,6 @@ public class Throwable implements java.io.Serializable {
      * @throws NullPointerException
      *             if any element in {@code trace} is {@code null}.
      * @see #printStackTrace()
-     * @since Android 1.0
      */
     public void setStackTrace(StackTraceElement[] trace) {
         StackTraceElement[] newTrace = trace.clone();
@@ -214,7 +201,6 @@ public class Throwable implements java.io.Serializable {
      * Writes a printable representation of this {@code Throwable}'s stack trace
      * to the {@code System.err} stream.
      * 
-     * @since Android 1.0
      */
     public void printStackTrace() {
         printStackTrace(System.err);
@@ -268,7 +254,6 @@ public class Throwable implements java.io.Serializable {
      * 
      * @param err
      *            the stream to write the stack trace on.
-     * @since Android 1.0
      */
     public void printStackTrace(PrintStream err) {
         err.println(toString());
@@ -305,7 +290,6 @@ public class Throwable implements java.io.Serializable {
      * 
      * @param err
      *            the writer to write the stack trace on.
-     * @since Android 1.0
      */
     public void printStackTrace(PrintWriter err) {
         err.println(toString());
@@ -356,7 +340,6 @@ public class Throwable implements java.io.Serializable {
      *             if {@code Throwable} is this object.
      * @throws IllegalStateException
      *             if the cause has already been initialized.
-     * @since Android 1.0
      */
     public Throwable initCause(Throwable throwable) {
         // BEGIN android-note
@@ -377,7 +360,6 @@ public class Throwable implements java.io.Serializable {
      * no cause.
      * 
      * @return Throwable this {@code Throwable}'s cause.
-     * @since Android 1.0
      */
     public Throwable getCause() {
         if (cause == this) {
@@ -407,4 +389,3 @@ public class Throwable implements java.io.Serializable {
     native private static StackTraceElement[] nativeGetStackTrace(Object stackState);
     // END android-added
 }
-

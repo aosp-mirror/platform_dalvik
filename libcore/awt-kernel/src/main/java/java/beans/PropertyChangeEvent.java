@@ -22,8 +22,6 @@ import java.util.EventObject;
 /**
  * An event that indicates that a constraint or a boundary of a property has
  * changed.
- * 
- * @since Android 1.0
  */
 public class PropertyChangeEvent extends EventObject {
 

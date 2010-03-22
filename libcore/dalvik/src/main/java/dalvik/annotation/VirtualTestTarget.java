@@ -44,8 +44,6 @@ import java.lang.annotation.Target;
  * annotating them with {@code @VirtualTestTarget}. This class can then be
  * used in the {@code @TestTargetClass} annotation with which we annotate 
  * {@code TestCase} subclasses.
- * 
- * @since Android 1.0
  * @hide
  */
 @Retention(RetentionPolicy.RUNTIME)

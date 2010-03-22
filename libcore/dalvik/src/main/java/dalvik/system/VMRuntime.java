@@ -23,8 +23,6 @@ package dalvik.system;
  *
  * @deprecated this is an internal Dalvik class that is not appropriate for
  *      general use. It will be removed from the public API in a future release.
- *
- * @since Android 1.0
  */
 public final class VMRuntime {
 

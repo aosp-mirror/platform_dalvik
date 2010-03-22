@@ -52,7 +52,6 @@ import com.ibm.icu4jni.regex.NativeRegEx;
  * Android-specific implementation details.
  * 
  * @see Matcher
- * @since Android 1.0
  */
 public final class Pattern implements Serializable {
     

@@ -43,8 +43,6 @@ import org.apache.harmony.kernel.vm.StringUtils;
 /**
  * This class represents a field. Information about the field can be accessed,
  * and the field's value can be accessed dynamically.
- * 
- * @since Android 1.0
  */
 public final class Field extends AccessibleObject implements Member {
 
@@ -132,7 +130,6 @@ public final class Field extends AccessibleObject implements Member {
      * Indicates whether or not this field is synthetic.
      * 
      * @return {@code true} if this field is synthetic, {@code false} otherwise
-     * @since Android 1.0
      */
     public boolean isSynthetic() {
         int flags = getFieldModifiers(declaringClass, slot);
@@ -144,7 +141,6 @@ public final class Field extends AccessibleObject implements Member {
      * generic type.
      * 
      * @return the string representation of this field
-     * @since Android 1.0
      */
     public String toGenericString() {
         StringBuilder sb = new StringBuilder(80);
@@ -166,7 +162,6 @@ public final class Field extends AccessibleObject implements Member {
      * 
      * @return {@code true} if this field is an enumeration constant, {@code
      *         false} otherwise
-     * @since Android 1.0
      */
     public boolean isEnumConstant() {
         int flags = getFieldModifiers(declaringClass, slot);
@@ -184,7 +179,6 @@ public final class Field extends AccessibleObject implements Member {
      * @throws MalformedParameterizedTypeException
      *             if the generic type points to a type that cannot be
      *             instantiated for some reason
-     * @since Android 1.0
      */
     public Type getGenericType() {
         initGenericType();
@@ -208,7 +202,6 @@ public final class Field extends AccessibleObject implements Member {
      * @return {@code true} if the specified object is equal to this method,
      *         {@code false} otherwise
      * @see #hashCode
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -241,7 +234,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public Object get(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getField(object, declaringClass, type, slot, flag);
@@ -269,7 +261,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public boolean getBoolean(Object object) throws IllegalAccessException,
             IllegalArgumentException {
@@ -298,7 +289,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public byte getByte(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getBField(object, declaringClass, type, slot, flag, TYPE_BYTE);
@@ -326,7 +316,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public char getChar(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getCField(object, declaringClass, type, slot, flag, TYPE_CHAR);
@@ -336,7 +325,6 @@ public final class Field extends AccessibleObject implements Member {
      * Returns the class that declares this field.
      *
      * @return the declaring class
-     * @since Android 1.0
      */
     public Class<?> getDeclaringClass() {
         return declaringClass;
@@ -364,7 +352,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public double getDouble(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getDField(object, declaringClass, type, slot, flag, TYPE_DOUBLE);
@@ -392,7 +379,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public float getFloat(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getFField(object, declaringClass, type, slot, flag, TYPE_FLOAT);
@@ -420,7 +406,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public int getInt(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getIField(object, declaringClass, type, slot, flag, TYPE_INTEGER);
@@ -448,7 +433,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public long getLong(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getJField(object, declaringClass, type, slot, flag, TYPE_LONG);
@@ -460,7 +444,6 @@ public final class Field extends AccessibleObject implements Member {
      *
      * @return the modifiers for this field
      * @see Modifier
-     * @since Android 1.0
      */
     public int getModifiers() {
         return getFieldModifiers(declaringClass, slot);
@@ -472,7 +455,6 @@ public final class Field extends AccessibleObject implements Member {
      * Returns the name of this field.
      *
      * @return the name of this field
-     * @since Android 1.0
      */
     public String getName() {
         return name;
@@ -500,7 +482,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public short getShort(Object object) throws IllegalAccessException, IllegalArgumentException {
         return getSField(object, declaringClass, type, slot, flag, TYPE_SHORT);
@@ -512,7 +493,6 @@ public final class Field extends AccessibleObject implements Member {
      * of the class
      * 
      * @return the constructor's signature.
-     * @since Android 1.0
      */
     @SuppressWarnings("unused")
     private String getSignature() {
@@ -523,7 +503,6 @@ public final class Field extends AccessibleObject implements Member {
      * Return the {@link Class} associated with the type of this field.
      * 
      * @return the type of this field
-     * @since Android 1.0
      */
     public Class<?> getType() {
         return type;
@@ -539,7 +518,6 @@ public final class Field extends AccessibleObject implements Member {
      * 
      * @return the hash code for this field
      * @see #equals
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -576,7 +554,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void set(Object object, Object value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -610,7 +587,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setBoolean(Object object, boolean value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -643,7 +619,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setByte(Object object, byte value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -676,7 +651,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setChar(Object object, char value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -709,7 +683,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setDouble(Object object, double value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -742,7 +715,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setFloat(Object object, float value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -775,7 +747,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setInt(Object object, int value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -808,7 +779,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setLong(Object object, long value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -841,7 +811,6 @@ public final class Field extends AccessibleObject implements Member {
      *             if the object is not compatible with the declaring class
      * @throws IllegalAccessException
      *             if this field is not accessible
-     * @since Android 1.0
      */
     public void setShort(Object object, short value) throws IllegalAccessException,
             IllegalArgumentException {
@@ -865,7 +834,6 @@ public final class Field extends AccessibleObject implements Member {
      * java.lang.System.in}
      * 
      * @return a printable representation for this field
-     * @since Android 1.0
      */
     @Override
     public String toString() {

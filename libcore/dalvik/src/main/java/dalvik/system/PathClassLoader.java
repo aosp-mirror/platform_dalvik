@@ -37,8 +37,6 @@ import dalvik.system.DexFile;
  * of files and directories in the local file system, but does not attempt to
  * load classes from the network. Android uses this class for its system class
  * loader and for its application class loader(s).
- *
- * @since Android 1.0
  */
 public class PathClassLoader extends ClassLoader {
 
@@ -277,7 +275,6 @@ public class PathClassLoader extends ClassLoader {
      * @param resName
      *            the name of the resource to find.
      * @return an enumeration of {@code URL} objects for the requested resource.
-     * @since Android 1.0
      */
     @Override
     protected Enumeration<URL> findResources(String resName) {

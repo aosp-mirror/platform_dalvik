@@ -22,8 +22,6 @@ import java.util.EventListenerProxy;
 /**
  * The implementation of this listener proxy just delegates the received events
  * to its listener.
- * 
- * @since Android 1.0
  */
 public class PropertyChangeListenerProxy extends EventListenerProxy implements
         PropertyChangeListener {

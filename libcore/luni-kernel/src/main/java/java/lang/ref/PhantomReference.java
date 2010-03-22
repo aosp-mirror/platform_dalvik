@@ -44,8 +44,6 @@ package java.lang.ref;
  * Phantom references are useful for implementing cleanup operations that are
  * necessary before an object gets garbage-collected. They are sometimes more
  * flexible than the {@link Object#finalize()} method.
- * 
- * @since Android 1.0
  */
 public class PhantomReference<T> extends Reference<T> {
 
@@ -57,8 +55,6 @@ public class PhantomReference<T> extends Reference<T> {
      * 
      * @param r the referent to track
      * @param q the queue to register the phantom reference object with
-     * 
-     * @since Android 1.0
      */
     public PhantomReference(T r, ReferenceQueue<? super T> q) {
         super();
@@ -71,8 +67,6 @@ public class PhantomReference<T> extends Reference<T> {
      * accessible.
      * 
      * @return {@code null} (always)
-     * 
-     * @since Android 1.0
      */
     @Override
     public T get() {

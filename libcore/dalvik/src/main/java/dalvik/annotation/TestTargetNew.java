@@ -25,8 +25,6 @@ import java.lang.annotation.Target;
  * Defines an annotation used be used within the TestInfo annotation. It
  * specifies a single method target for the test (but can be used multiple
  * times).
- * 
- * @since Android 1.0
  * @hide
  */
 @Retention(RetentionPolicy.RUNTIME)

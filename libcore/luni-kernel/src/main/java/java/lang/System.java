@@ -58,29 +58,21 @@ import dalvik.system.VMStack;
  * class itself can not be instantiated.
  * 
  * @see Runtime
- * 
- * @since Android 1.0
  */
 public final class System {
 
     /**
      * Default input stream.
-     * 
-     * @since Android 1.0
      */
     public static final InputStream in;
 
     /**
      * Default output stream.
-     * 
-     * @since Android 1.0
      */
     public static final PrintStream out;
 
     /**
      * Default error output stream.
-     * 
-     * @since Android 1.0
      */
     public static final PrintStream err;
 
@@ -118,7 +110,6 @@ public final class System {
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPermission()} method does not allow the change of the
      *             stream.
-     * @since Android 1.0
      */
     public static void setIn(InputStream newIn) {
         SecurityManager secMgr = System.getSecurityManager();
@@ -138,7 +129,6 @@ public final class System {
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPermission()} method does not allow the change of the
      *             stream.
-     * @since Android 1.0
      */
     public static void setOut(java.io.PrintStream newOut) {
         SecurityManager secMgr = System.getSecurityManager();
@@ -159,7 +149,6 @@ public final class System {
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPermission()} method does not allow the change of the
      *             stream.
-     * @since Android 1.0
      */
     public static void setErr(java.io.PrintStream newErr) {
         SecurityManager secMgr = System.getSecurityManager();
@@ -191,7 +180,6 @@ public final class System {
      * @param length
      *            the number of elements of the {@code array1} content they have
      *            to be copied.
-     * @since Android 1.0
      */
     public static native void arraycopy(Object src, int srcPos, Object dest,
             int destPos, int length);
@@ -203,7 +191,6 @@ public final class System {
      * the results.
      * 
      * @return the local system time in milliseconds.
-     * @since Android 1.0
      */
     public static native long currentTimeMillis();
 
@@ -214,14 +201,13 @@ public final class System {
      * very exact system time expression.
      * 
      * @return the current timestamp in nanoseconds.
-     * @since Android 1.0
      */
     public static native long nanoTime();
 
     /**
      * Causes the virtual machine to stop running and the program to exit. If
      * {@link #runFinalizersOnExit(boolean)} has been previously invoked with a
-     * {@code true} argument, then all all objects will be properly
+     * {@code true} argument, then all objects will be properly
      * garbage-collected and finalized first.
      * 
      * @param code
@@ -230,7 +216,6 @@ public final class System {
      *             if the running thread has not enough permission to exit the
      *             virtual machine.
      * @see SecurityManager#checkExit
-     * @since Android 1.0
      */
     public static void exit(int code) {
         Runtime.getRuntime().exit(code);
@@ -240,8 +225,6 @@ public final class System {
      * Indicates to the virtual machine that it would be a good time to run the
      * garbage collector. Note that this is a hint only. There is no guarantee
      * that the garbage collector will actually be run.
-     * 
-     * @since Android 1.0
      */
     public static void gc() {
         Runtime.getRuntime().gc();
@@ -259,8 +242,6 @@ public final class System {
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPermission()} method does not allow the querying of
      *             single environment variables.
-     * 
-     * @since Android 1.0
      */
     public static String getenv(String name) {
         if (name == null) {
@@ -289,7 +270,6 @@ public final class System {
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPermission()} method does not allow the querying of
      *             all environment variables.
-     * @since Android 1.0
      */
     public static Map<String, String> getenv() {
         SecurityManager secMgr = System.getSecurityManager();
@@ -332,7 +312,6 @@ public final class System {
      *             if an I/O error occurred.
      * @see SelectorProvider
      * @see SelectorProvider#inheritedChannel()
-     * @since Android 1.0
      */
     public static Channel inheritedChannel() throws IOException {
         return SelectorProvider.provider().inheritedChannel();
@@ -347,7 +326,6 @@ public final class System {
      * @throws SecurityException
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPropertiesAccess()} method does not allow the operation.
-     * @since Android 1.0
      */
     public static Properties getProperties() {
         SecurityManager secMgr = System.getSecurityManager();
@@ -407,7 +385,6 @@ public final class System {
      * @throws SecurityException
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPropertyAccess()} method does not allow the operation.
-     * @since Android 1.0
      */
     public static String getProperty(String prop) {
         return getProperty(prop, null);
@@ -427,7 +404,6 @@ public final class System {
      * @throws SecurityException
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPropertyAccess()} method does not allow the operation.
-     * @since Android 1.0
      */
     public static String getProperty(String prop, String defaultValue) {
         if (prop.length() == 0) {
@@ -453,7 +429,6 @@ public final class System {
      * @throws SecurityException
      *             if a security manager exists and write access to the
      *             specified property is not allowed.
-     * @since Android 1.0
      */
     public static String setProperty(String prop, String value) {
         if (prop.length() == 0) {
@@ -479,7 +454,6 @@ public final class System {
      * @throws SecurityException
      *             if a security manager exists and write access to the
      *             specified property is not allowed.
-     * @since Android 1.0
      */
     public static String clearProperty(String key) {
         if (key == null) {
@@ -511,7 +485,6 @@ public final class System {
      * Returns the active security manager.
      * 
      * @return the system security manager object.
-     * @since Android 1.0
      */
     public static SecurityManager getSecurityManager() {
         return securityManager;
@@ -527,7 +500,6 @@ public final class System {
      *            the object to calculate the hash code.
      * @return the hash code for the given object.
      * @see java.lang.Object#hashCode
-     * @since Android 1.0
      */
     public static native int identityHashCode(Object anObject);
 
@@ -538,7 +510,6 @@ public final class System {
      *            the path of the file to be loaded.
      * @throws SecurityException
      *             if the library was not allowed to be loaded.
-     * @since Android 1.0
      */
     public static void load(String pathName) {
         SecurityManager smngr = System.getSecurityManager();
@@ -559,7 +530,6 @@ public final class System {
      *             if the library could not be loaded.
      * @throws SecurityException
      *             if the library was not allowed to be loaded.
-     * @since Android 1.0
      */
     public static void loadLibrary(String libName) {
         SecurityManager smngr = System.getSecurityManager();
@@ -571,9 +541,7 @@ public final class System {
 
     /**
      * Provides a hint to the virtual machine that it would be useful to attempt
-     * to perform any outstanding object finalizations.
-     * 
-     * @since Android 1.0
+     * to perform any outstanding object finalization.
      */
     public static void runFinalization() {
         Runtime.getRuntime().runFinalization();
@@ -587,7 +555,6 @@ public final class System {
      * @param flag
      *            the flag determines if finalization on exit is enabled.
      * @deprecated this method is unsafe.
-     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -603,7 +570,6 @@ public final class System {
      * @throws SecurityException
      *             if a {@link SecurityManager} is installed and its {@code
      *             checkPropertiesAccess()} method does not allow the operation.
-     * @since Android 1.0
      */
     public static void setProperties(Properties p) {
         SecurityManager secMgr = System.getSecurityManager();
@@ -629,7 +595,6 @@ public final class System {
      *             if the security manager has already been set and if its
      *             checkPermission method does not allow to redefine the
      *             security manager.
-     * @since Android 1.0
      */
     public static void setSecurityManager(final SecurityManager sm) {
         if (securityManager != null) {
@@ -660,7 +625,6 @@ public final class System {
      * @param userLibName
      *            the name of the library to look up.
      * @return the platform specific filename for the library.
-     * @since Android 1.0
      */
     public static native String mapLibraryName(String userLibName);
 

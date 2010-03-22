@@ -25,7 +25,6 @@ package java.util;
  * 
  * @see Enumeration
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class NoSuchElementException extends RuntimeException {
 

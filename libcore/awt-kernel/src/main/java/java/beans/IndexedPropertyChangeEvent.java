@@ -20,8 +20,6 @@ package java.beans;
 /**
  * A type of {@link PropertyChangeEvent} that indicates that an indexed property
  * has changed.
- * 
- * @since Android 1.0
  */
 public class IndexedPropertyChangeEvent extends PropertyChangeEvent {
 

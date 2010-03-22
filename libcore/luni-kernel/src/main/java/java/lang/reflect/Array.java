@@ -34,8 +34,6 @@ package java.lang.reflect;
 
 /**
  * This class provides static methods to create and access arrays dynamically.
- *
- * @since Android 1.0
  */
 public final class Array {
     
@@ -64,8 +62,6 @@ public final class Array {
      *             if {@code array} is not an array
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static Object get(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -121,8 +117,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static boolean getBoolean(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -156,8 +150,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static byte getByte(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -187,8 +179,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static char getChar(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -222,8 +212,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static double getDouble(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -253,8 +241,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static float getFloat(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -284,8 +270,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static int getInt(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -309,8 +293,6 @@ public final class Array {
      *             if the {@code array} is {@code null}
      * @throws IllegalArgumentException
      *             if {@code array} is not an array
-     * 
-     * @since Android 1.0
      */
     public static int getLength(Object array) {
         if (array instanceof Object[])
@@ -365,8 +347,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static long getLong(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -396,8 +376,6 @@ public final class Array {
      *             index position can not be converted to the return type
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static short getShort(Object array, int index)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -427,8 +405,6 @@ public final class Array {
      * @throws IllegalArgumentException
      *             if the array of dimensions is of size zero, or exceeds the
      *             limit of the number of dimension for an array (currently 255)
-     * 
-     * @since Android 1.0
      */
     public static Object newInstance(Class<?> componentType, int[] dimensions)
             throws NegativeArraySizeException, IllegalArgumentException {
@@ -465,8 +441,6 @@ public final class Array {
      *             if the component type is null
      * @throws NegativeArraySizeException
      *             if {@code size < 0}
-     * 
-     * @since Android 1.0
      */
     public static Object newInstance(Class<?> componentType, int size)
             throws NegativeArraySizeException {
@@ -528,8 +502,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void set(Object array, int index, Object value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -588,8 +560,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setBoolean(Object array, int index, boolean value) {
         if (array instanceof boolean[]) {
@@ -617,8 +587,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setByte(Object array, int index, byte value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -647,8 +615,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setChar(Object array, int index, char value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -681,8 +647,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setDouble(Object array, int index, double value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -715,8 +679,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setFloat(Object array, int index, float value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -745,8 +707,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setInt(Object array, int index, int value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -775,8 +735,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setLong(Object array, int index, long value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {
@@ -805,8 +763,6 @@ public final class Array {
      *             converted to the array type by a widening conversion
      * @throws ArrayIndexOutOfBoundsException
      *             if {@code  index < 0 || index >= array.length}
-     * 
-     * @since Android 1.0
      */
     public static void setShort(Object array, int index, short value)
             throws IllegalArgumentException, ArrayIndexOutOfBoundsException {

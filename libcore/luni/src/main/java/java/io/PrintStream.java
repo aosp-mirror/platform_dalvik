@@ -588,7 +588,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @param inum
      *            the integer value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void println(int inum) {
         println(String.valueOf(inum));
@@ -601,7 +600,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @param lnum
      *            the long value to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void println(long lnum) {
         println(String.valueOf(lnum));
@@ -614,7 +612,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @param obj
      *            the object to print to the target stream.
      * @see #print(String)
-     * @since Android 1.0
      */
     public void println(Object obj) {
         println(String.valueOf(obj));
@@ -632,7 +629,6 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @param str
      *            the string to print to the target stream.
      * @see #write(int)
-     * @since Android 1.0
      */
     public synchronized void println(String str) {
         print(str);

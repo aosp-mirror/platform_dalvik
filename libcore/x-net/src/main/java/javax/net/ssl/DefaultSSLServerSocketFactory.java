@@ -24,8 +24,6 @@ import java.net.SocketException;
 
 /**
  * Default inoperative implementation of javax.net.ssl.SSLServerSocketFactory
- * 
- * @since Android 1.0
  */
 class DefaultSSLServerSocketFactory extends SSLServerSocketFactory {
 

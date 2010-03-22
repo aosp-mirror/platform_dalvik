@@ -46,7 +46,6 @@ import java.net.URL;
  * Packages are managed by class loaders. All classes loaded by the same loader
  * from the same package share a {@code Package} instance.
  * </p>
- * @since Android 1.0
  * 
  * @see java.lang.ClassLoader
  */
@@ -76,7 +75,6 @@ public class Package implements AnnotatedElement {
      *            the annotation type to look for.
      * @return an instance of {@link Annotation} or {@code null}.
      * @see java.lang.reflect.AnnotatedElement#getAnnotation(java.lang.Class)
-     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
@@ -95,7 +93,6 @@ public class Package implements AnnotatedElement {
      * 
      * @return an array of {@link Annotation} instances, which may be empty.
      * @see java.lang.reflect.AnnotatedElement#getAnnotations()
-     * @since Android 1.0
      */
     public Annotation[] getAnnotations() {
         return getDeclaredAnnotations(this, true);
@@ -106,7 +103,6 @@ public class Package implements AnnotatedElement {
      * 
      * @return an array of {@link Annotation} instances, which may be empty.
      * @see java.lang.reflect.AnnotatedElement#getDeclaredAnnotations()
-     * @since Android 1.0
      */
     public Annotation[] getDeclaredAnnotations() {
         return getDeclaredAnnotations(this, false);
@@ -133,7 +129,6 @@ public class Package implements AnnotatedElement {
      * @return {@code true} if the annotation is present; {@code false}
      *         otherwise.
      * @see java.lang.reflect.AnnotatedElement#isAnnotationPresent(java.lang.Class)
-     * @since Android 1.0
      */
     public boolean isAnnotationPresent(
             Class<? extends Annotation> annotationType) {
@@ -145,7 +140,6 @@ public class Package implements AnnotatedElement {
      * if this is unknown. The format of this string is unspecified.
      * 
      * @return the implementation title, may be {@code null}.
-     * @since Android 1.0
      */
     public String getImplementationTitle() {
         return implTitle;
@@ -157,7 +151,6 @@ public class Package implements AnnotatedElement {
      * format of this string is unspecified.
      * 
      * @return the implementation vendor name, may be {@code null}.
-     * @since Android 1.0
      */
     public String getImplementationVendor() {
         return implVendor;
@@ -168,7 +161,6 @@ public class Package implements AnnotatedElement {
      * null} if this is unknown. The format of this string is unspecified.
      * 
      * @return the implementation version, may be {@code null}.
-     * @since Android 1.0
      */
     public String getImplementationVersion() {
         return implVersion;
@@ -179,7 +171,6 @@ public class Package implements AnnotatedElement {
      * example: "java.lang".
      * 
      * @return the name of this package.
-     * @since Android 1.0
      */
     public String getName() {
         return name;
@@ -193,7 +184,6 @@ public class Package implements AnnotatedElement {
      *            the name of the package to find.
      * @return the requested package, or {@code null}.
      * @see ClassLoader#getPackage(java.lang.String)
-     * @since Android 1.0
      */
     public static Package getPackage(String packageName) {
         ClassLoader classloader = VMStack.getCallingClassLoader();
@@ -205,7 +195,6 @@ public class Package implements AnnotatedElement {
      * 
      * @return all the packages known to the caller's class loader.
      * @see ClassLoader#getPackages
-     * @since Android 1.0
      */
     public static Package[] getPackages() {
         ClassLoader classloader = VMStack.getCallingClassLoader();
@@ -217,7 +206,6 @@ public class Package implements AnnotatedElement {
      * {@code null} if this is unknown.
      * 
      * @return the specification title, may be {@code null}.
-     * @since Android 1.0
      */
     public String getSpecificationTitle() {
         return specTitle;
@@ -229,7 +217,6 @@ public class Package implements AnnotatedElement {
      * unknown.
      * 
      * @return the specification vendor name, may be {@code null}.
-     * @since Android 1.0
      */
     public String getSpecificationVendor() {
         return specVendor;
@@ -241,7 +228,6 @@ public class Package implements AnnotatedElement {
      * non-negative integers separated by dots; for example: "1.2.3".
      * 
      * @return the specification version string, may be {@code null}.
-     * @since Android 1.0
      */
     public String getSpecificationVersion() {
         return specVersion;
@@ -264,7 +250,6 @@ public class Package implements AnnotatedElement {
      * @throws NumberFormatException
      *             if this package's version string or the one provided are not
      *             in the correct format.
-     * @since Android 1.0
      */
     public boolean isCompatibleWith(String version)
             throws NumberFormatException {
@@ -293,7 +278,6 @@ public class Package implements AnnotatedElement {
      * Indicates whether this package is sealed.
      * 
      * @return {@code true} if this package is sealed; {@code false} otherwise.
-     * @since Android 1.0
      */
     public boolean isSealed() {
         return sealBase != null;
@@ -307,7 +291,6 @@ public class Package implements AnnotatedElement {
      *            the URL to check.
      * @return {@code true} if this package is sealed with {@code url}; {@code
      *         false} otherwise
-     * @since Android 1.0
      */
     public boolean isSealed(URL url) {
         return sealBase != null && sealBase.sameFile(url);

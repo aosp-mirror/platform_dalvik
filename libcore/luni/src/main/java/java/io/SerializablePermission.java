@@ -35,8 +35,6 @@ import java.security.BasicPermission;
  * </table>
  * 
  * @see ObjectStreamConstants
- * 
- * @since Android 1.0
  */
 public final class SerializablePermission extends BasicPermission {
     private static final long serialVersionUID = 8537212141160296410L;
@@ -50,7 +48,6 @@ public final class SerializablePermission extends BasicPermission {
      * 
      * @param permissionName
      *            the name of the new permission.
-     * @since Android 1.0
      */
     public SerializablePermission(String permissionName) {
         super(permissionName);
@@ -64,7 +61,6 @@ public final class SerializablePermission extends BasicPermission {
      *            the name of the new permission.
      * @param actions
      *            ignored.
-     * @since Android 1.0
      */
     public SerializablePermission(String name, String actions) {
         super(name, actions);

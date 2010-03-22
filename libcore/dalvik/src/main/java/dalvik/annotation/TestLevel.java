@@ -19,7 +19,6 @@ package dalvik.annotation;
 /**
  * Defines an enumeration of possible states a test case can be in.
  * 
- * @since Android 1.0
  * @hide
  */
 public enum TestLevel {

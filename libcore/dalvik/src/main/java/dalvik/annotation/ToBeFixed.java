@@ -25,8 +25,6 @@ import java.lang.annotation.Target;
  * Defines an annotation for test methods that indicate the test method
  * need to be fixed in future.
  * {@hide pending API Council approval}
- *
- * @since Android 1.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })

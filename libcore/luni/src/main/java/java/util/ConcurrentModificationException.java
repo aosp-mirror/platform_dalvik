@@ -23,7 +23,6 @@ package java.util;
  * Collection as well.
  * 
  * @see java.lang.RuntimeException
- * @since Android 1.0
  */
 public class ConcurrentModificationException extends RuntimeException {
 

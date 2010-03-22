@@ -46,8 +46,6 @@ import org.apache.harmony.luni.lang.reflect.Types;
  * accessed, and the constructor can be invoked dynamically.
  * 
  * @param <T> the class that declares this constructor
- *
- * @since Android 1.0
  */
 public final class Constructor<T> extends AccessibleObject implements GenericDeclaration,
         Member {
@@ -132,8 +130,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * including the type parameters.
      *
      * @return the string representation of the constructor's declaration
-     * 
-     * @since Android 1.0
      */
     public String toGenericString() {
         StringBuilder sb = new StringBuilder(80);
@@ -185,8 +181,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * @throws MalformedParameterizedTypeException
      *             if any parameter type points to a type that cannot be
      *             instantiated for some reason
-     * 
-     * @since Android 1.0
      */
     public Type[] getGenericParameterTypes() {
         initGenericTypes();
@@ -207,7 +201,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * @throws MalformedParameterizedTypeException
      *             if any exception type points to a type that cannot be
      *             instantiated for some reason
-     * @since Android 1.0
      */
     public Type[] getGenericExceptionTypes() {
         initGenericTypes();
@@ -228,8 +221,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * set, then an array of empty arrays is returned.
      * 
      * @return an array of arrays of {@code Annotation} instances
-     * 
-     * @since Android 1.0
      */
     public Annotation[][] getParameterAnnotations() {
         Annotation[][] parameterAnnotations
@@ -248,8 +239,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      *
      * @return {@code true} if a vararg is declare, otherwise
      *         {@code false}
-     * 
-     * @since Android 1.0
      */
     public boolean isVarArgs() {
         int mods = getConstructorModifiers(declaringClass, slot);
@@ -262,8 +251,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * 
      * @return {@code true} if this constructor is synthetic, {@code false}
      *         otherwise
-     * 
-     * @since Android 1.0
      */
     public boolean isSynthetic() {
         int mods = getConstructorModifiers(declaringClass, slot);
@@ -283,8 +270,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      *         constructor, {@code false} otherwise
      * 
      * @see #hashCode
-     * 
-     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -295,8 +280,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * Returns the class that declares this constructor.
      *
      * @return the declaring class
-     * 
-     * @since Android 1.0
      */
     public Class<T> getDeclaringClass() {
         return declaringClass;
@@ -308,8 +291,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * returned.
      * 
      * @return the declared exception classes
-     * 
-     * @since Android 1.0
      */
     public Class<?>[] getExceptionTypes() {
         if (exceptionTypes == null)
@@ -324,8 +305,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * @return the modifiers for this constructor
      * 
      * @see Modifier
-     * 
-     * @since Android 1.0
      */
     public int getModifiers() {
         return getConstructorModifiers(declaringClass, slot);
@@ -337,8 +316,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * Returns the name of this constructor.
      *
      * @return the name of this constructor
-     * 
-     * @since Android 1.0
      */
     public String getName() {
         return declaringClass.getName();
@@ -350,8 +327,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * no parameters, an empty array will be returned.
      *
      * @return the parameter types
-     * 
-     * @since Android 1.0
      */
     public Class<?>[] getParameterTypes() {
         return parameterTypes.clone();
@@ -385,8 +360,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * @return the hash code
      * 
      * @see #equals
-     * 
-     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -438,8 +411,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      *                if an exception was thrown by the invoked constructor
      * 
      * @see AccessibleObject
-     * 
-     * @since Android 1.0
      */
     public T newInstance(Object... args) throws InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException {
@@ -468,8 +439,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * {@code public String(byte[],String) throws UnsupportedEncodingException}
      *
      * @return a printable representation for this constructor
-     * 
-     * @since Android 1.0
      */
     @Override
     public String toString() {

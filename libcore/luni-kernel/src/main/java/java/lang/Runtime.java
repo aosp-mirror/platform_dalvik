@@ -58,8 +58,6 @@ import dalvik.system.VMStack;
  * get a singleton instance by invoking {@link #getRuntime()}.
  * 
  * @see System
- * 
- * @since Android 1.0
  */
 public class Runtime {
     
@@ -135,7 +133,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} disallows program
      *             execution.
      * @see SecurityManager#checkExec
-     * @since Android 1.0
      */
     public Process exec(String[] progArray) throws java.io.IOException {
         return exec(progArray, null, null);
@@ -161,7 +158,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} disallows program
      *             execution.
      * @see SecurityManager#checkExec
-     * @since Android 1.0
      */    
     public Process exec(String[] progArray, String[] envp) throws java.io.IOException {
         return exec(progArray, envp, null);
@@ -189,7 +185,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} disallows program
      *             execution.
      * @see SecurityManager#checkExec
-     * @since Android 1.0
      */
     public Process exec(String[] progArray, String[] envp, File directory) throws IOException {
         // BEGIN android-changed: push responsibility for argument checking into ProcessManager
@@ -212,7 +207,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} disallows program
      *             execution.
      * @see SecurityManager#checkExec
-     * @since Android 1.0
      */
     public Process exec(String prog) throws java.io.IOException {
         return exec(prog, null, null);
@@ -236,7 +230,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} disallows program
      *             execution.
      * @see SecurityManager#checkExec
-     * @since Android 1.0
      */
     public Process exec(String prog, String[] envp) throws java.io.IOException {
         return exec(prog, envp, null);
@@ -263,7 +256,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} disallows program
      *             execution.
      * @see SecurityManager#checkExec
-     * @since Android 1.0
      */
     public Process exec(String prog, String[] envp, File directory) throws java.io.IOException {
         // Sanity checks
@@ -288,7 +280,7 @@ public class Runtime {
     /**
      * Causes the virtual machine to stop running and the program to exit. If
      * {@link #runFinalizersOnExit(boolean)} has been previously invoked with a
-     * {@code true} argument, then all all objects will be properly
+     * {@code true} argument, then all objects will be properly
      * garbage-collected and finalized first.
      * 
      * @param code
@@ -298,7 +290,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} does not allow the
      *             running thread to terminate the virtual machine.
      * @see SecurityManager#checkExit
-     * @since Android 1.0
      */
     public void exit(int code) {
         // Security checks
@@ -349,7 +340,6 @@ public class Runtime {
      * running program.
      * 
      * @return the approximate amount of free memory, measured in bytes.
-     * @since Android 1.0
      */
     public native long freeMemory();
 
@@ -357,8 +347,6 @@ public class Runtime {
      * Indicates to the virtual machine that it would be a good time to run the
      * garbage collector. Note that this is a hint only. There is no guarantee
      * that the garbage collector will actually be run.
-     * 
-     * @since Android 1.0
      */
     public native void gc();
 
@@ -366,7 +354,6 @@ public class Runtime {
      * Returns the single {@code Runtime} instance.
      * 
      * @return the {@code Runtime} object for the current application.
-     * @since Android 1.0
      */
     public static Runtime getRuntime() {
         return mRuntime;
@@ -386,7 +373,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} does not allow to load
      *             the library.
      * @see SecurityManager#checkLink
-     * @since Android 1.0
      */
     public void load(String pathName) {
         // Security checks
@@ -424,7 +410,6 @@ public class Runtime {
      *             if the current {@code SecurityManager} does not allow to load
      *             the library.
      * @see SecurityManager#checkLink
-     * @since Android 1.0
      */
     public void loadLibrary(String libName) {
         // Security checks
@@ -479,7 +464,6 @@ public class Runtime {
      * Provides a hint to the virtual machine that it would be useful to attempt
      * to perform any outstanding object finalizations.
      * 
-     * @since Android 1.0
      */
     public void runFinalization() {
         runFinalization(false);
@@ -495,7 +479,6 @@ public class Runtime {
      *            {@code true} to enable finalization on exit, {@code false} to
      *            disable it.
      * @deprecated This method is unsafe.
-     * @since Android 1.0
      */
     @Deprecated
     public static void runFinalizersOnExit(boolean run) {
@@ -511,7 +494,6 @@ public class Runtime {
      * program.
      * 
      * @return the total amount of memory, measured in bytes.
-     * @since Android 1.0
      */
     public native long totalMemory();
 
@@ -522,7 +504,6 @@ public class Runtime {
      * @param enable
      *            {@code true} to switch tracing on, {@code false} to switch it
      *            off.
-     * @since Android 1.0
      */
     public void traceInstructions(boolean enable) {
         // TODO(Google) Provide some implementation for this.
@@ -535,7 +516,6 @@ public class Runtime {
      * @param enable
      *            {@code true} to switch tracing on, {@code false} to switch it
      *            off.
-     * @since Android 1.0
      */
     public void traceMethodCalls(boolean enable) {
         if (enable != tracingMethods) {
@@ -558,7 +538,6 @@ public class Runtime {
      *            the input stream to localize.
      * @return the localized input stream.
      * @deprecated Use {@link InputStreamReader}.
-     * @since Android 1.0
      */
     @Deprecated
     public InputStream getLocalizedInputStream(InputStream stream) {
@@ -578,7 +557,6 @@ public class Runtime {
      *            the output stream to localize.
      * @return the localized output stream.
      * @deprecated Use {@link OutputStreamWriter}.
-     * @since Android 1.0
      */    
     @Deprecated
     public OutputStream getLocalizedOutputStream(OutputStream stream) {
@@ -700,7 +678,6 @@ public class Runtime {
      * @see #addShutdownHook(Thread)
      * @see #removeShutdownHook(Thread)
      * @see #runFinalizersOnExit(boolean)
-     * @since Android 1.0
      */
     public void halt(int code) {
         // Security checks
@@ -718,7 +695,6 @@ public class Runtime {
      * Android reference implementation (currently) always returns 1.
      * 
      * @return the number of available processors, at least 1.
-     * @since Android 1.0
      */
     public int availableProcessors() {
         return 1;
@@ -730,7 +706,6 @@ public class Runtime {
      * 
      * @return the maximum amount of memory that the virtual machine will try to
      *         allocate, measured in bytes.
-     * @since Android 1.0
      */
     public native long maxMemory();
 
