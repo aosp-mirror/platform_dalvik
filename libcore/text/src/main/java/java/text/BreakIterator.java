@@ -238,7 +238,7 @@ public abstract class BreakIterator implements Cloneable {
     NativeBreakIterator wrapped;
 
     /**
-     * Default constructor, just for invocation by a subclass.
+     * Default constructor, for use by subclasses.
      */
     protected BreakIterator() {
         super();
