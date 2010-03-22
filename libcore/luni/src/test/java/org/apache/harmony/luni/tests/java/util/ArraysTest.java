@@ -19,6 +19,7 @@ package org.apache.harmony.luni.tests.java.util;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -1832,9 +1833,1674 @@ public class ArraysTest extends junit.framework.TestCase {
 		}
 	}
 	
-	/**
+    /**
+     * @tests java.util.Arrays#binarySearch(byte[],int,int, byte)
+     */
+    public void test_binarySearch$BIIB() {
+        for (byte counter = 0; counter < arraySize; counter++) {
+            assertTrue(
+                    "Binary search on byte[] answered incorrect position",
+                    Arrays.binarySearch(byteArray, counter, arraySize, counter) == counter);
+        }
+        assertEquals(
+                "Binary search succeeded for value not present in array 1", -1,
+                Arrays.binarySearch(byteArray, 0, arraySize, (byte) -1));
+        assertTrue(
+                "Binary search succeeded for value not present in array 2",
+                Arrays.binarySearch(byteArray, (byte) arraySize) == -(arraySize + 1));
+        for (byte counter = 0; counter < arraySize; counter++) {
+            byteArray[counter] -= 50;
+        }
+        for (byte counter = 0; counter < arraySize; counter++) {
+            assertTrue(
+                    "Binary search on byte[] involving negative numbers answered incorrect position",
+                    Arrays.binarySearch(byteArray, counter, arraySize,
+                            (byte) (counter - 50)) == counter);
+        }
+        try {
+            Arrays.binarySearch((byte[])null, 2, 1, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((byte[])null, -1, 0, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((byte[])null, -1, -2, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(byteArray, 2, 1, (byte) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays.binarySearch(byteArray, 0, 0, (byte) arraySize));
+        try {
+            Arrays.binarySearch(byteArray, -1, -2, (byte) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(byteArray, arraySize + 2, arraySize + 1,
+                    (byte) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(byteArray, -1, 0, (byte) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(byteArray, 0, arraySize + 1, (byte) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(char[], char)
+     */
+    public void test_binarySearch$CIIC() {
+        for (char counter = 0; counter < arraySize; counter++) {
+            assertTrue("Binary search on char[] answered incorrect position",
+                    Arrays.binarySearch(charArray, counter, arraySize,
+                            (char) (counter + 1)) == counter);
+        }
+        assertEquals(
+                "Binary search succeeded for value not present in array 1", -1,
+                Arrays.binarySearch(charArray, 0, arraySize, '\u0000'));
+        assertTrue("Binary search succeeded for value not present in array 2",
+                Arrays.binarySearch(charArray, 0, arraySize,
+                        (char) (arraySize + 1)) == -(arraySize + 1));
+        try {
+            Arrays.binarySearch(charArray, 2, 1, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((char[])null, 2, 1, (char) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((char[])null, -1, 0, (char) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((char[])null, -1, -2, (char) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays.binarySearch(charArray, 0, 0, (char) arraySize));
+        try {
+            Arrays.binarySearch(charArray, -1, -2, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(charArray, arraySize + 2, arraySize + 1,
+                    (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(charArray, -1, 0, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(charArray, 0, arraySize + 1, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(double[], double)
+     */
+    public void test_binarySearch$DIID() {
+        for (int counter = 0; counter < arraySize; counter++) {
+            assertTrue("Binary search on double[] answered incorrect position",
+                    Arrays.binarySearch(doubleArray, counter, arraySize,
+                            (double) counter) == (double) counter);
+        }
+        assertEquals(
+                "Binary search succeeded for value not present in array 1", -1,
+                Arrays.binarySearch(doubleArray, 0, arraySize, (double) -1));
+        assertTrue("Binary search succeeded for value not present in array 2",
+                Arrays.binarySearch(doubleArray, 0, arraySize,
+                        (double) arraySize) == -(arraySize + 1));
+        for (int counter = 0; counter < arraySize; counter++) {
+            doubleArray[counter] -= (double) 50;
+        }
+        for (int counter = 0; counter < arraySize; counter++) {
+            assertTrue(
+                    "Binary search on double[] involving negative numbers answered incorrect position",
+                    Arrays.binarySearch(doubleArray, counter, arraySize,(double) (counter - 50)) == (double) counter);
+        }
+        double[] specials = new double[] { Double.NEGATIVE_INFINITY,
+                -Double.MAX_VALUE, -2d, -Double.MIN_VALUE, -0d, 0d,
+                Double.MIN_VALUE, 2d, Double.MAX_VALUE,
+                Double.POSITIVE_INFINITY, Double.NaN };
+        for (int i = 0; i < specials.length; i++) {
+            int result = Arrays.binarySearch(specials, i, specials.length,specials[i]);
+            assertTrue(specials[i] + " invalid: " + result, result == i);
+        }
+        assertEquals("-1d", -4, Arrays.binarySearch(specials,0,specials.length, -1d));
+        assertEquals("1d", -8, Arrays.binarySearch(specials,0,specials.length, 1d));
+        try {
+            Arrays.binarySearch((double[])null, 2, 1, (double) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((double[])null, -1, 0, (double) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((double[])null, -1, -2, (double) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(doubleArray, 2, 1, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays.binarySearch(doubleArray, 0, 0, (char) arraySize));
+        try {
+            Arrays.binarySearch(doubleArray, -1, -2, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(doubleArray, arraySize + 2, arraySize + 1,
+                    (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(doubleArray, -1, 0, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(doubleArray, 0, arraySize + 1, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(float[], float)
+     */
+    public void test_binarySearch$FIIF() {
+        for (int counter = 0; counter < arraySize; counter++) {
+            assertTrue("Binary search on float[] answered incorrect position",
+                    Arrays.binarySearch(floatArray, counter, arraySize,
+                            (float) counter) == (float) counter);
+        }
+        assertEquals(
+                "Binary search succeeded for value not present in array 1", -1,
+                Arrays.binarySearch(floatArray, 0, arraySize, (float) -1));
+        assertTrue("Binary search succeeded for value not present in array 2",
+                Arrays
+                        .binarySearch(floatArray, 0, arraySize,
+                                (float) arraySize) == -(arraySize + 1));
+        for (int counter = 0; counter < arraySize; counter++) {
+            floatArray[counter] -= (float) 50;
+        }
+        for (int counter = 0; counter < arraySize; counter++) {
+            assertTrue(
+                    "Binary search on float[] involving negative numbers answered incorrect position",
+                    Arrays.binarySearch(floatArray, 0, arraySize,
+                            (float) counter - 50) == (float) counter);
+        }
+        float[] specials = new float[] { Float.NEGATIVE_INFINITY,
+                -Float.MAX_VALUE, -2f, -Float.MIN_VALUE, -0f, 0f,
+                Float.MIN_VALUE, 2f, Float.MAX_VALUE, Float.POSITIVE_INFINITY,
+                Float.NaN };
+        for (int i = 0; i < specials.length; i++) {
+            int result = Arrays.binarySearch(specials,i,specials.length,specials[i]);
+            assertTrue(specials[i] + " invalid: " + result, result == i);
+        }
+        assertEquals("-1f", -4, Arrays.binarySearch(specials,0,specials.length, -1f));
+        assertEquals("1f", -8, Arrays.binarySearch(specials,0,specials.length, 1f));
+        try {
+            Arrays.binarySearch((float[])null, 2, 1, (float) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((float[])null, -1, 0, (float) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((float[])null, -1, -2, (float) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(floatArray, 2, 1, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays.binarySearch(floatArray, 0, 0,
+                (char) arraySize));
+        try {
+            Arrays.binarySearch(floatArray, -1, -2, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(floatArray, arraySize + 2, arraySize + 1,
+                    (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(floatArray, -1, 0, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays
+                    .binarySearch(floatArray, 0, arraySize + 1,
+                            (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(int[], int)
+     */
+    public void test_binarySearch$IIII() {
+        for (int counter = 0; counter < arraySize; counter++) {
+            assertTrue(
+                    "Binary search on int[] answered incorrect position",
+                    Arrays.binarySearch(intArray, counter, arraySize, counter) == counter);
+        }
+        assertEquals(
+                "Binary search succeeded for value not present in array 1", -1,
+                Arrays.binarySearch(intArray,0, arraySize, -1));
+        assertTrue("Binary search succeeded for value not present in array 2",
+                Arrays.binarySearch(intArray,0, arraySize, arraySize) == -(arraySize + 1));
+        for (int counter = 0; counter < arraySize; counter++) {
+            intArray[counter] -= 50;
+        }
+        for (int counter = 0; counter < arraySize; counter++) {
+            assertTrue(
+                    "Binary search on int[] involving negative numbers answered incorrect position",
+                    Arrays.binarySearch(intArray,0, arraySize, counter - 50) == counter);
+        }
+        try {
+            Arrays.binarySearch((int[])null, 2, 1, (int) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((int[])null, -1, 0, (int) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((int[])null, -1, -2, (int) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(intArray, 2, 1, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays
+                .binarySearch(intArray, 0, 0, (char) arraySize));
+        try {
+            Arrays.binarySearch(intArray, -1, -2, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(intArray, arraySize + 2, arraySize + 1,
+                    (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(intArray, -1, 0, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(intArray, 0, arraySize + 1, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(long[], long)
+     */
+    public void test_binarySearch$JIIJ() {
+        for (long counter = 0; counter < arraySize; counter++){
+            assertTrue("Binary search on long[] answered incorrect position",
+                    Arrays.binarySearch(longArray,0,arraySize, counter) == counter);
+        }
+        assertEquals("Binary search succeeded for value not present in array 1",
+                -1, Arrays.binarySearch(longArray,0,arraySize, (long) -1));
+        assertTrue(
+                "Binary search succeeded for value not present in array 2",
+                Arrays.binarySearch(longArray,0,arraySize, (long) arraySize) == -(arraySize + 1));
+        for (long counter = 0; counter < arraySize; counter++){
+            longArray[(int) counter] -= (long) 50;
+        }
+        for (long counter = 0; counter < arraySize; counter++){
+            assertTrue(
+                    "Binary search on long[] involving negative numbers answered incorrect position",
+                    Arrays.binarySearch(longArray,0,arraySize, counter - (long) 50) == counter);
+        }
+        try {
+            Arrays.binarySearch((long[])null, 2, 1, (long) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((long[])null, -1, 0, (long) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((long[])null, -1, -2, (long) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(longArray, 2, 1, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays
+                .binarySearch(longArray, 0, 0, (char) arraySize));
+        try {
+            Arrays.binarySearch(longArray, -1, -2, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(longArray, arraySize + 2, arraySize + 1,
+                    (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(longArray, -1, 0, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(longArray, 0, arraySize + 1, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(java.lang.Object[],
+     *        java.lang.Object)
+     */
+    public void test_binarySearch$Ljava_lang_ObjectIILjava_lang_Object() {
+        assertEquals(
+                "Binary search succeeded for non-comparable value in empty array",
+                -1, Arrays.binarySearch(new Object[] {},0,0, new Object()));
+        assertEquals(
+                "Binary search succeeded for comparable value in empty array",
+                -1, Arrays.binarySearch(new Object[] {},0,0, new Integer(-1)));
+        for (int counter = 0; counter < arraySize; counter++){
+            assertTrue(
+                    "Binary search on Object[] answered incorrect position",
+                    Arrays.binarySearch(objectArray,counter,arraySize, objArray[counter]) == counter);
+        }
+        assertEquals("Binary search succeeded for value not present in array 1",
+                -1, Arrays.binarySearch(objectArray,0,arraySize, new Integer(-1)));
+        assertTrue(
+                "Binary search succeeded for value not present in array 2",
+                Arrays.binarySearch(objectArray,0,arraySize, new Integer(arraySize)) == -(arraySize + 1));
+        try {
+            Arrays.binarySearch((Object[])null, 2, 1, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((Object[])null, -1, 0, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((Object[])null, -1, -2, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, 2, 1, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays
+                .binarySearch(objectArray, 0, 0, (char) arraySize));
+        try {
+            Arrays.binarySearch(objectArray, -1, -2, (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, arraySize + 2, arraySize + 1,
+                    (char) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, -1, 0, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, 0, arraySize + 1, (char) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(java.lang.Object[],
+     *        java.lang.Object, java.util.Comparator)
+     */
+    public void test_binarySearch$Ljava_lang_ObjectIILjava_lang_ObjectLjava_util_Comparator() {
+        Comparator comp = new ReversedIntegerComparator();
+        for (int counter = 0; counter < arraySize; counter++) {
+            objectArray[counter] = objArray[arraySize - counter - 1];
+        }
+        assertTrue("Binary search succeeded for value not present in array 1",
+                Arrays.binarySearch(objectArray, 0, arraySize, new Integer(-1),
+                        comp) == -(arraySize + 1));
+        assertEquals(
+                "Binary search succeeded for value not present in array 2", -1,
+                Arrays.binarySearch(objectArray, 0, arraySize, new Integer(
+                        arraySize), comp));
+        for (int counter = 0; counter < arraySize; counter++) {
+            assertTrue(
+                    "Binary search on Object[] with custom comparator answered incorrect position",
+                    Arrays.binarySearch(objectArray, objArray[counter], comp) == arraySize
+                            - counter - 1);
+        }
+        try {
+            Arrays.binarySearch((Object[])null, 2, 1, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((Object[])null, -1, 0, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((Object[])null, -1, -2, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, 2, 1, (char) arraySize, comp);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays.binarySearch(objectArray, 0, 0,
+                (char) arraySize, comp));
+        try {
+            Arrays.binarySearch(objectArray, -1, -2, (char) arraySize, comp);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, arraySize + 2, arraySize + 1,
+                    (char) arraySize, comp);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, -1, 0, (char) arraySize, comp);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, 0, arraySize + 1,
+                    (char) arraySize, comp);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(objectArray, 0, arraySize ,
+                    new LinkedList(), comp);
+            fail("should throw ClassCastException");
+        } catch (ClassCastException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.Arrays#binarySearch(short[], short)
+     */
+    public void test_binarySearch$SIIS() {
+        for (short counter = 0; counter < arraySize; counter++){
+            assertTrue("Binary search on short[] answered incorrect position",
+                    Arrays.binarySearch(shortArray,counter,arraySize, counter) == counter);
+        }
+        assertEquals("Binary search succeeded for value not present in array 1",
+                -1, Arrays.binarySearch(shortArray,0,arraySize, (short) -1));
+        assertTrue(
+                "Binary search succeeded for value not present in array 2",
+                Arrays.binarySearch(shortArray,0,arraySize, (short) arraySize) == -(arraySize + 1));
+        for (short counter = 0; counter < arraySize; counter++){
+            shortArray[counter] -= 50;
+        }
+        for (short counter = 0; counter < arraySize; counter++){
+            assertTrue(
+                    "Binary search on short[] involving negative numbers answered incorrect position",
+                    Arrays.binarySearch(shortArray,counter,arraySize, (short) (counter - 50)) == counter);
+        }
+        try {
+            Arrays.binarySearch((String[])null, 2, 1, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((String[])null, -1, 0, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch((String[])null, -1, -2, (byte) arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(shortArray, 2, 1, (short) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(-1, Arrays
+                .binarySearch(shortArray, 0, 0, (short) arraySize));
+        try {
+            Arrays.binarySearch(shortArray, -1, -2, (short) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(shortArray, arraySize + 2, arraySize + 1,
+                    (short) arraySize);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(shortArray, -1, 0, (short) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.binarySearch(shortArray, 0, arraySize + 1, (short) arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        String[] array = {"a" , "b" , "c"};
+        assertEquals(-2,Arrays.binarySearch(array, 1, 2, "a", null));
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(byte[],int)
+     */
+    public void test_copyOf_$BI() throws Exception {
+        byte[] result = Arrays.copyOf(byteArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOf(byteArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i, result[i]);
+        }
+        try {
+            Arrays.copyOf((byte[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(byteArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((byte[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(short[],int)
+     */
+    public void test_copyOf_$SI() throws Exception {
+        short[] result = Arrays.copyOf(shortArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOf(shortArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i, result[i]);
+        }
+        try {
+            Arrays.copyOf((short[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(shortArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((short[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(int[],int)
+     */
+    public void test_copyOf_$II() throws Exception {
+        int[] result = Arrays.copyOf(intArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOf(intArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i, result[i]);
+        }
+        try {
+            Arrays.copyOf((int[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(intArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((int[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(boolean[],int)
+     */
+    public void test_copyOf_$ZI() throws Exception {
+        boolean[] result = Arrays.copyOf(booleanArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(booleanArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(false, result[i]);
+        }
+        result = Arrays.copyOf(booleanArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(booleanArray[i], result[i]);
+        }
+        try {
+            Arrays.copyOf((boolean[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(booleanArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((boolean[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(char[],int)
+     */
+    public void test_copyOf_$CI() throws Exception {
+        char[] result = Arrays.copyOf(charArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i+1, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOf(charArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i+1, result[i]);
+        }
+        try {
+            Arrays.copyOf((char[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(charArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((char[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(float[],int)
+     */
+    public void test_copyOf_$FI() throws Exception {
+        float[] result = Arrays.copyOf(floatArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(floatArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0.0f, result[i]);
+        }
+        result = Arrays.copyOf(floatArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(floatArray[i], result[i]);
+        }
+        try {
+            Arrays.copyOf((float[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(floatArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((float[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(double[],int)
+     */
+    public void test_copyOf_$DI() throws Exception {
+        double[] result = Arrays.copyOf(doubleArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(doubleArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0.0, result[i]);
+        }
+        result = Arrays.copyOf(doubleArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(doubleArray[i], result[i]);
+        }
+        try {
+            Arrays.copyOf((double[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(doubleArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((double[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(long[],int)
+     */
+    public void test_copyOf_$JI() throws Exception {
+        long[] result = Arrays.copyOf(longArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(longArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOf(longArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(longArray[i], result[i]);
+        }
+        try {
+            Arrays.copyOf((long[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(longArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((long[])null, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(T[],int)
+     */
+    public void test_copyOf_$TI() throws Exception {
+        Object[] result = Arrays.copyOf(objArray, arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertNull(result[i]);
+        }
+        result = Arrays.copyOf(objArray, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        try {
+            Arrays.copyOf((String[])null, arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(objArray, -1);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((String[])null, -1);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        Date[] component = new Date[0];
+        Object object[] = new Date[0];
+        
+        object = Arrays.copyOf(component,2);
+        assertNotNull(object);
+        component = Arrays.copyOf(component,2);
+        assertNotNull(component);
+        assertEquals(2, component.length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOf(T[],int,Class<? extends Object[]>))
+     */
+    public void test_copyOf_$TILClass() throws Exception {
+        Object[] result = Arrays.copyOf(objArray, arraySize*2,Object[].class);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertNull(result[i]);
+        }
+        result = Arrays.copyOf(objArray, arraySize/2,Object[].class);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        result = Arrays.copyOf(objArray, arraySize/2,Integer[].class);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        try {
+            Arrays.copyOf((Object[])null, arraySize,LinkedList[].class);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(objArray, arraySize,LinkedList[].class);
+            fail("should throw ArrayStoreException ");
+        } catch (ArrayStoreException  e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((Object[])null, arraySize,Object[].class);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf(objArray, -1,Object[].class);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((Object[])null, -1,Object[].class);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((Object[])null, -1,LinkedList[].class);
+            fail("should throw NegativeArraySizeException");
+        } catch (NegativeArraySizeException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOf((Object[])null, 0,LinkedList[].class);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        assertEquals(0,Arrays.copyOf(objArray, 0,LinkedList[].class).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(byte[],int,int)
+     */
+    public void test_copyOfRange_$BII() throws Exception {
+        byte[] result = Arrays.copyOfRange(byteArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOfRange(byteArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i, result[i]);
+        }
+        result = Arrays.copyOfRange(byteArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((byte[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((byte[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((byte[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(byteArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(byteArray, 0, -1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(byteArray.length + 1, Arrays.copyOfRange(byteArray, 0,
+                byteArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(short[],int,int)
+     */
+    public void test_copyOfRange_$SII() throws Exception {
+        short[] result = Arrays.copyOfRange(shortArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOfRange(shortArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i, result[i]);
+        }
+        result = Arrays.copyOfRange(shortArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((short[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((short[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((short[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(shortArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(shortArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(shortArray.length + 1, Arrays.copyOfRange(shortArray, 0,
+                shortArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(int[],int,int)
+     */
+    public void test_copyOfRange_$III() throws Exception {
+        int[] result = Arrays.copyOfRange(intArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOfRange(intArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i, result[i]);
+        }
+        result = Arrays.copyOfRange(intArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((int[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((int[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((int[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(intArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(intArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(intArray.length + 1, Arrays.copyOfRange(intArray, 0,
+                intArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(long[],int,int)
+     */
+    public void test_copyOfRange_$JII() throws Exception {
+        long[] result = Arrays.copyOfRange(longArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOfRange(longArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i, result[i]);
+        }
+        result = Arrays.copyOfRange(longArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((long[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((long[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((long[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(longArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(longArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(longArray.length + 1, Arrays.copyOfRange(longArray, 0,
+                longArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(char[],int,int)
+     */
+    public void test_copyOfRange_$CII() throws Exception {
+        char[] result = Arrays.copyOfRange(charArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(i+1, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0, result[i]);
+        }
+        result = Arrays.copyOfRange(charArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(i+1, result[i]);
+        }
+        result = Arrays.copyOfRange(charArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((char[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((char[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((char[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(charArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(charArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(charArray.length + 1, Arrays.copyOfRange(charArray, 0,
+                charArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(float[],int,int)
+     */
+    public void test_copyOfRange_$FII() throws Exception {
+        float[] result = Arrays.copyOfRange(floatArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals((float)i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0.0f, result[i]);
+        }
+        result = Arrays.copyOfRange(floatArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals((float)i, result[i]);
+        }
+        result = Arrays.copyOfRange(floatArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((float[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((float[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((float[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(floatArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(floatArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(floatArray.length + 1, Arrays.copyOfRange(floatArray, 0,
+                floatArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(double[],int,int)
+     */
+    public void test_copyOfRange_$DII() throws Exception {
+        double[] result = Arrays.copyOfRange(doubleArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals((double)i, result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(0.0, result[i]);
+        }
+        result = Arrays.copyOfRange(doubleArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals((double)i, result[i]);
+        }
+        result = Arrays.copyOfRange(doubleArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((double[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((double[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((double[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(doubleArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(doubleArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(doubleArray.length + 1, Arrays.copyOfRange(doubleArray, 0,
+                doubleArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(boolean[],int,int)
+     */
+    public void test_copyOfRange_$ZII() throws Exception {
+        boolean[] result = Arrays.copyOfRange(booleanArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(booleanArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(false, result[i]);
+        }
+        result = Arrays.copyOfRange(booleanArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(booleanArray[i], result[i]);
+        }
+        result = Arrays.copyOfRange(booleanArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((boolean[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((boolean[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((boolean[])null, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(booleanArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(booleanArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(booleanArray.length + 1, Arrays.copyOfRange(booleanArray, 0,
+                booleanArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(Object[],int,int)
+     */
+    public void test_copyOfRange_$TII() throws Exception {
+        Object[] result = Arrays.copyOfRange(objArray, 0,arraySize*2);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(null, result[i]);
+        }
+        result = Arrays.copyOfRange(objArray,0, arraySize/2);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        result = Arrays.copyOfRange(objArray,0, 0);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange((Object[])null, 0,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((Object[])null, -1,arraySize);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((Object[])null, 0,-1);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((Object[])objArray, -1,arraySize);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange((Object[])objArray, 0,-1);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        assertEquals(objArray.length + 1, Arrays.copyOfRange(objArray, 0,
+                objArray.length + 1).length);
+    }
+    
+    /**
+     * @tests {@link java.util.Arrays#copyOfRange(Object[], int, int, Class)
+     */
+    public void test_copyOfRange_$TIILClass() throws Exception {
+        Object[] result = Arrays.copyOfRange(objArray, 0,arraySize*2,Integer[].class);
+        int i = 0;
+        for (; i < arraySize; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        for (; i < result.length; i++) {
+            assertEquals(null, result[i]);
+        }
+        result = Arrays.copyOfRange(objArray,0, arraySize/2,Integer[].class);
+        i = 0;
+        for (; i < result.length; i++) {
+            assertEquals(objArray[i], result[i]);
+        }
+        result = Arrays.copyOfRange(objArray,0, 0,Integer[].class);
+        assertEquals(0, result.length);
+        try {
+            Arrays.copyOfRange(null, 0,arraySize,Integer[].class);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(null, -1,arraySize,Integer[].class);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(null, 0,-1,Integer[].class);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(objArray, -1,arraySize,Integer[].class);
+            fail("should throw ArrayIndexOutOfBoundsException");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(objArray, 0,-1,Integer[].class);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(objArray, 0,-1,LinkedList[].class);
+            fail("should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(objArray, 0,1,LinkedList[].class);
+            fail("should throw ArrayStoreException");
+        } catch (ArrayStoreException e) {
+            // expected
+        }
+        try {
+            Arrays.copyOfRange(null, 0,1,LinkedList[].class);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        try {
+            assertEquals(objArray.length + 1, Arrays.copyOfRange(objArray, 0,
+                    objArray.length + 1, LinkedList[].class).length);
+            fail("should throw ArrayStoreException");
+        } catch (ArrayStoreException e) {
+            // expected
+        }
+        assertEquals(0,
+                Arrays.copyOfRange(objArray, 0, 0, LinkedList[].class).length);
+    }
+    
+    /**
      * @tests java.util.Arrays#swap(int, int, Object[])
      */
+    /* BEGIN android-removed: tests private implementation detail we don't share.
     public void test_swap_I_I_$Ljava_lang_Object() throws Exception {
     	Method m = Arrays.class.getDeclaredMethod("swap", int.class, int.class, Object[].class);
     	m.setAccessible(true);
@@ -1843,6 +3509,7 @@ public class ArraysTest extends junit.framework.TestCase {
     	assertEquals("should be equal to 1",1, arr[0].intValue());
     	assertEquals("should be equal to 0",0, arr[1].intValue());
     }
+    */
 
 	/**
 	 * Tears down the fixture, for example, close a network connection. This

@@ -172,83 +172,142 @@ public class Arrays {
     }
 
     /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
      *
-     * @param array
-     *            the sorted {@code byte} array to search.
-     * @param value
-     *            the {@code byte} element to find.
+     * @param array the sorted array to search.
+     * @param value the element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(byte[] array, byte value) {
-         int lo = 0;
-         int hi = array.length - 1;
-
-         while (lo <= hi) {
-             int mid = (lo + hi) >>> 1;
-             byte midVal = array[mid];
-
-             if (midVal < value)
-                 lo = mid + 1;
-             else if (midVal > value)
-                 hi = mid - 1;
-             else
-                 return mid;  // value found
-         }
-         return ~lo;  // value not present
+        return binarySearch(array, 0, array.length, value);
     }
 
     /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
      *
-     * @param array
-     *            the sorted {@code char} array to search.
-     * @param value
-     *            the {@code char} element to find.
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static int binarySearch(byte[] array, int startIndex, int endIndex, byte value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            byte midVal = array[mid];
+
+            if (midVal < value) {
+                lo = mid + 1;
+            } else if (midVal > value) {
+                hi = mid - 1;
+            } else {
+                return mid;  // value found
+            }
+        }
+        return ~lo;  // value not present
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param value the element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(char[] array, char value) {
-         int lo = 0;
-         int hi = array.length - 1;
-
-         while (lo <= hi) {
-             int mid = (lo + hi) >>> 1;
-             char midVal = array[mid];
-
-             if (midVal < value)
-                 lo = mid + 1;
-             else if (midVal > value)
-                 hi = mid - 1;
-             else
-                 return mid;  // value found
-         }
-         return ~lo;  // value not present
+        return binarySearch(array, 0, array.length, value);
     }
 
     /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
      *
-     * @param array
-     *            the sorted {@code double} array to search.
-     * @param value
-     *            the {@code double} element to find.
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static int binarySearch(char[] array, int startIndex, int endIndex, char value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            char midVal = array[mid];
+
+            if (midVal < value) {
+                lo = mid + 1;
+            } else if (midVal > value) {
+                hi = mid - 1;
+            } else {
+                return mid;  // value found
+            }
+        }
+        return ~lo;  // value not present
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param value the element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(double[] array, double value) {
-        int lo = 0;
-        int hi = array.length - 1;
+        return binarySearch(array, 0, array.length, value);
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static int binarySearch(double[] array, int startIndex, int endIndex, double value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
 
         while (lo <= hi) {
             int mid = (lo + hi) >>> 1;
@@ -264,33 +323,53 @@ public class Arrays {
                 long midValBits = Double.doubleToLongBits(midVal);
                 long valueBits  = Double.doubleToLongBits(value);
 
-                if (midValBits < valueBits)
+                if (midValBits < valueBits) {
                     lo = mid + 1; // (-0.0, 0.0) or (not NaN, NaN); midVal < val
-                else if (midValBits > valueBits)
+                } else if (midValBits > valueBits) {
                     hi = mid - 1; // (0.0, -0.0) or (NaN, not NaN); midVal > val
-                else
+                } else {
                     return mid; // bit patterns are equal; value found
+                }
             }
         }
         return ~lo;  // value not present
     }
 
     /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
      *
-     * @param array
-     *            the sorted {@code float} array to search.
-     * @param value
-     *            the {@code float} element to find.
+     * @param array the sorted array to search.
+     * @param value the element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(float[] array, float value) {
-        int lo = 0;
-        int hi = array.length - 1;
+        return binarySearch(array, 0, array.length, value);
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static int binarySearch(float[] array, int startIndex, int endIndex, float value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
 
         while (lo <= hi) {
             int mid = (lo + hi) >>> 1;
@@ -306,184 +385,302 @@ public class Arrays {
                 int midValBits = Float.floatToIntBits(midVal);
                 int valueBits  = Float.floatToIntBits(value);
 
-                if (midValBits < valueBits)
+                if (midValBits < valueBits) {
                     lo = mid + 1; // (-0.0, 0.0) or (not NaN, NaN); midVal < val
-                else if (midValBits > valueBits)
+                } else if (midValBits > valueBits) {
                     hi = mid - 1; // (0.0, -0.0) or (NaN, not NaN); midVal > val
-                else
+                } else {
                     return mid; // bit patterns are equal; value found
+                }
             }
         }
         return ~lo;  // value not present
     }
 
     /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
      *
-     * @param array
-     *            the sorted {@code int} array to search.
-     * @param value
-     *            the {@code int} element to find.
+     * @param array the sorted array to search.
+     * @param value the element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
      */
- public static int binarySearch(int[] array, int value) {
-         int lo = 0;
-         int hi = array.length - 1;
-
-         while (lo <= hi) {
-             int mid = (lo + hi) >>> 1;
-             int midVal = array[mid];
-
-             if (midVal < value)
-                 lo = mid + 1;
-             else if (midVal > value)
-                 hi = mid - 1;
-             else
-                 return mid;  // value found
-         }
-         return ~lo;  // value not present
-     }
-
-    /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
-     *
-     * @param array
-     *            the sorted {@code long} array to search.
-     * @param value
-     *            the {@code long} element to find.
-     * @return the non-negative index of the element, or a negative index which
-     *         is {@code -index - 1} where the element would be inserted.
-     */
-    public static int binarySearch(long[] array, long value) {
-         int lo = 0;
-         int hi = array.length - 1;
-
-         while (lo <= hi) {
-             int mid = (lo + hi) >>> 1;
-             long midVal = array[mid];
-
-             if (midVal < value)
-                 lo = mid + 1;
-             else if (midVal > value)
-                 hi = mid - 1;
-             else
-                 return mid;  // value found
-         }
-         return ~lo;  // value not present
+    public static int binarySearch(int[] array, int value) {
+        return binarySearch(array, 0, array.length, value);
     }
 
     /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
      *
-     * @param array
-     *            the sorted {@code Object} array to search.
-     * @param value
-     *            the {@code Object} element to find.
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
-     * @throws ClassCastException
-     *                if an element in the array or the search element does not
-     *                implement {@code Comparable}, or cannot be compared to each other.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
      */
-    public static int binarySearch(Object[] array, Object value) {
-         int lo = 0;
-         int hi = array.length - 1;
-
-         while (lo <= hi) {
-             int mid = (lo + hi) >>> 1;
-             @SuppressWarnings("unchecked")
-             int midValCmp = ((Comparable) array[mid]).compareTo(value);
-
-             if (midValCmp < 0)
-                 lo = mid + 1;
-             else if (midValCmp > 0)
-                 hi = mid - 1;
-             else
-                 return mid;  // value found
-         }
-         return ~lo;  // value not present
-    }
-
-    /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array using the {@code Comparator} to compare elements.
-     * Searching in an unsorted array has an undefined result. It's also
-     * undefined which element is found if there are multiple occurrences of the
-     * same element.
-     *
-     * @param array
-     *            the sorted array to search
-     * @param value
-     *            the element to find
-     * @param comparator
-     *            the {@code Comparator} sued to compare the elements.
-     * @return the non-negative index of the element, or a negative index which
-     *         is {@code -index - 1} where the element would be inserted.
-     * @throws ClassCastException
-     *                if an element in the array cannot be compared to the search element
-     *                using the {@code Comparator}.
-     */
-    public static <T> int binarySearch(T[] array, T value,
-            Comparator<? super T> comparator) {
-        if (comparator == null)
-            return binarySearch(array, value);
-
-        int lo = 0;
-        int hi = array.length - 1;
+    public static int binarySearch(int[] array, int startIndex, int endIndex, int value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
 
         while (lo <= hi) {
             int mid = (lo + hi) >>> 1;
-            int midValCmp = comparator.compare(array[mid], value);
+            int midVal = array[mid];
 
-            if (midValCmp < 0)
+            if (midVal < value) {
                 lo = mid + 1;
-            else if (midValCmp > 0)
+            } else if (midVal > value) {
                 hi = mid - 1;
-            else
+            } else {
                 return mid;  // value found
+            }
         }
         return ~lo;  // value not present
     }
 
     /**
-     * Performs a binary search for the specified element in the specified
-     * ascending sorted array. Searching in an unsorted array has an undefined
-     * result. It's also undefined which element is found if there are multiple
-     * occurrences of the same element.
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
      *
-     * @param array
-     *            the sorted {@code short} array to search.
-     * @param value
-     *            the {@code short} element to find.
+     * @param array the sorted array to search.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     */
+    public static int binarySearch(long[] array, long value) {
+        return binarySearch(array, 0, array.length, value);
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static int binarySearch(long[] array, int startIndex, int endIndex, long value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            long midVal = array[mid];
+
+            if (midVal < value) {
+                lo = mid + 1;
+            } else if (midVal > value) {
+                hi = mid - 1;
+            } else {
+                return mid;  // value found
+            }
+         }
+         return ~lo;  // value not present
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws ClassCastException
+     *         if an element in the array or the search element does not
+     *         implement {@code Comparable}, or cannot be compared to each other.
+     */
+    public static int binarySearch(Object[] array, Object value) {
+        return binarySearch(array, 0, array.length, value);
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws ClassCastException
+     *         if an element in the array or the search element does not
+     *         implement {@code Comparable}, or cannot be compared to each other.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static int binarySearch(Object[] array, int startIndex, int endIndex, Object value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            @SuppressWarnings("unchecked")
+            int midValCmp = ((Comparable) array[mid]).compareTo(value);
+
+            if (midValCmp < 0) {
+                lo = mid + 1;
+            } else if (midValCmp > 0) {
+                hi = mid - 1;
+            } else {
+                return mid;  // value found
+            }
+        }
+        return ~lo;  // value not present
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * using {@comparator} to compare elements.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param value the element to find.
+     * @param comparator the {@code Comparator} used to compare the elements.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws ClassCastException
+     *         if an element in the array or the search element does not
+     *         implement {@code Comparable}, or cannot be compared to each other.
+     */
+    public static <T> int binarySearch(T[] array, T value, Comparator<? super T> comparator) {
+        return binarySearch(array, 0, array.length, value, comparator);
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive),
+     * using {@comparator} to compare elements.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @param comparator the {@code Comparator} used to compare the elements.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws ClassCastException
+     *         if an element in the array or the search element does not
+     *         implement {@code Comparable}, or cannot be compared to each other.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static <T> int binarySearch(T[] array, int startIndex, int endIndex, T value,
+            Comparator<? super T> comparator) {
+        if (comparator == null) {
+            return binarySearch(array, startIndex, endIndex, value);
+        }
+
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            int midValCmp = comparator.compare(array[mid], value);
+
+            if (midValCmp < 0) {
+                lo = mid + 1;
+            } else if (midValCmp > 0) {
+                hi = mid - 1;
+            } else {
+                return mid;  // value found
+            }
+        }
+        return ~lo;  // value not present
+    }
+
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array}.
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param value the element to find.
      * @return the non-negative index of the element, or a negative index which
      *         is {@code -index - 1} where the element would be inserted.
      */
     public static int binarySearch(short[] array, short value) {
-         int lo = 0;
-         int hi = array.length - 1;
+        return binarySearch(array, 0, array.length, value);
+    }
 
-         while (lo <= hi) {
-             int mid = (lo + hi) >>> 1;
-             short midVal = array[mid];
+    /**
+     * Performs a binary search for {@code value} in the ascending sorted array {@code array},
+     * in the range specified by fromIndex (inclusive) and toIndex (exclusive).
+     * Searching in an unsorted array has an undefined result. It's also undefined which element
+     * is found if there are multiple occurrences of the same element.
+     *
+     * @param array the sorted array to search.
+     * @param startIndex the inclusive start index.
+     * @param endIndex the exclusive start index.
+     * @param value the element to find.
+     * @return the non-negative index of the element, or a negative index which
+     *         is {@code -index - 1} where the element would be inserted.
+     * @throws IllegalArgumentException if {@code startIndex > endIndex}
+     * @throws ArrayIndexOutOfBoundsException if {@code startIndex < 0 || endIndex > array.length}
+     * @since 1.6
+     * @hide
+     */
+    public static int binarySearch(short[] array, int startIndex, int endIndex, short value) {
+        checkBinarySearchBounds(startIndex, endIndex, array.length);
+        int lo = startIndex;
+        int hi = endIndex - 1;
 
-             if (midVal < value)
-                 lo = mid + 1;
-             else if (midVal > value)
-                 hi = mid - 1;
-             else
-                 return mid;  // value found
-         }
-         return ~lo;  // value not present
+        while (lo <= hi) {
+            int mid = (lo + hi) >>> 1;
+            short midVal = array[mid];
+
+            if (midVal < value) {
+                lo = mid + 1;
+            } else if (midVal > value) {
+                hi = mid - 1;
+            } else {
+                return mid;  // value found
+            }
+        }
+        return ~lo;  // value not present
+    }
+
+    private static void checkBinarySearchBounds(int startIndex, int endIndex, int length) {
+        if (startIndex > endIndex) {
+            throw new IllegalArgumentException();
+        }
+        if (startIndex < 0 || endIndex > length) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
     }
 
     /**
@@ -517,7 +714,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(byte[] array, int start, int end, byte value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -554,7 +751,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(short[] array, int start, int end, short value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -591,7 +788,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(char[] array, int start, int end, char value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -628,7 +825,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(int[] array, int start, int end, int value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -665,7 +862,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(long[] array, int start, int end, long value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -702,7 +899,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(float[] array, int start, int end, float value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -739,7 +936,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(double[] array, int start, int end, double value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -776,7 +973,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(boolean[] array, int start, int end, boolean value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -813,7 +1010,7 @@ public class Arrays {
      *                if {@code start < 0} or {@code end > array.length}.
      */
     public static void fill(Object[] array, int start, int end, Object value) {
-        checkBounds(array.length, start, end);
+        checkFillBounds(array.length, start, end);
         for (int i = start; i < end; i++) {
             array[i] = value;
         }
@@ -1549,7 +1746,7 @@ public class Arrays {
         DualPivotQuicksort.sort(array, start, end);
     }
 
-    private static void checkBounds(int arrLength, int start, int end) {
+    private static void checkFillBounds(int arrLength, int start, int end) {
         if (start > end) {
             // K0033=Start index ({0}) is greater than end index ({1})
             throw new IllegalArgumentException(Msg.getString("K0033", //$NON-NLS-1$
@@ -2313,5 +2510,530 @@ public class Arrays {
             }
         }
         return false;
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code false}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static boolean[] copyOf(boolean[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code (byte) 0}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static byte[] copyOf(byte[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code '\\u0000'}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static char[] copyOf(char[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0.0d}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static double[] copyOf(double[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0.0f}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static float[] copyOf(float[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static int[] copyOf(int[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0L}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static long[] copyOf(long[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code (short) 0}.
+     *
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static short[] copyOf(short[] original, int newLength) {
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code null}.
+     *
+     * @param <T> array element type
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static <T> T[] copyOf(T[] original, int newLength) {
+        if (original == null) {
+            throw new NullPointerException();
+        }
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength);
+    }
+
+    /**
+     * Copies {@code newLength} elements from {@code original} into a new array.
+     * If {@code newLength} is greater than {@code original.length}, the result is padded
+     * with the value {@code null}.
+     *
+     * @param <T> result array element type
+     * @param <U> original array element type
+     * @param original the original array
+     * @param newLength the length of the new array
+     * @param newType the class of the new array
+     * @return the new array
+     * @throws NegativeArraySizeException if {@code newLength < 0}
+     * @throws NullPointerException if {@code original == null}
+     * @throws ArrayStoreException if a value in {@code original} is incompatible with T
+     * @since 1.6
+     * @hide
+     */
+    public static <T, U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
+        // We use the null pointer check in copyOfRange for exception priority compatibility.
+        if (newLength < 0) {
+            throw new NegativeArraySizeException();
+        }
+        return copyOfRange(original, 0, newLength, newType);
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code false}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static boolean[] copyOfRange(boolean[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        boolean[] result = new boolean[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code (byte) 0}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static byte[] copyOfRange(byte[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        byte[] result = new byte[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code '\\u0000'}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static char[] copyOfRange(char[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        char[] result = new char[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0.0d}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static double[] copyOfRange(double[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        double[] result = new double[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0.0f}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static float[] copyOfRange(float[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        float[] result = new float[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static int[] copyOfRange(int[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        int[] result = new int[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code 0L}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static long[] copyOfRange(long[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        long[] result = new long[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code (short) 0}.
+     *
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    public static short[] copyOfRange(short[] original, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        short[] result = new short[resultLength];
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code null}.
+     *
+     * @param <T> the element type
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @since 1.6
+     * @hide
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T[] copyOfRange(T[] original, int start, int end) {
+        int originalLength = original.length; // For exception priority compatibility.
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        T[] result = (T[]) Array.newInstance(original.getClass().getComponentType(), resultLength);
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
+    }
+
+    /**
+     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
+     * end (exclusive). The original order of elements is preserved.
+     * If {@code end} is greater than {@code original.length}, the result is padded
+     * with the value {@code null}.
+     *
+     * @param <T> result array element type
+     * @param <U> original array element type
+     * @param original the original array
+     * @param start the start index, inclusive
+     * @param end the end index, exclusive
+     * @return the new array
+     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
+     * @throws IllegalArgumentException if {@code start > end}
+     * @throws NullPointerException if {@code original == null}
+     * @throws ArrayStoreException if a value in {@code original} is incompatible with T
+     * @since 1.6
+     * @hide
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, U> T[] copyOfRange(U[] original, int start, int end, Class<? extends T[]> newType) {
+        if (start > end) {
+            throw new IllegalArgumentException();
+        }
+        int originalLength = original.length;
+        if (start < 0 || start > originalLength) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        int resultLength = end - start;
+        int copyLength = Math.min(resultLength, originalLength - start);
+        T[] result = (T[]) Array.newInstance(newType.getComponentType(), resultLength);
+        System.arraycopy(original, start, result, 0, copyLength);
+        return result;
     }
 }
