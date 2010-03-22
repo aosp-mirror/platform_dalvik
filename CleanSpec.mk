@@ -20,13 +20,13 @@
 #
 # E.g.:
 #     $(call add-clean-step, touch -c external/sqlite/sqlite3.h)
-#     $(call add-clean-step, rm -rf $(PRODUCT_OUT)/obj/STATIC_LIBRARIES/libz_intermediates)
+#     $(call add-clean-step, rm -rf $(OUT)/obj/STATIC_LIBRARIES/libz_intermediates)
 #
 # Always use "touch -c" and "rm -f" or "rm -rf" to gracefully deal with
 # files that are missing or have been moved.
 #
 # Use $(PRODUCT_OUT) to get to the "out/target/product/blah/" directory.
-# Use $(OUT_DIR) to refer to the "out" directory.
+# Use $(OUT) to refer to the "out" directory.
 #
 # If you need to re-do something that's already mentioned, just copy
 # the command and add it to the bottom of the list.  E.g., if a change
@@ -39,11 +39,12 @@
 # ************************************************
 
 # For example:
-#$(call add-clean-step, rm -rf $(OUT_DIR)/target/common/obj/APPS/AndroidTests_intermediates)
-#$(call add-clean-step, rm -rf $(OUT_DIR)/target/common/obj/JAVA_LIBRARIES/core_intermediates)
-#$(call add-clean-step, find $(OUT_DIR) -type f -name "IGTalkSession*" -print0 | xargs -0 rm -f)
+#$(call add-clean-step, rm -rf $(OUT)/target/common/obj/APPS/AndroidTests_intermediates)
+#$(call add-clean-step, rm -rf $(OUT)/target/common/obj/JAVA_LIBRARIES/core_intermediates)
+#$(call add-clean-step, find $(OUT) -type f -name "IGTalkSession*" -print0 | xargs -0 rm -f)
 #$(call add-clean-step, rm -rf $(PRODUCT_OUT)/data/*)
-
+#$(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
+$(call add-clean-step, rm -rf $(OUT)/obj/SHARED_LIBRARIES/libdvm*)
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************
