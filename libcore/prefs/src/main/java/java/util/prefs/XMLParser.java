@@ -173,9 +173,7 @@ class XMLParser {
     static void exportPrefs(Preferences prefs, OutputStream stream,
             boolean withSubTree) throws IOException, BackingStoreException {
         indent = -1;
-        // BEGIN android-modified
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"), 8192); //$NON-NLS-1$
-        // END android-modified
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(stream, "UTF-8"));
         out.write(HEADER);
         out.newLine();
         out.newLine();
@@ -515,9 +513,7 @@ class XMLParser {
             FileLock lock = null;
             try {
                 FileInputStream istream = new FileInputStream(file);
-                // BEGIN android-modified
-                in = new BufferedInputStream(istream, 8192);
-                // END android-modified
+                in = new BufferedInputStream(istream);
                 FileChannel channel = istream.getChannel();
                 lock = channel.lock(0L, Long.MAX_VALUE, true);
                 Document doc = builder.parse(in);
@@ -570,9 +566,7 @@ class XMLParser {
         FileLock lock = null;
         try {
             FileOutputStream ostream = new FileOutputStream(file);
-            // BEGIN android-modified
-            out = new BufferedWriter(new OutputStreamWriter(ostream, "UTF-8"), 8192); //$NON-NLS-1$
-            // END android-modified
+            out = new BufferedWriter(new OutputStreamWriter(ostream, "UTF-8"));
             FileChannel channel = ostream.getChannel();
             lock = channel.lock();
             out.write(HEADER);

@@ -56,9 +56,7 @@ class ProxySelectorImpl extends ProxySelector {
                 if (f.exists()) {
                     try {
                         FileInputStream fis = new FileInputStream(f);
-                        // BEGIN android-modified
-                        InputStream is = new BufferedInputStream(fis, 8192);
-                        // END android-modified
+                        InputStream is = new BufferedInputStream(fis);
                         netProps = new Properties();
                         netProps.load(is);
                         is.close();

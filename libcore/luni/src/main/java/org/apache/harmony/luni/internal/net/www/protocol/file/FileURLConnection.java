@@ -81,9 +81,7 @@ public class FileURLConnection extends URLConnection {
             is = getDirectoryListing(f);
             // use -1 for the contentLength
         } else {
-            // BEGIN android-modified
-            is = new BufferedInputStream(new FileInputStream(f), 8192);
-            // END android-modified
+            is = new BufferedInputStream(new FileInputStream(f));
             length = is.available();
         }
         connected = true;

@@ -129,12 +129,8 @@ public abstract class SelectorProvider extends Object {
             BufferedReader br = null;
             String className = null;
             try {
-                // BEGIN android-modified
                 br = new BufferedReader(
-                        new InputStreamReader(
-                                (enumeration.nextElement()).openStream()),
-                        8192);
-                // END android-modified
+                        new InputStreamReader(enumeration.nextElement().openStream()));
             } catch (Exception e) {
                 continue;
             }

@@ -776,10 +776,7 @@ public final class Formatter implements Closeable, Flushable {
         FileOutputStream fout = null;
         try {
             fout = new FileOutputStream(file);
-            OutputStreamWriter writer = new OutputStreamWriter(fout, csn);
-            // BEGIN android-changed
-            out = new BufferedWriter(writer, 8192);
-            // END android-changed
+            out = new BufferedWriter(new OutputStreamWriter(fout, csn));
         } catch (RuntimeException e) {
             closeOutputStream(fout);
             throw e;
@@ -802,11 +799,7 @@ public final class Formatter implements Closeable, Flushable {
      *            the stream to be used as the destination of the {@code Formatter}.
      */
     public Formatter(OutputStream os) {
-        OutputStreamWriter writer = new OutputStreamWriter(os, Charset
-                .defaultCharset());
-        // BEGIN android-changed
-        out = new BufferedWriter(writer, 8192);
-        // END android-changed
+        out = new BufferedWriter(new OutputStreamWriter(os, Charset.defaultCharset()));
         locale = Locale.getDefault();
     }
 
@@ -843,14 +836,8 @@ public final class Formatter implements Closeable, Flushable {
      * @throws UnsupportedEncodingException
      *             if the charset with the specified name is not supported.
      */
-    public Formatter(OutputStream os, String csn, Locale l)
-            throws UnsupportedEncodingException {
-
-        OutputStreamWriter writer = new OutputStreamWriter(os, csn);
-        // BEGIN android-changed
-        out = new BufferedWriter(writer, 8192);
-        // END android-changed
-
+    public Formatter(OutputStream os, String csn, Locale l) throws UnsupportedEncodingException {
+        out = new BufferedWriter(new OutputStreamWriter(os, csn));
         locale = l;
     }
 

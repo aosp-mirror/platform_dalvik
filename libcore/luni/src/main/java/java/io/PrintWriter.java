@@ -134,12 +134,7 @@ public class PrintWriter extends Writer {
      *             target file.
      */
     public PrintWriter(File file) throws FileNotFoundException {
-        // BEGIN android-modified
-        this(new OutputStreamWriter(
-                     new BufferedOutputStream(
-                             new FileOutputStream(file), 8192)),
-                false);
-        // END android-modified
+        this(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file))), false);
     }
 
     /**
@@ -165,12 +160,8 @@ public class PrintWriter extends Writer {
      */
     public PrintWriter(File file, String csn) throws FileNotFoundException,
             UnsupportedEncodingException {
-        // BEGIN android-modified
-        this(new OutputStreamWriter(
-                     new BufferedOutputStream(
-                             new FileOutputStream(file), 8192), csn),
+        this(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(file)), csn),
                 false);
-        // END android-modified
     }
 
     /**
@@ -190,12 +181,8 @@ public class PrintWriter extends Writer {
      *             target file.
      */
     public PrintWriter(String fileName) throws FileNotFoundException {
-        // BEGIN android-modified
-        this(new OutputStreamWriter(
-                     new BufferedOutputStream(
-                             new FileOutputStream(fileName), 8192)),
+        this(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(fileName))),
                 false);
-        // END android-modified
     }
 
      /**
@@ -222,12 +209,8 @@ public class PrintWriter extends Writer {
      */
     public PrintWriter(String fileName, String csn)
             throws FileNotFoundException, UnsupportedEncodingException {
-        // BEGIN android-modified
-        this(new OutputStreamWriter(
-                     new BufferedOutputStream(
-                             new FileOutputStream(fileName), 8192), csn),
+        this(new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(fileName)), csn),
                 false);
-        // END android-modified
     }
 
     /**

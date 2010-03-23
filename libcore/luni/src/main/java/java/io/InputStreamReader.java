@@ -44,13 +44,11 @@ import org.apache.harmony.luni.util.PriviAction;
 public class InputStreamReader extends Reader {
     private InputStream in;
 
-    private static final int BUFFER_SIZE = 8192;
-
     private boolean endOfInput = false;
 
-    CharsetDecoder decoder;
+    private CharsetDecoder decoder;
 
-    ByteBuffer bytes = ByteBuffer.allocate(BUFFER_SIZE);
+    private final ByteBuffer bytes = ByteBuffer.allocate(8192);
 
     /**
      * Constructs a new {@code InputStreamReader} on the {@link InputStream}

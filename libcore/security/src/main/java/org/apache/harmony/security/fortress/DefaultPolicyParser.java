@@ -115,14 +115,11 @@ public class DefaultPolicyParser {
             throws Exception {
 
         boolean resolve = PolicyUtils.canExpandProperties();
-        // BEGIN android-modified
         Reader r =
             new BufferedReader(
                     new InputStreamReader(
                             AccessController.doPrivileged(
-                                    new PolicyUtils.URLLoader(location))),
-                    8192);
-        // END android-modified
+                                    new PolicyUtils.URLLoader(location))));
 
         Collection<GrantEntry> grantEntries = new HashSet<GrantEntry>();
         List<KeystoreEntry> keystores = new ArrayList<KeystoreEntry>();

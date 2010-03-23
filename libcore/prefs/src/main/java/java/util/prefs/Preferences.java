@@ -194,7 +194,7 @@ public abstract class Preferences {
                         InputStream is = en.nextElement().openStream();
                         // Read each line for charset provider class names
                         reader = new BufferedReader(new InputStreamReader(is,
-                                CONFIGURATION_FILE_ENCODING), 8192);
+                                CONFIGURATION_FILE_ENCODING));
                         factoryClassName = reader.readLine();
                         commentIndex = factoryClassName.indexOf(CONFIGURATION_FILE_COMMENT);
                         if (commentIndex > 0) {

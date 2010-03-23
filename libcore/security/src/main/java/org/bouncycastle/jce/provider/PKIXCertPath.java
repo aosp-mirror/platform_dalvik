@@ -202,9 +202,7 @@ public  class PKIXCertPath
             }
             else if (encoding.equalsIgnoreCase("PKCS7") || encoding.equalsIgnoreCase("PEM"))
             {
-                // BEGIN android-modified
-                inStream = new BufferedInputStream(inStream, 8192);
-                // END android-modified
+                inStream = new BufferedInputStream(inStream);
                 certificates = new ArrayList();
                 CertificateFactory certFactory= CertificateFactory.getInstance("X.509", "BC");
                 Certificate cert;

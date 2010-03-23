@@ -124,10 +124,7 @@ final public class XMLReaderFactory
             in = loader.getResourceAsStream (service);
 
         if (in != null) {
-            // BEGIN android-modified
-            reader = new BufferedReader (
-                new InputStreamReader (in, "UTF8"), 8192);
-            // END android-modified
+            reader = new BufferedReader (new InputStreamReader (in, "UTF8"));
             className = reader.readLine ();
             in.close ();
         }

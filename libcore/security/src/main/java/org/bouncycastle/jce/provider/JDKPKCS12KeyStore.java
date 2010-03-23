@@ -704,9 +704,7 @@ public class JDKPKCS12KeyStore
             throw new NullPointerException("No password supplied for PKCS#12 KeyStore.");
         }
 
-        // BEGIN android-modified
-        BufferedInputStream             bufIn = new BufferedInputStream(stream, 8192);
-        // END android-modified
+        BufferedInputStream             bufIn = new BufferedInputStream(stream);
 
         bufIn.mark(10);
 
