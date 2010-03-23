@@ -55,44 +55,22 @@ public class BufferedWriter extends Writer {
             .doPrivileged(new PriviAction<String>("line.separator")); //$NON-NLS-1$
 
     /**
-     * Constructs a new {@code BufferedWriter} with {@code out} as the writer
-     * for which to buffer write operations. The buffer size is set to the
-     * default value of 8 KB.
+     * Constructs a new {@code BufferedWriter}, providing {@code out} with a buffer
+     * of 8192 bytes.
      *
-     * @param out
-     *            the writer for which character writing is buffered.
+     * @param out the {@code Writer} the buffer writes to.
      */
     public BufferedWriter(Writer out) {
-        super(out);
-        this.out = out;
-        buf = new char[8192];
-
-        // BEGIN android-added
-        /*
-         * For Android, we want to discourage the use of this constructor (with
-         * its arguably too-large default), so we note its use in the log. We
-         * don't disable it, nor do we alter the default, however, because we
-         * still aim to behave compatibly, and the default value, though not
-         * documented, is established by convention.
-         */
-        Logger.global.info(
-                "Default buffer size used in BufferedWriter " +
-                "constructor. It would be " +
-                "better to be explicit if an 8k-char buffer is required.");
-        // END android-added
+        this(out, 8192);
     }
 
     /**
-     * Constructs a new {@code BufferedWriter} with {@code out} as the writer
-     * for which to buffer write operations. The buffer size is set to {@code
-     * size}.
+     * Constructs a new {@code BufferedWriter}, providing {@code out} with {@code size} bytes
+     * of buffer.
      *
-     * @param out
-     *            the writer for which character writing is buffered.
-     * @param size
-     *            the size of the buffer in bytes.
-     * @throws IllegalArgumentException
-     *             if {@code size <= 0}.
+     * @param out the {@code OutputStream} the buffer writes to.
+     * @param size the size of buffer in bytes.
+     * @throws IllegalArgumentException if {@code size <= 0}.
      */
     public BufferedWriter(Writer out, int size) {
         super(out);

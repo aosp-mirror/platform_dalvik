@@ -75,43 +75,22 @@ public class BufferedReader extends Reader {
     private int markLimit = -1;
 
     /**
-     * Constructs a new BufferedReader on the Reader {@code in}. The
-     * buffer gets the default size (8 KB).
-     * 
-     * @param in
-     *            the Reader that is buffered.
+     * Constructs a new {@code BufferedReader}, providing {@code in} with a buffer
+     * of 8192 characters.
+     *
+     * @param in the {@code Reader} the buffer reads from.
      */
     public BufferedReader(Reader in) {
-        super(in);
-        this.in = in;
-        buf = new char[8192];
-
-        // BEGIN android-only
-        /*
-         * For Android, we want to discourage the use of this
-         * constructor (with its arguably too-large default), so we
-         * note its use in the log. We don't disable it, nor do we
-         * alter the default, however, because we still aim to behave
-         * compatibly, and the default value, though not documented,
-         * is established by convention.
-         */
-        Logger.global.info(
-                "Default buffer size used in BufferedReader " +
-                "constructor. It would be " +
-                "better to be explicit if an 8k-char buffer is required.");
-        // END android-only
+        this(in, 8192);
     }
 
     /**
-     * Constructs a new BufferedReader on the Reader {@code in}. The buffer
-     * size is specified by the parameter {@code size}.
-     * 
-     * @param in
-     *            the Reader that is buffered.
-     * @param size
-     *            the size of the buffer to allocate.
-     * @throws IllegalArgumentException
-     *             if {@code size <= 0}.
+     * Constructs a new {@code BufferedReader}, providing {@code in} with {@code size} characters
+     * of buffer.
+     *
+     * @param in the {@code InputStream} the buffer reads from.
+     * @param size the size of buffer in characters.
+     * @throws IllegalArgumentException if {@code size <= 0}.
      */
     public BufferedReader(Reader in, int size) {
         super(in);
