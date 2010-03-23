@@ -19,7 +19,8 @@
  */
 #include "Dalvik.h"
 #include "native/InternalNativePriv.h"
-
+#include <unistd.h>
+#include <limits.h>
 
 /*
  * public void gc()
@@ -106,6 +107,26 @@ static void Dalvik_java_lang_Runtime_runFinalization(const u4* args,
 }
 
 /*
+ * public int availableProcessors()
+ *
+ * Returns the number of online processors, at least one.
+ *
+ */
+static void Dalvik_java_lang_Runtime_availableProcessors(const u4* args,
+    JValue* pResult)
+{
+    long result = 1;
+#ifdef _SC_NPROCESSORS_ONLN
+    result = sysconf(_SC_NPROCESSORS_ONLN);
+    if (result > INT_MAX) {
+        result = INT_MAX;
+    } else if (result < 1 ) {
+        result = 1;
+    }
+#endif
+    RETURN_INT((int)result);
+}
+/*
  * public void maxMemory()
  *
  * Returns GC heap max memory in bytes.
@@ -149,6 +170,8 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_freeMemory },
     { "gc",                 "()V",
         Dalvik_java_lang_Runtime_gc },
+    { "availableProcessors", "()I",
+        Dalvik_java_lang_Runtime_availableProcessors },
     { "maxMemory",          "()J",
         Dalvik_java_lang_Runtime_maxMemory },
     { "nativeExit",         "(IZ)V",
@@ -161,4 +184,3 @@ const DalvikNativeMethod dvm_java_lang_Runtime[] = {
         Dalvik_java_lang_Runtime_totalMemory },
     { NULL, NULL, NULL },
 };
-
