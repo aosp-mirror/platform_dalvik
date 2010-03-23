@@ -51,42 +51,22 @@ public class BufferedOutputStream extends FilterOutputStream {
     protected int count;
 
     /**
-     * Constructs a new {@code BufferedOutputStream} on the {@link OutputStream}
-     * {@code out}. The buffer size is set to the default value of 8 KB.
+     * Constructs a new {@code BufferedOutputStream}, providing {@code out} with a buffer
+     * of 8192 bytes.
      *
-     * @param out
-     *            the {@code OutputStream} for which write operations are
-     *            buffered.
+     * @param out the {@code OutputStream} the buffer writes to.
      */
     public BufferedOutputStream(OutputStream out) {
-        super(out);
-        buf = new byte[8192];
-
-        // BEGIN android-added
-        /*
-         * For Android, we want to discourage the use of this constructor (with
-         * its arguably too-large default), so we note its use in the log. We
-         * don't disable it, nor do we alter the default, however, because we
-         * still aim to behave compatibly, and the default value, though not
-         * documented, is established by convention.
-         */
-        Logger.global.info(
-                "Default buffer size used in BufferedOutputStream " +
-                "constructor. It would be " +
-                "better to be explicit if an 8k buffer is required.");
-        // END android-added
+        this(out, 8192);
     }
 
     /**
-     * Constructs a new {@code BufferedOutputStream} on the {@link OutputStream}
-     * {@code out}. The buffer size is set to {@code size}.
+     * Constructs a new {@code BufferedOutputStream}, providing {@code out} with {@code size} bytes
+     * of buffer.
      *
-     * @param out
-     *            the output stream for which write operations are buffered.
-     * @param size
-     *            the size of the buffer in bytes.
-     * @throws IllegalArgumentException
-     *             if {@code size <= 0}.
+     * @param out the {@code OutputStream} the buffer writes to.
+     * @param size the size of buffer in bytes.
+     * @throws IllegalArgumentException if {@code size <= 0}.
      */
     public BufferedOutputStream(OutputStream out, int size) {
         super(out);

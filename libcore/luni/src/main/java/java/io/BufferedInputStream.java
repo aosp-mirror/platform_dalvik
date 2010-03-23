@@ -67,43 +67,22 @@ public class BufferedInputStream extends FilterInputStream {
     protected int pos;
 
     /**
-     * Constructs a new {@code BufferedInputStream} on the {@link InputStream}
-     * {@code in}. The default buffer size (8 KB) is allocated and all reads
-     * can now be filtered through this stream.
+     * Constructs a new {@code BufferedInputStream}, providing {@code in} with a buffer
+     * of 8192 bytes.
      *
-     * @param in
-     *            the InputStream the buffer reads from.
+     * @param in the {@code InputStream} the buffer reads from.
      */
     public BufferedInputStream(InputStream in) {
-        super(in);
-        buf = new byte[8192];
-
-        // BEGIN android-added
-        /*
-         * For Android, we want to discourage the use of this constructor (with
-         * its arguably too-large default), so we note its use in the log. We
-         * don't disable it, nor do we alter the default, however, because we
-         * still aim to behave compatibly, and the default value, though not
-         * documented, is established by convention.
-         */
-        Logger.global.info(
-                "Default buffer size used in BufferedInputStream " +
-                "constructor. It would be " +
-                "better to be explicit if an 8k buffer is required.");
-        // END android-added
+        this(in, 8192);
     }
 
     /**
-     * Constructs a new {@code BufferedInputStream} on the {@link InputStream}
-     * {@code in}. The buffer size is specified by the parameter {@code size}
-     * and all reads are now filtered through this stream.
+     * Constructs a new {@code BufferedInputStream}, providing {@code in} with {@code size} bytes
+     * of buffer.
      *
-     * @param in
-     *            the input stream the buffer reads from.
-     * @param size
-     *            the size of buffer to allocate.
-     * @throws IllegalArgumentException
-     *             if {@code size < 0}.
+     * @param in the {@code InputStream} the buffer reads from.
+     * @param size the size of buffer in bytes.
+     * @throws IllegalArgumentException if {@code size <= 0}.
      */
     public BufferedInputStream(InputStream in, int size) {
         super(in);
