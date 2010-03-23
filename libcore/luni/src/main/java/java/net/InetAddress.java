@@ -410,11 +410,39 @@ public class InetAddress implements Serializable {
     }
 
     /**
-     * Gets the local host address if the security policy allows this.
-     * Otherwise, gets the loopback address which allows this machine to be
-     * contacted.
+     * Returns an {@code InetAddress} for the local host if possible, or the
+     * loopback address otherwise. This method works by getting the hostname,
+     * performing a DNS lookup, and then taking the first returned address.
+     * For devices with multiple network interfaces and/or multiple addresses
+     * per interface, this does not necessarily return the {@code InetAddress}
+     * you want.
      *
-     * @return the {@code InetAddress} representing the local host.
+     * <p>Multiple interface/address configurations were relatively rare
+     * when this API was designed, but multiple interfaces are the default for
+     * modern mobile devices (with separate wifi and radio interfaces), and
+     * the need to support both IPv4 and IPv6 has made multiple addresses
+     * commonplace. New code should thus avoid this method except where it's
+     * basically being used to get a loopback address or equivalent.
+     *
+     * <p>There are two main ways to get a more specific answer:
+     * <ul>
+     * <li>If you have a connected socket, you should probably use
+     * {@link Socket#getLocalAddress} instead: that will give you the address
+     * that's actually in use for that connection. (It's not possible to ask
+     * the question "what local address would a connection to a given remote
+     * address use?"; you have to actually make the connection and see.)</li>
+     * <li>For other use cases, see {@link NetworkInterface}, which lets you
+     * enumerate all available network interfaces and their addresses.</li>
+     * </ul>
+     *
+     * <p>Note that if the host doesn't have a hostname set&nbsp;&ndash; as
+     * Android devices typically don't&nbsp;&ndash; this method will
+     * effectively return the loopback address, albeit by getting the name
+     * {@code localhost} and then doing a lookup to translate that to
+     * {@code 127.0.0.1}.
+     *
+     * @return an {@code InetAddress} representing the local host, or the
+     * loopback address.
      * @throws UnknownHostException
      *             if the address lookup fails.
      */
