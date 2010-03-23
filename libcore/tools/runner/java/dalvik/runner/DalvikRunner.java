@@ -135,7 +135,7 @@ public final class DalvikRunner {
             System.out.println();
             System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
             System.out.println("      test before the runner aborts it. Specifying zero seconds");
-            System.out.println("      or using --debug-port will disable the execution timeout");
+            System.out.println("      or using --debug will disable the execution timeout");
             System.out.println("      Default is: " + timeoutSeconds);
             System.out.println();
             System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
