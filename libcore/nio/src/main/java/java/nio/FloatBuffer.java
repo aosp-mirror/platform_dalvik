@@ -105,6 +105,7 @@ public abstract class FloatBuffer extends Buffer implements
      */
     FloatBuffer(int capacity) {
         super(capacity);
+        _elementSizeShift = 2;
     }
 
     public final float[] array() {

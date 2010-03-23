@@ -77,6 +77,14 @@ public abstract class Buffer {
 
     // BEGIN android-added
     /**
+     * The log base 2 of the element size of this buffer.  Each typed subclass
+     * (ByteBuffer, CharBuffer, etc.) is responsible for initializing this
+     * value.  The value is used by JNI code in frameworks/base/ to avoid the
+     * need for costly 'instanceof' tests.
+     */
+    int _elementSizeShift;
+
+    /**
      * For direct buffers, the effective address of the data.  This is set
      * on first use.  If the field is zero, this is either not a direct
      * buffer or the field has not been initialized, and you need to issue

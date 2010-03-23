@@ -102,6 +102,7 @@ public abstract class IntBuffer extends Buffer implements Comparable<IntBuffer> 
      */
     IntBuffer(int capacity) {
         super(capacity);
+        _elementSizeShift = 2;
     }
 
     public final int[] array() {
