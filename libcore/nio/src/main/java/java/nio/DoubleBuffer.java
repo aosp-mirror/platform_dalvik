@@ -103,6 +103,7 @@ public abstract class DoubleBuffer extends Buffer implements
      */
     DoubleBuffer(int capacity) {
         super(capacity);
+        _elementSizeShift = 3;
     }
 
     public final double[] array() {

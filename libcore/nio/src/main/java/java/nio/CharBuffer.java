@@ -153,6 +153,7 @@ public abstract class CharBuffer extends Buffer implements
      */
     CharBuffer(int capacity) {
         super(capacity);
+        _elementSizeShift = 1;
     }
 
     public final char[] array() {

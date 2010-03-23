@@ -104,6 +104,7 @@ public abstract class ShortBuffer extends Buffer implements
      */
     ShortBuffer(int capacity) {
         super(capacity);
+        _elementSizeShift = 1;
     }
 
     public final short[] array() {

@@ -126,6 +126,7 @@ public abstract class ByteBuffer extends Buffer implements
      */
     ByteBuffer(int capacity) {
         super(capacity);
+        _elementSizeShift = 0;
     }
 
     /**

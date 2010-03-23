@@ -104,6 +104,7 @@ public abstract class LongBuffer extends Buffer implements
      */
     LongBuffer(int capacity) {
         super(capacity);
+        _elementSizeShift = 3;
     }
 
     public final long[] array() {
