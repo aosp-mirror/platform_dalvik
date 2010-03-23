@@ -3591,8 +3591,8 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
  * This does not necessarily cause the entire process to stop, but once a
  * thread has been nuked the rest of the system is likely to be unstable.
  * This returns so that some limited set of additional operations may be
- * performed, but it's advisable to abort soon.  (This is NOT a way to
- * simply cancel a thread.)
+ * performed, but it's advisable (and expected) to call dvmAbort soon.
+ * (This is NOT a way to simply cancel a thread.)
  */
 void dvmNukeThread(Thread* thread)
 {
@@ -3600,24 +3600,32 @@ void dvmNukeThread(Thread* thread)
     gDvm.nativeDebuggerActive = true;
 
     /*
-     * Send the signals, separated by a brief interval to allow debuggerd to
-     * work its magic.  SIGFPE could be used to make it stand out a little
-     * in the crash dump.  (Observed behavior: with SIGFPE, debuggerd will
-     * dump the target thread and then the thread that calls dvmAbort.
-     * With SIGSEGV, you don't get the second stack trace.  The position in
-     * the current thread is generally known, so we're using SIGSEGV for now
-     * to reduce log volume.)
+     * Send the signals, separated by a brief interval to allow debuggerd
+     * to work its magic.  An uncommon signal like SIGFPE or SIGSTKFLT
+     * can be used instead of SIGSEGV to avoid making it look like the
+     * code actually crashed at the current point of execution.
+     *
+     * (Observed behavior: with SIGFPE, debuggerd will dump the target
+     * thread and then the thread that calls dvmAbort.  With SIGSEGV,
+     * you don't get the second stack trace; possibly something in the
+     * kernel decides that a signal has already been sent and it's time
+     * to just kill the process.  The position in the current thread is
+     * generally known, so the second dump is not useful.)
      *
      * The target thread can continue to execute between the two signals.
      * (The first just causes debuggerd to attach to it.)
      */
-    LOGD("Sending two SIGSEGVs to tid=%d to cause debuggerd dump\n",
-        thread->systemTid);
-    pthread_kill(thread->handle, SIGSEGV);
+    LOGD("threadid=%d: sending two SIGSTKFLTs to threadid=%d (tid=%d) to"
+         " cause debuggerd dump\n",
+        dvmThreadSelf()->threadId, thread->threadId, thread->systemTid);
+    pthread_kill(thread->handle, SIGSTKFLT);
     usleep(2 * 1000 * 1000);    // TODO: timed-wait until debuggerd attaches
-    pthread_kill(thread->handle, SIGSEGV);
+    pthread_kill(thread->handle, SIGSTKFLT);
     LOGD("Sent, pausing to let debuggerd run\n");
     usleep(8 * 1000 * 1000);    // TODO: timed-wait until debuggerd finishes
+
+    /* ignore SIGSEGV so the eventual dmvAbort() doesn't notify debuggerd */
+    signal(SIGSEGV, SIG_IGN);
     LOGD("Continuing\n");
 }
 
