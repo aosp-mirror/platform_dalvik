@@ -294,9 +294,7 @@ public class Properties extends Hashtable<Object, Object> {
         int offset = 0, keyLength = -1, intVal;
         boolean firstChar = true;
 
-        // BEGIN android-changed
-        BufferedInputStream bis = new BufferedInputStream(in, 8192);
-        // END android-changed
+        BufferedInputStream bis = new BufferedInputStream(in);
 
         while (true) {
             intVal = bis.read();

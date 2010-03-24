@@ -282,9 +282,7 @@ public class JDKX509CertificateFactory
             
             if (!in.markSupported())
             {
-                // BEGIN android-modified
-                in = new BufferedInputStream(in, 8192);
-                // END android-modified
+                in = new BufferedInputStream(in);
             }
             
             in.mark(10);
@@ -377,9 +375,7 @@ public class JDKX509CertificateFactory
             
             if (!inStream.markSupported())
             {
-                // BEGIN android-modified
-                inStream = new BufferedInputStream(inStream, 8192);
-                // END android-modified
+                inStream = new BufferedInputStream(inStream);
             }
             
             inStream.mark(10);

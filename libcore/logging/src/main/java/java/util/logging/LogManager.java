@@ -427,13 +427,11 @@ public class LogManager {
 
                 // BEGIN android-added
                 try {
-                    input = new BufferedInputStream(
-                            new FileInputStream(configFile), 8192);
+                    input = new BufferedInputStream(new FileInputStream(configFile));
                 } catch (Exception ex) {
                     // consult fixed resource as a last resort
                     input = new BufferedInputStream(
-                            getClass().getResourceAsStream(
-                                    "logging.properties"), 8192);
+                            getClass().getResourceAsStream("logging.properties"));
                 }
                 // END android-added
                 readConfiguration(input);

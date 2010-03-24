@@ -70,8 +70,7 @@ public final class Security {
                 try {
                     InputStream configStream =
                         getClass().getResourceAsStream("security.properties"); //$NON-NLS-1$
-                    InputStream input =
-                        new BufferedInputStream(configStream, 8192);
+                    InputStream input = new BufferedInputStream(configStream);
                     secprops.load(input);
                     loaded = true;
                     configStream.close();

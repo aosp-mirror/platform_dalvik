@@ -250,13 +250,9 @@ public class FtpURLConnection extends URLConnection {
             throw new IOException(Msg.getString("K0095")); //$NON-NLS-1$
         }
         if (getDoInput()) {
-            // BEGIN android-modified
             inputStream = new FtpURLInputStream(
-                    new BufferedInputStream(dataSocket.getInputStream(), 8192),
-                    controlSocket);
-            // END android-modified
+                    new BufferedInputStream(dataSocket.getInputStream()), controlSocket);
         }
-
     }
 
     /**

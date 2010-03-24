@@ -41,7 +41,7 @@ import org.apache.harmony.luni.util.PriviAction;
  */
 public class OutputStreamWriter extends Writer {
 
-    private OutputStream out;
+    private final OutputStream out;
 
     private CharsetEncoder encoder;
 

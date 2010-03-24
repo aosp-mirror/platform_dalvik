@@ -135,10 +135,7 @@ public class SocketHandler extends StreamHandler {
                     ErrorManager.OPEN_FAILURE);
             throw e;
         }
-        // BEGIN android-modified
-        super.internalSetOutputStream(new BufferedOutputStream(this.socket
-                        .getOutputStream(), 8192));
-        // END android-modified
+        super.internalSetOutputStream(new BufferedOutputStream(this.socket.getOutputStream()));
     }
 
     /**

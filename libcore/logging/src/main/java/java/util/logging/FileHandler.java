@@ -216,12 +216,8 @@ public class FileHandler extends StreamHandler {
                 break;
             }
         }
-        // BEGIN android-modified
-        output = new MeasureOutputStream(
-                new BufferedOutputStream(
-                        new FileOutputStream(fileName, append), 8192),
-                files[0].length());
-        // END android-modified
+        output = new MeasureOutputStream(new BufferedOutputStream(
+                new FileOutputStream(fileName, append)), files[0].length());
         setOutputStream(output);
     }
 
@@ -256,12 +252,8 @@ public class FileHandler extends StreamHandler {
             files[i - 1].renameTo(files[i]);
         }
         try {
-            // BEGIN android-modified
-            output = new MeasureOutputStream(
-                    new BufferedOutputStream(
-                            new FileOutputStream(files[0]),
-                            8192));
-            // END android-modified
+            output = new MeasureOutputStream(new BufferedOutputStream(
+                    new FileOutputStream(files[0])));
         } catch (FileNotFoundException e1) {
             // logging.1A=Error happened when open log file.
             this.getErrorManager().error(Messages.getString("logging.1A"), //$NON-NLS-1$

@@ -269,10 +269,8 @@ public abstract class Charset implements Comparable<Charset> {
         try {
             InputStream is = configFile.openStream();
             // Read each line for charset provider class names
-            // BEGIN android-modified
             reader = new BufferedReader(new InputStreamReader(is,
-                            PROVIDER_CONFIGURATION_FILE_ENCODING), 8192);
-            // END android-modified
+                    PROVIDER_CONFIGURATION_FILE_ENCODING));
             String providerClassName = reader.readLine();
             while (null != providerClassName) {
                 providerClassName = trimClassName(providerClassName);
@@ -384,10 +382,8 @@ public abstract class Charset implements Comparable<Charset> {
         try {
             InputStream is = configFile.openStream();
             // Read each line for charset provider class names
-            // BEGIN android-modified
             reader = new BufferedReader(new InputStreamReader(is,
-                            PROVIDER_CONFIGURATION_FILE_ENCODING), 8192);
-            // END android-modified
+                    PROVIDER_CONFIGURATION_FILE_ENCODING));
             String providerClassName = reader.readLine();
             while (null != providerClassName) {
                 providerClassName = trimClassName(providerClassName);
