@@ -3560,6 +3560,17 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
 
     dvmPrintDebugMessage(target, "DALVIK THREADS:\n");
 
+#ifdef HAVE_ANDROID_OS
+    dvmPrintDebugMessage(target,
+        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x hwl=%x hwll=%x)\n",
+        gDvm.threadListLock.value,
+        gDvm._threadSuspendLock.value,
+        gDvm.threadSuspendCountLock.value,
+        gDvm.gcHeapLock.value,
+        gDvm.heapWorkerLock.value,
+        gDvm.heapWorkerListLock.value);
+#endif
+
     if (grabLock)
         dvmLockThreadList(dvmThreadSelf());
 
