@@ -24,6 +24,7 @@ import java.util.spi.LocaleServiceProvider;
 /**
  * This abstract class should be extended by service providers that provide
  * instances of {@code BreakIterator}.
+ * <p>Note that Android does not currently support user-supplied locale service providers.
  * @since 1.6
  * @hide
  */

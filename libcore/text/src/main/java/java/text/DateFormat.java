@@ -407,9 +407,8 @@ public abstract class DateFormat extends Format {
             FieldPosition field);
 
     /**
-     * Gets the list of installed locales which support {@code DateFormat}.
-     * 
-     * @return an array of locales.
+     * Returns an array of locales for which custom {@code DateFormat} instances
+     * are available.
      */
     public static Locale[] getAvailableLocales() {
         return Locale.getAvailableLocales();

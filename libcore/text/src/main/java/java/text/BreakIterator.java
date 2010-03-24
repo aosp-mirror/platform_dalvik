@@ -252,9 +252,8 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Returns all supported locales in an array.
-     * 
-     * @return all supported locales.
+     * Returns an array of locales for which custom {@code BreakIterator} instances
+     * are available.
      */
     public static Locale[] getAvailableLocales() {
         return NativeBreakIterator.getAvailableLocales();

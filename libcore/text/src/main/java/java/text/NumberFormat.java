@@ -315,9 +315,8 @@ public abstract class NumberFormat extends Format {
     }
 
     /**
-     * Gets the list of installed locales which support {@code NumberFormat}.
-     * 
-     * @return an array of locales.
+     * Returns an array of locales for which custom {@code NumberFormat} instances
+     * are available.
      */
     public static Locale[] getAvailableLocales() {
         return Locale.getAvailableLocales();

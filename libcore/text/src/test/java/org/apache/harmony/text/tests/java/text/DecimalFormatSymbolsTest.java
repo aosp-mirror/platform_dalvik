@@ -85,6 +85,56 @@ public class DecimalFormatSymbolsTest extends TestCase {
     }
 
     /**
+     * @tests java.text.DecimalFormatSymbols#getAvailableLocales()
+     */
+    public void test_getAvailableLocales_no_provider() throws Exception {
+        Locale[] locales = DecimalFormatSymbols.getAvailableLocales();
+        assertNotNull(locales);
+        // must contain Locale.US
+        boolean flag = false;
+        for (Locale locale : locales) {
+            if (locale.equals(Locale.US)) {
+                flag = true;
+                break;
+            }
+        }
+        assertTrue(flag);
+    }
+
+    /**
+     * @tests java.text.DecimalFormatSymbols#getInstance()
+     */
+    public void test_getInstance() {
+        assertEquals(new DecimalFormatSymbols(), DecimalFormatSymbols.getInstance());
+        assertEquals(new DecimalFormatSymbols(Locale.getDefault()),
+                DecimalFormatSymbols.getInstance());
+
+        assertNotSame(DecimalFormatSymbols.getInstance(), DecimalFormatSymbols.getInstance());
+    }
+
+    /**
+     * @tests java.text.DecimalFormatSymbols#getInstance(Locale)
+     */
+    public void test_getInstanceLjava_util_Locale() {
+        try {
+            DecimalFormatSymbols.getInstance(null);
+            fail("Should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+
+        assertEquals(new DecimalFormatSymbols(Locale.GERMANY), DecimalFormatSymbols
+                .getInstance(Locale.GERMANY));
+
+        Locale locale = new Locale("not exist language", "not exist country");
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(locale);
+        assertNotNull(symbols);
+        // BEGIN android-removed: this test is wrong, and confuses default locale with root locale.
+        // assertEquals(DecimalFormatSymbols.getInstance(), symbols);
+        // END android-removed
+    }
+
+    /**
      * @tests java.text.DecimalFormatSymbols#clone() Test of method
      *        java.text.DecimalFormatSymbols#clone(). Case 1: Compare of
      *        internal variables of cloned objects. Case 2: Compare of clones.

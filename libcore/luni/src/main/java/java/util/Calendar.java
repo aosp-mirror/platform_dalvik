@@ -933,9 +933,8 @@ public abstract class Calendar implements Serializable, Cloneable, Comparable<Ca
     }
 
     /**
-     * Gets the list of installed {@code Locale}s which support {@code Calendar}.
-     *
-     * @return an array of {@code Locale}.
+     * Returns an array of locales for which custom {@code Calendar} instances
+     * are available.
      */
     public static synchronized Locale[] getAvailableLocales() {
         return Locale.getAvailableLocales();
