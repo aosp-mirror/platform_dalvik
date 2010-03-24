@@ -184,6 +184,12 @@ typedef struct CompilationUnit {
     const u2 *switchOverflowPad;
 } CompilationUnit;
 
+#if defined(WITH_SELF_VERIFICATION)
+#define HEAP_ACCESS_SHADOW(_state) cUnit->heapMemOp = _state
+#else
+#define HEAP_ACCESS_SHADOW(_state)
+#endif
+
 BasicBlock *dvmCompilerNewBB(BBType blockType);
 
 void dvmCompilerAppendMIR(BasicBlock *bb, MIR *mir);
