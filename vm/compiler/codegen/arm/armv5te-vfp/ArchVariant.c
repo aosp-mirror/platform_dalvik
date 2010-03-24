@@ -57,6 +57,7 @@ bool dvmCompilerArchVariantInit(void)
 #if defined(WITH_SELF_VERIFICATION)
     /* Force into blocking mode */
     gDvmJit.blockingMode = true;
+    gDvm.nativeDebuggerActive = true;
 #endif
 
     /* Codegen-specific assumptions */
@@ -70,11 +71,11 @@ bool dvmCompilerArchVariantInit(void)
     assert(sizeof(StackSaveArea) < 236);
 
     /*
-     * EA is calculated by doing "Rn + imm5 << 2", and there are 5 entry points
-     * that codegen may access, make sure that the offset from the top of the
-     * struct is less than 108.
+     * EA is calculated by doing "Rn + imm5 << 2", make sure that the last
+     * offset from the struct is less than 128.
      */
-    assert(offsetof(InterpState, jitToInterpEntries) < 108);
+    assert((offsetof(InterpState, jitToInterpEntries) +
+            sizeof(struct JitToInterpEntries)) <= 128);
     return true;
 }
 

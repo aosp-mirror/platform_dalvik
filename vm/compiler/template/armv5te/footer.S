@@ -60,6 +60,11 @@
  * r0  Faulting Dalvik PC
  */
 .LhandleException:
+#if defined(WITH_SELF_VERIFICATION)
+    ldr     pc, .LdeadFood @ should not see this under self-verification mode
+.LdeadFood:
+    .word   0xdeadf00d
+#endif
     ldr     r3, [rGLUE, #offGlue_self]  @ r3<- glue->self
     mov     r2, #0
     str     r2, [r3, #offThread_inJitCodeCache] @ in interpreter land

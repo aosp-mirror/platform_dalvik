@@ -275,13 +275,11 @@ static void genIGetWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
                  NULL);/* null object? */
     opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
     rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = true;
-#endif
+
+    HEAP_ACCESS_SHADOW(true);
     loadPair(cUnit, regPtr, rlResult.lowReg, rlResult.highReg);
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = false;
-#endif
+    HEAP_ACCESS_SHADOW(false);
+
     dvmCompilerFreeTemp(cUnit, regPtr);
     storeValueWide(cUnit, rlDest, rlResult);
 }
@@ -299,13 +297,11 @@ static void genIPutWide(CompilationUnit *cUnit, MIR *mir, int fieldOffset)
                  NULL);/* null object? */
     regPtr = dvmCompilerAllocTemp(cUnit);
     opRegRegImm(cUnit, kOpAdd, regPtr, rlObj.lowReg, fieldOffset);
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = true;
-#endif
+
+    HEAP_ACCESS_SHADOW(true);
     storePair(cUnit, regPtr, rlSrc.lowReg, rlSrc.highReg);
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = false;
-#endif
+    HEAP_ACCESS_SHADOW(false);
+
     dvmCompilerFreeTemp(cUnit, regPtr);
 }
 
@@ -325,14 +321,12 @@ static void genIGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
     rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = true;
-#endif
+
+    HEAP_ACCESS_SHADOW(true);
     loadBaseDisp(cUnit, mir, rlObj.lowReg, fieldOffset, rlResult.lowReg,
                  size, rlObj.sRegLow);
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = false;
-#endif
+    HEAP_ACCESS_SHADOW(false);
+
     storeValue(cUnit, rlDest, rlResult);
 }
 
@@ -351,13 +345,10 @@ static void genIPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
     int regPtr;
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset,
                  NULL);/* null object? */
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = true;
-#endif
+
+    HEAP_ACCESS_SHADOW(true);
     storeBaseDisp(cUnit, rlObj.lowReg, fieldOffset, rlSrc.lowReg, size);
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = false;
-#endif
+    HEAP_ACCESS_SHADOW(false);
 }
 
 
@@ -408,25 +399,21 @@ static void genArrayGet(CompilationUnit *cUnit, MIR *mir, OpSize size,
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
         rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = true;
-#endif
+
+        HEAP_ACCESS_SHADOW(true);
         loadPair(cUnit, regPtr, rlResult.lowReg, rlResult.highReg);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = false;
-#endif
+        HEAP_ACCESS_SHADOW(false);
+
         dvmCompilerFreeTemp(cUnit, regPtr);
         storeValueWide(cUnit, rlDest, rlResult);
     } else {
         rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = true;
-#endif
+
+        HEAP_ACCESS_SHADOW(true);
         loadBaseIndexed(cUnit, regPtr, rlIndex.lowReg, rlResult.lowReg,
                         scale, size);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = false;
-#endif
+        HEAP_ACCESS_SHADOW(false);
+
         dvmCompilerFreeTemp(cUnit, regPtr);
         storeValue(cUnit, rlDest, rlResult);
     }
@@ -489,24 +476,19 @@ static void genArrayPut(CompilationUnit *cUnit, MIR *mir, OpSize size,
             opRegReg(cUnit, kOpAdd, regPtr, rlIndex.lowReg);
         }
         rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = true;
-#endif
+
+        HEAP_ACCESS_SHADOW(true);
         storePair(cUnit, regPtr, rlSrc.lowReg, rlSrc.highReg);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = false;
-#endif
+        HEAP_ACCESS_SHADOW(false);
+
         dvmCompilerFreeTemp(cUnit, regPtr);
     } else {
         rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = true;
-#endif
+
+        HEAP_ACCESS_SHADOW(true);
         storeBaseIndexed(cUnit, regPtr, rlIndex.lowReg, rlSrc.lowReg,
                          scale, size);
-#if defined(WITH_SELF_VERIFICATION)
-        cUnit->heapMemOp = false;
-#endif
+        HEAP_ACCESS_SHADOW(false);
     }
 }
 
@@ -585,14 +567,10 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
     target->defMask = ENCODE_ALL;
     branchOver->generic.target = (LIR *) target;
 
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = true;
-#endif
+    HEAP_ACCESS_SHADOW(true);
     storeBaseIndexed(cUnit, regPtr, regIndex, r0,
                      scale, kWord);
-#if defined(WITH_SELF_VERIFICATION)
-    cUnit->heapMemOp = false;
-#endif
+    HEAP_ACCESS_SHADOW(false);
 }
 
 static bool genShiftOpLong(CompilationUnit *cUnit, MIR *mir,
@@ -1529,13 +1507,11 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = true;
-#endif
+
+            HEAP_ACCESS_SHADOW(true);
             loadWordDisp(cUnit, tReg, 0, rlResult.lowReg);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = false;
-#endif
+            HEAP_ACCESS_SHADOW(false);
+
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
@@ -1548,13 +1524,11 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = true;
-#endif
+
+            HEAP_ACCESS_SHADOW(true);
             loadPair(cUnit, tReg, rlResult.lowReg, rlResult.highReg);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = false;
-#endif
+            HEAP_ACCESS_SHADOW(false);
+
             storeValueWide(cUnit, rlDest, rlResult);
             break;
         }
@@ -1573,13 +1547,11 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = true;
-#endif
+
+            HEAP_ACCESS_SHADOW(true);
             storeWordDisp(cUnit, tReg, 0 ,rlSrc.lowReg);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = false;
-#endif
+            HEAP_ACCESS_SHADOW(false);
+
             break;
         }
         case OP_SPUT_WIDE: {
@@ -1592,13 +1564,10 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
             rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = true;
-#endif
+
+            HEAP_ACCESS_SHADOW(true);
             storePair(cUnit, tReg, rlSrc.lowReg, rlSrc.highReg);
-#if defined(WITH_SELF_VERIFICATION)
-            cUnit->heapMemOp = false;
-#endif
+            HEAP_ACCESS_SHADOW(false);
             break;
         }
         case OP_NEW_INSTANCE: {
@@ -1657,7 +1626,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              * so that we can tell if it happens frequently.
              */
             if (classPtr == NULL) {
-                 LOGD("null clazz in OP_CHECK_CAST, single-stepping");
+                 LOGVV("null clazz in OP_CHECK_CAST, single-stepping");
                  genInterpSingleStep(cUnit, mir);
                  return false;
             }
@@ -3251,9 +3220,14 @@ static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
 static void handleNormalChainingCell(CompilationUnit *cUnit,
                                      unsigned int offset)
 {
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                 jitToInterpEntries.dvmJitToInterpNormal), r0);
-    opReg(cUnit, kOpBlx, r0);
+    /*
+     * Use raw instruction constructors to guarantee that the generated
+     * instructions fit the predefined cell size.
+     */
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
+            offsetof(InterpState,
+                     jitToInterpEntries.dvmJitToInterpNormal) >> 2);
+    newLIR1(cUnit, kThumbBlxR, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
@@ -3264,9 +3238,14 @@ static void handleNormalChainingCell(CompilationUnit *cUnit,
 static void handleHotChainingCell(CompilationUnit *cUnit,
                                   unsigned int offset)
 {
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                 jitToInterpEntries.dvmJitToInterpTraceSelect), r0);
-    opReg(cUnit, kOpBlx, r0);
+    /*
+     * Use raw instruction constructors to guarantee that the generated
+     * instructions fit the predefined cell size.
+     */
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
+            offsetof(InterpState,
+                     jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
+    newLIR1(cUnit, kThumbBlxR, r0);
     addWordData(cUnit, (int) (cUnit->method->insns + offset), true);
 }
 
@@ -3275,6 +3254,10 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
 static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
                                              unsigned int offset)
 {
+    /*
+     * Use raw instruction constructors to guarantee that the generated
+     * instructions fit the predefined cell size.
+     */
 #if defined(WITH_SELF_VERIFICATION)
     newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
         offsetof(InterpState,
@@ -3292,9 +3275,14 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
 static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
                                               const Method *callee)
 {
-    loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
-                 jitToInterpEntries.dvmJitToInterpTraceSelect), r0);
-    opReg(cUnit, kOpBlx, r0);
+    /*
+     * Use raw instruction constructors to guarantee that the generated
+     * instructions fit the predefined cell size.
+     */
+    newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
+            offsetof(InterpState,
+                     jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
+    newLIR1(cUnit, kThumbBlxR, r0);
     addWordData(cUnit, (int) (callee->insns), true);
 }
 
