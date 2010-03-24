@@ -22,11 +22,13 @@
 
 /*
  * InsnFlags is a 32-bit integer with the following layout:
- *  0-15  instruction length (or 0 if this address doesn't hold an opcode)
- *  16    opcode flag (indicating this address holds an opcode)
- *  17    try block (indicating exceptions thrown here may be caught locally)
- *  30    visited (verifier has examined this instruction at least once)
- *  31    changed (set/cleared as bytecode verifier runs)
+ *   0-15  instruction length (or 0 if this address doesn't hold an opcode)
+ *  16-31  single bit flags:
+ *    InTry: in "try" block; exceptions thrown here may be caught locally
+ *    BranchTarget: other instructions can branch to this instruction
+ *    GcPoint: this instruction is a GC safe point
+ *    Visited: verifier has examined this instruction at least once
+ *    Changed: set/cleared as bytecode verifier runs
  */
 typedef u4 InsnFlags;
 

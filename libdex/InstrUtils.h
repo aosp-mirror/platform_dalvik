@@ -90,8 +90,8 @@ typedef struct DecodedInstruction {
 typedef signed char InstructionWidth;
 
 /*
- * Instruction flags, used by the verifier to determine where control
- * can flow to next.
+ * Instruction flags, used by the verifier and JIT to determine where
+ * control can flow to next.  Expected to fit in 8 bits.
  */
 typedef unsigned char InstructionFlags;
 enum InstructionFlags {
