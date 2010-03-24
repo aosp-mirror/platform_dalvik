@@ -63,6 +63,54 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     }
 
     /**
+     * @tests java.text.DateFormatSymbols#getAvailableLocales()
+     */
+    public void test_getAvailableLocales_no_provider() throws Exception {
+        Locale[] locales = DateFormatSymbols.getAvailableLocales();
+        assertNotNull(locales);
+        // must contain Locale.US
+        boolean flag = false;
+        for (Locale locale : locales) {
+            if (locale.equals(Locale.US)) {
+                flag = true;
+                break;
+            }
+        }
+        assertTrue(flag);
+    }
+
+    /**
+     * @tests java.text.DateFormatSymbols#getInstance()
+     */
+    public void test_getInstance() {
+        DateFormatSymbols.getInstance();
+        assertEquals(new DateFormatSymbols(), DateFormatSymbols.getInstance());
+        assertEquals(new DateFormatSymbols(Locale.getDefault()),
+                DateFormatSymbols.getInstance());
+
+        assertNotSame(DateFormatSymbols.getInstance(), DateFormatSymbols.getInstance());
+    }
+
+    public void test_getInstanceLjava_util_Locale() {
+        try {
+            DateFormatSymbols.getInstance(null);
+            fail("Should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+
+        assertEquals(new DateFormatSymbols(Locale.GERMANY), DateFormatSymbols
+                .getInstance(Locale.GERMANY));
+
+        Locale locale = new Locale("not exist language", "not exist country");
+        DateFormatSymbols symbols = DateFormatSymbols.getInstance(locale);
+        assertNotNull(symbols);
+        // BEGIN android-removed: this test is wrong, and confuses default locale with root locale.
+        // assertEquals(DateFormatSymbols.getInstance(), symbols);
+        // END android-removed
+    }
+
+    /**
      * @tests java.text.DateFormatSymbols#clone()
      */
     @TestTargetNew(

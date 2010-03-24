@@ -135,6 +135,42 @@ public class DateFormatSymbols implements Serializable, Cloneable {
         // END android-changed
     }
 
+    /**
+     * Returns a new {@code DateFormatSymbols} instance for the default locale.
+     *
+     * @return an instance of {@code DateFormatSymbols}
+     * @since 1.6
+     * @hide
+     */
+    public static final DateFormatSymbols getInstance() {
+        return getInstance(Locale.getDefault());
+    }
+
+    /**
+     * Returns a new {@code DateFormatSymbols} for the given locale.
+     *
+     * @param locale the locale
+     * @return an instance of {@code DateFormatSymbols}
+     * @exception NullPointerException if {@code locale == null}
+     * @since 1.6
+     * @hide
+     */
+    public static final DateFormatSymbols getInstance(Locale locale) {
+        if (locale == null) {
+            throw new NullPointerException();
+        }
+        return new DateFormatSymbols(locale);
+    }
+
+    /**
+     * Returns an array of locales for which custom {@code DateFormatSymbols} instances
+     * are available.
+     * @since 1.6
+     * @hide
+     */
+    public static Locale[] getAvailableLocales() {
+        return Locale.getAvailableLocales();
+    }
 
     private void writeObject(ObjectOutputStream oos) throws IOException {
         // BEGIN android-changed
@@ -188,64 +224,41 @@ public class DateFormatSymbols implements Serializable, Cloneable {
         if (!(object instanceof DateFormatSymbols)) {
             return false;
         }
+        DateFormatSymbols rhs = (DateFormatSymbols) object;
+        return localPatternChars.equals(rhs.localPatternChars) &&
+                Arrays.equals(ampms, rhs.ampms) &&
+                Arrays.equals(eras, rhs.eras) &&
+                Arrays.equals(months, rhs.months) &&
+                Arrays.equals(shortMonths, rhs.shortMonths) &&
+                Arrays.equals(shortWeekdays, rhs.shortWeekdays) &&
+                Arrays.equals(weekdays, rhs.weekdays) &&
+                timeZoneStringsEqual(this, rhs);
+    }
 
-        // BEGIN android-removed
-        // if (zoneStrings == null) {
-        //     zoneStrings = icuSymbols.getZoneStrings();
-        // }
-        // END android-removed
-        DateFormatSymbols obj = (DateFormatSymbols) object;
-        // BEGIN android-removed
-        // if (obj.zoneStrings == null) {
-        //     obj.zoneStrings = obj.icuSymbols.getZoneStrings();
-        // }
-        // END android-removed
-        if (!localPatternChars.equals(obj.localPatternChars)) {
-            return false;
-        }
-        if (!Arrays.equals(ampms, obj.ampms)) {
-            return false;
-        }
-        if (!Arrays.equals(eras, obj.eras)) {
-            return false;
-        }
-        if (!Arrays.equals(months, obj.months)) {
-            return false;
-        }
-        if (!Arrays.equals(shortMonths, obj.shortMonths)) {
-            return false;
-        }
-        if (!Arrays.equals(shortWeekdays, obj.shortWeekdays)) {
-            return false;
-        }
-        if (!Arrays.equals(weekdays, obj.weekdays)) {
-            return false;
-        }
-        // BEGIN android-changed
+    private static boolean timeZoneStringsEqual(DateFormatSymbols lhs, DateFormatSymbols rhs) {
         // Quick check that may keep us from having to load the zone strings.
-        if (zoneStrings == null && obj.zoneStrings == null
-                    && !locale.equals(obj.locale)) {
-            return false;
+        // Note that different locales may have the same strings, so the opposite check isn't valid.
+        if (lhs.zoneStrings == null && rhs.zoneStrings == null && lhs.locale.equals(rhs.locale)) {
+            return true;
         }
-        // Make sure zone strings are loaded.
-        internalZoneStrings();
-        obj.internalZoneStrings();
-        // END android-changed
-        if (zoneStrings.length != obj.zoneStrings.length) {
-            return false;
-        }
-        for (String[] element : zoneStrings) {
-            if (element.length != element.length) {
-                return false;
-            }
-            for (int j = 0; j < element.length; j++) {
-                if (element[j] != element[j]
-                        && !(element[j].equals(element[j]))) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        // Make sure zone strings are loaded, then check.
+        return Arrays.deepEquals(lhs.internalZoneStrings(), rhs.internalZoneStrings());
+    }
+
+    @Override
+    public String toString() {
+        // 'locale' isn't part of the externally-visible state.
+        // 'zoneStrings' is so large, we just print a representative value.
+        return getClass() + "[amPmStrings=" + Arrays.toString(ampms) +
+                ",customZoneStrings=" + customZoneStrings +
+                ",eras=" + Arrays.toString(eras) +
+                ",localPatternChars=" + new String(localPatternChars) +
+                ",months=" + Arrays.toString(months) +
+                ",shortMonths=" + Arrays.toString(shortMonths) +
+                ",shortWeekdays=" + Arrays.toString(shortWeekdays) +
+                ",weekdays=" + Arrays.toString(weekdays) +
+                ",zoneStrings=[" + Arrays.toString(internalZoneStrings()[0]) + "...]" +
+                "]";
     }
 
     /**

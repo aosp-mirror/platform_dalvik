@@ -260,10 +260,8 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     /**
-     * Gets the list of installed {@link java.util.Locale} objects which support
-     * {@code Collator}.
-     * 
-     * @return an array of {@code Locale}.
+     * Returns an array of locales for which custom {@code Collator} instances
+     * are available.
      */
     public static Locale[] getAvailableLocales() {
         return com.ibm.icu4jni.text.Collator.getAvailableLocales();
