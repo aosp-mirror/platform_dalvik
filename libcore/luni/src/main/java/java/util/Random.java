@@ -52,7 +52,6 @@ public class Random implements Serializable {
      */
     private double nextNextGaussian;
 
-    // BEGIN android-changed
     /**
      * Constructs a random generator with an initial state that is
      * unlikely to be duplicated by a subsequent instantiation.
@@ -64,14 +63,12 @@ public class Random implements Serializable {
      */
     public Random() {
         // Note: Using identityHashCode() to be hermetic wrt subclasses.
-        internalSetSeed(
-                System.currentTimeMillis() + System.identityHashCode(this));
+        setSeed(System.currentTimeMillis() + System.identityHashCode(this));
     }
-    // END android-changed
 
     /**
      * Construct a random generator with the given {@code seed} as the
-     * initial state.
+     * initial state. Equivalent to {@code Random r = new Random(); r.setSeed(seed);}.
      * 
      * @param seed
      *            the seed that will determine the initial state of this random
@@ -79,9 +76,7 @@ public class Random implements Serializable {
      * @see #setSeed
      */
     public Random(long seed) {
-        // BEGIN android-changed
-        internalSetSeed(seed);
-        // END android-changed
+        setSeed(seed);
     }
 
     /**
@@ -245,7 +240,6 @@ public class Random implements Serializable {
         return ((long) next(32) << 32) + next(32);
     }
 
-    // BEGIN android-changed
     /**
      * Modifies the seed a using linear congruential formula presented in <i>The
      * Art of Computer Programming, Volume 2</i>, Section 3.2.1.
@@ -257,20 +251,7 @@ public class Random implements Serializable {
      * @see #Random(long)
      */
     public synchronized void setSeed(long seed) {
-        internalSetSeed(seed);
-    }
-
-    /**
-     * Sets the seed. This is used both in the constructor and in the
-     * default implementation of {@link #setSeed}.
-     *
-     * @param seed
-     *            the seed that alters the state of the random number
-     *            generator.
-     */
-    private void internalSetSeed(long seed) {
         this.seed = (seed ^ multiplier) & ((1L << 48) - 1);
         haveNextNextGaussian = false;
     }
-    // END android-changed
 }
