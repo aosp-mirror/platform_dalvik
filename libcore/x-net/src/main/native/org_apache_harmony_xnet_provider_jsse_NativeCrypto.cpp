@@ -736,10 +736,12 @@ static int sslCreateAppData(SSL* ssl) {
     data->fdsEmergency[1] = -1;
 
     if (pipe(data->fdsEmergency) == -1) {
+        free(data);
         return -1;
     }
 
     if (MUTEX_SETUP(data->mutex) == -1) {
+        free(data);
         return -1;
     }
 
