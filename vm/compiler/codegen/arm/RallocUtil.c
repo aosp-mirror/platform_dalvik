@@ -771,18 +771,28 @@ extern RegLocation dvmCompilerUpdateLocWide(CompilationUnit *cUnit,
 {
     assert(loc.wide);
     if (loc.location == kLocDalvikFrame) {
+        // Are the dalvik regs already live in physical registers?
         RegisterInfo *infoLo = allocLive(cUnit, loc.sRegLow, kAnyReg);
         RegisterInfo *infoHi = allocLive(cUnit,
               dvmCompilerSRegHi(loc.sRegLow), kAnyReg);
         bool match = true;
         match = match && (infoLo != NULL);
         match = match && (infoHi != NULL);
+        // Are they both core or both FP?
         match = match && (FPREG(infoLo->reg) == FPREG(infoHi->reg));
+        // If a pair of floating point singles, are they properly aligned?
         if (match && FPREG(infoLo->reg)) {
             match &= ((infoLo->reg & 0x1) == 0);
             match &= ((infoHi->reg - infoLo->reg) == 1);
         }
+        // If previously used as a pair, it is the same pair?
+        if (match && (infoLo->pair || infoHi->pair)) {
+            match = (infoLo->pair == infoHi->pair);
+            match &= ((infoLo->reg == infoHi->partner) &&
+                      (infoHi->reg == infoLo->partner));
+        }
         if (match) {
+            // Can reuse - update the register usage info
             loc.lowReg = infoLo->reg;
             loc.highReg = infoHi->reg;
             loc.location = kLocPhysReg;
@@ -790,7 +800,7 @@ extern RegLocation dvmCompilerUpdateLocWide(CompilationUnit *cUnit,
             assert(!FPREG(loc.lowReg) || ((loc.lowReg & 0x1) == 0));
             return loc;
         }
-        /* Can't easily reuse - just clobber any overlaps */
+        // Can't easily reuse - clobber any overlaps
         if (infoLo) {
             dvmCompilerClobber(cUnit, infoLo->reg);
             if (infoLo->pair)
