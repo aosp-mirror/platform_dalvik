@@ -134,6 +134,7 @@ public class ObjectStreamField implements Comparable<Object> {
         }
         this.name = name;
         this.typeString = signature.replace('.', '/').intern();
+        defaultResolve();
         this.isDeserialized = true;
     }
 
@@ -348,34 +349,17 @@ public class ObjectStreamField implements Comparable<Object> {
     }
 
     void resolve(ClassLoader loader) {
+        if (typeString == null && isPrimitive()){
+            // primitive type declared in a serializable class
+            typeString = String.valueOf(getTypeCode());
+        }
+
         if (typeString.length() == 1) {
-            switch (typeString.charAt(0)) {
-                case 'I':
-                    type = Integer.TYPE;
-                    return;
-                case 'B':
-                    type = Byte.TYPE;
-                    return;
-                case 'C':
-                    type = Character.TYPE;
-                    return;
-                case 'S':
-                    type = Short.TYPE;
-                    return;
-                case 'Z':
-                    type = Boolean.TYPE;
-                    return;
-                case 'J':
-                    type = Long.TYPE;
-                    return;
-                case 'F':
-                    type = Float.TYPE;
-                    return;
-                case 'D':
-                    type = Double.TYPE;
-                    return;
+            if (defaultResolve()) {
+                return;
             }
         }
+
         String className = typeString.replace('/', '.');
         if (className.charAt(0) == 'L') {
             // remove L and ;
@@ -383,15 +367,14 @@ public class ObjectStreamField implements Comparable<Object> {
         }
         try {
             Class<?> cl = Class.forName(className, false, loader);
-            type = (cl.getClassLoader() == null) ? cl
-                    : new WeakReference<Class<?>>(cl);
+            type = (cl.getClassLoader() == null) ? cl : new WeakReference<Class<?>>(cl);
         } catch (ClassNotFoundException e) {
             // Ignored
         }
     }
 
     /**
-     * Indicats whether this field is unshared.
+     * Indicates whether this field is unshared.
      *
      * @return {@code true} if this field is unshared, {@code false} otherwise.
      */
@@ -401,5 +384,41 @@ public class ObjectStreamField implements Comparable<Object> {
     
     void setUnshared(boolean unshared) {
         this.unshared = unshared;
+    }
+
+    /**
+     * Resolves typeString into type. Returns true if the type is primitive
+     * and false otherwise.
+     */
+    private boolean defaultResolve() {
+        switch (typeString.charAt(0)) {
+        case 'I':
+            type = Integer.TYPE;
+            return true;
+        case 'B':
+            type = Byte.TYPE;
+            return true;
+        case 'C':
+            type = Character.TYPE;
+            return true;
+        case 'S':
+            type = Short.TYPE;
+            return true;
+        case 'Z':
+            type = Boolean.TYPE;
+            return true;
+        case 'J':
+            type = Long.TYPE;
+            return true;
+        case 'F':
+            type = Float.TYPE;
+            return true;
+        case 'D':
+            type = Double.TYPE;
+            return true;
+        default:
+            type = Object.class;
+            return false;
+        }
     }
 }
