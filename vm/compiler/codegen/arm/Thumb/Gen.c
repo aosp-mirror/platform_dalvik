@@ -60,12 +60,22 @@ static void genMulLong(CompilationUnit *cUnit, RegLocation rlDest,
     storeValueWide(cUnit, rlDest, rlResult);
 }
 
-static void genLong3Addr(CompilationUnit *cUnit, OpKind firstOp,
+static void partialOverlap(int sreg1, int sreg2)
+{
+    return abs(sreg1 - sreg2) == 1;
+}
+
+static void genLong3Addr(CompilationUnit *cUnit, MIR *mir, OpKind firstOp,
                          OpKind secondOp, RegLocation rlDest,
                          RegLocation rlSrc1, RegLocation rlSrc2)
 {
     RegLocation rlResult;
-   if (rlDest.sRegLow == rlSrc1.sRegLow) {
+    if (partialOverlap(rlSrc1.sRegLow,rlSrc2.sRegLow) ||
+        partialOverlap(rlSrc1.sRegLow,rlDest.sRegLow) ||
+        partialOverlap(rlSrc2.sRegLow,rlDest.sRegLow)) {
+        // Rare case - not enough registers to properly handle
+        genInterpSingleStep(cUnit, mir);
+    } else if (rlDest.sRegLow == rlSrc1.sRegLow) {
         // Already 2-operand
         rlResult = loadValueWide(cUnit, rlDest, kCoreReg);
         rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);

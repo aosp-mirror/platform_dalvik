@@ -688,7 +688,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
             dvmCompilerAbort(cUnit);
     }
     if (!callOut) {
-        genLong3Addr(cUnit, firstOp, secondOp, rlDest, rlSrc1, rlSrc2);
+        genLong3Addr(cUnit, mir, firstOp, secondOp, rlDest, rlSrc1, rlSrc2);
     } else {
         // Adjust return regs in to handle case of rem returning r2/r3
         dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */

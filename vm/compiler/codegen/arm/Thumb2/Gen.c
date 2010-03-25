@@ -71,7 +71,7 @@ static void genMulLong(CompilationUnit *cUnit, RegLocation rlDest,
     storeValueWide(cUnit, rlDest, rlResult);
 }
 
-static void genLong3Addr(CompilationUnit *cUnit, OpKind firstOp,
+static void genLong3Addr(CompilationUnit *cUnit, MIR *mir, OpKind firstOp,
                          OpKind secondOp, RegLocation rlDest,
                          RegLocation rlSrc1, RegLocation rlSrc2)
 {
