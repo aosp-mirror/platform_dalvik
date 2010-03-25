@@ -188,7 +188,8 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
     public String toString() {
         // Most of the externally-visible state is stashed in 'patternChars', and not obviously
         // worth breaking out individually, since this is only meant for debugging.
-        return getClass() + "[patternChars=" + new String(patternChars) +
+        return getClass().getName() +
+                "[patternChars=" + new String(patternChars) +
                 ",infinity=" + infinity +
                 ",currencySymbol=" + currencySymbol +
                 ",intlCurrencySymbol=" + intlCurrencySymbol +

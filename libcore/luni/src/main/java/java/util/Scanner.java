@@ -1642,14 +1642,12 @@ public final class Scanner implements Iterator<String> {
      */
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(this.getClass()).append(": ") //$NON-NLS-1$
-                .append("{(delimiter:") //$NON-NLS-1$
-                .append(delimiter).append(")(findStartIndex=") //$NON-NLS-1$
-                .append(findStartIndex).append(")(match succeed=") //$NON-NLS-1$
-                .append(matchSuccessful).append(")(closed=") //$NON-NLS-1$
-                .append(closed).append(")}"); //$NON-NLS-1$
-        return stringBuilder.toString();
+        return getClass().getName() +
+                "[delimiter=" + delimiter +
+                ",findStartIndex=" + findStartIndex +
+                ",matchSuccessful=" + matchSuccessful +
+                ",closed=" + closed +
+                "]";
     }
 
     /**

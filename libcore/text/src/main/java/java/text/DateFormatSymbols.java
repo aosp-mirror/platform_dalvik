@@ -249,7 +249,8 @@ public class DateFormatSymbols implements Serializable, Cloneable {
     public String toString() {
         // 'locale' isn't part of the externally-visible state.
         // 'zoneStrings' is so large, we just print a representative value.
-        return getClass() + "[amPmStrings=" + Arrays.toString(ampms) +
+        return getClass().getName() +
+                "[amPmStrings=" + Arrays.toString(ampms) +
                 ",customZoneStrings=" + customZoneStrings +
                 ",eras=" + Arrays.toString(eras) +
                 ",localPatternChars=" + new String(localPatternChars) +
