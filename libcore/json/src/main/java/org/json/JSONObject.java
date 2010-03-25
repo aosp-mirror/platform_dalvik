@@ -48,7 +48,9 @@ import java.util.Map;
  *       large values. For example, the string "9223372036854775806" yields the
  *       long 9223372036854775807.
  *   <li>When the requested type is a String, other non-null values will be
- *       coerced using {@link String#valueOf(Object)}.
+ *       coerced using {@link String#valueOf(Object)}. Although null cannot be
+ *       coerced, the sentinel value {@link JSONObject#NULL} is coerced to the
+ *       string "null".
  * </ul>
  *
  * <p>This class can look up both mandatory and optional values:
