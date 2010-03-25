@@ -150,8 +150,9 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
                             *newStoreLIR = *thisLIR;
                             newStoreLIR->age = cUnit->optRound;
                             /*
-                             * Insertion is guaranteed to succeed since checkLIR
-                             * is never the first LIR on the list
+                             * Stop point found - insert *before* the checkLIR
+                             * since the instruction list is scanned in the
+                             * top-down order.
                              */
                             dvmCompilerInsertLIRBefore((LIR *) checkLIR,
                                                        (LIR *) newStoreLIR);
@@ -211,9 +212,9 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
             int nativeRegId = thisLIR->operands[0];
             ArmLIR *checkLIR;
             int hoistDistance = 0;
-            u8 stopUseMask = (ENCODE_REG_PC | thisLIR->useMask) &
-                             ~ENCODE_FRAME_REF;
-            u8 stopDefMask = thisLIR->defMask & ~ENCODE_FRAME_REF;
+            u8 stopUseMask = (ENCODE_REG_PC | thisLIR->useMask);
+            u8 stopDefMask = thisLIR->defMask;
+            u8 checkResult;
 
             /* First check if the load can be completely elinimated */
             for (checkLIR = PREV_LIR(thisLIR);
@@ -241,11 +242,27 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                 /*
                  * No earlier use/def can reach this load if:
                  * 1) Head instruction is reached
+                 */
+                if (checkLIR == headLIR) {
+                    break;
+                }
+
+                checkResult = (stopUseMask | stopDefMask) & checkLIR->defMask;
+
+                /*
+                 * If both instructions are verified Dalvik accesses, clear the
+                 * may- and must-alias bits to detect true resource
+                 * dependencies.
+                 */
+                if (checkResult & ENCODE_DALVIK_REG) {
+                    checkResult &= ~(ENCODE_DALVIK_REG | ENCODE_FRAME_REF);
+                }
+
+                /*
                  * 2) load target register is clobbered
                  * 3) A branch is seen (stopUseMask has the PC bit set).
                  */
-                if ((checkLIR == headLIR) ||
-                    (stopUseMask | stopDefMask) & checkLIR->defMask) {
+                if (checkResult) {
                     break;
                 }
 
@@ -300,11 +317,19 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                     bool stopHere = (checkLIR == headLIR);
 
                     /* Base address is clobbered by checkLIR */
-                    stopHere |= ((stopUseMask & checkLIR->defMask) != 0);
+                    checkResult = stopUseMask & checkLIR->defMask;
+                    if (checkResult & ENCODE_DALVIK_REG) {
+                        checkResult &= ~(ENCODE_DALVIK_REG | ENCODE_FRAME_REF);
+                    }
+                    stopHere |= (checkResult != 0);
 
                     /* Load target clobbers use/def in checkLIR */
-                    stopHere |= ((stopDefMask &
-                                 (checkLIR->useMask | checkLIR->defMask)) != 0);
+                    checkResult = stopDefMask &
+                                  (checkLIR->useMask | checkLIR->defMask);
+                    if (checkResult & ENCODE_DALVIK_REG) {
+                        checkResult &= ~(ENCODE_DALVIK_REG | ENCODE_FRAME_REF);
+                    }
+                    stopHere |= (checkResult != 0);
 
                     /* Store data partially clobbers the Dalvik register */
                     if (stopHere == false &&
@@ -341,15 +366,16 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
                     if (stopHere == true) {
                         DEBUG_OPT(dumpDependentInsnPair(thisLIR, checkLIR,
                                                         "HOIST LOAD"));
-                        /* The store can be hoisted for at least one cycle */
+                        /* The load can be hoisted for at least one cycle */
                         if (hoistDistance != 0) {
                             ArmLIR *newLoadLIR =
                                 dvmCompilerNew(sizeof(ArmLIR), true);
                             *newLoadLIR = *thisLIR;
                             newLoadLIR->age = cUnit->optRound;
                             /*
-                             * Insertion is guaranteed to succeed since checkLIR
-                             * is never the first LIR on the list
+                             * Stop point found - insert *after* the checkLIR
+                             * since the instruction list is scanned in the
+                             * bottom-up order.
                              */
                             dvmCompilerInsertLIRAfter((LIR *) checkLIR,
                                                       (LIR *) newLoadLIR);
