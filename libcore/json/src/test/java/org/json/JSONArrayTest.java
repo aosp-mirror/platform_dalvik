@@ -160,6 +160,29 @@ public class JSONArrayTest extends TestCase {
         assertEquals("", array.optString(3));
     }
 
+    /**
+     * Our behaviour is questioned by this bug:
+     * http://code.google.com/p/android/issues/detail?id=7257
+     */
+    public void testParseNullYieldsJSONObjectNull() throws JSONException {
+        JSONArray array = new JSONArray("[\"null\",null]");
+        array.put(null);
+        assertEquals("null", array.get(0));
+        assertEquals(JSONObject.NULL, array.get(1));
+        try {
+            array.get(2);
+            fail();
+        } catch (JSONException e) {
+        }
+        assertEquals("null", array.getString(0));
+        assertEquals("null", array.getString(1));
+        try {
+            array.getString(2);
+            fail();
+        } catch (JSONException e) {
+        }
+    }
+
     public void testNumbers() throws JSONException {
         JSONArray array = new JSONArray();
         array.put(Double.MIN_VALUE);
