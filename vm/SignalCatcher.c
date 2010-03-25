@@ -180,6 +180,12 @@ static void handleSigQuit(void)
 
     if (traceBuf != NULL) {
         /*
+         * We don't know how long it will take to do the disk I/O, so put us
+         * into VMWAIT for the duration.
+         */
+        int oldStatus = dvmChangeStatus(dvmThreadSelf(), THREAD_VMWAIT);
+
+        /*
          * Open the stack trace output file, creating it if necessary.  It
          * needs to be world-writable so other processes can write to it.
          */
@@ -200,6 +206,7 @@ static void handleSigQuit(void)
         }
 
         free(traceBuf);
+        dvmChangeStatus(dvmThreadSelf(), oldStatus);
     }
 }
 
