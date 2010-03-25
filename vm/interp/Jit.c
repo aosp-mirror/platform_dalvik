@@ -64,8 +64,8 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
 {
     Thread *self = dvmThreadSelf();
     ShadowSpace *shadowSpace = self->shadowSpace;
-    int preBytes = interpState->method->outsSize*4 + sizeof(StackSaveArea);
-    int postBytes = interpState->method->registersSize*4;
+    unsigned preBytes = interpState->method->outsSize*4 + sizeof(StackSaveArea);
+    unsigned postBytes = interpState->method->registersSize*4;
 
     //LOGD("### selfVerificationSaveState(%d) pc: 0x%x fp: 0x%x",
     //    self->threadId, (int)pc, (int)fp);
@@ -79,11 +79,11 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
     shadowSpace->selfVerificationState = kSVSStart;
 
     // Dynamically grow shadow register space if necessary
-    while (preBytes + postBytes > shadowSpace->registerSpaceSize) {
-        shadowSpace->registerSpaceSize *= 2;
+    if (preBytes + postBytes > shadowSpace->registerSpaceSize * sizeof(u4)) {
         free(shadowSpace->registerSpace);
+        shadowSpace->registerSpaceSize = (preBytes + postBytes) / sizeof(u4);
         shadowSpace->registerSpace =
-            (int*) calloc(shadowSpace->registerSpaceSize, sizeof(int));
+            (int*) calloc(shadowSpace->registerSpaceSize, sizeof(u4));
     }
 
     // Remember original state
@@ -145,7 +145,8 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
     }
 
     // Special case when punting after a single instruction
-    if (exitPoint == kSVSPunt && pc == shadowSpace->startPC) {
+    if ((exitPoint == kSVSPunt || exitPoint == kSVSSingleStep) &&
+        pc == shadowSpace->startPC) {
         shadowSpace->selfVerificationState = kSVSIdle;
     } else {
         shadowSpace->selfVerificationState = exitPoint;
@@ -257,8 +258,7 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
     }
 
     /* Check that the current pc is the end of the trace */
-    if ((state == kSVSSingleStep || state == kSVSDebugInterp) &&
-        pc == shadowSpace->endPC) {
+    if (state == kSVSDebugInterp && pc == shadowSpace->endPC) {
 
         shadowSpace->selfVerificationState = kSVSIdle;
 
@@ -473,9 +473,16 @@ static bool selfVerificationPuntOps(DecodedInstruction *decInsn)
 {
     OpCode op = decInsn->opCode;
     int flags =  dexGetInstrFlags(gDvm.instrFlags, op);
+    /*
+     * All opcodes that can throw exceptions and use the
+     * TEMPLATE_THROW_EXCEPTION_COMMON template should be excluded in the trace
+     * under self-verification mode.
+     */
     return (op == OP_MONITOR_ENTER || op == OP_MONITOR_EXIT ||
             op == OP_NEW_INSTANCE || op == OP_NEW_ARRAY ||
             op == OP_CHECK_CAST || op == OP_MOVE_EXCEPTION ||
+            op == OP_FILL_ARRAY_DATA || op == OP_EXECUTE_INLINE ||
+            op == OP_EXECUTE_INLINE_RANGE ||
             (flags & kInstrInvoke));
 }
 #endif

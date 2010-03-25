@@ -112,12 +112,14 @@ unlockAndExit:
     return result;
 }
 
-/* Block until queue length is 0 */
+/* Block until the queue length is 0, or there is a pending suspend request */
 void dvmCompilerDrainQueue(void)
 {
-    int oldStatus = dvmChangeStatus(NULL, THREAD_VMWAIT);
+    Thread *self = dvmThreadSelf();
+
     dvmLockMutex(&gDvmJit.compilerLock);
-    while (workQueueLength() != 0 && !gDvmJit.haltCompilerThread) {
+    while (workQueueLength() != 0 && !gDvmJit.haltCompilerThread &&
+           self->suspendCount == 0) {
         /*
          * Use timed wait here - more than one mutator threads may be blocked
          * but the compiler thread will only signal once when the queue is
@@ -127,7 +129,6 @@ void dvmCompilerDrainQueue(void)
         dvmRelativeCondWait(&gDvmJit.compilerQueueEmpty, &gDvmJit.compilerLock,                             1000, 0);
     }
     dvmUnlockMutex(&gDvmJit.compilerLock);
-    dvmChangeStatus(NULL, oldStatus);
 }
 
 bool dvmCompilerSetupCodeCache(void)
@@ -577,8 +578,15 @@ static void *compilerThreadStart(void *arg)
                 /*
                  * Check whether there is a suspend request on me.  This
                  * is necessary to allow a clean shutdown.
+                 *
+                 * However, in the blocking stress testing mode, let the
+                 * compiler thread continue doing compilations to unblock
+                 * other requesting threads. This may occasionally cause
+                 * shutdown from proceeding cleanly in the standalone invocation
+                 * of the vm but this should be acceptable.
                  */
-                dvmCheckSuspendPending(NULL);
+                if (!gDvmJit.blockingMode)
+                    dvmCheckSuspendPending(NULL);
                 /* Is JitTable filling up? */
                 if (gDvmJit.jitTableEntriesUsed >
                     (gDvmJit.jitTableSize - gDvmJit.jitTableSize/4)) {
