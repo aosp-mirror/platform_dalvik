@@ -34,10 +34,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.Vector;
 
 // BEGIN android-changed
 import com.ibm.icu4jni.charset.CharsetProviderICU;
@@ -96,11 +96,11 @@ public abstract class Charset implements Comparable<Charset> {
 
     // built in provider instance, assuming thread-safe
     // BEGIN android-changed
-    private static final CharsetProviderICU _builtInProvider;
+    private static final CharsetProviderICU _builtInProvider = new CharsetProviderICU();
     // END android-changed
 
     // cached built in charsets
-    private static TreeMap<String, Charset> _builtInCharsets = null;
+    private static SortedMap<String, Charset> _builtInCharsets = null;
 
     private final String canonicalName;
 
@@ -111,19 +111,6 @@ public abstract class Charset implements Comparable<Charset> {
     private final static HashMap<String, Charset> cachedCharsetTable = new HashMap<String, Charset>();
 
     private static boolean inForNameInternal = false;
-
-    static {
-        /*
-         * Create built-in charset provider even if no privilege to access
-         * charset provider.
-         */
-        _builtInProvider = AccessController
-                .doPrivileged(new PrivilegedAction<CharsetProviderICU>() {
-                    public CharsetProviderICU run() {
-                         return new CharsetProviderICU();
-                   }
-                });
-    }
 
     /**
      * Constructs a <code>Charset</code> object. Duplicated aliases are
@@ -147,7 +134,7 @@ public abstract class Charset implements Comparable<Charset> {
         this.canonicalName = canonicalName;
         // check each alias and put into a set
         this.aliasesSet = new HashSet<String>();
-        if (null != aliases) {
+        if (aliases != null) {
             for (int i = 0; i < aliases.length; i++) {
                 checkCharsetName(aliases[i]);
                 this.aliasesSet.add(aliases[i]);
@@ -234,8 +221,7 @@ public abstract class Charset implements Comparable<Charset> {
     /*
      * Add the charsets supported by the given provider to the map.
      */
-    private static void addCharsets(CharsetProvider cp,
-            TreeMap<String, Charset> charsets) {
+    private static void addCharsets(CharsetProvider cp, Map<String, Charset> charsets) {
         Iterator<Charset> it = cp.charsets();
         while (it.hasNext()) {
             Charset cs = it.next();
@@ -264,7 +250,7 @@ public abstract class Charset implements Comparable<Charset> {
      * specified by this configuration file to the map.
      */
     private static void loadConfiguredCharsets(URL configFile,
-            ClassLoader contextClassLoader, TreeMap<String, Charset> charsets) {
+            ClassLoader contextClassLoader, Map<String, Charset> charsets) {
         BufferedReader reader = null;
         try {
             InputStream is = configFile.openStream();
@@ -325,45 +311,31 @@ public abstract class Charset implements Comparable<Charset> {
      */
     @SuppressWarnings("unchecked")
     public static SortedMap<String, Charset> availableCharsets() {
-        // BEGIN android-removed
-        // // workaround: conflicted Charsets with icu4j 4.0
-        // Charset.forName("TIS-620");
-        // Charset.forName("windows-1258");
-        // Charset.forName("cp856");
-        // Charset.forName("cp922");
-        // END android-removed
-
         // Initialize the built-in charsets map cache if necessary
-        if (null == _builtInCharsets) {
+        if (_builtInCharsets == null) {
             synchronized (Charset.class) {
-                if (null == _builtInCharsets) {
-                    _builtInCharsets = new TreeMap<String, Charset>(
-                            IgnoreCaseComparator.getInstance());
-                    _builtInProvider.putCharsets(_builtInCharsets);
+                if (_builtInCharsets == null) {
+                    _builtInCharsets = _builtInProvider.initAvailableCharsets();
                 }
             }
         }
 
-        // Add built-in charsets
-        TreeMap<String, Charset> charsets = (TreeMap<String, Charset>) _builtInCharsets
-                .clone();
+        // Start with the built-in charsets...
+        SortedMap<String, Charset> charsets = new TreeMap<String, Charset>(_builtInCharsets);
 
-        // Collect all charsets provided by charset providers
+        // Add all charsets provided by charset providers...
         ClassLoader contextClassLoader = getContextClassLoader();
         Enumeration<URL> e = null;
         try {
-            if (null != contextClassLoader) {
-                e = contextClassLoader
-                        .getResources(PROVIDER_CONFIGURATION_FILE_NAME);
+            if (contextClassLoader != null) {
+                e = contextClassLoader.getResources(PROVIDER_CONFIGURATION_FILE_NAME);
             } else {
                 getSystemClassLoader();
-                e = systemClassLoader
-                        .getResources(PROVIDER_CONFIGURATION_FILE_NAME);
+                e = systemClassLoader.getResources(PROVIDER_CONFIGURATION_FILE_NAME);
             }
             // Examine each configuration file
             while (e.hasMoreElements()) {
-                loadConfiguredCharsets(e.nextElement(), contextClassLoader,
-                        charsets);
+                loadConfiguredCharsets(e.nextElement(), contextClassLoader, charsets);
             }
         } catch (IOException ex) {
             // Unexpected ClassLoader exception, ignore
@@ -446,52 +418,34 @@ public abstract class Charset implements Comparable<Charset> {
      */
     private synchronized static Charset forNameInternal(String charsetName)
             throws IllegalCharsetNameException {
-        Charset cs = cachedCharsetTable.get(charsetName);
-        if (null != cs) {
-            return cs;
-        }
 
-        if (null == charsetName) {
-            throw new IllegalArgumentException();
-        }
-        checkCharsetName(charsetName);
-        // try built-in charsets
-        // BEGIN android-removed
-        // if (_builtInProvider == null) {
-        //     _builtInProvider = new CharsetProviderICU();
-        // }
-        // END android-removed
-        cs = _builtInProvider.charsetForName(charsetName);
-        if (null != cs) {
-            cacheCharset(cs);
+        Charset cs = lookupCachedOrBuiltInCharset(charsetName);
+        if (cs != null || inForNameInternal) {
             return cs;
         }
 
         // collect all charsets provided by charset providers
-        ClassLoader contextClassLoader = getContextClassLoader();
-        Enumeration<URL> e = null;
         try {
-            if (null != contextClassLoader) {
-                e = contextClassLoader
-                        .getResources(PROVIDER_CONFIGURATION_FILE_NAME);
+            Enumeration<URL> e = null;
+            ClassLoader contextClassLoader = getContextClassLoader();
+            if (contextClassLoader != null) {
+                e = contextClassLoader.getResources(PROVIDER_CONFIGURATION_FILE_NAME);
             } else {
                 getSystemClassLoader();
                 if (systemClassLoader == null) {
                     // Non available during class library start-up phase
-                    e = new Vector<URL>().elements();
+                    return null;
                 } else {
-                    e = systemClassLoader
-                            .getResources(PROVIDER_CONFIGURATION_FILE_NAME);
+                    e = systemClassLoader.getResources(PROVIDER_CONFIGURATION_FILE_NAME);
                 }
             }
 
             // examine each configuration file
             while (e.hasMoreElements()) {
-			     inForNameInternal = true;
-			     cs = searchConfiguredCharsets(charsetName, contextClassLoader,
-                        e.nextElement());
-				 inForNameInternal = false;
-                if (null != cs) {
+                inForNameInternal = true;
+                cs = searchConfiguredCharsets(charsetName, contextClassLoader, e.nextElement());
+                inForNameInternal = false;
+                if (cs != null) {
                     cacheCharset(cs);
                     return cs;
                 }
@@ -499,26 +453,40 @@ public abstract class Charset implements Comparable<Charset> {
         } catch (IOException ex) {
             // Unexpected ClassLoader exception, ignore
         } finally {
-		    inForNameInternal = false;
+            inForNameInternal = false;
         }
         return null;
+    }
+
+    private synchronized static Charset lookupCachedOrBuiltInCharset(String charsetName) {
+        Charset cs = cachedCharsetTable.get(charsetName);
+        if (cs != null) {
+            return cs;
+        }
+        if (charsetName == null) {
+            throw new IllegalArgumentException();
+        }
+        checkCharsetName(charsetName);
+        cs = _builtInProvider.charsetForName(charsetName);
+        if (cs != null) {
+            cacheCharset(cs);
+        }
+        return cs;
     }
 
     /*
      * save charset into cachedCharsetTable
      */
-    private static void cacheCharset(Charset cs) {
-        if (!cachedCharsetTable.containsKey(cs.name())){
-            cachedCharsetTable.put(cs.name(), cs);  
+    private synchronized static void cacheCharset(Charset cs) {
+        // Cache the Charset by its canonical name...
+        String canonicalName = cs.name();
+        if (!cachedCharsetTable.containsKey(canonicalName)) {
+            cachedCharsetTable.put(canonicalName, cs);
         }
-        Set<String> aliasesSet = cs.aliases();
-        if (null != aliasesSet) {
-            Iterator<String> iter = aliasesSet.iterator();
-            while (iter.hasNext()) {
-                String alias = iter.next();
-                if (!cachedCharsetTable.containsKey(alias)) {
-                    cachedCharsetTable.put(alias, cs); 
-                }
+        // And all its aliases...
+        for (String alias : cs.aliasesSet) {
+            if (!cachedCharsetTable.containsKey(alias)) {
+                cachedCharsetTable.put(alias, cs);
             }
         }
     }
@@ -536,7 +504,7 @@ public abstract class Charset implements Comparable<Charset> {
      */
     public static Charset forName(String charsetName) {
         Charset c = forNameInternal(charsetName);
-        if (null == c) {
+        if (c == null) {
             throw new UnsupportedCharsetException(charsetName);
         }
         return c;
@@ -552,34 +520,7 @@ public abstract class Charset implements Comparable<Charset> {
      *             if the specified charset name is illegal.
      */
     public static synchronized boolean isSupported(String charsetName) {
-        if (inForNameInternal) {
-            Charset cs = cachedCharsetTable.get(charsetName);
-            if (null != cs) {
-                return true;
-            }
-
-            if (null == charsetName) {
-                throw new IllegalArgumentException();
-            }
-            checkCharsetName(charsetName);
-
-            // Try built-in charsets
-            // BEGIN android-removed
-            // if (_builtInProvider == null) {
-            //     _builtInProvider = new CharsetProviderICU();
-            // }
-            // END android-removed
-            cs = _builtInProvider.charsetForName(charsetName);
-            if (null != cs) {
-                cacheCharset(cs);
-                return true;
-            }
-            return false;
-        } else {
-            Charset cs = forNameInternal(charsetName);
-            return (null != cs);
-        }
-
+        return forNameInternal(charsetName) != null;
     }
 
     /**
@@ -815,35 +756,5 @@ public abstract class Charset implements Comparable<Charset> {
             defaultCharset = Charset.forName("UTF-8"); //$NON-NLS-1$
         }
         return defaultCharset;
-    }
-
-    /**
-     * A comparator that ignores case.
-     */
-    static class IgnoreCaseComparator implements Comparator<String> {
-
-        // the singleton
-        private static Comparator<String> c = new IgnoreCaseComparator();
-
-        /*
-         * Default constructor.
-         */
-        private IgnoreCaseComparator() {
-            // no action
-        }
-
-        /*
-         * Gets a single instance.
-         */
-        public static Comparator<String> getInstance() {
-            return c;
-        }
-
-        /*
-         * Compares two strings ignoring case.
-         */
-        public int compare(String s1, String s2) {
-            return s1.compareToIgnoreCase(s2);
-        }
     }
 }

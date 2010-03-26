@@ -22,7 +22,7 @@ import java.util.Map;
 
 
 public final class CharsetICU extends Charset{
-    private String icuCanonicalName;
+    private final String icuCanonicalName;
     /**
      * Constructor to create a the CharsetICU object
      * @param canonicalName the canonical name as a string
@@ -30,23 +30,18 @@ public final class CharsetICU extends Charset{
      * @stable ICU 2.4
      */
     protected CharsetICU(String canonicalName, String icuCanonName, String[] aliases) {
-         super(canonicalName,aliases);
+         super(canonicalName, aliases);
          icuCanonicalName = icuCanonName;
-        
     }
     /**
      * Returns a new decoder instance of this charset object
      * @return a new decoder object
      * @stable ICU 2.4
      */
-    public CharsetDecoder newDecoder(){
-        // the arrays are locals and not
-        // instance variables since the
-        // methods on this class need to 
-        // be thread safe
+    public CharsetDecoder newDecoder() {
         long converterHandle = NativeConverter.openConverter(icuCanonicalName);
-        return new CharsetDecoderICU(this,converterHandle);
-    };
+        return new CharsetDecoderICU(this, converterHandle);
+    }
     
     // hardCoded list of replacement bytes
     private static final Map subByteMap = new HashMap();
@@ -125,5 +120,3 @@ public final class CharsetICU extends Charset{
         }
     }
 }
-
-

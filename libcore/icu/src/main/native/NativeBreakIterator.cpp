@@ -17,6 +17,7 @@
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "ErrorCode.h"
+#include "ScopedUtfChars.h"
 #include "unicode/ubrk.h"
 #include "unicode/putil.h"
 #include <stdlib.h>
@@ -38,9 +39,11 @@ static jobjectArray getAvailableLocalesImpl(JNIEnv* env, jclass) {
 
 static jint getIterator(JNIEnv* env, jstring locale, UBreakIteratorType type) {
     UErrorCode status = U_ZERO_ERROR;
-    const char* localeChars = env->GetStringUTFChars(locale, NULL);
-    UBreakIterator* it = ubrk_open(type, localeChars, NULL, 0, &status);
-    env->ReleaseStringUTFChars(locale, localeChars);
+    ScopedUtfChars localeChars(env, locale);
+    if (!localeChars.data()) {
+        return 0;
+    }
+    UBreakIterator* it = ubrk_open(type, localeChars.data(), NULL, 0, &status);
     icu4jni_error(env, status);
     return reinterpret_cast<uintptr_t>(it);
 }

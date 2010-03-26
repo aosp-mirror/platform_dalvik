@@ -9,11 +9,13 @@
 
 package com.ibm.icu4jni.charset;
 
+import java.nio.charset.Charset;
+
 /**
  * Class for accessing the underlying JNI methods
  * @internal ICU 2.4
  */
-final class NativeConverter{
+final class NativeConverter {
   
     //Native methods
     
@@ -335,7 +337,9 @@ final class NativeConverter{
      * @internal ICU 2.4
      */
     public static final native String[] getAvailable();
-    
+
+    public static final native Charset charsetForName(String charsetName);
+
     /**
      * Gets the number of aliases for a converter name
      * @param enc encoding name
@@ -351,30 +355,6 @@ final class NativeConverter{
      * @internal ICU 2.4
      */
     public static final native String[] getAliases(String enc);
-    
-    /**
-     * Gets the canonical name of the converter
-     * @param enc converter name
-     * @return canonical name of the converter
-     * @internal ICU 2.4
-     */
-    public static final native String getCanonicalName(String enc);
-    
-    /**
-     * Gets the canonical name of the converter as defined by Java
-     * @param enc converter name
-     * @return canonical name of the converter
-     * @internal ICU 3.4
-     */
-    public static final native String getICUCanonicalName(String enc);
-      
-    /**
-     * Gets the canonical name of the converter as defined by Java
-     * @param icuCanonicalName converter name
-     * @return canonical name of the converter
-     * @internal ICU 3.4
-     */
-    public static final native String getJavaCanonicalName(String icuCanonicalName);
     
     /**
      * Sets the callback to Unicode for ICU conveter. The default behaviour of ICU callback
