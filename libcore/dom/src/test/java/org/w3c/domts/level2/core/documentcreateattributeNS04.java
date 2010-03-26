@@ -92,13 +92,14 @@ public final class documentcreateattributeNS04 extends DOMTestCase {
           qualifiedName = (String) qualifiedNames.get(indexN1004E);
     
       {
-         boolean success = false;
+          // BEGIN android-changed
+          //     Our exception priorities differ from the spec
          try {
             attribute = doc.createAttributeNS(namespaceURI, qualifiedName);
-          } catch (DOMException ex) {
-            success = (ex.code == DOMException.NAMESPACE_ERR);
+             fail("documentcreateattributeNS04");
+          } catch (DOMException expected) {
          }
-         assertTrue("documentcreateattributeNS04", success);
+          // END android-changed
       }
   }
       }

@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 @TestTargetClass(DocumentBuilder.class) 
 public class DocumentBuilderTest extends TestCase {
@@ -564,8 +565,8 @@ public class DocumentBuilderTest extends TestCase {
     )
     public void test_parseLjava_lang_String() throws Exception {
         // case 1: Trivial use.
-        File f = new File(getClass().getResource("/simple.xml").getFile());
-        Document d = db.parse(f.getAbsolutePath());
+        URL resource = getClass().getResource("/simple.xml");
+        Document d = db.parse(resource.toString());
         assertNotNull(d);
 //          TBD  getXmlEncoding() is not supported
 //          assertEquals("ISO-8859-1", d.getXmlEncoding());
@@ -593,8 +594,8 @@ public class DocumentBuilderTest extends TestCase {
 
         // case 4: Try to parse incorrect xml file
         try {
-            f = new File(getClass().getResource("/wrong.xml").getFile());
-            db.parse(f.getAbsolutePath());
+            resource = getClass().getResource("/wrong.xml");
+            db.parse(resource.toString());
             fail("Expected SAXException was not thrown");
         } catch (SAXException sax) {
             // expected

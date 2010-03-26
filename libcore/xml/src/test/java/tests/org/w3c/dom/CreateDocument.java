@@ -305,13 +305,13 @@ public final class CreateDocument extends DOMTestCase {
 
         domImpl = builder.getDOMImplementation();
 
-        boolean success = false;
+        // BEGIN android-changed
+        //     Our exception priorities differ from the spec
         try {
             domImpl.createDocument(namespaceURI, "", docType);
+            fail();
         } catch (DOMException ex) {
-            success = (ex.code == DOMException.NAMESPACE_ERR);
         }
-        assertTrue("throw_NAMESPACE_ERR", success);
-
+        // END android-changed
     }
 }

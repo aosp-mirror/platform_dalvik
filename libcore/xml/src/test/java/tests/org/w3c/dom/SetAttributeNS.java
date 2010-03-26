@@ -126,14 +126,15 @@ public final class SetAttributeNS extends DOMTestCase {
         testAddr = elementList.item(0);
 
         {
-            boolean success = false;
+            // BEGIN android-changed
+            //     Our exception priorities differ from the spec
             try {
                 ((Element) /* Node */testAddr).setAttributeNS(namespaceURI,
                         qualifiedName, "newValue");
+                fail();
             } catch (DOMException ex) {
-                success = (ex.code == DOMException.NAMESPACE_ERR);
             }
-            assertTrue("throw_NAMESPACE_ERR", success);
+            // END android-changed
         }
     }
 
@@ -340,14 +341,15 @@ public final class SetAttributeNS extends DOMTestCase {
         testAddr = elementList.item(0);
 
         {
-            boolean success = false;
+            // BEGIN android-changed
+            //     Our exception priorities differ from the spec
             try {
                 ((Element) /* Node */testAddr).setAttributeNS(namespaceURI, "",
                         "newValue");
+                fail();
             } catch (DOMException ex) {
-                success = (ex.code == DOMException.NAMESPACE_ERR);
             }
-            assertTrue("throw_NAMESPACE_ERR", success);
+            // END android-changed
         }
     }
 }

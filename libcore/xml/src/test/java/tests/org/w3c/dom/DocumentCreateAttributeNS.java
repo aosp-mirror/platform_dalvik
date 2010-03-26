@@ -216,13 +216,15 @@ public final class DocumentCreateAttributeNS extends DOMTestCase {
             qualifiedName = (String) qualifiedNames.get(indexN1004E);
 
             {
-                boolean success = false;
+
+                // BEGIN android-changed
+                //     Our exception priorities differ from the spec
                 try {
                     doc.createAttributeNS(namespaceURI, qualifiedName);
+                    fail();
                 } catch (DOMException ex) {
-                    success = (ex.code == DOMException.NAMESPACE_ERR);
                 }
-                assertTrue("documentcreateattributeNS04", success);
+                // END android-changed
             }
         }
     }
