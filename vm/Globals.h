@@ -425,9 +425,6 @@ struct DvmGlobals {
     ReferenceTable  jniPinRefTable;
     pthread_mutex_t jniPinRefLock;
 
-    /* special ReferenceQueue for JNI weak globals */
-    Object*     jniWeakGlobalRefQueue;
-
     /*
      * Native shared library table.
      */

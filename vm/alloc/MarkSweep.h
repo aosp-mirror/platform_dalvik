@@ -54,7 +54,8 @@ enum RefType {
 bool dvmHeapBeginMarkStep(GcMode mode);
 void dvmHeapMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
-void dvmHeapHandleReferences(Object *refListHead, enum RefType refType);
+void dvmHandleSoftRefs(Object **list);
+void dvmClearWhiteRefs(Object **list);
 void dvmHeapScheduleFinalizations(void);
 void dvmHeapFinishMarkStep(void);
 

@@ -79,6 +79,6 @@ void dvmHeapSuspendAndVerify();
 /*
  * Run the garbage collector without doing any locking.
  */
-void dvmCollectGarbageInternal(bool collectSoftReferences, GcReason reason);
+void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
 
 #endif  // _DALVIK_ALLOC_HEAP

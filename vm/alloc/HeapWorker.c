@@ -278,6 +278,10 @@ static void doHeapWork(Thread *self)
             callMethod(self, obj, method);
         } else {
             if (op & WORKER_ENQUEUE) {
+                assert(dvmGetFieldObject(
+                           obj, gDvm.offJavaLangRefReference_queue) != NULL);
+                assert(dvmGetFieldObject(
+                           obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
                 numReferencesEnqueued++;
                 callMethod(self, obj,
                         gDvm.methJavaLangRefReference_enqueueInternal);

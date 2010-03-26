@@ -329,7 +329,6 @@ void dvmHeapMarkRootSet()
     dvmMarkObjectNonNull(gDvm.outOfMemoryObj);
     dvmMarkObjectNonNull(gDvm.internalErrorObj);
     dvmMarkObjectNonNull(gDvm.noClassDefFoundErrorObj);
-    dvmMarkObject(gDvm.jniWeakGlobalRefQueue);
 //TODO: scan object references sitting in gDvm;  use pointer begin & end
 
     HPROF_CLEAR_GC_SCAN_STATE();
@@ -538,42 +537,9 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
              */
             referent = dvmGetFieldObject(obj,
                     gDvm.offJavaLangRefReference_referent);
-            if (referent != NULL &&
-                    !isMarked(referent, &gcHeap->markContext))
+            if (referent != NULL && !isMarked(referent, ctx))
             {
                 u4 refFlags;
-
-                if (gcHeap->markAllReferents) {
-                    LOG_REF("Hard-marking a reference\n");
-
-                    /* Don't bother with normal reference-following
-                     * behavior, just mark the referent.  This should
-                     * only be used when following objects that just
-                     * became scheduled for finalization.
-                     */
-                    markObjectNonNull(referent, ctx);
-                    goto skip_reference;
-                }
-
-                /* See if this reference was handled by a previous GC.
-                 */
-                if (dvmGetFieldObject(obj,
-                            gDvm.offJavaLangRefReference_vmData) ==
-                        SCHEDULED_REFERENCE_MAGIC)
-                {
-                    LOG_REF("Skipping scheduled reference\n");
-
-                    /* Don't reschedule it, but make sure that its
-                     * referent doesn't get collected (in case it's
-                     * a PhantomReference and wasn't cleared automatically).
-                     */
-                    //TODO: Mark these after handling all new refs of
-                    //      this strength, in case the new refs refer
-                    //      to the same referent.  Not a very common
-                    //      case, though.
-                    markObjectNonNull(referent, ctx);
-                    goto skip_reference;
-                }
 
                 /* Find out what kind of reference is pointing
                  * to referent.
@@ -606,25 +572,7 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
                      * we'll attempt to collect all of them, some of
                      * them, or none of them.
                      */
-                    if (gcHeap->softReferenceCollectionState ==
-                            SR_COLLECT_NONE)
-                    {
-                sr_collect_none:
-                        markObjectNonNull(referent, ctx);
-                    } else if (gcHeap->softReferenceCollectionState ==
-                            SR_COLLECT_ALL)
-                    {
-                sr_collect_all:
-                        ADD_REF_TO_LIST(gcHeap->softReferences, obj);
-                    } else {
-                        /* We'll only try to collect half of the
-                         * referents.
-                         */
-                        if (gcHeap->softReferenceColor++ & 1) {
-                            goto sr_collect_none;
-                        }
-                        goto sr_collect_all;
-                    }
+                    ADD_REF_TO_LIST(gcHeap->softReferences, obj);
                 } else {
                     /* It's a weak or phantom reference.
                      * Clearing CLASS_ISREFERENCE will reveal which.
@@ -642,7 +590,6 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
             }
         }
 
-    skip_reference:
         /* If this is a class object, mark various other things that
          * its internals point to.
          *
@@ -697,7 +644,7 @@ scanBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
  * reachable objects.  When this returns, the entire set of
  * live objects will be marked and the mark stack will be empty.
  */
-void dvmHeapScanMarkedObjects()
+void dvmHeapScanMarkedObjects(void)
 {
     GcMarkContext *ctx = &gDvm.gcHeap->markContext;
 
@@ -735,9 +682,11 @@ static void clearReference(Object *reference)
             gDvm.offJavaLangRefReference_referent, NULL);
 }
 
-/** @return true if we need to schedule a call to enqueue().
+/*
+ * Returns true if the reference was registered with a reference queue
+ * and has not yet been enqueued.
  */
-static bool enqueueReference(Object *reference)
+static bool isEnqueuable(const Object *reference)
 {
     Object *queue = dvmGetFieldObject(reference,
             gDvm.offJavaLangRefReference_queue);
@@ -757,161 +706,124 @@ static bool enqueueReference(Object *reference)
     return true;
 }
 
-/* All objects for stronger reference levels have been
- * marked before this is called.
+/*
+ * Schedules a reference to be appended to its reference queue.
  */
-void dvmHeapHandleReferences(Object *refListHead, enum RefType refType)
+static void enqueueReference(Object *ref)
 {
-    Object *reference;
-    GcMarkContext *markContext = &gDvm.gcHeap->markContext;
-    const int offVmData = gDvm.offJavaLangRefReference_vmData;
-    const int offReferent = gDvm.offJavaLangRefReference_referent;
-    bool workRequired = false;
+    LargeHeapRefTable **table;
+    Object *op;
 
-    reference = refListHead;
-    while (reference != NULL) {
-        Object *next;
-        Object *referent;
-
-        /* Pull the interesting fields out of the Reference object.
-         */
-        next = dvmGetFieldObject(reference, offVmData);
-        referent = dvmGetFieldObject(reference, offReferent);
-
-        //TODO: when handling REF_PHANTOM, unlink any references
-        //      that fail this initial if().  We need to re-walk
-        //      the list, and it would be nice to avoid the extra
-        //      work.
-        if (referent != NULL && !isMarked(referent, markContext)) {
-            bool schedEnqueue;
-
-            /* This is the strongest reference that refers to referent.
-             * Do the right thing.
-             */
-            switch (refType) {
-            case REF_SOFT:
-            case REF_WEAK:
-                clearReference(reference);
-                schedEnqueue = enqueueReference(reference);
-                break;
-            case REF_PHANTOM:
-                /* PhantomReferences are not cleared automatically.
-                 * Until someone clears it (or the reference itself
-                 * is collected), the referent must remain alive.
-                 *
-                 * It's necessary to fully mark the referent because
-                 * it will still be present during the next GC, and
-                 * all objects that it points to must be valid.
-                 * (The referent will be marked outside of this loop,
-                 * after handing all references of this strength, in
-                 * case multiple references point to the same object.)
-                 *
-                 * One exception: JNI "weak global" references are handled
-                 * as a special case.  They're identified by the queue.
-                 */
-                if (gDvm.jniWeakGlobalRefQueue != NULL) {
-                    Object* queue = dvmGetFieldObject(reference,
-                            gDvm.offJavaLangRefReference_queue);
-                    if (queue == gDvm.jniWeakGlobalRefQueue) {
-                        LOGV("+++ WGR: clearing + not queueing %p:%p\n",
-                            reference, referent);
-                        clearReference(reference);
-                        schedEnqueue = false;
-                        break;
-                    }
-                }
-
-                /* A PhantomReference is only useful with a
-                 * queue, but since it's possible to create one
-                 * without a queue, we need to check.
-                 */
-                schedEnqueue = enqueueReference(reference);
-                break;
-            default:
-                assert(!"Bad reference type");
-                schedEnqueue = false;
-                break;
-            }
-
-            if (schedEnqueue) {
-                /* Stuff the enqueue bit in the bottom of the pointer.
-                 * Assumes that objects are 8-byte aligned.
-                 *
-                 * Note that we are adding the *Reference* (which
-                 * is by definition already marked at this point) to
-                 * this list; we're not adding the referent (which
-                 * has already been cleared).
-                 */
-                assert(((intptr_t)reference & 3) == 0);
-                assert((WORKER_ENQUEUE & ~3) == 0);
-                if (!dvmHeapAddRefToLargeTable(
-                        &gDvm.gcHeap->referenceOperations,
-                        (Object *)((uintptr_t)reference | WORKER_ENQUEUE)))
-                {
-                    LOGE_HEAP("dvmMalloc(): no room for any more "
-                            "reference operations\n");
-                    dvmAbort();
-                }
-                workRequired = true;
-            }
-
-            if (refType != REF_PHANTOM) {
-                /* Let later GCs know not to reschedule this reference.
-                 */
-                dvmSetFieldObject(reference, offVmData,
-                        SCHEDULED_REFERENCE_MAGIC);
-            } // else this is handled later for REF_PHANTOM
-
-        } // else there was a stronger reference to the referent.
-
-        reference = next;
-    }
-
-    /* Walk though the reference list again, and mark any non-clear/marked
-     * referents.  Only PhantomReferences can have non-clear referents
-     * at this point.
+    assert(((uintptr_t)ref & 3) == 0);
+    assert((WORKER_ENQUEUE & ~3) == 0);
+    assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
+    assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext) == NULL);
+    /* Stuff the enqueue bit in the bottom of the pointer.
+     * Assumes that objects are 8-byte aligned.
      *
-     * (Could skip this for JNI weak globals, since we know they've been
-     * cleared.)
+     * Note that we are adding the *Reference* (which
+     * is by definition already marked at this point) to
+     * this list; we're not adding the referent (which
+     * has already been cleared).
      */
-    if (refType == REF_PHANTOM) {
-        bool scanRequired = false;
-
-        HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_REFERENCE_CLEANUP, 0);
-        reference = refListHead;
-        while (reference != NULL) {
-            Object *next;
-            Object *referent;
-
-            /* Pull the interesting fields out of the Reference object.
-             */
-            next = dvmGetFieldObject(reference, offVmData);
-            referent = dvmGetFieldObject(reference, offReferent);
-
-            if (referent != NULL && !isMarked(referent, markContext)) {
-                markObjectNonNull(referent, markContext);
-                scanRequired = true;
-
-                /* Let later GCs know not to reschedule this reference.
-                 */
-                dvmSetFieldObject(reference, offVmData,
-                        SCHEDULED_REFERENCE_MAGIC);
-            }
-
-            reference = next;
-        }
-        HPROF_CLEAR_GC_SCAN_STATE();
-
-        if (scanRequired) {
-            processMarkStack(markContext);
-        }
-    }
-
-    if (workRequired) {
-        dvmSignalHeapWorker(false);
+    table = &gDvm.gcHeap->referenceOperations;
+    op = (Object *)((uintptr_t)ref | WORKER_ENQUEUE);
+    if (!dvmHeapAddRefToLargeTable(table, op)) {
+        LOGE_HEAP("enqueueReference(): no room for any more "
+                  "reference operations\n");
+        dvmAbort();
     }
 }
 
+/*
+ * Walks the reference list marking any references subject to the
+ * reference clearing policy.  References with a black referent are
+ * removed from the list.  References with white referents biased
+ * toward saving are blackened and also removed from the list.
+ */
+void dvmHandleSoftRefs(Object **list)
+{
+    GcMarkContext *markContext;
+    Object *ref, *referent;
+    Object *prev, *next;
+    size_t referentOffset, vmDataOffset;
+    unsigned counter;
+    bool marked;
+
+    markContext = &gDvm.gcHeap->markContext;
+    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    referentOffset = gDvm.offJavaLangRefReference_referent;
+    counter = 0;
+    prev = next = NULL;
+    ref = *list;
+    while (ref != NULL) {
+        referent = dvmGetFieldObject(ref, referentOffset);
+        next = dvmGetFieldObject(ref, vmDataOffset);
+        assert(referent != NULL);
+        marked = isMarked(referent, markContext);
+        if (!marked && ((++counter) & 1)) {
+            /* Referent is white and biased toward saving, mark it. */
+            markObjectNonNull(referent, markContext);
+            marked = true;
+        }
+        if (marked) {
+            /* Referent is black, unlink it. */
+            if (prev != NULL) {
+                dvmSetFieldObject(ref, vmDataOffset, NULL);
+                dvmSetFieldObject(prev, vmDataOffset, next);
+            }
+        } else {
+            /* Referent is white, skip over it. */
+            prev = ref;
+        }
+        ref = next;
+    }
+    /*
+     * Restart the mark with the newly black references added to the
+     * root set.
+     */
+    processMarkStack(markContext);
+}
+
+/*
+ * Walks the reference list and clears references with an unmarked
+ * (white) referents.  Cleared references registered to a reference
+ * queue are scheduled for appending by the heap worker thread.
+ */
+void dvmClearWhiteRefs(Object **list)
+{
+    GcMarkContext *markContext;
+    Object *ref, *referent;
+    size_t referentOffset, vmDataOffset;
+    bool doSignal;
+
+    markContext = &gDvm.gcHeap->markContext;
+    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    referentOffset = gDvm.offJavaLangRefReference_referent;
+    doSignal = false;
+    while (*list != NULL) {
+        ref = *list;
+        referent = dvmGetFieldObject(ref, referentOffset);
+        *list = dvmGetFieldObject(ref, vmDataOffset);
+        assert(referent != NULL);
+        if (!isMarked(referent, markContext)) {
+            /* Referent is "white", clear it. */
+            clearReference(ref);
+            if (isEnqueuable(ref)) {
+                enqueueReference(ref);
+                doSignal = true;
+            }
+        }
+    }
+    /*
+     * If we cleared a reference with a reference queue we must notify
+     * the heap worker to append the reference.
+     */
+    if (doSignal) {
+        dvmSignalHeapWorker(false);
+    }
+    assert(*list == NULL);
+}
 
 /* Find unreachable objects that need to be finalized,
  * and schedule them for finalization.
@@ -1018,16 +930,7 @@ void dvmHeapScheduleFinalizations()
         ref++;
     }
     HPROF_CLEAR_GC_SCAN_STATE();
-
-    /* Set markAllReferents so that we don't collect referents whose
-     * only references are in final-reachable objects.
-     * TODO: eventually provide normal reference behavior by properly
-     *       marking these references.
-     */
-    gDvm.gcHeap->markAllReferents = true;
     processMarkStack(markContext);
-    gDvm.gcHeap->markAllReferents = false;
-
     dvmSignalHeapWorker(false);
 }
 

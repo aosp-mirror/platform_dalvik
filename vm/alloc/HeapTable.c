@@ -202,10 +202,8 @@ void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table, bool stripLowBits)
         lastRef = table->refs.nextEntry;
         if (stripLowBits) {
             /* This case is used for marking reference objects that
-             * are still waiting for the heap worker thread to get to
-             * them.  The referents pointed to by the references are
-             * marked when a SCHEDULED_REFERENCE_MAGIC is encountered
-             * during scanning.
+             * are still waiting for the heap worker thread to push
+             * them onto their reference queue.
              */
             while (ref < lastRef) {
                 dvmMarkObjectNonNull((Object *)((uintptr_t)*ref++ & ~3));

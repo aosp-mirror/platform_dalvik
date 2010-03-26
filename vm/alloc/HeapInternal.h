@@ -24,8 +24,6 @@
 #include "HeapTable.h"
 #include "MarkSweep.h"
 
-#define SCHEDULED_REFERENCE_MAGIC   ((Object*)0x87654321)
-
 struct GcHeap {
     HeapSource      *heapSource;
 
@@ -110,31 +108,6 @@ struct GcHeap {
     /* Is the GC running?  Used to avoid recursive calls to GC.
      */
     bool            gcRunning;
-
-    /* Set at the end of a GC to indicate the collection policy
-     * for SoftReferences during the following GC.
-     */
-    enum { SR_COLLECT_NONE, SR_COLLECT_SOME, SR_COLLECT_ALL }
-                    softReferenceCollectionState;
-
-    /* The size of the heap is compared against this value
-     * to determine when to start collecting SoftReferences.
-     */
-    size_t          softReferenceHeapSizeThreshold;
-
-    /* A value that will increment every time we see a SoftReference
-     * whose referent isn't marked (during SR_COLLECT_SOME).
-     * The absolute value is meaningless, and does not need to
-     * be reset or initialized at any point.
-     */
-    int             softReferenceColor;
-
-    /* Indicates whether or not the object scanner should bother
-     * keeping track of any references.  If markAllReferents is
-     * true, referents will be hard-marked.  If false, normal
-     * reference following is used.
-     */
-    bool            markAllReferents;
 
 #if DVM_TRACK_HEAP_MARKING
     /* Every time an unmarked object becomes marked, markCount

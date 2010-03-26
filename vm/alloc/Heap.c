@@ -67,8 +67,6 @@ bool dvmHeapStartup()
     gcHeap->heapWorkerCurrentObject = NULL;
     gcHeap->heapWorkerCurrentMethod = NULL;
     gcHeap->heapWorkerInterpStartTime = 0LL;
-    gcHeap->softReferenceCollectionState = SR_COLLECT_NONE;
-    gcHeap->softReferenceHeapSizeThreshold = gDvm.heapSizeStart;
     gcHeap->ddmHpifWhen = 0;
     gcHeap->ddmHpsgWhen = 0;
     gcHeap->ddmHpsgWhat = 0;
@@ -260,49 +258,12 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
     return obj;
 }
 
-/* Used for a heap size change hysteresis to avoid collecting
- * SoftReferences when the heap only grows by a small amount.
- */
-#define SOFT_REFERENCE_GROWTH_SLACK (128 * 1024)
-
 /* Whenever the effective heap size may have changed,
  * this function must be called.
  */
 void dvmHeapSizeChanged()
 {
-    GcHeap *gcHeap = gDvm.gcHeap;
-    size_t currentHeapSize;
-
-    currentHeapSize = dvmHeapSourceGetIdealFootprint();
-
-    /* See if the heap size has changed enough that we should care
-     * about it.
-     */
-    if (currentHeapSize <= gcHeap->softReferenceHeapSizeThreshold -
-            4 * SOFT_REFERENCE_GROWTH_SLACK)
-    {
-        /* The heap has shrunk enough that we'll use this as a new
-         * threshold.  Since we're doing better on space, there's
-         * no need to collect any SoftReferences.
-         *
-         * This is 4x the growth hysteresis because we don't want
-         * to snap down so easily after a shrink.  If we just cleared
-         * up a bunch of SoftReferences, we don't want to disallow
-         * any new ones from being created.
-         * TODO: determine if the 4x is important, needed, or even good
-         */
-        gcHeap->softReferenceHeapSizeThreshold = currentHeapSize;
-        gcHeap->softReferenceCollectionState = SR_COLLECT_NONE;
-    } else if (currentHeapSize >= gcHeap->softReferenceHeapSizeThreshold +
-            SOFT_REFERENCE_GROWTH_SLACK)
-    {
-        /* The heap has grown enough to warrant collecting SoftReferences.
-         */
-        gcHeap->softReferenceHeapSizeThreshold = currentHeapSize;
-        gcHeap->softReferenceCollectionState = SR_COLLECT_SOME;
-    }
 }
-
 
 /* Do a full garbage collection, which may grow the
  * heap as a side-effect if the live set is large.
@@ -737,13 +698,9 @@ void dvmHeapSuspendAndVerify()
  * way to enforce this is to refuse to GC on an allocation made by the
  * JDWP thread -- we have to expand the heap or fail.
  */
-void dvmCollectGarbageInternal(bool collectSoftReferences, GcReason reason)
+void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 {
     GcHeap *gcHeap = gDvm.gcHeap;
-    Object *softReferences;
-    Object *weakReferences;
-    Object *phantomReferences;
-
     u8 now;
     s8 timeSinceLastGc;
     s8 gcElapsedTime;
@@ -760,8 +717,6 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, GcReason reason)
     size_t strongMarkSize = 0;
     size_t finalizeMarkCount = 0;
     size_t finalizeMarkSize = 0;
-    size_t phantomMarkCount = 0;
-    size_t phantomMarkSize = 0;
 #endif
 
     /* The heap lock must be held.
@@ -914,18 +869,6 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, GcReason reason)
     gcHeap->weakReferences = NULL;
     gcHeap->phantomReferences = NULL;
 
-    /* Make sure that we don't hard-mark the referents of Reference
-     * objects by default.
-     */
-    gcHeap->markAllReferents = false;
-
-    /* Don't mark SoftReferences if our caller wants us to collect them.
-     * This has to be set before calling dvmHeapScanMarkedObjects().
-     */
-    if (collectSoftReferences) {
-        gcHeap->softReferenceCollectionState = SR_COLLECT_ALL;
-    }
-
     /* Recursively mark any objects that marked objects point to strongly.
      * If we're not collecting soft references, soft-reachable
      * objects will also be marked.
@@ -939,29 +882,16 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, GcReason reason)
     gcHeap->markSize = 0;
 #endif
 
-    /* Latch these so that the other calls to dvmHeapScanMarkedObjects() don't
-     * mess with them.
-     */
-    softReferences = gcHeap->softReferences;
-    weakReferences = gcHeap->weakReferences;
-    phantomReferences = gcHeap->phantomReferences;
-
     /* All strongly-reachable objects have now been marked.
      */
-    if (gcHeap->softReferenceCollectionState != SR_COLLECT_NONE) {
-        LOGD_HEAP("Handling soft references...");
-        dvmHeapHandleReferences(softReferences, REF_SOFT);
-        // markCount always zero
+    LOGD_HEAP("Handling soft references...");
+    if (!clearSoftRefs) {
+        dvmHandleSoftRefs(&gcHeap->softReferences);
+    }
+    dvmClearWhiteRefs(&gcHeap->softReferences);
 
-        /* Now that we've tried collecting SoftReferences,
-         * fall back to not collecting them.  If the heap
-         * grows, we will start collecting again.
-         */
-        gcHeap->softReferenceCollectionState = SR_COLLECT_NONE;
-    } // else dvmHeapScanMarkedObjects() already marked the soft-reachable set
     LOGD_HEAP("Handling weak references...");
-    dvmHeapHandleReferences(weakReferences, REF_WEAK);
-    // markCount always zero
+    dvmClearWhiteRefs(&gcHeap->weakReferences);
 
     /* Once all weak-reachable objects have been taken
      * care of, any remaining unmarked objects can be finalized.
@@ -975,24 +905,22 @@ void dvmCollectGarbageInternal(bool collectSoftReferences, GcReason reason)
     gcHeap->markSize = 0;
 #endif
 
+    LOGD_HEAP("Handling f-reachable soft references...");
+    dvmClearWhiteRefs(&gcHeap->softReferences);
+
+    LOGD_HEAP("Handling f-reachable weak references...");
+    dvmClearWhiteRefs(&gcHeap->weakReferences);
+
     /* Any remaining objects that are not pending finalization
      * could be phantom-reachable.  This will mark any phantom-reachable
      * objects, as well as enqueue their references.
      */
     LOGD_HEAP("Handling phantom references...");
-    dvmHeapHandleReferences(phantomReferences, REF_PHANTOM);
-#if DVM_TRACK_HEAP_MARKING
-    phantomMarkCount = gcHeap->markCount;
-    phantomMarkSize = gcHeap->markSize;
-    gcHeap->markCount = 0;
-    gcHeap->markSize = 0;
-#endif
-
-//TODO: take care of JNI weak global references
+    dvmClearWhiteRefs(&gcHeap->phantomReferences);
 
 #if DVM_TRACK_HEAP_MARKING
-    LOGI_HEAP("Marked objects: %dB strong, %dB final, %dB phantom\n",
-            strongMarkSize, finalizeMarkSize, phantomMarkSize);
+    LOGI_HEAP("Marked objects: %dB strong, %dB final\n",
+              strongMarkSize, finalizeMarkSize);
 #endif
 
 #ifdef WITH_DEADLOCK_PREDICTION
