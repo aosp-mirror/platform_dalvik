@@ -32,6 +32,7 @@ import java.util.logging.LoggingPermission;
 import java.io.File;
 import java.io.FileInputStream;
 
+import dalvik.annotation.KnownFailure;
 import junit.framework.TestCase;
 
 import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
@@ -4639,6 +4640,7 @@ public class LoggerTest extends TestCase {
         method = "initHandler",
         args = {}
     )
+    @KnownFailure("This test doesn't load its resources properly")
     public void test_initHandler() throws Exception {
         File logProps = new File(LOGGING_CONFIG_FILE);
         LogManager lm = LogManager.getLogManager();

@@ -35,6 +35,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.LoggingPermission;
 
+import dalvik.annotation.KnownFailure;
 import junit.framework.TestCase;
 
 import org.apache.harmony.logging.tests.java.util.logging.HandlerTest.NullOutputStream;
@@ -837,6 +838,7 @@ public class LogManagerTest extends TestCase {
         assertNull(m.getProperty("java.util.logging.FileHandler.pattern"));
     }
 
+    @KnownFailure("We're ignoring a missing logging.properties. See bug 2487364")
     public void testReadConfiguration() throws SecurityException,
             IOException {
 

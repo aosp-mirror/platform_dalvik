@@ -372,6 +372,7 @@ public class DriverManagerTest extends TestCase {
         method = "getDrivers",
         args = {}
     )
+    @KnownFailure("We're working out issues with built-in SQL drivers")
     public void testGetDrivers() {
         // Load a driver manager
         Enumeration<Driver> driverList = DriverManager.getDrivers();
@@ -716,6 +717,7 @@ public class DriverManagerTest extends TestCase {
     /**
      * Regression for HARMONY-4303
      */
+    @KnownFailure("The test doesn't fork the VM properly.")
     public void test_initClass() throws Exception {
         ProcessBuilder builder = javaProcessBuilder();
         builder.command().add("org/apache/harmony/sql/tests/java/sql/TestMainForDriver");

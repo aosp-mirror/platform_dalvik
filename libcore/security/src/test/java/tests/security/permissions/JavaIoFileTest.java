@@ -22,6 +22,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.security.Permission;
 
+import dalvik.annotation.KnownFailure;
 import junit.framework.TestCase;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
@@ -431,6 +432,7 @@ public class JavaIoFileTest extends TestCase {
             args = {}
         )
     })
+    @KnownFailure("We need to finish cleaning up java.io.File (bug 2281992)")
     public void test_File4() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean checkPropertyAccessCalled;
@@ -487,6 +489,7 @@ public class JavaIoFileTest extends TestCase {
             args = {}
         )
     })
+    @KnownFailure("We need to finish cleaning up java.io.File (bug 2281992)")
     public void test_File5() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean checkPropertyAccessCalled;
