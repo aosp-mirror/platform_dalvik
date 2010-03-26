@@ -23,16 +23,16 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 public class DateFormatSymbolsTest extends junit.framework.TestCase {
-    private void checkLocaleIsEquivalentToRoot(Locale locale) {
+    private void assertLocaleIsEquivalentToRoot(Locale locale) {
         DateFormatSymbols dfs = DateFormatSymbols.getInstance(locale);
         assertEquals(DateFormatSymbols.getInstance(Locale.ROOT), dfs);
     }
     public void test_getInstance_unknown_locale() throws Exception {
         // TODO: we fail this test. on Android, the root locale uses GMT offsets as names.
         // see the invalid locale test below. on the RI, the root locale uses English names.
-        checkLocaleIsEquivalentToRoot(new Locale("xx", "XX"));
+        assertLocaleIsEquivalentToRoot(new Locale("xx", "XX"));
     }
     public void test_getInstance_invalid_locale() throws Exception {
-        checkLocaleIsEquivalentToRoot(new Locale("not exist language", "not exist country"));
+        assertLocaleIsEquivalentToRoot(new Locale("not exist language", "not exist country"));
     }
 }
