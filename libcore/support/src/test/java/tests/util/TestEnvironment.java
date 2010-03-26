@@ -145,7 +145,12 @@ public final class TestEnvironment {
     }
 
     private static void copyProperty(Properties p, String key) {
-        p.put(key, System.getProperty(key));
+        String value = System.getProperty(key);
+        if (value != null) {
+            p.put(key, value);
+        } else {
+            p.remove(key);
+        }
     }
 
     private static void makeDirectory(File path) {

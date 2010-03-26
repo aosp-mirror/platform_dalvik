@@ -51,14 +51,13 @@ public class NodeTest extends TestCase {
         File file = Support_Resources.resourceToTempFile("/simple.xml");
         Document document = builder.parse(file);
 
-        String baseUri = "file:" + file.getPath();
-        assertEquals(baseUri, document.getBaseURI());
+        assertFileUriEquals(file, document.getBaseURI());
 
         Element documentElement = document.getDocumentElement();
         for (Node node : flattenSubtree(documentElement)) {
             if (node.getNodeType() == Node.ELEMENT_NODE
                     || node.getNodeType() == Node.DOCUMENT_NODE) {
-                assertEquals("Unexpected base URI for " + node, baseUri, node.getBaseURI());
+                assertFileUriEquals(file, node.getBaseURI());
             } else {
                 assertNull("Unexpected base URI for " + node, node.getBaseURI());
             }
@@ -67,6 +66,12 @@ public class NodeTest extends TestCase {
         // TODO: test other node types
         // TODO: test resolution of relative paths
         // TODO: test URI santization
+    }
+
+    private void assertFileUriEquals(File expectedFile, String actual) {
+        assertTrue("Expected URI for: " + expectedFile + " but was " + actual + ". ",
+                actual.equals("file:" + expectedFile)
+                        || actual.equals("file://" + expectedFile));
     }
 
     private List<Node> flattenSubtree(Node subtree) {

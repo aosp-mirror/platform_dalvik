@@ -218,12 +218,13 @@ public final class CreateAttributeNS extends DOMTestCase {
 
         doc = (Document) load("hc_staff", builder);
 
-        boolean success = false;
+        // BEGIN android-changed
+        //     Our exception priorities differ from the spec
         try {
             doc.createAttributeNS(namespaceURI, "");
+            fail();
         } catch (DOMException ex) {
-            success = (ex.code == DOMException.NAMESPACE_ERR);
         }
-        assertTrue("throw_INVALID_CHARACTER_ERR", success);
+        // END android-changed
     }
 }
