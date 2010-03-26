@@ -49,7 +49,10 @@ public final class NativeBreakIterator implements Cloneable {
 
     @Override
     public boolean equals(Object object) {
-        if (object == null || !(object instanceof NativeBreakIterator)) {
+        if (object == this) {
+            return true;
+        }
+        if (!(object instanceof NativeBreakIterator)) {
             return false;
         }
         // TODO: is this sufficient? shouldn't we be checking the underlying rules?

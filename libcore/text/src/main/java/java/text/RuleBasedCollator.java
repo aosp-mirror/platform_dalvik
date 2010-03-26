@@ -420,18 +420,12 @@ public class RuleBasedCollator extends Collator {
      */
     @Override
     public CollationKey getCollationKey(String source) {
-        com.ibm.icu4jni.text.CollationKey icuKey = this.icuColl
-                .getCollationKey(source);
-        if (icuKey == null) {
-            return null;
-        }
-        return new CollationKey(source, icuKey);
+        return icuColl.getCollationKey(source);
     }
 
     @Override
     public int hashCode() {
-        return ((com.ibm.icu4jni.text.RuleBasedCollator) this.icuColl).getRules()
-                .hashCode();
+        return ((com.ibm.icu4jni.text.RuleBasedCollator) this.icuColl).getRules().hashCode();
     }
 
     /**
