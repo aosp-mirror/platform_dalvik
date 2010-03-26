@@ -114,13 +114,6 @@ import java.util.Vector;
  * @see CollationKey
  */
 public abstract class Collator implements Comparator<Object>, Cloneable {
-
-    static final int EQUAL = 0;
-
-    static final int GREATER = 1;
-
-    static final int LESS = -1;
-
     /**
      * Constant used to specify the decomposition rule.
      */
@@ -362,16 +355,13 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     private int decompositionMode_Java_ICU(int mode) {
-        int icuDecomp = mode;
         switch (mode) {
-            case Collator.CANONICAL_DECOMPOSITION:
-                icuDecomp = com.ibm.icu4jni.text.Collator.CANONICAL_DECOMPOSITION;
-                break;
-            case Collator.NO_DECOMPOSITION:
-                icuDecomp = com.ibm.icu4jni.text.Collator.NO_DECOMPOSITION;
-                break;
+        case Collator.CANONICAL_DECOMPOSITION:
+            return com.ibm.icu4jni.text.Collator.CANONICAL_DECOMPOSITION;
+        case Collator.NO_DECOMPOSITION:
+            return com.ibm.icu4jni.text.Collator.NO_DECOMPOSITION;
         }
-        return icuDecomp;
+        throw new IllegalArgumentException();
     }
 
     private int decompositionMode_ICU_Java(int mode) {
@@ -388,23 +378,17 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     private int strength_Java_ICU(int value) {
-        int icuValue = value;
         switch (value) {
-            case Collator.PRIMARY:
-                icuValue = com.ibm.icu4jni.text.Collator.PRIMARY;
-                break;
-            case Collator.SECONDARY:
-                icuValue = com.ibm.icu4jni.text.Collator.SECONDARY;
-                break;
-            case Collator.TERTIARY:
-                icuValue = com.ibm.icu4jni.text.Collator.TERTIARY;
-                break;
-            case Collator.IDENTICAL:
-                icuValue = com.ibm.icu4jni.text.Collator.IDENTICAL;
-                break;
+        case Collator.PRIMARY:
+            return com.ibm.icu4jni.text.Collator.PRIMARY;
+        case Collator.SECONDARY:
+            return com.ibm.icu4jni.text.Collator.SECONDARY;
+        case Collator.TERTIARY:
+            return com.ibm.icu4jni.text.Collator.TERTIARY;
+        case Collator.IDENTICAL:
+            return com.ibm.icu4jni.text.Collator.IDENTICAL;
         }
-        return icuValue;
-
+        throw new IllegalArgumentException();
     }
 
     private int strength_ICU_Java(int value) {

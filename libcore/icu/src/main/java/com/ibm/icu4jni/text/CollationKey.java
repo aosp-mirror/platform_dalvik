@@ -11,176 +11,112 @@
 package com.ibm.icu4jni.text;
 
 /**
-* Collation key wrapper, containing the byte array sort key.
-* @author syn wee quek
-* @stable ICU 2.4
-*/
+ * A concrete implementation of the abstract java.text.CollationKey.
+ */
+public final class CollationKey extends java.text.CollationKey {
+    /**
+     * The key.
+     */
+    private final byte[] bytes;
 
-public final class CollationKey implements Comparable
-{ 
-  // public methods -----------------------------------------------
+    /**
+     * Cached hash value.
+     */
+    private int hashCode;
 
-  /**
-  * Bitwise comparison for the collation keys
-  * @param target CollationKey to be compared
-  * @return comparison result from Collator, RESULT_LESS, RESULT_EQUAL, 
-  *         RESULT_GREATER
-  * @stable ICU 2.4    
-  */
-  public int compareTo(CollationKey target)
-  {
-    byte tgtbytes[] = target.m_bytes_;
-    
-    if (m_bytes_ == null || m_bytes_.length == 0) {
-      if (tgtbytes == null || tgtbytes.length == 0) {
-        return Collator.RESULT_EQUAL;
-      }
-      return Collator.RESULT_LESS;
-    }
-    else {
-      if (tgtbytes == null || tgtbytes.length == 0) {
-        return Collator.RESULT_GREATER;
-      }
-    }
-        
-    int count = m_bytes_.length;
-    if (tgtbytes.length < count) {
-      count = tgtbytes.length;
+    CollationKey(String source, byte[] bytes) {
+        super(source);
+        this.bytes = bytes;
     }
 
-    int s,
-        t;
-    for (int i = 0; i < count; i ++)
-    {
-      // unable to use Arrays.equals
-      s = m_bytes_[i] & UNSIGNED_BYTE_MASK_;
-      t = tgtbytes[i] & UNSIGNED_BYTE_MASK_;
-      if (s < t) {
-        return Collator.RESULT_LESS;
-      }
-      if (s > t) {
-        return Collator.RESULT_GREATER;
-      }
+    public int compareTo(java.text.CollationKey other) {
+        // Get the bytes from the other collation key.
+        final byte[] rhsBytes;
+        if (other instanceof CollationKey) {
+            rhsBytes = ((CollationKey) other).bytes;
+        } else {
+            rhsBytes = other.toByteArray();
+        }
+
+        if (bytes == null || bytes.length == 0) {
+            if (rhsBytes == null || rhsBytes.length == 0) {
+                return 0;
+            }
+            return -1;
+        } else {
+            if (rhsBytes == null || rhsBytes.length == 0) {
+                return 1;
+            }
+        }
+
+        int count = Math.min(bytes.length, rhsBytes.length);
+        for (int i = 0; i < count; ++i) {
+            int s = bytes[i] & 0xff;
+            int t = rhsBytes[i] & 0xff;
+            if (s < t) {
+                return -1;
+            }
+            if (s > t) {
+                return 1;
+            }
+        }
+        if (bytes.length < rhsBytes.length) {
+            return -1;
+        }
+        if (bytes.length > rhsBytes.length) {
+            return 1;
+        }
+        return 0;
     }
 
-    if (m_bytes_.length < target.m_bytes_.length) {
-      return Collator.RESULT_LESS;
+    /**
+     * Checks if target object is equal to this object.
+     * Target is first casted to CollationKey and bitwise compared.
+     * @param target comparison object
+     * @return true if both objects are equal, false otherwise
+     * @stable ICU 2.4
+     */
+    public boolean equals(Object object) {
+        if (object == this) {
+            return true;
+        }
+        if (!(object instanceof CollationKey)) {
+            return false;
+        }
+        return compareTo((CollationKey) object) == 0;
     }
-    
-    if (m_bytes_.length > target.m_bytes_.length) {
-      return Collator.RESULT_GREATER;
+
+    /**
+     * Creates a hash code for this CollationKey.
+     * Compute the hash by iterating sparsely over about 32 (up to 63) bytes
+     * spaced evenly through the string.  For each byte, multiply the previous
+     * hash value by a prime number and add the new byte in, like a linear
+     * congruential random number generator, producing a pseudo-random
+     * deterministic value well distributed over the output range.
+     * @return hash value of collation key. Hash value is never 0.
+     * @stable ICU 2.4
+     */
+    public int hashCode() {
+        if (hashCode == 0) {
+            if (bytes != null && bytes.length != 0) {
+                int len = bytes.length;
+                int inc = ((len - 32) / 32) + 1;
+                for (int i = 0; i < len;) {
+                    hashCode = (hashCode * 37) + bytes[i];
+                    i += inc;
+                }
+            }
+            if (hashCode == 0) {
+                hashCode = 1;
+            }
+        }
+        return hashCode;
     }
-    
-    return Collator.RESULT_EQUAL;
-  }
-  
-  /**
-  * Bitwise comparison for the collation keys.
-  * Argument is casted to CollationKey
-  * @param target CollationKey to be compared
-  * @return comparison result from Collator, RESULT_LESS, RESULT_EQUAL, 
-  * RESULT_GREATER
-  * @stable ICU 2.4
-  */
-  public int compareTo(Object target)
-  {
-    return compareTo((CollationKey)target);
-  }
 
-  /**
-  * Checks if target object is equal to this object.
-  * Target is first casted to CollationKey and bitwise compared.
-  * @param target comparison object
-  * @return true if both objects are equal, false otherwise
-  * @stable ICU 2.4
-  */
-  public boolean equals(Object target)
-  {
-    if (this == target) {
-      return true;
+    public byte[] toByteArray() {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        return bytes.clone();
     }
-      
-    // checks getClass here since CollationKey is final not subclassable
-    if (target == null || target.getClass() != getClass()) {
-      return false;
-    }
-    
-    return compareTo((CollationKey)target) == Collator.RESULT_EQUAL;
-  }
-
-  /**
-  * Creates a hash code for this CollationKey. 
-  * Compute the hash by iterating sparsely over about 32 (up to 63) bytes 
-  * spaced evenly through the string.  For each byte, multiply the previous 
-  * hash value by a prime number and add the new byte in, like a linear 
-  * congruential random number generator, producing a pseudorandom 
-  * deterministic value well distributed over the output range.
-  * @return hash value of collation key. Hash value is never 0.
-  * @stable ICU 2.4
-  */
-  public int hashCode()
-  {
-    if (m_hash_ == 0)
-    {
-      if (m_bytes_ != null && m_bytes_.length != 0)
-      {                        
-        int len = m_bytes_.length;
-        int inc = ((len - 32) / 32) + 1;  
-        for (int i = 0; i < len;)
-        {
-          m_hash_ = (m_hash_ * 37) + m_bytes_[i];
-          i += inc;                         
-        }                                     
-      }             
-      if (m_hash_ == 0)
-        m_hash_ = 1;
-    }
-    return m_hash_;
-  }
-
-  /**
-  * Create the value of the Collation key in term of bytes
-  * @return value of Collation key in bytes
-  * @stable ICU 2.4
-  */
-  public byte[] toByteArray()
-  {
-    if (m_bytes_ == null || m_bytes_.length == 0)
-      return null;
-      
-    return (byte[])m_bytes_.clone(); 
-  }
-
-  // package constructors ----------------------------------------------
-  
-  /**
-  * Default constructor, for use by the Collator and its subclasses.
-  */
-  CollationKey()
-  {
-    m_hash_ = 0;
-  }
-  
-  /**
-  * Constructor, for use only by the Collator and its subclasses.
-  */
-  CollationKey(byte[] bytes)
-  {
-    m_bytes_ = bytes;
-    m_hash_ = 0;
-  }
-
-  // private data members -----------------------------------------------
-  
-  private byte m_bytes_[];
-  
-  /**
-  * Mask value to retrieve a single unsigned byte
-  */
-  private static final int UNSIGNED_BYTE_MASK_ = 0x00FF;
-  
-  /**
-  * Cached hash value
-  */
-  private int m_hash_;
 }

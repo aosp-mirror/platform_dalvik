@@ -84,31 +84,16 @@ static jint compare(JNIEnv *env, jclass obj, jint address,
     return result;
 }
 
-/**
-* Universal attribute getter
-* @param env JNI environment
-* @param obj RuleBasedCollatorJNI object
-* @param address address of the C collator
-* @param type type of attribute to be set
-* @return attribute value
-* @exception thrown when error occurs while getting attribute value
-*/
-static jint getAttribute(JNIEnv *env, jclass obj, jint address,
-        jint type) {
-
+static jint getAttribute(JNIEnv *env, jclass, jint address, jint type) {
     const UCollator *collator = (const UCollator *)(int)address;
-    UErrorCode status = U_ZERO_ERROR;
-    if(collator){
-        jint result = (jint)ucol_getAttribute(collator, (UColAttribute)type, 
-                                            &status);
-        if (icu4jni_error(env, status) != FALSE){
-            return (jint)UCOL_DEFAULT;
-        }
-        return result;
-    }else{
-        icu4jni_error(env,U_ILLEGAL_ARGUMENT_ERROR);
+    if (!collator) {
+        icu4jni_error(env, U_ILLEGAL_ARGUMENT_ERROR);
+        return 0;
     }
-    return (jint)UCOL_DEFAULT;
+    UErrorCode status = U_ZERO_ERROR;
+    jint result = (jint)ucol_getAttribute(collator, (UColAttribute)type, &status);
+    icu4jni_error(env, status);
+    return result;
 }
 
 /** 
@@ -463,23 +448,11 @@ static jint safeClone(JNIEnv *env, jclass obj, jint address) {
   return result;
 }
 
-/**
-* Universal attribute setter.
-* @param env JNI environment
-* @param obj RuleBasedCollatorJNI object
-* @param address address of the C collator
-* @param type type of attribute to be set
-* @param value attribute value
-* @exception thrown when error occurs while setting attribute value
-*/
-static void setAttribute(JNIEnv *env, jclass obj, jint address,
-        jint type, jint value) {
-
-  UCollator *collator = (UCollator *)(int)address;
-  UErrorCode status = U_ZERO_ERROR;
-  ucol_setAttribute(collator, (UColAttribute)type, (UColAttributeValue)value, 
-                    &status);
-   icu4jni_error(env, status);
+static void setAttribute(JNIEnv *env, jclass, jint address, jint type, jint value) {
+    UCollator *collator = (UCollator *)(int)address;
+    UErrorCode status = U_ZERO_ERROR;
+    ucol_setAttribute(collator, (UColAttribute)type, (UColAttributeValue)value, &status);
+    icu4jni_error(env, status);
 }
 
 /**
