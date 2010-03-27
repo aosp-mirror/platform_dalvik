@@ -1779,6 +1779,8 @@ public class BidiTest extends TestCase {
         args = {int.class, int.class}
     )
     public void testCreateLineBidi_AndroidFailure() {
+        // This is a difference between ICU4C and the RI. ICU4C insists that 'limit' is strictly
+        // greater than 'start'. We have to paper over this in our Java code.
         Bidi bidi = new Bidi("str", Bidi.DIRECTION_RIGHT_TO_LEFT);
         bidi.createLineBidi(2, 2);
     }
@@ -1990,8 +1992,9 @@ public class BidiTest extends TestCase {
             // Expected for illegal run limit
             return;
         }
-
-        fail("Expected IllegalArgumentException to be thrown for invalid run limit");
+        // BEGIN android-changed: the RI doesn't throw.
+        // fail("Expected IllegalArgumentException to be thrown for invalid run limit");
+        // END android-changed
     }
 
     @TestTargetNew(
@@ -2068,7 +2071,8 @@ public class BidiTest extends TestCase {
             // Expected for illegal run limit
             return;
         }
-
-        fail("Expected IllegalArgumentException to be thrown for invalid run limit");
+        // BEGIN android-changed: the RI doesn't throw.
+        // fail("Expected IllegalArgumentException to be thrown for invalid run limit");
+        // END android-changed
     }
 }

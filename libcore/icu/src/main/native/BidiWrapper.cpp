@@ -17,23 +17,46 @@
 #include "AndroidSystemNatives.h"
 #include <JNIHelp.h>
 #include "ErrorCode.h"
+#include "UniquePtr.h"
 #include "unicode/ubidi.h"
 #include <stdlib.h>
 #include <string.h>
 
 struct BiDiData {
-    BiDiData(UBiDi* biDi) : mBiDi(biDi), embeddingLevels(NULL) {
+    BiDiData(UBiDi* biDi) : mBiDi(biDi), mEmbeddingLevels(NULL) {
     }
+
     ~BiDiData() {
         ubidi_close(mBiDi);
-        delete[] embeddingLevels;
     }
+
+    UBiDiLevel* embeddingLevels() {
+        return reinterpret_cast<UBiDiLevel*>(&mEmbeddingLevels[0]);
+    }
+
+    void setEmbeddingLevels(jbyte* newEmbeddingLevels) {
+        mEmbeddingLevels.reset(newEmbeddingLevels);
+    }
+
+    UBiDi* uBiDi() {
+        return mBiDi;
+    }
+
+private:
     UBiDi* mBiDi;
-    jbyte* embeddingLevels;
+    UniquePtr<jbyte[]> mEmbeddingLevels;
+
+    // Disallow copy and assignment.
+    BiDiData(const BiDiData&);
+    void operator=(const BiDiData&);
 };
 
 static BiDiData* biDiData(jlong ptr) {
     return reinterpret_cast<BiDiData*>(static_cast<uintptr_t>(ptr));
+}
+
+static UBiDi* uBiDi(jlong ptr) {
+    return reinterpret_cast<BiDiData*>(static_cast<uintptr_t>(ptr))->uBiDi();
 }
 
 static jlong BidiWrapper_ubidi_open(JNIEnv* env, jclass) {
@@ -46,72 +69,68 @@ static void BidiWrapper_ubidi_close(JNIEnv* env, jclass, jlong ptr) {
 
 static void BidiWrapper_ubidi_setPara(JNIEnv* env, jclass, jlong ptr, jcharArray text, jint length, jbyte paraLevel, jbyteArray newEmbeddingLevels) {
     BiDiData* data = biDiData(ptr);
-    jbyte* oldEmbeddingLevels = data->embeddingLevels;
     // Copy the new embedding levels from the Java heap to the native heap.
     if (newEmbeddingLevels != NULL) {
-        data->embeddingLevels = new jbyte[length];
-        env->GetByteArrayRegion(newEmbeddingLevels, 0, length, data->embeddingLevels);
+        jbyte* dst;
+        data->setEmbeddingLevels(dst = new jbyte[length]);
+        env->GetByteArrayRegion(newEmbeddingLevels, 0, length, dst);
     } else {
-        data->embeddingLevels = NULL;
+        data->setEmbeddingLevels(NULL);
     }
     UErrorCode err = U_ZERO_ERROR;
-    jchar* _text = env->GetCharArrayElements(text, NULL);
-    ubidi_setPara(data->mBiDi, _text, length, paraLevel, (UBiDiLevel*) data->embeddingLevels, &err);
-    env->ReleaseCharArrayElements(text, _text, 0);
-    delete[] oldEmbeddingLevels;
+    jchar* chars = env->GetCharArrayElements(text, NULL);
+    ubidi_setPara(data->uBiDi(), chars, length, paraLevel, data->embeddingLevels(), &err);
+    env->ReleaseCharArrayElements(text, chars, 0);
     icu4jni_error(env, err);
 }
 
 static jlong BidiWrapper_ubidi_setLine(JNIEnv* env, jclass, jlong ptr, jint start, jint limit) {
     UErrorCode err = U_ZERO_ERROR;
     UBiDi* sized = ubidi_openSized(limit - start, 0, &err);
-    if (icu4jni_error(env, err)) {
+    if (icu4jni_error(env, err) != FALSE) {
         return 0;
     }
-    BiDiData* lineData = new BiDiData(sized);
-    BiDiData* data = biDiData(ptr);
-    ubidi_setLine(data->mBiDi, start, limit, lineData->mBiDi, &err);
+    UniquePtr<BiDiData> lineData(new BiDiData(sized));
+    ubidi_setLine(uBiDi(ptr), start, limit, lineData->uBiDi(), &err);
     icu4jni_error(env, err);
-    return reinterpret_cast<uintptr_t>(lineData);
+    return reinterpret_cast<uintptr_t>(lineData.release());
 }
 
 static jint BidiWrapper_ubidi_getDirection(JNIEnv * env, jclass clazz, jlong ptr) {
-    return ubidi_getDirection(biDiData(ptr)->mBiDi);
+    return ubidi_getDirection(uBiDi(ptr));
 }
 
 static jint BidiWrapper_ubidi_getLength(JNIEnv* env, jclass, jlong ptr) {
-    return ubidi_getLength(biDiData(ptr)->mBiDi);
+    return ubidi_getLength(uBiDi(ptr));
 }
 
 static jbyte BidiWrapper_ubidi_getParaLevel(JNIEnv* env, jclass, jlong ptr) {
-    return ubidi_getParaLevel(biDiData(ptr)->mBiDi);
+    return ubidi_getParaLevel(uBiDi(ptr));
 }
 
 static jbyteArray BidiWrapper_ubidi_getLevels(JNIEnv* env, jclass, jlong ptr) {
-    BiDiData* data = biDiData(ptr);
     UErrorCode err = U_ZERO_ERROR;
-    const UBiDiLevel* levels = ubidi_getLevels(data->mBiDi, &err);
+    const UBiDiLevel* levels = ubidi_getLevels(uBiDi(ptr), &err);
     if (icu4jni_error(env, err)) {
         return NULL;
     }
-    int len = ubidi_getLength(data->mBiDi);
+    int len = ubidi_getLength(uBiDi(ptr));
     jbyteArray result = env->NewByteArray(len);
     env->SetByteArrayRegion(result, 0, len, reinterpret_cast<const jbyte*>(levels));
     return result;
 }
 
 static jint BidiWrapper_ubidi_countRuns(JNIEnv* env, jclass, jlong ptr) {
-    BiDiData* data = biDiData(ptr);
     UErrorCode err = U_ZERO_ERROR;
-    int count = ubidi_countRuns(data->mBiDi, &err);
+    int count = ubidi_countRuns(uBiDi(ptr), &err);
     icu4jni_error(env, err);
     return count;
 }
 
 static jobjectArray BidiWrapper_ubidi_getRuns(JNIEnv* env, jclass, jlong ptr) {
-    BiDiData* data = biDiData(ptr);
+    UBiDi* ubidi = uBiDi(ptr);
     UErrorCode err = U_ZERO_ERROR;
-    int runCount = ubidi_countRuns(data->mBiDi, &err);
+    int runCount = ubidi_countRuns(ubidi, &err);
     if (icu4jni_error(env, err)) {
         return NULL;
     }
@@ -122,7 +141,7 @@ static jobjectArray BidiWrapper_ubidi_getRuns(JNIEnv* env, jclass, jlong ptr) {
     int start = 0;
     int limit = 0;
     for (int i = 0; i < runCount; ++i) {
-        ubidi_getLogicalRun(data->mBiDi, start, &limit, &level);
+        ubidi_getLogicalRun(ubidi, start, &limit, &level);
         jobject run = env->NewObject(bidiRunClass, bidiRunConstructor, start, limit, level);
         env->SetObjectArrayElement(runs, i, run);
         start = limit;
@@ -131,13 +150,12 @@ static jobjectArray BidiWrapper_ubidi_getRuns(JNIEnv* env, jclass, jlong ptr) {
 }
 
 static jintArray BidiWrapper_ubidi_reorderVisual(JNIEnv* env, jclass, jbyteArray levels, jint length) {
-    int* local_indexMap = new int[length];
+    UniquePtr<int[]> local_indexMap(new int[length]);
     jbyte* local_levelBytes = env->GetByteArrayElements(levels, NULL);
     UBiDiLevel* local_levels = reinterpret_cast<UBiDiLevel*>(local_levelBytes);
-    ubidi_reorderVisual(local_levels, length, local_indexMap);
+    ubidi_reorderVisual(local_levels, length, &local_indexMap[0]);
     jintArray result = env->NewIntArray(length);
-    env->SetIntArrayRegion(result, 0, length, local_indexMap);
-    delete[] local_indexMap;
+    env->SetIntArrayRegion(result, 0, length, &local_indexMap[0]);
     env->ReleaseByteArrayElements(levels, local_levelBytes, 0);
     return result;
 }

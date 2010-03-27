@@ -395,17 +395,12 @@ public final class Bidi {
      *             than the length of this object's paragraph text.
      */
     public Bidi createLineBidi(int lineStart, int lineLimit) {
-        // BEGIN android-removed
-        // int length = icuBidi.getLength();
-        // END android-removed
-        if (lineStart < 0 || lineLimit < 0 || lineLimit > length
-                || lineStart > lineLimit) {
+        if (lineStart < 0 || lineLimit < 0 || lineLimit > length || lineStart > lineLimit) {
             // text.12=Invalid ranges (start={0}, limit={1}, length={2})
             throw new IllegalArgumentException(Messages.getString(
                     "text.12", new Object[] { lineStart, lineLimit, length })); //$NON-NLS-1$
         }
-        
-        // BEGIN android-changed
+
         char[] text = new char[this.length];
         Arrays.fill(text, 'a');
         byte[] embeddings = new byte[this.length];
@@ -413,17 +408,31 @@ public final class Bidi {
             embeddings[i] = (byte) -this.offsetLevel[i];
         }
 
-        int dir = this.baseIsLeftToRight() ? Bidi.DIRECTION_LEFT_TO_RIGHT
+        int dir = this.baseIsLeftToRight()
+                ? Bidi.DIRECTION_LEFT_TO_RIGHT
                 : Bidi.DIRECTION_RIGHT_TO_LEFT;
+        long parent = 0;
+        try {
+            parent = createUBiDi(text, 0, embeddings, 0, this.length, dir);
+            if (lineStart == lineLimit) {
+                return createEmptyLineBidi(parent);
+            }
+            return new Bidi(BidiWrapper.ubidi_setLine(parent, lineStart, lineLimit));
+        } finally {
+            if (parent != 0) {
+                BidiWrapper.ubidi_close(parent);
+            }
+        }
+    }
 
-        long parent = createUBiDi(text, 0, embeddings, 0, this.length, dir);
-
-        long line = BidiWrapper.ubidi_setLine(parent, lineStart, lineLimit);
-        Bidi result = new Bidi(line);
-        BidiWrapper.ubidi_close(line);
-        BidiWrapper.ubidi_close(parent);
+    private Bidi createEmptyLineBidi(long parent) {
+        // ICU4C doesn't allow this case, but the RI does.
+        Bidi result = new Bidi(parent);
+        result.length = 0;
+        result.offsetLevel = null;
+        result.runs = null;
+        result.unidirectional = true;
         return result;
-        // END android-changed
     }
 
     /**
