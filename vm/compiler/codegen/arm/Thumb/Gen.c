@@ -60,7 +60,7 @@ static void genMulLong(CompilationUnit *cUnit, RegLocation rlDest,
     storeValueWide(cUnit, rlDest, rlResult);
 }
 
-static void partialOverlap(int sreg1, int sreg2)
+static bool partialOverlap(int sreg1, int sreg2)
 {
     return abs(sreg1 - sreg2) == 1;
 }
