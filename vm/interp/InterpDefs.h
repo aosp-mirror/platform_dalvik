@@ -147,8 +147,8 @@ typedef struct InterpState {
      */
     unsigned char*     pJitProfTable;
     JitState           jitState;
-    void*              jitResume;
-    u2*                jitResumePC;
+    const void*        jitResumeNPC;	// Native PC of compiled code
+    const u2*          jitResumeDPC;	// Dalvik PC corresponding to NPC
     int                jitThreshold;
     /*
      * ppJitProfTable holds the address of gDvmJit.pJitProfTable, which

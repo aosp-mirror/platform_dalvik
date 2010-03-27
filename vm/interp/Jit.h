@@ -42,7 +42,7 @@ typedef struct InstructionTrace {
 typedef struct ShadowSpace {
     const u2* startPC;          /* starting pc of jitted region */
     const void* fp;             /* starting fp of jitted region */
-    const void* glue;           /* starting glue of jitted region */
+    void* glue;                 /* starting glue of jitted region */
     SelfVerificationState selfVerificationState;  /* self verification state */
     const u2* endPC;            /* ending pc of jitted region */
     void* shadowFP;       /* pointer to fp in shadow space */

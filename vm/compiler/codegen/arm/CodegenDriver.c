@@ -3511,6 +3511,26 @@ static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
     cUnit->loopAnalysis->branchToPCR = (LIR *) branchToPCR;
 }
 
+#if defined(WITH_SELF_VERIFICATION)
+static bool selfVerificationPuntOps(MIR *mir)
+{
+    DecodedInstruction *decInsn = &mir->dalvikInsn;
+    OpCode op = decInsn->opCode;
+    int flags =  dexGetInstrFlags(gDvm.instrFlags, op);
+    /*
+     * All opcodes that can throw exceptions and use the
+     * TEMPLATE_THROW_EXCEPTION_COMMON template should be excluded in the trace
+     * under self-verification mode.
+     */
+    return (op == OP_MONITOR_ENTER || op == OP_MONITOR_EXIT ||
+            op == OP_NEW_INSTANCE || op == OP_NEW_ARRAY ||
+            op == OP_CHECK_CAST || op == OP_MOVE_EXCEPTION ||
+            op == OP_FILL_ARRAY_DATA || op == OP_EXECUTE_INLINE ||
+            op == OP_EXECUTE_INLINE_RANGE ||
+            (flags & kInstrInvoke));
+}
+#endif
+
 void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 {
     /* Used to hold the labels of each block */
@@ -3709,6 +3729,11 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 ((gDvmJit.opList[dalvikOpCode >> 3] &
                   (1 << (dalvikOpCode & 0x7))) !=
                  0);
+#if defined(WITH_SELF_VERIFICATION)
+          if (singleStepMe == false) {
+              singleStepMe = selfVerificationPuntOps(mir);
+          }
+#endif
             if (singleStepMe || cUnit->allSingleStep) {
                 notHandled = false;
                 genInterpSingleStep(cUnit, mir);

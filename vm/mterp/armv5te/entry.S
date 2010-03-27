@@ -67,7 +67,7 @@ dvmMterpStdRun:
     bne     .Lnot_instr                 @ no, handle it
 
 #if defined(WITH_JIT)
-.Lno_singleStep:
+.LentryInstr:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     /* Entry is always a possible trace start */
     GET_JIT_PROF_TABLE(r0)
@@ -95,18 +95,21 @@ dvmMterpStdRun:
 
 #if defined(WITH_JIT)
 .Lnot_throw:
-    ldr     r0,[rGLUE, #offGlue_jitResume]
-    ldr     r2,[rGLUE, #offGlue_jitResumePC]
+    ldr     r10,[rGLUE, #offGlue_jitResumeNPC]
+    ldr     r2,[rGLUE, #offGlue_jitResumeDPC]
     cmp     r1, #kInterpEntryResume     @ resuming after Jit single-step?
     bne     .Lbad_arg
     cmp     rPC,r2
-    bne     .Lno_singleStep             @ must have branched, don't resume
+    bne     .LentryInstr                @ must have branched, don't resume
+#if defined(WITH_SELF_VERIFICATION)
+    @ glue->entryPoint will be set in dvmSelfVerificationSaveState
+    b       jitSVShadowRunStart         @ re-enter the translation after the
+                                        @ single-stepped instruction
+    @noreturn
+#endif
     mov     r1, #kInterpEntryInstr
     str     r1, [rGLUE, #offGlue_entryPoint]
-    ldr     rINST, .LdvmCompilerTemplate
-    bx      r0                          @ re-enter the translation
-.LdvmCompilerTemplate:
-    .word   dvmCompilerTemplateStart
+    bx      r10                         @ re-enter the translation
 #endif
 
 .Lbad_arg:
