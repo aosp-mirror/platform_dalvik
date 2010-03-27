@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 /* This static way is the "best" way to integrate fdlibm without a conflict
- * into the android envoirement 
+ * into the android environment.
  */
 
 /* #include "fltconst.h" */
@@ -19,6 +19,8 @@
 
 #include "../../external/fdlibm/fdlibm.h"
 _LIB_VERSION_TYPE _LIB_VERSION = _IEEE_;
+
+#include <math.h>
 
 /* native public static double sin(double a); */
 static jdouble jsin(JNIEnv* env, jclass clazz, jdouble a)
@@ -184,42 +186,46 @@ static jfloat jnextafterf(JNIEnv* env, jclass clazz, jfloat arg1, jfloat arg2)
     return arg1;
 }
 
+static jdouble copySign(JNIEnv* env, jclass clazz, jdouble a, jdouble b) {
+    return copysign(a, isnan(b) ? 1.0 : b);
+}
+
+static jfloat copySign_f(JNIEnv* env, jclass clazz, jfloat a, jfloat b) {
+    return copysignf(a, isnan(b) ? 1.0f : b);
+}
+
 /*
  * JNI registration.
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "sin",    "(D)D", jsin },
-    { "cos",    "(D)D", jcos },
-    { "tan",    "(D)D", jtan },
-
-    { "asin",   "(D)D", jasin },
-    { "acos",   "(D)D", jacos },
-    { "atan",   "(D)D", jatan },
-
-    { "exp",    "(D)D", jexp },
-    { "log",    "(D)D", jlog },
-    { "sqrt",   "(D)D", jsqrt2 },
-
     { "IEEEremainder", "(DD)D", jieee_remainder },
-
-    { "floor",  "(D)D", jfloor },
-    { "ceil",   "(D)D", jceil },
-    { "rint",   "(D)D", jrint },
-
+    { "acos",   "(D)D", jacos },
+    { "asin",   "(D)D", jasin },
+    { "atan",   "(D)D", jatan },
     { "atan2",  "(DD)D", jatan2 },
-    { "pow",    "(DD)D", jpow },
-
-    { "sinh",   "(D)D", jsinh },
-    { "cosh",   "(D)D", jcosh },
-    { "tanh",   "(D)D", jtanh },
-    { "log10",  "(D)D", jlog10 },
     { "cbrt",   "(D)D", jcbrt },
+    { "ceil",   "(D)D", jceil },
+    { "copySign",  "(DD)D", copySign },
+    { "copySign",  "(FF)F", copySign_f },
+    { "cos",    "(D)D", jcos },
+    { "cosh",   "(D)D", jcosh },
+    { "exp",    "(D)D", jexp },
     { "expm1",  "(D)D", jexpm1 },
+    { "floor",  "(D)D", jfloor },
     { "hypot",  "(DD)D", jhypot },
+    { "log",    "(D)D", jlog },
+    { "log10",  "(D)D", jlog10 },
     { "log1p",  "(D)D", jlog1p },
     { "nextafter",  "(DD)D", jnextafter },
     { "nextafterf",  "(FF)F", jnextafterf },
+    { "pow",    "(DD)D", jpow },
+    { "rint",   "(D)D", jrint },
+    { "sin",    "(D)D", jsin },
+    { "sinh",   "(D)D", jsinh },
+    { "sqrt",   "(D)D", jsqrt2 },
+    { "tan",    "(D)D", jtan },
+    { "tanh",   "(D)D", jtanh },
 };
 
 int register_java_lang_StrictMath(JNIEnv* env)

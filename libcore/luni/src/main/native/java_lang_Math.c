@@ -159,42 +159,46 @@ static jfloat jnextafterf(JNIEnv* env, jclass clazz, jfloat a, jfloat b)
     return nextafterf(a, b);
 }
 
+static jdouble copySign(JNIEnv* env, jclass clazz, jdouble a, jdouble b) {
+    return copysign(a, b);
+}
+
+static jfloat copySign_f(JNIEnv* env, jclass clazz, jfloat a, jfloat b) {
+    return copysignf(a, b);
+}
+
 /*
  * JNI registration.
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "sin",    "(D)D", jsin },
-    { "cos",    "(D)D", jcos },
-    { "tan",    "(D)D", jtan },
-
-    { "asin",   "(D)D", jasin },
-    { "acos",   "(D)D", jacos },
-    { "atan",   "(D)D", jatan },
-
-    { "exp",    "(D)D", jexp },
-    { "log",    "(D)D", jlog },
-    { "sqrt",   "(D)D", jsqrt },
-
     { "IEEEremainder", "(DD)D", jieee_remainder },
-
-    { "floor",  "(D)D", jfloor },
-    { "ceil",   "(D)D", jceil },
-    { "rint",   "(D)D", jrint },
-
+    { "acos",   "(D)D", jacos },
+    { "asin",   "(D)D", jasin },
+    { "atan",   "(D)D", jatan },
     { "atan2",  "(DD)D", jatan2 },
-    { "pow",    "(DD)D", jpow },
-
-    { "sinh",   "(D)D", jsinh },
-    { "cosh",   "(D)D", jcosh },
-    { "tanh",   "(D)D", jtanh },
-    { "log10",  "(D)D", jlog10 },
     { "cbrt",   "(D)D", jcbrt },
+    { "ceil",   "(D)D", jceil },
+    { "copySign",  "(DD)D", copySign },
+    { "copySign",  "(FF)F", copySign_f },
+    { "cos",    "(D)D", jcos },
+    { "cosh",   "(D)D", jcosh },
+    { "exp",    "(D)D", jexp },
     { "expm1",  "(D)D", jexpm1 },
+    { "floor",  "(D)D", jfloor },
     { "hypot",  "(DD)D", jhypot },
+    { "log",    "(D)D", jlog },
+    { "log10",  "(D)D", jlog10 },
     { "log1p",  "(D)D", jlog1p },
     { "nextafter",  "(DD)D", jnextafter },
     { "nextafterf",  "(FF)F", jnextafterf },
+    { "pow",    "(DD)D", jpow },
+    { "rint",   "(D)D", jrint },
+    { "sin",    "(D)D", jsin },
+    { "sinh",   "(D)D", jsinh },
+    { "sqrt",   "(D)D", jsqrt },
+    { "tan",    "(D)D", jtan },
+    { "tanh",   "(D)D", jtanh },
 };
 
 int register_java_lang_Math(JNIEnv* env)

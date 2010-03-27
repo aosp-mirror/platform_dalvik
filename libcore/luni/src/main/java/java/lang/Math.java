@@ -1091,47 +1091,25 @@ public final class Math {
     private native static double nextafter(double x, double y);
 
     private native static float nextafterf(float x, float y);
-    
-    /**
-     * Answers a result of the magnitude of the first given double value and the
-     * sign of the second given double value.
-     * 
-     * @param magnitude
-     *            the double value whose magnitude should be used
-     * @param sign
-     *            the double value whose sign should be used
-     * @return a result of the magnitude of the first given double value and the
-     *         sign of the second given double value .
-     * 
-     * @since 1.6
-     * @hide
-     */
-    public static double copySign(double magnitude, double sign) {
-        long mbits = Double.doubleToRawLongBits(magnitude);
-        long sbits = Double.doubleToRawLongBits(sign);
-        return Double.longBitsToDouble((mbits & ~DOUBLE_SIGN_MASK) | (sbits & DOUBLE_SIGN_MASK));
-    }
 
     /**
-     * Answers a result of the magnitude of the first given float value and the
-     * sign of the second given float value .
-     * 
-     * @param magnitude
-     *            the float value whose magnitude should be used
-     * @param sign
-     *            the float value whose sign should be used
-     * @return a result with the magnitude of the first given float value and
-     *         the sign of the second given float value .
-     * 
+     * Returns a double with the given magnitude and the sign of {@code sign}.
+     * If {@code sign} is NaN, the sign of the result is arbitrary.
+     * If you need a determinate sign in such cases, use {@code StrictMath.copySign}.
      * @since 1.6
      * @hide
      */
-    public static float copySign(float magnitude, float sign) {
-        int mbits = Float.floatToRawIntBits(magnitude);
-        int sbits = Float.floatToRawIntBits(sign);
-        return Float.intBitsToFloat((mbits & ~FLOAT_SIGN_MASK) | (sbits & FLOAT_SIGN_MASK));
-    }
-    
+    public static native double copySign(double magnitude, double sign);
+
+    /**
+     * Returns a float with the given magnitude and the sign of {@code sign}.
+     * If {@code sign} is NaN, the sign of the result is arbitrary.
+     * If you need a determinate sign in such cases, use {@code StrictMath.copySign}.
+     * @since 1.6
+     * @hide
+     */
+    public static native float copySign(float magnitude, float sign);
+
     /**
      * Answers the exponent of a float.
      * 
