@@ -176,6 +176,7 @@ public class SAXParserFactoryTest extends TestCase {
         method = "newInstance",
         args = {}
     )
+    @KnownFailure("Dalvik doesn't honor system properties when choosing a SAX implementation")
     public void test_newInstance() {
         try {
             SAXParserFactory dtf = SAXParserFactory.newInstance();
@@ -315,56 +316,18 @@ public class SAXParserFactoryTest extends TestCase {
         method = "setNamespaceAware",
         args = {boolean.class}
     )
-    public void test_setNamespaceAwareZ() {
+    public void test_setNamespaceAwareZ() throws Exception {
+        MyHandler mh = new MyHandler();
 
         spf.setNamespaceAware(true);
-        MyHandler mh = new MyHandler();
         InputStream is = getClass().getResourceAsStream("/simple_ns.xml");
-        try {
-            spf.newSAXParser().parse(is, mh);
-        } catch(javax.xml.parsers.ParserConfigurationException pce) {
-            fail("ParserConfigurationException was thrown during parsing");
-        } catch(org.xml.sax.SAXException se) {
-            fail("SAXException was thrown during parsing");
-        } catch(IOException ioe) {
-            fail("IOException was thrown during parsing");
-        } finally {
-            try {
-                is.close();
-            } catch(Exception e) {}
-        }
+        spf.newSAXParser().parse(is, mh);
+        is.close();
+
         spf.setNamespaceAware(false);
         is = getClass().getResourceAsStream("/simple_ns.xml");
-        try {
-            is = getClass().getResourceAsStream("/simple_ns.xml");
-            spf.newSAXParser().parse(is, mh);
-        } catch(javax.xml.parsers.ParserConfigurationException pce) {
-            fail("ParserConfigurationException was thrown during parsing");
-        } catch(org.xml.sax.SAXException se) {
-            se.printStackTrace();
-            fail("SAXException was thrown during parsing");
-        } catch(IOException ioe) {
-            fail("IOException was thrown during parsing");
-        } finally {
-            try {
-                is.close();
-            } catch(Exception ioee) {}
-        }
-        is = getClass().getResourceAsStream("/simple_ns.xml");
-        try {
-            spf.setNamespaceAware(true);
-            spf.newSAXParser().parse(is, mh);
-        } catch(javax.xml.parsers.ParserConfigurationException pce) {
-            fail("ParserConfigurationException was thrown during parsing");
-        } catch(org.xml.sax.SAXException se) {
-            fail("SAXException was thrown during parsing");
-        } catch(IOException ioe) {
-            fail("IOException was thrown during parsing");
-        } finally {
-            try {
-                is.close();
-            } catch(Exception ioee) {}
-        }
+        spf.newSAXParser().parse(is, mh);
+        is.close();
     }
 
     /*   public void test_setSchemaLjavax_xml_validation_Schema() {

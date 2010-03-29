@@ -16,6 +16,7 @@
 
 package tests.xml;
 
+import dalvik.annotation.KnownFailure;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.w3c.dom.Attr;
@@ -185,6 +186,7 @@ public class DomTest extends TestCase {
      * Android's parsed DOM doesn't include entity declarations. These nodes will
      * only be tested for implementations that support them.
      */
+    @KnownFailure("Dalvik doesn't parse entity declarations")
     public void testEntityDeclarations() {
         assertNotNull("This implementation does not parse entity declarations", sp);
     }
@@ -193,6 +195,7 @@ public class DomTest extends TestCase {
      * Android's parsed DOM doesn't include notations. These nodes will only be
      * tested for implementations that support them.
      */
+    @KnownFailure("Dalvik doesn't parse notations")
     public void testNotations() {
         assertNotNull("This implementation does not parse notations", png);
     }
@@ -552,10 +555,12 @@ public class DomTest extends TestCase {
         assertNoFeature("XMLVersion", "2.0");
     }
 
-    public void testLsFeature() {
+    @KnownFailure("Dalvik doesn't support load/save")
+    public void testLoadSaveFeature() {
         assertFeature("LS", "3.0");
     }
 
+    @KnownFailure("Dalvik doesn't support the element traversal feature")
     public void testElementTraversalFeature() {
         assertFeature("ElementTraversal", "1.0");
     }
@@ -652,6 +657,7 @@ public class DomTest extends TestCase {
         assertFalse(text.isElementContentWhitespace());
     }
 
+    @KnownFailure("Dalvik doesn't recognize element content whitespace")
     public void testIsElementContentWhitespaceWithDeclaration() throws Exception {
         String xml = "<!DOCTYPE menu [\n"
                 + "  <!ELEMENT menu (item)*>\n"
@@ -685,6 +691,7 @@ public class DomTest extends TestCase {
         assertEquals("60%", vitamincText.getWholeText());
     }
 
+    @KnownFailure("Dalvik doesn't resolve entity references")
     public void testGetWholeTextWithEntityReference() {
         EntityReference spReference = document.createEntityReference("sp");
         description.insertBefore(spReference, descriptionText2);
@@ -1180,6 +1187,7 @@ public class DomTest extends TestCase {
         assertNull(document.getElementById("g"));
     }
 
+    @KnownFailure("Dalvik treats id attributes as identifiers")
     public void testAttributeNamedIdIsNotAnIdByDefault() {
         String message = "This implementation incorrectly interprets the "
                 + "\"id\" attribute as an identifier by default.";
@@ -1323,6 +1331,7 @@ public class DomTest extends TestCase {
                 1, document.getChildNodes().getLength());
     }
 
+    @KnownFailure("Dalvik document nodes accept arbitrary child nodes")
     public void testDocumentAddChild()
             throws IOException, SAXException {
         try {

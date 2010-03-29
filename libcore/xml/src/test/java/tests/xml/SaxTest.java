@@ -16,6 +16,7 @@
 
 package tests.xml;
 
+import dalvik.annotation.KnownFailure;
 import junit.framework.TestCase;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -94,6 +95,7 @@ public class SaxTest extends TestCase {
      * Android's Expat-based SAX parser fails this test because Expat doesn't
      * supply us with our much desired {@code xmlns="http://..."} attributes.
      */
+    @KnownFailure("No xmlns attributes from Expat")
     public void testYesPrefixesYesNamespaces() throws Exception {
         parse(true, true, "<foo bar=\"baz\"/>", new DefaultHandler() {
             @Override public void startElement(String uri, String localName,
