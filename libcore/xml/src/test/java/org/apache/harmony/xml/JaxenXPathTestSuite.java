@@ -53,11 +53,11 @@ import java.util.List;
  */
 public class JaxenXPathTestSuite {
 
-    private static final File DEFAULT_JAXEN_HOME
-            = new File("/home/dalvik-prebuild/jaxen");
+    private static final String DEFAULT_JAXEN_HOME = "/home/dalvik-prebuild/jaxen";
 
     public static Test suite() throws Exception {
-        return suite(DEFAULT_JAXEN_HOME);
+        String jaxenHome = System.getProperty("jaxen.home", DEFAULT_JAXEN_HOME);
+        return suite(new File(jaxenHome));
     }
 
     /**
