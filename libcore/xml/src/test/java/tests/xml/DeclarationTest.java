@@ -16,6 +16,7 @@
 
 package tests.xml;
 
+import dalvik.annotation.KnownFailure;
 import junit.framework.TestCase;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -78,18 +79,21 @@ public class DeclarationTest extends TestCase {
         assertEquals("ISO-8859-1", documentB.getInputEncoding());
     }
 
+    @KnownFailure("Dalvik doesn't parse the XML declaration")
     public void testGetXmlEncoding() throws Exception {
         String message = "This implementation doesn't parse the encoding from the XML declaration";
         assertEquals(message, "ISO-8859-1", documentA.getXmlEncoding());
         assertEquals(message, "US-ASCII", documentB.getXmlEncoding());
     }
 
+    @KnownFailure("Dalvik doesn't parse the XML declaration")
     public void testGetXmlVersion() throws Exception {
         String message = "This implementation doesn't parse the version from the XML declaration";
         assertEquals(message, "1.0", documentA.getXmlVersion());
         assertEquals(message, "1.1", documentB.getXmlVersion());
     }
 
+    @KnownFailure("Dalvik doesn't parse the XML declaration")
     public void testGetXmlStandalone() throws Exception {
         String message = "This implementation doesn't parse standalone from the XML declaration";
         assertEquals(message, false, documentA.getXmlStandalone());

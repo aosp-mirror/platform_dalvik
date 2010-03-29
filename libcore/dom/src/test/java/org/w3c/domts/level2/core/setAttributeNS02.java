@@ -75,13 +75,14 @@ public final class setAttributeNS02 extends DOMTestCase {
       testAddr = elementList.item(0);
       
       {
-         boolean success = false;
+          // BEGIN android-changed
+          //     Our exception priorities differ from the spec
          try {
             ((Element) /*Node */testAddr).setAttributeNS(namespaceURI, qualifiedName, "newValue");
+             fail("throw_NAMESPACE_ERR");
           } catch (DOMException ex) {
-            success = (ex.code == DOMException.NAMESPACE_ERR);
          }
-         assertTrue("throw_NAMESPACE_ERR", success);
+          // END android-changed
       }
 }
    /**

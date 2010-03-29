@@ -16,6 +16,7 @@
 
 package tests.xml;
 
+import dalvik.annotation.KnownFailure;
 import junit.framework.TestCase;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
@@ -204,6 +205,7 @@ public class NormalizeTest extends TestCase {
      * This fails under the RI because setParameter() succeeds even though
      * canSetParameter() returns false.
      */
+    @KnownFailure("Dalvik doesn't honor the schema-type parameter")
     public void testSchemaTypeDtd() {
         assertUnsupported("schema-type", "http://www.w3.org/TR/REC-xml"); // supported in RI v6
     }
