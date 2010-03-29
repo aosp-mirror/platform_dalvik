@@ -1037,41 +1037,21 @@ public final class StrictMath {
     private native static float nextafterf(float x, float y); 
     
     /**
-     * Answers a result of the magnitude of the first given double value and the
-     * sign of the second given double value.
-     * 
-     * @param magnitude
-     *            the double value whose magnitude should be used
-     * @param sign
-     *            the double value whose sign should be used
-     * @return a result of the magnitude of the first given double value and the
-     *         sign of the second given double value.
-     *         
+     * Returns a double with the given magnitude and the sign of {@code sign}.
+     * If {@code sign} is NaN, the sign of the result is positive.
      * @since 1.6
      * @hide
      */
-    public static double copySign(double magnitude, double sign) {
-        return Math.copySign(magnitude, sign);
-    }
+    public static native double copySign(double magnitude, double sign);
 
     /**
-     * Answers a result of the magnitude of the first given float value and the
-     * sign of the second given float value.
-     * 
-     * @param magnitude
-     *            the float value whose magnitude should be used
-     * @param sign
-     *            the float value whose sign should be used
-     * @return a result with the magnitude of the first given float value and
-     *         the sign of the second given float value.
-     *         
+     * Returns a float with the given magnitude and the sign of {@code sign}.
+     * If {@code sign} is NaN, the sign of the result is positive.
      * @since 1.6
      * @hide
      */
-    public static float copySign(float magnitude, float sign) {
-        return Math.copySign(magnitude, sign);
-    }
-    
+    public static native float copySign(float magnitude, float sign);
+
     /**
      * Answers the exponent of a float.
      * 
