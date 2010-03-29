@@ -160,11 +160,13 @@ static jfloat jnextafterf(JNIEnv* env, jclass clazz, jfloat a, jfloat b)
 }
 
 static jdouble copySign(JNIEnv* env, jclass clazz, jdouble a, jdouble b) {
-    return copysign(a, b);
+    // Our StrictMath.copySign delegates to Math.copySign, so we need to treat NaN as positive.
+    return copysign(a, isnan(b) ? 1.0 : b);
 }
 
 static jfloat copySign_f(JNIEnv* env, jclass clazz, jfloat a, jfloat b) {
-    return copysignf(a, b);
+    // Our StrictMath.copySign delegates to Math.copySign, so we need to treat NaN as positive.
+    return copysignf(a, isnan(b) ? 1.0 : b);
 }
 
 /*

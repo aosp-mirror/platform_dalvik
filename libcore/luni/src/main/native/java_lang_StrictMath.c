@@ -20,8 +20,6 @@
 #include "../../external/fdlibm/fdlibm.h"
 _LIB_VERSION_TYPE _LIB_VERSION = _IEEE_;
 
-#include <math.h>
-
 /* native public static double sin(double a); */
 static jdouble jsin(JNIEnv* env, jclass clazz, jdouble a)
 {
@@ -186,14 +184,6 @@ static jfloat jnextafterf(JNIEnv* env, jclass clazz, jfloat arg1, jfloat arg2)
     return arg1;
 }
 
-static jdouble copySign(JNIEnv* env, jclass clazz, jdouble a, jdouble b) {
-    return copysign(a, isnan(b) ? 1.0 : b);
-}
-
-static jfloat copySign_f(JNIEnv* env, jclass clazz, jfloat a, jfloat b) {
-    return copysignf(a, isnan(b) ? 1.0f : b);
-}
-
 /*
  * JNI registration.
  */
@@ -206,8 +196,6 @@ static JNINativeMethod gMethods[] = {
     { "atan2",  "(DD)D", jatan2 },
     { "cbrt",   "(D)D", jcbrt },
     { "ceil",   "(D)D", jceil },
-    { "copySign",  "(DD)D", copySign },
-    { "copySign",  "(FF)F", copySign_f },
     { "cos",    "(D)D", jcos },
     { "cosh",   "(D)D", jcosh },
     { "exp",    "(D)D", jexp },

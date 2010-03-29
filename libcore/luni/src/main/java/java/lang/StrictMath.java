@@ -1042,7 +1042,9 @@ public final class StrictMath {
      * @since 1.6
      * @hide
      */
-    public static native double copySign(double magnitude, double sign);
+    public static double copySign(double magnitude, double sign) {
+        return Math.copySign(magnitude, sign);
+    }
 
     /**
      * Returns a float with the given magnitude and the sign of {@code sign}.
@@ -1050,7 +1052,9 @@ public final class StrictMath {
      * @since 1.6
      * @hide
      */
-    public static native float copySign(float magnitude, float sign);
+    public static float copySign(float magnitude, float sign) {
+        return Math.copySign(magnitude, sign);
+    }
 
     /**
      * Answers the exponent of a float.
