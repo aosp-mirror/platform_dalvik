@@ -503,7 +503,6 @@ static void throwIOExceptionWithSslErrors(JNIEnv* env, int sslReturnCode,
                     line,
                     data,
                     flags);
-            LOGD("XXX bdc str %s", str);
 
             if (ret < 0) {
                 break;
