@@ -309,6 +309,15 @@ public class DecimalFormatSymbolsTest extends TestCase {
     }
 
     /**
+     * @tests java.text.DecimalFormatSymbols#getExponentSeparator()
+     */
+    public void test_getExponentSeparator() {
+        dfs.setExponentSeparator("EE");
+        assertEquals("Returned incorrect Exponent Separator symbol", "EE", dfs
+                .getExponentSeparator());
+    }
+
+    /**
      * @tests java.text.DecimalFormatSymbols#getGroupingSeparator()
      */
     @TestTargetNew(
@@ -563,6 +572,30 @@ public class DecimalFormatSymbolsTest extends TestCase {
     public void test_setDigitC() {
         dfs.setDigit('*');
         assertEquals("Returned incorrect Digit symbol", '*', dfs.getDigit());
+    }
+
+    /**
+     * @tests java.text.DecimalFormatSymbols#setExponentSeparator(String)
+     */
+    public void test_setExponentSeparator() {
+        try {
+            dfs.setExponentSeparator(null);
+            fail("Should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+
+        dfs.setExponentSeparator("");
+        assertEquals("Returned incorrect Exponent Separator symbol", "", dfs
+                .getExponentSeparator());
+
+        dfs.setExponentSeparator("what ever you want");
+        assertEquals("Returned incorrect Exponent Separator symbol",
+                "what ever you want", dfs.getExponentSeparator());
+
+        dfs.setExponentSeparator(" E ");
+        assertEquals("Returned incorrect Exponent Separator symbol", " E ", dfs
+                .getExponentSeparator());
     }
 
     /**

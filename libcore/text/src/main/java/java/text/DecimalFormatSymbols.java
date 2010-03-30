@@ -51,16 +51,15 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
     private static final int PATTERN_SEPARATOR = 4;
     private static final int PERCENT = 5;
     private static final int PER_MILL = 6;
-    private static final int EXPONENT = 7;
-    private static final int MONETARY_DECIMAL_SEPARATOR = 8;
-    private static final int MINUS_SIGN = 9;
+    private static final int MONETARY_DECIMAL_SEPARATOR = 7;
+    private static final int MINUS_SIGN = 8;
 
     // TODO: replace this with individual char fields.
     private transient char[] patternChars;
 
     private transient Currency currency;
-
     private transient Locale locale;
+    private transient String exponentSeparator;
 
     private String infinity, NaN, currencySymbol, intlCurrencySymbol;
 
@@ -89,13 +88,14 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
         this.patternChars = localeData.decimalPatternChars.toCharArray();
         this.infinity = localeData.infinity;
         this.NaN = localeData.NaN;
+        this.exponentSeparator = localeData.exponentSeparator;
         this.locale = locale;
         try {
             currency = Currency.getInstance(locale);
             currencySymbol = currency.getSymbol(locale);
             intlCurrencySymbol = currency.getCurrencyCode();
         } catch (IllegalArgumentException e) {
-            currency = Currency.getInstance("XXX"); //$NON-NLS-1$
+            currency = Currency.getInstance("XXX");
             currencySymbol = localeData.currencySymbol;
             intlCurrencySymbol = localeData.internationalCurrencySymbol;
         }
@@ -178,21 +178,41 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
             return false;
         }
         DecimalFormatSymbols obj = (DecimalFormatSymbols) object;
-        return Arrays.equals(patternChars, obj.patternChars)
-                && infinity.equals(obj.infinity) && NaN.equals(obj.NaN)
-                && currencySymbol.equals(obj.currencySymbol)
-                && intlCurrencySymbol.equals(obj.intlCurrencySymbol);
+        return currency.equals(obj.currency) &&
+                currencySymbol.equals(obj.currencySymbol) &&
+                patternChars[DECIMAL_SEPARATOR] == obj.patternChars[DECIMAL_SEPARATOR] &&
+                patternChars[DIGIT] == obj.patternChars[DIGIT] &&
+                exponentSeparator.equals(obj.exponentSeparator) &&
+                patternChars[GROUPING_SEPARATOR] == obj.patternChars[GROUPING_SEPARATOR] &&
+                infinity.equals(obj.infinity) &&
+                intlCurrencySymbol.equals(obj.intlCurrencySymbol) &&
+                patternChars[MINUS_SIGN] == obj.patternChars[MINUS_SIGN] &&
+                patternChars[MONETARY_DECIMAL_SEPARATOR] == obj.patternChars[MONETARY_DECIMAL_SEPARATOR] &&
+                NaN.equals(obj.NaN) &&
+                patternChars[PATTERN_SEPARATOR] == obj.patternChars[PATTERN_SEPARATOR] &&
+                patternChars[PER_MILL] == obj.patternChars[PER_MILL] &&
+                patternChars[PERCENT] == obj.patternChars[PERCENT] &&
+                patternChars[ZERO_DIGIT] == obj.patternChars[ZERO_DIGIT];
     }
 
     @Override
     public String toString() {
-        // Most of the externally-visible state is stashed in 'patternChars', and not obviously
-        // worth breaking out individually, since this is only meant for debugging.
         return getClass().getName() +
-                "[patternChars=" + new String(patternChars) +
-                ",infinity=" + infinity +
+                "[currency=" + currency +
                 ",currencySymbol=" + currencySymbol +
+                ",decimalSeparator=" + patternChars[DECIMAL_SEPARATOR] +
+                ",digit=" + patternChars[DIGIT] +
+                ",exponentSeparator=" + exponentSeparator +
+                ",groupingSeparator=" + patternChars[GROUPING_SEPARATOR] +
+                ",infinity=" + infinity +
                 ",intlCurrencySymbol=" + intlCurrencySymbol +
+                ",minusSign=" + patternChars[MINUS_SIGN] +
+                ",monetaryDecimalSeparator=" + patternChars[MONETARY_DECIMAL_SEPARATOR] +
+                ",NaN=" + NaN +
+                ",patternSeparator=" + patternChars[PATTERN_SEPARATOR] +
+                ",perMill=" + patternChars[PER_MILL] +
+                ",percent=" + patternChars[PERCENT] +
+                ",zeroDigit=" + patternChars[ZERO_DIGIT] +
                 "]";
     }
 
@@ -335,17 +355,19 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
     }
 
     /*
-     * Returns the exponent as a character.
+     * Returns the string used to separate mantissa and exponent. Typically "E", as in "1.2E3".
+     * @since 1.6
+     * @hide
      */
-    char getExponential() {
-        return patternChars[EXPONENT];
+    public String getExponentSeparator() {
+        return exponentSeparator;
     }
 
     @Override
     public int hashCode() {
-        return new String(patternChars).hashCode() + infinity.hashCode()
-                + NaN.hashCode() + currencySymbol.hashCode()
-                + intlCurrencySymbol.hashCode();
+        return new String(patternChars).hashCode() + exponentSeparator.hashCode() +
+                infinity.hashCode() + NaN.hashCode() + currencySymbol.hashCode() +
+                intlCurrencySymbol.hashCode();
     }
 
     /**
@@ -525,77 +547,94 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
         patternChars[ZERO_DIGIT] = value;
     }
 
-    /*
-     * Sets the exponent character.
+    /**
+     * Sets the string used to separate mantissa and exponent. Typically "E", as in "1.2E3".
+     * @since 1.6
+     * @hide
      */
-    void setExponential(char value) {
-        patternChars[EXPONENT] = value;
+    public void setExponentSeparator(String value) {
+        if (value == null) {
+            throw new NullPointerException();
+        }
+        this.exponentSeparator = value;
     }
 
     private static final ObjectStreamField[] serialPersistentFields = {
-            new ObjectStreamField("currencySymbol", String.class), //$NON-NLS-1$
-            new ObjectStreamField("decimalSeparator", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("digit", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("exponential", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("groupingSeparator", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("infinity", String.class), //$NON-NLS-1$
-            new ObjectStreamField("intlCurrencySymbol", String.class), //$NON-NLS-1$
-            new ObjectStreamField("minusSign", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("monetarySeparator", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("NaN", String.class), //$NON-NLS-1$
-            new ObjectStreamField("patternSeparator", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("percent", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("perMill", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("serialVersionOnStream", Integer.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("zeroDigit", Character.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("locale", Locale.class), }; //$NON-NLS-1$
+        new ObjectStreamField("currencySymbol", String.class),
+        new ObjectStreamField("decimalSeparator", Character.TYPE),
+        new ObjectStreamField("digit", Character.TYPE),
+        new ObjectStreamField("exponential", Character.TYPE),
+        new ObjectStreamField("exponentialSeparator", String.class),
+        new ObjectStreamField("groupingSeparator", Character.TYPE),
+        new ObjectStreamField("infinity", String.class),
+        new ObjectStreamField("intlCurrencySymbol", String.class),
+        new ObjectStreamField("minusSign", Character.TYPE),
+        new ObjectStreamField("monetarySeparator", Character.TYPE),
+        new ObjectStreamField("NaN", String.class),
+        new ObjectStreamField("patternSeparator", Character.TYPE),
+        new ObjectStreamField("percent", Character.TYPE),
+        new ObjectStreamField("perMill", Character.TYPE),
+        new ObjectStreamField("serialVersionOnStream", Integer.TYPE),
+        new ObjectStreamField("zeroDigit", Character.TYPE),
+        new ObjectStreamField("locale", Locale.class),
+    };
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
         ObjectOutputStream.PutField fields = stream.putFields();
-        fields.put("currencySymbol", currencySymbol); //$NON-NLS-1$
-        fields.put("decimalSeparator", getDecimalSeparator()); //$NON-NLS-1$
-        fields.put("digit", getDigit()); //$NON-NLS-1$
-        fields.put("exponential", getExponential()); //$NON-NLS-1$
-        fields.put("groupingSeparator", getGroupingSeparator()); //$NON-NLS-1$
-        fields.put("infinity", infinity); //$NON-NLS-1$
-        fields.put("intlCurrencySymbol", intlCurrencySymbol); //$NON-NLS-1$
-        fields.put("minusSign", getMinusSign()); //$NON-NLS-1$
-        fields.put("monetarySeparator", getMonetaryDecimalSeparator()); //$NON-NLS-1$
-        fields.put("NaN", NaN); //$NON-NLS-1$
-        fields.put("patternSeparator", getPatternSeparator()); //$NON-NLS-1$
-        fields.put("percent", getPercent()); //$NON-NLS-1$
-        fields.put("perMill", getPerMill()); //$NON-NLS-1$
-        fields.put("serialVersionOnStream", 1); //$NON-NLS-1$
-        fields.put("zeroDigit", getZeroDigit()); //$NON-NLS-1$
-        fields.put("locale", locale); //$NON-NLS-1$
+        fields.put("currencySymbol", currencySymbol);
+        fields.put("decimalSeparator", getDecimalSeparator());
+        fields.put("digit", getDigit());
+        fields.put("exponential", exponentSeparator.charAt(0));
+        fields.put("exponentialSeparator", exponentSeparator);
+        fields.put("groupingSeparator", getGroupingSeparator());
+        fields.put("infinity", infinity);
+        fields.put("intlCurrencySymbol", intlCurrencySymbol);
+        fields.put("minusSign", getMinusSign());
+        fields.put("monetarySeparator", getMonetaryDecimalSeparator());
+        fields.put("NaN", NaN);
+        fields.put("patternSeparator", getPatternSeparator());
+        fields.put("percent", getPercent());
+        fields.put("perMill", getPerMill());
+        fields.put("serialVersionOnStream", 3);
+        fields.put("zeroDigit", getZeroDigit());
+        fields.put("locale", locale);
         stream.writeFields();
     }
 
-    private void readObject(ObjectInputStream stream) throws IOException,
-            ClassNotFoundException {
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         ObjectInputStream.GetField fields = stream.readFields();
-        patternChars = new char[10];
-        currencySymbol = (String) fields.get("currencySymbol", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        setDecimalSeparator(fields.get("decimalSeparator", '.')); //$NON-NLS-1$
-        setDigit(fields.get("digit", '#')); //$NON-NLS-1$
-        setGroupingSeparator(fields.get("groupingSeparator", ',')); //$NON-NLS-1$
-        infinity = (String) fields.get("infinity", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        intlCurrencySymbol = (String) fields.get("intlCurrencySymbol", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        setMinusSign(fields.get("minusSign", '-')); //$NON-NLS-1$
-        NaN = (String) fields.get("NaN", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        setPatternSeparator(fields.get("patternSeparator", ';')); //$NON-NLS-1$
-        setPercent(fields.get("percent", '%')); //$NON-NLS-1$
-        setPerMill(fields.get("perMill", '\u2030')); //$NON-NLS-1$
-        setZeroDigit(fields.get("zeroDigit", '0')); //$NON-NLS-1$
-        locale = (Locale) fields.get("locale", null); //$NON-NLS-1$
-        if (fields.get("serialVersionOnStream", 0) == 0) { //$NON-NLS-1$
+        final int serialVersionOnStream = fields.get("serialVersionOnStream", 0);
+        patternChars = new char[9];
+        currencySymbol = (String) fields.get("currencySymbol", "");
+        setDecimalSeparator(fields.get("decimalSeparator", '.'));
+        setDigit(fields.get("digit", '#'));
+        setGroupingSeparator(fields.get("groupingSeparator", ','));
+        infinity = (String) fields.get("infinity", "");
+        intlCurrencySymbol = (String) fields.get("intlCurrencySymbol", "");
+        setMinusSign(fields.get("minusSign", '-'));
+        NaN = (String) fields.get("NaN", "");
+        setPatternSeparator(fields.get("patternSeparator", ';'));
+        setPercent(fields.get("percent", '%'));
+        setPerMill(fields.get("perMill", '\u2030'));
+        setZeroDigit(fields.get("zeroDigit", '0'));
+        locale = (Locale) fields.get("locale", null);
+        if (serialVersionOnStream == 0) {
             setMonetaryDecimalSeparator(getDecimalSeparator());
-            setExponential('E');
         } else {
-            setMonetaryDecimalSeparator(fields.get("monetarySeparator", '.')); //$NON-NLS-1$
-            setExponential(fields.get("exponential", 'E')); //$NON-NLS-1$
-
+            setMonetaryDecimalSeparator(fields.get("monetarySeparator", '.'));
         }
+
+        if (serialVersionOnStream == 0) {
+            // Prior to Java 1.1.6, the exponent separator wasn't configurable.
+            exponentSeparator = "E";
+        } else if (serialVersionOnStream < 3) {
+            // In Javas 1.1.6 and 1.4, there was a character field "exponential".
+            setExponentSeparator(String.valueOf(fields.get("exponential", 'E')));
+        } else {
+            // In Java 6, there's a new "exponentialSeparator" field.
+            setExponentSeparator((String) fields.get("exponentialSeparator", "E"));
+        }
+
         try {
             currency = Currency.getInstance(intlCurrencySymbol);
         } catch (IllegalArgumentException e) {

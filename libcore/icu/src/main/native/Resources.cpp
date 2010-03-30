@@ -514,7 +514,7 @@ static jobjectArray getShortWeekdayNames(JNIEnv* env, UResourceBundle* gregorian
 static jstring getDecimalPatternChars(JNIEnv* env, UResourceBundle* rootElems) {
     UErrorCode status = U_ZERO_ERROR;
 
-    int zeroL, digitL, decSepL, groupL, listL, percentL, permillL, expL, currSepL, minusL;
+    int zeroL, digitL, decSepL, groupL, listL, percentL, permillL, currSepL, minusL;
 
     const jchar* zero = ures_getStringByIndex(rootElems, 4, &zeroL, &status);
     const jchar* digit = ures_getStringByIndex(rootElems, 5, &digitL, &status);
@@ -523,7 +523,6 @@ static jstring getDecimalPatternChars(JNIEnv* env, UResourceBundle* rootElems) {
     const jchar* list = ures_getStringByIndex(rootElems, 2, &listL, &status);
     const jchar* percent = ures_getStringByIndex(rootElems, 3, &percentL, &status);
     const jchar* permill = ures_getStringByIndex(rootElems, 8, &permillL, &status);
-    const jchar* exp = ures_getStringByIndex(rootElems, 7, &expL, &status);
     const jchar* currSep = ures_getStringByIndex(rootElems, 0, &currSepL, &status);
     const jchar* minus = ures_getStringByIndex(rootElems, 6, &minusL, &status);
 
@@ -531,21 +530,18 @@ static jstring getDecimalPatternChars(JNIEnv* env, UResourceBundle* rootElems) {
         return NULL;
     }
 
-    jchar patternChars[11];
-    patternChars[0] = 0;
-
-    u_strncat(patternChars, zero, 1);
-    u_strncat(patternChars, digit, 1);
-    u_strncat(patternChars, decSep, 1);
-    u_strncat(patternChars, group, 1);
-    u_strncat(patternChars, list, 1);
-    u_strncat(patternChars, percent, 1);
-    u_strncat(patternChars, permill, 1);
-    u_strncat(patternChars, exp, 1);
-    u_strncat(patternChars, currSep, 1);
-    u_strncat(patternChars, minus, 1);
-
-    return env->NewString(patternChars, 10);
+    jchar patternChars[] = {
+        zero[0],
+        digit[0],
+        decSep[0],
+        group[0],
+        list[0],
+        percent[0],
+        permill[0],
+        currSep[0],
+        minus[0],
+    };
+    return env->NewString(patternChars, sizeof(patternChars));
 }
 
 static jstring getIntCurrencyCode(JNIEnv* env, jstring locale) {
@@ -600,6 +596,8 @@ static void setStringField(JNIEnv* env, jobject obj, const char* fieldName, URes
     const UChar* chars = ures_getStringByIndex(bundle, index, &charCount, &status);
     if (U_SUCCESS(status)) {
         setStringField(env, obj, fieldName, env->NewString(chars, charCount));
+    } else {
+        LOGE("Error setting field %s from ICU resource: %s", fieldName, u_errorName(status));
     }
 }
 
@@ -656,6 +654,7 @@ static jboolean initLocaleDataImpl(JNIEnv* env, jclass clazz, jstring locale, jo
     ScopedResourceBundle numberElements(ures_getByKey(root.get(), "NumberElements", NULL, &status));
     if (U_SUCCESS(status) && ures_getSize(numberElements.get()) >= 11) {
         setStringField(env, localeData, "decimalPatternChars", getDecimalPatternChars(env, numberElements.get()));
+        setStringField(env, localeData, "exponentSeparator", numberElements.get(), 7);
         setStringField(env, localeData, "infinity", numberElements.get(), 9);
         setStringField(env, localeData, "NaN", numberElements.get(), 10);
     }

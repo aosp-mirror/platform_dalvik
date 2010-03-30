@@ -52,6 +52,7 @@ public final class LocaleData {
     
     public String decimalPatternChars;
     
+    public String exponentSeparator;
     public String infinity;
     public String NaN;
     
@@ -82,6 +83,7 @@ public final class LocaleData {
                 "mediumDateFormat=" + mediumDateFormat + "," +
                 "shortDateFormat=" + shortDateFormat + "," +
                 "decimalPatternChars=" + decimalPatternChars + "," +
+                "exponentSeparator=" + exponentSeparator + "," +
                 "infinity=" + infinity + "," +
                 "NaN=" + NaN + "," +
                 "currencySymbol=" + currencySymbol + "," +
@@ -143,6 +145,9 @@ public final class LocaleData {
         }
         if (overrides.decimalPatternChars != null) {
             decimalPatternChars = overrides.decimalPatternChars;
+        }
+        if (overrides.exponentSeparator != null) {
+            exponentSeparator = overrides.exponentSeparator;
         }
         if (overrides.NaN != null) {
             NaN = overrides.NaN;
