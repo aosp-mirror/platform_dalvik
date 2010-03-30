@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package dalvik.runner;
+package vogar.target;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+import vogar.TestProperties;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 /**
  * Runs a user-supplied {@code main(String[] args)} method
@@ -84,7 +84,7 @@ public class TestActivity extends Activity {
                 FileOutputStream resultOut = new FileOutputStream(resultTemp);
                 resultOut.write(result.getBytes("UTF-8"));
                 resultOut.close();
-                // atomically rename since DalvikRunner will be polling for this
+                // atomically rename since Vogar will be polling for this
                 resultTemp.renameTo(resultFile);
             } catch (IOException e) {
                 log("TestActivity could not create result file", e);

@@ -42,7 +42,7 @@ mmm dalvik/libcore/tools/runner
 #clean=--no-clean-after
 extras="$verbose $clean"
 
-dalvik_runner="java -cp out/host/linux-x86/framework/dalvik_runner.jar dalvik.runner.DalvikRunner"
+dalvik_runner="java -cp out/host/linux-x86/framework/dalvik_runner.jar vogar.Vogar"
 
 for mode in $modes; do
     for test in $tests; do
