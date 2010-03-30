@@ -50,43 +50,43 @@ abstract class Environment {
      * expect to read data files from the current working directory; this step
      * should ensure such files are available.
      */
-    abstract void prepareUserDir(TestRun testRun);
+    abstract void prepareUserDir(Action action);
 
     /**
      * Deletes files and releases any resources required for the execution of
      * the given test.
      */
-    void cleanup(TestRun testRun) {
+    void cleanup(Action action) {
         if (cleanAfter) {
-            logger.fine("clean " + testRun.getQualifiedName());
-            new Rm().directoryTree(testCompilationDir(testRun));
-            new Rm().directoryTree(testUserDir(testRun));
+            logger.fine("clean " + action.getName());
+            new Rm().directoryTree(actionCompilationDir(action));
+            new Rm().directoryTree(actionUserDir(action));
         }
     }
 
-    final File testDir(String name) {
+    final File actionDir(String name) {
         return new File(localTemp, name);
     }
 
-    final File testRunnerDir(String name) {
-        return new File(testDir("testrunner"), name);
+    final File runnerDir(String name) {
+        return new File(actionDir("testrunner"), name);
     }
 
-    final File testRunnerClassesDir() {
-        return testRunnerDir("classes");
+    final File runnerClassesDir() {
+        return runnerDir("classes");
     }
 
-    final File testCompilationDir(TestRun testRun) {
-        return new File(localTemp, testRun.getQualifiedName());
+    final File actionCompilationDir(Action action) {
+        return new File(localTemp, action.getName());
     }
 
-    final File testClassesDir(TestRun testRun) {
-        return new File(testCompilationDir(testRun), "classes");
+    final File classesDir(Action action) {
+        return new File(actionCompilationDir(action), "classes");
     }
 
-    final File testUserDir(TestRun testRun) {
+    final File actionUserDir(Action action) {
         File testTemp = new File(localTemp, "userDir");
-        return new File(testTemp, testRun.getQualifiedName());
+        return new File(testTemp, action.getName());
     }
 
     abstract void shutdown();

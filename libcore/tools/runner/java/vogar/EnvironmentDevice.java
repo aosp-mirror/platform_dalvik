@@ -23,13 +23,13 @@ import java.io.File;
 class EnvironmentDevice extends Environment {
     final Adb adb = new Adb();
     final File runnerDir;
-    final File testTemp;
+    final File vogarTemp;
 
     EnvironmentDevice (boolean cleanBefore, boolean cleanAfter,
             Integer debugPort, File localTemp, File runnerDir) {
         super(cleanBefore, cleanAfter, debugPort, localTemp);
         this.runnerDir = runnerDir;
-        this.testTemp = new File(runnerDir, "/tests.tmp");
+        this.vogarTemp = new File(runnerDir, "/vogar.tmp");
     }
 
     @Override void prepare() {
@@ -39,28 +39,28 @@ class EnvironmentDevice extends Environment {
             adb.rm(runnerDir);
         }
         adb.mkdir(runnerDir);
-        adb.mkdir(testTemp);
+        adb.mkdir(vogarTemp);
         adb.mkdir(new File("/sdcard/dalvik-cache")); // TODO: only necessary on production devices.
         if (debugPort != null) {
             adb.forwardTcp(debugPort, debugPort);
         }
     }
 
-    @Override protected void prepareUserDir(TestRun testRun) {
-        File testClassesDirOnDevice = testClassesDirOnDevice(testRun);
-        adb.mkdir(testClassesDirOnDevice);
-        adb.push(testRun.getTestDirectory(), testClassesDirOnDevice);
-        testRun.setUserDir(testClassesDirOnDevice);
+    @Override protected void prepareUserDir(Action action) {
+        File actionClassesDirOnDevice = actionClassesDirOnDevice(action);
+        adb.mkdir(actionClassesDirOnDevice);
+        adb.push(action.getJavaDirectory(), actionClassesDirOnDevice);
+        action.setUserDir(actionClassesDirOnDevice);
     }
 
-    private File testClassesDirOnDevice(TestRun testRun) {
-        return new File(runnerDir, testRun.getQualifiedName());
+    private File actionClassesDirOnDevice(Action action) {
+        return new File(runnerDir, action.getName());
     }
 
-    @Override void cleanup(TestRun testRun) {
-        super.cleanup(testRun);
+    @Override void cleanup(Action action) {
+        super.cleanup(action);
         if (cleanAfter) {
-            adb.rm(testClassesDirOnDevice(testRun));
+            adb.rm(actionClassesDirOnDevice(action));
         }
     }
 

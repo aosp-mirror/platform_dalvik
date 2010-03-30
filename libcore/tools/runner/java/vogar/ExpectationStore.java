@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,70 +22,65 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The expected outcome of a test execution. This is typically encoded in the
- * expectations text file, which has the following format:
- * <pre>
- * test java.io.StreamTokenizer.Reset
- * result UNSUPPORTED
- * pattern .*should get token \[, but get -1.*
- *
- * # should we fix this?
- * test java.util.Arrays.CopyMethods
- * result COMPILE_FAILED
- * pattern .*cannot find symbol.*
- * </pre>
+ * A database of expected outcomes.
  */
-class ExpectedResult {
+final class ExpectationStore {
 
-    private static final Logger logger = Logger.getLogger(ExpectedResult.class.getName());
+    private static final Logger logger = Logger.getLogger(ExpectationStore.class.getName());
 
     /** Matches lines in the file containing a key and value pair. */
     private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s+(.+)");
 
-    /** The pattern to use when no expected output is specified */
-    private static final Pattern MATCH_ALL_PATTERN
-            = Pattern.compile(".*", Pattern.MULTILINE | Pattern.DOTALL);
+    private final Map<String, Expectation> expectedResults;
 
-    /** The expectation of a general successful test run. */
-    static final ExpectedResult SUCCESS = new ExpectedResult(Result.SUCCESS, null);
+    private ExpectationStore(Map<String, Expectation> expectedResults) {
+        this.expectedResults = expectedResults;
+    }
 
-    /** The test's expected result, such as {@code EXEC_FAILED}. */
-    private final Result result;
+    /**
+     * Finds the expected result for the specified action or outcome. This
+     * returns a value for all names, even if no explicit expectation was set.
+     */
+    public Expectation get(String name) {
+        while (true) {
+            Expectation expectation = expectedResults.get(name);
+            if (expectation != null) {
+                return expectation;
+            }
 
-    /** The pattern the expected output will match. */
-    private final Pattern pattern;
+            int dot = name.lastIndexOf('.');
+            if (dot == -1) {
+                return Expectation.SUCCESS;
+            }
 
-    private ExpectedResult(Result result, String pattern) {
-        if (result == null) {
-            throw new IllegalArgumentException();
+            name = name.substring(0, dot);
         }
-
-        this.result = result;
-        this.pattern = pattern != null
-                ? Pattern.compile(pattern, Pattern.MULTILINE | Pattern.DOTALL)
-                : MATCH_ALL_PATTERN;
     }
 
-    public Result getResult() {
-        return result;
+    public static ExpectationStore parse(Set<File> expectationFiles) throws IOException {
+        Map<String, Expectation> expectedResults = new HashMap<String, Expectation>();
+        for (File f : expectationFiles) {
+            if (f.exists()) {
+                expectedResults.putAll(parse(f));
+            }
+        }
+        return new ExpectationStore(expectedResults);
     }
 
-    public Pattern getPattern() {
-        return pattern;
-    }
 
-    public static Map<String, ExpectedResult> parse(File expectationsFile)
+    public static Map<String, Expectation> parse(File expectationsFile)
             throws IOException {
         logger.fine("loading expectations file " + expectationsFile);
 
         BufferedReader reader = new BufferedReader(new FileReader(expectationsFile));
         try {
-            Map<String, ExpectedResult> results = new HashMap<String, ExpectedResult>();
+            Map<String, Expectation> results = new HashMap<String, Expectation>();
             Matcher keyValuePairMatcher = KEY_VALUE_PAIR_PATTERN.matcher("");
 
             // the fields of interest for the current element
@@ -119,8 +114,8 @@ class ExpectedResult {
                     // when we encounter a new qualified name, the previous
                     // element is complete. Add it to the results.
                     if (qualifiedName != null) {
-                        ExpectedResult expectation = new ExpectedResult(result, pattern);
-                        ExpectedResult previous = results.put(qualifiedName, expectation);
+                        Expectation expectation = new Expectation(result, pattern);
+                        Expectation previous = results.put(qualifiedName, expectation);
                         if (previous != null) {
                             throw new IllegalArgumentException(
                                     "Duplicate expectations for " + qualifiedName);
@@ -140,8 +135,8 @@ class ExpectedResult {
 
             // add the last element in the file
             if (qualifiedName != null) {
-                ExpectedResult expectation = new ExpectedResult(result, pattern);
-                ExpectedResult previous = results.put(qualifiedName, expectation);
+                Expectation expectation = new Expectation(result, pattern);
+                Expectation previous = results.put(qualifiedName, expectation);
                 if (previous != null) {
                     throw new IllegalArgumentException(
                             "Duplicate expectations for " + qualifiedName);

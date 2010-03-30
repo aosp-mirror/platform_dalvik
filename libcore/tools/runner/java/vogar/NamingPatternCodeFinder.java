@@ -34,9 +34,9 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
     private final String TYPE_DECLARATION_PATTERN
             = "(?m)\\b(?:public|private)\\s+(?:final\\s+)?(?:interface|class|enum)\\b";
 
-    public Set<TestRun> findTests(File testDirectory) {
-        Set<TestRun> result = new LinkedHashSet<TestRun>();
-        findTestsRecursive(result, testDirectory);
+    public Set<Action> findActions(File searchDirectory) {
+        Set<Action> result = new LinkedHashSet<Action>();
+        findActionsRecursive(result, searchDirectory);
         return result;
     }
 
@@ -48,12 +48,10 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
                 && file.getName().endsWith(".java"));
     }
 
-    protected abstract String testName(File file);
-
-    private void findTestsRecursive(Set<TestRun> sink, File file) {
+    private void findActionsRecursive(Set<Action> sink, File file) {
         if (file.isDirectory()) {
             for (File child : file.listFiles()) {
-                findTestsRecursive(sink, child);
+                findActionsRecursive(sink, child);
             }
             return;
         }
@@ -63,11 +61,9 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
         }
 
         String className = fileToClass(file);
-        File testDirectory = file.getParentFile();
-        String testName = testName(file);
-        String testDescription = null;
-        sink.add(new TestRun(testDirectory, file, className, className,
-                testName, className, testDescription,
+        File directory = file.getParentFile();
+        String description = null;
+        sink.add(new Action(className, className, directory, file, description,
                 getRunnerClass(), getRunnerJava(), getRunnerClasspath()));
     }
 

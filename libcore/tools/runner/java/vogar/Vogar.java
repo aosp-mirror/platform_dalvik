@@ -44,7 +44,7 @@ public final class Vogar {
 
     private static class Options {
 
-        private final List<File> testFiles = new ArrayList<File>();
+        private final List<File> actionFiles = new ArrayList<File>();
 
         @Option(names = { "--expectations" })
         private Set<File> expectationFiles = new LinkedHashSet<File>();
@@ -102,20 +102,20 @@ public final class Vogar {
         private File sdkJar = new File("/home/dalvik-prebuild/android-sdk-linux/platforms/android-2.0/android.jar");
 
         private void printUsage() {
-            System.out.println("Usage: Vogar [options]... <tests>...");
+            System.out.println("Usage: Vogar [options]... <actions>...");
             System.out.println();
-            System.out.println("  <tests>: a .java file containing a jtreg test, JUnit test,");
-            System.out.println("      Caliper benchmark, or a directory of such tests.");
+            System.out.println("  <actions>: .java files containing a jtreg tests, JUnit tests,");
+            System.out.println("      Caliper benchmarks, or a directory of such tests.");
             System.out.println();
             System.out.println("GENERAL OPTIONS");
             System.out.println();
             System.out.println("  --expectations <file>: include the specified file when looking for");
-            System.out.println("      test expectations. The file should include qualified test names");
+            System.out.println("      action expectations. The file should include qualified action names");
             System.out.println("      and the corresponding expected output.");
             System.out.println("      Default is: " + expectationFiles);
             System.out.println();
             System.out.println("  --mode <device|host|activity>: specify which environment to run the");
-            System.out.println("      tests in. Options are on the device VM, on the host VM, and on");
+            System.out.println("      actions in. Options are on the device VM, on the host VM, and on");
             System.out.println("      device within an android.app.Activity.");
             System.out.println("      Default is: " + mode);
             System.out.println();
@@ -130,18 +130,18 @@ public final class Vogar {
             System.out.println("  --clean: synonym for --clean-before and --clean-after (default).");
             System.out.println("      Disable with --no-clean if you want no files removed.");
             System.out.println();
-            System.out.println("  --tee <file>: emit test output to file during execution.");
+            System.out.println("  --tee <file>: emit output to file during execution.");
             System.out.println("      Specify '-' for stdout.");
             System.out.println();
             System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
-            System.out.println("      test before the runner aborts it. Specifying zero seconds");
+            System.out.println("      action before the runner aborts it. Specifying zero seconds");
             System.out.println("      or using --debug will disable the execution timeout");
             System.out.println("      Default is: " + timeoutSeconds);
             System.out.println();
             System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
             System.out.println("      XML test results.");
             System.out.println();
-            System.out.println("  --ident: amount to indent test result output. Can be set to ''");
+            System.out.println("  --ident: amount to indent action result output. Can be set to ''");
             System.out.println("      (aka empty string) to simplify output parsing.");
             System.out.println("      Default is: '" + indent + "'");
             System.out.println();
@@ -164,7 +164,7 @@ public final class Vogar {
             System.out.println();
             System.out.println("HOST VM OPTIONS");
             System.out.println();
-            System.out.println("  --java-home <java_home>: execute the tests on the local workstation");
+            System.out.println("  --java-home <java_home>: execute the actions on the local workstation");
             System.out.println("      using the specified java home directory. This does not impact");
             System.out.println("      which javac gets used. When unset, java is used from the PATH.");
             System.out.println();
@@ -182,9 +182,9 @@ public final class Vogar {
         }
 
         private boolean parseArgs(String[] args) {
-            final List<String> testFilenames;
+            final List<String> actionFilenames;
             try {
-                testFilenames = new OptionParser(this).parse(args);
+                actionFilenames = new OptionParser(this).parse(args);
             } catch (RuntimeException e) {
                 System.out.println(e.getMessage());
                 return false;
@@ -242,8 +242,8 @@ public final class Vogar {
                 return false;
             }
 
-            if (testFilenames.isEmpty()) {
-                System.out.println("No tests provided.");
+            if (actionFilenames.isEmpty()) {
+                System.out.println("No actions provided.");
                 return false;
             }
 
@@ -261,8 +261,8 @@ public final class Vogar {
                 timeoutSeconds = 0;
             }
 
-            for (String testFilename : testFilenames) {
-                testFiles.add(new File(testFilename));
+            for (String actionFilename : actionFilenames) {
+                actionFiles.add(new File(actionFilename));
             }
 
             if (teeName != null) {
@@ -352,21 +352,28 @@ public final class Vogar {
                 new JUnitFinder(),
                 new CaliperFinder(),
                 new MainFinder());
-        Driver driver = new Driver(
-                localTemp,
-                mode,
-                options.expectationFiles,
-                options.xmlReportsDirectory,
-                options.indent,
-                codeFinders);
+
+        ExpectationStore expectationStore;
         try {
-            driver.loadExpectations();
+            expectationStore = ExpectationStore.parse(options.expectationFiles);
         } catch (IOException e) {
             System.out.println("Problem loading expectations: " + e);
             return;
         }
 
-        driver.buildAndRunAllTests(options.testFiles);
+        XmlReportPrinter xmlReportPrinter = options.xmlReportsDirectory != null
+                ? new XmlReportPrinter(options.xmlReportsDirectory, expectationStore)
+                : null;
+
+        Driver driver = new Driver(
+                localTemp,
+                mode,
+                expectationStore,
+                options.indent,
+                codeFinders,
+                xmlReportPrinter);
+
+        driver.buildAndRunAllActions(options.actionFiles);
         mode.shutdown();
     }
 

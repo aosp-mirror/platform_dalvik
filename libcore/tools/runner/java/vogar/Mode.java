@@ -35,13 +35,13 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
- * A Mode for running tests. Examples including running in a virtual
- * machine either on the host or a device or within a specific context
- * such as within an Activity.
+ * A Mode for running actions. Examples including running in a virtual machine
+ * either on the host or a device or within a specific context such as within an
+ * Activity.
  */
 abstract class Mode {
 
-    private static final Pattern JAVA_TEST_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
+    private static final Pattern JAVA_SOURCE_PATTERN = Pattern.compile("\\/(\\w)+\\.java$");
 
     private static final Logger logger = Logger.getLogger(Mode.class.getName());
 
@@ -52,24 +52,22 @@ abstract class Mode {
     protected final PrintStream tee;
 
     /**
-     * Set of Java files needed to built to tun the currently selected
-     * set of tests. We build a subset rather than all the files all
-     * the time to reduce dex packaging costs in the activity mode
-     * case.
+     * Set of Java files needed to built to tun the currently selected set of
+     * actions. We build a subset rather than all the files all the time to
+     * reduce dex packaging costs in the activity mode case.
      */
-    protected final Set<File> testRunnerJava = new HashSet<File>();
+    protected final Set<File> runnerJava = new HashSet<File>();
 
     /**
-     * Classpath of testRunner on the host side including any
-     * supporting libraries for testRunnerJava. Useful for compiling
-     * testRunnerJava as well as executing it on the host. Execution
-     * on the device requires further packaging typically done by
-     * postCompileTestRunner.
+     * Classpath of runner on the host side including any supporting libraries
+     * for runnerJava. Useful for compiling runnerJava as well as executing it
+     * on the host. Execution on the device requires further packaging typically
+     * done by postCompile.
      */
-    protected final Classpath testRunnerClasspath = new Classpath();
+    protected final Classpath runnerClasspath = new Classpath();
 
     // TODO: this should be an immutable collection.
-    protected final Classpath testClasspath = Classpath.of(
+    protected final Classpath classpath = Classpath.of(
             new File("dalvik/libcore/tools/runner/lib/jsr305.jar"),
             new File("dalvik/libcore/tools/runner/lib/guava.jar"),
             new File("dalvik/libcore/tools/runner/lib/caliper.jar"),
@@ -87,16 +85,16 @@ abstract class Mode {
     }
 
     /**
-     * Initializes the temporary directories and test harness necessary to run
-     * tests.
+     * Initializes the temporary directories and harness necessary to run
+     * actions.
      */
-    protected void prepare(Set<File> testRunnerJava, Classpath testRunnerClasspath) {
-        this.testRunnerJava.add(new File(Vogar.HOME_JAVA, "vogar/target/TestRunner.java"));
-        this.testRunnerJava.addAll(dalvikAnnotationSourceFiles());
-        this.testRunnerJava.addAll(testRunnerJava);
-        this.testRunnerClasspath.addAll(testRunnerClasspath);
+    protected void prepare(Set<File> runnerJava, Classpath runnerClasspath) {
+        this.runnerJava.add(new File(Vogar.HOME_JAVA, "vogar/target/TestRunner.java"));
+        this.runnerJava.addAll(dalvikAnnotationSourceFiles());
+        this.runnerJava.addAll(runnerJava);
+        this.runnerClasspath.addAll(runnerClasspath);
         environment.prepare();
-        compileTestRunner();
+        compileRunner();
     }
 
     private List<File> dalvikAnnotationSourceFiles() {
@@ -111,14 +109,14 @@ abstract class Mode {
         return Arrays.asList(javaSourceFiles);
     }
 
-    private void compileTestRunner() {
-        logger.fine("build testrunner");
+    private void compileRunner() {
+        logger.fine("build runner");
 
         Classpath classpath = new Classpath();
-        classpath.addAll(testClasspath);
-        classpath.addAll(testRunnerClasspath);
+        classpath.addAll(this.classpath);
+        classpath.addAll(runnerClasspath);
 
-        File base = environment.testRunnerClassesDir();
+        File base = environment.runnerClassesDir();
         new Mkdir().mkdirs(base);
         new Javac()
                 .bootClasspath(sdkJar)
@@ -126,148 +124,133 @@ abstract class Mode {
                 .sourcepath(Vogar.HOME_JAVA)
                 .destination(base)
                 .extra(javacArgs)
-                .compile(testRunnerJava);
-        postCompileTestRunner();
+                .compile(runnerJava);
+        postCompileRunner();
     }
 
     /**
-     * Hook method called after TestRunner compilation.
+     * Hook method called after runner compilation.
      */
-    abstract protected void postCompileTestRunner();
+    abstract protected void postCompileRunner();
 
     /**
-     * Compiles classes for the given test and makes them ready for execution.
-     * If the test could not be compiled successfully, it will be updated with
-     * the appropriate test result.
-     */
-    public void buildAndInstall(TestRun testRun) {
-        logger.fine("build " + testRun.getQualifiedName());
-
-        boolean testCompiled;
-        try {
-            testCompiled = compileTest(testRun);
-            if (!testCompiled) {
-                testRun.setResult(Result.UNSUPPORTED, Collections.<String>emptyList());
-                return;
-            }
-        } catch (CommandFailedException e) {
-            testRun.setResult(Result.COMPILE_FAILED, e.getOutputLines());
-            return;
-        } catch (IOException e) {
-            testRun.setResult(Result.ERROR, e);
-            return;
-        }
-        testRun.setTestCompiled(testCompiled);
-        environment.prepareUserDir(testRun);
-    }
-
-    /**
-     * Compiles the classes for the described test.
+     * Compiles classes for the given action and makes them ready for execution.
      *
-     * @return the path to the compiled classes (directory or jar), or {@code
-     *      null} if the test could not be compiled.
+     * @return null if the compilation succeeded, or an outcome describing the
+     *      failure otherwise.
+     */
+    public Outcome buildAndInstall(Action action) {
+        logger.fine("build " + action.getName());
+
+        try {
+            compile(action);
+        } catch (CommandFailedException e) {
+            return new Outcome(action.getName(), action.getName(),
+                    Result.COMPILE_FAILED, e.getOutputLines());
+        } catch (IOException e) {
+            return new Outcome(action.getName(), Result.ERROR, e);
+        }
+        environment.prepareUserDir(action);
+        return null;
+    }
+
+    /**
+     * Compiles the classes for the described action.
+     *
      * @throws CommandFailedException if javac fails
      */
-    private boolean compileTest(TestRun testRun) throws IOException {
-        if (!JAVA_TEST_PATTERN.matcher(testRun.getTestJava().toString()).find()) {
-            return false;
+    private void compile(Action action) throws IOException {
+        if (!JAVA_SOURCE_PATTERN.matcher(action.getJavaFile().toString()).find()) {
+            throw new CommandFailedException(Collections.<String>emptyList(),
+                    Collections.singletonList("Cannot compile: " + action.getJavaFile()));
         }
 
-        String qualifiedName = testRun.getQualifiedName();
-        File testClassesDir = environment.testClassesDir(testRun);
-        new Mkdir().mkdirs(testClassesDir);
+        String qualifiedName = action.getName();
+        File classesDir = environment.classesDir(action);
+        new Mkdir().mkdirs(classesDir);
         FileOutputStream propertiesOut = new FileOutputStream(
-                new File(testClassesDir, TestProperties.FILE));
+                new File(classesDir, TestProperties.FILE));
         Properties properties = new Properties();
-        fillInProperties(properties, testRun);
+        fillInProperties(properties, action);
         properties.store(propertiesOut, "generated by " + Mode.class.getName());
         propertiesOut.close();
 
         Classpath classpath = new Classpath();
-        classpath.addAll(testClasspath);
-        classpath.addAll(testRun.getRunnerClasspath());
+        classpath.addAll(this.classpath);
+        classpath.addAll(action.getRunnerClasspath());
 
         Set<File> sourceFiles = new HashSet<File>();
-        sourceFiles.add(testRun.getTestJava());
+        sourceFiles.add(action.getJavaFile());
         sourceFiles.addAll(dalvikAnnotationSourceFiles());
 
-        // compile the test case
+        // compile the action case
         new Javac()
                 .bootClasspath(sdkJar)
                 .classpath(classpath)
-                .sourcepath(testRun.getTestDirectory())
-                .destination(testClassesDir)
+                .sourcepath(action.getJavaDirectory())
+                .destination(classesDir)
                 .extra(javacArgs)
                 .compile(sourceFiles);
-        postCompileTest(testRun);
-        return true;
+        postCompile(action);
     }
 
     /**
-     * Hook method called after test compilation.
-     *
-     * @param testRun The test being compiled
+     * Hook method called after action compilation.
      */
-    abstract protected void postCompileTest(TestRun testRun);
+    abstract protected void postCompile(Action action);
 
 
     /**
      * Fill in properties for running in this mode
      */
-    protected void fillInProperties(Properties properties, TestRun testRun) {
-        properties.setProperty(TestProperties.TEST_CLASS, testRun.getTestClass());
-        properties.setProperty(TestProperties.QUALIFIED_NAME, testRun.getQualifiedName());
-        properties.setProperty(TestProperties.RUNNER_CLASS, testRun.getRunnerClass().getName());
+    protected void fillInProperties(Properties properties, Action action) {
+        properties.setProperty(TestProperties.TEST_CLASS, action.getTargetClass());
+        properties.setProperty(TestProperties.QUALIFIED_NAME, action.getName());
+        properties.setProperty(TestProperties.RUNNER_CLASS, action.getRunnerClass().getName());
     }
 
     /**
-     * Runs the test, and updates its test result.
+     * Runs the action, and returns its outcomes.
      */
-    void runTest(TestRun testRun) {
-        if (!testRun.isRunnable()) {
-            throw new IllegalArgumentException();
-        }
-
+    Set<Outcome> run(Action action) {
         List<String> output;
         try {
-            output = runTestCommand(testRun);
+            output = executeAction(action);
         } catch (TimeoutException e) {
-            testRun.setResult(Result.EXEC_TIMEOUT,
-                Collections.singletonList("Exceeded timeout! (" + timeoutSeconds + "s)"));
-            return;
+            return Collections.singleton(new Outcome(action.getName(),
+                    Result.EXEC_TIMEOUT, "Exceeded timeout! (" + timeoutSeconds + "s)"));
         } catch (Exception e) {
-            testRun.setResult(Result.ERROR, e);
-            return;
+            return Collections.singleton(new Outcome(action.getName(), Result.ERROR, e));
         }
         // we only look at the output of the last command
         if (output.isEmpty()) {
-            testRun.setResult(Result.ERROR,
-                    Collections.singletonList("No output returned!"));
-            return;
+            return Collections.singleton(new Outcome(action.getName(),
+                    Result.ERROR, "No output returned!"));
         }
 
         Result result = TestProperties.RESULT_SUCCESS.equals(output.get(output.size() - 1))
                 ? Result.SUCCESS
                 : Result.EXEC_FAILED;
-        testRun.setResult(result, output.subList(0, output.size() - 1));
+        return Collections.singleton(new Outcome(action.getName(),
+                action.getName(), result, output.subList(0, output.size() - 1)));
     }
 
     /**
-     * Run the actual test to gather output
+     * Run the actual action to gather output
      */
-    protected abstract List<String> runTestCommand(TestRun testRun)
+    protected abstract List<String> executeAction(Action action)
         throws TimeoutException;
 
     /**
      * Deletes files and releases any resources required for the execution of
-     * the given test.
+     * the given action.
      */
-    void cleanup(TestRun testRun) {
-        environment.cleanup(testRun);
+    void cleanup(Action action) {
+        environment.cleanup(action);
     }
 
     /**
-     * Cleans up after all test runs have completed.
+     * Cleans up after all actions have completed.
      */
     void shutdown() {
         environment.shutdown();

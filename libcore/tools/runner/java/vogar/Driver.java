@@ -19,13 +19,10 @@ package vogar;
 import vogar.commands.Mkdir;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,205 +33,190 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
- * Compiles, installs, runs and reports tests.
+ * Compiles, installs, runs and reports on actions.
  */
 final class Driver {
 
     private static final Logger logger = Logger.getLogger(Driver.class.getName());
 
     private final File localTemp;
-    private final Set<File> expectationFiles;
+    private final ExpectationStore expectationStore;
     private final List<CodeFinder> codeFinders;
     private final Mode mode;
-    private final File xmlReportsDirectory;
     private final String indent;
-    private final Map<String, ExpectedResult> expectedResults = new HashMap<String, ExpectedResult>();
+    private final XmlReportPrinter reportPrinter;
+
+    private final Map<String, Action> actions = Collections.synchronizedMap(
+            new LinkedHashMap<String, Action>());
+    private final Map<String, Outcome> outcomes = Collections.synchronizedMap(
+            new LinkedHashMap<String, Outcome>());
 
     /**
      * The number of tests that weren't run because they aren't supported by
      * this runner.
      */
-    private int unsupportedTests = 0;
+    private int unsupportedActions = 0;
 
-    public Driver(File localTemp, Mode mode, Set<File> expectationFiles,
-                  File xmlReportsDirectory, String indent, List<CodeFinder> codeFinders) {
+    public Driver(File localTemp, Mode mode, ExpectationStore expectationStore,
+            String indent, List<CodeFinder> codeFinders, XmlReportPrinter reportPrinter) {
         this.localTemp = localTemp;
-        this.expectationFiles = expectationFiles;
+        this.expectationStore = expectationStore;
         this.mode = mode;
-        this.xmlReportsDirectory = xmlReportsDirectory;
         this.indent = indent;
         this.codeFinders = codeFinders;
-    }
-
-    public void loadExpectations() throws IOException {
-        for (File f : expectationFiles) {
-            if (f.exists()) {
-                expectedResults.putAll(ExpectedResult.parse(f));
-            }
-        }
+        this.reportPrinter = reportPrinter;
     }
 
     /**
      * Builds and executes all tests in the test directory.
      */
-    public void buildAndRunAllTests(Collection<File> testFiles) {
-        new Mkdir().mkdirs(localTemp);
+    public void buildAndRunAllActions(Collection<File> files) {
+        if (!actions.isEmpty()) {
+            throw new IllegalStateException("Drivers are not reusable");
+        }
 
-        Set<TestRun> tests = new LinkedHashSet<TestRun>();
-        for (File testFile : testFiles) {
-            Set<TestRun> testsForFile = Collections.emptySet();
+        new Mkdir().mkdirs(localTemp);
+        for (File file : files) {
+            Set<Action> actionsForFile = Collections.emptySet();
 
             for (CodeFinder codeFinder : codeFinders) {
-                testsForFile = codeFinder.findTests(testFile);
+                actionsForFile = codeFinder.findActions(file);
 
                 // break as soon as we find any match. We don't need multiple
                 // matches for the same file, since that would run it twice.
-                if (!testsForFile.isEmpty()) {
+                if (!actionsForFile.isEmpty()) {
                     break;
                 }
             }
 
-            tests.addAll(testsForFile);
+            for (Action action : actionsForFile) {
+                actions.put(action.getName(), action);
+            }
         }
 
         // compute TestRunner java and classpath to pass to mode.prepare
-        Set<File> testRunnerJava = new HashSet<File>();
-        Classpath testRunnerClasspath = new Classpath();
-        for (final TestRun testRun : tests) {
-            testRunnerJava.add(testRun.getRunnerJava());
-            testRunnerClasspath.addAll(testRun.getRunnerClasspath());
+        Set<File> runnerJava = new HashSet<File>();
+        Classpath runnerClasspath = new Classpath();
+        for (final Action action : actions.values()) {
+            runnerJava.add(action.getRunnerJava());
+            runnerClasspath.addAll(action.getRunnerClasspath());
         }
 
-        // mode.prepare before mode.buildAndInstall to ensure test
-        // runner is built. packaging of activity APK files needs the
-        // test runner along with the test specific files.
-        mode.prepare(testRunnerJava, testRunnerClasspath);
+        // mode.prepare before mode.buildAndInstall to ensure the runner is
+        // built. packaging of activity APK files needs the runner along with
+        // the action-specific files.
+        mode.prepare(runnerJava, runnerClasspath);
 
-        logger.info("Running " + tests.size() + " tests.");
+        logger.info("Running " + actions.size() + " actions.");
 
-        // build and install tests in a background thread. Using lots of
-        // threads helps for packages that contain many unsupported tests
-        final BlockingQueue<TestRun> readyToRun = new ArrayBlockingQueue<TestRun>(4);
+        // build and install actions in a background thread. Using lots of
+        // threads helps for packages that contain many unsupported actions
+        final BlockingQueue<Action> readyToRun = new ArrayBlockingQueue<Action>(4);
 
         ExecutorService builders = Threads.threadPerCpuExecutor();
         int t = 0;
-        for (final TestRun testRun : tests) {
+
+        for (final Action action : actions.values()) {
+            final String name = action.getName();
             final int runIndex = t++;
             builders.submit(new Runnable() {
                 public void run() {
                     try {
-                        ExpectedResult expectedResult = lookupExpectedResult(testRun);
-                        testRun.setExpectedResult(expectedResult);
+                        logger.fine("installing action " + runIndex + "; "
+                                + readyToRun.size() + " are runnable");
 
-                        if (expectedResult.getResult() == Result.UNSUPPORTED) {
-                            testRun.setResult(Result.UNSUPPORTED, Collections.<String>emptyList());
-                            logger.fine("skipping test " + testRun
-                                    + " because the expectations file says it is unsupported.");
+                        if (expectationStore.get(name).getResult() == Result.UNSUPPORTED) {
+                            outcomes.put(name, new Outcome(name, Result.UNSUPPORTED,
+                                    "Unsupported according to expectations file"));
 
                         } else {
-                            mode.buildAndInstall(testRun);
-                            logger.fine("installed test " + runIndex + "; "
-                                    + readyToRun.size() + " are ready to run");
+                            Outcome outcome = mode.buildAndInstall(action);
+                            if (outcome != null) {
+                                outcomes.put(name, outcome);
+                            }
                         }
 
-                        readyToRun.put(testRun);
-                    } catch (Throwable throwable) {
-                        testRun.setResult(Result.ERROR, throwable);
+                        readyToRun.put(action);
+                    } catch (InterruptedException e) {
+                        outcomes.put(name, new Outcome(name, Result.ERROR, e));
                     }
                 }
             });
         }
         builders.shutdown();
 
-        List<TestRun> runs = new ArrayList<TestRun>(tests.size());
-        for (int i = 0; i < tests.size(); i++) {
-            logger.fine("executing test " + i + "; "
+        for (int i = 0; i < actions.size(); i++) {
+            logger.fine("executing action " + i + "; "
                     + readyToRun.size() + " are ready to run");
 
             // if it takes 5 minutes for build and install, something is broken
-            TestRun testRun;
+            Action action;
             try {
-                testRun = readyToRun.poll(5 * 60, TimeUnit.SECONDS);
+                action = readyToRun.poll(5 * 60, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 throw new RuntimeException("Unexpected interruption waiting for build and install", e);
             }
 
-            if (testRun == null) {
-                throw new IllegalStateException("Expected " + tests.size() + " tests but found only " + i);
+            if (action == null) {
+                throw new IllegalStateException("Expected " + actions.size()
+                        + " actions but found only " + i);
             }
 
-            runs.add(testRun);
-            execute(testRun);
-            mode.cleanup(testRun);
+            execute(action);
+            mode.cleanup(action);
         }
 
-        if (unsupportedTests > 0) {
-            logger.info("Skipped " + unsupportedTests + " unsupported tests.");
+        if (unsupportedActions > 0) {
+            logger.info("Skipped " + unsupportedActions + " unsupported actions.");
         }
 
-        if (xmlReportsDirectory != null) {
+        if (reportPrinter != null) {
             logger.info("Printing XML Reports... ");
-            int numFiles = new XmlReportPrinter().generateReports(xmlReportsDirectory, runs);
+            int numFiles = reportPrinter.generateReports(outcomes.values());
             logger.info(numFiles + " XML files written.");
         }
     }
 
     /**
-     * Finds the expected result for the specified test run. This strips off
-     * parts of the test's qualified name until it either finds a match or runs
-     * out of name.
+     * Executes a single action and then prints the result.
      */
-    private ExpectedResult lookupExpectedResult(TestRun testRun) {
-        String name = testRun.getQualifiedName();
-
-        while (true) {
-            ExpectedResult expectedResult = expectedResults.get(name);
-            if (expectedResult != null) {
-                return expectedResult;
+    private void execute(Action action) {
+        Outcome earlyFailure = outcomes.get(action.getName());
+        if (earlyFailure != null) {
+            if (earlyFailure.getResult() == Result.UNSUPPORTED) {
+                logger.fine("skipping " + action.getName());
+                unsupportedActions++;
+            } else {
+                printResult(earlyFailure);
             }
-
-            int dot = name.lastIndexOf('.');
-            if (dot == -1) {
-                return ExpectedResult.SUCCESS;
-            }
-
-            name = name.substring(0, dot);
-        }
-    }
-
-    /**
-     * Executes a single test and then prints the result.
-     */
-    private void execute(TestRun testRun) {
-        if (testRun.getResult() == Result.UNSUPPORTED) {
-            logger.fine("skipping " + testRun.getQualifiedName());
-            unsupportedTests++;
             return;
         }
 
-        if (testRun.isRunnable()) {
-            mode.runTest(testRun);
+        Set<Outcome> outcomes = mode.run(action);
+        for (Outcome outcome : outcomes) {
+            printResult(outcome);
         }
-
-        printResult(testRun);
     }
 
-    private void printResult(TestRun testRun) {
-        if (testRun.isExpectedResult()) {
-            logger.info("OK " + testRun.getQualifiedName() + " (" + testRun.getResult() + ")");
+    private void printResult(Outcome outcome) {
+        Expectation expected = expectationStore.get(outcome.getName());
+        Action action = actions.get(outcome.getActionName());
+
+        if (expected.matches(outcome)) {
+            logger.info("OK " + outcome.getName() + " (" + outcome.getResult() + ")");
             // In --verbose mode, show the output even on success.
-            logger.fine(indent + testRun.getFailureMessage().replace("\n", "\n" + indent));
+            logger.fine(indent + expected.getFailureMessage(outcome).replace("\n", "\n" + indent));
             return;
         }
 
-        logger.info("FAIL " + testRun.getQualifiedName() + " (" + testRun.getResult() + ")");
-        String description = testRun.getDescription();
+        logger.info("FAIL " + outcome.getName() + " (" + outcome.getResult() + ")");
+        String description = action.getDescription();
         if (description != null) {
             logger.info(indent + "\"" + description + "\"");
         }
 
         // Don't mess with compiler error output for tools (such as
         // Emacs) that are trying to parse it with regexps
-        logger.info(indent + testRun.getFailureMessage().replace("\n", "\n" + indent));
+        logger.info(indent + expected.getFailureMessage(outcome).replace("\n", "\n" + indent));
     }
 }

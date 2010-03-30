@@ -22,13 +22,9 @@ import vogar.target.Runner;
 import java.io.File;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with main methods in them.
+ * Create {@link Action}s for {@code .java} files with main methods in them.
  */
 class MainFinder extends NamingPatternCodeFinder {
-
-    @Override protected String testName(File file) {
-        return "main";
-    }
 
     public Class<? extends Runner> getRunnerClass() {
         return MainRunner.class;
