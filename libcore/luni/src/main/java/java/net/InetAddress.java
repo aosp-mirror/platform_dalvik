@@ -524,22 +524,6 @@ public class InetAddress implements Serializable {
     private static native String getnameinfo(byte[] addr);
     // END android-changed
 
-    // BEGIN android-removed
-    // static int inetAddr(String host) throws UnknownHostException
-    // END android-removed
-
-    // BEGIN android-removed
-    // static native int inetAddrImpl(String host) throws UnknownHostException;
-    // END android-removed
-
-    // BEGIN android-removed
-    // static native String inetNtoaImpl(int hipAddr);
-    // END android-removed
-
-    // BEGIN android-removed
-    // static native InetAddress getHostByNameImpl(String name) throws UnknownHostException;
-    // END android-removed
-
     static String getHostNameInternal(String host, boolean isCheck) throws UnknownHostException {
         if (host == null || 0 == host.length()) {
             return Inet4Address.LOOPBACK.getHostAddress();

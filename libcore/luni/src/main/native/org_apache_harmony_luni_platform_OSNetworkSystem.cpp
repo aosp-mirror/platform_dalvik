@@ -1794,17 +1794,15 @@ static void osNetworkSystem_bind(JNIEnv* env, jobject, jobject fileDescriptor,
     }
 }
 
-static void osNetworkSystem_listenStreamSocket(JNIEnv* env, jobject,
-        jobject fileDescriptor, jint backlog) {
-    int handle;
-    if (!jniGetFd(env, fileDescriptor, handle)) {
+static void osNetworkSystem_listen(JNIEnv* env, jobject, jobject fileDescriptor, jint backlog) {
+    int fd;
+    if (!jniGetFd(env, fileDescriptor, fd)) {
         return;
     }
 
-    int rc = listen(handle, backlog);
+    int rc = listen(fd, backlog);
     if (rc == -1) {
         jniThrowSocketException(env, errno);
-        return;
     }
 }
 
@@ -2853,7 +2851,7 @@ static JNINativeMethod gMethods[] = {
     { "getSocketLocalPort",                "(Ljava/io/FileDescriptor;)I",                                              (void*) osNetworkSystem_getSocketLocalPort },
     { "getSocketOption",                   "(Ljava/io/FileDescriptor;I)Ljava/lang/Object;",                            (void*) osNetworkSystem_getSocketOption },
     { "ipStringToByteArray",               "(Ljava/lang/String;)[B",                                                   (void*) osNetworkSystem_ipStringToByteArray },
-    { "listenStreamSocket",                "(Ljava/io/FileDescriptor;I)V",                                             (void*) osNetworkSystem_listenStreamSocket },
+    { "listen",                            "(Ljava/io/FileDescriptor;I)V",                                             (void*) osNetworkSystem_listen },
     { "peekDatagram",                      "(Ljava/io/FileDescriptor;Ljava/net/InetAddress;I)I",                       (void*) osNetworkSystem_peekDatagram },
     { "readDirect",                        "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_readDirect },
     { "readSocketImpl",                    "(Ljava/io/FileDescriptor;[BIII)I",                                         (void*) osNetworkSystem_readSocketImpl },
