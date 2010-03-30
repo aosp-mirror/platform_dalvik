@@ -136,6 +136,11 @@ struct ifaddrs {
         }
         return NULL;
     }
+
+private:
+    // Disallow copy and assignment.
+    ifaddrs(const ifaddrs&);
+    void operator=(const ifaddrs&);
 };
 
 // FIXME: use iovec instead.

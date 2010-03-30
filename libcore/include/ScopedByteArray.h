@@ -48,6 +48,10 @@ private:
     JNIEnv* mEnv;
     jbyteArray mByteArray;
     jbyte* mBytes;
+
+    // Disallow copy and assignment.
+    ScopedByteArray(const ScopedByteArray&);
+    void operator=(const ScopedByteArray&);
 };
 
 #endif  // SCOPED_BYTE_ARRAY_H_included

@@ -37,6 +37,10 @@ public:
 
 private:
     int fd;
+
+    // Disallow copy and assignment.
+    ScopedFd(const ScopedFd&);
+    void operator=(const ScopedFd&);
 };
 
 #endif  // SCOPED_FD_H_included

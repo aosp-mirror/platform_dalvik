@@ -83,8 +83,7 @@ static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
         // Count results so we know how to size the output array.
         int addressCount = 0;
         for (addrInfo = addressList; addrInfo; addrInfo = addrInfo->ai_next) {
-            if (addrInfo->ai_family == AF_INET ||
-                addrInfo->ai_family == AF_INET6) {
+            if (addrInfo->ai_family == AF_INET || addrInfo->ai_family == AF_INET6) {
                 addressCount++;
             }
         }
@@ -94,7 +93,7 @@ static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
         if (addressArray == NULL) {
             // Appropriate exception will be thrown.
             LOGE("getaddrinfo: could not allocate array of size %i", addressCount);
-            freeaddrinfo(addrInfo);
+            freeaddrinfo(addressList);
             return NULL;
         }
 
@@ -109,20 +108,17 @@ static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
                 // Find the raw address length and start pointer.
                 case AF_INET6:
                     addressLength = 16;
-                    rawAddress =
-                        &((struct sockaddr_in6*) address)->sin6_addr.s6_addr;
+                    rawAddress = &((struct sockaddr_in6*) address)->sin6_addr.s6_addr;
                     logIpString(addrInfo, name);
                     break;
                 case AF_INET:
                     addressLength = 4;
-                    rawAddress =
-                        &((struct sockaddr_in*) address)->sin_addr.s_addr;
+                    rawAddress = &((struct sockaddr_in*) address)->sin_addr.s_addr;
                     logIpString(addrInfo, name);
                     break;
                 default:
                     // Unknown address family. Skip this address.
-                    LOGE("getaddrinfo: Unknown address family %d",
-                         addrInfo->ai_family);
+                    LOGE("getaddrinfo: Unknown address family %d", addrInfo->ai_family);
                     continue;
             }
 
@@ -130,13 +126,11 @@ static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
             jbyteArray bytearray = env->NewByteArray(addressLength);
             if (bytearray == NULL) {
                 // Out of memory error will be thrown on return.
-                LOGE("getaddrinfo: Can't allocate %d-byte array",
-                     addressLength);
+                LOGE("getaddrinfo: Can't allocate %d-byte array", addressLength);
                 addressArray = NULL;
                 break;
             }
-            env->SetByteArrayRegion(bytearray, 0, addressLength,
-                                    (jbyte*) rawAddress);
+            env->SetByteArrayRegion(bytearray, 0, addressLength, (jbyte*) rawAddress);
             env->SetObjectArrayElement(addressArray, index, bytearray);
             env->DeleteLocalRef(bytearray);
             index++;
@@ -146,8 +140,7 @@ static jobjectArray InetAddress_getaddrinfoImpl(JNIEnv* env, const char* name) {
         jniThrowException(env, "java/lang/SecurityException",
             "Permission denied (maybe missing INTERNET permission)");
     } else {
-        jniThrowException(env, "java/net/UnknownHostException",
-                gai_strerror(result));
+        jniThrowException(env, "java/net/UnknownHostException", gai_strerror(result));
     }
 
     if (addressList) {

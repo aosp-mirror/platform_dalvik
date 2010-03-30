@@ -562,6 +562,10 @@ private:
             mPrefix = "";
         }
     }
+
+    // Disallow copy and assignment.
+    ExpatElementName(const ExpatElementName&);
+    void operator=(const ExpatElementName&);
 };
 
 /**

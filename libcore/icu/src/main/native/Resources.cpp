@@ -58,6 +58,10 @@ public:
 
 private:
     UResourceBundle* mBundle;
+
+    // Disallow copy and assignment.
+    ScopedResourceBundle(const ScopedResourceBundle&);
+    void operator=(const ScopedResourceBundle&);
 };
 
 static Locale getLocale(JNIEnv* env, jstring locale) {

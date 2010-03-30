@@ -53,6 +53,11 @@ public:
     }
     
     ifaddrs* list;
+
+private:
+    // Disallow copy and assignment.
+    ScopedInterfaceAddresses(const ScopedInterfaceAddresses&);
+    void operator=(const ScopedInterfaceAddresses&);
 };
 
 // TODO: add a header file for shared utilities like this.

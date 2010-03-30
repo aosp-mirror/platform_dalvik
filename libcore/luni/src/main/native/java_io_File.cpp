@@ -253,6 +253,10 @@ private:
     DIR* mDirStream;
     dirent mEntry;
     bool mIsBad;
+
+    // Disallow copy and assignment.
+    ScopedReaddir(const ScopedReaddir&);
+    void operator=(const ScopedReaddir&);
 };
 
 // DirEntry and DirEntries is a minimal equivalent of std::forward_list
@@ -310,6 +314,10 @@ public:
 private:
     size_t mSize;
     DirEntry* mHead;
+
+    // Disallow copy and assignment.
+    DirEntries(const DirEntries&);
+    void operator=(const DirEntries&);
 };
 
 // Reads the directory referred to by 'pathBytes', adding each directory entry

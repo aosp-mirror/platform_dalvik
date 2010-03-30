@@ -46,6 +46,10 @@ private:
     jstring mString;
     const UChar* mChars;
     UnicodeString mUnicodeString;
+
+    // Disallow copy and assignment.
+    ScopedJavaUnicodeString(const ScopedJavaUnicodeString&);
+    void operator=(const ScopedJavaUnicodeString&);
 };
 
 #endif  // SCOPED_JAVA_UNICODE_STRING_H_included

@@ -66,6 +66,10 @@ private:
     char mOnStackBuffer[STACK_BYTE_COUNT];
     char* mPtr;
     size_t mSize;
+
+    // Disallow copy and assignment.
+    LocalArray(const LocalArray&);
+    void operator=(const LocalArray&);
 };
 
 #endif // LOCAL_ARRAY_H_included
