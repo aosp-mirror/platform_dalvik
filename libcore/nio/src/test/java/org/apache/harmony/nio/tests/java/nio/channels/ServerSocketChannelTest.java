@@ -21,8 +21,8 @@ import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.AndroidOnly;
 import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -724,7 +724,7 @@ public class ServerSocketChannelTest extends TestCase {
         method = "accept",
         args = {}
     )
-    @AndroidOnly("seems to run on newer RI versions")
+    @KnownFailure("http://b/1952042 - issues with sockets forgetting their local and remote addresses")
     public void test_accept_Security() throws IOException {
         this.clientChannel.configureBlocking(true);
         this.serverChannel.configureBlocking(true);
