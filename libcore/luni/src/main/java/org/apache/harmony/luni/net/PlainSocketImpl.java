@@ -161,7 +161,7 @@ public class PlainSocketImpl extends SocketImpl {
     protected synchronized int available() throws IOException {
         // we need to check if the input has been shutdown. If so
         // we should return that there is no data to be read
-        if (shutdownInput == true) {
+        if (shutdownInput) {
             return 0;
         }
         return Platform.getFileSystem().ioctlAvailable(fd);
@@ -191,9 +191,7 @@ public class PlainSocketImpl extends SocketImpl {
 
     @Override
     protected void connect(String aHost, int aPort) throws IOException {
-        // BEGIN android-changed: remove useless IPv6 check.
-        connect(netImpl.getHostByName(aHost), aPort);
-        // END android-changed
+        connect(InetAddress.getByName(aHost), aPort);
     }
 
     @Override
@@ -290,7 +288,7 @@ public class PlainSocketImpl extends SocketImpl {
             // server during the bind.
             return;
         }
-        netImpl.listenStreamSocket(fd, backlog);
+        netImpl.listen(fd, backlog);
     }
 
     @Override
@@ -348,9 +346,7 @@ public class PlainSocketImpl extends SocketImpl {
         if (null == proxyName) {
             proxyName = addr.getAddress().getHostAddress();
         }
-        // BEGIN android-changed: remove useless IPv6 check.
-        return netImpl.getHostByName(proxyName);
-        // END android-changed
+        return InetAddress.getByName(proxyName);
     }
 
     /**

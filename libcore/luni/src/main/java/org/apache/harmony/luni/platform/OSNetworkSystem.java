@@ -15,10 +15,6 @@
  *  limitations under the License.
  */
 
-// BEGIN android-note
-// Address length was changed from long to int for performance reasons.
-// END android-note
-
 package org.apache.harmony.luni.platform;
 
 import java.io.FileDescriptor;
@@ -29,19 +25,13 @@ import java.net.SocketException;
 import java.net.SocketImpl;
 import java.net.UnknownHostException;
 import java.nio.channels.Channel;
-// BEGIN android-removed
-// import java.nio.channels.SelectableChannel;
-// END android-removed
 
 /**
  * This wraps native code that implements the INetworkSystem interface.
+ * Address length was changed from long to int for performance reasons.
  */
 final class OSNetworkSystem implements INetworkSystem {
-
-    private static final int ERRORCODE_SOCKET_TIMEOUT = -209;
-    private static final int ERRORCODE_SOCKET_INTERRUPTED = -208;
-
-    private static OSNetworkSystem singleton = new OSNetworkSystem();
+    private static final OSNetworkSystem singleton = new OSNetworkSystem();
 
     public static OSNetworkSystem getOSNetworkSystem() {
         return singleton;
@@ -55,12 +45,10 @@ final class OSNetworkSystem implements INetworkSystem {
 
     public native void bind(FileDescriptor fd, InetAddress inetAddress, int port) throws SocketException;
 
-    // BEGIN android-changed (removed unused return value and useless native method)
     public void connect(FileDescriptor fd, int trafficClass,
             InetAddress inetAddress, int port) throws IOException{
         connectStreamWithTimeoutSocket(fd, port, 0, trafficClass, inetAddress);
     }
-    // END android-changed
 
     public native void connectDatagram(FileDescriptor fd, int port,
             int trafficClass, InetAddress inetAddress) throws SocketException;
@@ -69,11 +57,9 @@ final class OSNetworkSystem implements INetworkSystem {
             int port, int timeout, int trafficClass, InetAddress inetAddress)
             throws IOException;
 
-    // BEGIN android-changed: changed context from Long to byte[]
     public native int connectWithTimeout(FileDescriptor fd, int timeout,
             int trafficClass, InetAddress inetAddress, int port, int step,
             byte[] context) throws IOException;
-    // END android-changed
 
     // TODO: preferIPv4Stack is ignored.
     public native void createDatagramSocket(FileDescriptor fd, boolean preferIPv4Stack)
@@ -89,26 +75,9 @@ final class OSNetworkSystem implements INetworkSystem {
 
     public native void disconnectDatagram(FileDescriptor fd) throws SocketException;
 
-    // TODO: rewrite callers to skip the middleman.
-    public InetAddress getHostByAddr(byte[] ipAddress) throws UnknownHostException {
-        // BEGIN android-changed
-        // Wallpaper fix for http://b/1851257. This  is a layering violation,
-        // but at least the method has the right return type.
-        // TODO: Fix the socket code to remove this method altogether.
-        return InetAddress.getByAddress(ipAddress);
-        // END android-changed
-    }
+    public native String byteArrayToIpString(byte[] address) throws UnknownHostException;
 
-    // TODO: rewrite callers to skip the middleman.
-    public InetAddress getHostByName(String hostName) throws UnknownHostException {
-        return InetAddress.getByName(hostName);
-    }
-
-    public native String byteArrayToIpString(byte[] address)
-            throws UnknownHostException;
-
-    public native byte[] ipStringToByteArray(String address)
-            throws UnknownHostException;
+    public native byte[] ipStringToByteArray(String address) throws UnknownHostException;
 
     public native InetAddress getSocketLocalAddress(FileDescriptor fd);
 
@@ -121,19 +90,17 @@ final class OSNetworkSystem implements INetworkSystem {
         return null;
     }
 
-    public native void listenStreamSocket(FileDescriptor fd, int backlog) throws SocketException;
+    public native void listen(FileDescriptor fd, int backlog) throws SocketException;
 
     public native int peekDatagram(FileDescriptor fd, InetAddress sender, int receiveTimeout)
             throws IOException;
 
     public int read(FileDescriptor fd, byte[] data, int offset, int count,
             int timeout) throws IOException {
-        // BEGIN android-added safety!
         if (offset < 0 || count < 0 || offset > data.length - count) {
             throw new IllegalArgumentException("data.length=" + data.length + " offset=" + offset +
                     " count=" + count);
         }
-        // END android-added
         return readSocketImpl(fd, data, offset, count, timeout);
     }
 
@@ -194,16 +161,12 @@ final class OSNetworkSystem implements INetworkSystem {
             return true;
         }
 
-        // BEGIN android-changed: handle errors in native code
         return selectImpl(readFDs, writeFDs, numReadable, numWritable, flags, timeout);
-        // END android-changed
     }
 
-    // BEGIN android-changed: return type (we throw in native code, with descriptive errors)
     static native boolean selectImpl(FileDescriptor[] readfd,
             FileDescriptor[] writefd, int cread, int cwirte, int[] flags,
             long timeout);
-    // END android-changed
 
     // TODO: bindToDevice is unused.
     public native int sendConnectedDatagram(FileDescriptor fd, byte[] data,
