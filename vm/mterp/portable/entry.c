@@ -45,18 +45,16 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
 #if INTERP_TYPE == INTERP_DBG
     /* Check to see if we've got a trace selection request. */
     if (
-#if defined(WITH_SELF_VERIFICATION)
-         (interpState->jitState != kJitSelfVerification) &&
-#endif
          /*
-          * Don't bail out of the dbg interpreter if the entry reason is to
-          * deal with a thrown exception.
+          * Only perform dvmJitCheckTraceRequest if the entry point is
+          * EntryInstr and the jit state is either kJitTSelectRequest or
+          * kJitTSelectRequestHot. If debugger/profiler happens to be attached,
+          * dvmJitCheckTraceRequest will change the jitState to kJitDone but
+          * but stay in the dbg interpreter.
           */
-         (interpState->entryPoint != kInterpEntryThrow) &&
-         !gDvm.debuggerActive &&
-#if defined(WITH_PROFILER)
-         (gDvm.activeProfilers == 0) &&
-#endif
+         (interpState->entryPoint == kInterpEntryInstr) &&
+         (interpState->jitState == kJitTSelectRequest ||
+          interpState->jitState == kJitTSelectRequestHot) &&
          dvmJitCheckTraceRequest(self, interpState)) {
         interpState->nextMode = INTERP_STD;
         //LOGD("Invalid trace request, exiting\n");
