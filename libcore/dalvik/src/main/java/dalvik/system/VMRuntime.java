@@ -160,6 +160,7 @@ public final class VMRuntime {
      * @return true if the VM thinks there's enough process memory
      *         to satisfy this request, or false if not.
      */
+    @Deprecated
     public native boolean trackExternalAllocation(long size);
 
     /**
@@ -175,6 +176,7 @@ public final class VMRuntime {
      *             should have been passed to trackExternalAlloc() when
      *             the underlying memory was originally allocated.
      */
+    @Deprecated
     public native void trackExternalFree(long size);
 
     /**
@@ -183,6 +185,7 @@ public final class VMRuntime {
      *
      * @return the number of bytes
      */
+    @Deprecated
     public native long getExternalBytesAllocated();
 
     /**
