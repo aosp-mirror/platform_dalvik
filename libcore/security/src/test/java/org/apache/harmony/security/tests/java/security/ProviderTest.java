@@ -706,7 +706,7 @@ public class ProviderTest extends TestCase {
         assertEquals("1.0", myProvider.get("Provider.id version"));
 
         try {
-            myProvider.load(null);
+            myProvider.load((InputStream) null);
             fail("NullPointerException expected");
         } catch (NullPointerException e) {
             // expected
