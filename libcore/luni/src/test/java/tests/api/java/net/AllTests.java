@@ -41,7 +41,8 @@ public class AllTests {
         suite.addTestSuite(DatagramSocketTest.class);
         suite.addTestSuite(ExcludedProxyTest.class);
         suite.addTestSuite(FileNameMapTest.class);
-        suite.addTestSuite(HttpRetryExceptionTest.class);
+	suite.addTestSuite(HttpRetryExceptionTest.class);
+        suite.addTestSuite(IDNTest.class);
         suite.addTestSuite(JarURLConnectionTest.class);
         suite.addTestSuite(MalformedURLExceptionTest.class);
         suite.addTestSuite(MulticastSocketTest.class);

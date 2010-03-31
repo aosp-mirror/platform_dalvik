@@ -22,6 +22,7 @@ import junit.framework.TestSuite;
 public class AllTests {
     public static final Test suite() {
         TestSuite suite = new TestSuite();
+        suite.addTestSuite(java.net.IDNTest.class);
         suite.addTestSuite(java.net.SocketTest.class);
         suite.addTestSuite(java.net.URLConnectionTest.class);
         return suite;

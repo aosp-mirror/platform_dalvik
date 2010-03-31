@@ -9,6 +9,7 @@ LOCAL_SRC_FILES := \
 	NativeCollation.cpp \
 	NativeConverter.cpp \
 	NativeDecimalFormat.cpp \
+	NativeIDN.cpp \
 	NativeNormalizer.cpp \
 	NativeRegEx.cpp \
 	Resources.cpp \
