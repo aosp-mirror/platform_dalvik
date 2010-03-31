@@ -19,6 +19,7 @@ package java.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 
 /**
  * {@code PropertyResourceBundle} loads resources from an {@code InputStream}. All resources are
@@ -44,21 +45,35 @@ public class PropertyResourceBundle extends ResourceBundle {
      *             {@code InputStream}.
      */
     public PropertyResourceBundle(InputStream stream) throws IOException {
+        if (stream == null) {
+            throw new NullPointerException();
+        }
         resources = new Properties();
         resources.load(stream);
     }
-
+    
+    /**
+     * Constructs a new resource bundle with properties read from {@code reader}.
+     * 
+     * @param reader the {@code Reader}
+     * @throws IOException
+     * @since 1.6
+     * @hide
+     */
+    public PropertyResourceBundle(Reader reader) throws IOException {
+        resources = new Properties();
+        resources.load(reader);
+    }
+    
+    protected Set<String> handleKeySet(){                
+        return resources.stringPropertyNames();
+    }
+    
     @SuppressWarnings("unchecked")
     private Enumeration<String> getLocalKeys() {
         return (Enumeration<String>) resources.propertyNames();
     }
 
-    /**
-     * Returns the names of the resources contained in this
-     * PropertyResourceBundle.
-     * 
-     * @return an Enumeration of the resource names
-     */
     @Override
     public Enumeration<String> getKeys() {
         if (parent == null) {
@@ -107,14 +122,6 @@ public class PropertyResourceBundle extends ResourceBundle {
         };
     }
 
-    /**
-     * Returns the named resource from this PropertyResourceBundle, or null if
-     * the resource is not found.
-     * 
-     * @param key
-     *            the name of the resource
-     * @return the resource object
-     */
     @Override
     public Object handleGetObject(String key) {
         return resources.get(key);

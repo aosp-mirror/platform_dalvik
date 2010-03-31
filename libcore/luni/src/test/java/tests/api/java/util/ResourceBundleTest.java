@@ -188,7 +188,7 @@ public class ResourceBundleTest extends junit.framework.TestCase {
         }
         
         try {
-            ResourceBundle.getBundle(name, Locale.getDefault(), null);
+            ResourceBundle.getBundle(name, Locale.getDefault(), (ClassLoader) null);
             fail("NullPointerException expected");
         } catch (NullPointerException ee) {
             //expected
