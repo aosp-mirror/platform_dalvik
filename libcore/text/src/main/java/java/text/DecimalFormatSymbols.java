@@ -118,7 +118,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *
      * @param locale the locale
      * @return an instance of {@code DecimalFormatSymbols}
-     * @exception NullPointerException if {@code locale == null}
+     * @throws NullPointerException if {@code locale == null}
      * @since 1.6
      * @hide
      */

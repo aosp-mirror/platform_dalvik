@@ -151,7 +151,7 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      *
      * @param locale the locale
      * @return an instance of {@code DateFormatSymbols}
-     * @exception NullPointerException if {@code locale == null}
+     * @throws NullPointerException if {@code locale == null}
      * @since 1.6
      * @hide
      */
