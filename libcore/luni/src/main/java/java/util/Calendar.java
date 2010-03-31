@@ -17,13 +17,13 @@
 
 package java.util;
 
+import com.ibm.icu4jni.util.LocaleData;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
-
-import com.ibm.icu4jni.util.LocaleData;
+import java.text.DateFormatSymbols;
 
 /**
  * {@code Calendar} is an abstract base class for converting between a
@@ -668,11 +668,35 @@ public abstract class Calendar implements Serializable, Cloneable, Comparable<Ca
      */
     public static final int PM = 1;
 
-    private static String[] fieldNames = { "ERA=", "YEAR=", "MONTH=", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            "WEEK_OF_YEAR=", "WEEK_OF_MONTH=", "DAY_OF_MONTH=", "DAY_OF_YEAR=", //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            "DAY_OF_WEEK=", "DAY_OF_WEEK_IN_MONTH=", "AM_PM=", "HOUR=", //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$
-            "HOUR_OF_DAY", "MINUTE=", "SECOND=", "MILLISECOND=", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            "ZONE_OFFSET=", "DST_OFFSET=" }; //$NON-NLS-1$ //$NON-NLS-2$
+    /**
+     * Requests both {@code SHORT} and {@code LONG} styles in the map returned by
+     * {@link getDisplayNames}.
+     * @since 1.6
+     * @hide
+     */
+    public static final int ALL_STYLES = 0;
+
+    /**
+     * Requests short names (such as "Jan") from
+     * {@link getDisplayName} or {@link getDisplayNames}.
+     * @since 1.6
+     * @hide
+     */
+    public static final int SHORT = 1;
+
+    /**
+     * Requests long names (such as "January") from
+     * {@link getDisplayName} or {@link getDisplayNames}.
+     * @since 1.6
+     * @hide
+     */
+    public static final int LONG = 2;
+
+    private static final String[] FIELD_NAMES = { "ERA", "YEAR", "MONTH",
+            "WEEK_OF_YEAR", "WEEK_OF_MONTH", "DAY_OF_MONTH", "DAY_OF_YEAR",
+            "DAY_OF_WEEK", "DAY_OF_WEEK_IN_MONTH", "AM_PM", "HOUR",
+            "HOUR_OF_DAY", "MINUTE", "SECOND", "MILLISECOND",
+            "ZONE_OFFSET", "DST_OFFSET" };
 
     /**
      * Constructs a {@code Calendar} instance using the default {@code TimeZone} and {@code Locale}.
@@ -1348,7 +1372,7 @@ public abstract class Calendar implements Serializable, Cloneable, Comparable<Ca
                 + minimalDaysInFirstWeek);
         for (int i = 0; i < FIELD_COUNT; i++) {
             result.append(',');
-            result.append(fieldNames[i]);
+            result.append(FIELD_NAMES[i]);
             result.append('=');
             if (isSet[i]) {
                 result.append(fields[i]);
@@ -1388,6 +1412,99 @@ public abstract class Calendar implements Serializable, Cloneable, Comparable<Ca
             return 0;
         }
         return -1;
+    }
+
+    /**
+     * Returns a human-readable string for the value of {@code field}
+     * using the given style and locale. If no string is available, returns null.
+     * The value is retrieved by invoking {@code get(field)}.
+     * 
+     * <p>For example, {@code getDisplayName(MONTH, SHORT, Locale.US)} will return "Jan"
+     * while {@code getDisplayName(MONTH, LONG, Locale.US)} will return "January".
+     * 
+     * @param field the field
+     * @param style {@code SHORT} or {@code LONG}
+     * @param locale the locale
+     * @return the display name, or null
+     * @throws NullPointerException if {@code locale == null}
+     * @throws IllegalArgumentException if {@code field} or {@code style} is invalid
+     * @since 1.6
+     * @hide
+     */
+    public String getDisplayName(int field, int style, Locale locale) {
+        // TODO: the RI's documentation says ALL_STYLES is invalid, but actually treats it as SHORT.
+        if (style == ALL_STYLES) {
+            style = SHORT;
+        }
+        String[] array = getDisplayNameArray(field, style, locale);
+        int value = get(field);
+        return (array != null) ? array[value] : null;
+    }
+
+    private String[] getDisplayNameArray(int field, int style, Locale locale) {
+        if (field < 0 || field >= FIELD_COUNT) {
+            throw new IllegalArgumentException("bad field " + field);
+        }
+        checkStyle(style);
+        DateFormatSymbols dfs = DateFormatSymbols.getInstance(locale);
+        switch (field) {
+        case AM_PM:
+            return dfs.getAmPmStrings();
+        case DAY_OF_WEEK:
+            return (style == LONG) ? dfs.getWeekdays() : dfs.getShortWeekdays();
+        case ERA:
+            return dfs.getEras();
+        case MONTH:
+            return (style == LONG) ? dfs.getMonths() : dfs.getShortMonths();
+        }
+        return null;
+    }
+
+    private static void checkStyle(int style) {
+        if (style != ALL_STYLES && style != SHORT && style != LONG) {
+            throw new IllegalArgumentException("bad style " + style);
+        }
+    }
+
+    /**
+     * Returns a map of human-readable strings to corresponding values,
+     * for the given field, style, and locale.
+     * Returns null if no strings are available.
+     * 
+     * <p>For example, {@code getDisplayNames(MONTH, ALL_STYLES, Locale.US)} would
+     * contain mappings from "Jan" and "January" to {@link JANUARY}, and so on.
+     * 
+     * @param field the field
+     * @param style {@code SHORT}, {@code LONG}, or {@code ALL_STYLES}
+     * @param locale the locale
+     * @return the display name, or null
+     * @throws NullPointerException if {@code locale == null}
+     * @throws IllegalArgumentException if {@code field} or {@code style} is invalid
+     * @since 1.6
+     * @hide
+     */
+    public Map<String, Integer> getDisplayNames(int field, int style, Locale locale) {
+        checkStyle(style);
+        complete();
+        Map<String, Integer> result = new HashMap<String, Integer>();
+        if (style == SHORT || style == ALL_STYLES) {
+            insertValuesInMap(result, getDisplayNameArray(field, SHORT, locale));
+        }
+        if (style == LONG || style == ALL_STYLES) {
+            insertValuesInMap(result, getDisplayNameArray(field, LONG, locale));
+        }
+        return result.isEmpty() ? null : result;
+    }
+
+    private static void insertValuesInMap(Map<String, Integer> map, String[] values) {
+        if (values == null) {
+            return;
+        }
+        for (int i = 0; i < values.length; ++i) {
+            if (values[i] != null && !values[i].isEmpty()) {
+                map.put(values[i], i);
+            }
+        }
     }
 
     @SuppressWarnings("nls")

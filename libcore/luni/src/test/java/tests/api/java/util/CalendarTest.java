@@ -17,369 +17,372 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTargetNew;
-import dalvik.annotation.TestTargets;
-import tests.support.Support_Locale;
-
+import java.text.DateFormatSymbols;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
-@TestTargetClass(Calendar.class) 
+import org.apache.harmony.testframework.serialization.SerializationTest;
+
 public class CalendarTest extends junit.framework.TestCase {
-    
-    Locale defaultLocale;
+	
+	Locale defaultLocale;
 
-    /**
-     * @tests java.util.Calendar#set(int, int)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "set",
-        args = {int.class, int.class}
-    )
-    public void test_setII() {
-        // Test for correct result defined by the last set field
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
+	/**
+	 * @tests java.util.Calendar#set(int, int)
+	 */
+	public void test_setII() {
+		// Test for correct result defined by the last set field
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
 
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        assertTrue("Incorrect result 0: " + cal.getTime().getTime(), cal
-                .getTime().getTime() == 1009861200000L);
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		assertTrue("Incorrect result 0: " + cal.getTime().getTime(), cal
+				.getTime().getTime() == 1009861200000L);
 
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		assertTrue("Incorrect result 0a: " + cal.getTime(), cal.getTime()
+				.getTime() == 1014958800000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DATE, 24);
+		assertTrue("Incorrect result 0b: " + cal.getTime(), cal.getTime()
+				.getTime() == 1011848400000L);
+
+		cal.set(Calendar.MONTH, Calendar.OCTOBER);
+		cal.set(Calendar.DATE, 31);
+		cal.set(Calendar.MONTH, Calendar.NOVEMBER);
+		cal.set(Calendar.DATE, 26);
+		assertTrue("Incorrect month: " + cal.get(Calendar.MONTH), cal
+				.get(Calendar.MONTH) == Calendar.NOVEMBER);
+
+		int dow = cal.get(Calendar.DAY_OF_WEEK);
+		cal.set(Calendar.DATE, 27);
+		assertTrue("Incorrect DAY_OF_WEEK: " + cal.get(Calendar.DAY_OF_WEEK)
+				+ " expected: " + dow, cal.get(Calendar.DAY_OF_WEEK) != dow);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		assertTrue("Incorrect result 0c1: " + cal.getTime().getTime(), cal
+				.getTime().getTime() == 1010379600000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
+		assertTrue("Incorrect result 0c2: " + cal.getTime().getTime(), cal
+				.getTime().getTime() == 1009861200000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
+		assertTrue("Incorrect result 0c3: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010034000000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_MONTH, 2);
+		assertTrue("Incorrect result 0d: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010293200000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 2);
+		assertTrue("Incorrect result 0e: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010898000000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		assertTrue("Incorrect result 0f: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015736400000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DATE, 24);
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		assertTrue("Incorrect result 0g: " + cal.getTime(), cal.getTime()
+				.getTime() == 1011848400000L);
+
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.get(Calendar.WEEK_OF_YEAR); // Force fields to compute
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		assertTrue("Incorrect result 0h: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015909200000L);
+
+		// WEEK_OF_YEAR has priority over MONTH/DATE
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_YEAR, 170);
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		cal.set(Calendar.DATE, 5);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		assertTrue("Incorrect result 1: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
+
+		// WEEK_OF_YEAR has priority over MONTH/DATE
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		cal.set(Calendar.DATE, 5);
+		cal.set(Calendar.DAY_OF_YEAR, 170);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		assertTrue("Incorrect result 1a: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
+
+		// DAY_OF_WEEK has no effect when other fields not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.DATE, 11);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
+		assertTrue("Incorrect result 1b: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
+        // Regression for HARMONY-4384
+        // Set DAY_OF_WEEK without DATE
         cal.clear();
         cal.set(Calendar.YEAR, 2002);
         cal.set(Calendar.MONTH, Calendar.MARCH);
-        assertTrue("Incorrect result 0a: " + cal.getTime(), cal.getTime()
-                .getTime() == 1014958800000L);
-
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DATE, 24);
-        assertTrue("Incorrect result 0b: " + cal.getTime(), cal.getTime()
-                .getTime() == 1011848400000L);
-
-        cal.set(Calendar.MONTH, Calendar.OCTOBER);
-        cal.set(Calendar.DATE, 31);
-        cal.set(Calendar.MONTH, Calendar.NOVEMBER);
-        cal.set(Calendar.DATE, 26);
-        assertTrue("Incorrect month: " + cal.get(Calendar.MONTH), cal
-                .get(Calendar.MONTH) == Calendar.NOVEMBER);
-
-        int dow = cal.get(Calendar.DAY_OF_WEEK);
-        cal.set(Calendar.DATE, 27);
-        assertTrue("Incorrect DAY_OF_WEEK: " + cal.get(Calendar.DAY_OF_WEEK)
-                + " expected: " + dow, cal.get(Calendar.DAY_OF_WEEK) != dow);
-
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        assertTrue("Incorrect result 0c1: " + cal.getTime().getTime(), cal
-                .getTime().getTime() == 1010379600000L);
-
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
         cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
-        assertTrue("Incorrect result 0c2: " + cal.getTime().getTime(), cal
-                .getTime().getTime() == 1009861200000L);
+        assertEquals("Incorrect result 1b: " + cal.getTime(), 1015304400000L, cal.getTime()
+                .getTime());
+        
 
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
-        assertTrue("Incorrect result 0c3: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010034000000L);
+		// WEEK_OF_MONTH has priority
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 1);
+		cal.set(Calendar.WEEK_OF_MONTH, 3);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.DATE, 5);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		assertTrue("Incorrect result 2: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_MONTH, 2);
-        assertTrue("Incorrect result 0d: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010293200000L);
+		// DAY_OF_WEEK_IN_MONTH has priority over WEEK_OF_YEAR
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 2);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.DATE, 5);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		assertTrue("Incorrect result 3: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 2);
-        assertTrue("Incorrect result 0e: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010898000000L);
+		// WEEK_OF_MONTH has priority, MONTH not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 1);
+		cal.set(Calendar.WEEK_OF_MONTH, 3);
+		cal.set(Calendar.DATE, 25);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		assertTrue("Incorrect result 4: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010984400000L);
 
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        assertTrue("Incorrect result 0f: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015736400000L);
+		// WEEK_OF_YEAR has priority when MONTH set last and DAY_OF_WEEK set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		cal.set(Calendar.DATE, 25);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		assertTrue("Incorrect result 5: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DATE, 24);
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        assertTrue("Incorrect result 0g: " + cal.getTime(), cal.getTime()
-                .getTime() == 1011848400000L);
+		// Use MONTH/DATE when WEEK_OF_YEAR set but not DAY_OF_WEEK
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DATE, 11);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		assertTrue("Incorrect result 5a: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.get(Calendar.WEEK_OF_YEAR); // Force fields to compute
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        assertTrue("Incorrect result 0h: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015909200000L);
+		// Use MONTH/DATE when DAY_OF_WEEK is not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DATE, 11);
+		cal.set(Calendar.WEEK_OF_MONTH, 1);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		assertTrue("Incorrect result 5b: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // WEEK_OF_YEAR has priority over MONTH/DATE
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_YEAR, 170);
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        cal.set(Calendar.DATE, 5);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        assertTrue("Incorrect result 1: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// WEEK_OF_MONTH has priority
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DATE, 5);
+		cal.set(Calendar.WEEK_OF_MONTH, 3);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		assertTrue("Incorrect result 5c: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // WEEK_OF_YEAR has priority over MONTH/DATE
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        cal.set(Calendar.DATE, 5);
-        cal.set(Calendar.DAY_OF_YEAR, 170);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        assertTrue("Incorrect result 1a: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// DATE has priority when set last
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.DATE, 11);
+		assertTrue("Incorrect result 6: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // DAY_OF_WEEK has no effect when other fields not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.DATE, 11);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
-        assertTrue("Incorrect result 1b: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// DATE has priority when set last, MONTH not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 12);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		cal.set(Calendar.DATE, 14);
+		assertTrue("Incorrect result 7: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010984400000L);
 
-        // WEEK_OF_MONTH has priority
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 1);
-        cal.set(Calendar.WEEK_OF_MONTH, 3);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.DATE, 5);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        assertTrue("Incorrect result 2: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// DAY_OF_YEAR has priority when MONTH set last and DATE not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_YEAR, 70);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		assertTrue("Incorrect result 8: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // DAY_OF_WEEK_IN_MONTH has priority over WEEK_OF_YEAR
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 2);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.DATE, 5);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        assertTrue("Incorrect result 3: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// DAY/MONTH has priority when DATE set after DAY_OF_YEAR
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_YEAR, 170);
+		cal.set(Calendar.DATE, 11);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		assertTrue("Incorrect result 8a: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // WEEK_OF_MONTH has priority, MONTH not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 1);
-        cal.set(Calendar.WEEK_OF_MONTH, 3);
-        cal.set(Calendar.DATE, 25);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        assertTrue("Incorrect result 4: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010984400000L);
+		// DAY_OF_YEAR has priority when set after DATE
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DATE, 15);
+		cal.set(Calendar.DAY_OF_YEAR, 70);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		assertTrue("Incorrect result 8b: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // WEEK_OF_YEAR has priority when MONTH set last and DAY_OF_WEEK set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        cal.set(Calendar.DATE, 25);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        assertTrue("Incorrect result 5: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// DATE has priority when set last
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_YEAR, 70);
+		cal.set(Calendar.DATE, 14);
+		assertTrue("Incorrect result 9: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010984400000L);
 
-        // Use MONTH/DATE when WEEK_OF_YEAR set but not DAY_OF_WEEK
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DATE, 11);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        assertTrue("Incorrect result 5a: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// DATE has priority when set last
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_YEAR, 15);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
+		cal.set(Calendar.DATE, 14);
+		assertTrue("Incorrect result 9a: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010984400000L);
 
-        // Use MONTH/DATE when DAY_OF_WEEK is not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DATE, 11);
-        cal.set(Calendar.WEEK_OF_MONTH, 1);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        assertTrue("Incorrect result 5b: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		cal.set(Calendar.DATE, 14);
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		assertTrue("Incorrect result 9b: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // WEEK_OF_MONTH has priority
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DATE, 5);
-        cal.set(Calendar.WEEK_OF_MONTH, 3);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        assertTrue("Incorrect result 5c: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DATE, 14);
+		cal.set(Calendar.WEEK_OF_YEAR, 11);
+		assertTrue("Incorrect result 9c: " + cal.getTime(), cal.getTime()
+				.getTime() == 1010984400000L);
 
-        // DATE has priority when set last
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.DATE, 11);
-        assertTrue("Incorrect result 6: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.WEEK_OF_MONTH, 1);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.DATE, 11);
+		assertTrue("Incorrect result 9d: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // DATE has priority when set last, MONTH not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 12);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        cal.set(Calendar.DATE, 14);
-        assertTrue("Incorrect result 7: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010984400000L);
+		// DAY_OF_YEAR has priority when DAY_OF_MONTH set last and other fields
+		// not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_YEAR, 70);
+		cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
+		assertTrue("Incorrect result 10: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // DAY_OF_YEAR has priority when MONTH set last and DATE not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_YEAR, 70);
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        assertTrue("Incorrect result 8: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// MONTH/DATE has priority when DAY_OF_WEEK_IN_MONTH set last but
+		// DAY_OF_WEEK not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DATE, 11);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 1);
+		assertTrue("Incorrect result 11: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // DAY/MONTH has priority when DATE set after DAY_OF_YEAR
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_YEAR, 170);
-        cal.set(Calendar.DATE, 11);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        assertTrue("Incorrect result 8a: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// MONTH/DATE has priority when WEEK_OF_YEAR set last but DAY_OF_WEEK
+		// not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DATE, 11);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.WEEK_OF_YEAR, 15);
+		assertTrue("Incorrect result 12: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // DAY_OF_YEAR has priority when set after DATE
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DATE, 15);
-        cal.set(Calendar.DAY_OF_YEAR, 70);
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        assertTrue("Incorrect result 8b: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
+		// MONTH/DATE has priority when WEEK_OF_MONTH set last but DAY_OF_WEEK
+		// not set
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DATE, 11);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.WEEK_OF_MONTH, 1);
+		assertTrue("Incorrect result 13: " + cal.getTime(), cal.getTime()
+				.getTime() == 1015822800000L);
 
-        // DATE has priority when set last
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_YEAR, 70);
-        cal.set(Calendar.DATE, 14);
-        assertTrue("Incorrect result 9: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010984400000L);
+		// Ensure last date field set is reset after computing
+		cal.clear();
+		cal.set(Calendar.YEAR, 2002);
+		cal.set(Calendar.DAY_OF_YEAR, 111);
+		cal.get(Calendar.YEAR);
+		cal.set(Calendar.MONTH, Calendar.MARCH);
+		cal.set(Calendar.AM_PM, Calendar.AM);
+		assertTrue("Incorrect result 14: " + cal.getTime(), cal.getTime()
+				.getTime() == 1016686800000L);
 
-        // DATE has priority when set last
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_YEAR, 15);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
-        cal.set(Calendar.DATE, 14);
-        assertTrue("Incorrect result 9a: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010984400000L);
-
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-        cal.set(Calendar.DATE, 14);
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        assertTrue("Incorrect result 9b: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
-
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DATE, 14);
-        cal.set(Calendar.WEEK_OF_YEAR, 11);
-        assertTrue("Incorrect result 9c: " + cal.getTime(), cal.getTime()
-                .getTime() == 1010984400000L);
-
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.WEEK_OF_MONTH, 1);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.DATE, 11);
-        assertTrue("Incorrect result 9d: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
-
-        // DAY_OF_YEAR has priority when DAY_OF_MONTH set last and other fields
-        // not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_YEAR, 70);
-        cal.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
-        assertTrue("Incorrect result 10: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
-
-        // MONTH/DATE has priority when DAY_OF_WEEK_IN_MONTH set last but
-        // DAY_OF_WEEK not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DATE, 11);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.DAY_OF_WEEK_IN_MONTH, 1);
-        assertTrue("Incorrect result 11: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
-
-        // MONTH/DATE has priority when WEEK_OF_YEAR set last but DAY_OF_WEEK
-        // not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DATE, 11);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.WEEK_OF_YEAR, 15);
-        assertTrue("Incorrect result 12: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
-
-        // MONTH/DATE has priority when WEEK_OF_MONTH set last but DAY_OF_WEEK
-        // not set
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DATE, 11);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.WEEK_OF_MONTH, 1);
-        assertTrue("Incorrect result 13: " + cal.getTime(), cal.getTime()
-                .getTime() == 1015822800000L);
-
-        // Ensure last date field set is reset after computing
-        cal.clear();
-        cal.set(Calendar.YEAR, 2002);
-        cal.set(Calendar.DAY_OF_YEAR, 111);
-        cal.get(Calendar.YEAR);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.AM_PM, Calendar.AM);
-        assertTrue("Incorrect result 14: " + cal.getTime(), cal.getTime()
-                .getTime() == 1016686800000L);
-
-        int hour = cal.get(Calendar.HOUR);
-        cal.set(Calendar.HOUR, hour);
-        cal.set(Calendar.AM_PM, Calendar.PM);
-        assertEquals("AM_PM not changed", Calendar.PM, cal.get(Calendar.AM_PM));
-        // setting AM_PM without HOUR should not have any affect
-        cal.set(Calendar.AM_PM, Calendar.AM);
-        assertEquals("AM_PM was changed 1",
-                Calendar.AM, cal.get(Calendar.AM_PM));
-        int hourOfDay = cal.get(Calendar.HOUR_OF_DAY);
-        hour = cal.get(Calendar.HOUR);
-        cal.set(Calendar.AM_PM, Calendar.PM);
-        assertEquals("AM_PM was changed 2",
-                Calendar.PM, cal.get(Calendar.AM_PM));
-        assertEquals(hour, cal.get(Calendar.HOUR));
-        assertEquals(hourOfDay + 12, cal.get(Calendar.HOUR_OF_DAY));
+		int hour = cal.get(Calendar.HOUR);
+		cal.set(Calendar.HOUR, hour);
+		cal.set(Calendar.AM_PM, Calendar.PM);
+		assertEquals("AM_PM not changed", Calendar.PM, cal.get(Calendar.AM_PM));
+		// setting AM_PM without HOUR should not have any affect
+		cal.set(Calendar.AM_PM, Calendar.AM);
+		assertEquals("AM_PM was changed 1",
+				Calendar.AM, cal.get(Calendar.AM_PM));
+		int hourOfDay = cal.get(Calendar.HOUR_OF_DAY);
+		hour = cal.get(Calendar.HOUR);
+		cal.set(Calendar.AM_PM, Calendar.PM);
+		assertEquals("AM_PM was changed 2",
+				Calendar.PM, cal.get(Calendar.AM_PM));
+		assertEquals(hour, cal.get(Calendar.HOUR));
+		assertEquals(hourOfDay + 12, cal.get(Calendar.HOUR_OF_DAY));
         
         // regression test for Harmony-2122
         cal = Calendar.getInstance();
@@ -388,74 +391,40 @@ public class CalendarTest extends junit.framework.TestCase {
         cal.set(Calendar.AM_PM, newValue);
         newValue = cal.get(Calendar.AM_PM);
         assertTrue(newValue != oldValue);
-        
-        cal.setLenient(false);
-        
-        try {
-            cal.set(-1, 3);
-            fail("ArrayIndexOutOfBoundsException expected");
-        } catch (ArrayIndexOutOfBoundsException e) {
-            //expected
-        }
-        
-        try {
-            cal.set(Calendar.FIELD_COUNT + 1, 3);
-            fail("ArrayIndexOutOfBoundsException expected");
-        } catch (ArrayIndexOutOfBoundsException e) {
-            //expected
-        }
-    }
+	}
 
-    /**
-     * @tests java.util.Calendar#setTime(java.util.Date)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setTime",
-        args = {java.util.Date.class}
-    )
-    public void test_setTimeLjava_util_Date() {
-        Calendar cal = Calendar.getInstance();
-        // Use millisecond time for testing in Core
-        cal.setTime(new Date(884581200000L)); // (98, Calendar.JANUARY, 12)
-        assertEquals("incorrect millis", 884581200000L, cal.getTime().getTime());
-        cal.setTimeZone(TimeZone.getTimeZone("EST"));
-        cal.setTime(new Date(943506000000L)); // (99, Calendar.NOVEMBER, 25)
-        assertTrue("incorrect fields", cal.get(Calendar.YEAR) == 1999
-                && cal.get(Calendar.MONTH) == Calendar.NOVEMBER
-                && cal.get(Calendar.DATE) == 25);
-    }
+	/**
+	 * @tests java.util.Calendar#setTime(java.util.Date)
+	 */
+	public void test_setTimeLjava_util_Date() {
+		Calendar cal = Calendar.getInstance();
+		// Use millisecond time for testing in Core
+		cal.setTime(new Date(884581200000L)); // (98, Calendar.JANUARY, 12)
+		assertEquals("incorrect millis", 884581200000L, cal.getTime().getTime());
+		cal.setTimeZone(TimeZone.getTimeZone("EST"));
+		cal.setTime(new Date(943506000000L)); // (99, Calendar.NOVEMBER, 25)
+		assertTrue("incorrect fields", cal.get(Calendar.YEAR) == 1999
+				&& cal.get(Calendar.MONTH) == Calendar.NOVEMBER
+				&& cal.get(Calendar.DATE) == 25);
+	}
 
-    /**
-     * @tests java.util.Calendar#compareTo(Calendar)
-     */
-    @TestTargetNew(
-        level = TestLevel.PARTIAL_COMPLETE,
-        notes = "Verifies NullPointerException.",
-        method = "compareTo",
-        args = {java.util.Calendar.class}
-    )
-    public void test_compareToLjava_util_Calendar_null() {
-        Calendar cal = Calendar.getInstance();
-        try {
-            cal.compareTo(null);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-    }
+	/**
+	 * @tests java.util.Calendar#compareTo(Calendar)
+	 */
+	public void test_compareToLjava_util_Calendar_null() {
+		Calendar cal = Calendar.getInstance();
+		try {
+			cal.compareTo(null);
+			fail("should throw NullPointerException");
+		} catch (NullPointerException e) {
+			// expected
+		}
+	}
 
-    /**
-     * @tests java.util.Calendar#compareTo(Calendar)
-     */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "compareTo",
-        args = {java.util.Calendar.class}
-    )
-    public void test_compareToLjava_util_Calendar() {
+	/**
+	 * @tests java.util.Calendar#compareTo(Calendar)
+	 */
+	public void test_compareToLjava_util_Calendar() {
         Calendar cal = Calendar.getInstance();
         cal.clear();
         cal.set(1997, 12, 13, 23, 57);
@@ -474,33 +443,11 @@ public class CalendarTest extends junit.framework.TestCase {
         anotherCal.clear();
         anotherCal.set(1997, 12, 13, 23, 58);
         assertEquals(-1, cal.compareTo(anotherCal));
-        
-        try {
-            cal.compareTo(null);
-            fail("NullPointerException expected");
-        } catch (NullPointerException e) {
-            //expected
-        }
-
-        MockCalendar mc = new MockCalendar();
-
-        try {
-            cal.compareTo(mc);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            //expected
-        }
     }
 
     /**
      * @tests java.util.Calendar#clone()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "clone",
-        args = {}
-    )
     public void test_clone() {
         // Regression for HARMONY-475
         Calendar cal = Calendar.getInstance();
@@ -514,17 +461,11 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Calendar#getTimeInMillis()
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getTimeInMillis",
-        args = {}
-    )
     public void test_getTimeInMillis() {
         Calendar cal = Calendar.getInstance();
 
         int year = Integer.MIN_VALUE + 71;
-        cal.setTimeZone(TimeZone.getTimeZone("GMT"));;
+		cal.setTimeZone(TimeZone.getTimeZone("GMT"));
         cal.set(Calendar.YEAR, year + 1900);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
         cal.set(Calendar.DATE, 1);
@@ -536,793 +477,623 @@ public class CalendarTest extends junit.framework.TestCase {
         assertEquals(6017546357372606464L, cal.getTimeInMillis());
     }
 
+	private static final Locale[] locales = new Locale[] { Locale.getDefault(),
+			Locale.US, Locale.UK, Locale.TAIWAN, Locale.PRC, Locale.KOREA,
+			Locale.JAPAN, Locale.ITALIAN, Locale.GERMAN, Locale.ENGLISH,
+			Locale.CHINA, Locale.CANADA, Locale.FRANCE };
+
     /**
-     * @tests {@link java.util.Calendar#getActualMaximum(int)}
+     * @tests java.util.Calendar#before(Object)
+     * @tests java.util.Calendar#after(Object)
      */
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getActualMaximum",
-        args = {int.class}
-    )
-    public void test_getActualMaximum_I() {
-        Calendar c = new MockCalendar();
-        assertEquals("should be equal to 0", 0, c.getActualMaximum(0));
+    public void test_before_after() {
+        Calendar early = Calendar.getInstance();
+        Calendar late = Calendar.getInstance();
+        // test by second
+        early.set(2008, 3, 20, 17, 28, 12);
+        late.set(2008, 3, 20, 17, 28, 22);
+        // test before()
+        assertTrue(early.before(late));
+        assertFalse(early.before(early));
+        assertFalse(late.before(early));
+        // test after();
+        assertTrue(late.after(early));
+        assertFalse(late.after(late));
+        assertFalse(early.after(late));
+
+        // test by minute
+        early.set(2008, 3, 20, 17, 18, 12);
+        late.set(2008, 3, 20, 17, 28, 12);
+        // test before()
+        assertTrue(early.before(late));
+        assertFalse(early.before(early));
+        assertFalse(late.before(early));
+        // test after();
+        assertTrue(late.after(early));
+        assertFalse(late.after(late));
+        assertFalse(early.after(late));
+
+        // test by hour
+        early.set(2008, 3, 20, 17, 28, 12);
+        late.set(2008, 3, 20, 27, 28, 12);
+        // test before()
+        assertTrue(early.before(late));
+        assertFalse(early.before(early));
+        assertFalse(late.before(early));
+        // test after();
+        assertTrue(late.after(early));
+        assertFalse(late.after(late));
+        assertFalse(early.after(late));
+
+        // test by day
+        early.set(2008, 3, 10, 17, 28, 12);
+        late.set(2008, 3, 20, 17, 28, 12);
+        // test before()
+        assertTrue(early.before(late));
+        assertFalse(early.before(early));
+        assertFalse(late.before(early));
+        // test after();
+        assertTrue(late.after(early));
+        assertFalse(late.after(late));
+        assertFalse(early.after(late));
+
+        // test by month
+        early.set(2008, 2, 20, 17, 28, 12);
+        late.set(2008, 3, 20, 17, 28, 12);
+        // test before()
+        assertTrue(early.before(late));
+        assertFalse(early.before(early));
+        assertFalse(late.before(early));
+        // test after();
+        assertTrue(late.after(early));
+        assertFalse(late.after(late));
+        assertFalse(early.after(late));
+
+        // test by year
+        early.set(2007, 3, 20, 17, 28, 12);
+        late.set(2008, 3, 20, 17, 28, 12);
+        // test before()
+        assertTrue(early.before(late));
+        assertFalse(early.before(early));
+        assertFalse(late.before(early));
+        // test after();
+        assertTrue(late.after(early));
+        assertFalse(late.after(late));
+        assertFalse(early.after(late));
     }
-    
+
     /**
-     * @tests {@link java.util.Calendar#getActualMinimum(int)}
+     * @tests java.util.Calendar#clear()
+     * @tests java.util.Calendar#clear(int)
      */
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getActualMinimum",
-            args = {int.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "Calendar",
-            args = {}
-        )
-    })
-    public void test_getActualMinimum_I() {
-        Calendar c = new MockCalendar();
-        assertEquals("should be equal to 0", 0, c.getActualMinimum(0));
-    }
-
-    private class MockCalendar extends Calendar {
-
-        public MockCalendar() {
-            super();
-        }
-
-        public MockCalendar(TimeZone default1, Locale germany) {
-            super(default1, germany);
-        }
-
-        @Override
-        public void add(int field, int value) {
-        }
-
-        @Override
-        protected void computeFields() {
-        }
-
-        @Override
-        protected void computeTime() {
-            throw new IllegalArgumentException();
-        }
-
-        @Override
-        public int getGreatestMinimum(int field) {
-            return 0;
-        }
-
-        @Override
-        public int getLeastMaximum(int field) {
-            return 0;
-        }
-
-        @Override
-        public int getMaximum(int field) {
-            return 0;
-        }
-
-        @Override
-        public int getMinimum(int field) {
-            return 0;
-        }
-
-        @Override
-        public void roll(int field, boolean increment) {
-        }
-    }
-    
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "Calendar",
-        args = {java.util.TimeZone.class, java.util.Locale.class}
-    )
-    public void test_ConstructorLjava_utilTimeZoneLjava_util_Locale() {
-        assertNotNull(new MockCalendar(TimeZone.getDefault(), Locale.GERMANY));
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "Test calls dummy implementation of abstract method.",
-        method = "add",
-        args = {int.class, int.class}
-    )
-    public void test_addII() {
-        MockCalendar mc = new MockCalendar();
-        
-        mc.add(Calendar.DAY_OF_YEAR, 7);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "after",
-        args = {java.lang.Object.class}
-    )
-    public void test_afterLjava_lang_Object() {
-        MockCalendar mcBefore = new MockCalendar();
-        MockCalendar mc       = new MockCalendar();
-        MockCalendar mcAfter  = new MockCalendar();
-        MockCalendar mcSame   = new MockCalendar();
-
-        mcBefore.setTimeInMillis(1000);
-        mc.setTimeInMillis(10000);
-        mcAfter.setTimeInMillis(100000);
-        mcSame.setTimeInMillis(10000);
-        
-        assertTrue(mc.after(mcBefore));
-        assertFalse(mc.after(mcAfter));
-        assertFalse(mc.after(mcSame));
-        assertFalse(mc.after(mc));
-        assertFalse(mc.after(new String()));
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "before",
-        args = {java.lang.Object.class}
-    )
-    public void test_beforeLjava_lang_Object() {
-        MockCalendar mcBefore = new MockCalendar();
-        MockCalendar mc       = new MockCalendar();
-        MockCalendar mcAfter  = new MockCalendar();
-        MockCalendar mcSame   = new MockCalendar();
-    
-        mcBefore.setTimeInMillis(1000);
-        mc.setTimeInMillis(10000);
-        mcAfter.setTimeInMillis(100000);
-        mcSame.setTimeInMillis(10000);
-        
-        assertFalse(mc.before(mcBefore));
-        assertTrue(mc.before(mcAfter));
-        assertFalse(mc.before(mcSame));
-        assertFalse(mc.before(mc));
-        assertFalse(mc.before(new String()));
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "clear",
-        args = {}
-    )
     public void test_clear() {
-        MockCalendar mc1 = new MockCalendar();
-        MockCalendar mc2 = new MockCalendar();
-        
-        assertTrue(mc1.toString().equals(mc2.toString()));
-        mc1.set(2008, Calendar.SEPTEMBER, 23, 18, 0, 0);
-        assertFalse(mc1.toString().equals(mc2.toString()));
-        mc1.clear();
-        assertTrue(mc1.toString().equals(mc2.toString()));
+        Calendar calendar = Calendar.getInstance();
+
+        int count = 6;
+        int[] fields = new int[count];
+        int[] defaults = new int[count];
+
+        fields[0] = Calendar.YEAR;
+        fields[1] = Calendar.MONTH;
+        fields[2] = Calendar.DATE;
+        fields[3] = Calendar.HOUR_OF_DAY;
+        fields[4] = Calendar.MINUTE;
+        fields[5] = Calendar.SECOND;
+
+        defaults[0] = 1970;
+        defaults[1] = 0;
+        defaults[2] = 1;
+        defaults[3] = 0;
+        defaults[4] = 0;
+        defaults[5] = 0;
+
+        calendar.set(2008, 3, 20, 17, 28, 12);
+
+        // test clear(int)
+        for (int i = 0; i < fields.length; i++) {
+            int index = fields[i];
+            calendar.clear(index);
+            if (5 == index) {
+                // RI also doesn't change the value of DATE
+                assertEquals("Field " + index + " Should equal to 20.", 20,
+                        calendar.get(index));
+            } else if (11 == index) {
+                // RI also doesn't change the value of HOUR
+                assertEquals("Field " + index + " Should equal to 17.", 17,
+                        calendar.get(index));
+            } else {
+                // Other have been set to default values
+                assertEquals("Field " + index + " Should equal to "
+                        + defaults[i] + ".", defaults[i], calendar.get(index));
+            }
+        }
+
+        // test clear()
+        calendar.set(2008, 3, 20, 17, 28, 12);
+
+        calendar.clear();
+
+        for (int i = 0; i < fields.length; i++) {
+            int index = fields[i];
+            assertEquals("Field " + index + " Should equal to "
+                    + defaults[i] + ".", defaults[i], calendar.get(index));
+        }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "clear",
-        args = {int.class}
-    )
-    public void test_clearI() {
-        MockCalendar mc1 = new MockCalendar();
-        MockCalendar mc2 = new MockCalendar();
-        
-        assertTrue(mc1.toString().equals(mc2.toString()));
-        mc1.set(2008, Calendar.SEPTEMBER, 23, 18, 0, 0);
-        assertFalse(mc1.toString().equals(mc2.toString()));
-        mc1.clear(Calendar.YEAR);
-        mc1.clear(Calendar.MONTH);
-        mc1.clear(Calendar.DAY_OF_MONTH);
-        mc1.clear(Calendar.HOUR_OF_DAY);
-        mc1.clear(Calendar.MINUTE);
-        mc1.clear(Calendar.SECOND);
-        mc1.clear(Calendar.MILLISECOND);
-        assertTrue(mc1.toString().equals(mc2.toString()));
+    /**
+     * @tests java.util.Calendar#isSet(int)
+     */
+    public void test_isSet() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        for (int i = 0; i < Calendar.FIELD_COUNT; i++) {
+            assertFalse(calendar.isSet(i));
+        }
     }
 
-    class Mock_Calendar extends Calendar {
-        boolean flagComplete = false;
-        @Override
-        public void add(int field, int amount) {
-            
+    /**
+     * @tests java.util.Calendar#getAvailableLocales()
+     */
+    public void test_getAvailableLocales() {
+        Locale[] locales = Calendar.getAvailableLocales();
+        boolean exist = false;
+        for (int i = 0; i < locales.length; i++) {
+            Locale l = locales[i];
+            if (Locale.US.equals(l)) {
+                exist = true;
+                break;
+            }
         }
+        assertTrue(exist);
+    }
 
-        @Override
-        protected void computeFields() {
-            this.set(MONTH, this.internalGet(MONTH)%12);
-        }
+    /**
+     * @tests java.util.Calendar#getInstance(Locale)
+     * @tests java.util.Calendar#getInstance(TimeZone, Locale)
+     */
+    public void test_getInstance() {
+        // test getInstance(Locale)
+        Calendar us_calendar = Calendar.getInstance(Locale.US);
+        Calendar ch_calendar = Calendar.getInstance(Locale.CHINESE);
+        assertEquals(Calendar.SUNDAY, us_calendar
+                .getFirstDayOfWeek());
+        assertEquals(Calendar.MONDAY, ch_calendar
+                .getFirstDayOfWeek());
 
-        @Override
-        protected void computeTime() {
-        }
+        // test getInstance(Locale, TimeZone)
+        Calendar gmt_calendar = Calendar.getInstance(TimeZone
+                .getTimeZone("GMT"), Locale.US);
+        assertEquals(TimeZone.getTimeZone("GMT"),
+                gmt_calendar.getTimeZone());
+        Calendar est_calendar = Calendar.getInstance(TimeZone
+                .getTimeZone("EST"), Locale.US);
+        assertEquals(TimeZone.getTimeZone("EST")
+                .getID(), est_calendar.getTimeZone().getID());
+    }
 
-        @Override
-        public int getGreatestMinimum(int field) {
-            return 0;
-        }
+    /**
+     * @tests java.util.Calendar#internalGet(int)
+     */
+    public void test_internalGet() {
+        MockGregorianCalendar c = new MockGregorianCalendar();
+        c.clear(Calendar.YEAR);
+        assertEquals(0, c.internal_get(Calendar.YEAR));
+    }
 
-        @Override
-        public int getLeastMaximum(int field) {
-            return 0;
-        }
+    /**
+     * @tests java.util.Calendar#hashCode()
+     */
+    public void test_hashcode() {
+        Calendar calendar = Calendar.getInstance(Locale.JAPAN);
+        assertTrue(calendar.hashCode() == calendar.hashCode());
+    }
 
-        @Override
-        public int getMaximum(int field) {
-            return 0;
-        }
+    /**
+     * @tests java.util.Calendar#roll(int, int)
+     */
+    public void test_roll() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2008, 3, 20, 17, 28, 12);
 
-        @Override
-        public int getMinimum(int field) {
-            return 0;
-        }
+        // roll up
+        calendar.roll(Calendar.DATE, 5);
+        assertEquals(25, calendar.get(Calendar.DATE));
 
-        @Override
-        public void roll(int field, boolean up) {
-        }
-        
-        @Override
-        public void complete() {
-            computeTime();
-            computeFields();
-            flagComplete = true;
-        }
-        
-        public boolean isCompleted () {
-            return flagComplete;
-        }
+        // roll down
+        calendar.roll(Calendar.DATE, -5);
+        assertEquals(20, calendar.get(Calendar.DATE));
 
-        public int internalGetField(int field) {
+        // roll 0
+        calendar.roll(Calendar.DATE, 0);
+        assertEquals(20, calendar.get(Calendar.DATE));
+
+        // roll overweight
+        calendar.set(2008, 1, 31, 17, 28, 12);
+        calendar.roll(Calendar.MONTH, 1);
+        assertEquals(2, calendar.get(Calendar.DATE));
+
+    }
+
+    /**
+     * @tests java.util.Calendar#toString()
+     */
+    public void test_toString() {
+        Calendar calendar = Calendar.getInstance();
+        //Should be the current time with no interrogation in the string.
+        assertTrue(calendar.toString() instanceof String);
+        assertEquals(-1, calendar.toString().indexOf("?"));
+        calendar.clear();
+        assertTrue(calendar.toString() instanceof String);
+        assertTrue(0 <= calendar.toString().indexOf("?"));
+    }
+
+    /**
+     * @tests serialization/deserialization.
+     */
+    public void testSerializationSelf() throws Exception {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2008, 3, 20, 17, 28, 12);
+
+        SerializationTest.verifySelf(calendar);
+    }
+
+
+    private class MockGregorianCalendar extends GregorianCalendar {
+        public int internal_get(int field) {
             return super.internalGet(field);
         }
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "complete",
-        args = {}
-    )
-    public void test_complete() {
-        Mock_Calendar cal = new Mock_Calendar();
-        
-        assertFalse(cal.isCompleted());
-        cal.setTimeInMillis(1000);
-        cal.get(Calendar.MONTH);
-        assertTrue(cal.isCompleted());
+    private class MockCalendar extends Calendar {
+
+		public MockCalendar() {
+			super();
+		}
+
+		@Override
+		public void add(int field, int value) {
+		}
+
+		@Override
+		protected void computeFields() {
+		}
+
+		@Override
+		protected void computeTime() {
+		}
+
+		@Override
+		public int getGreatestMinimum(int field) {
+			return 0;
+		}
+
+		@Override
+		public int getLeastMaximum(int field) {
+			return 0;
+		}
+
+		@Override
+		public int getMaximum(int field) {
+			return 0;
+		}
+
+		@Override
+		public int getMinimum(int field) {
+			return 0;
+		}
+
+		@Override
+		public void roll(int field, boolean increment) {
+		}
     }
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "computeFields",
-        args = {}
-    )
-    public void test_computeFields() {
-        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        
-        cal1.setTimeInMillis(1222185600225L);
-        cal2.set(2008, Calendar.SEPTEMBER, 23, 18, 0, 0);
-        assertFalse(cal1.toString().equals(cal2.toString()));
-        cal1.get(Calendar.YEAR);
-        cal2.getTimeInMillis();
-        cal1.set(Calendar.MILLISECOND, 0);
-        cal2.set(Calendar.MILLISECOND, 0);
-        // tests fails in this line.
-        assertTrue(cal1.toString().equals(cal2.toString()));
-    }
+	/**
+	 * @tests {@link java.util.Calendar#getDisplayName(int, int, Locale)}
+	 * @since 1.6
+	 */
+	public void test_getDisplayNameIILjava_util_Locale() {
+		Calendar cal = Calendar.getInstance();
+		for (int field = 0; field < Calendar.FIELD_COUNT; field++) {
+			for (Locale locale : locales) {
+				DateFormatSymbols symbols = new DateFormatSymbols(locale);
+				String value = null;
+				switch (field) {
+				case Calendar.AM_PM:
+					cal.set(Calendar.AM_PM, Calendar.AM);
+					value = symbols.getAmPmStrings()[0];
+					assertEquals(cal.getDisplayName(field, Calendar.SHORT,
+							locale), value);
+					assertEquals(cal.getDisplayName(field, Calendar.LONG,
+							locale), value);
+					cal.set(Calendar.AM_PM, Calendar.PM);
+					value = symbols.getAmPmStrings()[1];
+					assertEquals(cal.getDisplayName(field, Calendar.SHORT,
+							locale), value);
+					assertEquals(cal.getDisplayName(field, Calendar.LONG,
+							locale), value);
+					break;
+				case Calendar.ERA:
+					cal.set(Calendar.ERA, GregorianCalendar.BC);
+					value = symbols.getEras()[0];
+					assertEquals(cal.getDisplayName(field, Calendar.SHORT,
+							locale), value);
+					assertEquals(cal.getDisplayName(field, Calendar.LONG,
+							locale), value);
+					cal.set(Calendar.ERA, GregorianCalendar.AD);
+					value = symbols.getEras()[1];
+					assertEquals(cal.getDisplayName(field, Calendar.SHORT,
+							locale), value);
+					assertEquals(cal.getDisplayName(field, Calendar.LONG,
+							locale), value);
+					break;
+				case Calendar.MONTH:
+					cal.set(Calendar.DAY_OF_MONTH, 1);
+					for (int month = 0; month <= 11; month++) {
+						cal.set(Calendar.MONTH, month);
+						value = symbols.getShortMonths()[month];
+						assertEquals(cal.getDisplayName(field, Calendar.SHORT,
+								locale), value);
+						value = symbols.getMonths()[month];
+						assertEquals(cal.getDisplayName(field, Calendar.LONG,
+								locale), value);
+					}
+					break;
+				case Calendar.DAY_OF_WEEK:
+					for (int day = 1; day <= 7; day++) {
+						cal.set(Calendar.DAY_OF_WEEK, day);
+						value = symbols.getShortWeekdays()[day];
+						assertEquals(cal.getDisplayName(field, Calendar.SHORT,
+								locale), value);
+						value = symbols.getWeekdays()[day];
+						assertEquals(cal.getDisplayName(field, Calendar.LONG,
+								locale), value);
+					}
+					break;
+				default:
+					assertNull(cal
+							.getDisplayName(field, Calendar.SHORT, locale));
+					assertNull(cal.getDisplayName(field, Calendar.LONG, locale));
+				}
+			}
+		}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "equals",
-        args = {java.lang.Object.class}
-    )
-    public void test_equals() {
-        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        
-        cal1.setTimeInMillis(1222185600225L);
-        cal2.set(2008, Calendar.SEPTEMBER, 23, 18, 0, 0);
-        assertFalse(cal1.equals(cal2));
-        cal1.get(Calendar.YEAR);
-        cal2.getTimeInMillis();
-        cal1.set(Calendar.MILLISECOND, 0);
-        cal2.set(Calendar.MILLISECOND, 0);
-        // tests fails on following line.
-        assertTrue(cal1.equals(cal2));
-    }
+		cal.setLenient(true);
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "get",
-        args = {int.class}
-    )
-    public void test_getI() {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        
-        cal.setTimeInMillis(1222185600225L);
-        assertEquals(cal.get(Calendar.ERA), 1);
-        assertEquals(cal.get(Calendar.YEAR), 2008);
-        assertEquals(cal.get(Calendar.MONTH), Calendar.SEPTEMBER);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 23);
-        // Following line returns wrong value. Behavior uncompatible with RI.
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 18);
-        assertEquals(cal.get(Calendar.MINUTE), 0);
-        
-        try {
-            cal.get(-1);
-            fail("ArrayIndexOutOfBoundsException expected");
-        } catch (ArrayIndexOutOfBoundsException e) {
-            //expected
-        }
+		try {
+			cal.getDisplayName(-1, Calendar.SHORT, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayName(Calendar.FIELD_COUNT, Calendar.LONG, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayName(Calendar.MONTH, -1, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayName(Calendar.MONTH, 3, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, null);
+			fail("Should throw NullPointerException");
+		} catch (NullPointerException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayName(-1, Calendar.SHORT, null);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayName(Calendar.MONTH, -1, null);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		// in lenient mode, following cases pass
+		cal.set(Calendar.SECOND, 999);
+		cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US);
+		// test for ALL_STYLES, it is equal to use SHORT
+		for (int field = 0; field < Calendar.FIELD_COUNT; field++) {
+			for (Locale locale : locales) {
+				String result = cal.getDisplayName(field, Calendar.ALL_STYLES,
+						locale);
+				if (field == Calendar.AM_PM || field == Calendar.ERA
+						|| field == Calendar.MONTH
+						|| field == Calendar.DAY_OF_WEEK) {
+					assertEquals(result, cal.getDisplayName(field,
+							Calendar.SHORT, locale));
+				} else {
+					assertNull(result);
+				}
+			}
+		}
 
-        try {
-            cal.get(Calendar.FIELD_COUNT + 1);
-            fail("ArrayIndexOutOfBoundsException expected");
-        } catch (ArrayIndexOutOfBoundsException e) {
-            //expected
-        }
-    }
+		// invalid value for an un-related field when the calendar is not
+		// lenient
+		cal.setLenient(false);
+		assertNotNull(cal.getDisplayName(Calendar.MONTH, Calendar.SHORT,
+				Locale.US));
+		cal.set(Calendar.SECOND, 999);
+		try {
+			cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayName(Calendar.MONTH, Calendar.ALL_STYLES, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+	}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getAvailableLocales",
-        args = {}
-    )
-    public void test_getAvailableLocales() {
-        assertNotNull(Calendar.getAvailableLocales());
-    }
+	/**
+	 * @tests {@link java.util.Calendar#getDisplayNames(int, int, Locale)}
+	 * @since 1.6
+	 */
+	public void test_getDisplayNamesIILjava_util_Locale() {
+		assertEquals(0, Calendar.ALL_STYLES);
+		assertEquals(1, Calendar.SHORT);
+		assertEquals(2, Calendar.LONG);
 
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getFirstDayOfWeek",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "getInstance",
-            args = {}
-        )
-    })
-    public void test_getFirstDayOfWeek() {
-        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
-        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
-            // locale dependent test, bug 1943269
-            return;
-        }
-        Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(Locale.US);
 
-        assertEquals(Calendar.SUNDAY, cal.getFirstDayOfWeek());
-        Locale.setDefault(Locale.FRANCE);
-        cal = Calendar.getInstance();
-        assertEquals(Calendar.MONDAY, cal.getFirstDayOfWeek());
-        Locale.setDefault(Locale.US);
-    }
+		for (int field = 0; field < Calendar.FIELD_COUNT; field++) {
+			for (Locale locale : locales) {
+				Map<String, Integer> shortResult = cal.getDisplayNames(field,
+						Calendar.SHORT, locale);
+				Map<String, Integer> longResult = cal.getDisplayNames(field,
+						Calendar.LONG, locale);
+				Map<String, Integer> allResult = cal.getDisplayNames(field,
+						Calendar.ALL_STYLES, locale);
+				DateFormatSymbols symbols = new DateFormatSymbols(locale);
+				String[] values = null;
+				switch (field) {
+				case Calendar.AM_PM:
+				case Calendar.ERA:
+					values = (field == Calendar.AM_PM) ? symbols
+							.getAmPmStrings() : symbols.getEras();
+					assertDisplayNameMap(values, shortResult, 0);
+					assertDisplayNameMap(values, longResult, 0);
+					assertDisplayNameMap(values, allResult, 0);
+					break;
+				case Calendar.MONTH:
+					values = symbols.getShortMonths();
+					assertDisplayNameMap(values, shortResult, 0);
+					values = symbols.getMonths();
+					assertDisplayNameMap(values, longResult, 0);
+					assertTrue(allResult.size() >= shortResult.size());
+					assertTrue(allResult.size() >= longResult.size());
+					assertTrue(allResult.size() <= shortResult.size()
+							+ longResult.size());
+					break;
+				case Calendar.DAY_OF_WEEK:
+					values = symbols.getShortWeekdays();
+					assertDisplayNameMap(values, shortResult, 1);
+					values = symbols.getWeekdays();
+					assertDisplayNameMap(values, longResult, 1);
+					assertTrue(allResult.size() >= shortResult.size());
+					assertTrue(allResult.size() >= longResult.size());
+					assertTrue(allResult.size() <= shortResult.size()
+							+ longResult.size());
+					break;
+				default:
+					assertNull(shortResult);
+					assertNull(longResult);
+					assertNull(allResult);
+				}
+			}
+		}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getInstance",
-        args = {java.util.Locale.class}
-    )
-    public void test_getInstanceLjava_util_Locale() {
-        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
-        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
-            // locale dependent test, bug 1943269
-            return;
-        }
-        Calendar cal1 = Calendar.getInstance(Locale.FRANCE);
-        Locale.setDefault(Locale.FRANCE);
-        Calendar cal2 = Calendar.getInstance();
-        assertSame(cal1.getFirstDayOfWeek(), cal2.getFirstDayOfWeek());
-        Locale.setDefault(Locale.US);
-        cal2 = Calendar.getInstance();
-        assertNotSame(cal1.getFirstDayOfWeek(), cal2.getFirstDayOfWeek());
-    }
+		cal.setLenient(true);
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getInstance",
-        args = {java.util.TimeZone.class}
-    )
-    public void test_get_InstanceLjava_util_TimeZone() {
-        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"));
-        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
-        assertNotSame(cal1.getTimeZone().getRawOffset(), cal2.getTimeZone().getRawOffset());
-    }
+		try {
+			cal.getDisplayNames(-1, Calendar.SHORT, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayNames(Calendar.FIELD_COUNT, Calendar.LONG, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayNames(Calendar.MONTH, -1, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayNames(Calendar.MONTH, 3, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayNames(Calendar.MONTH, Calendar.SHORT, null);
+			fail("Should throw NullPointerException");
+		} catch (NullPointerException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayNames(-1, Calendar.SHORT, null);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		try {
+			cal.getDisplayNames(Calendar.MONTH, -1, null);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+		cal.set(Calendar.SECOND, 999);
+		cal.getDisplayNames(Calendar.MONTH, Calendar.SHORT, Locale.US);
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getInstance",
-        args = {java.util.TimeZone.class, java.util.Locale.class}
-    )
-    public void test_getInstanceLjava_util_TimeZoneLjava_util_Locale() {
-        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
-        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
-            // locale dependent test, bug 1943269
-            return;
-        }
-        Calendar cal1 = Calendar.getInstance(TimeZone.getTimeZone("GMT-6"), Locale.FRANCE);
-        Locale.setDefault(Locale.FRANCE);
-        Calendar cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
-        assertSame(cal1.getFirstDayOfWeek(), cal2.getFirstDayOfWeek());
-        assertNotSame(cal1.getTimeZone().getRawOffset(), cal2.getTimeZone().getRawOffset());
-        Locale.setDefault(Locale.US);
-        cal2 = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
-        assertNotSame(cal1.getFirstDayOfWeek(), cal2.getFirstDayOfWeek());
-        assertNotSame(cal1.getTimeZone().getRawOffset(), cal2.getTimeZone().getRawOffset());
-    }
+		// RI fails here
+		// invalid value for an un-related field when the calendar is not
+		// lenient
+		cal.setLenient(false);
+		cal.set(Calendar.SECOND, 999);
+		try {
+			cal.getDisplayNames(Calendar.MONTH, Calendar.SHORT, Locale.US);
+			fail("Should throw IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			// expected
+		}
+	}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getMinimalDaysInFirstWeek",
-        args = {}
-    )
-    public void test_getMinimalDaysInFirstWeek() {
-        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
-        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
-            // locale dependent test, bug 1943269
-            return;
-        }
-        Locale.setDefault(Locale.US);
-        Calendar cal = Calendar.getInstance();
-        assertEquals(1, cal.getMinimalDaysInFirstWeek());
-        Locale.setDefault(Locale.FRANCE);
-        cal = Calendar.getInstance();
-        assertEquals(4, cal.getMinimalDaysInFirstWeek());
-        Locale.setDefault(Locale.US);
-    }
+	private void assertDisplayNameMap(String[] values,
+			Map<String, Integer> result, int shift) {
+		List<String> trimValue = new ArrayList<String>();
+		for (String value : values) {
+			if (value.trim().length() > 0) {
+				trimValue.add(value);
+			}
+		}
+		assertEquals(trimValue.size(), result.size());
+		for (int i = 0; i < trimValue.size(); i++) {
+			assertEquals(i + shift, result.get(trimValue.get(i)).intValue());
+		}
+	}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getTime",
-        args = {}
-    )
-    public void test_getTime() {
-        Calendar cal = Calendar.getInstance();
-        Date d = new Date(1222185600225L);
-        
-        cal.setTimeInMillis(1222185600225L);
-        assertEquals(d.getTime(), cal.getTimeInMillis());
-        assertEquals(d, cal.getTime());
-    }
+	/**
+	 * @tests {@link java.util.Calendar#getActualMaximum(int)}
+	 */
+	public void test_getActualMaximum_I() {
+		Calendar c = new MockCalendar();
+		assertEquals("should be equal to 0", 0, c.getActualMaximum(0));
+	}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "getTimeZone",
-        args = {}
-    )
-    public void test_getTimeZone() {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeZone(TimeZone.getTimeZone("GMT-6"));
-        
-        assertEquals(TimeZone.getTimeZone("GMT-6"), cal.getTimeZone());
-        cal = Calendar.getInstance(TimeZone.getTimeZone("GMT-8"));
-        assertEquals(TimeZone.getTimeZone("GMT-8"), cal.getTimeZone());
-    }
+	/**
+	 * @tests {@link java.util.Calendar#getActualMinimum(int)}
+	 */
+	public void test_getActualMinimum_I() {
+		Calendar c = new MockCalendar();
+		assertEquals("should be equal to 0", 0, c.getActualMinimum(0));
+	}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "hashCode",
-        args = {}
-    )
-    public void test_hashCode() {
-        Locale[] requiredLocales = {Locale.US, Locale.FRANCE};
-        if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
-            // locale dependent test, bug 1943269
-            return;
-        }
-        Calendar cal1 = Calendar.getInstance();
-        Locale.setDefault(Locale.FRANCE);
-        Calendar cal2 = Calendar.getInstance();
-        Locale.setDefault(Locale.US);
-        assertTrue(cal1.hashCode() != cal2.hashCode());
-    }
+	protected void setUp() {
+		defaultLocale = Locale.getDefault();
+		Locale.setDefault(Locale.US);
+	}
 
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "internalGet",
-        args = {int.class}
-    )
-    public void test_internalGet() {
-        Mock_Calendar mc = new Mock_Calendar();
-        assertEquals(0, mc.internalGetField(Calendar.MONTH));
-        mc.set(Calendar.MONTH, 35);
-        assertEquals(35, mc.internalGetField(Calendar.MONTH));
-        assertEquals(11, mc.get(Calendar.MONTH));
-    }
-
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "isLenient",
-            args = {}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setLenient",
-            args = {boolean.class}
-        )
-    })
-    public void test_isLenient() {
-        Calendar cal = Calendar.getInstance();
-        assertTrue(cal.isLenient());
-        cal.set(Calendar.MONTH, 35);
-        cal.get(Calendar.MONTH);
-        cal.setLenient(false);
-        cal.set(Calendar.MONTH, 35);
-        try {
-            cal.get(Calendar.MONTH);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException e) {
-            //expected
-        }
-        assertFalse(cal.isLenient());
-        cal.setLenient(true);
-        cal.set(Calendar.MONTH, 35);
-        cal.get(Calendar.MONTH);
-        assertTrue(cal.isLenient());
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "isSet",
-        args = {int.class}
-    )
-    public void test_isSet() {
-        Calendar cal = Calendar.getInstance();
-        cal.clear();
-        assertFalse(cal.isSet(Calendar.MONTH));
-        cal.set(Calendar.MONTH, 35);
-        assertTrue(cal.isSet(Calendar.MONTH));
-        assertFalse(cal.isSet(Calendar.YEAR));
-        cal.get(Calendar.MONTH);
-        assertTrue(cal.isSet(Calendar.YEAR));
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "roll",
-        args = {int.class, int.class}
-    )
-    public void test_rollII() {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        
-        cal.setTimeInMillis(1222185600225L);
-        cal.roll(Calendar.DAY_OF_MONTH, 200);
-        assertEquals(cal.get(Calendar.ERA), 1);
-        assertEquals(cal.get(Calendar.YEAR), 2008);
-        assertEquals(cal.get(Calendar.MONTH), Calendar.SEPTEMBER);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 13);
-        // Following line returns wrong value. Behavior uncompatible with RI.
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 18);
-        assertEquals(cal.get(Calendar.MINUTE), 0);
-        cal.roll(Calendar.DAY_OF_MONTH, -200);
-        assertEquals(cal.get(Calendar.ERA), 1);
-        assertEquals(cal.get(Calendar.YEAR), 2008);
-        assertEquals(cal.get(Calendar.MONTH), Calendar.SEPTEMBER);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 23);
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 18);
-        assertEquals(cal.get(Calendar.MINUTE), 0);
-    }
-
-    @TestTargets({
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "set",
-            args = {int.class, int.class, int.class}
-        ),
-        @TestTargetNew(
-            level = TestLevel.COMPLETE,
-            notes = "",
-            method = "setTimeInMillis",
-            args = {long.class}
-        )
-    })
-    public void test_setIII() {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        
-        cal.setTimeInMillis(1222185600225L);
-        assertEquals(1222185600225L, cal.getTimeInMillis());
-        assertEquals(cal.get(Calendar.YEAR), 2008);
-        assertEquals(cal.get(Calendar.MONTH), Calendar.SEPTEMBER);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 23);
-        assertEquals(cal.get(Calendar.SECOND), 0);
-        
-        cal.set(1970, Calendar.JANUARY, 1);
-        assertEquals(cal.get(Calendar.ERA), 1);
-        // Following line returns wrong value. Behavior uncompatible with RI.
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 18);
-        assertEquals(cal.get(Calendar.MINUTE), 0);
-        assertEquals(cal.get(Calendar.SECOND), 0);
-
-        assertEquals(cal.get(Calendar.YEAR), 1970);
-        assertEquals(cal.get(Calendar.MONTH), 0);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 1);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "set",
-        args = {int.class, int.class, int.class, int.class, int.class}
-    )
-    public void test_setIIIII() {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        
-        cal.setTimeInMillis(1222185600225L);
-        assertEquals(cal.get(Calendar.YEAR), 2008);
-        assertEquals(cal.get(Calendar.MONTH), Calendar.SEPTEMBER);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 23);
-        // Following line returns wrong value. Behavior uncompatible with RI.
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 18);
-        assertEquals(cal.get(Calendar.MINUTE), 0);
-        assertEquals(cal.get(Calendar.SECOND), 0);
-        
-        cal.set(1970, Calendar.JANUARY, 1, 0, 10);
-        assertEquals(cal.get(Calendar.ERA), 1);
-        assertEquals(cal.get(Calendar.SECOND), 0);
-    
-        assertEquals(cal.get(Calendar.YEAR), 1970);
-        assertEquals(cal.get(Calendar.MONTH), 0);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 1);
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 0);
-        assertEquals(cal.get(Calendar.MINUTE), 10);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "set",
-        args = {int.class, int.class, int.class, int.class, int.class, int.class}
-    )
-    public void test_setIIIIII() {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+2"), defaultLocale);
-        
-        cal.setTimeInMillis(1222185600225L);
-        assertEquals(cal.get(Calendar.YEAR), 2008);
-        assertEquals(cal.get(Calendar.MONTH), Calendar.SEPTEMBER);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 23);
-        // Following line returns wrong value. Behavior uncompatible with RI.
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 18);
-        assertEquals(cal.get(Calendar.MINUTE), 0);
-        assertEquals(cal.get(Calendar.SECOND), 0);
-        
-        cal.set(1970, Calendar.JANUARY, 1, 0, 10, 33);
-        assertEquals(cal.get(Calendar.ERA), 1);
-    
-        assertEquals(cal.get(Calendar.YEAR), 1970);
-        assertEquals(cal.get(Calendar.MONTH), 0);
-        assertEquals(cal.get(Calendar.DAY_OF_MONTH), 1);
-        assertEquals(cal.get(Calendar.HOUR_OF_DAY), 0);
-        assertEquals(cal.get(Calendar.MINUTE), 10);
-        assertEquals(cal.get(Calendar.SECOND), 33);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setFirstDayOfWeek",
-        args = {int.class}
-    )
-    public void test_setFirstDayOfWeekI() {
-        Calendar cal = Calendar.getInstance();
-        
-        for (int i = 0; i < 10; i++) {
-            cal.setFirstDayOfWeek(i);
-            assertEquals(i, cal.getFirstDayOfWeek());
-        }
-        cal.setLenient(false);
-        cal.setFirstDayOfWeek(10);
-        cal.setFirstDayOfWeek(-10);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setMinimalDaysInFirstWeek",
-        args = {int.class}
-    )
-    public void test_setMinimalDaysInFirstWeekI() {
-        Calendar cal = Calendar.getInstance();
-        
-        for (int i = 0; i < 10; i++) {
-            cal.setMinimalDaysInFirstWeek(i);
-            assertEquals(i, cal.getMinimalDaysInFirstWeek());
-        }
-        cal.setLenient(false);
-        cal.setMinimalDaysInFirstWeek(10);
-        cal.setMinimalDaysInFirstWeek(-10);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "setTimeZone",
-        args = {java.util.TimeZone.class}
-    )
-    public void test_setTimeZoneLjava_util_TimeZone() {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeZone(TimeZone.getTimeZone("GMT-6"));
-        assertEquals(TimeZone.getTimeZone("GMT-6"), cal.getTimeZone());
-        cal = Calendar.getInstance(TimeZone.getTimeZone("GMT-8"));
-        cal.setTimeZone(TimeZone.getTimeZone("GMT-6"));
-        assertEquals(TimeZone.getTimeZone("GMT-6"), cal.getTimeZone());
-        
-        cal.setTimeZone(null);
-    }
-
-    @TestTargetNew(
-        level = TestLevel.COMPLETE,
-        notes = "",
-        method = "toString",
-        args = {}
-    )
-    public void test_toString() {
-        Calendar cal1 = Calendar.getInstance();
-        Calendar cal2 = Calendar.getInstance();
-        cal1.setTimeZone(TimeZone.getTimeZone("GMT-6"));
-        cal2.setTimeZone(TimeZone.getTimeZone("GMT-8"));
-        cal1.set(Calendar.MILLISECOND, 0);
-        cal2.set(Calendar.MILLISECOND, 0);
-        assertFalse(cal1.toString().equals(cal2.toString()));
-        cal1.setTimeZone(TimeZone.getTimeZone("GMT-8"));
-        assertTrue(cal1.toString().equals(cal2.toString()));
-    }
-    
-    @TestTargetNew(
-        level = TestLevel.ADDITIONAL,
-        method = "get",
-        args = {int.class}
-    )
-    public void test_EdgeCases() {
-        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        
-        c.setTimeInMillis(Long.MAX_VALUE);
-        
-        assertEquals(292278994, c.get(Calendar.YEAR));
-        assertEquals(Calendar.AUGUST, c.get(Calendar.MONTH));
-        assertEquals(17, c.get(Calendar.DAY_OF_MONTH));
-        assertEquals(Calendar.SUNDAY, c.get(Calendar.DAY_OF_WEEK));
-        assertEquals(7, c.get(Calendar.HOUR_OF_DAY));
-        assertEquals(12, c.get(Calendar.MINUTE));
-        assertEquals(55, c.get(Calendar.SECOND));
-    }
-
-    protected void setUp() {
-        defaultLocale = Locale.getDefault();
-        Locale.setDefault(Locale.US);
-    }
-
-    protected void tearDown() {
-        Locale.setDefault(defaultLocale);
-    }
+	protected void tearDown() {
+		Locale.setDefault(defaultLocale);
+	}
 }
