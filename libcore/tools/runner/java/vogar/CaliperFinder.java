@@ -22,17 +22,13 @@ import vogar.target.Runner;
 import java.io.File;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with Caliper benchmarks in
+ * Create {@link Action}s for {@code .java} files with Caliper benchmarks in
  * them.
  */
 class CaliperFinder extends NamingPatternCodeFinder {
 
     @Override protected boolean matches(File file) {
         return super.matches(file) && file.getName().endsWith("Benchmark.java");
-    }
-
-    @Override protected String testName(File file) {
-        return "caliper";
     }
 
     public Class<? extends Runner> getRunnerClass() {

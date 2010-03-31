@@ -30,18 +30,18 @@ class EnvironmentHost extends Environment {
 
     @Override void prepare() {}
 
-    @Override protected void prepareUserDir(TestRun testRun) {
-        File testUserDir = testUserDir(testRun);
+    @Override protected void prepareUserDir(Action action) {
+        File actionUserDir = actionUserDir(action);
 
         // if the user dir exists, cp would copy the files to the wrong place
-        if (testUserDir.exists()) {
+        if (actionUserDir.exists()) {
             throw new IllegalStateException();
         }
 
-        new Mkdir().mkdirs(testUserDir.getParentFile());
-        new Command("cp", "-r", testRun.getTestDirectory().toString(),
-                testUserDir.toString()).execute();
-        testRun.setUserDir(testUserDir);
+        new Mkdir().mkdirs(actionUserDir.getParentFile());
+        new Command("cp", "-r", action.getJavaDirectory().toString(),
+                actionUserDir.toString()).execute();
+        action.setUserDir(actionUserDir);
     }
 
     @Override void shutdown() {}

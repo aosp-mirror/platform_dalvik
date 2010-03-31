@@ -22,7 +22,7 @@ import vogar.target.Runner;
 import java.io.File;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with JUnit tests in them.
+ * Create {@link Action}s for {@code .java} files with JUnit tests in them.
  */
 class JUnitFinder extends NamingPatternCodeFinder {
 
@@ -30,11 +30,6 @@ class JUnitFinder extends NamingPatternCodeFinder {
         String filename = file.getName();
         return super.matches(file) 
                 && (filename.endsWith("Test.java") || filename.endsWith("TestSuite.java"));
-    }
-
-    // TODO: try to get names for each method?
-    @Override protected String testName(File file) {
-        return "junit";
     }
 
     public Class<? extends Runner> getRunnerClass() {

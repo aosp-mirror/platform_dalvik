@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Execute tests on a Dalvik VM using an Android device or emulator.
+ * Execute actions on a Dalvik VM using an Android device or emulator.
  */
 final class DeviceDalvikVm extends Vm {
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
@@ -40,17 +40,17 @@ final class DeviceDalvikVm extends Vm {
         return (EnvironmentDevice) environment;
     }
 
-    @Override protected void postCompileTestRunner() {
+    @Override protected void postCompileRunner() {
         // TODO: does this really need to be a special case?
-        postCompile("testrunner", environment.testRunnerClassesDir());
+        postCompile("testrunner", environment.runnerClassesDir());
 
         // dex everything on the classpath and push it to the device.
-        for (File classpathElement : testClasspath.getElements()) {
+        for (File classpathElement : classpath.getElements()) {
             String name = basenameOfJar(classpathElement);
             logger.fine("dex and push " + name);
             // make the local dex (inside a jar)
             // TODO: this is *really* expensive. we need a cache!
-            File outputFile = getEnvironmentDevice().testDir(name + ".jar");
+            File outputFile = getEnvironmentDevice().actionDir(name + ".jar");
             new Dx().dex(outputFile, Classpath.of(classpathElement));
             // push the local dex to the device
             getEnvironmentDevice().adb.push(outputFile, deviceDexFile(name));
@@ -61,8 +61,8 @@ final class DeviceDalvikVm extends Vm {
         return jarFile.getName().replaceAll("\\.jar$", "");
     }
 
-    @Override protected void postCompileTest(TestRun testRun) {
-        postCompile(testRun.getQualifiedName(), environment.testClassesDir(testRun));
+    @Override protected void postCompile(Action action) {
+        postCompile(action.getName(), environment.classesDir(action));
     }
 
     private void postCompile(String name, File dir) {
@@ -95,15 +95,15 @@ final class DeviceDalvikVm extends Vm {
                 .vmArgs("-Duser.language=en")
                 .vmArgs("-Duser.region=US")
                 .vmArgs("-Djavax.net.ssl.trustStore=/system/etc/security/cacerts.bks")
-                .temp(getEnvironmentDevice().testTemp);
+                .temp(getEnvironmentDevice().vogarTemp);
     }
 
-    @Override protected Classpath getRuntimeSupportClasspath(TestRun testRun) {
+    @Override protected Classpath getRuntimeSupportClasspath(Action action) {
         Classpath classpath = new Classpath();
-        classpath.addAll(deviceDexFile(testRun.getQualifiedName()));
+        classpath.addAll(deviceDexFile(action.getName()));
         classpath.addAll(deviceDexFile("testrunner"));
-        for (File testClasspathElement : testClasspath.getElements()) {
-            classpath.addAll(deviceDexFile(basenameOfJar(testClasspathElement)));
+        for (File classpathElement : this.classpath.getElements()) {
+            classpath.addAll(deviceDexFile(basenameOfJar(classpathElement)));
         }
         return classpath;
     }

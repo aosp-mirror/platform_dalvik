@@ -52,7 +52,6 @@ public class XmlReportPrinter {
     private static final String ATTR_FAILURES = "failures";
     private static final String ATTR_TESTS = "tests";
     private static final String ATTR_TYPE = "type";
-    private static final String ATTR_MESSAGE = "message";
     private static final String PROPERTIES = "properties";
     private static final String ATTR_CLASSNAME = "classname";
     private static final String TIMESTAMP = "timestamp";
@@ -61,10 +60,18 @@ public class XmlReportPrinter {
     /** the XML namespace */
     private static final String ns = null;
 
+    private final File directory;
+    private final ExpectationStore expectationStore;
+
+    public XmlReportPrinter(File directory, ExpectationStore expectationStore) {
+        this.directory = directory;
+        this.expectationStore = expectationStore;
+    }
+
     /**
      * Populates the directory with the report data from the completed tests.
      */
-    public int generateReports(File directory, Collection<TestRun> results) {
+    public int generateReports(Collection<Outcome> results) {
         Map<String, Suite> suites = testsToSuites(results);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -100,24 +107,25 @@ public class XmlReportPrinter {
         return suites.size();
     }
 
-    private Map<String, Suite> testsToSuites(Collection<TestRun> testRuns) {
+    private Map<String, Suite> testsToSuites(Collection<Outcome> outcomes) {
         Map<String, Suite> result = new LinkedHashMap<String, Suite>();
-        for (TestRun testRun : testRuns) {
-            if (testRun.getResult() == Result.UNSUPPORTED) {
+        for (Outcome outcome : outcomes) {
+            if (outcome.getResult() == Result.UNSUPPORTED) {
                 continue;
             }
 
-            String suiteName = testRun.getSuiteName();
+            String suiteName = outcome.getSuiteName();
             Suite suite = result.get(suiteName);
             if (suite == null) {
                 suite = new Suite(suiteName);
                 result.put(suiteName, suite);
             }
 
-            suite.tests.add(testRun);
+            suite.outcomes.add(outcome);
 
-            if (!testRun.isExpectedResult()) {
-                if (testRun.getResult() == Result.EXEC_FAILED) {
+            Expectation expectation = expectationStore.get(outcome.getName());
+            if (!expectation.matches(outcome)) {
+                if (outcome.getResult() == Result.EXEC_FAILED) {
                     suite.failuresCount++;
                 } else {
                     suite.errorsCount++;
@@ -127,9 +135,9 @@ public class XmlReportPrinter {
         return result;
     }
 
-    static class Suite {
+    class Suite {
         private final String name;
-        private final List<TestRun> tests = new ArrayList<TestRun>();
+        private final List<Outcome> outcomes = new ArrayList<Outcome>();
         private int failuresCount;
         private int errorsCount;
 
@@ -140,7 +148,7 @@ public class XmlReportPrinter {
         void print(KXmlSerializer serializer, String timestamp) throws IOException {
             serializer.startTag(ns, TESTSUITE);
             serializer.attribute(ns, ATTR_NAME, name);
-            serializer.attribute(ns, ATTR_TESTS, Integer.toString(tests.size()));
+            serializer.attribute(ns, ATTR_TESTS, Integer.toString(outcomes.size()));
             serializer.attribute(ns, ATTR_FAILURES, Integer.toString(failuresCount));
             serializer.attribute(ns, ATTR_ERRORS, Integer.toString(errorsCount));
             serializer.attribute(ns, ATTR_TIME, "0");
@@ -149,28 +157,25 @@ public class XmlReportPrinter {
             serializer.startTag(ns, PROPERTIES);
             serializer.endTag(ns, PROPERTIES);
 
-            for (TestRun testRun : tests) {
-                print(serializer, testRun);
+            for (Outcome outcome : outcomes) {
+                print(serializer, outcome);
             }
 
             serializer.endTag(ns, TESTSUITE);
         }
 
-        void print(KXmlSerializer serializer, TestRun testRun) throws IOException {
+        void print(KXmlSerializer serializer, Outcome outcome) throws IOException {
             serializer.startTag(ns, TESTCASE);
-            serializer.attribute(ns, ATTR_NAME, testRun.getTestName());
-            serializer.attribute(ns, ATTR_CLASSNAME, testRun.getSuiteName());
+            serializer.attribute(ns, ATTR_NAME, outcome.getTestName());
+            serializer.attribute(ns, ATTR_CLASSNAME, outcome.getSuiteName());
             serializer.attribute(ns, ATTR_TIME, "0");
 
-            if (!testRun.isExpectedResult()) {
-                String result = testRun.getResult() == Result.EXEC_FAILED ? FAILURE : ERROR;
+            Expectation expectation = expectationStore.get(outcome.getName());
+            if (!expectation.matches(outcome)) {
+                String result = outcome.getResult() == Result.EXEC_FAILED ? FAILURE : ERROR;
                 serializer.startTag(ns, result);
-                String title = testRun.getDescription();
-                if (title != null && title.length() > 0) {
-                    serializer.attribute(ns, ATTR_MESSAGE, title);
-                }
-                serializer.attribute(ns, ATTR_TYPE, testRun.getResult().toString());
-                String text = sanitize(Strings.join(testRun.getOutputLines(), "\n"));
+                serializer.attribute(ns, ATTR_TYPE, outcome.getResult().toString());
+                String text = sanitize(Strings.join(outcome.getOutputLines(), "\n"));
                 serializer.text(text);
                 serializer.endTag(ns, result);
             }

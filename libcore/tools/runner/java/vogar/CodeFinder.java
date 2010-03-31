@@ -30,7 +30,7 @@ public interface CodeFinder {
      * Returns all test runs in the given file or directory. If the returned set
      * is empty, no executable code of this kind were found.
      */
-    public Set<TestRun> findTests(File file);
+    public Set<Action> findActions(File file);
 
     /**
      * Return the class for the TestRunner

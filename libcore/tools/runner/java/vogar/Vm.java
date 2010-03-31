@@ -34,8 +34,6 @@ import java.util.logging.Logger;
  */
 public abstract class Vm extends Mode {
 
-    private static final Logger logger = Logger.getLogger(Vm.class.getName());
-
     protected final List<String> additionalVmArgs;
 
     Vm(Environment environment, long timeoutSeconds, File sdkJar, List<String> javacArgs,
@@ -47,11 +45,11 @@ public abstract class Vm extends Mode {
     /**
      * Returns a VM for test execution.
      */
-    @Override protected List<String> runTestCommand(TestRun testRun)
+    @Override protected List<String> executeAction(Action action)
             throws TimeoutException {
-        Command command = newVmCommandBuilder(testRun.getUserDir())
-                .classpath(getRuntimeSupportClasspath(testRun))
-                .userDir(testRun.getUserDir())
+        Command command = newVmCommandBuilder(action.getUserDir())
+                .classpath(getRuntimeSupportClasspath(action))
+                .userDir(action.getUserDir())
                 .debugPort(environment.debugPort)
                 .vmArgs(additionalVmArgs)
                 .mainClass(TestRunner.class.getName())
@@ -61,15 +59,15 @@ public abstract class Vm extends Mode {
     }
 
     /**
-     * Returns a VM for test execution.
+     * Returns a VM for action execution.
      */
     protected abstract VmCommandBuilder newVmCommandBuilder(File workingDirectory);
 
     /**
      * Returns the classpath containing JUnit and the dalvik annotations
-     * required for test execution.
+     * required for action execution.
      */
-    protected abstract Classpath getRuntimeSupportClasspath(TestRun testRun);
+    protected abstract Classpath getRuntimeSupportClasspath(Action action);
 
     /**
      * Builds a virtual machine command.

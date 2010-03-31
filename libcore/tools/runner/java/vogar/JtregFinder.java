@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * Create {@link TestRun}s for {@code .java} files with jtreg tests in them.
+ * Create {@link Action}s for {@code .java} files with jtreg tests in them.
  */
 class JtregFinder implements CodeFinder {
 
@@ -59,7 +59,7 @@ class JtregFinder implements CodeFinder {
     /**
      * Returns the tests in {@code directoryToScan}.
      */
-    public Set<TestRun> findTests(File directoryToScan) {
+    public Set<Action> findActions(File directoryToScan) {
         // for now, jtreg doesn't know how to scan anything but directories
         if (!directoryToScan.isDirectory()) {
             return Collections.emptySet();
@@ -80,16 +80,13 @@ class JtregFinder implements CodeFinder {
             WorkDirectory wd = WorkDirectory.convert(workDirectory, testSuite);
             TestResultTable resultTable = wd.getTestResultTable();
 
-            Set<TestRun> result = new LinkedHashSet<TestRun>();
+            Set<Action> result = new LinkedHashSet<Action>();
             for (Iterator i = resultTable.getIterator(); i.hasNext(); ) {
                 TestResult testResult = (TestResult) i.next();
                 TestDescription description = testResult.getDescription();
                 String qualifiedName = qualifiedName(description);
-                String suiteName = suiteName(description);
-                String testName = description.getName();
                 String testClass = description.getName();
-                result.add(new TestRun(description.getDir(), description.getFile(),
-                        testClass, suiteName, testName, qualifiedName,
+                result.add(new Action(qualifiedName, testClass, description.getDir(), description.getFile(),
                         description.getTitle(),
                         getRunnerClass(), getRunnerJava(), getRunnerClasspath()));
             }

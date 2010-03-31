@@ -61,11 +61,11 @@ final class ActivityMode extends Mode {
         super.prepare(testRunnerJava, testRunnerClasspath);
     }
 
-    @Override protected void postCompileTestRunner() {
+    @Override protected void postCompileRunner() {
     }
 
-    @Override protected void postCompileTest(TestRun testRun) {
-        logger.fine("aapt and push " + testRun.getQualifiedName());
+    @Override protected void postCompile(Action action) {
+        logger.fine("aapt and push " + action.getName());
 
         // Some things of note:
         // 1. we can't put multiple dex files in one apk
@@ -83,49 +83,49 @@ final class ActivityMode extends Mode {
         // 7. aapt the dex to create apk
         // 8. sign the apk
         // 9. install the apk
-        File packagingDir = makePackagingDirectory(testRun);
-        addTestRunnerClasses(packagingDir);
+        File packagingDir = makePackagingDirectory(action);
+        addRunnerClasses(packagingDir);
         List<File> found = new ArrayList<File>();
-        File originalTestJar = findOriginalTestJar(testRun);
-        if (originalTestJar != null) {
-            found.add(originalTestJar);
+        File originalJar = findOriginalJar(action);
+        if (originalJar != null) {
+            found.add(originalJar);
         }
-        found.addAll(testRun.getRunnerClasspath().getElements());
+        found.addAll(action.getRunnerClasspath().getElements());
         extractJars(packagingDir, found);
-        addTestClasses(testRun, packagingDir);
-        File dex = createDex(testRun, packagingDir);
-        File apkUnsigned = createApk(testRun, dex);
-        File apkSigned = signApk(testRun, apkUnsigned);
-        installApk(testRun, apkSigned);
+        addActionClasses(action, packagingDir);
+        File dex = createDex(action, packagingDir);
+        File apkUnsigned = createApk(action, dex);
+        File apkSigned = signApk(action, apkUnsigned);
+        installApk(action, apkSigned);
     }
 
-    private File makePackagingDirectory(TestRun testRun) {
-        File packagingDir = new File(environment.testCompilationDir(testRun), "packaging");
+    private File makePackagingDirectory(Action action) {
+        File packagingDir = new File(environment.actionCompilationDir(action), "packaging");
         new Rm().directoryTree(packagingDir);
         new Mkdir().mkdirs(packagingDir);
         return packagingDir;
     }
 
-    private void addTestRunnerClasses(File packagingDir) {
+    private void addRunnerClasses(File packagingDir) {
         new Command("rsync", "-a",
-                    environment.testRunnerClassesDir() + "/",
+                    environment.runnerClassesDir() + "/",
                     packagingDir + "/").execute();
     }
 
-    private File findOriginalTestJar(TestRun testRun) {
-        String testClass = testRun.getTestClass();
-        String testFile = testClass.replace('.', '/') + ".class";
-        for (File element : testClasspath.getElements()) {
+    private File findOriginalJar(Action action) {
+        String targetClass = action.getTargetClass();
+        String targetClassFile = targetClass.replace('.', '/') + ".class";
+        for (File element : classpath.getElements()) {
             try {
                 JarFile jar = new JarFile(element);
-                JarEntry jarEntry = jar.getJarEntry(testFile);
+                JarEntry jarEntry = jar.getJarEntry(targetClassFile);
                 if (jarEntry != null) {
                     return element;
                 }
             } catch (IOException e) {
                 throw new RuntimeException(
                         "Could not find element " + element +
-                        " of test class path " + testClasspath, e);
+                        " of class path " + classpath, e);
             }
         }
         return null;
@@ -144,15 +144,15 @@ final class ActivityMode extends Mode {
         new Rm().directoryTree(new File(packagingDir, "META-INF"));
     }
 
-    private void addTestClasses(TestRun testRun, File packagingDir) {
-        File testClassesDir = environment.testClassesDir(testRun);
+    private void addActionClasses(Action action, File packagingDir) {
+        File classesDir = environment.classesDir(action);
         new Command("rsync", "-a",
-                    testClassesDir + "/",
+                    classesDir + "/",
                     packagingDir + "/").execute();
     }
-    private File createDex (TestRun testRun, File packagingDir) {
-        File testClassesDir = environment.testClassesDir(testRun);
-        File dex = new File(testClassesDir + ".dex");
+    private File createDex(Action action, File packagingDir) {
+        File classesDir = environment.classesDir(action);
+        File dex = new File(classesDir + ".dex");
         new Dx().dex(dex, Classpath.of(packagingDir));
         return dex;
     }
@@ -163,15 +163,15 @@ final class ActivityMode extends Mode {
      * may not contain a dot, we prefix containing one to ensure we
      * are compliant.
      */
-    private static String packageName(TestRun testRun) {
-        return "vogar.test." + testRun.getQualifiedName();
+    private static String packageName(Action action) {
+        return "vogar.test." + action.getName();
     }
 
-    private File createApk (TestRun testRun, File dex) {
+    private File createApk (Action action, File dex) {
         String androidManifest =
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
             "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-            "      package=\"" + packageName(testRun) + "\">\n" +
+            "      package=\"" + packageName(action) + "\">\n" +
             "    <uses-permission android:name=\"android.permission.INTERNET\" />\n" +
             "    <application>\n" +
             "        <activity android:name=\"" + TEST_ACTIVITY_CLASS + "\">\n" +
@@ -183,7 +183,7 @@ final class ActivityMode extends Mode {
             "    </application>\n" +
             "</manifest>\n";
         File androidManifestFile =
-                new File(environment.testCompilationDir(testRun),
+                new File(environment.actionCompilationDir(action),
                         "AndroidManifest.xml");
         try {
             FileOutputStream androidManifestOut =
@@ -194,17 +194,17 @@ final class ActivityMode extends Mode {
             throw new RuntimeException("Problem writing " + androidManifestFile, e);
         }
 
-        File testClassesDir = environment.testClassesDir(testRun);
-        File apkUnsigned = new File(testClassesDir + ".apk.unsigned");
+        File classesDir = environment.classesDir(action);
+        File apkUnsigned = new File(classesDir  + ".apk.unsigned");
         new Aapt().apk(apkUnsigned, androidManifestFile);
         new Aapt().add(apkUnsigned, dex);
-        new Aapt().add(apkUnsigned, new File(testClassesDir, TestProperties.FILE));
+        new Aapt().add(apkUnsigned, new File(classesDir , TestProperties.FILE));
         return apkUnsigned;
     }
 
-    private File signApk(TestRun testRun, File apkUnsigned) {
-        File testClassesDir = environment.testClassesDir(testRun);
-        File apkSigned = new File(testClassesDir, testRun.getQualifiedName() + ".apk");
+    private File signApk(Action action, File apkUnsigned) {
+        File classesDir = environment.classesDir(action);
+        File apkSigned = new File(classesDir, action.getName() + ".apk");
         // TODO: we should be able to work with a shipping SDK, not depend on out/...
         // TODO: we should be able to work without hardwired keys, not depend on build/...
         new Command.Builder()
@@ -219,25 +219,25 @@ final class ActivityMode extends Mode {
         return apkSigned;
     }
 
-    private void installApk(TestRun testRun, File apkSigned) {
+    private void installApk(Action action, File apkSigned) {
         // install the local apk ona the device
-        getEnvironmentDevice().adb.uninstall(packageName(testRun));
+        getEnvironmentDevice().adb.uninstall(packageName(action));
         getEnvironmentDevice().adb.install(apkSigned);
     }
 
-    @Override protected void fillInProperties(Properties properties, TestRun testRun) {
-        super.fillInProperties(properties, testRun);
+    @Override protected void fillInProperties(Properties properties, Action action) {
+        super.fillInProperties(properties, action);
         properties.setProperty(TestProperties.DEVICE_RUNNER_DIR, getEnvironmentDevice().runnerDir.getPath());
     }
 
-    @Override protected List<String> runTestCommand(TestRun testRun)
+    @Override protected List<String> executeAction(Action action)
             throws TimeoutException {
         new Command(
             "adb", "shell", "am", "start",
             "-a","android.intent.action.MAIN",
-            "-n", (packageName(testRun) + "/" + TEST_ACTIVITY_CLASS)).executeWithTimeout(timeoutSeconds);
+            "-n", (packageName(action) + "/" + TEST_ACTIVITY_CLASS)).executeWithTimeout(timeoutSeconds);
 
-        File resultDir = new File(getEnvironmentDevice().runnerDir, testRun.getQualifiedName());
+        File resultDir = new File(getEnvironmentDevice().runnerDir, action.getName());
         File resultFile = new File(resultDir, TestProperties.RESULT_FILE);
         getEnvironmentDevice().adb.waitForFile(resultFile, timeoutSeconds);
         return new Command.Builder()
@@ -246,10 +246,10 @@ final class ActivityMode extends Mode {
             .build().executeWithTimeout(timeoutSeconds);
     }
 
-    @Override void cleanup(TestRun testRun) {
-        super.cleanup(testRun);
+    @Override void cleanup(Action action) {
+        super.cleanup(action);
         if (environment.cleanAfter) {
-            getEnvironmentDevice().adb.uninstall(testRun.getQualifiedName());
+            getEnvironmentDevice().adb.uninstall(action.getName());
         }
     }
 }

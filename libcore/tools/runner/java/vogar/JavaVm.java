@@ -35,10 +35,10 @@ final class JavaVm extends Vm {
         this.javaHome = javaHome;
     }
 
-    @Override protected void postCompileTestRunner() {
+    @Override protected void postCompileRunner() {
     }
 
-    @Override protected void postCompileTest(TestRun testRun) {
+    @Override protected void postCompile(Action action) {
     }
 
     @Override protected VmCommandBuilder newVmCommandBuilder(
@@ -48,12 +48,12 @@ final class JavaVm extends Vm {
                 .vmCommand(java)
                 .workingDir(workingDirectory);
     }
-    @Override protected Classpath getRuntimeSupportClasspath(TestRun testRun) {
+    @Override protected Classpath getRuntimeSupportClasspath(Action action) {
         Classpath classpath = new Classpath();
-        classpath.addAll(environment.testClassesDir(testRun));
-        classpath.addAll(testClasspath);
-        classpath.addAll(environment.testRunnerClassesDir());
-        classpath.addAll(testRunnerClasspath);
+        classpath.addAll(environment.classesDir(action));
+        classpath.addAll(this.classpath);
+        classpath.addAll(environment.runnerClassesDir());
+        classpath.addAll(runnerClasspath);
         return classpath;
     }
 }
