@@ -16,6 +16,7 @@
 #ifndef _DALVIK_HEAP_SOURCE
 #define _DALVIK_HEAP_SOURCE
 
+#include "alloc/Heap.h"
 #include "alloc/HeapInternal.h" // for GcHeap
 
 /* dlmalloc uses one size_t per allocated chunk.
@@ -159,5 +160,17 @@ size_t dvmHeapSourceGetNumHeaps(void);
  * Exchanges the mark and object bitmaps and zeros the mark bitmap.
  */
 void dvmHeapSourceSwapBitmaps(void);
+
+/*
+ * Marks all objects outside the threatened region of the heap.
+ */
+void dvmMarkImmuneObjects(void);
+
+/*
+ * Returns a pointer that demarcates the threatened region of the
+ * heap.  Addresses at or above this pointer are threatened, addresses
+ * below this pointer are not.
+ */
+void *dvmHeapSourceGetImmuneLimit(GcMode mode);
 
 #endif  // _DALVIK_HEAP_SOURCE

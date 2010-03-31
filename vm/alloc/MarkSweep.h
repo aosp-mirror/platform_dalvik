@@ -40,6 +40,7 @@ typedef struct {
 typedef struct {
     HeapBitmap *bitmap;
     GcMarkStack stack;
+    const char *immuneLimit;
     const void *finger;   // only used while scanning/recursing.
 } GcMarkContext;
 
@@ -50,13 +51,13 @@ enum RefType {
     REF_WEAKGLOBAL
 };
 
-bool dvmHeapBeginMarkStep(void);
+bool dvmHeapBeginMarkStep(GcMode mode);
 void dvmHeapMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
 void dvmHeapHandleReferences(Object *refListHead, enum RefType refType);
 void dvmHeapScheduleFinalizations(void);
 void dvmHeapFinishMarkStep(void);
 
-void dvmHeapSweepUnmarkedObjects(int *numFreed, size_t *sizeFreed);
+void dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed);
 
 #endif  // _DALVIK_ALLOC_MARK_SWEEP

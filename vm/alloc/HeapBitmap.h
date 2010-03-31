@@ -30,6 +30,9 @@
 #define HB_INDEX_TO_OFFSET(index_) \
     ((uintptr_t)(index_) * HB_OBJECT_ALIGNMENT * HB_BITS_PER_WORD)
 
+#define HB_OFFSET_TO_BYTE_INDEX(offset_) \
+  (HB_OFFSET_TO_INDEX(offset_) * sizeof(*((HeapBitmap *)0)->bits))
+
 /* Pack the bits in backwards so they come out in address order
  * when using CLZ.
  */
