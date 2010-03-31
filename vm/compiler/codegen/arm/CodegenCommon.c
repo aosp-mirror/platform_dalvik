@@ -370,7 +370,7 @@ extern ArmLIR *genCheckCommon(CompilationUnit *cUnit, int dOffset,
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + dOffset);
         pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
-        pcrLabel->opCode = ARM_PSEUDO_kPCReconstruction_CELL;
+        pcrLabel->opCode = kArmPseudoPCReconstructionCell;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = dOffset;
         /* Insert the place holder to the growable list */

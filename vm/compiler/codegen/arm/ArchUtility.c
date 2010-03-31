@@ -257,41 +257,41 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             break;
         case kArmPseudoTargetLabel:
             break;
-        case ARM_PSEUDO_kChainingCellBackwardBranch:
+        case kArmPseudoChainingCellBackwardBranch:
             LOGD("-------- chaining cell (backward branch): 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_kChainingCellNormal:
+        case kArmPseudoChainingCellNormal:
             LOGD("-------- chaining cell (normal): 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_kChainingCellHot:
+        case kArmPseudoChainingCellHot:
             LOGD("-------- chaining cell (hot): 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_kChainingCellInvokePredicted:
+        case kArmPseudoChainingCellInvokePredicted:
             LOGD("-------- chaining cell (predicted)\n");
             break;
-        case ARM_PSEUDO_kChainingCellInvokeSingleton:
+        case kArmPseudoChainingCellInvokeSingleton:
             LOGD("-------- chaining cell (invoke singleton): %s/%p\n",
                  ((Method *)dest)->name,
                  ((Method *)dest)->insns);
             break;
-        case ARM_PSEUDO_kEntryBlock:
+        case kArmPseudoEntryBlock:
             LOGD("-------- entry offset: 0x%04x\n", dest);
             break;
-        case ARM_PSEUDO_kDalvikByteCode_BOUNDARY:
+        case kArmPseudoDalvikByteCodeBoundary:
             LOGD("-------- dalvik offset: 0x%04x @ %s\n", dest,
                  (char *) lir->operands[1]);
             break;
-        case ARM_PSEUDO_kExitBlock:
+        case kArmPseudoExitBlock:
             LOGD("-------- exit offset: 0x%04x\n", dest);
             break;
         case kArmPseudoPseudoAlign4:
             LOGD("%p (%04x): .align4\n", baseAddr + offset, offset);
             break;
-        case ARM_PSEUDO_kPCReconstruction_CELL:
+        case kArmPseudoPCReconstructionCell:
             LOGD("-------- reconstruct dalvik PC : 0x%04x @ +0x%04x\n", dest,
                  lir->operands[1]);
             break;
-        case ARM_PSEUDO_kPCReconstruction_BLOCK_LABEL:
+        case kArmPseudoPCReconstructionBlockLabel:
             /* Do nothing */
             break;
         case kArmPseudoEHBlockLabel:

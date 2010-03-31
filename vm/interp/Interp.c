@@ -1264,7 +1264,8 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #endif
 #if defined(WITH_JIT)
     dvmJitCalleeSave(interpState.calleeSave);
-    interpState.jitState = gDvmJit.pJitEntryTable ? kJitNormal : kJitOff;
+    /* Initialize the state to kJitNot */
+    interpState.jitState = kJitNot;
 
     /* Setup the Jit-to-interpreter entry points */
     interpState.jitToInterpEntries = jitToInterpEntries;
