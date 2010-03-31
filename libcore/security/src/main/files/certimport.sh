@@ -67,3 +67,12 @@ for cert in `ls -1 cacerts`
       -storepass $STOREPASS
   let "COUNTER=$COUNTER + 1"
 done
+
+keytool \
+      -list \
+      -v \
+      -keystore $CERTSTORE \
+      -storetype BKS \
+      -provider $PROVIDER_CLASS \
+      -providerpath $PROVIDER_PATH \
+      -storepass $STOREPASS
