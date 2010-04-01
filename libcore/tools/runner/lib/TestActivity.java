@@ -20,11 +20,10 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
-import vogar.TestProperties;
+import vogar.Threads;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Runs a user-supplied {@code main(String[] args)} method
@@ -44,62 +43,19 @@ public class TestActivity extends Activity {
         this.view = new TextView(this);
         log("TestActivity starting...");
         setContentView(view);
-        ActivityRunner activityRunner = new ActivityRunner();
-        activityRunner.run();
+
+        ExecutorService executor = Executors.newFixedThreadPool(
+                1, Threads.daemonThreadFactory());
+        executor.submit(new Runnable() {
+            public void run() {
+                new TestRunner().run();
+            }
+        });
+        executor.shutdown();
     }
 
-    private void log(String message, Throwable ex) {
-        log(message + "\n" + Log.getStackTraceString(ex));
-    }
     private void log(String message) {
         Log.i(TAG, message);
         view.append(message + "\n");
-    }
-
-    class ActivityRunner extends TestRunner {
-
-        private final File runnerDir;
-        private final Thread shutdownHook = new Thread(new ShutdownHook());
-
-        ActivityRunner() {
-            runnerDir = new File(properties.getProperty(TestProperties.DEVICE_RUNNER_DIR));
-        }
-
-        @Override public boolean run() {
-            log("Using " + runnerClass + " to run " + qualifiedName);
-            Runtime.getRuntime().addShutdownHook(shutdownHook);
-            boolean success = super.run();
-            Runtime.getRuntime().removeShutdownHook(shutdownHook);
-            writeResultFile(success);
-            return success;
-        }
-
-        private void writeResultFile (boolean success) {
-            String result = TestProperties.result(success);
-            File resultDir = new File(runnerDir, qualifiedName);
-            File resultTemp = new File(resultDir, TestProperties.RESULT_FILE + ".temp");
-            File resultFile = new File(resultDir, TestProperties.RESULT_FILE);
-            log("TestActivity " + result + " " + resultFile);
-            try {
-                FileOutputStream resultOut = new FileOutputStream(resultTemp);
-                resultOut.write(result.getBytes("UTF-8"));
-                resultOut.close();
-                // atomically rename since Vogar will be polling for this
-                resultTemp.renameTo(resultFile);
-            } catch (IOException e) {
-                log("TestActivity could not create result file", e);
-            }
-        }
-
-        /**
-         * Used to trap tests that try to exit on the their own. We
-         * treat this as a failure since they usually are calling
-         * System.exit with a non-zero value.
-         */
-        class ShutdownHook implements Runnable {
-            public void run() {
-                writeResultFile(false);
-            }
-        }
     }
 }

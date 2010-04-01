@@ -16,23 +16,15 @@
 
 package vogar;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 /**
  * Command line interface for running benchmarks and tests on dalvik.
@@ -79,9 +71,11 @@ public final class Vogar {
         @Option(names = { "--verbose" })
         private boolean verbose;
 
-        @Option(names = { "--tee" })
-        private String teeName;
-        private PrintStream tee;
+        @Option(names = { "--stream" })
+        private boolean stream;
+
+        @Option(names = { "--color" })
+        private boolean color = true;
 
         @Option(names = { "--debug" })
         private Integer debugPort;
@@ -130,8 +124,9 @@ public final class Vogar {
             System.out.println("  --clean: synonym for --clean-before and --clean-after (default).");
             System.out.println("      Disable with --no-clean if you want no files removed.");
             System.out.println();
-            System.out.println("  --tee <file>: emit output to file during execution.");
-            System.out.println("      Specify '-' for stdout.");
+            System.out.println("  --color: format output in technicolor.");
+            System.out.println();
+            System.out.println("  --stream: stream output as it is emitted.");
             System.out.println();
             System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
             System.out.println("      action before the runner aborts it. Specifying zero seconds");
@@ -265,23 +260,6 @@ public final class Vogar {
                 actionFiles.add(new File(actionFilename));
             }
 
-            if (teeName != null) {
-                if (teeName.equals("-")) {
-                    tee = System.out;
-                } else {
-                    try {
-                        tee = new PrintStream(new BufferedOutputStream(new FileOutputStream(teeName)));
-                    } catch (FileNotFoundException e) {
-                        System.out.println("Could not open file teeName: " + e);
-                        return false;
-                    }
-                }
-            }
-
-            if (verbose) {
-                Logger.getLogger("vogar").setLevel(Level.FINE);
-            }
-
             return true;
         }
 
@@ -292,28 +270,18 @@ public final class Vogar {
 
     private Vogar() {}
 
-    private void prepareLogging() {
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setLevel(Level.ALL);
-        handler.setFormatter(new Formatter() {
-            @Override public String format(LogRecord r) {
-                return r.getMessage() + "\n";
-            }
-        });
-        Logger logger = Logger.getLogger("vogar");
-        logger.addHandler(handler);
-        logger.setUseParentHandlers(false);
-    }
-
     private void run() {
+        Console console = new Console(options.stream, options.indent, options.color);
+        console.configureJavaLogging(options.verbose);
+
+        int monitorPort = 8787;
         Mode mode;
         if (options.mode.equals(Options.MODE_DEVICE)) {
             mode = new DeviceDalvikVm(
                     options.debugPort,
-                    options.timeoutSeconds,
                     options.sdkJar,
                     options.javacArgs,
-                    options.tee,
+                    monitorPort,
                     localTemp,
                     options.vmArgs,
                     options.cleanBefore,
@@ -322,22 +290,21 @@ public final class Vogar {
         } else if (options.mode.equals(Options.MODE_HOST)) {
             mode = new JavaVm(
                     options.debugPort,
-                    options.timeoutSeconds,
                     options.sdkJar,
                     options.javacArgs,
-                    options.tee,
+                    monitorPort,
                     localTemp,
                     options.javaHome,
                     options.vmArgs,
                     options.cleanBefore,
-                    options.cleanAfter);
+                    options.cleanAfter
+            );
         } else if (options.mode.equals(Options.MODE_ACTIVITY)) {
             mode = new ActivityMode(
                     options.debugPort,
-                    options.timeoutSeconds,
                     options.sdkJar,
                     options.javacArgs,
-                    options.tee,
+                    monitorPort,
                     localTemp,
                     options.cleanBefore,
                     options.cleanAfter,
@@ -346,6 +313,8 @@ public final class Vogar {
             System.out.println("Unknown mode mode " + options.mode + ".");
             return;
         }
+
+        HostMonitor monitor = new HostMonitor();
 
         List<CodeFinder> codeFinders = Arrays.asList(
                 new JtregFinder(localTemp),
@@ -369,11 +338,15 @@ public final class Vogar {
                 localTemp,
                 mode,
                 expectationStore,
-                options.indent,
                 codeFinders,
-                xmlReportPrinter);
+                xmlReportPrinter,
+                console,
+                monitor,
+                monitorPort,
+                options.timeoutSeconds);
 
         driver.buildAndRunAllActions(options.actionFiles);
+
         mode.shutdown();
     }
 
@@ -383,7 +356,6 @@ public final class Vogar {
             vogar.options.printUsage();
             return;
         }
-        vogar.prepareLogging();
         vogar.run();
     }
 }

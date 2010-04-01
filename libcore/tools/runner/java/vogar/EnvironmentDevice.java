@@ -24,12 +24,14 @@ class EnvironmentDevice extends Environment {
     final Adb adb = new Adb();
     final File runnerDir;
     final File vogarTemp;
+    final int monitorPort;
 
     EnvironmentDevice (boolean cleanBefore, boolean cleanAfter,
-            Integer debugPort, File localTemp, File runnerDir) {
+            Integer debugPort, int monitorPort, File localTemp, File runnerDir) {
         super(cleanBefore, cleanAfter, debugPort, localTemp);
         this.runnerDir = runnerDir;
         this.vogarTemp = new File(runnerDir, "/vogar.tmp");
+        this.monitorPort = monitorPort;
     }
 
     @Override void prepare() {
@@ -41,6 +43,7 @@ class EnvironmentDevice extends Environment {
         adb.mkdir(runnerDir);
         adb.mkdir(vogarTemp);
         adb.mkdir(new File("/sdcard/dalvik-cache")); // TODO: only necessary on production devices.
+        adb.forwardTcp(monitorPort, monitorPort);
         if (debugPort != null) {
             adb.forwardTcp(debugPort, debugPort);
         }

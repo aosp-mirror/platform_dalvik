@@ -16,6 +16,8 @@
 
 package vogar.target;
 
+import vogar.Result;
+
 import java.lang.reflect.Method;
 
 /**
@@ -23,9 +25,12 @@ import java.lang.reflect.Method;
  */
 public final class MainRunner implements Runner {
 
+    private TargetMonitor monitor;
     private Method main;
 
-    public void prepareTest(Class<?> testClass) {
+    public void init(TargetMonitor monitor, String actionName,
+            Class<?> testClass) {
+        this.monitor = monitor;
         try {
             main = testClass.getMethod("main", String[].class);
         } catch (Exception e) {
@@ -33,12 +38,13 @@ public final class MainRunner implements Runner {
         }
     }
 
-    public boolean test(Class<?> testClass) {
+    public void run(String actionName, Class<?> testClass) {
+        monitor.outcomeStarted(actionName, actionName);
         try {
             main.invoke(null, new Object[] { new String[0] });
         } catch (Throwable ex) {
             ex.printStackTrace();
         }
-        return false; // always print main method output
+        monitor.outcomeFinished(Result.SUCCESS);
     }
 }

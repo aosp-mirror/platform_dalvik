@@ -25,18 +25,16 @@ import vogar.commands.Rm;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Logger;
 
 /**
- * Runs a test in the context of an android.app.Activity on a device
+ * Runs an action in the context of an android.app.Activity on a device
  */
 final class ActivityMode extends Mode {
 
@@ -44,12 +42,12 @@ final class ActivityMode extends Mode {
 
     private static final String TEST_ACTIVITY_CLASS   = "vogar.target.TestActivity";
 
-    ActivityMode(Integer debugPort, long timeoutSeconds, File sdkJar, List<String> javacArgs,
-                 PrintStream tee, File localTemp, boolean cleanBefore, boolean cleanAfter,
-                 File deviceRunnerDir) {
+    ActivityMode(Integer debugPort, File sdkJar, List<String> javacArgs,
+            int monitorPort, File localTemp, boolean cleanBefore, boolean cleanAfter,
+            File deviceRunnerDir) {
         super(new EnvironmentDevice(cleanBefore, cleanAfter,
-                debugPort, localTemp, deviceRunnerDir),
-                timeoutSeconds, sdkJar, javacArgs, tee);
+                debugPort, monitorPort, localTemp, deviceRunnerDir),
+                sdkJar, javacArgs, monitorPort);
     }
 
     private EnvironmentDevice getEnvironmentDevice() {
@@ -230,20 +228,11 @@ final class ActivityMode extends Mode {
         properties.setProperty(TestProperties.DEVICE_RUNNER_DIR, getEnvironmentDevice().runnerDir.getPath());
     }
 
-    @Override protected List<String> executeAction(Action action)
-            throws TimeoutException {
-        new Command(
-            "adb", "shell", "am", "start",
-            "-a","android.intent.action.MAIN",
-            "-n", (packageName(action) + "/" + TEST_ACTIVITY_CLASS)).executeWithTimeout(timeoutSeconds);
-
-        File resultDir = new File(getEnvironmentDevice().runnerDir, action.getName());
-        File resultFile = new File(resultDir, TestProperties.RESULT_FILE);
-        getEnvironmentDevice().adb.waitForFile(resultFile, timeoutSeconds);
-        return new Command.Builder()
-            .args("adb", "shell", "cat", resultFile.getPath())
-            .tee(tee)
-            .build().executeWithTimeout(timeoutSeconds);
+    @Override protected Command createActionCommand(Action action) {
+        return new Command(
+                "adb", "shell", "am", "start", "-W",
+                "-a", "android.intent.action.MAIN",
+                "-n", (packageName(action) + "/" + TEST_ACTIVITY_CLASS));
     }
 
     @Override void cleanup(Action action) {

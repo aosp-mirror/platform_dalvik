@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
-import java.util.logging.Logger;
 
 /**
  * A Java-like virtual machine for compiling and running tests.
@@ -36,26 +34,23 @@ public abstract class Vm extends Mode {
 
     protected final List<String> additionalVmArgs;
 
-    Vm(Environment environment, long timeoutSeconds, File sdkJar, List<String> javacArgs,
-           PrintStream tee, List<String> additionalVmArgs) {
-        super(environment, timeoutSeconds, sdkJar, javacArgs,tee);
+    Vm(Environment environment, File sdkJar, List<String> javacArgs,
+            List<String> additionalVmArgs, int monitorPort) {
+        super(environment, sdkJar, javacArgs, monitorPort);
         this.additionalVmArgs = additionalVmArgs;
     }
 
     /**
-     * Returns a VM for test execution.
+     * Returns a VM for action execution.
      */
-    @Override protected List<String> executeAction(Action action)
-            throws TimeoutException {
-        Command command = newVmCommandBuilder(action.getUserDir())
+    @Override protected Command createActionCommand(Action action) {
+        return newVmCommandBuilder(action.getUserDir())
                 .classpath(getRuntimeSupportClasspath(action))
                 .userDir(action.getUserDir())
                 .debugPort(environment.debugPort)
                 .vmArgs(additionalVmArgs)
                 .mainClass(TestRunner.class.getName())
-                .output(tee)
                 .build();
-        return command.executeWithTimeout(timeoutSeconds);
     }
 
     /**

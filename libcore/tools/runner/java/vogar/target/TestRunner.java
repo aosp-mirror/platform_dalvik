@@ -20,10 +20,11 @@ import vogar.TestProperties;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Properties;
 
 /**
- * Runs a test.
+ * Runs an action, in process on the target.
  */
 public class TestRunner {
 
@@ -32,12 +33,14 @@ public class TestRunner {
     protected final String qualifiedName;
     protected final Class<?> testClass;
     protected final Class<?> runnerClass;
+    protected final int monitorPort;
 
-    protected TestRunner () {
+    protected TestRunner() {
         properties = loadProperties();
         qualifiedName = properties.getProperty(TestProperties.QUALIFIED_NAME);
         testClass = classProperty(TestProperties.TEST_CLASS, Object.class);
         runnerClass = classProperty(TestProperties.RUNNER_CLASS, Runner.class);
+        monitorPort = Integer.parseInt(properties.getProperty(TestProperties.MONITOR_PORT));
     }
 
     protected static Properties loadProperties() {
@@ -73,7 +76,19 @@ public class TestRunner {
         }
     }
 
-    public boolean run() {
+    public void run() {
+        final TargetMonitor monitor = new TargetMonitor();
+        monitor.await(monitorPort);
+
+        PrintStream monitorPrintStream = new PrintStream(System.out) {
+            @Override public void print(String str) {
+                super.print(str);
+                monitor.output(str);
+            }
+        };
+        System.setOut(monitorPrintStream);
+        System.setErr(monitorPrintStream);
+
         Runner runner;
         try {
             runner = (Runner) runnerClass.newInstance();
@@ -82,14 +97,18 @@ public class TestRunner {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        runner.prepareTest(testClass);
-        return runner.test(testClass);
+        runner.init(monitor, qualifiedName, testClass);
+        runner.run(qualifiedName, testClass);
+
+        monitor.close();
     }
+
+
 
     public static void main(String[] args) {
         if (args.length != 0) {
             throw new RuntimeException("TestRunner doesn't take arguments");
         }
-        System.out.println(TestProperties.result(new TestRunner().run()));
+        new TestRunner().run();
     }
 }

@@ -27,7 +27,7 @@ import java.util.Set;
 public interface CodeFinder {
 
     /**
-     * Returns all test runs in the given file or directory. If the returned set
+     * Returns all actions in the given file or directory. If the returned set
      * is empty, no executable code of this kind were found.
      */
     public Set<Action> findActions(File file);
