@@ -26,8 +26,7 @@ import java.util.logging.Logger;
  * startup, as a reasonably easy way to get the standard property
  * <code>java.io.tmpdir</code> to point at something useful.
  *
- * @deprecated this is an internal Dalvik class that is not appropriate for
- *      general use. It will be removed from the public API in a future release.
+ * @hide
  */
 public class TemporaryDirectory {
     /** system property name for the temporary directory */

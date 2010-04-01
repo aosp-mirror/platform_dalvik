@@ -21,8 +21,7 @@ package dalvik.system;
  * be partially initialized and then fork()'d from the partially initialized
  * state.
  *
- * @deprecated this is an internal Dalvik class that is not appropriate for
- *      general use. It will be removed from the public API in a future release.
+ * @hide
  */
 public class Zygote {
     /*

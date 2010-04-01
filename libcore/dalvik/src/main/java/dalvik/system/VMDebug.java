@@ -28,8 +28,7 @@ import java.io.IOException;
  * 
  * @cts Please complete the spec.
  *
- * @deprecated this is an internal Dalvik class that is not appropriate for
- *      general use. It will be removed from the public API in a future release.
+ * @hide
  */
 public final class VMDebug {
     /**
