@@ -15,10 +15,6 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// The icu implementation used was changed from icu4j to icu4jni.
-// END android-note
-
 package java.text;
 
 import org.apache.harmony.text.internal.nls.Messages;

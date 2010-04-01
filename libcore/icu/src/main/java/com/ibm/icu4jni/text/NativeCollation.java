@@ -244,6 +244,4 @@ final class NativeCollation
   * @internal ICU 2.4
   */
   static native void setOffset(int address, int offset);
-
-  static native String[] getAvailableLocalesImpl();
 }

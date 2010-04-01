@@ -15,13 +15,10 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// The icu implementation used was changed from icu4j to icu4jni.
-// END android-note
-
 package java.text;
 
 import com.ibm.icu4jni.text.NativeBreakIterator;
+import com.ibm.icu4jni.util.Resources;
 import java.util.Locale;
 import org.apache.harmony.text.internal.nls.Messages;
 
@@ -256,7 +253,7 @@ public abstract class BreakIterator implements Cloneable {
      * are available.
      */
     public static Locale[] getAvailableLocales() {
-        return NativeBreakIterator.getAvailableLocales();
+        return Resources.getAvailableBreakIteratorLocales();
     }
 
     /**

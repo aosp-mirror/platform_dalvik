@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// changed from ICU to resource bundles
-// END android-note
-
 package java.text;
 
+import com.ibm.icu4jni.util.LocaleData;
+import com.ibm.icu4jni.util.Resources;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -30,8 +28,6 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.Currency;
 import java.util.Locale;
-
-import com.ibm.icu4jni.util.LocaleData;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -319,7 +315,7 @@ public abstract class NumberFormat extends Format {
      * are available.
      */
     public static Locale[] getAvailableLocales() {
-        return Locale.getAvailableLocales();
+        return Resources.getAvailableNumberFormatLocales();
     }
 
     /**

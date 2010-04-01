@@ -17,10 +17,6 @@
 
 package java.text;
 
-// BEGIN android-note
-// The icu implementation used was changed from icu4j to icu4jni.
-// END android-note
-
 /**
  * Created by a {@code RuleBasedCollator} to iterate through a string. The
  * result of each iteration is a 32-bit collation element that defines the

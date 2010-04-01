@@ -15,20 +15,16 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// changed from ICU to resource bundles
-// END android-note
-
 package java.text;
 
+import com.ibm.icu4jni.util.LocaleData;
+import com.ibm.icu4jni.util.Resources;
 import java.io.InvalidObjectException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import com.ibm.icu4jni.util.LocaleData;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
@@ -411,7 +407,7 @@ public abstract class DateFormat extends Format {
      * are available.
      */
     public static Locale[] getAvailableLocales() {
-        return Locale.getAvailableLocales();
+        return Resources.getAvailableDateFormatLocales();
     }
 
     /**

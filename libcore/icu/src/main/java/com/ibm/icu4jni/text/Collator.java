@@ -324,8 +324,4 @@ public abstract class Collator implements Cloneable {
      * @stable ICU 2.4
      */
     public abstract int hashCode();
-
-    public static Locale[] getAvailableLocales() {
-        return Resources.localesFromStrings(NativeCollation.getAvailableLocalesImpl());
-    }
 }

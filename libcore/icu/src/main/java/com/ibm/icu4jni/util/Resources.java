@@ -39,22 +39,17 @@ public final class Resources {
     /**
      * Cache for ISO language names.
      */
-    private static String[] isoLanguages = null;
+    private static String[] isoLanguages;
 
     /**
      * Cache for ISO country names.
      */
-    private static String[] isoCountries = null;
-
-    /**
-     * Available locales cache.
-     */
-    private static String[] availableLocales = null;
+    private static String[] isoCountries;
 
     /**
      * Available timezones cache.
      */
-    private static String[] availableTimezones = null;
+    private static String[] availableTimezones;
 
     /**
      * Returns a shared LocaleData for the given locale.
@@ -102,7 +97,7 @@ public final class Resources {
     /**
      * Returns an array of ISO language names (two-letter codes), fetched either
      * from ICU's database or from our memory cache.
-     * 
+     *
      * @return The array.
      */
     public static String[] getISOLanguages() {
@@ -116,7 +111,7 @@ public final class Resources {
     /**
      * Returns an array of ISO country names (two-letter codes), fetched either
      * from ICU's database or from our memory cache.
-     * 
+     *
      * @return The array.
      */
     public static String[] getISOCountries() {
@@ -128,23 +123,9 @@ public final class Resources {
     }
 
     /**
-     * Returns an array of names of locales that are available in the system,
-     * fetched either from ICU's database or from our memory cache.
-     * 
-     * @return The array.
-     */
-    public static String[] getAvailableLocales() {
-        if (availableLocales == null) {
-            availableLocales = getAvailableLocalesNative();
-        }
-
-        return availableLocales.clone();
-    }
-
-    /**
      * Returns an array of names of timezones that are available in the system,
      * fetched either from the TimeZone class or from our memory cache.
-     * 
+     *
      * @return The array.
      */
     public static String[] getKnownTimezones() {
@@ -158,7 +139,7 @@ public final class Resources {
 
     /**
      * Returns the display name for the given time zone using the given locale.
-     * 
+     *
      * @param id The time zone ID, for example "Europe/Berlin"
      * @param daylight Indicates whether daylight savings is in use
      * @param style The style, 0 for long, 1 for short
@@ -261,7 +242,7 @@ public final class Resources {
 
     /**
      * Returns the display names for all given timezones using the given locale.
-     * 
+     *
      * @return An array of time zone strings. Each row represents one time zone.
      *         The first columns holds the ID of the time zone, for example
      *         "Europe/Berlin". The other columns then hold for each row the
@@ -274,14 +255,14 @@ public final class Resources {
         if (locale == null) {
             locale = defaultLocale;
         }
-        
+
         // If locale == default and the default locale hasn't changed since
         // DefaultTimeZones loaded, return the cached names.
         // TODO: We should force a reboot if the default locale changes.
         if (defaultLocale.equals(locale) && DefaultTimeZones.locale.equals(defaultLocale)) {
             return clone2dStringArray(DefaultTimeZones.names);
         }
-        
+
         return createTimeZoneNamesFor(locale);
     }
 
@@ -322,7 +303,50 @@ public final class Resources {
         return result;
     }
 
+    private static Locale[] availableLocalesCache;
+    public static Locale[] getAvailableLocales() {
+        if (availableLocalesCache == null) {
+            availableLocalesCache = localesFromStrings(getAvailableLocalesNative());
+        }
+        return availableLocalesCache.clone();
+    }
+
+    public static Locale[] getAvailableBreakIteratorLocales() {
+        return localesFromStrings(getAvailableBreakIteratorLocalesNative());
+    }
+
+    public static Locale[] getAvailableCalendarLocales() {
+        return localesFromStrings(getAvailableCalendarLocalesNative());
+    }
+
+    public static Locale[] getAvailableCollatorLocales() {
+        return localesFromStrings(getAvailableCollatorLocalesNative());
+    }
+
+    public static Locale[] getAvailableDateFormatLocales() {
+        return localesFromStrings(getAvailableDateFormatLocalesNative());
+    }
+
+    public static Locale[] getAvailableDateFormatSymbolsLocales() {
+        return getAvailableDateFormatLocales();
+    }
+
+    public static Locale[] getAvailableDecimalFormatSymbolsLocales() {
+        return getAvailableNumberFormatLocales();
+    }
+
+    public static Locale[] getAvailableNumberFormatLocales() {
+        return localesFromStrings(getAvailableNumberFormatLocalesNative());
+    }
+
     // --- Native methods accessing ICU's database ----------------------------
+
+    private static native String[] getAvailableBreakIteratorLocalesNative();
+    private static native String[] getAvailableCalendarLocalesNative();
+    private static native String[] getAvailableCollatorLocalesNative();
+    private static native String[] getAvailableDateFormatLocalesNative();
+    private static native String[] getAvailableLocalesNative();
+    private static native String[] getAvailableNumberFormatLocalesNative();
 
     public static native String getDisplayCountryNative(String countryCode, String locale);
     public static native String getDisplayLanguageNative(String languageCode, String locale);
@@ -335,8 +359,6 @@ public final class Resources {
     public static native String getCurrencySymbolNative(String locale, String currencyCode);
 
     public static native int getCurrencyFractionDigitsNative(String currencyCode);
-
-    private static native String[] getAvailableLocalesNative();
 
     private static native String[] getISOLanguagesNative();
     private static native String[] getISOCountriesNative();
