@@ -2212,6 +2212,10 @@ static jint osNetworkSystem_sendDatagram2(JNIEnv* env, jobject,
     return totalBytesSent;
 }
 
+static bool isValidFd(int fd) {
+    return fd >= 0 && fd < FD_SETSIZE;
+}
+
 static bool initFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set* fdSet, int* maxFd) {
     for (int i = 0; i < count; ++i) {
         jobject fileDescriptor = env->GetObjectArrayElement(fdArray, i);
@@ -2220,7 +2224,7 @@ static bool initFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set* fdS
         }
         
         const int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);
-        if (fd < 0 || fd > 1024) {
+        if (!isValidFd(fd)) {
             LOGE("selectImpl: ignoring invalid fd %i", fd);
             continue;
         }
@@ -2248,9 +2252,7 @@ static bool translateFdSet(JNIEnv* env, jobjectArray fdArray, jint count, fd_set
         }
         
         const int fd = jniGetFDFromFileDescriptor(env, fileDescriptor);
-        const bool valid = fd >= 0 && fd < 1024;
-
-        if (valid && FD_ISSET(fd, &fdSet)) {
+        if (isValidFd(fd) && FD_ISSET(fd, &fdSet)) {
             flagArray[i + offset] = op;
         } else {
             flagArray[i + offset] = SOCKET_OP_NONE;
