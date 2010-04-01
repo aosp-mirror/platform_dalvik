@@ -921,8 +921,14 @@ static int dvmProcessOptions(int argc, const char* const argv[],
           gDvmJit.printMe = true;
         } else if (strncmp(argv[i], "-Xjitprofile", 12) == 0) {
           gDvmJit.profile = true;
-        } else if (strncmp(argv[i], "-Xjitdisableopt:", 16) == 0) {
-          sscanf(argv[i] + 16, "%x", &gDvmJit.disableOpt);
+        } else if (strncmp(argv[i], "-Xjitdisableopt", 15) == 0) {
+          /* Disable selected optimizations */
+          if (argv[i][15] == ':') {
+              sscanf(argv[i] + 16, "%x", &gDvmJit.disableOpt);
+          /* Disable all optimizations */
+          } else {
+              gDvmJit.disableOpt = -1;
+          }
 #endif
 
         } else if (strncmp(argv[i], "-Xdeadlockpredict:", 18) == 0) {
