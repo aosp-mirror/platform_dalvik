@@ -16,6 +16,7 @@
 
 package vogar;
 
+import vogar.commands.Command;
 import vogar.commands.CommandFailedException;
 import vogar.commands.Mkdir;
 
@@ -23,14 +24,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -46,10 +45,9 @@ abstract class Mode {
     private static final Logger logger = Logger.getLogger(Mode.class.getName());
 
     protected final Environment environment;
-    protected final long timeoutSeconds;
     protected final File sdkJar;
     protected final List<String> javacArgs;
-    protected final PrintStream tee;
+    protected final int monitorPort;
 
     /**
      * Set of Java files needed to built to tun the currently selected set of
@@ -76,12 +74,11 @@ abstract class Mode {
             // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
             new File("out/target/common/obj/JAVA_LIBRARIES/core-tests-luni_intermediates/classes.jar").getAbsoluteFile());
 
-    Mode(Environment environment, long timeoutSeconds, File sdkJar, List<String> javacArgs, PrintStream tee) {
+    Mode(Environment environment, File sdkJar, List<String> javacArgs, int monitorPort) {
         this.environment = environment;
-        this.timeoutSeconds = timeoutSeconds;
         this.sdkJar = sdkJar;
         this.javacArgs = javacArgs;
-        this.tee = tee;
+        this.monitorPort = monitorPort;
     }
 
     /**
@@ -165,7 +162,6 @@ abstract class Mode {
                     Collections.singletonList("Cannot compile: " + action.getJavaFile()));
         }
 
-        String qualifiedName = action.getName();
         File classesDir = environment.classesDir(action);
         new Mkdir().mkdirs(classesDir);
         FileOutputStream propertiesOut = new FileOutputStream(
@@ -207,39 +203,13 @@ abstract class Mode {
         properties.setProperty(TestProperties.TEST_CLASS, action.getTargetClass());
         properties.setProperty(TestProperties.QUALIFIED_NAME, action.getName());
         properties.setProperty(TestProperties.RUNNER_CLASS, action.getRunnerClass().getName());
+        properties.setProperty(TestProperties.MONITOR_PORT, String.valueOf(monitorPort));
     }
 
     /**
-     * Runs the action, and returns its outcomes.
+     * Create the command that executes the action.
      */
-    Set<Outcome> run(Action action) {
-        List<String> output;
-        try {
-            output = executeAction(action);
-        } catch (TimeoutException e) {
-            return Collections.singleton(new Outcome(action.getName(),
-                    Result.EXEC_TIMEOUT, "Exceeded timeout! (" + timeoutSeconds + "s)"));
-        } catch (Exception e) {
-            return Collections.singleton(new Outcome(action.getName(), Result.ERROR, e));
-        }
-        // we only look at the output of the last command
-        if (output.isEmpty()) {
-            return Collections.singleton(new Outcome(action.getName(),
-                    Result.ERROR, "No output returned!"));
-        }
-
-        Result result = TestProperties.RESULT_SUCCESS.equals(output.get(output.size() - 1))
-                ? Result.SUCCESS
-                : Result.EXEC_FAILED;
-        return Collections.singleton(new Outcome(action.getName(),
-                action.getName(), result, output.subList(0, output.size() - 1)));
-    }
-
-    /**
-     * Run the actual action to gather output
-     */
-    protected abstract List<String> executeAction(Action action)
-        throws TimeoutException;
+    protected abstract Command createActionCommand(Action action);
 
     /**
      * Deletes files and releases any resources required for the execution of

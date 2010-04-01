@@ -40,21 +40,21 @@ abstract class Environment {
     }
 
     /**
-     * Initializes the temporary directories and test harness necessary to run
-     * tests.
+     * Initializes the temporary directories and harness necessary to run
+     * actions.
      */
     abstract void prepare();
 
     /**
-     * Prepares the directory from which the test will be executed. Some tests
-     * expect to read data files from the current working directory; this step
-     * should ensure such files are available.
+     * Prepares the directory from which the action will be executed. Some
+     * actions expect to read data files from the current working directory;
+     * this step should ensure such files are available.
      */
     abstract void prepareUserDir(Action action);
 
     /**
      * Deletes files and releases any resources required for the execution of
-     * the given test.
+     * the given action.
      */
     void cleanup(Action action) {
         if (cleanAfter) {

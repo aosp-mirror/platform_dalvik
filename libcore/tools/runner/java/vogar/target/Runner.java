@@ -22,7 +22,8 @@ package vogar.target;
  */
 public interface Runner {
 
-    public void prepareTest(Class<?> testClass);
+    public void init(TargetMonitor monitor, String actionName,
+            Class<?> testClass);
 
-    public boolean test(Class<?> testClass);
+    public void run(String actionName, Class<?> testClass);
 }

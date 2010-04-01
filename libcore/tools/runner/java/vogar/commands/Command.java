@@ -49,7 +49,7 @@ public final class Command {
     private final File workingDirectory;
     private final boolean permitNonZeroExitStatus;
     private final PrintStream tee;
-    private Process process;
+    private volatile Process process;
 
     public Command(String... args) {
         this(Arrays.asList(args));
@@ -73,7 +73,7 @@ public final class Command {
         return Collections.unmodifiableList(args);
     }
 
-    public synchronized void start() throws IOException {
+    public void start() throws IOException {
         if (isStarted()) {
             throw new IllegalStateException("Already started!");
         }
@@ -94,15 +94,7 @@ public final class Command {
         return process != null;
     }
 
-    public Process getProcess() {
-        if (!isStarted()) {
-            throw new IllegalStateException("Not started!");
-        }
-
-        return process;
-    }
-
-    public synchronized List<String> gatherOutput()
+    public List<String> gatherOutput()
             throws IOException, InterruptedException {
         if (!isStarted()) {
             throw new IllegalStateException("Not started!");
@@ -130,7 +122,7 @@ public final class Command {
         return outputLines;
     }
 
-    public synchronized List<String> execute() {
+    public List<String> execute() {
         try {
             start();
             return gatherOutput();
@@ -142,37 +134,54 @@ public final class Command {
     }
 
     /**
-     * Executes a command with a specified timeout. Output is returned
-     * if the command succeeds. If Otherwise null is returned if the
-     * command timed out.
+     * Executes a command with a specified timeout. If the process does not
+     * complete normally before the timeout has elapsed, it will be destroyed.
+     *
+     * @param timeoutSeconds how long to wait, or 0 to wait indefinitely
+     * @return the command's output, or null if the command timed out
      */
     public List<String> executeWithTimeout(long timeoutSeconds)
             throws TimeoutException {
-        ExecutorService outputReader
-            = Executors.newFixedThreadPool(1, Threads.daemonThreadFactory());
+        if (timeoutSeconds == 0) {
+            return execute();
+        }
+
         try {
-            start();
-            // run on a different thread to allow a timeout
-            Future<List<String>> future = outputReader.submit(new Callable<List<String>>() {
-                    public List<String> call() throws Exception {
-                        return gatherOutput();
-                    }
-                });
-            if (timeoutSeconds == 0) {
-                return future.get();
-            }
-            return future.get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to execute process: " + args, e);
+            return executeLater().get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while executing process: " + args, e);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         } finally {
-            if (isStarted()) {
-                getProcess().destroy(); // to release the output reader
+            destroy();
+        }
+    }
+
+    /**
+     * Executes the command on a new background thread. This method returns
+     * immediately.
+     *
+     * @return a future to retrieve the command's output.
+     */
+    public Future<List<String>> executeLater() {
+        ExecutorService executor = Executors.newFixedThreadPool(
+                1, Threads.daemonThreadFactory());
+        Future<List<String>> result = executor.submit(new Callable<List<String>>() {
+            public List<String> call() throws Exception {
+                start();
+                return gatherOutput();
             }
-            outputReader.shutdown();
+        });
+        executor.shutdown();
+        return result;
+    }
+
+    /**
+     * Destroys the underlying process and closes its associated streams.
+     */
+    public void destroy() {
+        if (process != null) {
+            process.destroy();
         }
     }
 

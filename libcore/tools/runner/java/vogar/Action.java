@@ -50,7 +50,7 @@ public final class Action {
     }
 
     /**
-     * Returns the local directory containing this test's java file.
+     * Returns the local directory containing this action's java file.
      */
     public File getJavaDirectory() {
         return actionDirectory;
@@ -69,14 +69,14 @@ public final class Action {
     }
 
     /**
-     * Returns a unique identifier for this test.
+     * Returns a unique identifier for this action.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Returns an English description of this test, or null if no such
+     * Returns an English description of this action, or null if no such
      * description is known.
      */
     public String getDescription() {
@@ -84,7 +84,8 @@ public final class Action {
     }
 
     /**
-     * Initializes the directory from which local files can be read by the test.
+     * Initializes the directory from which local files can be read by the
+     * action.
      */
     public void setUserDir(File base) {
         this.userDir = base;

@@ -16,6 +16,7 @@
 
 package vogar;
 
+import vogar.commands.Command;
 import vogar.commands.Mkdir;
 
 import java.io.File;
@@ -26,16 +27,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
  * Compiles, installs, runs and reports on actions.
  */
-final class Driver {
+final class Driver implements HostMonitor.Handler {
 
     private static final Logger logger = Logger.getLogger(Driver.class.getName());
 
@@ -43,8 +48,15 @@ final class Driver {
     private final ExpectationStore expectationStore;
     private final List<CodeFinder> codeFinders;
     private final Mode mode;
-    private final String indent;
     private final XmlReportPrinter reportPrinter;
+    private final Console console;
+    private final int monitorPort;
+    private final HostMonitor monitor;
+    private final long timeoutSeconds;
+    private int successes = 0;
+    private int failures = 0;
+
+    private Timer actionTimeoutTimer = new Timer("action timeout", true);
 
     private final Map<String, Action> actions = Collections.synchronizedMap(
             new LinkedHashMap<String, Action>());
@@ -58,17 +70,21 @@ final class Driver {
     private int unsupportedActions = 0;
 
     public Driver(File localTemp, Mode mode, ExpectationStore expectationStore,
-            String indent, List<CodeFinder> codeFinders, XmlReportPrinter reportPrinter) {
+            List<CodeFinder> codeFinders, XmlReportPrinter reportPrinter,
+            Console console, HostMonitor monitor, int monitorPort, long timeoutSeconds) {
         this.localTemp = localTemp;
         this.expectationStore = expectationStore;
         this.mode = mode;
-        this.indent = indent;
+        this.console = console;
         this.codeFinders = codeFinders;
         this.reportPrinter = reportPrinter;
+        this.monitor = monitor;
+        this.monitorPort = monitorPort;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     /**
-     * Builds and executes all tests in the test directory.
+     * Builds and executes the actions in the given files.
      */
     public void buildAndRunAllActions(Collection<File> files) {
         if (!actions.isEmpty()) {
@@ -107,7 +123,7 @@ final class Driver {
         // the action-specific files.
         mode.prepare(runnerJava, runnerClasspath);
 
-        logger.info("Running " + actions.size() + " actions.");
+        logger.info("Actions: " + actions.size());
 
         // build and install actions in a background thread. Using lots of
         // threads helps for packages that contain many unsupported actions
@@ -166,57 +182,84 @@ final class Driver {
             mode.cleanup(action);
         }
 
-        if (unsupportedActions > 0) {
-            logger.info("Skipped " + unsupportedActions + " unsupported actions.");
-        }
-
         if (reportPrinter != null) {
             logger.info("Printing XML Reports... ");
             int numFiles = reportPrinter.generateReports(outcomes.values());
             logger.info(numFiles + " XML files written.");
+        }
+
+        if (failures > 0 || unsupportedActions > 0) {
+            logger.info(String.format("Outcomes: %s. Passed: %d, Failed: %d, Skipped: %d",
+                    (successes + failures), successes, failures, unsupportedActions));
+        } else {
+            logger.info(String.format("Outcomes: %s. All successful.", 
+                    (successes + failures)));
         }
     }
 
     /**
      * Executes a single action and then prints the result.
      */
-    private void execute(Action action) {
+    private void execute(final Action action) {
+        console.action(action.getName());
+
         Outcome earlyFailure = outcomes.get(action.getName());
-        if (earlyFailure != null) {
-            if (earlyFailure.getResult() == Result.UNSUPPORTED) {
-                logger.fine("skipping " + action.getName());
-                unsupportedActions++;
-            } else {
-                printResult(earlyFailure);
+        if (earlyFailure == null) {
+            final Command command = mode.createActionCommand(action);
+            Future<List<String>> consoleOut = command.executeLater();
+            final AtomicBoolean done = new AtomicBoolean();
+
+            actionTimeoutTimer.schedule(new TimerTask() {
+                @Override public void run() {
+                    if (!done.get()) {
+                        // TODO: set a "timout" bit somewhere so we know why this failed.
+                        //       currently we report ERROR for all timeouts.
+                        logger.fine("killing " + action.getName() + " because it "
+                                + "timed out after " + timeoutSeconds + " seconds");
+                    }
+                    command.destroy();
+                }
+            }, timeoutSeconds * 1000);
+
+            boolean success = monitor.monitor(monitorPort, this);
+            done.set(true);
+            if (success) {
+                return;
             }
-            return;
+
+            try {
+                earlyFailure = new Outcome(action.getName(), action.getName(),
+                        Result.ERROR, consoleOut.get());
+            } catch (Exception e) {
+                earlyFailure = new Outcome(action.getName(), Result.ERROR, e);
+            }
         }
 
-        Set<Outcome> outcomes = mode.run(action);
-        for (Outcome outcome : outcomes) {
-            printResult(outcome);
+        if (earlyFailure.getResult() == Result.UNSUPPORTED) {
+            logger.fine("skipping " + action.getName());
+            unsupportedActions++;
+        } else {
+            for (String line : earlyFailure.getOutputLines()) {
+                console.streamOutput(line + "\n");
+            }
+            outcome(earlyFailure);
         }
     }
 
-    private void printResult(Outcome outcome) {
-        Expectation expected = expectationStore.get(outcome.getName());
-        Action action = actions.get(outcome.getActionName());
-
-        if (expected.matches(outcome)) {
-            logger.info("OK " + outcome.getName() + " (" + outcome.getResult() + ")");
-            // In --verbose mode, show the output even on success.
-            logger.fine(indent + expected.getFailureMessage(outcome).replace("\n", "\n" + indent));
-            return;
+    public void outcome(Outcome outcome) {
+        Expectation expectation = expectationStore.get(outcome.getName());
+        boolean ok = expectation.matches(outcome);
+        if (ok) {
+            successes++;
+        } else {
+            failures++;
         }
+        console.outcome(outcome.getName());
+        console.printResult(outcome.getResult(), ok);
+    }
 
-        logger.info("FAIL " + outcome.getName() + " (" + outcome.getResult() + ")");
-        String description = action.getDescription();
-        if (description != null) {
-            logger.info(indent + "\"" + description + "\"");
-        }
-
-        // Don't mess with compiler error output for tools (such as
-        // Emacs) that are trying to parse it with regexps
-        logger.info(indent + expected.getFailureMessage(outcome).replace("\n", "\n" + indent));
+    public void output(String outcomeName, String output) {
+        console.outcome(outcomeName);
+        console.streamOutput(output);
     }
 }

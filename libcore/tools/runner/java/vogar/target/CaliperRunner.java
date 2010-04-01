@@ -18,20 +18,27 @@ package vogar.target;
 
 import com.google.caliper.Benchmark;
 import com.google.caliper.Runner;
+import vogar.Result;
 
 /**
  * Runs a <a href="http://code.google.com/p/caliper/">Caliper</a> benchmark.
  */
 public final class CaliperRunner implements vogar.target.Runner {
 
-    public void prepareTest(Class<?> testClass) {}
+    private TargetMonitor monitor;
 
-    public boolean test(Class<?> testClass) {
+    public void init(TargetMonitor monitor, String actionName,
+            Class<?> testClass) {
+        this.monitor = monitor;
+    }
+
+    public void run(String actionName, Class<?> testClass) {
+        monitor.outcomeStarted(actionName, actionName);
         try {
             Runner.main(testClass.asSubclass(Benchmark.class), new String[0]);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return false; // always print benchmarking results
+        monitor.outcomeFinished(Result.SUCCESS);
     }
 }

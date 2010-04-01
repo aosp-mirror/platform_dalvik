@@ -16,6 +16,8 @@
 
 package vogar.target;
 
+import vogar.Result;
+
 import java.lang.reflect.Method;
 
 /**
@@ -24,8 +26,11 @@ import java.lang.reflect.Method;
 public final class JtregRunner implements Runner {
 
     private Method main;
+    private TargetMonitor monitor;
 
-    public void prepareTest(Class<?> testClass) {
+    public void init(TargetMonitor monitor, String actionName,
+            Class<?> testClass) {
+        this.monitor = monitor;
         try {
             main = testClass.getMethod("main", String[].class);
         } catch (Exception e) {
@@ -33,13 +38,14 @@ public final class JtregRunner implements Runner {
         }
     }
 
-    public boolean test(Class<?> testClass) {
+    public void run(String actionName, Class<?> testClass) {
+        monitor.outcomeStarted(actionName, actionName);
         try {
             main.invoke(null, new Object[] { new String[0] });
-            return true;
+            monitor.outcomeFinished(Result.SUCCESS);
         } catch (Throwable failure) {
             failure.printStackTrace();
-            return false;
+            monitor.outcomeFinished(Result.EXEC_FAILED);
         }
     }
 }

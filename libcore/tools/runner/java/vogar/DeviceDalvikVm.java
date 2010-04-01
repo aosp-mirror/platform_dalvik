@@ -19,7 +19,6 @@ package vogar;
 import vogar.commands.Dx;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -29,11 +28,11 @@ import java.util.logging.Logger;
 final class DeviceDalvikVm extends Vm {
     private static final Logger logger = Logger.getLogger(DeviceDalvikVm.class.getName());
 
-    DeviceDalvikVm(Integer debugPort, long timeoutSeconds, File sdkJar, List<String> javacArgs,
-                   PrintStream tee, File localTemp, List<String> additionalVmArgs,
-                   boolean cleanBefore, boolean cleanAfter, File runnerDir) {
-        super(new EnvironmentDevice(cleanBefore, cleanAfter, debugPort, localTemp, runnerDir),
-              timeoutSeconds, sdkJar, javacArgs, tee, additionalVmArgs);
+    DeviceDalvikVm(Integer debugPort, File sdkJar, List<String> javacArgs,
+            int monitorPort, File localTemp, List<String> additionalVmArgs,
+            boolean cleanBefore, boolean cleanAfter, File runnerDir) {
+        super(new EnvironmentDevice(cleanBefore, cleanAfter, debugPort, monitorPort, localTemp,
+                runnerDir), sdkJar, javacArgs, additionalVmArgs, monitorPort);
     }
 
     private EnvironmentDevice getEnvironmentDevice() {

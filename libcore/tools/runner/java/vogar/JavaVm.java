@@ -17,7 +17,6 @@
 package vogar;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.util.List;
 
 /**
@@ -27,11 +26,11 @@ final class JavaVm extends Vm {
 
     private final File javaHome;
 
-    JavaVm(Integer debugPort, long timeoutSeconds, File sdkJar, List<String> javacArgs,
-           PrintStream tee, File localTemp, File javaHome, List<String> additionalVmArgs,
-           boolean cleanBefore, boolean cleanAfter) {
+    JavaVm(Integer debugPort, File sdkJar, List<String> javacArgs, int monitorPort,
+            File localTemp, File javaHome, List<String> additionalVmArgs,
+            boolean cleanBefore, boolean cleanAfter) {
         super(new EnvironmentHost(cleanBefore, cleanAfter, debugPort, localTemp),
-              timeoutSeconds, sdkJar, javacArgs, tee, additionalVmArgs);
+                sdkJar, javacArgs, additionalVmArgs, monitorPort);
         this.javaHome = javaHome;
     }
 

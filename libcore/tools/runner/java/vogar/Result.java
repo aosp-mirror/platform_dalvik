@@ -22,7 +22,7 @@ package vogar;
 public enum Result {
 
     /**
-     * A test that cannot be run by this harness, such as a shell script.
+     * An action that cannot be run by this harness, such as a shell script.
      */
     UNSUPPORTED,
 

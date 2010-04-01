@@ -41,7 +41,7 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
     }
 
     /**
-     * Returns true if {@code file} contains a test class of this type.
+     * Returns true if {@code file} contains a action class of this type.
      */
     protected boolean matches(File file) {
         return (!file.getName().startsWith(".")

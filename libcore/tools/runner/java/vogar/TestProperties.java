@@ -52,11 +52,10 @@ final public class TestProperties {
      */
     public static final String DEVICE_RUNNER_DIR = "deviceRunnerDir";
 
-
     /**
-     * The output file written by TestActivity
+     * Port to accept monitor connections on.
      */
-    public static final String RESULT_FILE = "result.txt";
+    public static final String MONITOR_PORT = "monitorPort";
 
     /**
      * Result value for successful test

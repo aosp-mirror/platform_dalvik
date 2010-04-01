@@ -16,19 +16,28 @@
 
 package vogar.target;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestResult;
+import junit.runner.BaseTestRunner;
 import junit.runner.TestSuiteLoader;
+import junit.textui.ResultPrinter;
+import vogar.Result;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Runs a JUnit test.
+ * Adapts a JUnit test for use by vogar.
  */
 public final class JUnitRunner implements Runner {
 
-    private final junit.textui.TestRunner testRunner;
+    private static final Pattern NAME_THEN_TEST_CLASS = Pattern.compile("(.*)\\(([\\w\\.$]+)\\)");
+
+    private junit.textui.TestRunner testRunner;
     private Test junitTest;
 
-    public JUnitRunner() {
+    public void init(TargetMonitor monitor, String actionName, Class<?> testClass) {
         final TestSuiteLoader testSuiteLoader = new TestSuiteLoader() {
             public Class load(String suiteClassName) throws ClassNotFoundException {
                 return JUnitRunner.class.getClassLoader().loadClass(suiteClassName);
@@ -39,19 +48,84 @@ public final class JUnitRunner implements Runner {
             }
         };
 
-        testRunner = new junit.textui.TestRunner() {
+        testRunner = new junit.textui.TestRunner(
+                new MonitoringResultPrinter(monitor, actionName)) {
             @Override public TestSuiteLoader getLoader() {
                 return testSuiteLoader;
             }
         };
+
+        this.junitTest = testRunner.getTest(testClass.getName());
     }
 
-    public void prepareTest(Class<?> testClass) {
-        junitTest = testRunner.getTest(testClass.getName());
+    public void run(String actionName, Class<?> testClass) {
+        testRunner.doRun(junitTest);
     }
 
-    public boolean test(Class<?> testClass) {
-        TestResult result = testRunner.doRun(junitTest);
-        return result.wasSuccessful();
+    /**
+     * Returns the vogar name like {@code tests.xml.DomTest#testFoo} for a test
+     * with a JUnit name like {@code testFoo(tests.xml.DomTest)}.
+     */
+    private String getOutcomeName(Test test) {
+        String testToString = test.toString();
+
+        Matcher matcher = NAME_THEN_TEST_CLASS.matcher(testToString);
+        if (matcher.matches()) {
+            return matcher.group(2) + "#" + matcher.group(1);
+        }
+
+        return testToString;
+    }
+
+    /**
+     * This result printer posts test names, output and exceptions to the
+     * hosting process.
+     */
+    private class MonitoringResultPrinter extends ResultPrinter {
+        private final TargetMonitor monitor;
+        private final String actionName;
+
+        private Test current;
+        private Throwable failure;
+
+        public MonitoringResultPrinter(TargetMonitor monitor,
+                String actionName) {
+            super(System.out);
+            this.monitor = monitor;
+            this.actionName = actionName;
+        }
+
+        @Override public void addError(Test test, Throwable t) {
+            System.out.println(BaseTestRunner.getFilteredTrace(t));
+            failure = t;
+        }
+
+        @Override public void addFailure(Test test, AssertionFailedError t) {
+            System.out.println(BaseTestRunner.getFilteredTrace(t));
+            failure = t;
+        }
+
+        @Override public void endTest(Test test) {
+            if (current == null) {
+                throw new IllegalStateException();
+            }
+            monitor.outcomeFinished(
+                    failure == null ? Result.SUCCESS : Result.EXEC_FAILED);
+            current = null;
+            failure = null;
+        }
+
+        @Override public void startTest(Test test) {
+            if (current != null) {
+                throw new IllegalStateException();
+            }
+            current = test;
+            monitor.outcomeStarted(getOutcomeName(test), actionName);
+        }
+
+        @Override protected void printHeader(long runTime) {}
+        @Override protected void printErrors(TestResult result) {}
+        @Override protected void printFailures(TestResult result) {}
+        @Override protected void printFooter(TestResult result) {}
     }
 }
