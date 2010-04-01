@@ -125,10 +125,6 @@ public final class NativeBreakIterator implements Cloneable {
         return precedingImpl(this.addr, offset);
     }
 
-    public static Locale[] getAvailableLocales() {
-        return Resources.localesFromStrings(getAvailableLocalesImpl());
-    }
-
     public static NativeBreakIterator getCharacterInstance(Locale where) {
         return new NativeBreakIterator(getCharacterInstanceImpl(where.toString()), BI_CHAR_INSTANCE);
     }
@@ -145,7 +141,6 @@ public final class NativeBreakIterator implements Cloneable {
         return new NativeBreakIterator(getWordInstanceImpl(where.toString()), BI_WORD_INSTANCE);
     }
 
-    private static native String[] getAvailableLocalesImpl();
     private static native int getCharacterInstanceImpl(String locale);
     private static native int getWordInstanceImpl(String locale);
     private static native int getLineInstanceImpl(String locale);

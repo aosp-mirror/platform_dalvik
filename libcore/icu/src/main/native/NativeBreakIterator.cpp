@@ -22,21 +22,6 @@
 #include "unicode/putil.h"
 #include <stdlib.h>
 
-static jobjectArray getAvailableLocalesImpl(JNIEnv* env, jclass) {
-    jclass stringClass = env->FindClass("java/lang/String");
-    if (stringClass == NULL) {
-        return NULL;
-    }
-    size_t count = ubrk_countAvailable();
-    jobjectArray result = env->NewObjectArray(count, stringClass, NULL);
-    for (size_t i = 0; i < count; ++i) {
-        jstring s = env->NewStringUTF(ubrk_getAvailable(i));
-        env->SetObjectArrayElement(result, i, s);
-        env->DeleteLocalRef(s);
-    }
-    return result;
-}
-
 static jint getIterator(JNIEnv* env, jstring locale, UBreakIteratorType type) {
     UErrorCode status = U_ZERO_ERROR;
     ScopedUtfChars localeChars(env, locale);
@@ -140,7 +125,6 @@ static JNINativeMethod gMethods[] = {
     { "currentImpl", "(I)I", (void*) currentImpl },
     { "firstImpl", "(I)I", (void*) firstImpl },
     { "followingImpl", "(II)I", (void*) followingImpl },
-    { "getAvailableLocalesImpl", "()[Ljava/lang/String;", (void*) getAvailableLocalesImpl },
     { "getCharacterInstanceImpl", "(Ljava/lang/String;)I", (void*) getCharacterInstanceImpl },
     { "getLineInstanceImpl", "(Ljava/lang/String;)I", (void*) getLineInstanceImpl },
     { "getSentenceInstanceImpl", "(Ljava/lang/String;)I", (void*) getSentenceInstanceImpl },

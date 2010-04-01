@@ -15,22 +15,16 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// The icu implementation used was changed from icu4j to icu4jni.
-// END android-note
-
 package java.text;
 
+import com.ibm.icu4jni.util.LocaleData;
+import com.ibm.icu4jni.util.Resources;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Locale;
 
-// BEGIN android-added
-import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
-// END android-added
 /**
  * Encapsulates localizable date-time formatting data, such as the names of the
  * months, the names of the days of the week, and the time zone data.
@@ -169,7 +163,7 @@ public class DateFormatSymbols implements Serializable, Cloneable {
      * @hide
      */
     public static Locale[] getAvailableLocales() {
-        return Locale.getAvailableLocales();
+        return Resources.getAvailableDateFormatSymbolsLocales();
     }
 
     private void writeObject(ObjectOutputStream oos) throws IOException {

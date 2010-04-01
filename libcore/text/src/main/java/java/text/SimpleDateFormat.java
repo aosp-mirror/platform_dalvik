@@ -15,10 +15,6 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// changed from ICU to resource bundles and Java parsing/formatting
-// END android-note
-
 package java.text;
 
 import java.io.IOException;

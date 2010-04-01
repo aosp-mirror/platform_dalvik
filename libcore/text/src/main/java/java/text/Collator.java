@@ -15,12 +15,9 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// The icu implementation used was changed from icu4j to icu4jni.
-// END android-note
-
 package java.text;
 
+import com.ibm.icu4jni.util.Resources;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Comparator;
@@ -257,7 +254,7 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * are available.
      */
     public static Locale[] getAvailableLocales() {
-        return com.ibm.icu4jni.text.Collator.getAvailableLocales();
+        return Resources.getAvailableCollatorLocales();
     }
 
     /**

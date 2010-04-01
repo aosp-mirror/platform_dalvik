@@ -68,10 +68,6 @@ public final class Locale implements Cloneable, Serializable {
 
     private static final long serialVersionUID = 9149081749638150636L;
 
-    // BEGIN android-added
-    private static volatile Locale[] availableLocales;
-    // END android-added
-
     // Initialize a default which is used during static
     // initialization of the default for the platform.
     private static Locale defaultLocale = new Locale();
@@ -343,12 +339,7 @@ public final class Locale implements Cloneable, Serializable {
      * @return an array of {@code Locale}s.
      */
     public static Locale[] getAvailableLocales() {
-        // BEGIN android-changed
-        if (availableLocales == null) {
-            availableLocales = Resources.localesFromStrings(Resources.getAvailableLocales());
-        }
-        return availableLocales.clone();
-        // END android-changed
+        return Resources.getAvailableLocales();
     }
 
     /**

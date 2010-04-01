@@ -18,6 +18,7 @@
 package java.util;
 
 import com.ibm.icu4jni.util.LocaleData;
+import com.ibm.icu4jni.util.Resources;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -961,7 +962,7 @@ public abstract class Calendar implements Serializable, Cloneable, Comparable<Ca
      * are available.
      */
     public static synchronized Locale[] getAvailableLocales() {
-        return Locale.getAvailableLocales();
+        return Resources.getAvailableCalendarLocales();
     }
 
     /**

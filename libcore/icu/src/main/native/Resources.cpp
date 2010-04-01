@@ -20,7 +20,10 @@
 #include "cutils/log.h"
 #include "unicode/numfmt.h"
 #include "unicode/locid.h"
+#include "unicode/ubrk.h"
 #include "unicode/ucal.h"
+#include "unicode/ucol.h"
+#include "unicode/udat.h"
 #include "unicode/gregocal.h"
 #include "unicode/ucurr.h"
 #include "unicode/calendar.h"
@@ -239,15 +242,40 @@ static jobjectArray getISOLanguagesNative(JNIEnv* env, jclass clazz) {
     return toStringArray(env, Locale::getISOLanguages());
 }
 
-static jobjectArray getAvailableLocalesNative(JNIEnv* env, jclass clazz) {
-    size_t count = uloc_countAvailable();
+template <typename Counter, typename Getter>
+static jobjectArray getAvailableLocales(JNIEnv* env, Counter* counter, Getter* getter) {
+    size_t count = (*counter)();
     jobjectArray result = env->NewObjectArray(count, string_class, NULL);
     for (size_t i = 0; i < count; ++i) {
-        jstring s = env->NewStringUTF(uloc_getAvailable(i));
+        jstring s = env->NewStringUTF((*getter)(i));
         env->SetObjectArrayElement(result, i, s);
         env->DeleteLocalRef(s);
     }
     return result;
+}
+
+static jobjectArray getAvailableLocalesNative(JNIEnv* env, jclass) {
+    return getAvailableLocales(env, uloc_countAvailable, uloc_getAvailable);
+}
+
+static jobjectArray getAvailableBreakIteratorLocalesNative(JNIEnv* env, jclass) {
+    return getAvailableLocales(env, ubrk_countAvailable, ubrk_getAvailable);
+}
+
+static jobjectArray getAvailableCalendarLocalesNative(JNIEnv* env, jclass) {
+    return getAvailableLocales(env, ucal_countAvailable, ucal_getAvailable);
+}
+
+static jobjectArray getAvailableCollatorLocalesNative(JNIEnv* env, jclass) {
+    return getAvailableLocales(env, ucol_countAvailable, ucol_getAvailable);
+}
+
+static jobjectArray getAvailableDateFormatLocalesNative(JNIEnv* env, jclass) {
+    return getAvailableLocales(env, udat_countAvailable, udat_getAvailable);
+}
+
+static jobjectArray getAvailableNumberFormatLocalesNative(JNIEnv* env, jclass) {
+    return getAvailableLocales(env, unum_countAvailable, unum_getAvailable);
 }
 
 static TimeZone* timeZoneFromId(JNIEnv* env, jstring id) {
@@ -690,42 +718,25 @@ static jboolean initLocaleDataImpl(JNIEnv* env, jclass clazz, jstring locale, jo
 
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    {"getCurrencyFractionDigitsNative", "(Ljava/lang/String;)I",
-            (void*) getCurrencyFractionDigitsNative},
-    {"getCurrencyCodeNative", "(Ljava/lang/String;)Ljava/lang/String;",
-            (void*) getCurrencyCodeNative},
-    {"getCurrencySymbolNative", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
-            (void*) getCurrencySymbolNative},
-    {"getDisplayCountryNative",
-            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
-            (void*) getDisplayCountryNative},
-    {"getDisplayLanguageNative",
-            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
-            (void*) getDisplayLanguageNative},
-    {"getDisplayVariantNative",
-            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
-            (void*) getDisplayVariantNative},
-    {"getISO3CountryNative",
-            "(Ljava/lang/String;)Ljava/lang/String;",
-            (void*) getISO3CountryNative},
-    {"getISO3LanguageNative",
-            "(Ljava/lang/String;)Ljava/lang/String;",
-            (void*) getISO3LanguageNative},
-    {"getISOCountriesNative", "()[Ljava/lang/String;",
-            (void*) getISOCountriesNative},
-    {"getISOLanguagesNative", "()[Ljava/lang/String;",
-            (void*) getISOLanguagesNative},
-    {"getAvailableLocalesNative", "()[Ljava/lang/String;",
-            (void*) getAvailableLocalesNative},
-    {"getTimeZonesNative",
-            "([[Ljava/lang/String;Ljava/lang/String;)V",
-            (void*) getTimeZonesNative},
-    {"getDisplayTimeZoneNative",
-            "(Ljava/lang/String;ZILjava/lang/String;)Ljava/lang/String;",
-            (void*) getDisplayTimeZoneNative},
-    {"initLocaleDataImpl",
-            "(Ljava/lang/String;Lcom/ibm/icu4jni/util/LocaleData;)Z",
-            (void*) initLocaleDataImpl},
+    {"getAvailableBreakIteratorLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableBreakIteratorLocalesNative},
+    {"getAvailableCalendarLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableCalendarLocalesNative},
+    {"getAvailableCollatorLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableCollatorLocalesNative},
+    {"getAvailableDateFormatLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableDateFormatLocalesNative},
+    {"getAvailableLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableLocalesNative},
+    {"getAvailableNumberFormatLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableNumberFormatLocalesNative},
+    {"getCurrencyCodeNative", "(Ljava/lang/String;)Ljava/lang/String;", (void*) getCurrencyCodeNative},
+    {"getCurrencyFractionDigitsNative", "(Ljava/lang/String;)I", (void*) getCurrencyFractionDigitsNative},
+    {"getCurrencySymbolNative", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", (void*) getCurrencySymbolNative},
+    {"getDisplayCountryNative", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", (void*) getDisplayCountryNative},
+    {"getDisplayLanguageNative", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", (void*) getDisplayLanguageNative},
+    {"getDisplayTimeZoneNative", "(Ljava/lang/String;ZILjava/lang/String;)Ljava/lang/String;", (void*) getDisplayTimeZoneNative},
+    {"getDisplayVariantNative", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", (void*) getDisplayVariantNative},
+    {"getISO3CountryNative", "(Ljava/lang/String;)Ljava/lang/String;", (void*) getISO3CountryNative},
+    {"getISO3LanguageNative", "(Ljava/lang/String;)Ljava/lang/String;", (void*) getISO3LanguageNative},
+    {"getISOCountriesNative", "()[Ljava/lang/String;", (void*) getISOCountriesNative},
+    {"getISOLanguagesNative", "()[Ljava/lang/String;", (void*) getISOLanguagesNative},
+    {"getTimeZonesNative", "([[Ljava/lang/String;Ljava/lang/String;)V", (void*) getTimeZonesNative},
+    {"initLocaleDataImpl", "(Ljava/lang/String;Lcom/ibm/icu4jni/util/LocaleData;)Z", (void*) initLocaleDataImpl},
 };
 
 int register_com_ibm_icu4jni_util_Resources(JNIEnv* env) {

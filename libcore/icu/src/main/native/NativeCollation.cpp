@@ -496,24 +496,8 @@ static void setText(JNIEnv *env, jclass obj, jint address,
    icu4jni_error(env, status);
 }
 
-static jobjectArray getAvailableLocalesImpl(JNIEnv *env, jclass clazz) {
-    jclass stringClass = env->FindClass("java/lang/String");
-    if (stringClass == NULL) {
-        return NULL;
-    }
-    size_t count = ucol_countAvailable();
-    jobjectArray result = env->NewObjectArray(count, stringClass, NULL);
-    for (size_t i = 0; i < count; ++i) {
-        jstring s = env->NewStringUTF(ucol_getAvailable(i));
-        env->SetObjectArrayElement(result, i, s);
-        env->DeleteLocalRef(s);
-    }
-    return result;
-}
-
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
-    { "getAvailableLocalesImpl", "()[Ljava/lang/String;", (void*) getAvailableLocalesImpl },
     { "openCollator", "()I", (void*) openCollator__ },
     { "openCollator", "(Ljava/lang/String;)I", (void*) openCollator__Ljava_lang_String_2 },
     { "openCollatorFromRules", "(Ljava/lang/String;II)I", (void*) openCollatorFromRules },
