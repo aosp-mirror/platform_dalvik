@@ -88,6 +88,8 @@ int jniRegisterSystemMethods(JNIEnv* env)
         goto bail;
     if (register_com_ibm_icu4jni_text_NativeCollator(env) != 0)
         goto bail;
+    if (register_com_ibm_icu4jni_text_NativeIDN(env) != 0)
+        goto bail;
     if (register_com_ibm_icu4jni_converters_NativeConverter(env) != 0)
         goto bail;
     if (register_com_ibm_icu4jni_regex_NativeRegEx(env) != 0)
