@@ -1,0 +1,7 @@
+# this is a comment
+# followed by a blank line
+
+java.util.ServiceLoaderTest$Impl1
+java.util.ServiceLoaderTest$Impl2 # this comment is valid
+java.util.ServiceLoaderTest$Impl2#as is this
+java.util.ServiceLoaderTest$Impl2 # and duplicates are allowed too
