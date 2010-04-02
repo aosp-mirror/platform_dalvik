@@ -25,7 +25,6 @@
 static int coreTemps[] = {r0, r1, r2, r3, r4PC, r7};
 static int corePreserved[] = {};
 
-/* FIXME - circular dependency */
 static void storePair(CompilationUnit *cUnit, int base, int lowReg,
                       int highReg);
 static void loadPair(CompilationUnit *cUnit, int base, int lowReg, int highReg);
@@ -43,8 +42,13 @@ static ArmLIR *genRegRegCheck(CompilationUnit *cUnit,
  * Load a immediate using a shortcut if possible; otherwise
  * grab from the per-translation literal pool.  If target is
  * a high register, build constant into a low register and copy.
+ *
+ * No additional register clobbering operation performed. Use this version when
+ * 1) rDest is freshly returned from dvmCompilerAllocTemp or
+ * 2) The codegen is under fixed register usage
  */
-static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
+static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
+                                     int value)
 {
     ArmLIR *res;
     int tDest = LOWREG(rDest) ? rDest : dvmCompilerAllocTemp(cUnit);
@@ -113,7 +117,7 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
         dvmCompilerClobber(cUnit, rDest);
         dvmCompilerMarkInUse(cUnit, rDest);
     }
-    return loadConstantValue(cUnit, rDest, value);
+    return loadConstantNoClobber(cUnit, rDest, value);
 }
 
 static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
@@ -436,8 +440,8 @@ static ArmLIR *loadConstantValueWide(CompilationUnit *cUnit, int rDestLo,
                                      int rDestHi, int valLo, int valHi)
 {
     ArmLIR *res;
-    res = loadConstantValue(cUnit, rDestLo, valLo);
-    loadConstantValue(cUnit, rDestHi, valHi);
+    res = loadConstantNoClobber(cUnit, rDestLo, valLo);
+    loadConstantNoClobber(cUnit, rDestHi, valHi);
     return res;
 }
 

@@ -265,7 +265,6 @@ bool dvmCompilerSetBit(BitVector *pBits, int num)
     return true;
 }
 
-/* FIXME */
 void dvmDebugBitVector(char *msg, const BitVector *bv, int length)
 {
     int i;

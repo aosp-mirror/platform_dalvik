@@ -41,7 +41,7 @@ static bool genConversionCall(CompilationUnit *cUnit, MIR *mir, void *funct,
         rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
         loadValueDirectWideFixed(cUnit, rlSrc, r0, r1);
     }
-    loadConstant(cUnit, r2, (int)funct);
+    LOAD_FUNC_ADDR(cUnit, r2, (int)funct);
     opReg(cUnit, kOpBlx, r2);
     dvmCompilerClobberCallRegs(cUnit);
     if (tgtSize == 1) {
@@ -65,13 +65,6 @@ static bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
 {
     RegLocation rlResult;
     void* funct;
-
-    /* TODO: use a proper include file to define these */
-    float __aeabi_fadd(float a, float b);
-    float __aeabi_fsub(float a, float b);
-    float __aeabi_fdiv(float a, float b);
-    float __aeabi_fmul(float a, float b);
-    float fmodf(float a, float b);
 
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_FLOAT_2ADDR:
@@ -104,7 +97,7 @@ static bool genArithOpFloatPortable(CompilationUnit *cUnit, MIR *mir,
     dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
     loadValueDirectFixed(cUnit, rlSrc1, r0);
     loadValueDirectFixed(cUnit, rlSrc2, r1);
-    loadConstant(cUnit, r2, (int)funct);
+    LOAD_FUNC_ADDR(cUnit, r2, (int)funct);
     opReg(cUnit, kOpBlx, r2);
     dvmCompilerClobberCallRegs(cUnit);
     rlResult = dvmCompilerGetReturn(cUnit);
@@ -118,13 +111,6 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
 {
     RegLocation rlResult;
     void* funct;
-
-    /* TODO: use a proper include file to define these */
-    double __aeabi_dadd(double a, double b);
-    double __aeabi_dsub(double a, double b);
-    double __aeabi_ddiv(double a, double b);
-    double __aeabi_dmul(double a, double b);
-    double fmod(double a, double b);
 
     switch (mir->dalvikInsn.opCode) {
         case OP_ADD_DOUBLE_2ADDR:
@@ -155,7 +141,7 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
             return true;
     }
     dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
-    loadConstant(cUnit, rlr, (int)funct);
+    LOAD_FUNC_ADDR(cUnit, rlr, (int)funct);
     loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
     loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
     opReg(cUnit, kOpBlx, rlr);
@@ -168,17 +154,6 @@ static bool genArithOpDoublePortable(CompilationUnit *cUnit, MIR *mir,
 static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode opCode = mir->dalvikInsn.opCode;
-
-    float  __aeabi_i2f(  int op1 );
-    int    __aeabi_f2iz( float op1 );
-    float  __aeabi_d2f(  double op1 );
-    double __aeabi_f2d(  float op1 );
-    double __aeabi_i2d(  int op1 );
-    int    __aeabi_d2iz( double op1 );
-    float  __aeabi_l2f(  long op1 );
-    double __aeabi_l2d(  long op1 );
-    s8 dvmJitf2l( float op1 );
-    s8 dvmJitd2l( double op1 );
 
     switch (opCode) {
         case OP_INT_TO_FLOAT:
@@ -536,7 +511,7 @@ static void genArrayObjectPut(CompilationUnit *cUnit, MIR *mir,
 
     /* Get object to store */
     loadValueDirectFixed(cUnit, rlSrc, r0);
-    loadConstant(cUnit, r2, (int)dvmCanPutArrayElement);
+    LOAD_FUNC_ADDR(cUnit, r2, (int)dvmCanPutArrayElement);
 
     /* Are we storing null?  If so, avoid check */
     opRegImm(cUnit, kOpCmp, r0, 0);
@@ -616,8 +591,6 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
     bool callOut = false;
     void *callTgt;
     int retReg = r0;
-    /* TODO - find proper .h file to declare these */
-    long long __aeabi_ldivmod(long long op1, long long op2);
 
     switch (mir->dalvikInsn.opCode) {
         case OP_NOT_LONG:
@@ -675,7 +648,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
             int tReg = dvmCompilerAllocTemp(cUnit);
             rlSrc2 = loadValueWide(cUnit, rlSrc2, kCoreReg);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-            loadConstantValue(cUnit, tReg, 0);
+            loadConstantNoClobber(cUnit, tReg, 0);
             opRegRegReg(cUnit, kOpSub, rlResult.lowReg,
                         tReg, rlSrc2.lowReg);
             opRegReg(cUnit, kOpSbc, tReg, rlSrc2.highReg);
@@ -693,7 +666,7 @@ static bool genArithOpLong(CompilationUnit *cUnit, MIR *mir,
         // Adjust return regs in to handle case of rem returning r2/r3
         dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
         loadValueDirectWideFixed(cUnit, rlSrc1, r0, r1);
-        loadConstant(cUnit, rlr, (int) callTgt);
+        LOAD_FUNC_ADDR(cUnit, rlr, (int) callTgt);
         loadValueDirectWideFixed(cUnit, rlSrc2, r2, r3);
         opReg(cUnit, kOpBlx, rlr);
         dvmCompilerClobberCallRegs(cUnit);
@@ -718,10 +691,6 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
     void *callTgt;
     RegLocation rlResult;
     bool shiftOp = false;
-
-    /* TODO - find proper .h file to declare these */
-    int __aeabi_idivmod(int op1, int op2);
-    int __aeabi_idiv(int op1, int op2);
 
     switch (mir->dalvikInsn.opCode) {
         case OP_NEG_INT:
@@ -817,7 +786,7 @@ static bool genArithOpInt(CompilationUnit *cUnit, MIR *mir,
         RegLocation rlResult;
         dvmCompilerFlushAllRegs(cUnit);   /* Send everything to home location */
         loadValueDirectFixed(cUnit, rlSrc2, r1);
-        loadConstant(cUnit, r2, (int) callTgt);
+        LOAD_FUNC_ADDR(cUnit, r2, (int) callTgt);
         loadValueDirectFixed(cUnit, rlSrc1, r0);
         if (checkZero) {
             genNullCheck(cUnit, rlSrc2.sRegLow, r1, mir->offset, NULL);
@@ -1340,7 +1309,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         genDispatchToHandler(cUnit, TEMPLATE_MONITOR_ENTER);
 #endif
     } else {
-        loadConstant(cUnit, r2, (int)dvmUnlockObject);
+        LOAD_FUNC_ADDR(cUnit, r2, (int)dvmUnlockObject);
         /* Do the call */
         opReg(cUnit, kOpBlx, r2);
         opRegImm(cUnit, kOpCmp, r0, 0); /* Did we throw? */
@@ -1409,7 +1378,7 @@ static bool handleFmt11n_Fmt31i(CompilationUnit *cUnit, MIR *mir)
         case OP_CONST:
         case OP_CONST_4: {
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
-            loadConstantValue(cUnit, rlResult.lowReg, mir->dalvikInsn.vB);
+            loadConstantNoClobber(cUnit, rlResult.lowReg, mir->dalvikInsn.vB);
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
@@ -1417,7 +1386,7 @@ static bool handleFmt11n_Fmt31i(CompilationUnit *cUnit, MIR *mir)
             //TUNING: single routine to load constant pair for support doubles
             //TUNING: load 0/-1 separately to avoid load dependency
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-            loadConstantValue(cUnit, rlResult.lowReg, mir->dalvikInsn.vB);
+            loadConstantNoClobber(cUnit, rlResult.lowReg, mir->dalvikInsn.vB);
             opRegRegImm(cUnit, kOpAsr, rlResult.highReg,
                         rlResult.lowReg, 31);
             storeValueWide(cUnit, rlDest, rlResult);
@@ -1442,7 +1411,8 @@ static bool handleFmt21h(CompilationUnit *cUnit, MIR *mir)
 
     switch (mir->dalvikInsn.opCode) {
         case OP_CONST_HIGH16: {
-            loadConstantValue(cUnit, rlResult.lowReg, mir->dalvikInsn.vB << 16);
+            loadConstantNoClobber(cUnit, rlResult.lowReg,
+                                  mir->dalvikInsn.vB << 16);
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
@@ -1479,7 +1449,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             assert(strPtr != NULL);
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-            loadConstantValue(cUnit, rlResult.lowReg, (int) strPtr );
+            loadConstantNoClobber(cUnit, rlResult.lowReg, (int) strPtr );
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
@@ -1489,7 +1459,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             assert(classPtr != NULL);
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-            loadConstantValue(cUnit, rlResult.lowReg, (int) classPtr );
+            loadConstantNoClobber(cUnit, rlResult.lowReg, (int) classPtr );
             storeValue(cUnit, rlDest, rlResult);
             break;
         }
@@ -1586,7 +1556,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             assert((classPtr->accessFlags & (ACC_INTERFACE|ACC_ABSTRACT)) == 0);
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             genExportPC(cUnit, mir);
-            loadConstant(cUnit, r2, (int)dvmAllocObject);
+            LOAD_FUNC_ADDR(cUnit, r2, (int)dvmAllocObject);
             loadConstant(cUnit, r0, (int) classPtr);
             loadConstant(cUnit, r1, ALLOC_DONT_TRACK);
             opReg(cUnit, kOpBlx, r2);
@@ -1644,7 +1614,7 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              */
             /* r0 now contains object->clazz */
             loadWordDisp(cUnit, rlSrc.lowReg, offsetof(Object, clazz), r0);
-            loadConstant(cUnit, r2, (int)dvmInstanceofNonTrivial);
+            LOAD_FUNC_ADDR(cUnit, r2, (int)dvmInstanceofNonTrivial);
             opRegReg(cUnit, kOpCmp, r0, r1);
             ArmLIR *branch2 = opCondBranch(cUnit, kArmCondEq);
             opReg(cUnit, kOpBlx, r2);
@@ -1847,14 +1817,14 @@ static bool handleFmt21s(CompilationUnit *cUnit, MIR *mir)
     if (dalvikOpCode == OP_CONST_WIDE_16) {
         rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
         rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-        loadConstantValue(cUnit, rlResult.lowReg, BBBB);
+        loadConstantNoClobber(cUnit, rlResult.lowReg, BBBB);
         //TUNING: do high separately to avoid load dependency
         opRegRegImm(cUnit, kOpAsr, rlResult.highReg, rlResult.lowReg, 31);
         storeValueWide(cUnit, rlDest, rlResult);
     } else if (dalvikOpCode == OP_CONST_16) {
         rlDest = dvmCompilerGetDest(cUnit, mir, 0);
         rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
-        loadConstantValue(cUnit, rlResult.lowReg, BBBB);
+        loadConstantNoClobber(cUnit, rlResult.lowReg, BBBB);
         storeValue(cUnit, rlDest, rlResult);
     } else
         return true;
@@ -1984,9 +1954,6 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
     int shiftOp = false;
     bool isDiv = false;
 
-    int __aeabi_idivmod(int op1, int op2);
-    int __aeabi_idiv(int op1, int op2);
-
     switch (dalvikOpCode) {
         case OP_RSUB_INT_LIT8:
         case OP_RSUB_INT: {
@@ -2057,10 +2024,10 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             dvmCompilerClobber(cUnit, r0);
             if ((dalvikOpCode == OP_DIV_INT_LIT8) ||
                 (dalvikOpCode == OP_DIV_INT_LIT16)) {
-                loadConstant(cUnit, r2, (int)__aeabi_idiv);
+                LOAD_FUNC_ADDR(cUnit, r2, (int)__aeabi_idiv);
                 isDiv = true;
             } else {
-                loadConstant(cUnit, r2, (int)__aeabi_idivmod);
+                LOAD_FUNC_ADDR(cUnit, r2, (int)__aeabi_idivmod);
                 isDiv = false;
             }
             loadConstant(cUnit, r1, lit);
@@ -2116,7 +2083,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r1);   /* Len */
             loadConstant(cUnit, r0, (int) classPtr );
-            loadConstant(cUnit, r3, (int)dvmAllocArrayByClass);
+            LOAD_FUNC_ADDR(cUnit, r3, (int)dvmAllocArrayByClass);
             /*
              * "len < 0": bail to the interpreter to re-execute the
              * instruction
@@ -2174,7 +2141,7 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             /* r1 now contains object->clazz */
             loadWordDisp(cUnit, r0, offsetof(Object, clazz), r1);
             /* r1 now contains object->clazz */
-            loadConstant(cUnit, r3, (int)dvmInstanceofNonTrivial);
+            LOAD_FUNC_ADDR(cUnit, r3, (int)dvmInstanceofNonTrivial);
             loadConstant(cUnit, r0, 1);                /* Assume true */
             opRegReg(cUnit, kOpCmp, r1, r2);
             ArmLIR *branch2 = opCondBranch(cUnit, kArmCondEq);
@@ -2446,7 +2413,7 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
  * chaining cell for case default [8 bytes]
  * noChain exit
  */
-s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc)
+static s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc)
 {
     int size;
     int firstKey;
@@ -2498,7 +2465,7 @@ s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc)
 }
 
 /* See comments for findPackedSwitchIndex */
-s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc)
+static s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc)
 {
     int size;
     const int *keys;
@@ -2563,7 +2530,7 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r0);
-            loadConstant(cUnit, r2, (int)dvmInterpHandleFillArrayData);
+            LOAD_FUNC_ADDR(cUnit, r2, (int)dvmInterpHandleFillArrayData);
             loadConstant(cUnit, r1,
                (int) (cUnit->method->insns + mir->offset + mir->dalvikInsn.vB));
             opReg(cUnit, kOpBlx, r2);
@@ -2595,9 +2562,9 @@ static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
             u2 size = switchData[1];
 
             if (dalvikOpCode == OP_PACKED_SWITCH) {
-                loadConstant(cUnit, r4PC, (int)findPackedSwitchIndex);
+                LOAD_FUNC_ADDR(cUnit, r4PC, (int)findPackedSwitchIndex);
             } else {
-                loadConstant(cUnit, r4PC, (int)findSparseSwitchIndex);
+                LOAD_FUNC_ADDR(cUnit, r4PC, (int)findSparseSwitchIndex);
             }
             /* r0 <- Addr of the switch data */
             loadConstant(cUnit, r0,
@@ -2654,7 +2621,6 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
          * calleeMethod = method->clazz->super->vtable[method->clazz->pDvmDex
          *                ->pResMethods[BBBB]->methodIndex]
          */
-        /* TODO - not excersized in RunPerf.jar */
         case OP_INVOKE_SUPER:
         case OP_INVOKE_SUPER_RANGE: {
             int mIndex = cUnit->method->clazz->pDvmDex->
@@ -2853,8 +2819,8 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             /* r3 = pDvmDex */
             loadConstant(cUnit, r3, (int) cUnit->method->clazz->pDvmDex);
 
-            loadConstant(cUnit, r7,
-                         (intptr_t) dvmFindInterfaceMethodInCache);
+            LOAD_FUNC_ADDR(cUnit, r7,
+                           (intptr_t) dvmFindInterfaceMethodInCache);
             opReg(cUnit, kOpBlx, r7);
 
             /* r0 = calleeMethod (returned from dvmFindInterfaceMethodInCache */
@@ -3180,7 +3146,7 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
             dvmCompilerClobber(cUnit, r7);
             opRegRegImm(cUnit, kOpAdd, r4PC, rGLUE, offset);
             opImm(cUnit, kOpPush, (1<<r4PC) | (1<<r7));
-            loadConstant(cUnit, r4PC, (int)inLineTable[operation].func);
+            LOAD_FUNC_ADDR(cUnit, r4PC, (int)inLineTable[operation].func);
             genExportPC(cUnit, mir);
             for (i=0; i < dInsn->vA; i++) {
                 loadValueDirect(cUnit, dvmCompilerGetSrc(cUnit, mir, i), i);
@@ -3208,10 +3174,10 @@ static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
     //TUNING: We're using core regs here - not optimal when target is a double
     RegLocation rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
     RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-    loadConstantValue(cUnit, rlResult.lowReg,
-                      mir->dalvikInsn.vB_wide & 0xFFFFFFFFUL);
-    loadConstantValue(cUnit, rlResult.highReg,
-                      (mir->dalvikInsn.vB_wide>>32) & 0xFFFFFFFFUL);
+    loadConstantNoClobber(cUnit, rlResult.lowReg,
+                          mir->dalvikInsn.vB_wide & 0xFFFFFFFFUL);
+    loadConstantNoClobber(cUnit, rlResult.highReg,
+                          (mir->dalvikInsn.vB_wide>>32) & 0xFFFFFFFFUL);
     storeValueWide(cUnit, rlDest, rlResult);
     return false;
 }
