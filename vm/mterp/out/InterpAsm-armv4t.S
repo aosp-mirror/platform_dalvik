@@ -313,7 +313,7 @@ dvmMterpStdRun:
     bne     .Lnot_instr                 @ no, handle it
 
 #if defined(WITH_JIT)
-.Lno_singleStep:
+.LentryInstr:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     /* Entry is always a possible trace start */
     GET_JIT_PROF_TABLE(r0)
@@ -341,18 +341,21 @@ dvmMterpStdRun:
 
 #if defined(WITH_JIT)
 .Lnot_throw:
-    ldr     r0,[rGLUE, #offGlue_jitResume]
-    ldr     r2,[rGLUE, #offGlue_jitResumePC]
+    ldr     r10,[rGLUE, #offGlue_jitResumeNPC]
+    ldr     r2,[rGLUE, #offGlue_jitResumeDPC]
     cmp     r1, #kInterpEntryResume     @ resuming after Jit single-step?
     bne     .Lbad_arg
     cmp     rPC,r2
-    bne     .Lno_singleStep             @ must have branched, don't resume
+    bne     .LentryInstr                @ must have branched, don't resume
+#if defined(WITH_SELF_VERIFICATION)
+    @ glue->entryPoint will be set in dvmSelfVerificationSaveState
+    b       jitSVShadowRunStart         @ re-enter the translation after the
+                                        @ single-stepped instruction
+    @noreturn
+#endif
     mov     r1, #kInterpEntryInstr
     str     r1, [rGLUE, #offGlue_entryPoint]
-    ldr     rINST, .LdvmCompilerTemplate
-    bx      r0                          @ re-enter the translation
-.LdvmCompilerTemplate:
-    .word   dvmCompilerTemplateStart
+    bx      r10                         @ re-enter the translation
 #endif
 
 .Lbad_arg:
@@ -9733,43 +9736,63 @@ dvmAsmSisterEnd:
 #if defined(WITH_SELF_VERIFICATION)
     .global dvmJitToInterpPunt
 dvmJitToInterpPunt:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r2,#kSVSPunt                 @ r2<- interpreter entry point
-    b      dvmJitSelfVerificationEnd    @ doesn't return
+    mov    r3, #0
+    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpSingleStep
 dvmJitToInterpSingleStep:
+    str    lr,[rGLUE,#offGlue_jitResumeNPC]
+    str    r1,[rGLUE,#offGlue_jitResumeDPC]
     mov    r2,#kSVSSingleStep           @ r2<- interpreter entry point
-    b      dvmJitSelfVerificationEnd    @ doesn't return
+    b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
     mov    r2,#kSVSTraceSelectNoChain   @ r2<- interpreter entry point
-    b      dvmJitSelfVerificationEnd    @ doesn't return
+    mov    r3, #0
+    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpTraceSelect
 dvmJitToInterpTraceSelect:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSTraceSelect          @ r2<- interpreter entry point
-    b      dvmJitSelfVerificationEnd    @ doesn't return
+    mov    r3, #0
+    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpBackwardBranch
 dvmJitToInterpBackwardBranch:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSBackwardBranch       @ r2<- interpreter entry point
-    b      dvmJitSelfVerificationEnd    @ doesn't return
+    mov    r3, #0
+    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpNormal
 dvmJitToInterpNormal:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     ldr    r0,[lr, #-1]                 @ pass our target PC
     mov    r2,#kSVSNormal               @ r2<- interpreter entry point
-    b      dvmJitSelfVerificationEnd    @ doesn't return
+    mov    r3, #0
+    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
 
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
+    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    r0,rPC                       @ pass our target PC
     mov    r2,#kSVSNoChain              @ r2<- interpreter entry point
-    b      dvmJitSelfVerificationEnd    @ doesn't return
+    mov    r3, #0
+    str    r3, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+    b      jitSVShadowRunEnd            @ doesn't return
 #else
 /*
  * Return from the translation cache to the interpreter when the compiler is
@@ -9803,8 +9826,8 @@ dvmJitToInterpPunt:
  */
     .global dvmJitToInterpSingleStep
 dvmJitToInterpSingleStep:
-    str    lr,[rGLUE,#offGlue_jitResume]
-    str    r1,[rGLUE,#offGlue_jitResumePC]
+    str    lr,[rGLUE,#offGlue_jitResumeNPC]
+    str    r1,[rGLUE,#offGlue_jitResumeDPC]
     mov    r1,#kInterpEntryInstr
     @ enum is 4 byte in aapcs-EABI
     str    r1, [rGLUE, #offGlue_entryPoint]
@@ -9985,10 +10008,10 @@ common_updateProfile:
      * that translation is actually the interpret-only pseudo-translation
      * we want to treat it the same as no translation.
      */
-    mov     r10, r0                      @ save target
+    mov     r10, r0                     @ save target
     bl      dvmCompilerGetInterpretTemplate
-    cmp     r0, r10                      @ special case?
-    bne     dvmJitSelfVerificationStart  @ set up self verification
+    cmp     r0, r10                     @ special case?
+    bne     jitSVShadowRunStart         @ set up self verification shadow space
     GET_INST_OPCODE(ip)
     GOTO_OPCODE(ip)
     /* no return */
@@ -10009,9 +10032,11 @@ common_selectTrace:
 /*
  * Save PC and registers to shadow memory for self verification mode
  * before jumping to native translation.
- * On entry, r10 contains the address of the target translation.
+ * On entry:
+ *    rPC, rFP, rGLUE: the values that they should contain
+ *    r10: the address of the target translation.
  */
-dvmJitSelfVerificationStart:
+jitSVShadowRunStart:
     mov     r0,rPC                      @ r0<- program counter
     mov     r1,rFP                      @ r1<- frame pointer
     mov     r2,rGLUE                    @ r2<- InterpState pointer
@@ -10025,10 +10050,7 @@ dvmJitSelfVerificationStart:
  * Restore PC, registers, and interpState to original values
  * before jumping back to the interpreter.
  */
-dvmJitSelfVerificationEnd:
-    ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
-    mov    r1, #0
-    str    r1, [r10, #offThread_inJitCodeCache] @ Back to the interp land
+jitSVShadowRunEnd:
     mov    r1,rFP                        @ pass ending fp
     bl     dvmSelfVerificationRestoreState @ restore pc and fp values
     ldr    rPC,[r0,#offShadowSpace_startPC] @ restore PC
@@ -10135,9 +10157,9 @@ common_periodicChecks:
      * Refresh the Jit's cached copy of profile table pointer.  This pointer
      * doubles as the Jit's on/off switch.
      */
-    ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ r10<-&gDvmJit.pJitProfTable
+    ldr     r3, [rGLUE, #offGlue_ppJitProfTable] @ r3<-&gDvmJit.pJitProfTable
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
-    ldr     r3, [r3] @ r10 <- pJitProfTable
+    ldr     r3, [r3] @ r3 <- pJitProfTable
     EXPORT_PC()                         @ need for precise GC
     str     r3, [rGLUE, #offGlue_pJitProfTable] @ refresh Jit's on/off switch
 #else

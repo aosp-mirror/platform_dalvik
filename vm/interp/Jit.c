@@ -78,6 +78,20 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
     }
     shadowSpace->selfVerificationState = kSVSStart;
 
+    if (interpState->entryPoint == kInterpEntryResume) {
+        interpState->entryPoint = kInterpEntryInstr;
+#if 0
+        /* Tracking the success rate of resume after single-stepping */
+        if (interpState->jitResumeDPC == pc) {
+            LOGD("SV single step resumed at %p", pc);
+        }
+        else {
+            LOGD("real %p DPC %p NPC %p", pc, interpState->jitResumeDPC,
+                 interpState->jitResumeNPC);
+        }
+#endif
+    }
+
     // Dynamically grow shadow register space if necessary
     if (preBytes + postBytes > shadowSpace->registerSpaceSize * sizeof(u4)) {
         free(shadowSpace->registerSpace);
@@ -99,7 +113,6 @@ void* dvmSelfVerificationSaveState(const u2* pc, const void* fp,
                             shadowSpace->registerSpaceSize - postBytes/4;
 
     // Create a copy of the InterpState
-    //shadowSpace->interpState = *interpState;
     memcpy(&(shadowSpace->interpState), interpState, sizeof(InterpState));
     shadowSpace->interpState.fp = shadowSpace->shadowFP;
     shadowSpace->interpState.interpStackEnd = (u1*)shadowSpace->registerSpace;
@@ -126,6 +139,8 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
 {
     Thread *self = dvmThreadSelf();
     ShadowSpace *shadowSpace = self->shadowSpace;
+    // Official InterpState structure
+    InterpState *realGlue = shadowSpace->glue;
     shadowSpace->endPC = pc;
     shadowSpace->endShadowFP = fp;
 
@@ -144,9 +159,18 @@ void* dvmSelfVerificationRestoreState(const u2* pc, const void* fp,
             (int)shadowSpace->endShadowFP);
     }
 
+    // Move the resume [ND]PC from the shadow space to the real space so that
+    // the debug interpreter can return to the translation
+    if (exitPoint == kSVSSingleStep) {
+        realGlue->jitResumeNPC = shadowSpace->interpState.jitResumeNPC;
+        realGlue->jitResumeDPC = shadowSpace->interpState.jitResumeDPC;
+    } else {
+        realGlue->jitResumeNPC = NULL;
+        realGlue->jitResumeDPC = NULL;
+    }
+
     // Special case when punting after a single instruction
-    if ((exitPoint == kSVSPunt || exitPoint == kSVSSingleStep) &&
-        pc == shadowSpace->startPC) {
+    if (exitPoint == kSVSPunt && pc == shadowSpace->startPC) {
         shadowSpace->selfVerificationState = kSVSIdle;
     } else {
         shadowSpace->selfVerificationState = exitPoint;
@@ -232,7 +256,8 @@ static void selfVerificationSpinLoop(ShadowSpace *shadowSpace)
 }
 
 /* Manage self verification while in the debug interpreter */
-static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
+static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
+                                        InterpState *interpState)
 {
     ShadowSpace *shadowSpace = self->shadowSpace;
     SelfVerificationState state = shadowSpace->selfVerificationState;
@@ -251,14 +276,18 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
         selfVerificationDumpTrace(pc, self);
     }
 
-    /* Skip endPC once when trace has a backward branch */
+    /*
+     * Skip endPC once when trace has a backward branch. If the SV state is
+     * single step, keep it that way.
+     */
     if ((state == kSVSBackwardBranch && pc == shadowSpace->endPC) ||
-        state != kSVSBackwardBranch) {
+        (state != kSVSBackwardBranch && state != kSVSSingleStep)) {
         shadowSpace->selfVerificationState = kSVSDebugInterp;
     }
 
     /* Check that the current pc is the end of the trace */
-    if (state == kSVSDebugInterp && pc == shadowSpace->endPC) {
+    if ((state == kSVSDebugInterp || state == kSVSSingleStep) &&
+        pc == shadowSpace->endPC) {
 
         shadowSpace->selfVerificationState = kSVSIdle;
 
@@ -325,6 +354,14 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self)
             }
         }
         if (memDiff) selfVerificationSpinLoop(shadowSpace);
+
+        /*
+         * Switch to JIT single step mode to stay in the debug interpreter for
+         * one more instruction
+         */
+        if (state == kSVSSingleStep) {
+            interpState->jitState = kJitSingleStepEnd;
+        }
         return true;
 
     /* If end not been reached, make sure max length not exceeded */
@@ -468,25 +505,6 @@ void dvmJitAbortTraceSelect(InterpState* interpState)
         interpState->jitState = kJitTSelectAbort;
 }
 
-#if defined(WITH_SELF_VERIFICATION)
-static bool selfVerificationPuntOps(DecodedInstruction *decInsn)
-{
-    OpCode op = decInsn->opCode;
-    int flags =  dexGetInstrFlags(gDvm.instrFlags, op);
-    /*
-     * All opcodes that can throw exceptions and use the
-     * TEMPLATE_THROW_EXCEPTION_COMMON template should be excluded in the trace
-     * under self-verification mode.
-     */
-    return (op == OP_MONITOR_ENTER || op == OP_MONITOR_EXIT ||
-            op == OP_NEW_INSTANCE || op == OP_NEW_ARRAY ||
-            op == OP_CHECK_CAST || op == OP_MOVE_EXCEPTION ||
-            op == OP_FILL_ARRAY_DATA || op == OP_EXECUTE_INLINE ||
-            op == OP_EXECUTE_INLINE_RANGE ||
-            (flags & kInstrInvoke));
-}
-#endif
-
 /*
  * Find an entry in the JitTable, creating if necessary.
  * Returns null if table is full.
@@ -604,21 +622,6 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
     /* Prepare to handle last PC and stage the current PC */
     const u2 *lastPC = interpState->lastPC;
     interpState->lastPC = pc;
-
-#if defined(WITH_SELF_VERIFICATION)
-    /*
-     * We can't allow some instructions to be executed twice, and so they
-     * must not appear in any translations.  End the trace before they
-     * are inlcluded.
-     */
-    if (lastPC && interpState->jitState == kJitTSelect) {
-        DecodedInstruction decInsn;
-        dexDecodeInstruction(gDvm.instrFormat, lastPC, &decInsn);
-        if (selfVerificationPuntOps(&decInsn)) {
-            interpState->jitState = kJitTSelectEnd;
-        }
-    }
-#endif
 
     switch (interpState->jitState) {
         char* nopStr;
@@ -777,9 +780,15 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             break;
 #if defined(WITH_SELF_VERIFICATION)
         case kJitSelfVerification:
-            if (selfVerificationDebugInterp(pc, self)) {
-                interpState->jitState = kJitNormal;
-                switchInterp = !debugOrProfile;
+            if (selfVerificationDebugInterp(pc, self, interpState)) {
+                /*
+                 * If the next state is not single-step end, we can switch
+                 * interpreter now.
+                 */
+                if (interpState->jitState != kJitSingleStepEnd) {
+                    interpState->jitState = kJitNormal;
+                    switchInterp = !debugOrProfile;
+                }
             }
             break;
 #endif
