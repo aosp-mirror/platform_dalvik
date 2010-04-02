@@ -284,7 +284,7 @@ static void genMonitorExit(CompilationUnit *cUnit, MIR *mir)
     // Export PC (part 1)
     loadConstant(cUnit, r3, (int) (cUnit->method->insns + mir->offset));
 
-    loadConstant(cUnit, r7, (int)dvmUnlockObject);
+    LOAD_FUNC_ADDR(cUnit, r7, (int)dvmUnlockObject);
     // Export PC (part 2)
     newLIR3(cUnit, kThumb2StrRRI8Predec, r3, rFP,
             sizeof(StackSaveArea) -

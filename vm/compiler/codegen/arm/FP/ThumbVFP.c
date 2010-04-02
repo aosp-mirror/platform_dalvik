@@ -19,7 +19,6 @@
  * variant-specific code.
  */
 
-/* FIXME */
 extern void dvmCompilerFlushRegWideForV5TEVFP(CompilationUnit *cUnit,
                                               int reg1, int reg2);
 extern void dvmCompilerFlushRegForV5TEVFP(CompilationUnit *cUnit, int reg);
