@@ -132,8 +132,13 @@ static int modifiedImmediate(u4 value)
 /*
  * Load a immediate using a shortcut if possible; otherwise
  * grab from the per-translation literal pool.
+ *
+ * No additional register clobbering operation performed. Use this version when
+ * 1) rDest is freshly returned from dvmCompilerAllocTemp or
+ * 2) The codegen is under fixed register usage
  */
-static ArmLIR *loadConstantValue(CompilationUnit *cUnit, int rDest, int value)
+static ArmLIR *loadConstantNoClobber(CompilationUnit *cUnit, int rDest,
+                                     int value)
 {
     ArmLIR *res;
     int modImm;
@@ -206,7 +211,7 @@ static ArmLIR *loadConstant(CompilationUnit *cUnit, int rDest, int value)
         dvmCompilerClobber(cUnit, rDest);
         dvmCompilerMarkInUse(cUnit, rDest);
     }
-    return loadConstantValue(cUnit, rDest, value);
+    return loadConstantNoClobber(cUnit, rDest, value);
 }
 
 static ArmLIR *opNone(CompilationUnit *cUnit, OpKind op)
@@ -661,8 +666,8 @@ static ArmLIR *loadConstantValueWide(CompilationUnit *cUnit, int rDestLo,
         res = newLIR2(cUnit, kThumb2Vmovd_IMM8, S2D(rDestLo, rDestHi),
                       encodedImm);
     } else {
-        res = loadConstantValue(cUnit, rDestLo, valLo);
-        loadConstantValue(cUnit, rDestHi, valHi);
+        res = loadConstantNoClobber(cUnit, rDestLo, valLo);
+        loadConstantNoClobber(cUnit, rDestHi, valHi);
     }
     return res;
 }
