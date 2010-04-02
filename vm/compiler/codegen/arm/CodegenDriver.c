@@ -911,7 +911,7 @@ static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
     ArmLIR *branch = genUnconditionalBranch(cUnit, NULL);
     /* Set up the place holder to reconstruct this Dalvik PC */
     ArmLIR *pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
-    pcrLabel->opCode = ARM_PSEUDO_kPCReconstruction_CELL;
+    pcrLabel->opCode = kArmPseudoPCReconstructionCell;
     pcrLabel->operands[0] = dPC;
     pcrLabel->operands[1] = mir->offset;
     /* Insert the place holder to the growable list */
@@ -1148,7 +1148,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     if (pcrLabel == NULL) {
         int dPC = (int) (cUnit->method->insns + mir->offset);
         pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
-        pcrLabel->opCode = ARM_PSEUDO_kPCReconstruction_CELL;
+        pcrLabel->opCode = kArmPseudoPCReconstructionCell;
         pcrLabel->operands[0] = dPC;
         pcrLabel->operands[1] = mir->offset;
         /* Insert the place holder to the growable list */
@@ -2817,7 +2817,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             if (pcrLabel == NULL) {
                 int dPC = (int) (cUnit->method->insns + mir->offset);
                 pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
-                pcrLabel->opCode = ARM_PSEUDO_kPCReconstruction_CELL;
+                pcrLabel->opCode = kArmPseudoPCReconstructionCell;
                 pcrLabel->operands[0] = dPC;
                 pcrLabel->operands[1] = mir->offset;
                 /* Insert the place holder to the growable list */
@@ -3493,7 +3493,7 @@ static void setupLoopEntryBlock(CompilationUnit *cUnit, BasicBlock *entry,
 {
     /* Set up the place holder to reconstruct this Dalvik PC */
     ArmLIR *pcrLabel = dvmCompilerNew(sizeof(ArmLIR), true);
-    pcrLabel->opCode = ARM_PSEUDO_kPCReconstruction_CELL;
+    pcrLabel->opCode = kArmPseudoPCReconstructionCell;
     pcrLabel->operands[0] =
         (int) (cUnit->method->insns + entry->startOffset);
     pcrLabel->operands[1] = entry->startOffset;
@@ -3604,7 +3604,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         }
 
         if (blockList[i]->blockType == kEntryBlock) {
-            labelList[i].opCode = ARM_PSEUDO_kEntryBlock;
+            labelList[i].opCode = kArmPseudoEntryBlock;
             if (blockList[i]->firstMIRInsn == NULL) {
                 continue;
             } else {
@@ -3612,7 +3612,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                                   &labelList[blockList[i]->fallThrough->id]);
             }
         } else if (blockList[i]->blockType == kExitBlock) {
-            labelList[i].opCode = ARM_PSEUDO_kExitBlock;
+            labelList[i].opCode = kArmPseudoExitBlock;
             goto gen_fallthrough;
         } else if (blockList[i]->blockType == kDalvikByteCode) {
             labelList[i].opCode = kArmPseudoNormalBlockLabel;
@@ -3623,14 +3623,14 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         } else {
             switch (blockList[i]->blockType) {
                 case kChainingCellNormal:
-                    labelList[i].opCode = ARM_PSEUDO_kChainingCellNormal;
+                    labelList[i].opCode = kArmPseudoChainingCellNormal;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[kChainingCellNormal], (void *) i);
                     break;
                 case kChainingCellInvokeSingleton:
                     labelList[i].opCode =
-                        ARM_PSEUDO_kChainingCellInvokeSingleton;
+                        kArmPseudoChainingCellInvokeSingleton;
                     labelList[i].operands[0] =
                         (int) blockList[i]->containingMethod;
                     /* handle the codegen later */
@@ -3640,7 +3640,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     break;
                 case kChainingCellInvokePredicted:
                     labelList[i].opCode =
-                        ARM_PSEUDO_kChainingCellInvokePredicted;
+                        kArmPseudoChainingCellInvokePredicted;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[kChainingCellInvokePredicted],
@@ -3648,7 +3648,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                     break;
                 case kChainingCellHot:
                     labelList[i].opCode =
-                        ARM_PSEUDO_kChainingCellHot;
+                        kArmPseudoChainingCellHot;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[kChainingCellHot],
@@ -3657,7 +3657,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
                 case kPCReconstruction:
                     /* Make sure exception handling block is next */
                     labelList[i].opCode =
-                        ARM_PSEUDO_kPCReconstruction_BLOCK_LABEL;
+                        kArmPseudoPCReconstructionBlockLabel;
                     assert (i == cUnit->numBlocks - 2);
                     handlePCReconstruction(cUnit, &labelList[i+1]);
                     break;
@@ -3673,7 +3673,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
 #if defined(WITH_SELF_VERIFICATION) || defined(WITH_JIT_TUNING)
                 case kChainingCellBackwardBranch:
                     labelList[i].opCode =
-                        ARM_PSEUDO_kChainingCellBackwardBranch;
+                        kArmPseudoChainingCellBackwardBranch;
                     /* handle the codegen later */
                     dvmInsertGrowableList(
                         &chainingListByType[kChainingCellBackwardBranch],
@@ -3709,7 +3709,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             InstructionFormat dalvikFormat =
                 dexGetInstrFormat(gDvm.instrFormat, dalvikOpCode);
             ArmLIR *boundaryLIR =
-                newLIR2(cUnit, ARM_PSEUDO_kDalvikByteCode_BOUNDARY,
+                newLIR2(cUnit, kArmPseudoDalvikByteCodeBoundary,
                         mir->offset,
                         (int) dvmCompilerGetDalvikDisassembly(&mir->dalvikInsn)
                        );

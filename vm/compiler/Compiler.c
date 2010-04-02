@@ -385,7 +385,11 @@ bool compilerThreadStartup(void)
     gDvmJit.jitTableEntriesUsed = 0;
     gDvmJit.compilerHighWater =
         COMPILER_WORK_QUEUE_SIZE - (COMPILER_WORK_QUEUE_SIZE/4);
-    gDvmJit.pProfTable = pJitProfTable;
+    /*
+     * If the VM is launched with wait-on-the-debugger, we will need to hide
+     * the profile table here
+     */
+    gDvmJit.pProfTable = dvmDebuggerOrProfilerActive() ? NULL : pJitProfTable;
     gDvmJit.pProfTableCopy = pJitProfTable;
     dvmUnlockMutex(&gDvmJit.tableLock);
 
@@ -707,6 +711,16 @@ void dvmCompilerStateRefresh()
     bool jitActive;
     bool jitActivate;
     bool needUnchain = false;
+
+    /*
+     * The tableLock might not be initialized yet by the compiler thread if
+     * debugger is attached from the very beginning of the VM launch. If
+     * pProfTableCopy is NULL, the lock is not initialized yet and we don't
+     * need to refresh anything either.
+     */
+    if (gDvmJit.pProfTableCopy == NULL) {
+        return;
+    }
 
     dvmLockMutex(&gDvmJit.tableLock);
     jitActive = gDvmJit.pProfTable != NULL;

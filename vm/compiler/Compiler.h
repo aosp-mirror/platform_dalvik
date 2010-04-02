@@ -79,17 +79,20 @@ typedef struct ICPatchWorkOrder {
     PredictedChainingCell cellContent;  /* content of the new cell */
 } ICPatchWorkOrder;
 
+/* States of the dbg interpreter when serving a JIT-related request */
 typedef enum JitState {
-    kJitOff = 0,
-    kJitNormal = 1,            // Profiling in mterp or running native
-    kJitTSelectRequest = 2,    // Transition state - start trace selection
-    kJitTSelectRequestHot = 3, // Transition state - start hot trace selection
-    kJitTSelect = 4,           // Actively selecting trace in dbg interp
-    kJitTSelectAbort = 5,      // Something threw during selection - abort
-    kJitTSelectEnd = 6,        // Done with the trace - wrap it up
-    kJitSingleStep = 7,        // Single step interpretation
-    kJitSingleStepEnd = 8,     // Done with single step, return to mterp
-    kJitSelfVerification = 9,  // Self Verification Mode
+    /* Entering states in the debug interpreter */
+    kJitNot = 0,               // Non-JIT related reasons */
+    kJitTSelectRequest = 1,    // Request a trace (subject to filtering)
+    kJitTSelectRequestHot = 2, // Request a hot trace (bypass the filter)
+    kJitSelfVerification = 3,  // Self Verification Mode
+
+    /* Operational states in the debug interpreter */
+    kJitTSelect = 4,           // Actively selecting a trace
+    kJitTSelectEnd = 5,        // Done with the trace - wrap it up
+    kJitSingleStep = 6,        // Single step interpretation
+    kJitSingleStepEnd = 7,     // Done with single step, ready return to mterp
+    kJitDone = 8,              // Ready to leave the debug interpreter
 } JitState;
 
 #if defined(WITH_SELF_VERIFICATION)

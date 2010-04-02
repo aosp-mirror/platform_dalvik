@@ -502,7 +502,7 @@ void resetTracehead(InterpState* interpState, JitEntry *slot)
 void dvmJitAbortTraceSelect(InterpState* interpState)
 {
     if (interpState->jitState == kJitTSelect)
-        interpState->jitState = kJitTSelectAbort;
+        interpState->jitState = kJitDone;
 }
 
 /*
@@ -593,6 +593,7 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
     }
     return (idx == chainEndMarker) ? NULL : &gDvmJit.pJitEntryTable[idx];
 }
+
 /*
  * Adds to the current trace request one instruction at a time, just
  * before that instruction is interpreted.  This is the primary trace
@@ -613,11 +614,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 {
     int flags,i,len;
     int switchInterp = false;
-    int debugOrProfile = (gDvm.debuggerActive || self->suspendCount
-#if defined(WITH_PROFILER)
-                          || gDvm.activeProfilers
-#endif
-            );
+    bool debugOrProfile = dvmDebuggerOrProfilerActive();
 
     /* Prepare to handle last PC and stage the current PC */
     const u2 *lastPC = interpState->lastPC;
@@ -695,9 +692,9 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             if (interpState->totalTraceLen >= JIT_MAX_TRACE_LEN) {
                 interpState->jitState = kJitTSelectEnd;
             }
+             /* Abandon the trace request if debugger/profiler is attached */
             if (debugOrProfile) {
-                interpState->jitState = kJitTSelectAbort;
-                switchInterp = !debugOrProfile;
+                interpState->jitState = kJitDone;
                 break;
             }
             if ((flags & kInstrCanReturn) != kInstrCanReturn) {
@@ -706,10 +703,11 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             /* NOTE: intentional fallthrough for returns */
         case kJitTSelectEnd:
             {
+                /* Bad trace */
                 if (interpState->totalTraceLen == 0) {
                     /* Bad trace - mark as untranslatable */
-                    dvmJitAbortTraceSelect(interpState);
-                    switchInterp = !debugOrProfile;
+                    interpState->jitState = kJitDone;
+                    switchInterp = true;
                     break;
                 }
                 JitTraceDescription* desc =
@@ -718,14 +716,12 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                 if (desc == NULL) {
                     LOGE("Out of memory in trace selection");
                     dvmJitStopTranslationRequests();
-                    interpState->jitState = kJitTSelectAbort;
-                    dvmJitAbortTraceSelect(interpState);
-                    switchInterp = !debugOrProfile;
+                    interpState->jitState = kJitDone;
+                    switchInterp = true;
                     break;
                 }
                 interpState->trace[interpState->currTraceRun].frag.runEnd =
                      true;
-                interpState->jitState = kJitNormal;
                 desc->method = interpState->method;
                 memcpy((char*)&(desc->trace[0]),
                     (char*)&(interpState->trace[0]),
@@ -755,7 +751,8 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                 if (jitEntry) {
                     setTraceConstruction(jitEntry, false);
                 }
-                switchInterp = !debugOrProfile;
+                interpState->jitState = kJitDone;
+                switchInterp = true;
             }
             break;
         case kJitSingleStep:
@@ -763,20 +760,11 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             break;
         case kJitSingleStepEnd:
             interpState->entryPoint = kInterpEntryResume;
-            switchInterp = !debugOrProfile;
+            interpState->jitState = kJitDone;
+            switchInterp = true;
             break;
-        case kJitTSelectRequest:
-        case kJitTSelectRequestHot:
-        case kJitTSelectAbort:
-#if defined(SHOW_TRACE)
-            LOGD("TraceGen:  trace abort");
-#endif
-            dvmJitAbortTraceSelect(interpState);
-            interpState->jitState = kJitNormal;
-            switchInterp = !debugOrProfile;
-            break;
-        case kJitNormal:
-            switchInterp = !debugOrProfile;
+        case kJitDone:
+            switchInterp = true;
             break;
 #if defined(WITH_SELF_VERIFICATION)
         case kJitSelfVerification:
@@ -786,23 +774,36 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                  * interpreter now.
                  */
                 if (interpState->jitState != kJitSingleStepEnd) {
-                    interpState->jitState = kJitNormal;
-                    switchInterp = !debugOrProfile;
+                    interpState->jitState = kJitDone;
+                    switchInterp = true;
                 }
             }
             break;
 #endif
-        /* If JIT is off stay out of interpreter selections */
-        case kJitOff:
+        /*
+         * If the debug interpreter was entered for non-JIT reasons, check if
+         * the original reason still holds. If not, we have to force the
+         * interpreter switch here and use dvmDebuggerOrProfilerActive instead
+         * of dvmJitDebuggerOrProfilerActive since the latter will alwasy
+         * return true when the debugger/profiler is already detached and the
+         * JIT profiling table is restored.
+         */
+        case kJitNot:
+            switchInterp = !dvmDebuggerOrProfilerActive();
             break;
         default:
-            if (!debugOrProfile) {
-                LOGE("Unexpected JIT state: %d", interpState->jitState);
-                dvmAbort();
-            }
+            LOGE("Unexpected JIT state: %d entry point: %d",
+                 interpState->jitState, interpState->entryPoint);
+            dvmAbort();
             break;
     }
-    return switchInterp;
+    /*
+     * Final check to see if we can really switch the interpreter. Make sure
+     * the jitState is kJitDone or kJitNot when switchInterp is set to true.
+     */
+     assert(switchInterp == false || interpState->jitState == kJitDone ||
+            interpState->jitState == kJitNot);
+     return switchInterp && !debugOrProfile;
 }
 
 JitEntry *dvmFindJitEntry(const u2* pc)
@@ -888,23 +889,21 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
 /*
  * Determine if valid trace-bulding request is active.  Return true
  * if we need to abort and switch back to the fast interpreter, false
- * otherwise.  NOTE: may be called even when trace selection is not being
- * requested
+ * otherwise.
  */
 bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
-    bool res = false;         /* Assume success */
+    bool switchInterp = false;         /* Assume success */
     int i;
     intptr_t filterKey = ((intptr_t) interpState->pc) >>
                          JIT_TRACE_THRESH_FILTER_GRAN_LOG2;
+    bool debugOrProfile = dvmDebuggerOrProfilerActive();
 
-    /*
-     * If previous trace-building attempt failed, force it's head to be
-     * interpret-only.
-     */
-    if (gDvmJit.pJitEntryTable != NULL) {
-        /* Bypass the filter for hot trace requests */
-        if (interpState->jitState != kJitTSelectRequestHot) {
+    /* Check if the JIT request can be handled now */
+    if (gDvmJit.pJitEntryTable != NULL && debugOrProfile == false) {
+        /* Bypass the filter for hot trace requests or during stress mode */
+        if (interpState->jitState == kJitTSelectRequest &&
+            gDvmJit.threshold > 6) {
             /* Two-level filtering scheme */
             for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
                 if (filterKey == interpState->threshFilter[i]) {
@@ -919,28 +918,21 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                  */
                 i = rand() % JIT_TRACE_THRESH_FILTER_SIZE;
                 interpState->threshFilter[i] = filterKey;
-                res = true;
+                interpState->jitState = kJitDone;
             }
+        }
 
-            /* If stress mode (threshold <= 6), always translate */
-            res &= (gDvmJit.threshold > 6);
+        /* If the compiler is backlogged, cancel any JIT actions */
+        if (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater) {
+            interpState->jitState = kJitDone;
         }
 
         /*
-         * If the compiler is backlogged, or if a debugger or profiler is
-         * active, cancel any JIT actions
+         * Check for additional reasons that might force the trace select
+         * request to be dropped
          */
-        if (res || (gDvmJit.compilerQueueLength >= gDvmJit.compilerHighWater)
-            || gDvm.debuggerActive || self->suspendCount
-#if defined(WITH_PROFILER)
-            || gDvm.activeProfilers
-#endif
-           ) {
-            if (interpState->jitState != kJitOff) {
-                interpState->jitState = kJitNormal;
-            }
-        } else if (interpState->jitState == kJitTSelectRequest ||
-                   interpState->jitState == kJitTSelectRequestHot) {
+        if (interpState->jitState == kJitTSelectRequest ||
+            interpState->jitState == kJitTSelectRequestHot) {
             JitEntry *slot = lookupAndAdd(interpState->pc, false);
             if (slot == NULL) {
                 /*
@@ -949,7 +941,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                  * resized before we run into it here.  Assume bad things
                  * are afoot and disable profiling.
                  */
-                interpState->jitState = kJitTSelectAbort;
+                interpState->jitState = kJitDone;
                 LOGD("JIT: JitTable full, disabling profiling");
                 dvmJitStopTranslationRequests();
             } else if (slot->u.info.traceConstruction) {
@@ -963,11 +955,11 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                  * template instead of the real translation during this
                  * window.  Performance, but not correctness, issue.
                  */
-                interpState->jitState = kJitTSelectAbort;
+                interpState->jitState = kJitDone;
                 resetTracehead(interpState, slot);
             } else if (slot->codeAddress) {
                  /* Nothing to do here - just return */
-                interpState->jitState = kJitTSelectAbort;
+                interpState->jitState = kJitDone;
             } else {
                 /*
                  * Mark request.  Note, we are not guaranteed exclusivity
@@ -980,39 +972,49 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
                 setTraceConstruction(slot, true);
             }
         }
+
         switch (interpState->jitState) {
             case kJitTSelectRequest:
             case kJitTSelectRequestHot:
-                 interpState->jitState = kJitTSelect;
-                 interpState->currTraceHead = interpState->pc;
-                 interpState->currTraceRun = 0;
-                 interpState->totalTraceLen = 0;
-                 interpState->currRunHead = interpState->pc;
-                 interpState->currRunLen = 0;
-                 interpState->trace[0].frag.startOffset =
-                       interpState->pc - interpState->method->insns;
-                 interpState->trace[0].frag.numInsts = 0;
-                 interpState->trace[0].frag.runEnd = false;
-                 interpState->trace[0].frag.hint = kJitHintNone;
-                 interpState->lastPC = 0;
-                 break;
-            case kJitTSelect:
-            case kJitTSelectAbort:
-                 res = true;
-            case kJitSingleStep:
-            case kJitSingleStepEnd:
-            case kJitOff:
-            case kJitNormal:
-#if defined(WITH_SELF_VERIFICATION)
-            case kJitSelfVerification:
-#endif
+                interpState->jitState = kJitTSelect;
+                interpState->currTraceHead = interpState->pc;
+                interpState->currTraceRun = 0;
+                interpState->totalTraceLen = 0;
+                interpState->currRunHead = interpState->pc;
+                interpState->currRunLen = 0;
+                interpState->trace[0].frag.startOffset =
+                     interpState->pc - interpState->method->insns;
+                interpState->trace[0].frag.numInsts = 0;
+                interpState->trace[0].frag.runEnd = false;
+                interpState->trace[0].frag.hint = kJitHintNone;
+                interpState->lastPC = 0;
+                break;
+            /*
+             * For JIT's perspective there is no need to stay in the debug
+             * interpreter unless debugger/profiler is attached.
+             */
+            case kJitDone:
+                switchInterp = true;
                 break;
             default:
-                LOGE("Unexpected JIT state: %d", interpState->jitState);
+                LOGE("Unexpected JIT state: %d entry point: %d",
+                     interpState->jitState, interpState->entryPoint);
                 dvmAbort();
         }
+    } else {
+        /*
+         * Cannot build trace this time - ready to leave the dbg interpreter
+         */
+        interpState->jitState = kJitDone;
+        switchInterp = true;
     }
-    return res;
+
+    /*
+     * Final check to see if we can really switch the interpreter. Make sure
+     * the jitState is kJitDone when switchInterp is set to true.
+     */
+    assert(switchInterp == false || interpState->jitState == kJitDone);
+    return switchInterp && !debugOrProfile;
 }
 
 /*
@@ -1032,7 +1034,7 @@ bool dvmJitResizeJitTable( unsigned int size )
     assert(gDvmJit.pJitEntryTable != NULL);
     assert(size && !(size & (size - 1)));   /* Is power of 2? */
 
-    LOGD("Jit: resizing JitTable from %d to %d", gDvmJit.jitTableSize, size);
+    LOGI("Jit: resizing JitTable from %d to %d", gDvmJit.jitTableSize, size);
 
     newMask = size - 1;
 
