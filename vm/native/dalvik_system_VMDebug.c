@@ -49,25 +49,27 @@ static ArrayObject* convertStringArray(char** strings, size_t count)
         return NULL;
     }
 
+    Thread* self = dvmThreadSelf();
+
     /*
      * Create the individual String objects and add them to the array.
-     *
-     * We can use ALLOC_DONT_TRACK here because the objects are being
-     * added to a tracked array object as they're created.
      */
     StringObject** contents = (StringObject**) stringArray->contents;
     size_t i;
     for (i = 0; i < count; i++) {
-        contents[i] = dvmCreateStringFromCstr(strings[i], ALLOC_DONT_TRACK);
+        contents[i] = dvmCreateStringFromCstr(strings[i], ALLOC_DEFAULT);
         if (contents[i] == NULL) {
             /* probably OOM; drop out now */
             assert(dvmCheckException(dvmThreadSelf()));
-            dvmReleaseTrackedAlloc((Object*)stringArray, NULL);
+            dvmReleaseTrackedAlloc((Object*)stringArray, self);
             return NULL;
         }
+
+        /* stored in tracked array, okay to release */
+        dvmReleaseTrackedAlloc((Object*)contents[i], self);
     }
 
-    dvmReleaseTrackedAlloc((Object*)stringArray, NULL);
+    dvmReleaseTrackedAlloc((Object*)stringArray, self);
     return stringArray;
 }
 
