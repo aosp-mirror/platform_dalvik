@@ -53,6 +53,15 @@ final class JavaVm extends Vm {
         classpath.addAll(this.classpath);
         classpath.addAll(environment.runnerClassesDir());
         classpath.addAll(runnerClasspath);
+        /*
+         * For javax.net.ssl tests dependency on Bouncy Castle for
+         * creating a self-signed X509 certificate. Needs to be run
+         * with an openjdk, not a sunjdk, which expects a signed jar
+         * to authenticate security providers. For example:
+         *
+         * --java-home /usr/lib/jvm/java-6-openjdk
+         */
+        classpath.addAll(new File("/usr/share/java/bcprov.jar"));
         return classpath;
     }
 }

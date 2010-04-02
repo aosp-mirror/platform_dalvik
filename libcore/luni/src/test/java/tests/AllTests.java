@@ -65,6 +65,7 @@ public class AllTests
         suite.addTest(java.text.AllTests.suite());
         suite.addTest(java.util.AllTests.suite());
         suite.addTest(javax.xml.parsers.AllTests.suite());
+        suite.addTest(javax.net.ssl.AllTests.suite());
         suite.addTest(org.apache.harmony.luni.platform.AllTests.suite());
         suite.addTest(org.json.AllTests.suite());
         suite.addTest(tests.api.org.apache.harmony.kernel.dalvik.AllTests.suite());
