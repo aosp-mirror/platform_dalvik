@@ -45,6 +45,8 @@ static bool genConversionPortable(CompilationUnit *cUnit, MIR *mir);
 
 static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir);
 
+static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir);
+
 #if defined(WITH_SELF_VERIFICATION)
 /* Self Verification memory instruction decoder */
 void dvmSelfVerificationMemOpDecode(int lr, int* sp);
