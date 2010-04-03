@@ -15,15 +15,16 @@
  * @author: Ram Viswanadha
  */
 
-#include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
-#include "ScopedUtfChars.h"
-#include "unicode/utypes.h"   /* Basic ICU data types */
-#include "unicode/ucnv.h"     /* C   Converter API    */
-#include "unicode/ustring.h"  /* some more string functions*/
-#include "unicode/ucnv_cb.h"  /* for callback functions */
-#include "unicode/uset.h"     /* for contains function */
 #include "ErrorCode.h"
+#include "JNIHelp.h"
+#include "ScopedUtfChars.h"
+#include "UniquePtr.h"
+#include "unicode/ucnv.h"
+#include "unicode/ucnv_cb.h"
+#include "unicode/uset.h"
+#include "unicode/ustring.h"
+#include "unicode/utypes.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -73,92 +74,6 @@ static void closeConverter(JNIEnv* env, jclass, jlong handle) {
     }
 }
 
-/**
- * Sets the substution mode for from Unicode conversion. Currently only 
- * two modes are supported: substitute or report
- * @param env environment handle for JNI 
- * @param jClass handle for the class
- * @param handle address of ICU converter
- * @param mode the mode to set 
- */
-static jint setSubstitutionModeCharToByte (JNIEnv *env, jclass, jlong handle, jboolean mode) {
-    
-    UConverter* conv = (UConverter*)(long)handle;
-    UErrorCode errorCode =U_ZERO_ERROR;
-
-    if(conv) {
-        
-        UConverterFromUCallback fromUOldAction ;
-        void* fromUOldContext;
-        void* fromUNewContext=NULL;
-        if(mode) {
-
-            ucnv_setFromUCallBack(conv,
-               UCNV_FROM_U_CALLBACK_SUBSTITUTE,
-               fromUNewContext,
-               &fromUOldAction,
-               (const void**)&fromUOldContext,
-               &errorCode);
-
-        }
-        else{
-
-            ucnv_setFromUCallBack(conv,
-               UCNV_FROM_U_CALLBACK_STOP,
-               fromUNewContext,
-               &fromUOldAction,
-               (const void**)&fromUOldContext,
-               &errorCode);
-         
-        }
-        return errorCode;
-    }
-    errorCode = U_ILLEGAL_ARGUMENT_ERROR;
-    return errorCode;
-}
-/**
- * Sets the substution mode for to Unicode conversion. Currently only 
- * two modes are supported: substitute or report
- * @param env environment handle for JNI 
- * @param jClass handle for the class
- * @param handle address of ICU converter
- * @param mode the mode to set 
- */
-static jint setSubstitutionModeByteToChar (JNIEnv *env, jclass, jlong handle, jboolean mode) {
-    
-    UConverter* conv = (UConverter*)handle;
-    UErrorCode errorCode =U_ZERO_ERROR;
-
-    if(conv) {
-        
-        UConverterToUCallback toUOldAction ;
-        void* toUOldContext;
-        void* toUNewContext=NULL;
-        if(mode) {
-
-            ucnv_setToUCallBack(conv,
-               UCNV_TO_U_CALLBACK_SUBSTITUTE,
-               toUNewContext,
-               &toUOldAction,
-               (const void**)&toUOldContext,
-               &errorCode);
-
-        }
-        else{
-
-            ucnv_setToUCallBack(conv,
-               UCNV_TO_U_CALLBACK_STOP,
-               toUNewContext,
-               &toUOldAction,
-               (const void**)&toUOldContext,
-               &errorCode);
-         
-        }
-        return errorCode;
-    }
-    errorCode = U_ILLEGAL_ARGUMENT_ERROR;
-    return errorCode;
-}
 /**
  * Converts a buffer of Unicode code units to target encoding 
  * @param env environment handle for JNI 
@@ -342,38 +257,6 @@ static void resetCharToByte(JNIEnv* env, jclass, jlong handle) {
     }
 }
 
-static jint countInvalidBytes (JNIEnv *env, jclass, jlong handle, jintArray length) {
-    UConverter* cnv = (UConverter*)handle;
-    if (!cnv) {
-        return U_ILLEGAL_ARGUMENT_ERROR;
-    }
-
-    UErrorCode errorCode = U_ZERO_ERROR;
-    jint* len = (jint*) env->GetPrimitiveArrayCritical(length, NULL);
-    if (len) {
-        char invalidChars[32];
-        ucnv_getInvalidChars(cnv,invalidChars,(int8_t*)len,&errorCode);
-    }
-    env->ReleasePrimitiveArrayCritical(length,(jint*)len,0);
-    return errorCode;
-}
-
-static jint countInvalidChars(JNIEnv *env, jclass, jlong handle, jintArray length) {
-    UConverter* cnv = (UConverter*)handle;
-    if (!cnv) {
-        return U_ILLEGAL_ARGUMENT_ERROR;
-    }
-
-    UErrorCode errorCode =U_ZERO_ERROR;
-    jint* len = (jint*) env->GetPrimitiveArrayCritical(length, NULL);
-    if (len) {
-        UChar invalidUChars[32];
-        ucnv_getInvalidUChars(cnv,invalidUChars,(int8_t*)len,&errorCode);
-    }
-    env->ReleasePrimitiveArrayCritical(length,(jint*)len,0);
-    return errorCode;
-}
-
 static jint getMaxBytesPerChar(JNIEnv *env, jclass, jlong handle) {
     UConverter* cnv = (UConverter*)handle;
     return (cnv != NULL) ? ucnv_getMaxCharSize(cnv) : -1;
@@ -477,30 +360,26 @@ static jint flushCharToByte (JNIEnv *env, jclass, jlong handle, jbyteArray targe
 }
 
 static void toChars(const UChar* us, char* cs, int32_t length) {
-    UChar u;
-    while(length>0) {
-        u=*us++;
+    while (length > 0) {
+        UChar u = *us++;
         *cs++=(char)u;
         --length;
     }
 }
 static jint setSubstitutionBytes(JNIEnv *env, jclass, jlong handle, jbyteArray subChars, jint length) {
-
     UConverter* cnv = (UConverter*) handle;
     UErrorCode errorCode = U_ZERO_ERROR;
-    if(cnv) {
+    if (cnv) {
         jbyte* u_subChars = reinterpret_cast<jbyte*>(env->GetPrimitiveArrayCritical(subChars, NULL));
-        if(u_subChars) {
-            char* mySubChars = new char[length];
-             toChars((UChar*)u_subChars,&mySubChars[0],length);
-             ucnv_setSubstChars(cnv,mySubChars, (char)length,&errorCode);
-             if(U_FAILURE(errorCode)) {
+        if (u_subChars) {
+            char mySubChars[length];
+            toChars((UChar*)u_subChars,&mySubChars[0],length);
+            ucnv_setSubstChars(cnv,mySubChars, (char)length,&errorCode);
+            if(U_FAILURE(errorCode)) {
                 env->ReleasePrimitiveArrayCritical(subChars,mySubChars,0);
                 return errorCode;
-             }
-             delete[] mySubChars;
-        }
-        else{   
+            }
+        } else{
            errorCode =  U_ILLEGAL_ARGUMENT_ERROR;
         }
         env->ReleasePrimitiveArrayCritical(subChars,u_subChars,0);
@@ -630,128 +509,53 @@ static jboolean canEncode(JNIEnv *env, jclass, jlong handle, jint codeUnit) {
     return (jboolean)FALSE;
 }
 
-
-static jboolean canDecode(JNIEnv *env, jclass, jlong handle, jbyteArray source) {
-    
-    UErrorCode errorCode =U_ZERO_ERROR;
-    UConverter* cnv = (UConverter*)handle;
-    if(cnv) {
-        jint len = env->GetArrayLength(source);
-        jbyte* cSource =(jbyte*) env->GetPrimitiveArrayCritical(source, NULL);
-        if(cSource) {
-            const char* cSourceLimit = reinterpret_cast<const char*>(cSource+len);
-
-            /* Assume that we need at most twice the length of source */
-            UChar* target = (UChar*) malloc(sizeof(UChar)* (len<<1));
-            UChar* targetLimit = target + (len<<1);
-            if(target) {
-                ucnv_toUnicode(cnv,&target,targetLimit, (const char**)&cSource,
-                        cSourceLimit,NULL, TRUE,&errorCode);
-
-                if(U_SUCCESS(errorCode)) {
-                    free(target);
-                    env->ReleasePrimitiveArrayCritical(source,cSource,0);
-                    return (jboolean)TRUE;
-                }
-            }
-            free(target);
-        }
-        env->ReleasePrimitiveArrayCritical(source,cSource,0);
-    }
-    return (jboolean)FALSE;
-}
-
-static int32_t copyString(char* dest, int32_t destCapacity, int32_t startIndex,
-           const char* src, UErrorCode* status) {
-    int32_t srcLen = 0, i=0;
-    if(U_FAILURE(*status)) {
-        return 0;
-    }
-    if(dest == NULL || src == NULL || destCapacity < startIndex) { 
-        *status = U_ILLEGAL_ARGUMENT_ERROR;
-        return 0;
-    }
-    srcLen = strlen(src);
-    if(srcLen >= destCapacity) {
-        *status = U_BUFFER_OVERFLOW_ERROR;
-        return 0;
-    }
-    for(i=0; i < srcLen; i++) {
-        dest[startIndex++] = src[i];
-    }
-    /* null terminate the buffer */
-    dest[startIndex] = 0; /* no bounds check already made sure that we have enough room */
-    return startIndex;
-}
-
-static int32_t getJavaCanonicalName1(const char* icuCanonicalName,
-                     char* canonicalName, int32_t capacity, 
-                     UErrorCode* status) {
-    int32_t retLen = 0;
-    const char* cName = NULL;
-    /* find out the alias with MIME tag */
-    if((cName =ucnv_getStandardName(icuCanonicalName, "MIME", status)) !=  NULL) {
-        retLen = copyString(canonicalName, capacity, 0, cName, status);
-        /* find out the alias with IANA tag */
-    }else if((cName =ucnv_getStandardName(icuCanonicalName, "IANA", status)) !=  NULL) {
-        retLen = copyString(canonicalName, capacity, 0, cName, status);
-    }else {
-        /*  
-            check to see if an alias already exists with x- prefix, if yes then 
-            make that the canonical name
-        */
-        int32_t aliasCount = ucnv_countAliases(icuCanonicalName,status);
-        int32_t i=0;
-        const char* name;
-        for(i=0;i<aliasCount;i++) {
-            name = ucnv_getAlias(icuCanonicalName,(uint16_t)i, status);
-            if(name != NULL && name[0]=='x' && name[1]=='-') {
-                retLen = copyString(canonicalName, capacity, 0, name, status);
-                break;
-            }
-        }
-        /* last resort just append x- to any of the alias and 
-            make it the canonical name */
-        if(retLen == 0 && U_SUCCESS(*status)) {
-            name = ucnv_getStandardName(icuCanonicalName, "UTR22", status);
-            if(name == NULL && strchr(icuCanonicalName, ',')!= NULL) {
-                name = ucnv_getAlias(icuCanonicalName, 1, status);
-                if(*status == U_INDEX_OUTOFBOUNDS_ERROR) {
-                    *status = U_ZERO_ERROR;
-                }
-            }
-            /* if there is no UTR22 canonical name .. then just return itself*/
-            if(name == NULL) {                
-                name = icuCanonicalName;
-            }
-            if(capacity >= 2) {
-                strcpy(canonicalName,"x-");
-            }
-            retLen = copyString(canonicalName, capacity, 2, name, status);
-        }
-    }
-    return retLen;
-}
-
+/*
+ * If a charset listed in the IANA Charset Registry is supported by an implementation
+ * of the Java platform then its canonical name must be the name listed in the registry.
+ * Many charsets are given more than one name in the registry, in which case the registry
+ * identifies one of the names as MIME-preferred. If a charset has more than one registry
+ * name then its canonical name must be the MIME-preferred name and the other names in
+ * the registry must be valid aliases. If a supported charset is not listed in the IANA
+ * registry then its canonical name must begin with one of the strings "X-" or "x-".
+ */
 static jstring getJavaCanonicalName(JNIEnv *env, const char* icuCanonicalName) {
-    /*
-     * If a charset listed in the IANA Charset Registry is supported by an implementation
-     * of the Java platform then its canonical name must be the name listed in the registry.
-     * Many charsets are given more than one name in the registry, in which case the registry
-     * identifies one of the names as MIME-preferred. If a charset has more than one registry
-     * name then its canonical name must be the MIME-preferred name and the other names in
-     * the registry must be valid aliases. If a supported charset is not listed in the IANA
-     * registry then its canonical name must begin with one of the strings "X-" or "x-".
-     */
-    UErrorCode error = U_ZERO_ERROR;
-    char cName[UCNV_MAX_CONVERTER_NAME_LENGTH] = {0};
-    if (icuCanonicalName[0] != 0) {
-        getJavaCanonicalName1(icuCanonicalName, cName, UCNV_MAX_CONVERTER_NAME_LENGTH, &error);
+    UErrorCode status = U_ZERO_ERROR;
+
+    // Check to see if this is a well-known MIME or IANA name.
+    const char* cName = NULL;
+    if ((cName = ucnv_getStandardName(icuCanonicalName, "MIME", &status)) != NULL) {
+        return env->NewStringUTF(cName);
+    } else if ((cName = ucnv_getStandardName(icuCanonicalName, "IANA", &status)) != NULL) {
+        return env->NewStringUTF(cName);
     }
-    return env->NewStringUTF(cName);
+
+    // Check to see if an alias already exists with "x-" prefix, if yes then
+    // make that the canonical name.
+    int32_t aliasCount = ucnv_countAliases(icuCanonicalName, &status);
+    for (int i = 0; i < aliasCount; ++i) {
+        const char* name = ucnv_getAlias(icuCanonicalName, i, &status);
+        if (name != NULL && name[0] == 'x' && name[1] == '-') {
+            return env->NewStringUTF(name);
+        }
+    }
+
+    // As a last resort, prepend "x-" to any alias and make that the canonical name.
+    status = U_ZERO_ERROR;
+    const char* name = ucnv_getStandardName(icuCanonicalName, "UTR22", &status);
+    if (name == NULL && strchr(icuCanonicalName, ',') != NULL) {
+        name = ucnv_getAlias(icuCanonicalName, 1, &status);
+    }
+    // If there is no UTR22 canonical name then just return the original name.
+    if (name == NULL) {
+        name = icuCanonicalName;
+    }
+    UniquePtr<char[]> result(new char[2 + strlen(name) + 1]);
+    strcpy(&result[0], "x-");
+    strcat(&result[0], name);
+    return env->NewStringUTF(&result[0]);
 }
 
-static jobjectArray getAvailable(JNIEnv *env, jclass) {
+static jobjectArray getAvailableCharsetNames(JNIEnv *env, jclass) {
     int32_t num = ucnv_countAvailable();
     jobjectArray result = env->NewObjectArray(num, env->FindClass("java/lang/String"), NULL);
     for (int i = 0; i < num; ++i) {
@@ -761,12 +565,6 @@ static jobjectArray getAvailable(JNIEnv *env, jclass) {
         env->DeleteLocalRef(javaCanonicalName);
     }
     return result;
-}
-
-static jint countAliases(JNIEnv *env, jclass, jstring enc) {
-    ScopedUtfChars encChars(env, enc);
-    UErrorCode error = U_ZERO_ERROR;
-    return encChars.data() ? ucnv_countAliases(encChars.data(), &error) : 0;
 }
 
 static jobjectArray getAliases(JNIEnv* env, const char* icuCanonicalName) {
@@ -872,10 +670,11 @@ static void CHARSET_ENCODER_CALLBACK(const void *context,
                     *status = U_ILLEGAL_ARGUMENT_ERROR;
                     return;
             }
-            if(realCB==NULL) {
+            if (realCB == NULL) {
                 *status = U_INTERNAL_PROGRAM_ERROR;
+            } else {
+                realCB(context, fromArgs, codeUnits, length, codePoint, reason, status);
             }
-            realCB(context, fromArgs, codeUnits, length, codePoint, reason, status);
         }
     }      
 }
@@ -1027,10 +826,11 @@ static void CHARSET_DECODER_CALLBACK(const void *context,
                     *status = U_ILLEGAL_ARGUMENT_ERROR;
                     return;
             }
-            if(realCB==NULL) {
+            if (realCB == NULL) {
                 *status = U_INTERNAL_PROGRAM_ERROR;
+            } else {
+                realCB(context, args, codeUnits, length, reason, status);
             }
-            realCB(context, args, codeUnits, length, reason, status);
         }
     }      
 }
@@ -1083,18 +883,6 @@ static jint setCallbackDecode(JNIEnv *env, jclass, jlong handle, jint onMalforme
         return errorCode;
     }
     return U_ILLEGAL_ARGUMENT_ERROR;
-}
-
-static jlong safeClone(JNIEnv *env, jclass, jlong address) {
-    UConverter* source = reinterpret_cast<UConverter*>(static_cast<uintptr_t>(address));
-    if (!source) {
-        return NULL;
-    }
-    UErrorCode status = U_ZERO_ERROR;
-    jint bufferSize = U_CNV_SAFECLONE_BUFFERSIZE;
-    UConverter* conv = ucnv_safeClone(source, NULL, &bufferSize, &status);
-    icu4jni_error(env, status);
-    return reinterpret_cast<uintptr_t>(conv);
 }
 
 static jint getMaxCharsPerByte(JNIEnv *env, jclass, jlong handle) {
@@ -1204,37 +992,28 @@ static jobject charsetForName(JNIEnv* env, jclass, jstring charsetName) {
  */
 static JNINativeMethod gMethods[] = {
     /* name, signature, funcPtr */
+    { "canEncode", "(JI)Z", (void*) canEncode },
     { "charsetForName", "(Ljava/lang/String;)Ljava/nio/charset/Charset;", (void*) charsetForName },
-    { "convertByteToChar", "(J[BI[CI[IZ)I", (void*) convertByteToChar },
+    { "closeConverter", "(J)V", (void*) closeConverter },
+    { "contains", "(JJ)Z", (void*) contains },
     { "decode", "(J[BI[CI[IZ)I", (void*) decode },
-    { "convertCharToByte", "(J[CI[BI[IZ)I", (void*) convertCharToByte },
     { "encode", "(J[CI[BI[IZ)I", (void*) encode },
-    { "flushCharToByte", "(J[BI[I)I", (void*) flushCharToByte },
     { "flushByteToChar", "(J[CI[I)I", (void*) flushByteToChar },
+    { "flushCharToByte", "(J[BI[I)I", (void*) flushCharToByte },
+    { "getAvailableCharsetNames", "()[Ljava/lang/String;", (void*) getAvailableCharsetNames },
+    { "getAveBytesPerChar", "(J)F", (void*) getAveBytesPerChar },
+    { "getAveCharsPerByte", "(J)F", (void*) getAveCharsPerByte },
+    { "getMaxBytesPerChar", "(J)I", (void*) getMaxBytesPerChar },
+    { "getMaxCharsPerByte", "(J)I", (void*) getMaxCharsPerByte },
+    { "getMinBytesPerChar", "(J)I", (void*) getMinBytesPerChar },
+    { "getSubstitutionBytes", "(J)[B", (void*) getSubstitutionBytes },
     { "openConverter", "(Ljava/lang/String;)J", (void*) openConverter },
     { "resetByteToChar", "(J)V", (void*) resetByteToChar },
     { "resetCharToByte", "(J)V", (void*) resetCharToByte },
-    { "closeConverter", "(J)V", (void*) closeConverter },
-    { "setSubstitutionChars", "(J[CI)I", (void*) setSubstitutionChars },
-    { "setSubstitutionBytes", "(J[BI)I", (void*) setSubstitutionBytes },
-    { "setSubstitutionModeCharToByte", "(JZ)I", (void*) setSubstitutionModeCharToByte },
-    { "setSubstitutionModeByteToChar", "(JZ)I", (void*) setSubstitutionModeByteToChar },
-    { "countInvalidBytes", "(J[I)I", (void*) countInvalidBytes },
-    { "countInvalidChars", "(J[I)I", (void*) countInvalidChars },
-    { "getMaxBytesPerChar", "(J)I", (void*) getMaxBytesPerChar },
-    { "getMinBytesPerChar", "(J)I", (void*) getMinBytesPerChar },
-    { "getAveBytesPerChar", "(J)F", (void*) getAveBytesPerChar },
-    { "getMaxCharsPerByte", "(J)I", (void*) getMaxCharsPerByte },
-    { "getAveCharsPerByte", "(J)F", (void*) getAveCharsPerByte },
-    { "contains", "(JJ)Z", (void*) contains },
-    { "getSubstitutionBytes", "(J)[B", (void*) getSubstitutionBytes },
-    { "canEncode", "(JI)Z", (void*) canEncode },
-    { "canDecode", "(J[B)Z", (void*) canDecode },
-    { "getAvailable", "()[Ljava/lang/String;", (void*) getAvailable },
-    { "countAliases", "(Ljava/lang/String;)I", (void*) countAliases },
     { "setCallbackDecode", "(JII[CI)I", (void*) setCallbackDecode },
     { "setCallbackEncode", "(JII[BI)I", (void*) setCallbackEncode },
-    { "safeClone", "(J)J", (void*) safeClone }
+    { "setSubstitutionBytes", "(J[BI)I", (void*) setSubstitutionBytes },
+    { "setSubstitutionChars", "(J[CI)I", (void*) setSubstitutionChars },
 };
 
 int register_com_ibm_icu4jni_converters_NativeConverter(JNIEnv *_env) {

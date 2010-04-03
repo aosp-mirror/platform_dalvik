@@ -17,6 +17,7 @@
 
 package java.nio.charset;
 
+import com.ibm.icu4jni.charset.NativeConverter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,10 +39,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-// BEGIN android-changed
-import com.ibm.icu4jni.charset.CharsetProviderICU;
-// END android-changed
 
 /**
  * A charset defines a mapping between a Unicode character sequence and a byte
@@ -94,13 +91,7 @@ public abstract class Charset implements Comparable<Charset> {
 
     private static ClassLoader systemClassLoader;
 
-    // built in provider instance, assuming thread-safe
-    // BEGIN android-changed
-    private static final CharsetProviderICU _builtInProvider = new CharsetProviderICU();
-    // END android-changed
-
-    // cached built in charsets
-    private static SortedMap<String, Charset> _builtInCharsets = null;
+    private static SortedMap<String, Charset> cachedBuiltInCharsets;
 
     private final String canonicalName;
 
@@ -299,29 +290,29 @@ public abstract class Charset implements Comparable<Charset> {
         }
     }
 
+    private static synchronized SortedMap<String, Charset> getCachedBuiltInCharsets() {
+        if (cachedBuiltInCharsets == null) {
+            cachedBuiltInCharsets = new TreeMap<String, Charset>(String.CASE_INSENSITIVE_ORDER);
+            for (String charsetName : NativeConverter.getAvailableCharsetNames()) {
+                Charset charset = NativeConverter.charsetForName(charsetName);
+                cachedBuiltInCharsets.put(charset.name(), charset);
+            }
+        }
+        return cachedBuiltInCharsets;
+    }
+
     /**
-     * Gets a map of all available charsets supported by the runtime.
-     * <p>
-     * The returned map contains mappings from canonical names to corresponding
-     * instances of <code>Charset</code>. The canonical names can be considered
-     * as case-insensitive.
-     *
-     * @return an unmodifiable map of all available charsets supported by the
-     *         runtime
+     * Returns an immutable case-insensitive map from canonical names to {@code Charset} instances.
+     * If multiple charsets have the same canonical name, it is unspecified which is returned in
+     * the map. This method may be slow. If you know which charset you're looking for, use
+     * {@link #forName}.
+     * @return an immutable case-insensitive map from canonical names to {@code Charset} instances
      */
     @SuppressWarnings("unchecked")
     public static SortedMap<String, Charset> availableCharsets() {
-        // Initialize the built-in charsets map cache if necessary
-        if (_builtInCharsets == null) {
-            synchronized (Charset.class) {
-                if (_builtInCharsets == null) {
-                    _builtInCharsets = _builtInProvider.initAvailableCharsets();
-                }
-            }
-        }
-
-        // Start with the built-in charsets...
-        SortedMap<String, Charset> charsets = new TreeMap<String, Charset>(_builtInCharsets);
+        // Start with a copy of the built-in charsets...
+        TreeMap<String, Charset> charsets = new TreeMap<String, Charset>(String.CASE_INSENSITIVE_ORDER);
+        charsets.putAll(getCachedBuiltInCharsets());
 
         // Add all charsets provided by charset providers...
         ClassLoader contextClassLoader = getContextClassLoader();
@@ -467,7 +458,7 @@ public abstract class Charset implements Comparable<Charset> {
             throw new IllegalArgumentException();
         }
         checkCharsetName(charsetName);
-        cs = _builtInProvider.charsetForName(charsetName);
+        cs = NativeConverter.charsetForName(charsetName);
         if (cs != null) {
             cacheCharset(cs);
         }
