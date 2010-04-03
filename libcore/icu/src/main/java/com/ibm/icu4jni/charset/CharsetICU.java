@@ -5,7 +5,7 @@
 *******************************************************************************
 *
 *******************************************************************************
-*/ 
+*/
 
 package com.ibm.icu4jni.charset;
 
@@ -36,52 +36,52 @@ public final class CharsetICU extends Charset {
         long converterHandle = NativeConverter.openConverter(icuCanonicalName);
         return new CharsetDecoderICU(this, converterHandle);
     }
-    
+
     // hardCoded list of replacement bytes
-    private static final Map subByteMap = new HashMap();
-    static{
-        subByteMap.put("UTF-32",new byte[]{0x00, 0x00, (byte)0xfe, (byte)0xff});
-        subByteMap.put("ibm-16684_P110-2003",new byte[]{0x40, 0x40}); // make \u3000 the sub char
-        subByteMap.put("ibm-971_P100-1995",new byte[]{(byte)0xa1, (byte)0xa1}); // make \u3000 the sub char
+    private static final Map<String, byte[]> subByteMap = new HashMap<String, byte[]>();
+    static {
+        subByteMap.put("UTF-32", new byte[]{0x00, 0x00, (byte)0xfe, (byte)0xff});
+        subByteMap.put("ibm-16684_P110-2003", new byte[]{0x40, 0x40}); // make \u3000 the sub char
+        subByteMap.put("ibm-971_P100-1995", new byte[]{(byte)0xa1, (byte)0xa1}); // make \u3000 the sub char
     }
     /**
      * Returns a new encoder object of the charset
      * @return a new encoder
      * @stable ICU 2.4
      */
-    public CharsetEncoder newEncoder(){
+    public CharsetEncoder newEncoder() {
         // the arrays are locals and not
         // instance variables since the
-        // methods on this class need to 
+        // methods on this class need to
         // be thread safe
         long converterHandle = NativeConverter.openConverter(icuCanonicalName);
-        
+
         //According to the contract all converters should have non-empty replacement
         byte[] replacement = NativeConverter.getSubstitutionBytes(converterHandle);
 
-       try{
+       try {
             return new CharsetEncoderICU(this,converterHandle, replacement);
-        }catch(IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             // work around for the non-sensical check in the nio API that
             // a substitution character must be mappable while decoding!!
-            replacement = (byte[])subByteMap.get(icuCanonicalName);
-            if(replacement==null){
+            replacement = subByteMap.get(icuCanonicalName);
+            if (replacement == null) {
                 replacement = new byte[NativeConverter.getMinBytesPerChar(converterHandle)];
-                for(int i=0; i<replacement.length; i++){
+                for(int i = 0; i < replacement.length; ++i) {
                     replacement[i]= 0x3f;
                 }
             }
             NativeConverter.setSubstitutionBytes(converterHandle, replacement, replacement.length);
             return new CharsetEncoderICU(this,converterHandle, replacement);
         }
-    } 
-    
+    }
+
     /**
      * Ascertains if a charset is a sub set of this charset
      * @param cs charset to test
      * @return true if the given charset is a subset of this charset
      * @stable ICU 2.4
-     * 
+     *
      * //CSDL: major changes by Jack
      */
     public boolean contains(Charset cs){
@@ -90,7 +90,7 @@ public final class CharsetICU extends Charset {
         } else if (this.equals(cs)) {
             return true;
         }
-        
+
         long converterHandle1 = 0;
         long converterHandle2 = 0;
 
