@@ -16,7 +16,7 @@
 
 # To run these tests:
 # mmm -j14 dalvik snod
-# adb reboot && fastboot flashall
+# adb reboot bootloader && fastboot flashall
 # adb shell run-core-tests
 
 tmp=/data/core-tests.tmp
