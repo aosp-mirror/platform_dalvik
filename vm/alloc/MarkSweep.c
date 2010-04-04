@@ -168,7 +168,7 @@ _markObjectNonNullCommon(const Object *obj, GcMarkContext *ctx,
     assert(dvmIsValidObject(obj));
 #endif
 
-    if ((char *)obj < ctx->immuneLimit) {
+    if (obj < ctx->immuneLimit) {
         assert(isMarked(obj, ctx));
         return;
     }
@@ -1141,7 +1141,7 @@ dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
     dvmHeapSourceGetObjectBitmaps(objBits, markBits, numBitmaps);
     if (mode == GC_PARTIAL) {
         numSweepBitmaps = 1;
-        assert(gDvm.gcHeap->markContext.immuneLimit == objBits[0].base);
+        assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == objBits[0].base);
     } else {
         numSweepBitmaps = numBitmaps;
     }
