@@ -310,7 +310,8 @@ static void freeObjectMonitor(Object* obj)
      * the object, in which case we've got some bad
      * native code somewhere.
      */
-    assert(dvmTryLockMutex(&mon->lock) == 0);
+    assert(pthread_mutex_trylock(&mon->lock) == 0);
+    assert(pthread_mutex_unlock(&mon->lock) == 0);
     dvmDestroyMutex(&mon->lock);
 #ifdef WITH_DEADLOCK_PREDICTION
     expandObjClear(&mon->historyChildren);
