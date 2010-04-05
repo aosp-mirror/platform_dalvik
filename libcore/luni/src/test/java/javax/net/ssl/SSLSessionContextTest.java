@@ -31,17 +31,17 @@ public class SSLSessionContextTest extends TestCase {
     }
 
     public void test_SSLSessionContext_getIds() {
-        final SSLContextTest.Helper c = SSLContextTest.Helper.create();
+        SSLContextTest.Helper c = SSLContextTest.Helper.create();
         assertSSLSessionContextSize(0, c.sslContext.getClientSessionContext());
         assertSSLSessionContextSize(0, c.sslContext.getServerSessionContext());
 
-        final SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
+        SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
         assertSSLSessionContextSize(1, s.c.sslContext.getClientSessionContext());
         assertSSLSessionContextSize(1, s.c.sslContext.getServerSessionContext());
-        final Enumeration clientIds = s.c.sslContext.getClientSessionContext().getIds();
-        final Enumeration serverIds = s.c.sslContext.getServerSessionContext().getIds();
-        final byte[] clientId = (byte[]) clientIds.nextElement();
-        final byte[] serverId = (byte[]) serverIds.nextElement();
+        Enumeration clientIds = s.c.sslContext.getClientSessionContext().getIds();
+        Enumeration serverIds = s.c.sslContext.getServerSessionContext().getIds();
+        byte[] clientId = (byte[]) clientIds.nextElement();
+        byte[] serverId = (byte[]) serverIds.nextElement();
         assertEquals(32, clientId.length);
         assertEquals(32, serverId.length);
         assertEquals(clientId, serverId);
@@ -49,7 +49,7 @@ public class SSLSessionContextTest extends TestCase {
 
     @KnownFailure("Should throw NullPointerException on getSession(null)")
     public void test_SSLSessionContext_getSession() {
-        final SSLContextTest.Helper c = SSLContextTest.Helper.create();
+        SSLContextTest.Helper c = SSLContextTest.Helper.create();
         try {
             c.sslContext.getClientSessionContext().getSession(null);
             fail();
@@ -58,11 +58,11 @@ public class SSLSessionContextTest extends TestCase {
         assertNull(c.sslContext.getClientSessionContext().getSession(new byte[0]));
         assertNull(c.sslContext.getClientSessionContext().getSession(new byte[1]));
 
-        final SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
-        final SSLSessionContext client = s.c.sslContext.getClientSessionContext();
-        final SSLSessionContext server = s.c.sslContext.getServerSessionContext();
-        final byte[] clientId = (byte[]) client.getIds().nextElement();
-        final byte[] serverId = (byte[]) server.getIds().nextElement();
+        SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
+        SSLSessionContext client = s.c.sslContext.getClientSessionContext();
+        SSLSessionContext server = s.c.sslContext.getServerSessionContext();
+        byte[] clientId = (byte[]) client.getIds().nextElement();
+        byte[] serverId = (byte[]) server.getIds().nextElement();
         assertNotNull(client.getSession(clientId));
         assertNotNull(server.getSession(serverId));
         assertEquals(clientId, client.getSession(clientId).getId());
@@ -71,18 +71,18 @@ public class SSLSessionContextTest extends TestCase {
 
     @KnownFailure("Should return 0 for unlimited, not 10 entries")
     public void test_SSLSessionContext_getSessionCacheSize() {
-        final SSLContextTest.Helper c = SSLContextTest.Helper.create();
+        SSLContextTest.Helper c = SSLContextTest.Helper.create();
         assertEquals(0, c.sslContext.getClientSessionContext().getSessionCacheSize());
         assertEquals(0, c.sslContext.getServerSessionContext().getSessionCacheSize());
 
-        final SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
+        SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
         assertEquals(0, s.c.sslContext.getClientSessionContext().getSessionCacheSize());
         assertEquals(0, s.c.sslContext.getServerSessionContext().getSessionCacheSize());
     }
 
     @KnownFailure("Should return 0 for unlimited, not 10 entries")
     public void test_SSLSessionContext_setSessionCacheSize_basic() {
-        final SSLContextTest.Helper c = SSLContextTest.Helper.create();
+        SSLContextTest.Helper c = SSLContextTest.Helper.create();
         assertBasicSetSessionCacheSizeBehavior(c.sslContext.getClientSessionContext());
         assertBasicSetSessionCacheSizeBehavior(c.sslContext.getServerSessionContext());
     }
@@ -101,15 +101,15 @@ public class SSLSessionContextTest extends TestCase {
     @KnownFailure("Should return 0 for unlimited, not 10 entries")
     public void test_SSLSessionContext_setSessionCacheSize_dynamic() {
 
-        final SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
-        final SSLSessionContext client = s.c.sslContext.getClientSessionContext();
-        final SSLSessionContext server = s.c.sslContext.getServerSessionContext();
+        SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
+        SSLSessionContext client = s.c.sslContext.getClientSessionContext();
+        SSLSessionContext server = s.c.sslContext.getServerSessionContext();
         assertEquals(0, client.getSessionCacheSize());
         assertEquals(0, server.getSessionCacheSize());
         assertSSLSessionContextSize(1, client);
         assertSSLSessionContextSize(1, server);
 
-        final LinkedList<String> uniqueCipherSuites
+        LinkedList<String> uniqueCipherSuites
             = new LinkedList(Arrays.asList(s.server.getEnabledCipherSuites()));
         uniqueCipherSuites.remove(s.client.getSession().getCipherSuite());
 
@@ -178,18 +178,18 @@ public class SSLSessionContextTest extends TestCase {
 
     @KnownFailure("Should return 86400 seconds (1 day), not 0 for unlimited")
     public void test_SSLSessionContext_getSessionTimeout() {
-        final SSLContextTest.Helper c = SSLContextTest.Helper.create();
+        SSLContextTest.Helper c = SSLContextTest.Helper.create();
         assertEquals(86400, c.sslContext.getClientSessionContext().getSessionTimeout());
         assertEquals(86400, c.sslContext.getServerSessionContext().getSessionTimeout());
 
-        final SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
+        SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
         assertEquals(86400, s.c.sslContext.getClientSessionContext().getSessionTimeout());
         assertEquals(86400, s.c.sslContext.getServerSessionContext().getSessionTimeout());
     }
 
     @KnownFailure("Should return 86400 seconds (1 day), not 0 for unlimited")
     public void test_SSLSessionContext_setSessionTimeout() throws Exception {
-        final SSLContextTest.Helper c = SSLContextTest.Helper.create();
+        SSLContextTest.Helper c = SSLContextTest.Helper.create();
         assertEquals(86400, c.sslContext.getClientSessionContext().getSessionTimeout());
         assertEquals(86400, c.sslContext.getServerSessionContext().getSessionTimeout());
         c.sslContext.getClientSessionContext().setSessionTimeout(0);
@@ -208,7 +208,7 @@ public class SSLSessionContextTest extends TestCase {
         } catch (IllegalArgumentException e) {
         }
 
-        final SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
+        SSLSocketTest.Helper s = SSLSocketTest.Helper.create_workaround();
         assertSSLSessionContextSize(1, s.c.sslContext.getClientSessionContext());
         assertSSLSessionContextSize(1, s.c.sslContext.getServerSessionContext());
         Thread.sleep(1 * 1000);
