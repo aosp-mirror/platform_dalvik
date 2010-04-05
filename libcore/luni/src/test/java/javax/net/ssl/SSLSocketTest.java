@@ -46,25 +46,25 @@ import junit.framework.TestCase;
 public class SSLSocketTest extends TestCase {
 
     public void test_SSLSocket_getSupportedCipherSuites() throws Exception {
-        final SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        final SSLSocket ssl = (SSLSocket) sf.createSocket();
-        final String[] cs = ssl.getSupportedCipherSuites();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket ssl = (SSLSocket) sf.createSocket();
+        String[] cs = ssl.getSupportedCipherSuites();
         assertNotNull(cs);
         assertTrue(cs.length != 0);
     }
 
     public void test_SSLSocket_getEnabledCipherSuites() throws Exception {
-        final SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        final SSLSocket ssl = (SSLSocket) sf.createSocket();
-        final String[] cs = ssl.getEnabledCipherSuites();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket ssl = (SSLSocket) sf.createSocket();
+        String[] cs = ssl.getEnabledCipherSuites();
         assertNotNull(cs);
         assertTrue(cs.length != 0);
     }
 
     @KnownFailure("Should support disabling all cipher suites")
     public void test_SSLSocket_setEnabledCipherSuites() throws Exception {
-        final SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        final SSLSocket ssl = (SSLSocket) sf.createSocket();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket ssl = (SSLSocket) sf.createSocket();
 
         try {
             ssl.setEnabledCipherSuites(null);
@@ -88,25 +88,25 @@ public class SSLSocketTest extends TestCase {
     }
 
     public void test_SSLSocket_getSupportedProtocols() throws Exception {
-        final SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        final SSLSocket ssl = (SSLSocket) sf.createSocket();
-        final String[] p = ssl.getSupportedProtocols();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket ssl = (SSLSocket) sf.createSocket();
+        String[] p = ssl.getSupportedProtocols();
         assertNotNull(p);
         assertTrue(p.length != 0);
     }
 
     public void test_SSLSocket_getEnabledProtocols() throws Exception {
-        final SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        final SSLSocket ssl = (SSLSocket) sf.createSocket();
-        final String[] p = ssl.getEnabledProtocols();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket ssl = (SSLSocket) sf.createSocket();
+        String[] p = ssl.getEnabledProtocols();
         assertNotNull(p);
         assertTrue(p.length != 0);
     }
 
     @KnownFailure("Should thow IllegalArgumentException not NullPointerException on null enabled protocols argument")
     public void test_SSLSocket_setEnabledProtocols() throws Exception {
-        final SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        final SSLSocket ssl = (SSLSocket) sf.createSocket();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket ssl = (SSLSocket) sf.createSocket();
 
         try {
             ssl.setEnabledProtocols(null);
@@ -130,9 +130,9 @@ public class SSLSocketTest extends TestCase {
 
     @KnownFailure("session of unconnected socket should not be valid")
     public void test_SSLSocket_getSession() throws Exception {
-        final SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        final SSLSocket ssl = (SSLSocket) sf.createSocket();
-        final SSLSession session = ssl.getSession();
+        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket ssl = (SSLSocket) sf.createSocket();
+        SSLSession session = ssl.getSession();
         assertNotNull(session);
         assertFalse(session.isValid());
     }
@@ -140,7 +140,7 @@ public class SSLSocketTest extends TestCase {
     @KnownFailure("Implementation should not start handshake in ServerSocket.accept")
     public void test_SSLSocket_startHandshake() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         if (!SSLContextTest.IS_RI) {
             /*
              * The following hangs in accept in the Dalvik
@@ -158,7 +158,7 @@ public class SSLSocketTest extends TestCase {
             fail();
         }
         final SSLSocket server = (SSLSocket) c.serverSocket.accept();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
                     server.startHandshake();
@@ -195,10 +195,10 @@ public class SSLSocketTest extends TestCase {
     @KnownFailure("local certificates should be null as it should not have been requested by server")
     public void test_SSLSocket_startHandshake_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     server.startHandshake();
                     assertNotNull(server.getSession());
                     try {
@@ -219,7 +219,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         client.startHandshake();
         assertNotNull(client.getSession());
         assertNull(client.getSession().getLocalCertificates());
@@ -234,7 +234,7 @@ public class SSLSocketTest extends TestCase {
     @KnownFailure("Should throw SSLException on server, not IOException on client")
     public void test_SSLSocket_startHandshake_noKeyStore_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create(null, null, null, null);
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
                     c.serverSocket.accept();
@@ -248,7 +248,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         if (!SSLContextTest.IS_RI) {
             client.startHandshake();
         }
@@ -261,10 +261,10 @@ public class SSLSocketTest extends TestCase {
     @KnownFailure("local certificates should be null as it should not have been requested by server")
     public void test_SSLSocket_HandshakeCompletedListener_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     server.startHandshake();
                 } catch (RuntimeException e) {
                     throw e;
@@ -276,7 +276,7 @@ public class SSLSocketTest extends TestCase {
         thread.start();
         final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         client.addHandshakeCompletedListener(new HandshakeCompletedListener() {
-            public void handshakeCompleted(final HandshakeCompletedEvent event) {
+            public void handshakeCompleted(HandshakeCompletedEvent event) {
                 try {
                     SSLSession session = event.getSession();
                     String cipherSuite = event.getCipherSuite();
@@ -309,7 +309,7 @@ public class SSLSocketTest extends TestCase {
                     assertTrue(Arrays.asList(client.getEnabledCipherSuites()).contains(cipherSuite));
                     assertTrue(Arrays.asList(c.serverSocket.getEnabledCipherSuites()).contains(cipherSuite));
 
-                    final Enumeration e = c.keyStore.aliases();
+                    Enumeration e = c.keyStore.aliases();
                     Certificate certificate = null;
                     Key key = null;
                     while (e.hasMoreElements()) {
@@ -329,7 +329,7 @@ public class SSLSocketTest extends TestCase {
                     assertNotNull(key);
 
                     assertTrue(X509Certificate.class.isAssignableFrom(certificate.getClass()));
-                    final X509Certificate x509certificate = (X509Certificate) certificate;
+                    X509Certificate x509certificate = (X509Certificate) certificate;
 
                     assertNull(localCertificates);
 
@@ -370,10 +370,10 @@ public class SSLSocketTest extends TestCase {
      */
     public void test_SSLSocket_getUseClientMode_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     assertFalse(server.getUseClientMode());
                 } catch (RuntimeException e) {
                     throw e;
@@ -383,7 +383,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         if (!SSLContextTest.IS_RI) {
             client.startHandshake();
         }
@@ -422,10 +422,10 @@ public class SSLSocketTest extends TestCase {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
         final SSLProtocolException[] sslProtocolException = new SSLProtocolException[1];
         final SocketTimeoutException[] socketTimeoutException = new SocketTimeoutException[1];
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     if (!serverClientMode) {
                         server.setSoTimeout(1 * 1000);
                         if (!SSLContextTest.IS_RI) {
@@ -447,7 +447,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         if (!clientClientMode) {
             client.setSoTimeout(1 * 1000);
             if (!SSLContextTest.IS_RI) {
@@ -471,10 +471,10 @@ public class SSLSocketTest extends TestCase {
      */
     public void test_SSLSocket_clientAuth_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     assertFalse(server.getWantClientAuth());
                     assertFalse(server.getNeedClientAuth());
 
@@ -503,7 +503,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         client.startHandshake();
         assertNotNull(client.getSession().getLocalCertificates());
         assertEquals(1, client.getSession().getLocalCertificates().length);
@@ -516,10 +516,10 @@ public class SSLSocketTest extends TestCase {
      */
     public void test_SSLSocket_getEnableSessionCreation_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     assertTrue(server.getEnableSessionCreation());
                 } catch (RuntimeException e) {
                     throw e;
@@ -529,7 +529,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         assertTrue(client.getEnableSessionCreation());
         if (!SSLContextTest.IS_RI) {
             client.startHandshake();
@@ -543,10 +543,10 @@ public class SSLSocketTest extends TestCase {
     @KnownFailure("Server side session creation disabling does not work, should throw SSLException, not fail")
     public void test_SSLSocket_setEnableSessionCreation_server_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     server.setEnableSessionCreation(false);
                     try {
                         server.startHandshake();
@@ -561,7 +561,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         try {
             client.startHandshake();
             fail();
@@ -576,10 +576,10 @@ public class SSLSocketTest extends TestCase {
     @KnownFailure("Should throw SSLException on server, not IOException")
     public void test_SSLSocket_setEnableSessionCreation_client_workaround() throws Exception {
         final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-        final Thread thread = new Thread(new Runnable () {
+        Thread thread = new Thread(new Runnable () {
             public void run() {
                 try {
-                    final SSLSocket server = (SSLSocket) c.serverSocket.accept();
+                    SSLSocket server = (SSLSocket) c.serverSocket.accept();
                     try {
                         server.startHandshake();
                         fail();
@@ -593,7 +593,7 @@ public class SSLSocketTest extends TestCase {
             }
         });
         thread.start();
-        final SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
+        SSLSocket client = (SSLSocket) c.sslContext.getSocketFactory().createSocket(c.host, c.port);
         client.setEnableSessionCreation(false);
         try {
             client.startHandshake();
@@ -617,9 +617,9 @@ public class SSLSocketTest extends TestCase {
         public final SSLSocket server;
         public final SSLSocket client;
 
-        private Helper (final SSLContextTest.Helper c,
-                        final SSLSocket server,
-                        final SSLSocket client) {
+        private Helper (SSLContextTest.Helper c,
+                        SSLSocket server,
+                        SSLSocket client) {
             this.c = c;
             this.server = server;
             this.client = client;
@@ -630,8 +630,8 @@ public class SSLSocketTest extends TestCase {
          * be written to non-workaround form when possible
          */
         public static Helper create_workaround () {
-            final SSLContextTest.Helper c = SSLContextTest.Helper.create();
-            final SSLSocket[] sockets = connect_workaround(c, null);
+            SSLContextTest.Helper c = SSLContextTest.Helper.create();
+            SSLSocket[] sockets = connect_workaround(c, null);
             return new Helper(c, sockets[0], sockets[1]);
         }
 
@@ -644,7 +644,7 @@ public class SSLSocketTest extends TestCase {
                                                       String[] clientCipherSuites) {
             try {
                 final SSLSocket[] server = new SSLSocket[1];
-                final Thread thread = new Thread(new Runnable () {
+                Thread thread = new Thread(new Runnable () {
                     public void run() {
                         try {
                             server[0] = (SSLSocket) c.serverSocket.accept();
@@ -657,7 +657,7 @@ public class SSLSocketTest extends TestCase {
                     }
                 });
                 thread.start();
-                final SSLSocket client = (SSLSocket)
+                SSLSocket client = (SSLSocket)
                     c.sslContext.getSocketFactory().createSocket(c.host, c.port);
                 if (clientCipherSuites != null) {
                     client.setEnabledCipherSuites(clientCipherSuites);

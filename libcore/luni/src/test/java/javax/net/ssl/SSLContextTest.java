@@ -198,14 +198,14 @@ public class SSLContextTest extends TestCase {
         public final InetAddress host;
         public final int port;
 
-        private Helper(final KeyStore keyStore,
-                       final char[] keyStorePassword,
-                       final String publicAlias,
-                       final String privateAlias,
-                       final SSLContext sslContext,
-                       final SSLServerSocket serverSocket,
-                       final InetAddress host,
-                       final int port) {
+        private Helper(KeyStore keyStore,
+                       char[] keyStorePassword,
+                       String publicAlias,
+                       String privateAlias,
+                       SSLContext sslContext,
+                       SSLServerSocket serverSocket,
+                       InetAddress host,
+                       int port) {
             this.keyStore = keyStore;
             this.keyStorePassword = keyStorePassword;
             this.publicAlias = publicAlias;
@@ -218,9 +218,9 @@ public class SSLContextTest extends TestCase {
 
         public static Helper create() {
             try {
-                final char[] keyStorePassword = null;
-                final String publicAlias = "public";
-                final String privateAlias = "private";
+                char[] keyStorePassword = null;
+                String publicAlias = "public";
+                String privateAlias = "private";
                 return create(createKeyStore(keyStorePassword, publicAlias, privateAlias),
                               null,
                               publicAlias,
@@ -232,18 +232,18 @@ public class SSLContextTest extends TestCase {
             }
         }
 
-        public static Helper create(final KeyStore keyStore,
-                                    final char[] keyStorePassword,
-                                    final String publicAlias,
-                                    final String privateAlias) {
+        public static Helper create(KeyStore keyStore,
+                                    char[] keyStorePassword,
+                                    String publicAlias,
+                                    String privateAlias) {
             try {
-                final SSLContext sslContext = createSSLContext(keyStore, keyStorePassword);
+                SSLContext sslContext = createSSLContext(keyStore, keyStorePassword);
 
-                final SSLServerSocket serverSocket = (SSLServerSocket)
+                SSLServerSocket serverSocket = (SSLServerSocket)
                     sslContext.getServerSocketFactory().createServerSocket(0);
-                final InetSocketAddress sa = (InetSocketAddress) serverSocket.getLocalSocketAddress();
-                final InetAddress host = sa.getAddress();
-                final int port = sa.getPort();
+                InetSocketAddress sa = (InetSocketAddress) serverSocket.getLocalSocketAddress();
+                InetAddress host = sa.getAddress();
+                int port = sa.getPort();
 
                 return new Helper(keyStore, keyStorePassword, publicAlias, privateAlias,
                                   sslContext, serverSocket, host, port);
@@ -274,18 +274,18 @@ public class SSLContextTest extends TestCase {
          * org.bouncycastle.jce.provider.test.SigTest
          * org.bouncycastle.jce.provider.test.CertTest
          */
-        public static KeyStore createKeyStore(final char[] keyStorePassword,
+        public static KeyStore createKeyStore(char[] keyStorePassword,
                                               String publicAlias,
                                               String privateAlias)
                 throws Exception {
 
             // 1.) we make the keys
-            final int keysize = 1024;
-            final KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+            int keysize = 1024;
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
             kpg.initialize(keysize, new SecureRandom());
-            final KeyPair kp = kpg.generateKeyPair();
-            final RSAPrivateKey privateKey = (RSAPrivateKey)kp.getPrivate();
-            final RSAPublicKey publicKey  = (RSAPublicKey)kp.getPublic();
+            KeyPair kp = kpg.generateKeyPair();
+            RSAPrivateKey privateKey = (RSAPrivateKey)kp.getPrivate();
+            RSAPublicKey publicKey  = (RSAPublicKey)kp.getPublic();
 
             // 2.) use keys to make certficate
 
@@ -295,17 +295,17 @@ public class SSLContextTest extends TestCase {
             // factory specific format. So here we use Bouncy Castle's
             // X509V3CertificateGenerator and related classes.
 
-            final Hashtable attributes = new Hashtable();
+            Hashtable attributes = new Hashtable();
             attributes.put(X509Principal.CN, InetAddress.getLocalHost().getCanonicalHostName());
-            final X509Principal dn = new X509Principal(attributes);
+            X509Principal dn = new X509Principal(attributes);
 
-            final long millisPerDay = 24 * 60 * 60 * 1000;
-            final long now = System.currentTimeMillis();
-            final Date start = new Date(now - millisPerDay);
-            final Date end = new Date(now + millisPerDay);
-            final BigInteger serial = BigInteger.valueOf(1);
+            long millisPerDay = 24 * 60 * 60 * 1000;
+            long now = System.currentTimeMillis();
+            Date start = new Date(now - millisPerDay);
+            Date end = new Date(now + millisPerDay);
+            BigInteger serial = BigInteger.valueOf(1);
 
-            final X509V3CertificateGenerator x509cg = new X509V3CertificateGenerator();
+            X509V3CertificateGenerator x509cg = new X509V3CertificateGenerator();
             x509cg.setSubjectDN(dn);
             x509cg.setIssuerDN(dn);
             x509cg.setNotBefore(start);
@@ -313,12 +313,12 @@ public class SSLContextTest extends TestCase {
             x509cg.setPublicKey(publicKey);
             x509cg.setSignatureAlgorithm("sha1WithRSAEncryption");
             x509cg.setSerialNumber(serial);
-            final X509Certificate x509c = x509cg.generateX509Certificate(privateKey);
-            final X509Certificate[] x509cc = new X509Certificate[] { x509c };
+            X509Certificate x509c = x509cg.generateX509Certificate(privateKey);
+            X509Certificate[] x509cc = new X509Certificate[] { x509c };
 
 
             // 3.) put certificate and private key to make a key store
-            final KeyStore ks = KeyStore.getInstance("BKS");
+            KeyStore ks = KeyStore.getInstance("BKS");
             ks.load(null, null);
             ks.setKeyEntry(privateAlias, privateKey, keyStorePassword, x509cc);
             ks.setCertificateEntry(publicAlias, x509c);
@@ -332,15 +332,15 @@ public class SSLContextTest extends TestCase {
          */
         public static final SSLContext createSSLContext(final KeyStore keyStore, final char[] keyStorePassword)
                 throws Exception {
-            final String kmfa = KeyManagerFactory.getDefaultAlgorithm();
-            final KeyManagerFactory kmf = KeyManagerFactory.getInstance(kmfa);
+            String kmfa = KeyManagerFactory.getDefaultAlgorithm();
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(kmfa);
             kmf.init(keyStore, keyStorePassword);
 
-            final String tmfa = TrustManagerFactory.getDefaultAlgorithm();
-            final TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfa);
+            String tmfa = TrustManagerFactory.getDefaultAlgorithm();
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfa);
             tmf.init(keyStore);
 
-            final SSLContext context = SSLContext.getInstance("TLS");
+            SSLContext context = SSLContext.getInstance("TLS");
             context.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
             return context;
         }
