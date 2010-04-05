@@ -25,8 +25,7 @@ import java.io.FilenameFilter;
 /**
  * Induces optimization/verification of a set of DEX files.
  *
- * @deprecated this is an internal Dalvik class that is not appropriate for
- *      general use. It will be removed from the public API in a future release.
+ * @hide
  */
 public class TouchDex {
 

@@ -21,8 +21,7 @@ package dalvik.system;
  * An application cannot create its own Runtime instance, and must obtain
  * one from the getRuntime method.
  *
- * @deprecated this is an internal Dalvik class that is not appropriate for
- *      general use. It will be removed from the public API in a future release.
+ * @hide
  */
 public final class VMRuntime {
 
