@@ -16,10 +16,9 @@
 
 package vogar;
 
+import java.io.File;
 import vogar.commands.Command;
 import vogar.commands.Mkdir;
-
-import java.io.File;
 
 class EnvironmentHost extends Environment {
 

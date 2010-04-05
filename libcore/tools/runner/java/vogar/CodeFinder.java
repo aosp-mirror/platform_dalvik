@@ -16,10 +16,9 @@
 
 package vogar;
 
-import vogar.target.Runner;
-
 import java.io.File;
 import java.util.Set;
+import vogar.target.Runner;
 
 /**
  * A strategy for finding runnable things in a directory.

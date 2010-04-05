@@ -16,12 +16,11 @@
 
 package vogar.commands;
 
+import java.io.File;
+import java.util.logging.Logger;
 import vogar.Classpath;
 import vogar.Md5Cache;
 import vogar.Strings;
-
-import java.io.File;
-import java.util.logging.Logger;
 
 /**
  * A dx command.

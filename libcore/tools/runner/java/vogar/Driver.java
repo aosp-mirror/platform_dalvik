@@ -16,9 +16,6 @@
 
 package vogar;
 
-import vogar.commands.Command;
-import vogar.commands.Mkdir;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,6 +33,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
+import vogar.commands.Command;
+import vogar.commands.Mkdir;
 
 /**
  * Compiles, installs, runs and reports on actions.

@@ -16,10 +16,9 @@
 
 package vogar;
 
+import java.io.File;
 import vogar.target.CaliperRunner;
 import vogar.target.Runner;
-
-import java.io.File;
 
 /**
  * Create {@link Action}s for {@code .java} files with Caliper benchmarks in

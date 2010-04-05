@@ -16,10 +16,9 @@
 
 package vogar;
 
+import java.io.File;
 import vogar.target.MainRunner;
 import vogar.target.Runner;
-
-import java.io.File;
 
 /**
  * Create {@link Action}s for {@code .java} files with main methods in them.

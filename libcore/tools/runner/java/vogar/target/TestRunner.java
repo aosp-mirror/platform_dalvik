@@ -16,12 +16,11 @@
 
 package vogar.target;
 
-import vogar.TestProperties;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Properties;
+import vogar.TestProperties;
 
 /**
  * Runs an action, in process on the target.

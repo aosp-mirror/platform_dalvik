@@ -16,11 +16,10 @@
 
 package vogar;
 
-import vogar.commands.Dx;
-
 import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
+import vogar.commands.Dx;
 
 /**
  * Execute actions on a Dalvik VM using an Android device or emulator.

@@ -16,14 +16,13 @@
 
 package vogar.target;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 import vogar.Result;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
  * Accepts a connection for a host process to monitor this action.
@@ -51,7 +50,7 @@ class TargetMonitor {
             serializer = XmlPullParserFactory.newInstance().newSerializer();
             serializer.setOutput(socket.getOutputStream(), "UTF-8");
             serializer.startDocument("UTF-8", null);
-            serializer.startTag(ns, "vogar");
+            serializer.startTag(ns, "vogar-monitor");
         } catch (IOException e) {
             throw new RuntimeException("Failed to accept a monitor on localhost:" + port, e);
         } catch (XmlPullParserException e) {
@@ -93,7 +92,7 @@ class TargetMonitor {
 
     public void close() {
         try {
-            serializer.endTag(ns, "vogar");
+            serializer.endTag(ns, "vogar-monitor");
             serializer.endDocument();
             socket.close();
             serverSocket.close();

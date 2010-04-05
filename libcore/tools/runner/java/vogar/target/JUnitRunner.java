@@ -16,6 +16,8 @@
 
 package vogar.target;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -23,9 +25,6 @@ import junit.runner.BaseTestRunner;
 import junit.runner.TestSuiteLoader;
 import junit.textui.ResultPrinter;
 import vogar.Result;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Adapts a JUnit test for use by vogar.

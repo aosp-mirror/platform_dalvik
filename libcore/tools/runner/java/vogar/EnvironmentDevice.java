@@ -16,9 +16,8 @@
 
 package vogar;
 
-import vogar.commands.Adb;
-
 import java.io.File;
+import vogar.commands.Adb;
 
 class EnvironmentDevice extends Environment {
     final Adb adb = new Adb();

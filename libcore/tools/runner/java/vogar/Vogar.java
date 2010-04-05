@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -274,9 +273,10 @@ public final class Vogar {
         Console console = new Console(options.stream, options.indent, options.color);
         console.configureJavaLogging(options.verbose);
 
-        int monitorPort = 8787;
+        int monitorPort;
         Mode mode;
         if (options.mode.equals(Options.MODE_DEVICE)) {
+            monitorPort = 8787;
             mode = new DeviceDalvikVm(
                     options.debugPort,
                     options.sdkJar,
@@ -288,6 +288,7 @@ public final class Vogar {
                     options.cleanAfter,
                     options.deviceRunnerDir);
         } else if (options.mode.equals(Options.MODE_HOST)) {
+            monitorPort = 8788;
             mode = new JavaVm(
                     options.debugPort,
                     options.sdkJar,
@@ -300,6 +301,7 @@ public final class Vogar {
                     options.cleanAfter
             );
         } else if (options.mode.equals(Options.MODE_ACTIVITY)) {
+            monitorPort = 8787;
             mode = new ActivityMode(
                     options.debugPort,
                     options.sdkJar,

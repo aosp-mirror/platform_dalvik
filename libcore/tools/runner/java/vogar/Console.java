@@ -60,8 +60,8 @@ public class Console {
     }
 
     /**
-     * Formats an alternating sequence of regular log messages and messages
-     * streamed from a foreign process.
+     * Formats a sequence of regular log messages with the output streamed from
+     * a foreign process.
      */
     private String logRecordToString(LogRecord logRecord) {
         String message = logRecord.getMessage();

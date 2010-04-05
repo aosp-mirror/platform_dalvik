@@ -16,22 +16,21 @@
 
 package vogar;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ConnectException;
+import java.net.Socket;
+import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Socket;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Connects to a target process to monitor its action.
@@ -50,31 +49,37 @@ class HostMonitor {
     public boolean monitor(int port, Handler handler) {
         Socket socket;
         InputStream in;
-        try {
-            int attempt = 0;
-            do {
+        int attempt = 0;
+        do {
+            try {
                 socket = new Socket("localhost", port);
                 in = new BufferedInputStream(socket.getInputStream());
                 if (checkStream(in)) {
-                    logger.fine("action monitor connected to " + socket.getRemoteSocketAddress());
                     break;
                 }
-
-                if (attempt++ == MAX_CONNECT_ATTEMPTS) {
-                    throw new IOException("Exceeded max connection attempts!");
-                }
-                logger.fine("connection " + attempt + " to localhost:" + port + " is dead; retrying...");
                 in.close();
                 socket.close();
-                try {
-                    Thread.sleep(CONNECTION_ATTEMPT_DELAY_MILLIS);
-                } catch (InterruptedException e) {
-                }
-            } while (true);
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to connect to localhost:" + port, e);
-            return false;
-        }
+            } catch (ConnectException recoverable) {
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Failed to connect to localhost:" + port, e);
+                return false;
+            }
+
+            if (attempt++ == MAX_CONNECT_ATTEMPTS) {
+                logger.warning("Exceeded " + MAX_CONNECT_ATTEMPTS
+                        + " attempts to connect to localhost:" + port);
+                return false;
+            }
+
+            logger.fine("connection " + attempt + " to localhost:" + port
+                    + " failed; retrying in " + CONNECTION_ATTEMPT_DELAY_MILLIS + "ms");
+            try {
+                Thread.sleep(CONNECTION_ATTEMPT_DELAY_MILLIS);
+            } catch (InterruptedException e) {
+            }
+        } while (true);
+
+        logger.fine("action monitor connected to " + socket.getRemoteSocketAddress());
 
         try {
             SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
@@ -147,13 +152,13 @@ class HostMonitor {
          * Our XML wire format looks like this:
          *
          * <?xml version='1.0' encoding='UTF-8' ?>
-         * <vogar>
+         * <vogar-monitor>
          *   <outcome name="java.util.FormatterTest" action="java.util.FormatterTest">
          *     test output
          *     more test output
          *     <result value="SUCCESS" />
          *   </outcome>
-         * </vogar>
+         * </vogar-monitor>
          */
 
         @Override public void startElement(String uri, String localName,
@@ -171,7 +176,7 @@ class HostMonitor {
                 currentResult = Result.valueOf(attributes.getValue("value"));
                 return;
 
-            } else if (!qName.equals("vogar")) {
+            } else if (!qName.equals("vogar-monitor")) {
                 throw new IllegalArgumentException("Unrecognized: " + qName);
             }
         }

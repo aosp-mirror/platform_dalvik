@@ -16,9 +16,8 @@
 
 package vogar.target;
 
-import vogar.Result;
-
 import java.lang.reflect.Method;
+import vogar.Result;
 
 /**
  * Runs a Java class with a main method.

@@ -16,13 +16,12 @@
 
 package vogar;
 
-import vogar.commands.Command;
-import vogar.commands.Mkdir;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.MessageDigest;
 import java.util.logging.Logger;
+import vogar.commands.Command;
+import vogar.commands.Mkdir;
 
 /**
  * Caches content by MD5.
