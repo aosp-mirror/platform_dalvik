@@ -16,9 +16,6 @@
 
 package vogar;
 
-import vogar.commands.Command;
-import vogar.target.TestRunner;
-
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -26,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import vogar.commands.Command;
+import vogar.target.TestRunner;
 
 /**
  * A Java-like virtual machine for compiling and running tests.

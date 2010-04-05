@@ -22,16 +22,15 @@ import com.sun.javatest.TestResultTable;
 import com.sun.javatest.TestSuite;
 import com.sun.javatest.WorkDirectory;
 import com.sun.javatest.regtest.RegressionTestSuite;
-import vogar.commands.Mkdir;
-import vogar.target.JtregRunner;
-import vogar.target.Runner;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Logger;
+import vogar.commands.Mkdir;
+import vogar.target.JtregRunner;
+import vogar.target.Runner;
 
 /**
  * Create {@link Action}s for {@code .java} files with jtreg tests in them.

@@ -16,10 +16,9 @@
 
 package vogar;
 
-import vogar.commands.Rm;
-
 import java.io.File;
 import java.util.logging.Logger;
+import vogar.commands.Rm;
 
 /**
  * A target runtime environment such as a remote device or the local host

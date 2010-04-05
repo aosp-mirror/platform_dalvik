@@ -16,12 +16,6 @@
 
 package vogar;
 
-import vogar.commands.Aapt;
-import vogar.commands.Command;
-import vogar.commands.Dx;
-import vogar.commands.Mkdir;
-import vogar.commands.Rm;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,6 +26,11 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Logger;
+import vogar.commands.Aapt;
+import vogar.commands.Command;
+import vogar.commands.Dx;
+import vogar.commands.Mkdir;
+import vogar.commands.Rm;
 
 /**
  * Runs an action in the context of an android.app.Activity on a device

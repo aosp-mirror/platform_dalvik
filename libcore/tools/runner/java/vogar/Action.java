@@ -16,9 +16,8 @@
 
 package vogar;
 
-import vogar.target.Runner;
-
 import java.io.File;
+import vogar.target.Runner;
 
 /**
  * A named job such as a test or benchmark run. This class tracks the resource

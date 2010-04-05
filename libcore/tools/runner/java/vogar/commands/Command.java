@@ -16,9 +16,6 @@
 
 package vogar.commands;
 
-import vogar.Strings;
-import vogar.Threads;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +34,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
+import vogar.Strings;
+import vogar.Threads;
 
 /**
  * An out of process executable.

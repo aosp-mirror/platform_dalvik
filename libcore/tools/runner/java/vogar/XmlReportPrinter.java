@@ -16,8 +16,6 @@
 
 package vogar;
 
-import org.kxml2.io.KXmlSerializer;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import org.kxml2.io.KXmlSerializer;
 
 
 /**

@@ -16,10 +16,6 @@
 
 package vogar;
 
-import vogar.commands.Command;
-import vogar.commands.CommandFailedException;
-import vogar.commands.Mkdir;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
@@ -32,6 +28,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import vogar.commands.Command;
+import vogar.commands.CommandFailedException;
+import vogar.commands.Mkdir;
 
 /**
  * A Mode for running actions. Examples including running in a virtual machine
@@ -72,6 +71,7 @@ abstract class Mode {
             // TODO: we should be able to work with a shipping SDK, not depend on out/...
             // dalvik/libcore/**/test/ for junit
             // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
+            new File("out/host/common/obj/JAVA_LIBRARIES/kxml2-2.3.0_intermediates/javalib.jar").getAbsoluteFile(),
             new File("out/target/common/obj/JAVA_LIBRARIES/core-tests-luni_intermediates/classes.jar").getAbsoluteFile());
 
     Mode(Environment environment, File sdkJar, List<String> javacArgs, int monitorPort) {
