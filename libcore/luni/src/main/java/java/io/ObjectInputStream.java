@@ -446,16 +446,6 @@ public class ObjectInputStream extends InputStream implements ObjectInput,
         primitiveData = emptyStream;
     }
 
-    /**
-     * Returns the number of bytes of primitive data that can be read from this
-     * stream without blocking. This method should not be used at any arbitrary
-     * position; just when reading primitive data types (int, char etc).
-     *
-     * @return the number of available primitive data bytes.
-     * @throws IOException
-     *             if any I/O problem occurs while computing the available
-     *             bytes.
-     */
     @Override
     public int available() throws IOException {
         // returns 0 if next data is an object, or N if reading primitive types

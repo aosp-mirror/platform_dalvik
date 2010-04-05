@@ -81,14 +81,6 @@ public class SequenceInputStream extends InputStream {
         }
     }
 
-    /**
-     * Returns the number of bytes that are available before the current input stream will
-     * block.
-     *
-     * @return the number of bytes available in the current input stream before blocking.
-     * @throws IOException
-     *             if an I/O error occurs in the current input stream.
-     */
     @Override
     public int available() throws IOException {
         if (e != null && in != null) {

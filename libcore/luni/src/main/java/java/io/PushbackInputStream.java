@@ -73,16 +73,6 @@ public class PushbackInputStream extends FilterInputStream {
         pos = size;
     }
 
-    /**
-     * Returns the number of bytes that are available before this stream will
-     * block. This is the sum of the bytes available in the pushback buffer and
-     * those available from the source stream.
-     *
-     * @return the number of bytes available before blocking.
-     * @throws IOException
-     *             if this stream is closed or an I/O error occurs in the source
-     *             stream.
-     */
     @Override
     public int available() throws IOException {
         if (buf == null) {
