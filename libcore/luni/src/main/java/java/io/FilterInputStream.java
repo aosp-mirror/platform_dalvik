@@ -46,14 +46,6 @@ public class FilterInputStream extends InputStream {
         this.in = in;
     }
 
-    /**
-     * Returns the number of bytes that are available before this stream will
-     * block.
-     *
-     * @return the number of bytes available before blocking.
-     * @throws IOException
-     *             if an error occurs in this stream.
-     */
     @Override
     public int available() throws IOException {
         return in.available();

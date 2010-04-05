@@ -385,18 +385,12 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
         return skipped;
     }
 
-    /**
-     * Returns 0 if the {@code EOF} has been reached, otherwise returns 1.
-     *
-     * @return 0 after {@code EOF} of current entry, 1 otherwise.
-     * @throws IOException
-     *             if an IOException occurs.
-     */
     @Override
     public int available() throws IOException {
         if (closed) {
             throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
         }
+        // The InflaterInputStream contract says we must only return 0 or 1.
         return (currentEntry == null || inRead < currentEntry.size) ? 1 : 0;
     }
 

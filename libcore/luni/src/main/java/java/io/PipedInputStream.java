@@ -103,13 +103,13 @@ public class PipedInputStream extends InputStream {
     }
 
     /**
-     * Returns the number of bytes that are available before this stream will
-     * block. This implementation returns the number of bytes written to this
-     * pipe that have not been read yet.
+     * {@inheritDoc}
      *
-     * @return the number of bytes available before blocking.
-     * @throws IOException
-     *             if an error occurs in this stream.
+     * <p>Unlike most streams, {@code PipedInputStream} returns 0 rather than throwing
+     * {@code IOException} if the stream has been closed. Unconnected and broken pipes also
+     * return 0.
+     *
+     * @throws IOException if an I/O error occurs
      */
     @Override
     public synchronized int available() throws IOException {

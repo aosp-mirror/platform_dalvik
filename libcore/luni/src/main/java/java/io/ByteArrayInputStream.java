@@ -85,11 +85,9 @@ public class ByteArrayInputStream extends InputStream {
     }
 
     /**
-     * Returns the number of bytes that are available before this stream will
-     * block. This method returns the number of bytes yet to be read from the
-     * source byte array.
+     * Returns the number of remaining bytes.
      *
-     * @return the number of bytes available before blocking.
+     * @return {@code count - pos}
      */
     @Override
     public synchronized int available() {

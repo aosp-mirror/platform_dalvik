@@ -279,8 +279,7 @@ public class InflaterInputStream extends FilterInputStream {
      * @return 0 if no further bytes are available. Otherwise returns 1,
      *         which suggests (but does not guarantee) that additional bytes are
      *         available.
-     * @throws IOException
-     *             If an error occurs.
+     * @throws IOException if this stream is closed or an error occurs
      */
     @Override
     public int available() throws IOException {

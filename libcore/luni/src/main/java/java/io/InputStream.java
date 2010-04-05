@@ -48,13 +48,41 @@ public abstract class InputStream extends Object implements Closeable {
     }
 
     /**
-     * Returns the number of bytes that are available before this stream will
-     * block. This implementation always returns 0. Subclasses should override
-     * and indicate the correct number of bytes available.
+     * Returns an estimated number of bytes that can be read or skipped without blocking for more
+     * input.
      *
-     * @return the number of bytes available before blocking.
-     * @throws IOException
-     *             if an error occurs in this stream.
+     * <p>Note that this method provides such a weak guarantee that it is not very useful in
+     * practice.
+     *
+     * <p>Firstly, the guarantee is "without blocking for more input" rather than "without
+     * blocking": a read may still block waiting for I/O to complete&nbsp;&mdash; the guarantee is
+     * merely that it won't have to wait indefinitely for data to be written. The result of this
+     * method should not be used as a license to do I/O on a thread that shouldn't be blocked.
+     *
+     * <p>Secondly, the result is a
+     * conservative estimate and may be significantly smaller than the actual number of bytes
+     * available. In particular, an implementation that always returns 0 would be correct.
+     * In general, callers should only use this method if they'd be satisfied with
+     * treating the result as a boolean yes or no answer to the question "is there definitely
+     * data ready?".
+     *
+     * <p>Thirdly, the fact that a given number of bytes is "available" does not guarantee that a
+     * read or skip will actually read or skip that many bytes: they may read or skip fewer.
+     *
+     * <p>It is particularly important to realize that you <i>must not</i> use this method to
+     * size a container and assume that you can read the entirety of the stream without needing
+     * to resize the container. Such callers should probably write everything they read to a
+     * {@link ByteArrayOutputStream} and convert that to a byte array. Alternatively, if you're
+     * reading from a file, {@link File#length} returns the current length of the file (though
+     * assuming the file's length can't change may be incorrect, reading a file is inherently
+     * racy).
+     *
+     * <p>The default implementation of this method in {@code InputStream} always returns 0.
+     * Subclasses should override this method if they are able to indicate the number of bytes
+     * available.
+     *
+     * @return the estimated number of bytes available
+     * @throws IOException if this stream is closed or an error occurs
      */
     public int available() throws IOException {
         return 0;
@@ -198,15 +226,16 @@ public abstract class InputStream extends Object implements Closeable {
     }
 
     /**
-     * Skips at most {@code n} bytes in this stream. It does nothing and returns
-     * 0 if {@code n} is negative. Less than {@code n} characters are skipped if
-     * the end of this stream is reached before the operation completes.
-     * <p>
-     * This default implementation reads {@code n} bytes into a temporary
+     * Skips at most {@code n} bytes in this stream. This method does nothing and returns
+     * 0 if {@code n} is negative.
+     *
+     * <p>Note the "at most" in the description of this method: this method may choose to skip
+     * fewer bytes than requested. Callers should <i>always</i> check the return value.
+     *
+     * <p>This default implementation reads bytes into a temporary
      * buffer. Concrete subclasses should provide their own implementation.
      *
-     * @param n
-     *            the number of bytes to skip.
+     * @param n the number of bytes to skip.
      * @return the number of bytes actually skipped.
      * @throws IOException
      *             if this stream is closed or another IOException occurs.
