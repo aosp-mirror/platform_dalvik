@@ -199,6 +199,12 @@ disconnects, the original interpreter is resumed.  (The "debug" interpreter
 is substantially slower, something to keep in mind when evaluating
 profiling data.)
 
+<p>The JIT compiler can be disabled on a per-application basis by adding
+<code>android:vmSafeMode="true"</code> in the <code>application</code>
+tag in <code>AndroidManifest.xml</code>.  This can be useful if you
+suspect that JIT compilation is causing your application to behave
+incorrectly.
+
 
 <h2><a name="dp">Deadlock Prediction</a></h2>
 
