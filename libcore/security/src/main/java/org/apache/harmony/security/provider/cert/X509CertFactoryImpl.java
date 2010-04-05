@@ -800,26 +800,17 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
             this.inStream = inStream;
         }
 
-        /**
-         * @see java.io.InputStream#available()
-         * method documentation for more info
-         */
+        @Override
         public int available() throws IOException {
             return (bar - pos) + inStream.available();
         }
 
-        /**
-         * @see java.io.InputStream#close()
-         * method documentation for more info
-         */
+        @Override
         public void close() throws IOException {
             inStream.close();
         }
 
-        /**
-         * @see java.io.InputStream#mark(int readlimit)
-         * method documentation for more info
-         */
+        @Override
         public void mark(int readlimit) {
             if (pos < 0) {
                 pos = 0;
@@ -830,10 +821,7 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
             }
         }
 
-        /**
-         * @see java.io.InputStream#markSupported()
-         * method documentation for more info
-         */
+        @Override
         public boolean markSupported() {
             return true;
         }
@@ -881,18 +869,12 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
             return inStream.read();
         }
 
-        /**
-         * @see java.io.InputStream#read(byte[] b)
-         * method documentation for more info
-         */
+        @Override
         public int read(byte[] b) throws IOException {
             return read(b, 0, b.length);
         }
 
-        /**
-         * @see java.io.InputStream#read(byte[] b, int off, int len)
-         * method documentation for more info
-         */
+        @Override
         public int read(byte[] b, int off, int len) throws IOException {
             int read_b;
             int i;
@@ -905,10 +887,7 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
             return i;
         }
 
-        /**
-         * @see java.io.InputStream#reset()
-         * method documentation for more info
-         */
+        @Override
         public void reset() throws IOException {
             if (pos >= 0) {
                 pos = (end + 1) % BUFF_SIZE;
@@ -918,10 +897,7 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
             }
         }
 
-        /**
-         * @see java.io.InputStream#skip(long n)
-         * method documentation for more info
-         */
+        @Override
         public long skip(long n) throws IOException {
             if (pos >= 0) {
                 long i = 0;
@@ -939,6 +915,3 @@ public class X509CertFactoryImpl extends CertificateFactorySpi {
         }
     }
 }
-
-
-

@@ -134,15 +134,6 @@ public class FileInputStream extends InputStream implements Closeable {
         this(null == fileName ? (File) null : new File(fileName));
     }
 
-    /**
-     * Returns the number of bytes that are available before this stream will
-     * block. This method always returns the size of the file minus the current
-     * position.
-     *
-     * @return the number of bytes available before blocking.
-     * @throws IOException
-     *             if an error occurs in this stream.
-     */
     @Override
     public int available() throws IOException {
         openCheck();

@@ -60,12 +60,6 @@ public class StringBufferInputStream extends InputStream {
         count = str.length();
     }
 
-    /**
-     * Returns the number of bytes that are available before this stream will
-     * block.
-     *
-     * @return the number of bytes available before blocking.
-     */
     @Override
     public synchronized int available() {
         return count - pos;

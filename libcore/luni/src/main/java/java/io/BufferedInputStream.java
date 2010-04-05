@@ -115,13 +115,13 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Returns the number of bytes that are available before this stream will
-     * block. This method returns the number of bytes available in the buffer
-     * plus those available in the source stream.
+     * Returns an estimated number of bytes that can be read or skipped without blocking for more
+     * input. This method returns the number of bytes available in the buffer
+     * plus those available in the source stream, but see {@link InputStream#available} for
+     * important caveats.
      *
-     * @return the number of bytes available before blocking.
-     * @throws IOException
-     *             if this stream is closed.
+     * @return the estimated number of bytes available
+     * @throws IOException if this stream is closed or an error occurs
      */
     @Override
     public synchronized int available() throws IOException {
