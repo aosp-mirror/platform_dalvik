@@ -19,7 +19,9 @@
 #include "alloc/Verify.h"
 #include "alloc/HeapBitmap.h"
 
-/* comment everything, of course! */
+/*
+ * Assertion that the given reference points to a valid object.
+ */
 #define VERIFY_REFERENCE(x) do {                                \
         if (!verifyReference((x), &(x))) {                      \
             LOGE("Verify of %p at %p failed", (x), &(x));       \
@@ -123,12 +125,9 @@ static void verifyDataObject(const DataObject *obj)
         }
     }
     if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
-        /*
-         * Reference.referent is not included in the above loop. See
-         * precacheReferenceOffsets in Class.c for details.
-         */
-        addr = BYTE_OFFSET((Object *)obj,
-                           gDvm.offJavaLangRefReference_referent);
+        /* Verify the hidden Reference.referent field. */
+        offset = gDvm.offJavaLangRefReference_referent;
+        addr = BYTE_OFFSET((Object *)obj, offset);
         VERIFY_REFERENCE(((JValue *)addr)->l);
     }
     LOGV("Exiting verifyDataObject(obj=%p) %zx", obj, length);
