@@ -388,6 +388,22 @@ static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 }
 
 /*
+ * public boolean isEmpty()
+ */
+static bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    //LOGI("String.isEmpty this=0x%08x pResult=%p\n", arg0, pResult);
+
+    /* null reference check on "this" */
+    if (!dvmValidateObject((Object*) arg0))
+        return false;
+
+    pResult->i = (dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT) == 0);
+    return true;
+}
+
+/*
  * Determine the index of the first character matching "ch".  The string
  * to search is described by "chars", "offset", and "count".
  *
@@ -654,6 +670,8 @@ const InlineOperation gDvmInlineOpsTable[] = {
         "Ljava/lang/String;", "indexOf", "(I)I" },
     { javaLangString_indexOf_II,
         "Ljava/lang/String;", "indexOf", "(II)I" },
+    { javaLangString_isEmpty,
+        "Ljava/lang/String;", "isEmpty", "()Z" },
     { javaLangString_length,
         "Ljava/lang/String;", "length", "()I" },
 

@@ -27,6 +27,11 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 
 public class StringTest extends TestCase {
+    public void testIsEmpty() {
+        assertTrue("".isEmpty());
+        assertFalse("x".isEmpty());
+    }
+
     // The evil decoder keeps hold of the CharBuffer it wrote to.
     private static final class EvilCharsetDecoder extends CharsetDecoder {
         private static char[] chars;
