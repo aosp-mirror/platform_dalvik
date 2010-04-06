@@ -62,6 +62,8 @@ import java.net.URL;
  * 
  * <p>Note that each iteration creates new instances of the various service implementations, so
  * any heavily-used code will likely want to cache the known implementations itself and reuse them.
+ * Note also that the candidate classes are instantiated lazily as you call {@code next} on the
+ * iterator: construction of the iterator itself does not instantiate any of the providers.
  * 
  * @param <S> the service class or interface
  * @since 1.6
@@ -106,13 +108,17 @@ public final class ServiceLoader<S> implements Iterable<S> {
     }
 
     /**
-     * Constructs a service loader.
+     * Constructs a service loader. If {@code classLoader} is null, the system class loader
+     * is used.
      * 
      * @param service the service class or interface
-     * @param loader the class loader
+     * @param classLoader the class loader
      * @return a new ServiceLoader
      */
     public static <S> ServiceLoader<S> load(Class<S> service, ClassLoader classLoader) {
+        if (classLoader == null) {
+            classLoader = ClassLoader.getSystemClassLoader();
+        }
         return new ServiceLoader<S>(service, classLoader);
     }
 
@@ -120,14 +126,10 @@ public final class ServiceLoader<S> implements Iterable<S> {
         services.clear();
         try {
             String name = "META-INF/services/" + service.getName();
-            services.addAll(Collections.list(classLoader().getResources(name)));
+            services.addAll(Collections.list(classLoader.getResources(name)));
         } catch (IOException e) {
             return;
         }
-    }
-
-    private ClassLoader classLoader() {
-        return (classLoader != null) ? classLoader : ClassLoader.getSystemClassLoader();
     }
 
     /**
@@ -154,6 +156,29 @@ public final class ServiceLoader<S> implements Iterable<S> {
             }
         }
         return ServiceLoader.load(service, cl);
+    }
+
+    /**
+     * Internal API to support built-in SPIs that check a system property first.
+     * Returns an instance specified by a property with the class' binary name, or null if
+     * no such property is set.
+     * @hide
+     */
+    public static <S> S loadFromSystemProperty(final Class<S> service) {
+        return AccessController.doPrivileged(new PrivilegedAction<S>() {
+            public S run() {
+                try {
+                    final String className = System.getProperty(service.getName());
+                    if (className != null) {
+                        Class<?> c = ClassLoader.getSystemClassLoader().loadClass(className);
+                        return (S) c.newInstance();
+                    }
+                    return null;
+                } catch (Exception e) {
+                    throw new Error(e);
+                }
+            }
+        });
     }
 
     @Override
@@ -190,11 +215,7 @@ public final class ServiceLoader<S> implements Iterable<S> {
             }
             String className = queue.remove();
             try {
-                if (classLoader == null) {
-                    return service.cast(Class.forName(className).newInstance());
-                } else {
-                    return service.cast(classLoader.loadClass(className).newInstance());
-                }
+                return service.cast(classLoader.loadClass(className).newInstance());
             } catch (Exception e) {
                 throw new ServiceConfigurationError("Couldn't instantiate class " + className, e);
             }

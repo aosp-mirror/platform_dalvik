@@ -16,14 +16,6 @@
 
 package java.util.prefs;
 
-// BEGIN android-added
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.Enumeration;
-// END android-added
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,7 +23,7 @@ import java.net.MalformedURLException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Locale;
-
+import java.util.ServiceLoader;
 import org.apache.harmony.prefs.internal.nls.Messages;
 
 /**
@@ -110,123 +102,24 @@ public abstract class Preferences {
      */
     public static final int MAX_VALUE_LENGTH = 8192;
 
-    // BEGIN android-added
-    /**
-     * The name of the configuration file where preferences factory class names
-     * can be specified.
-     */
-    private static final String FACTORY_CONFIGURATION_FILE_NAME = "META-INF/services/java.util.prefs.PreferencesFactory"; //$NON-NLS-1$
-
-    /**
-     * The encoding of configuration files
-     */
-    private static final String CONFIGURATION_FILE_ENCODING = "UTF-8"; //$NON-NLS-1$
-
-    /**
-     * The comment string used in configuration files
-     */
-    private static final String CONFIGURATION_FILE_COMMENT = "#"; //$NON-NLS-1$
-
-    // END android-added
-
     //permission
-    private static final RuntimePermission PREFS_PERM = new RuntimePermission("preferences"); //$NON-NLS-1$
+    private static final RuntimePermission PREFS_PERM = new RuntimePermission("preferences");
 
     //factory used to get user/system prefs root
-    private static final PreferencesFactory factory;
+    private static final PreferencesFactory factory = findPreferencesFactory();
 
-    // BEGIN android-removed
-    // // default provider factory name for Windows
-    // private static final String DEFAULT_FACTORY_NAME_WIN = "java.util.prefs.RegistryPreferencesFactoryImpl"; //$NON-NLS-1$
-    //
-    // // default provider factory name for Unix
-    // private static final String DEFAULT_FACTORY_NAME_UNIX = "java.util.prefs.FilePreferencesFactoryImpl"; //$NON-NLS-1$
-    // END android-removed
-
-    static {
-        String factoryClassName = AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty("java.util.prefs.PreferencesFactory"); //$NON-NLS-1$
-            }
-        });
-        // BEGIN android-removed
-        // // set default provider
-        // if (factoryClassName == null) {
-        //     String osName = AccessController.doPrivileged(new PrivilegedAction<String>() {
-        //         public String run() {
-        //             return System.getProperty("os.name"); //$NON-NLS-1$
-        //         }
-        //     });
-        //
-        //     // only comparing ASCII, so assume english locale
-        //     osName = (osName == null ? null : osName.toLowerCase(Locale.ENGLISH));
-        //
-        //     if (osName != null && osName.startsWith("windows")) {
-        //         factoryClassName = DEFAULT_FACTORY_NAME_WIN;
-        //     } else {
-        //         factoryClassName = DEFAULT_FACTORY_NAME_UNIX;
-        //     }
-        // }
-        // try {
-        //     ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        //     if(loader == null){
-        //         loader = ClassLoader.getSystemClassLoader();
-        //     }
-        //     Class<?> factoryClass = loader.loadClass(factoryClassName);
-        //     factory = (PreferencesFactory) factoryClass.newInstance();
-        // } catch (Exception e) {
-        //     // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by {1}
-        //     throw new InternalError(Messages.getString("prefs.10", factoryClassName, e));   //$NON-NLS-1$
-        // }
-        // BEGIN android-added
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        if (loader == null) {
-            loader = ClassLoader.getSystemClassLoader();
+    private static PreferencesFactory findPreferencesFactory() {
+        // Try the system property first...
+        PreferencesFactory result = ServiceLoader.loadFromSystemProperty(PreferencesFactory.class);
+        if (result != null) {
+            return result;
         }
-        if (factoryClassName == null) {
-            Enumeration<URL> en = null;
-            try {
-                en = loader.getResources(FACTORY_CONFIGURATION_FILE_NAME);
-                BufferedReader reader = null;
-                int commentIndex = 0;
-                while (en.hasMoreElements()) {
-                    try {
-                        InputStream is = en.nextElement().openStream();
-                        // Read each line for charset provider class names
-                        reader = new BufferedReader(new InputStreamReader(is,
-                                CONFIGURATION_FILE_ENCODING));
-                        factoryClassName = reader.readLine();
-                        commentIndex = factoryClassName.indexOf(CONFIGURATION_FILE_COMMENT);
-                        if (commentIndex > 0) {
-                            factoryClassName = factoryClassName.substring(0, commentIndex).trim();
-                        }
-                        if (factoryClassName.length() > 0) {
-                            break;
-                        }
-                    } catch (IOException ex) {
-                        // ignore if a resource couldn't be read
-                    }
-                }
-            } catch (Exception e) {
-                // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by
-                // {1}
-                throw new InternalError(Messages.getString("prefs.10",
-                        FACTORY_CONFIGURATION_FILE_NAME, e)); //$NON-NLS-1$
-            }
+        // Then use ServiceLoader for META-INF/services/...
+        for (PreferencesFactory impl : ServiceLoader.load(PreferencesFactory.class, null)) {
+            return impl;
         }
-
-        if (factoryClassName == null) {
-            factoryClassName = "java.util.prefs.FilePreferencesFactoryImpl";
-        }
-
-        try {
-            Class<?> c = loader.loadClass(factoryClassName);
-            factory = (PreferencesFactory)c.newInstance();
-        } catch (Exception e) {
-            // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by {1}
-            throw new InternalError(Messages.getString("prefs.10", factoryClassName, e)); //$NON-NLS-1$
-        }
-        // END android-added
+        // Finally return a default...
+        return new FilePreferencesFactoryImpl();
     }
 
     /**
