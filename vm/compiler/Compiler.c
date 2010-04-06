@@ -590,7 +590,7 @@ static void *compilerThreadStart(void *arg)
                  * of the vm but this should be acceptable.
                  */
                 if (!gDvmJit.blockingMode)
-                    dvmCheckSuspendPending(NULL);
+                    dvmCheckSuspendPending(dvmThreadSelf());
                 /* Is JitTable filling up? */
                 if (gDvmJit.jitTableEntriesUsed >
                     (gDvmJit.jitTableSize - gDvmJit.jitTableSize/4)) {

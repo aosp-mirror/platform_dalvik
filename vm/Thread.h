@@ -44,6 +44,8 @@ struct LockedObjectData;
  * Note that "suspended" is orthogonal to these values (so says JDWP).
  */
 typedef enum ThreadStatus {
+    THREAD_UNDEFINED    = -1,       /* threads are never in this state */
+
     /* these match up with JDWP values */
     THREAD_ZOMBIE       = 0,        /* TERMINATED */
     THREAD_RUNNING      = 1,        /* RUNNABLE or running now */
@@ -328,8 +330,6 @@ void dvmWaitForSuspend(Thread* thread);
 /*
  * Check to see if we should be suspended now.  If so, suspend ourselves
  * by sleeping on a condition variable.
- *
- * If "self" is NULL, this will use dvmThreadSelf().
  */
 bool dvmCheckSuspendPending(Thread* self);
 
