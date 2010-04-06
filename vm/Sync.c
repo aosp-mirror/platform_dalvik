@@ -400,8 +400,7 @@ static bool tryLockMonitor(Thread* self, Monitor* mon)
 static bool unlockMonitor(Thread* self, Monitor* mon)
 {
     assert(self != NULL);
-    assert(mon != NULL);        // can this happen?
-
+    assert(mon != NULL);
     if (mon->owner == self) {
         /*
          * We own the monitor, so nobody else can be in here.
@@ -419,9 +418,7 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
          * in this case.
          */
         dvmThrowExceptionFmt("Ljava/lang/IllegalMonitorStateException;",
-                             "unlock of unowned monitor, self=%d owner=%d",
-                             self->threadId, 
-                             mon->owner ? mon->owner->threadId : 0);
+                             "unlock of unowned monitor");
         return false;
     }
     return true;
