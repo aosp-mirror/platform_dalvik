@@ -1022,7 +1022,7 @@ void
 dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
 {
     HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
-    HeapBitmap objBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+    HeapBitmap liveBits[HEAP_SOURCE_MAX_HEAP_COUNT];
     size_t origObjectsAllocated;
     size_t origBytesAllocated;
     size_t numBitmaps, numSweepBitmaps;
@@ -1041,14 +1041,14 @@ dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
     dvmSweepMonitorList(&gDvm.monitorList, isUnmarkedObject);
 
     numBitmaps = dvmHeapSourceGetNumHeaps();
-    dvmHeapSourceGetObjectBitmaps(objBits, markBits, numBitmaps);
+    dvmHeapSourceGetObjectBitmaps(liveBits, markBits, numBitmaps);
     if (mode == GC_PARTIAL) {
         numSweepBitmaps = 1;
-        assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == objBits[0].base);
+        assert((uintptr_t)gDvm.gcHeap->markContext.immuneLimit == liveBits[0].base);
     } else {
         numSweepBitmaps = numBitmaps;
     }
-    dvmHeapBitmapXorWalkLists(markBits, objBits, numSweepBitmaps,
+    dvmHeapBitmapXorWalkLists(markBits, liveBits, numSweepBitmaps,
                               sweepBitmapCallback, NULL);
 
     *numFreed = origObjectsAllocated -

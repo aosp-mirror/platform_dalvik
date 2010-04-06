@@ -184,9 +184,9 @@ struct HeapSource {
     size_t heapLength;
 
     /*
-     * The object (live, allocated) bitmap.
+     * The live object bitmap.
      */
-    HeapBitmap objBits;
+    HeapBitmap liveBits;
 
     /*
      * The mark bitmap.
@@ -276,7 +276,7 @@ countAllocation(Heap *heap, const void *ptr, bool isObj)
     if (isObj) {
         heap->objectsAllocated++;
         hs = gDvm.gcHeap->heapSource;
-        dvmHeapBitmapSetObjectBit(&hs->objBits, ptr);
+        dvmHeapBitmapSetObjectBit(&hs->liveBits, ptr);
     }
 
     assert(heap->bytesAllocated < mspace_footprint(heap->msp));
@@ -297,7 +297,7 @@ countFree(Heap *heap, const void *ptr, bool isObj)
     }
     if (isObj) {
         hs = gDvm.gcHeap->heapSource;
-        dvmHeapBitmapClearObjectBit(&hs->objBits, ptr);
+        dvmHeapBitmapClearObjectBit(&hs->liveBits, ptr);
         if (heap->objectsAllocated > 0) {
             heap->objectsAllocated--;
         }
@@ -478,13 +478,13 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
         LOGE_HEAP("Can't add initial heap\n");
         goto fail;
     }
-    if (!dvmHeapBitmapInit(&hs->objBits, base, length, "dalvik-bitmap-1")) {
-        LOGE_HEAP("Can't create objBits\n");
+    if (!dvmHeapBitmapInit(&hs->liveBits, base, length, "dalvik-bitmap-1")) {
+        LOGE_HEAP("Can't create liveBits\n");
         goto fail;
     }
     if (!dvmHeapBitmapInit(&hs->markBits, base, length, "dalvik-bitmap-2")) {
         LOGE_HEAP("Can't create markBits\n");
-        dvmHeapBitmapDelete(&hs->objBits);
+        dvmHeapBitmapDelete(&hs->liveBits);
         goto fail;
     }
 
@@ -546,7 +546,7 @@ dvmHeapSourceShutdown(GcHeap **gcHeap)
         assert((char *)*gcHeap >= hs->heapBase);
         assert((char *)*gcHeap < hs->heapBase + hs->heapLength);
 
-        dvmHeapBitmapDelete(&hs->objBits);
+        dvmHeapBitmapDelete(&hs->liveBits);
         dvmHeapBitmapDelete(&hs->markBits);
 
         munmap(hs->heapBase, hs->heapLength);
@@ -630,7 +630,7 @@ static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
  * object and mark bitmaps.  This routine is used by the sweep code
  * which needs to free each object in the correct heap.
  */
-void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
+void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
                                    size_t numHeaps)
 {
     HeapSource *hs = gHs;
@@ -643,7 +643,7 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
     for (i = 0; i < hs->numHeaps; ++i) {
         base = (uintptr_t)hs->heaps[i].base;
         max = (uintptr_t)hs->heaps[i].limit - 1;
-        aliasBitmap(&objBits[i], &hs->objBits, base, max);
+        aliasBitmap(&liveBits[i], &hs->liveBits, base, max);
         aliasBitmap(&markBits[i], &hs->markBits, base, max);
     }
 }
@@ -655,14 +655,14 @@ HeapBitmap *dvmHeapSourceGetLiveBits()
 {
     HS_BOILERPLATE();
 
-    return &gHs->objBits;
+    return &gHs->liveBits;
 }
 
 void dvmHeapSourceSwapBitmaps(void)
 {
     HeapBitmap tmp;
-    tmp = gHs->objBits;
-    gHs->objBits = gHs->markBits;
+    tmp = gHs->liveBits;
+    gHs->liveBits = gHs->markBits;
     gHs->markBits = tmp;
     dvmHeapBitmapZero(&gHs->markBits);
 }
@@ -676,13 +676,13 @@ void dvmMarkImmuneObjects(void)
      * Copy the contents of the live bit vector for immune object
      * range into the mark bit vector.
      */
-    assert(gHs->objBits.base == gHs->markBits.base);
-    assert(gHs->objBits.bitsLen == gHs->markBits.bitsLen);
+    assert(gHs->liveBits.base == gHs->markBits.base);
+    assert(gHs->liveBits.bitsLen == gHs->markBits.bitsLen);
     for (i = 1; i < gHs->numHeaps; ++i) {
         /* Compute the number of words to copy in the bitmap. */
-        index = HB_OFFSET_TO_INDEX((uintptr_t)gHs->heaps[i].base - gHs->objBits.base);
+        index = HB_OFFSET_TO_INDEX((uintptr_t)gHs->heaps[i].base - gHs->liveBits.base);
         /* Compute the starting offset in the live and mark bits. */
-        src = (char *)(gHs->objBits.bits + index);
+        src = (char *)(gHs->liveBits.bits + index);
         dst = (char *)(gHs->markBits.bits + index);
         /* Compute the number of bytes of the live bitmap to copy. */
         length = HB_OFFSET_TO_BYTE_INDEX(gHs->heaps[i].limit - gHs->heaps[i].base);
@@ -919,8 +919,8 @@ dvmHeapSourceContains(const void *ptr)
 {
     HS_BOILERPLATE();
 
-    if (dvmHeapBitmapCoversAddress(&gHs->objBits, ptr)) {
-        return dvmHeapBitmapIsObjectBitSet(&gHs->objBits, ptr) != 0;
+    if (dvmHeapBitmapCoversAddress(&gHs->liveBits, ptr)) {
+        return dvmHeapBitmapIsObjectBitSet(&gHs->liveBits, ptr) != 0;
     }
     return false;
 }
