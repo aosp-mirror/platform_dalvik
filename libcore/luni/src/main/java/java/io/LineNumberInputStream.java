@@ -51,17 +51,12 @@ public class LineNumberInputStream extends FilterInputStream {
     }
 
     /**
-     * Returns the number of bytes that are available before this stream will
-     * block.
-     * <p>
-     * Note: The source stream may just be a sequence of {@code "\r\n"} bytes
+     * {@inheritDoc}
+     *
+     * <p>Note that the source stream may just be a sequence of {@code "\r\n"} bytes
      * which are converted into {@code '\n'} by this stream. Therefore,
      * {@code available} returns only {@code in.available() / 2} bytes as
      * result.
-     *
-     * @return the guaranteed number of bytes available before blocking.
-     * @throws IOException
-     *             if an error occurs in this stream.
      */
     @Override
     public int available() throws IOException {
