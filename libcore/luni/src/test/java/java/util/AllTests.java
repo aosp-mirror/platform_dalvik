@@ -29,6 +29,7 @@ public class AllTests {
         suite.addTestSuite(java.util.RandomTest.class);
         suite.addTestSuite(java.util.ServiceLoaderTest.class);
         suite.addTestSuite(java.util.TimeZoneTest.class);
+        suite.addTestSuite(java.util.TreeMapTest.class);
         return suite;
     }
 }
