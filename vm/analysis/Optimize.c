@@ -29,199 +29,23 @@
  * Virtual/direct calls to "method" are replaced with an execute-inline
  * instruction with index "idx".
  */
-typedef struct InlineSub {
+struct InlineSub {
     Method* method;
     int     inlineIdx;
-} InlineSub;
+};
 
 
 /* fwd */
-static bool loadAllClasses(DvmDex* pDvmDex);
 static void optimizeLoadedClasses(DexFile* pDexFile);
-static void optimizeClass(ClassObject* clazz, const InlineSub* inlineSubs);
-static bool optimizeMethod(Method* method, const InlineSub* inlineSubs);
+static void optimizeClass(ClassObject* clazz);
+static bool optimizeMethod(Method* method);
 static void rewriteInstField(Method* method, u2* insns, OpCode newOpc);
 static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc);
 static bool rewriteEmptyDirectInvoke(Method* method, u2* insns);
 static bool rewriteExecuteInline(Method* method, u2* insns,
-    MethodType methodType, const InlineSub* inlineSubs);
+    MethodType methodType);
 static bool rewriteExecuteInlineRange(Method* method, u2* insns,
-    MethodType methodType, const InlineSub* inlineSubs);
-
-
-/*
- * Perform in-place rewrites on a memory-mapped DEX file.
- *
- * This happens in a short-lived child process, so we can go nutty with
- * loading classes and allocating memory.
- */
-bool dvmRewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
-    u4* pHeaderFlags, DexClassLookup** ppClassLookup)
-{
-    u8 prepWhen, loadWhen, verifyWhen, optWhen;
-    DvmDex* pDvmDex = NULL;
-    bool result = false;
-
-    *pHeaderFlags = 0;
-
-    LOGV("+++ swapping bytes\n");
-    if (dexFixByteOrdering(addr, len) != 0)
-        goto bail;
-#if __BYTE_ORDER != __LITTLE_ENDIAN
-    *pHeaderFlags |= DEX_OPT_FLAG_BIG;
-#endif
-
-    /*
-     * Now that the DEX file can be read directly, create a DexFile for it.
-     */
-    if (dvmDexFileOpenPartial(addr, len, &pDvmDex) != 0) {
-        LOGE("Unable to create DexFile\n");
-        goto bail;
-    }
-
-    /*
-     * Create the class lookup table.
-     */
-    //startWhen = dvmGetRelativeTimeUsec();
-    *ppClassLookup = dexCreateClassLookup(pDvmDex->pDexFile);
-    if (*ppClassLookup == NULL)
-        goto bail;
-
-    /*
-     * Bail out early if they don't want The Works.  The current implementation
-     * doesn't fork a new process if this flag isn't set, so we really don't
-     * want to continue on with the crazy class loading.
-     */
-    if (!doVerify && !doOpt) {
-        result = true;
-        goto bail;
-    }
-
-    /* this is needed for the next part */
-    pDvmDex->pDexFile->pClassLookup = *ppClassLookup;
-
-    prepWhen = dvmGetRelativeTimeUsec();
-
-    /*
-     * Load all classes found in this DEX file.  If they fail to load for
-     * some reason, they won't get verified (which is as it should be).
-     */
-    if (!loadAllClasses(pDvmDex))
-        goto bail;
-    loadWhen = dvmGetRelativeTimeUsec();
-
-    /*
-     * Verify all classes in the DEX file.  Export the "is verified" flag
-     * to the DEX file we're creating.
-     */
-    if (doVerify) {
-        dvmVerifyAllClasses(pDvmDex->pDexFile);
-        *pHeaderFlags |= DEX_FLAG_VERIFIED;
-    }
-    verifyWhen = dvmGetRelativeTimeUsec();
-
-    /*
-     * Optimize the classes we successfully loaded.  If the opt mode is
-     * OPTIMIZE_MODE_VERIFIED, each class must have been successfully
-     * verified or we'll skip it.
-     */
-#ifndef PROFILE_FIELD_ACCESS
-    if (doOpt) {
-        optimizeLoadedClasses(pDvmDex->pDexFile);
-        *pHeaderFlags |= DEX_OPT_FLAG_FIELDS | DEX_OPT_FLAG_INVOCATIONS;
-    }
-#endif
-    optWhen = dvmGetRelativeTimeUsec();
-
-    LOGD("DexOpt: load %dms, verify %dms, opt %dms\n",
-        (int) (loadWhen - prepWhen) / 1000,
-        (int) (verifyWhen - loadWhen) / 1000,
-        (int) (optWhen - verifyWhen) / 1000);
-
-    result = true;
-
-bail:
-    /* free up storage */
-    dvmDexFileFree(pDvmDex);
-
-    return result;
-}
-
-/*
- * Try to load all classes in the specified DEX.  If they have some sort
- * of broken dependency, e.g. their superclass lives in a different DEX
- * that wasn't previously loaded into the bootstrap class path, loading
- * will fail.  This is the desired behavior.
- *
- * We have no notion of class loader at this point, so we load all of
- * the classes with the bootstrap class loader.  It turns out this has
- * exactly the behavior we want, and has no ill side effects because we're
- * running in a separate process and anything we load here will be forgotten.
- *
- * We set the CLASS_MULTIPLE_DEFS flag here if we see multiple definitions.
- * This works because we only call here as part of optimization / pre-verify,
- * not during verification as part of loading a class into a running VM.
- *
- * This returns "false" if the world is too screwed up to do anything
- * useful at all.
- */
-static bool loadAllClasses(DvmDex* pDvmDex)
-{
-    u4 count = pDvmDex->pDexFile->pHeader->classDefsSize;
-    u4 idx;
-    int loaded = 0;
-
-    LOGV("DexOpt: +++ trying to load %d classes\n", count);
-
-    dvmSetBootPathExtraDex(pDvmDex);
-
-    /*
-     * We have some circularity issues with Class and Object that are most
-     * easily avoided by ensuring that Object is never the first thing we
-     * try to find.  Take care of that here.  (We only need to do this when
-     * loading classes from the DEX file that contains Object, and only
-     * when Object comes first in the list, but it costs very little to
-     * do it in all cases.)
-     */
-    if (dvmFindSystemClass("Ljava/lang/Class;") == NULL) {
-        LOGE("ERROR: java.lang.Class does not exist!\n");
-        return false;
-    }
-
-    for (idx = 0; idx < count; idx++) {
-        const DexClassDef* pClassDef;
-        const char* classDescriptor;
-        ClassObject* newClass;
-
-        pClassDef = dexGetClassDef(pDvmDex->pDexFile, idx);
-        classDescriptor =
-            dexStringByTypeIdx(pDvmDex->pDexFile, pClassDef->classIdx);
-
-        LOGV("+++  loading '%s'", classDescriptor);
-        //newClass = dvmDefineClass(pDexFile, classDescriptor,
-        //        NULL);
-        newClass = dvmFindSystemClassNoInit(classDescriptor);
-        if (newClass == NULL) {
-            LOGV("DexOpt: failed loading '%s'\n", classDescriptor);
-            dvmClearOptException(dvmThreadSelf());
-        } else if (newClass->pDvmDex != pDvmDex) {
-            /*
-             * We don't load the new one, and we tag the first one found
-             * with the "multiple def" flag so the resolver doesn't try
-             * to make it available.
-             */
-            LOGD("DexOpt: '%s' has an earlier definition; blocking out\n",
-                classDescriptor);
-            SET_CLASS_FLAG(newClass, CLASS_MULTIPLE_DEFS);
-        } else {
-            loaded++;
-        }
-    }
-    LOGV("DexOpt: +++ successfully loaded %d classes\n", loaded);
-
-    dvmSetBootPathExtraDex(NULL);
-    return true;
-}
+    MethodType methodType);
 
 
 /*
@@ -230,7 +54,7 @@ static bool loadAllClasses(DvmDex* pDvmDex)
  * TODO: this is currently just a linear array.  We will want to put this
  * into a hash table as the list size increases.
  */
-static InlineSub* createInlineSubsTable(void)
+InlineSub* dvmCreateInlineSubsTable(void)
 {
     const InlineOperation* ops = dvmGetInlineOpsTable();
     const int count = dvmGetInlineOpsTableLength();
@@ -300,75 +124,34 @@ static InlineSub* createInlineSubsTable(void)
 }
 
 /*
- * Run through all classes that were successfully loaded from this DEX
- * file and optimize their code sections.
+ * Release inline sub data structure.
  */
-static void optimizeLoadedClasses(DexFile* pDexFile)
+void dvmFreeInlineSubsTable(InlineSub* inlineSubs)
 {
-    u4 count = pDexFile->pHeader->classDefsSize;
-    u4 idx;
-    InlineSub* inlineSubs = NULL;
-
-    LOGV("DexOpt: +++ optimizing up to %d classes\n", count);
-    assert(gDvm.dexOptMode != OPTIMIZE_MODE_NONE);
-
-    inlineSubs = createInlineSubsTable();
-
-    for (idx = 0; idx < count; idx++) {
-        const DexClassDef* pClassDef;
-        const char* classDescriptor;
-        ClassObject* clazz;
-
-        pClassDef = dexGetClassDef(pDexFile, idx);
-        classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
-
-        /* all classes are loaded into the bootstrap class loader */
-        clazz = dvmLookupClass(classDescriptor, NULL, false);
-        if (clazz != NULL) {
-            if ((pClassDef->accessFlags & CLASS_ISPREVERIFIED) == 0 &&
-                gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED)
-            {
-                LOGV("DexOpt: not optimizing '%s': not verified\n",
-                    classDescriptor);
-            } else if (clazz->pDvmDex->pDexFile != pDexFile) {
-                /* shouldn't be here -- verifier should have caught */
-                LOGD("DexOpt: not optimizing '%s': multiple definitions\n",
-                    classDescriptor);
-            } else {
-                optimizeClass(clazz, inlineSubs);
-
-                /* set the flag whether or not we actually did anything */
-                ((DexClassDef*)pClassDef)->accessFlags |=
-                    CLASS_ISOPTIMIZED;
-            }
-        } else {
-            LOGV("DexOpt: not optimizing unavailable class '%s'\n",
-                classDescriptor);
-        }
-    }
-
     free(inlineSubs);
 }
+
 
 /*
  * Optimize the specified class.
  */
-static void optimizeClass(ClassObject* clazz, const InlineSub* inlineSubs)
+void dvmOptimizeClass(ClassObject* clazz)
 {
     int i;
 
     for (i = 0; i < clazz->directMethodCount; i++) {
-        if (!optimizeMethod(&clazz->directMethods[i], inlineSubs))
+        if (!optimizeMethod(&clazz->directMethods[i] ))
             goto fail;
     }
     for (i = 0; i < clazz->virtualMethodCount; i++) {
-        if (!optimizeMethod(&clazz->virtualMethods[i], inlineSubs))
+        if (!optimizeMethod(&clazz->virtualMethods[i]))
             goto fail;
     }
 
     return;
 
 fail:
+    // TODO: show when in "verbose" mode
     LOGV("DexOpt: ceasing optimization attempts on %s\n", clazz->descriptor);
 }
 
@@ -378,7 +161,7 @@ fail:
  * Returns "true" if all went well, "false" if we bailed out early when
  * something failed.
  */
-static bool optimizeMethod(Method* method, const InlineSub* inlineSubs)
+static bool optimizeMethod(Method* method)
 {
     u4 insnsSize;
     u2* insns;
@@ -397,6 +180,7 @@ static bool optimizeMethod(Method* method, const InlineSub* inlineSubs)
         inst = *insns & 0xff;
 
         switch (inst) {
+#ifndef PROFILE_FIELD_ACCESS    /* quickened instructions not instrumented */
         case OP_IGET:
         case OP_IGET_BOOLEAN:
         case OP_IGET_BYTE:
@@ -423,18 +207,16 @@ static bool optimizeMethod(Method* method, const InlineSub* inlineSubs)
         case OP_IPUT_OBJECT:
             rewriteInstField(method, insns, OP_IPUT_OBJECT_QUICK);
             break;
+#endif
 
         case OP_INVOKE_VIRTUAL:
-            if (!rewriteExecuteInline(method, insns, METHOD_VIRTUAL,inlineSubs))
-            {
+            if (!rewriteExecuteInline(method, insns, METHOD_VIRTUAL)) {
                 if (!rewriteVirtualInvoke(method, insns, OP_INVOKE_VIRTUAL_QUICK))
                     return false;
             }
             break;
         case OP_INVOKE_VIRTUAL_RANGE:
-            if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL,
-                    inlineSubs))
-            {
+            if (!rewriteExecuteInlineRange(method, insns, METHOD_VIRTUAL)) {
                 if (!rewriteVirtualInvoke(method, insns,
                         OP_INVOKE_VIRTUAL_QUICK_RANGE))
                 {
@@ -452,21 +234,20 @@ static bool optimizeMethod(Method* method, const InlineSub* inlineSubs)
             break;
 
         case OP_INVOKE_DIRECT:
-            if (!rewriteExecuteInline(method, insns, METHOD_DIRECT, inlineSubs))
-            {
+            if (!rewriteExecuteInline(method, insns, METHOD_DIRECT)) {
                 if (!rewriteEmptyDirectInvoke(method, insns))
                     return false;
             }
             break;
         case OP_INVOKE_DIRECT_RANGE:
-            rewriteExecuteInlineRange(method, insns, METHOD_DIRECT, inlineSubs);
+            rewriteExecuteInlineRange(method, insns, METHOD_DIRECT);
             break;
 
         case OP_INVOKE_STATIC:
-            rewriteExecuteInline(method, insns, METHOD_STATIC, inlineSubs);
+            rewriteExecuteInline(method, insns, METHOD_STATIC);
             break;
         case OP_INVOKE_STATIC_RANGE:
-            rewriteExecuteInlineRange(method, insns, METHOD_STATIC, inlineSubs);
+            rewriteExecuteInlineRange(method, insns, METHOD_STATIC);
             break;
 
         default:
@@ -1115,8 +896,9 @@ Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx)
  * Returns "true" if we replace it.
  */
 static bool rewriteExecuteInline(Method* method, u2* insns,
-    MethodType methodType, const InlineSub* inlineSubs)
+    MethodType methodType)
 {
+    const InlineSub* inlineSubs = gDvm.inlineSubs;
     ClassObject* clazz = method->clazz;
     Method* calledMethod;
     u2 methodIdx = insns[1];
@@ -1165,8 +947,9 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
  * Returns "true" if we replace it.
  */
 static bool rewriteExecuteInlineRange(Method* method, u2* insns,
-    MethodType methodType, const InlineSub* inlineSubs)
+    MethodType methodType)
 {
+    const InlineSub* inlineSubs = gDvm.inlineSubs;
     ClassObject* clazz = method->clazz;
     Method* calledMethod;
     u2 methodIdx = insns[1];

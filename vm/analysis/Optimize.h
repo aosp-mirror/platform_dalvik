@@ -21,10 +21,15 @@
 #define _DALVIK_OPTIMIZE
 
 /*
+ * Prep data structures.
+ */
+InlineSub* dvmCreateInlineSubsTable(void);
+void dvmFreeInlineSubsTable(InlineSub* inlineSubs);
+
+/*
  * Entry point from DEX preparation.
  */
-bool dvmRewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
-    u4* pHeaderFlags, DexClassLookup** ppClassLookup);
+void dvmOptimizeClass(ClassObject* clazz);
 
 /*
  * Abbreviated resolution functions, for use by optimization and verification
