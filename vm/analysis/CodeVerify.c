@@ -29,6 +29,7 @@
  */
 #include "Dalvik.h"
 #include "analysis/CodeVerify.h"
+#include "analysis/Optimize.h"
 #include "analysis/RegisterMap.h"
 #include "libdex/DexCatch.h"
 #include "libdex/InstrUtils.h"
@@ -5561,7 +5562,8 @@ sput_1nr_common:
     /*
      * If we didn't just set the result register, clear it out.  This
      * ensures that you can only use "move-result" immediately after the
-     * result is set.
+     * result is set.  (We could check this statically, but it's not
+     * expensive and it makes our debugging output cleaner.)
      */
     if (!justSetResult) {
         int reg = RESULT_REGISTER(insnRegCount);

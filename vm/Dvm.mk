@@ -138,8 +138,9 @@ LOCAL_SRC_FILES := \
 	alloc/DdmHeap.c \
 	alloc/Verify.c \
 	analysis/CodeVerify.c \
-	analysis/DexOptimize.c \
+	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
+	analysis/Optimize.c \
 	analysis/ReduceConstants.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \

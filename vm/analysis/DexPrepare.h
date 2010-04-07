@@ -15,10 +15,10 @@
  */
 
 /*
- * DEX optimization declarations.
+ * DEX preparation declarations.
  */
-#ifndef _DALVIK_DEXOPTIMIZE
-#define _DALVIK_DEXOPTIMIZE
+#ifndef _DALVIK_DEXPREPARE
+#define _DALVIK_DEXPREPARE
 
 /*
  * Global DEX optimizer control.  Determines the circumstances in which we
@@ -112,18 +112,4 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLen,
 bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     const char* fileName, u4 modWhen, u4 crc, bool isBootstrap);
 
-/*
- * Abbreviated resolution functions, for use by optimization and verification
- * code.
- */
-ClassObject* dvmOptResolveClass(ClassObject* referrer, u4 classIdx,
-    VerifyError* pFailure);
-Method* dvmOptResolveMethod(ClassObject* referrer, u4 methodIdx,
-    MethodType methodType, VerifyError* pFailure);
-Method* dvmOptResolveInterfaceMethod(ClassObject* referrer, u4 methodIdx);
-InstField* dvmOptResolveInstField(ClassObject* referrer, u4 ifieldIdx,
-    VerifyError* pFailure);
-StaticField* dvmOptResolveStaticField(ClassObject* referrer, u4 sfieldIdx,
-    VerifyError* pFailure);
-
-#endif /*_DALVIK_DEXOPTIMIZE*/
+#endif /*_DALVIK_DEXPREPARE*/

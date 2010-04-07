@@ -67,7 +67,7 @@
 #include "JniInternal.h"
 #include "LinearAlloc.h"
 #include "analysis/DexVerify.h"
-#include "analysis/DexOptimize.h"
+#include "analysis/DexPrepare.h"
 #include "analysis/RegisterMap.h"
 #include "Init.h"
 #include "libdex/OpCode.h"
