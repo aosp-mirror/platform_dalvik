@@ -246,6 +246,7 @@ final class Driver implements HostMonitor.Handler {
     }
 
     public void outcome(Outcome outcome) {
+        outcomes.put(outcome.getName(), outcome);
         Expectation expectation = expectationStore.get(outcome.getName());
         boolean ok = expectation.matches(outcome);
         if (ok) {
