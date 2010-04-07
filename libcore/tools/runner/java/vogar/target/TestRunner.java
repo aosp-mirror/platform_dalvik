@@ -75,7 +75,7 @@ public class TestRunner {
         }
     }
 
-    public void run() {
+    public void run(String[] args) {
         final TargetMonitor monitor = new TargetMonitor();
         monitor.await(monitorPort);
 
@@ -97,7 +97,7 @@ public class TestRunner {
             throw new RuntimeException(e);
         }
         runner.init(monitor, qualifiedName, testClass);
-        runner.run(qualifiedName, testClass);
+        runner.run(qualifiedName, testClass, args);
 
         monitor.close();
     }
@@ -105,9 +105,6 @@ public class TestRunner {
 
 
     public static void main(String[] args) {
-        if (args.length != 0) {
-            throw new RuntimeException("TestRunner doesn't take arguments");
-        }
-        new TestRunner().run();
+        new TestRunner().run(args);
     }
 }

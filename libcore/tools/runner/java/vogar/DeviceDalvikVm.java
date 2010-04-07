@@ -29,9 +29,10 @@ final class DeviceDalvikVm extends Vm {
 
     DeviceDalvikVm(Integer debugPort, File sdkJar, List<String> javacArgs,
             int monitorPort, File localTemp, List<String> additionalVmArgs,
-            boolean cleanBefore, boolean cleanAfter, File runnerDir) {
+            List<String> targetArgs, boolean cleanBefore, boolean cleanAfter,
+            File runnerDir) {
         super(new EnvironmentDevice(cleanBefore, cleanAfter, debugPort, monitorPort, localTemp,
-                runnerDir), sdkJar, javacArgs, additionalVmArgs, monitorPort);
+                runnerDir), sdkJar, javacArgs, additionalVmArgs, targetArgs, monitorPort);
     }
 
     private EnvironmentDevice getEnvironmentDevice() {

@@ -25,5 +25,5 @@ public interface Runner {
     public void init(TargetMonitor monitor, String actionName,
             Class<?> testClass);
 
-    public void run(String actionName, Class<?> testClass);
+    public void run(String actionName, Class<?> testClass, String[] args);
 }

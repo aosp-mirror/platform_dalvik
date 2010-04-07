@@ -36,6 +36,7 @@ public final class Vogar {
     private static class Options {
 
         private final List<File> actionFiles = new ArrayList<File>();
+        private final List<String> targetArgs = new ArrayList<String>();
 
         @Option(names = { "--expectations" })
         private Set<File> expectationFiles = new LinkedHashSet<File>();
@@ -51,6 +52,9 @@ public final class Vogar {
 
         @Option(names = { "--timeout" })
         private long timeoutSeconds = 10 * 60; // default is ten minutes;
+
+        @Option(names = { "--monitor-timeout" })
+        private long monitorTimeout = 10;
 
         @Option(names = { "--clean-before" })
         private boolean cleanBefore = true;
@@ -95,53 +99,43 @@ public final class Vogar {
         private File sdkJar = new File("/home/dalvik-prebuild/android-sdk-linux/platforms/android-2.0/android.jar");
 
         private void printUsage() {
-            System.out.println("Usage: Vogar [options]... <actions>...");
+            System.out.println("Usage: Vogar [options]... <actions>... [target args]...");
             System.out.println();
-            System.out.println("  <actions>: .java files containing a jtreg tests, JUnit tests,");
-            System.out.println("      Caliper benchmarks, or a directory of such tests.");
+            System.out.println("  <actions>: .java files or directories containing jtreg tests, JUnit");
+            System.out.println("      tests, Caliper benchmarks, or executable Java classes.");
+            System.out.println();
+            System.out.println("  [args]: arguments passed to the target process. This is only useful when");
+            System.out.println("      the target process is a Caliper benchmark or main method.");
             System.out.println();
             System.out.println("GENERAL OPTIONS");
-            System.out.println();
-            System.out.println("  --expectations <file>: include the specified file when looking for");
-            System.out.println("      action expectations. The file should include qualified action names");
-            System.out.println("      and the corresponding expected output.");
-            System.out.println("      Default is: " + expectationFiles);
             System.out.println();
             System.out.println("  --mode <device|host|activity>: specify which environment to run the");
             System.out.println("      actions in. Options are on the device VM, on the host VM, and on");
             System.out.println("      device within an android.app.Activity.");
             System.out.println("      Default is: " + mode);
             System.out.println();
-            System.out.println("  --clean-before: remove working directories before building and");
-            System.out.println("      running (default). Disable with --no-clean-before if you are");
-            System.out.println("      using interactively with your own temporary input files.");
-            System.out.println();
-            System.out.println("  --clean-after: remove temporary files after running (default).");
-            System.out.println("      Disable with --no-clean-after and use with --verbose if");
-            System.out.println("      you'd like to manually re-run commands afterwards.");
-            System.out.println();
             System.out.println("  --clean: synonym for --clean-before and --clean-after (default).");
             System.out.println("      Disable with --no-clean if you want no files removed.");
             System.out.println();
-            System.out.println("  --color: format output in technicolor.");
-            System.out.println();
             System.out.println("  --stream: stream output as it is emitted.");
             System.out.println();
-            System.out.println("  --timeout-seconds <seconds>: maximum execution time of each");
-            System.out.println("      action before the runner aborts it. Specifying zero seconds");
-            System.out.println("      or using --debug will disable the execution timeout");
+            System.out.println("  --timeout <seconds>: maximum execution time of each action before the");
+            System.out.println("      runner aborts it. Specifying zero seconds or using --debug will");
+            System.out.println("      disable the execution timeout.");
             System.out.println("      Default is: " + timeoutSeconds);
             System.out.println();
             System.out.println("  --xml-reports-directory <path>: directory to emit JUnit-style");
             System.out.println("      XML test results.");
             System.out.println();
-            System.out.println("  --ident: amount to indent action result output. Can be set to ''");
-            System.out.println("      (aka empty string) to simplify output parsing.");
-            System.out.println("      Default is: '" + indent + "'");
+            System.out.println("  --sdk <android jar>: the API jar file to compile against.");
+            System.out.println("      Usually this is <SDK>/platforms/android-<X.X>/android.jar");
+            System.out.println("      where <SDK> is the path to an Android SDK path and <X.X> is");
+            System.out.println("      a release version like 1.5.");
+            System.out.println("      Default is: " + sdkJar);
             System.out.println();
             System.out.println("  --verbose: turn on verbose output");
             System.out.println();
-            System.out.println("DEVICE OPTIONS");
+            System.out.println("TARGET OPTIONS");
             System.out.println();
             System.out.println("  --debug <port>: enable Java debugging on the specified port.");
             System.out.println("      This port must be free both on the device and on the local");
@@ -151,34 +145,47 @@ public final class Vogar {
             System.out.println("      on-device temporary files and code.");
             System.out.println("      Default is: " + deviceRunnerDir);
             System.out.println();
-            System.out.println("GENERAL VM OPTIONS");
-            System.out.println();
             System.out.println("  --vm-arg <argument>: include the specified argument when spawning a");
             System.out.println("      virtual machine. Examples: -Xint:fast, -ea, -Xmx16M");
-            System.out.println();
-            System.out.println("HOST VM OPTIONS");
             System.out.println();
             System.out.println("  --java-home <java_home>: execute the actions on the local workstation");
             System.out.println("      using the specified java home directory. This does not impact");
             System.out.println("      which javac gets used. When unset, java is used from the PATH.");
             System.out.println();
-            System.out.println("COMPILE OPTIONS");
+            System.out.println("EXOTIC OPTIONS");
             System.out.println();
-            System.out.println("  --sdk <android jar>: the API jar file to compile against.");
-            System.out.println("      Usually this is <SDK>/platforms/android-<X.X>/android.jar");
-            System.out.println("      where <SDK> is the path to an Android SDK path and <X.X> is");
-            System.out.println("      a release version like 1.5.");
-            System.out.println("      Default is: " + sdkJar);
+            System.out.println("  --clean-before: remove working directories before building and");
+            System.out.println("      running (default). Disable with --no-clean-before if you are");
+            System.out.println("      using interactively with your own temporary input files.");
+            System.out.println();
+            System.out.println("  --clean-after: remove temporary files after running (default).");
+            System.out.println("      Disable with --no-clean-after and use with --verbose if");
+            System.out.println("      you'd like to manually re-run commands afterwards.");
+            System.out.println();
+            System.out.println("  --color: format output in technicolor.");
+            System.out.println();
+            System.out.println("  --expectations <file>: include the specified file when looking for");
+            System.out.println("      action expectations. The file should include qualified action names");
+            System.out.println("      and the corresponding expected output.");
+            System.out.println("      Default is: " + expectationFiles);
+            System.out.println();
+            System.out.println("  --ident: amount to indent action result output. Can be set to ''");
+            System.out.println("      (aka empty string) to simplify output parsing.");
+            System.out.println("      Default is: '" + indent + "'");
             System.out.println();
             System.out.println("  --javac-arg <argument>: include the specified argument when invoking");
             System.out.println("      javac. Examples: --javac-arg -Xmaxerrs --javac-arg 1");
             System.out.println();
+            System.out.println("  --monitor-timeout <seconds>: number of seconds to wait for the target");
+            System.out.println("      process to launch. This can be used to prevent connection failures");
+            System.out.println("      when dexopt is slow.");
+            System.out.println();
         }
 
         private boolean parseArgs(String[] args) {
-            final List<String> actionFilenames;
+            List<String> actionsAndTargetArgs;
             try {
-                actionFilenames = new OptionParser(this).parse(args);
+                actionsAndTargetArgs = new OptionParser(this).parse(args);
             } catch (RuntimeException e) {
                 System.out.println(e.getMessage());
                 return false;
@@ -236,11 +243,6 @@ public final class Vogar {
                 return false;
             }
 
-            if (actionFilenames.isEmpty()) {
-                System.out.println("No actions provided.");
-                return false;
-            }
-
             if (!clean) {
                 cleanBefore = false;
                 cleanAfter = false;
@@ -255,13 +257,35 @@ public final class Vogar {
                 timeoutSeconds = 0;
             }
 
-            for (String actionFilename : actionFilenames) {
-                actionFiles.add(new File(actionFilename));
+            // separate the actions and the target args
+            boolean action = true;
+            for (String arg : actionsAndTargetArgs) {
+                if (arg.equals("--")) {
+                    action = false;
+                    continue;
+                }
+
+                File actionFile = new File(arg);
+                if (action && actionFile.exists()) {
+                    actionFiles.add(actionFile);
+                } else {
+                    targetArgs.add(arg);
+                    action = false;
+                }
+            }
+
+            if (actionFiles.isEmpty()) {
+                System.out.println("No actions provided.");
+                return false;
+            }
+
+            if (!targetArgs.isEmpty() && mode.equals(Options.MODE_ACTIVITY)) {
+                System.out.println("Target args not supported with --mode activity");
+                return false;
             }
 
             return true;
         }
-
     }
 
     private final Options options = new Options();
@@ -284,6 +308,7 @@ public final class Vogar {
                     monitorPort,
                     localTemp,
                     options.vmArgs,
+                    options.targetArgs,
                     options.cleanBefore,
                     options.cleanAfter,
                     options.deviceRunnerDir);
@@ -297,6 +322,7 @@ public final class Vogar {
                     localTemp,
                     options.javaHome,
                     options.vmArgs,
+                    options.targetArgs,
                     options.cleanBefore,
                     options.cleanAfter
             );
@@ -316,7 +342,7 @@ public final class Vogar {
             return;
         }
 
-        HostMonitor monitor = new HostMonitor();
+        HostMonitor monitor = new HostMonitor(options.monitorTimeout);
 
         List<CodeFinder> codeFinders = Arrays.asList(
                 new JtregFinder(localTemp),
