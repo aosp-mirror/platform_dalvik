@@ -57,7 +57,7 @@ public final class JUnitRunner implements Runner {
         this.junitTest = testRunner.getTest(testClass.getName());
     }
 
-    public void run(String actionName, Class<?> testClass) {
+    public void run(String actionName, Class<?> testClass, String[] args) {
         testRunner.doRun(junitTest);
     }
 

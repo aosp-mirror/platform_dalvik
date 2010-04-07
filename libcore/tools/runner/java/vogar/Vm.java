@@ -32,11 +32,13 @@ import vogar.target.TestRunner;
 public abstract class Vm extends Mode {
 
     protected final List<String> additionalVmArgs;
+    protected final List<String> targetArgs;
 
     Vm(Environment environment, File sdkJar, List<String> javacArgs,
-            List<String> additionalVmArgs, int monitorPort) {
+            List<String> additionalVmArgs, List<String> targetArgs, int monitorPort) {
         super(environment, sdkJar, javacArgs, monitorPort);
         this.additionalVmArgs = additionalVmArgs;
+        this.targetArgs = targetArgs;
     }
 
     /**
@@ -49,6 +51,7 @@ public abstract class Vm extends Mode {
                 .debugPort(environment.debugPort)
                 .vmArgs(additionalVmArgs)
                 .mainClass(TestRunner.class.getName())
+                .args(targetArgs)
                 .build();
     }
 
@@ -76,6 +79,7 @@ public abstract class Vm extends Mode {
         private PrintStream output;
         private List<String> vmCommand = Collections.singletonList("java");
         private List<String> vmArgs = new ArrayList<String>();
+        private List<String> args = new ArrayList<String>();
 
         public VmCommandBuilder vmCommand(String... vmCommand) {
             this.vmCommand = Arrays.asList(vmCommand.clone());
@@ -126,6 +130,15 @@ public abstract class Vm extends Mode {
             return this;
         }
 
+        public VmCommandBuilder args(String... args) {
+            return args(Arrays.asList(args));
+        }
+
+        public VmCommandBuilder args(Collection<String> args) {
+            this.args.addAll(args);
+            return this;
+        }
+
         public Command build() {
             Command.Builder builder = new Command.Builder();
             builder.args(vmCommand);
@@ -146,6 +159,7 @@ public abstract class Vm extends Mode {
 
             builder.args(vmArgs);
             builder.args(mainClass);
+            builder.args(args);
 
             builder.tee(output);
 

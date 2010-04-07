@@ -28,9 +28,9 @@ final class JavaVm extends Vm {
 
     JavaVm(Integer debugPort, File sdkJar, List<String> javacArgs, int monitorPort,
             File localTemp, File javaHome, List<String> additionalVmArgs,
-            boolean cleanBefore, boolean cleanAfter) {
+            List<String> targetArgs, boolean cleanBefore, boolean cleanAfter) {
         super(new EnvironmentHost(cleanBefore, cleanAfter, debugPort, localTemp),
-                sdkJar, javacArgs, additionalVmArgs, monitorPort);
+                sdkJar, javacArgs, additionalVmArgs, targetArgs, monitorPort);
         this.javaHome = javaHome;
     }
 

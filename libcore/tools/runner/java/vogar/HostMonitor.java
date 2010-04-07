@@ -39,8 +39,11 @@ class HostMonitor {
 
     private static final Logger logger = Logger.getLogger(HostMonitor.class.getName());
 
-    private final int MAX_CONNECT_ATTEMPTS = 10;
-    private final int CONNECTION_ATTEMPT_DELAY_MILLIS = 1000;
+    private final long monitorTimeoutSeconds;
+
+    HostMonitor(long monitorTimeoutSeconds) {
+        this.monitorTimeoutSeconds = monitorTimeoutSeconds;
+    }
 
     /**
      * Connect to the target process on the given port, read all of its
@@ -65,16 +68,16 @@ class HostMonitor {
                 return false;
             }
 
-            if (attempt++ == MAX_CONNECT_ATTEMPTS) {
-                logger.warning("Exceeded " + MAX_CONNECT_ATTEMPTS
+            if (attempt++ == monitorTimeoutSeconds) {
+                logger.warning("Exceeded " + monitorTimeoutSeconds
                         + " attempts to connect to localhost:" + port);
                 return false;
             }
 
             logger.fine("connection " + attempt + " to localhost:" + port
-                    + " failed; retrying in " + CONNECTION_ATTEMPT_DELAY_MILLIS + "ms");
+                    + " failed; retrying in 1s");
             try {
-                Thread.sleep(CONNECTION_ATTEMPT_DELAY_MILLIS);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
             }
         } while (true);
