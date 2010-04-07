@@ -21,10 +21,7 @@ import sun.misc.Unsafe;
 public class AtomicBoolean implements java.io.Serializable {
     private static final long serialVersionUID = 4654671469794556979L;
     // setup to use Unsafe.compareAndSwapInt for updates
-    // BEGIN android-changed
-    private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
-    // END android-changed
-
+    private static final Unsafe unsafe = UnsafeAccess.THE_ONE; // android-changed
     private static final long valueOffset;
 
     static {
@@ -100,6 +97,17 @@ public class AtomicBoolean implements java.io.Serializable {
      */
     public final void set(boolean newValue) {
         value = newValue ? 1 : 0;
+    }
+
+    /**
+     * Eventually sets to the given value.
+     *
+     * @param newValue the new value
+     * @since 1.6
+     */
+    public final void lazySet(boolean newValue) {
+        int v = newValue ? 1 : 0;
+        unsafe.putOrderedInt(this, valueOffset, v);
     }
 
     /**

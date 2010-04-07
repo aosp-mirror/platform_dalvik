@@ -2,17 +2,17 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import java.util.concurrent.atomic.*;
 import junit.framework.*;
 import java.util.*;
 
-public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
+public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     volatile Integer x = null;
     Object z;
     Integer w;
@@ -24,68 +24,44 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
     /**
      * Construction with non-existent field throws RuntimeException
      */
-    public void testConstructor(){
-        try{
+    public void testConstructor() {
+        try {
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "y");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
 
     /**
      * construction with field not of given type throws RuntimeException
      */
-    public void testConstructor2(){
-        try{
+    public void testConstructor2() {
+        try {
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "z");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
      * Constructor with non-volatile field throws exception
      */
-    public void testConstructor3(){
-        try{
+    public void testConstructor3() {
+        try {
             AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>
                 a = AtomicReferenceFieldUpdater.newUpdater
                 (AtomicReferenceFieldUpdaterTest.class, Integer.class, "w");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
-    }
-
-    static class Base {
-        protected volatile Object f = null;
-    }
-    static class Sub1 extends Base {
-        AtomicReferenceFieldUpdater<Base, Object> fUpdater
-                = AtomicReferenceFieldUpdater.newUpdater(Base.class, Object.class, "f");
-    }
-    static class Sub2 extends Base {}
-
-    public void testProtectedFieldOnAnotherSubtype() {
-        Sub1 sub1 = new Sub1();
-        Sub2 sub2 = new Sub2();
-
-        sub1.fUpdater.set(sub1, "f");
-        try {
-            sub1.fUpdater.set(sub2, "g");
-            shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
      *  get returns the last value set or assigned
      */
-    public void testGetSet(){
+    public void testGetSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
         try {
             a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
@@ -93,16 +69,35 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
             return;
         }
         x = one;
-	assertEquals(one,a.get(this));
-	a.set(this,two);
-	assertEquals(two,a.get(this));
-	a.set(this,m3);
-	assertEquals(m3,a.get(this));
+        assertSame(one,a.get(this));
+        a.set(this,two);
+        assertSame(two,a.get(this));
+        a.set(this,m3);
+        assertSame(m3,a.get(this));
     }
+
+    /**
+     *  get returns the last value lazySet by same thread
+     */
+    public void testGetLazySet() {
+        AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
+        try {
+            a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
+        } catch (RuntimeException ok) {
+            return;
+        }
+        x = one;
+        assertSame(one,a.get(this));
+        a.lazySet(this,two);
+        assertSame(two,a.get(this));
+        a.lazySet(this,m3);
+        assertSame(m3,a.get(this));
+    }
+
     /**
      * compareAndSet succeeds in changing value if equal to expected else fails
      */
-    public void testCompareAndSet(){
+    public void testCompareAndSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
         try {
             a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
@@ -112,18 +107,18 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
         x = one;
         assertTrue(a.compareAndSet(this,one,two));
         assertTrue(a.compareAndSet(this,two,m4));
-        assertEquals(m4,a.get(this));
+        assertSame(m4,a.get(this));
         assertFalse(a.compareAndSet(this,m5,seven));
-        assertFalse((seven == a.get(this)));
+        assertFalse(seven == a.get(this));
         assertTrue(a.compareAndSet(this,m4,seven));
-        assertEquals(seven,a.get(this));
+        assertSame(seven,a.get(this));
     }
 
     /**
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws Exception {
         x = one;
         final AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
         try {
@@ -132,27 +127,24 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
             return;
         }
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while(!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three)) Thread.yield();
-                }});
-        try {
-            t.start();
-            assertTrue(a.compareAndSet(this, one, two));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(a.get(this), three);
-        }
-        catch(Exception e) {
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!a.compareAndSet(AtomicReferenceFieldUpdaterTest.this, two, three))
+                    Thread.yield();
+            }});
+
+        t.start();
+        assertTrue(a.compareAndSet(this, one, two));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertSame(a.get(this), three);
     }
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
      * to expected
      */
-    public void testWeakCompareAndSet(){
+    public void testWeakCompareAndSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
         try {
             a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
@@ -160,17 +152,17 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
             return;
         }
         x = one;
-        while(!a.weakCompareAndSet(this,one,two));
-        while(!a.weakCompareAndSet(this,two,m4));
-        assertEquals(m4,a.get(this));
-        while(!a.weakCompareAndSet(this,m4,seven));
-        assertEquals(seven,a.get(this));
+        while (!a.weakCompareAndSet(this,one,two));
+        while (!a.weakCompareAndSet(this,two,m4));
+        assertSame(m4,a.get(this));
+        while (!a.weakCompareAndSet(this,m4,seven));
+        assertSame(seven,a.get(this));
     }
 
     /**
      * getAndSet returns previous value and sets to given value
      */
-    public void testGetAndSet(){
+    public void testGetAndSet() {
         AtomicReferenceFieldUpdater<AtomicReferenceFieldUpdaterTest, Integer>a;
         try {
             a = AtomicReferenceFieldUpdater.newUpdater(AtomicReferenceFieldUpdaterTest.class, Integer.class, "x");
@@ -178,9 +170,9 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase{
             return;
         }
         x = one;
-        assertEquals(one,a.getAndSet(this, zero));
-        assertEquals(zero,a.getAndSet(this,m10));
-        assertEquals(m10,a.getAndSet(this,1));
+        assertSame(one,a.getAndSet(this, zero));
+        assertSame(zero,a.getAndSet(this,m10));
+        assertSame(m10,a.getAndSet(this,1));
     }
 
 }

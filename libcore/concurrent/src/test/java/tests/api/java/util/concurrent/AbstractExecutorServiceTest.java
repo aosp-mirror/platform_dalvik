@@ -2,24 +2,25 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.math.BigInteger;
 import java.security.*;
 
-public class AbstractExecutorServiceTest extends JSR166TestCase{
+public class AbstractExecutorServiceTest extends JSR166TestCase {
     public static Test suite() {
         return new TestSuite(AbstractExecutorServiceTest.class);
     }
 
-    /** 
+    /**
      * A no-frills implementation of AbstractExecutorService, designed
      * to test the submit methods only.
      */
@@ -36,188 +37,106 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * execute(runnable) runs it to completion
      */
-    public void testExecuteRunnable() {
-        try {
-            ExecutorService e = new DirectExecutorService();
-            TrackedShortRunnable task = new TrackedShortRunnable();
-            assertFalse(task.done);
-            Future<?> future = e.submit(task);
-            future.get();
-            assertTrue(task.done);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
+    public void testExecuteRunnable() throws Exception {
+        ExecutorService e = new DirectExecutorService();
+        TrackedShortRunnable task = new TrackedShortRunnable();
+        assertFalse(task.done);
+        Future<?> future = e.submit(task);
+        future.get();
+        assertTrue(task.done);
     }
 
 
     /**
      * Completed submit(callable) returns result
      */
-    public void testSubmitCallable() {
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future<String> future = e.submit(new StringTask());
-            String result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
+    public void testSubmitCallable() throws Exception {
+        ExecutorService e = new DirectExecutorService();
+        Future<String> future = e.submit(new StringTask());
+        String result = future.get();
+        assertSame(TEST_STRING, result);
     }
 
     /**
      * Completed submit(runnable) returns successfully
      */
-    public void testSubmitRunnable() {
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future<?> future = e.submit(new NoOpRunnable());
-            future.get();
-            assertTrue(future.isDone());
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
+    public void testSubmitRunnable() throws Exception {
+        ExecutorService e = new DirectExecutorService();
+        Future<?> future = e.submit(new NoOpRunnable());
+        future.get();
+        assertTrue(future.isDone());
     }
 
     /**
      * Completed submit(runnable, result) returns result
      */
-    public void testSubmitRunnable2() {
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future<String> future = e.submit(new NoOpRunnable(), TEST_STRING);
-            String result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
+    public void testSubmitRunnable2() throws Exception {
+        ExecutorService e = new DirectExecutorService();
+        Future<String> future = e.submit(new NoOpRunnable(), TEST_STRING);
+        String result = future.get();
+        assertSame(TEST_STRING, result);
     }
 
 
     /**
-     * A submitted privileged action to completion
+     * A submitted privileged action runs to completion
      */
-    public void testSubmitPrivilegedAction() {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch(AccessControlException ok) {
-            return;
-        }
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(Executors.callable(new PrivilegedAction() {
+    public void testSubmitPrivilegedAction() throws Exception {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new DirectExecutorService();
+                Future future = e.submit(Executors.callable(new PrivilegedAction() {
                     public Object run() {
                         return TEST_STRING;
                     }}));
 
-            Object result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-        finally {
-            try {
-                Policy.setPolicy(savedPolicy);
-            } catch(AccessControlException ok) {
-                return;
-            }
-        }
+                assertSame(TEST_STRING, future.get());
+            }};
+
+        runWithPermissions(r,
+                           new RuntimePermission("getClassLoader"),
+                           new RuntimePermission("setContextClassLoader"),
+                           new RuntimePermission("modifyThread"));
     }
 
     /**
-     * A submitted a privileged exception action runs to completion
+     * A submitted privileged exception action runs to completion
      */
-    public void testSubmitPrivilegedExceptionAction() {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch(AccessControlException ok) {
-            return;
-        }
-
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
+    public void testSubmitPrivilegedExceptionAction() throws Exception {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new DirectExecutorService();
+                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() {
                         return TEST_STRING;
                     }}));
 
-            Object result = future.get();
-            assertSame(TEST_STRING, result);
-        }
-        catch (ExecutionException ex) {
-            unexpectedException();
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-        finally {
-            Policy.setPolicy(savedPolicy);
-        }
+                assertSame(TEST_STRING, future.get());
+            }};
+
+        runWithPermissions(r);
     }
 
     /**
      * A submitted failed privileged exception action reports exception
      */
-    public void testSubmitFailedPrivilegedExceptionAction() {
-        Policy savedPolicy = null;
-        try {
-            savedPolicy = Policy.getPolicy();
-            AdjustablePolicy policy = new AdjustablePolicy();
-            policy.addPermission(new RuntimePermission("getContextClassLoader"));
-            policy.addPermission(new RuntimePermission("setContextClassLoader"));
-            Policy.setPolicy(policy);
-        } catch(AccessControlException ok) {
-            return;
-        }
-
-
-        try {
-            ExecutorService e = new DirectExecutorService();
-            Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
+    public void testSubmitFailedPrivilegedExceptionAction() throws Exception {
+        Runnable r = new CheckedRunnable() {
+            public void realRun() throws Exception {
+                ExecutorService e = new DirectExecutorService();
+                Future future = e.submit(Executors.callable(new PrivilegedExceptionAction() {
                     public Object run() throws Exception {
                         throw new IndexOutOfBoundsException();
                     }}));
 
-            Object result = future.get();
-            shouldThrow();
-        }
-        catch (ExecutionException success) {
-        }
-        catch (InterruptedException ex) {
-            unexpectedException();
-        }
-        finally {
-            Policy.setPolicy(savedPolicy);
-        }
+                try {
+                    future.get();
+                    shouldThrow();
+                } catch (ExecutionException success) {
+                    assertTrue(success.getCause() instanceof IndexOutOfBoundsException);
+                }}};
+
+        runWithPermissions(r);
     }
 
     /**
@@ -226,15 +145,9 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     public void testExecuteNullRunnable() {
         try {
             ExecutorService e = new DirectExecutorService();
-            TrackedShortRunnable task = null;
-            Future<?> future = e.submit(task);
+            e.submit((Runnable) null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -244,15 +157,9 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     public void testSubmitNullCallable() {
         try {
             ExecutorService e = new DirectExecutorService();
-            StringTask t = null;
-            Future<String> future = e.submit(t);
+            e.submit((Callable) null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -260,15 +167,22 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      * executor is saturated.
      */
     public void testExecute1() {
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1));
+        ThreadPoolExecutor p =
+            new ThreadPoolExecutor(1, 1,
+                                   60, TimeUnit.SECONDS,
+                                   new ArrayBlockingQueue<Runnable>(1));
         try {
-
-            for(int i = 0; i < 5; ++i){
+            for (int i = 0; i < 2; ++i)
                 p.submit(new MediumRunnable());
+            for (int i = 0; i < 2; ++i) {
+                try {
+                    p.submit(new MediumRunnable());
+                    shouldThrow();
+                } catch (RejectedExecutionException success) {}
             }
-            shouldThrow();
-        } catch(RejectedExecutionException success){}
-        joinPool(p);
+        } finally {
+            joinPool(p);
+        }
     }
 
     /**
@@ -276,14 +190,22 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      * if executor is saturated.
      */
     public void testExecute2() {
-         ThreadPoolExecutor p = new ThreadPoolExecutor(1,1, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1));
+        ThreadPoolExecutor p =
+            new ThreadPoolExecutor(1, 1,
+                                   60, TimeUnit.SECONDS,
+                                   new ArrayBlockingQueue<Runnable>(1));
         try {
-            for(int i = 0; i < 5; ++i) {
-                p.submit(new SmallCallable());
+            for (int i = 0; i < 2; ++i)
+                p.submit(new MediumRunnable());
+            for (int i = 0; i < 2; ++i) {
+                try {
+                    p.submit(new SmallCallable());
+                    shouldThrow();
+                } catch (RejectedExecutionException success) {}
             }
-            shouldThrow();
-        } catch(RejectedExecutionException e){}
-        joinPool(p);
+        } finally {
+            joinPool(p);
+        }
     }
 
 
@@ -291,75 +213,43 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      *  Blocking on submit(callable) throws InterruptedException if
      *  caller interrupted.
      */
-    public void testInterruptedSubmit() {
+    public void testInterruptedSubmit() throws InterruptedException {
         final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10));
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        p.submit(new Callable<Object>() {
-                                public Object call() {
-                                    try {
-                                        Thread.sleep(MEDIUM_DELAY_MS);
-                                        shouldThrow();
-                                    } catch(InterruptedException e){
-                                    }
-                                    return null;
-                                }
-                            }).get();
-                    } catch(InterruptedException success){
-                    } catch(Exception e) {
-                        unexpectedException();
-                    }
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws Exception {
+                p.submit(new CheckedCallable<Object>() {
+                             public Object realCall()
+                                 throws InterruptedException {
+                                 Thread.sleep(SMALL_DELAY_MS);
+                                 return null;
+                             }}).get();
+            }});
 
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
         joinPool(p);
     }
 
     /**
-     *  get of submitted callable throws Exception if callable
+     *  get of submitted callable throws InterruptedException if callable
      *  interrupted
      */
-    public void testSubmitIE() {
-        final ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10));
+    public void testSubmitIE() throws InterruptedException {
+        final ThreadPoolExecutor p =
+            new ThreadPoolExecutor(1, 1,
+                                   60, TimeUnit.SECONDS,
+                                   new ArrayBlockingQueue<Runnable>(10));
 
-        final Callable c = new Callable() {
-                public Object call() {
-                    try {
-                        p.submit(new SmallCallable()).get();
-                        shouldThrow();
-                    } catch(InterruptedException e){}
-                    catch(RejectedExecutionException e2){}
-                    catch(ExecutionException e3){}
-                    return Boolean.TRUE;
-                }
-            };
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws Exception {
+                p.submit(new SmallCallable()).get();
+            }});
 
-
-
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        c.call();
-                    } catch(Exception e){}
-                }
-          });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
-
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
         joinPool(p);
     }
 
@@ -367,26 +257,20 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
      *  get of submit(callable) throws ExecutionException if callable
      *  throws exception
      */
-    public void testSubmitEE() {
-        ThreadPoolExecutor p = new ThreadPoolExecutor(1,1,60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(10));
+    public void testSubmitEE() throws InterruptedException {
+        ThreadPoolExecutor p =
+            new ThreadPoolExecutor(1, 1,
+                                   60, TimeUnit.SECONDS,
+                                   new ArrayBlockingQueue<Runnable>(10));
+
+        Callable c = new Callable() {
+            public Object call() { return 5/0; }};
 
         try {
-            Callable c = new Callable() {
-                    public Object call() {
-                        int i = 5/0;
-                        return Boolean.TRUE;
-                    }
-                };
-
-            for(int i =0; i < 5; i++){
-                p.submit(c).get();
-            }
-
+            p.submit(c).get();
             shouldThrow();
-        }
-        catch(ExecutionException success){
-        } catch(Exception e) {
-            unexpectedException();
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof ArithmeticException);
         }
         joinPool(p);
     }
@@ -394,13 +278,13 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAny(null) throws NPE
      */
-    public void testInvokeAny1() {
+    public void testInvokeAny1()
+        throws InterruptedException, ExecutionException {
         ExecutorService e = new DirectExecutorService();
         try {
             e.invokeAny(null);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -409,13 +293,13 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAny(empty collection) throws IAE
      */
-    public void testInvokeAny2() {
+    public void testInvokeAny2()
+        throws InterruptedException, ExecutionException {
         ExecutorService e = new DirectExecutorService();
         try {
             e.invokeAny(new ArrayList<Callable<String>>());
+            shouldThrow();
         } catch (IllegalArgumentException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -424,17 +308,16 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAny(c) throws NPE if c has null elements
      */
-    public void testInvokeAny3() {
+    public void testInvokeAny3() throws Exception {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<Integer>> l = new ArrayList<Callable<Integer>>();
+        l.add(new Callable<Integer>() {
+                  public Integer call() { return 5/0; }});
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
-            l.add(null);
             e.invokeAny(l);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            ex.printStackTrace();
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -443,15 +326,15 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAny(c) throws ExecutionException if no task in c completes
      */
-    public void testInvokeAny4() {
+    public void testInvokeAny4() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new NPETask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new NPETask());
             e.invokeAny(l);
-        } catch(ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
+            shouldThrow();
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }
@@ -460,17 +343,14 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAny(c) returns result of some task in c if at least one completes
      */
-    public void testInvokeAny5() {
+    public void testInvokeAny5() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
             String result = e.invokeAny(l);
             assertSame(TEST_STRING, result);
-        } catch (ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -479,13 +359,12 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAll(null) throws NPE
      */
-    public void testInvokeAll1() {
+    public void testInvokeAll1() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
         try {
             e.invokeAll(null);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -494,13 +373,11 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAll(empty collection) returns empty collection
      */
-    public void testInvokeAll2() {
+    public void testInvokeAll2() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
         try {
             List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>());
             assertTrue(r.isEmpty());
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -509,16 +386,15 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAll(c) throws NPE if c has null elements
      */
-    public void testInvokeAll3() {
+    public void testInvokeAll3() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
-            l.add(null);
             e.invokeAll(l);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -527,18 +403,19 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * get of returned element of invokeAll(c) throws exception on failed task
      */
-    public void testInvokeAll4() {
+    public void testInvokeAll4() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new NPETask());
-            List<Future<String>> result = e.invokeAll(l);
-            assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
-                it.next().get();
-        } catch(ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
+            List<Future<String>> futures = e.invokeAll(l);
+            assertEquals(1, futures.size());
+            try {
+                futures.get(0).get();
+                shouldThrow();
+            } catch (ExecutionException success) {
+                assertTrue(success.getCause() instanceof NullPointerException);
+            }
         } finally {
             joinPool(e);
         }
@@ -547,19 +424,16 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * invokeAll(c) returns results of all completed tasks in c
      */
-    public void testInvokeAll5() {
+    public void testInvokeAll5() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l);
-            assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
-                assertSame(TEST_STRING, it.next().get());
-        } catch (ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
+            List<Future<String>> futures = e.invokeAll(l);
+            assertEquals(2, futures.size());
+            for (Future<String> future : futures)
+                assertSame(TEST_STRING, future.get());
         } finally {
             joinPool(e);
         }
@@ -569,13 +443,12 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAny(null) throws NPE
      */
-    public void testTimedInvokeAny1() {
+    public void testTimedInvokeAny1() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            e.invokeAny(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAny(null, MEDIUM_DELAY_MS, MILLISECONDS);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -584,15 +457,14 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAny(null time unit) throws NPE
      */
-    public void testTimedInvokeAnyNullTimeUnit() {
+    public void testTimedInvokeAnyNullTimeUnit() throws Exception {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
             e.invokeAny(l, MEDIUM_DELAY_MS, null);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -601,13 +473,12 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAny(empty collection) throws IAE
      */
-    public void testTimedInvokeAny2() {
+    public void testTimedInvokeAny2() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            e.invokeAny(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAny(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, MILLISECONDS);
+            shouldThrow();
         } catch (IllegalArgumentException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -616,17 +487,16 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAny(c) throws NPE if c has null elements
      */
-    public void testTimedInvokeAny3() {
+    public void testTimedInvokeAny3() throws Exception {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<Integer>> l = new ArrayList<Callable<Integer>>();
+        l.add(new Callable<Integer>() {
+                  public Integer call() { return 5/0; }});
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
-            l.add(null);
-            e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            ex.printStackTrace();
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -635,15 +505,15 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAny(c) throws ExecutionException if no task completes
      */
-    public void testTimedInvokeAny4() {
+    public void testTimedInvokeAny4() throws Exception {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new NPETask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new NPETask());
-            e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-        } catch(ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
+            e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
+            shouldThrow();
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof NullPointerException);
         } finally {
             joinPool(e);
         }
@@ -652,17 +522,14 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAny(c) returns result of some task in c
      */
-    public void testTimedInvokeAny5() {
+    public void testTimedInvokeAny5() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
-            String result = e.invokeAny(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            String result = e.invokeAny(l, MEDIUM_DELAY_MS, MILLISECONDS);
             assertSame(TEST_STRING, result);
-        } catch (ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -671,13 +538,12 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAll(null) throws NPE
      */
-    public void testTimedInvokeAll1() {
+    public void testTimedInvokeAll1() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
         try {
-            e.invokeAll(null, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAll(null, MEDIUM_DELAY_MS, MILLISECONDS);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -686,15 +552,14 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAll(null time unit) throws NPE
      */
-    public void testTimedInvokeAllNullTimeUnit() {
+    public void testTimedInvokeAllNullTimeUnit() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
             e.invokeAll(l, MEDIUM_DELAY_MS, null);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -703,13 +568,11 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAll(empty collection) returns empty collection
      */
-    public void testTimedInvokeAll2() {
+    public void testTimedInvokeAll2() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
         try {
-            List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            List<Future<String>> r = e.invokeAll(new ArrayList<Callable<String>>(), MEDIUM_DELAY_MS, MILLISECONDS);
             assertTrue(r.isEmpty());
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -718,16 +581,15 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAll(c) throws NPE if c has null elements
      */
-    public void testTimedInvokeAll3() {
+    public void testTimedInvokeAll3() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
+        List<Callable<String>> l = new ArrayList<Callable<String>>();
+        l.add(new StringTask());
+        l.add(null);
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
-            l.add(new StringTask());
-            l.add(null);
-            e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
+            e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
+            shouldThrow();
         } catch (NullPointerException success) {
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }
@@ -736,18 +598,20 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * get of returned element of invokeAll(c) throws exception on failed task
      */
-    public void testTimedInvokeAll4() {
+    public void testTimedInvokeAll4() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new NPETask());
-            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            assertEquals(1, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
-                it.next().get();
-        } catch(ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
+            List<Future<String>> futures =
+                e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
+            assertEquals(1, futures.size());
+            try {
+                futures.get(0).get();
+                shouldThrow();
+            } catch (ExecutionException success) {
+                assertTrue(success.getCause() instanceof NullPointerException);
+            }
         } finally {
             joinPool(e);
         }
@@ -756,19 +620,17 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAll(c) returns results of all completed tasks in c
      */
-    public void testTimedInvokeAll5() {
+    public void testTimedInvokeAll5() throws Exception {
         ExecutorService e = new DirectExecutorService();
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-            assertEquals(2, result.size());
-            for (Iterator<Future<String>> it = result.iterator(); it.hasNext();) 
-                assertSame(TEST_STRING, it.next().get());
-        } catch (ExecutionException success) {
-        } catch(Exception ex) {
-            unexpectedException();
+            List<Future<String>> futures =
+                e.invokeAll(l, MEDIUM_DELAY_MS, MILLISECONDS);
+            assertEquals(2, futures.size());
+            for (Future<String> future : futures)
+                assertSame(TEST_STRING, future.get());
         } finally {
             joinPool(e);
         }
@@ -777,16 +639,17 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
     /**
      * timed invokeAll cancels tasks not completed by timeout
      */
-    public void testTimedInvokeAll6() {
+    public void testTimedInvokeAll6() throws InterruptedException {
         ExecutorService e = new DirectExecutorService();
         try {
-            ArrayList<Callable<String>> l = new ArrayList<Callable<String>>();
+            List<Callable<String>> l = new ArrayList<Callable<String>>();
             l.add(new StringTask());
             l.add(Executors.callable(new MediumPossiblyInterruptedRunnable(), TEST_STRING));
             l.add(new StringTask());
-            List<Future<String>> result = e.invokeAll(l, SMALL_DELAY_MS, TimeUnit.MILLISECONDS);
-            assertEquals(3, result.size());
-            Iterator<Future<String>> it = result.iterator(); 
+            List<Future<String>> futures =
+                e.invokeAll(l, SMALL_DELAY_MS, MILLISECONDS);
+            assertEquals(3, futures.size());
+            Iterator<Future<String>> it = futures.iterator();
             Future<String> f1 = it.next();
             Future<String> f2 = it.next();
             Future<String> f3 = it.next();
@@ -795,8 +658,6 @@ public class AbstractExecutorServiceTest extends JSR166TestCase{
             assertTrue(f2.isDone());
             assertTrue(f3.isDone());
             assertTrue(f3.isCancelled());
-        } catch(Exception ex) {
-            unexpectedException();
         } finally {
             joinPool(e);
         }

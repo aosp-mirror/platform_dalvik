@@ -6,11 +6,12 @@
  * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 import java.security.*;
 
@@ -88,71 +89,91 @@ import java.security.*;
  * </ul>
  */
 public class JSR166TestCase extends TestCase {
-    /**
-     * Runs all JSR166 unit tests using junit.textui.TestRunner
-     */
-    public static void main (String[] args) {
-        int iters = 1;
-        if (args.length > 0)
-            iters = Integer.parseInt(args[0]);
-        Test s = suite();
-        for (int i = 0; i < iters; ++i) {
-            // junit.textui.TestRunner.run (s); android-changed
-            System.gc();
-            System.runFinalization();
-        }
-        System.exit(0);
-    }
+    private static final boolean useSecurityManager =
+        Boolean.getBoolean("jsr166.useSecurityManager");
+
+    // BEGIN android-removed
+    // /**
+    //  * Runs all JSR166 unit tests using junit.textui.TestRunner
+    //  */
+    // public static void main(String[] args) {
+    //     if (useSecurityManager) {
+    //         System.err.println("Setting a permissive security manager");
+    //         Policy.setPolicy(permissivePolicy());
+    //         System.setSecurityManager(new SecurityManager());
+    //     }
+    //     int iters = 1;
+    //     if (args.length > 0)
+    //         iters = Integer.parseInt(args[0]);
+    //     Test s = suite();
+    //     for (int i = 0; i < iters; ++i) {
+    //         junit.textui.TestRunner.run(s);
+    //         System.gc();
+    //         System.runFinalization();
+    //     }
+    //     System.exit(0);
+    // }
+    // END android-removed
 
     /**
      * Collects all JSR166 unit tests as one suite
      */
-    public static Test suite ( ) {
-        // BEGIN android-changed
+    public static Test suite() {
         TestSuite suite = new TestSuite("JSR166 Unit Tests");
-        suite.addTest(AbstractExecutorServiceTest.suite());
-        suite.addTest(AbstractQueueTest.suite());
-        suite.addTest(AbstractQueuedSynchronizerTest.suite());
-        suite.addTest(ArrayBlockingQueueTest.suite());
-        suite.addTest(AtomicBooleanTest.suite());
-        suite.addTest(AtomicIntegerArrayTest.suite());
-        suite.addTest(AtomicIntegerFieldUpdaterTest.suite());
-        suite.addTest(AtomicIntegerTest.suite());
-        suite.addTest(AtomicLongArrayTest.suite());
-        suite.addTest(AtomicLongFieldUpdaterTest.suite());
-        suite.addTest(AtomicLongTest.suite());
-        suite.addTest(AtomicMarkableReferenceTest.suite());
-        suite.addTest(AtomicReferenceArrayTest.suite());
-        suite.addTest(AtomicReferenceFieldUpdaterTest.suite());
-        suite.addTest(AtomicReferenceTest.suite());
-        suite.addTest(AtomicStampedReferenceTest.suite());
-        suite.addTest(ConcurrentHashMapTest.suite());
-        suite.addTest(ConcurrentLinkedQueueTest.suite());
-        suite.addTest(CopyOnWriteArrayListTest.suite());
-        suite.addTest(CopyOnWriteArraySetTest.suite());
-        suite.addTest(CountDownLatchTest.suite());
-        suite.addTest(CyclicBarrierTest.suite());
-        suite.addTest(DelayQueueTest.suite());
-        suite.addTest(ExchangerTest.suite());
-        suite.addTest(ExecutorsTest.suite());
-        suite.addTest(ExecutorCompletionServiceTest.suite());
-        suite.addTest(FutureTaskTest.suite());
-        suite.addTest(LinkedBlockingQueueTest.suite());
-        suite.addTest(LinkedListTest.suite());
-        suite.addTest(LockSupportTest.suite());
-        suite.addTest(PriorityBlockingQueueTest.suite());
-        suite.addTest(PriorityQueueTest.suite());
-        suite.addTest(ReentrantLockTest.suite());
-        suite.addTest(ReentrantReadWriteLockTest.suite());
-        suite.addTest(ScheduledExecutorTest.suite());
-        suite.addTest(SemaphoreTest.suite());
-        suite.addTest(SynchronousQueueTest.suite());
-        suite.addTest(SystemTest.suite());
-        suite.addTest(ThreadLocalTest.suite());
-        suite.addTest(ThreadPoolExecutorTest.suite());
-        suite.addTest(ThreadTest.suite());
-        suite.addTest(TimeUnitTest.suite());
-        // END android-changed
+
+        suite.addTest(new TestSuite(AbstractExecutorServiceTest.class));
+        suite.addTest(new TestSuite(AbstractQueueTest.class));
+        suite.addTest(new TestSuite(AbstractQueuedSynchronizerTest.class));
+        suite.addTest(new TestSuite(AbstractQueuedLongSynchronizerTest.class));
+        suite.addTest(new TestSuite(ArrayBlockingQueueTest.class));
+        suite.addTest(new TestSuite(ArrayDequeTest.class));
+        suite.addTest(new TestSuite(AtomicBooleanTest.class));
+        suite.addTest(new TestSuite(AtomicIntegerArrayTest.class));
+        suite.addTest(new TestSuite(AtomicIntegerFieldUpdaterTest.class));
+        suite.addTest(new TestSuite(AtomicIntegerTest.class));
+        suite.addTest(new TestSuite(AtomicLongArrayTest.class));
+        suite.addTest(new TestSuite(AtomicLongFieldUpdaterTest.class));
+        suite.addTest(new TestSuite(AtomicLongTest.class));
+        suite.addTest(new TestSuite(AtomicMarkableReferenceTest.class));
+        suite.addTest(new TestSuite(AtomicReferenceArrayTest.class));
+        suite.addTest(new TestSuite(AtomicReferenceFieldUpdaterTest.class));
+        suite.addTest(new TestSuite(AtomicReferenceTest.class));
+        suite.addTest(new TestSuite(AtomicStampedReferenceTest.class));
+        suite.addTest(new TestSuite(ConcurrentHashMapTest.class));
+        suite.addTest(new TestSuite(ConcurrentLinkedQueueTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListMapTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListSubMapTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListSetTest.class));
+        suite.addTest(new TestSuite(ConcurrentSkipListSubSetTest.class));
+        suite.addTest(new TestSuite(CopyOnWriteArrayListTest.class));
+        suite.addTest(new TestSuite(CopyOnWriteArraySetTest.class));
+        suite.addTest(new TestSuite(CountDownLatchTest.class));
+        suite.addTest(new TestSuite(CyclicBarrierTest.class));
+        suite.addTest(new TestSuite(DelayQueueTest.class));
+        suite.addTest(new TestSuite(EntryTest.class));
+        suite.addTest(new TestSuite(ExchangerTest.class));
+        suite.addTest(new TestSuite(ExecutorsTest.class));
+        suite.addTest(new TestSuite(ExecutorCompletionServiceTest.class));
+        suite.addTest(new TestSuite(FutureTaskTest.class));
+        suite.addTest(new TestSuite(LinkedBlockingDequeTest.class));
+        suite.addTest(new TestSuite(LinkedBlockingQueueTest.class));
+        suite.addTest(new TestSuite(LinkedListTest.class));
+        suite.addTest(new TestSuite(LockSupportTest.class));
+        suite.addTest(new TestSuite(PriorityBlockingQueueTest.class));
+        suite.addTest(new TestSuite(PriorityQueueTest.class));
+        suite.addTest(new TestSuite(ReentrantLockTest.class));
+        suite.addTest(new TestSuite(ReentrantReadWriteLockTest.class));
+        suite.addTest(new TestSuite(ScheduledExecutorTest.class));
+        suite.addTest(new TestSuite(ScheduledExecutorSubclassTest.class));
+        suite.addTest(new TestSuite(SemaphoreTest.class));
+        suite.addTest(new TestSuite(SynchronousQueueTest.class));
+        suite.addTest(new TestSuite(SystemTest.class));
+        suite.addTest(new TestSuite(ThreadLocalTest.class));
+        suite.addTest(new TestSuite(ThreadPoolExecutorTest.class));
+        suite.addTest(new TestSuite(ThreadPoolExecutorSubclassTest.class));
+        suite.addTest(new TestSuite(ThreadTest.class));
+        suite.addTest(new TestSuite(TimeUnitTest.class));
+
         return suite;
     }
 
@@ -178,7 +199,7 @@ public class JSR166TestCase extends TestCase {
     /**
      * Sets delays as multiples of SHORT_DELAY.
      */
-    protected  void setDelays() {
+    protected void setDelays() {
         SHORT_DELAY_MS = getShortDelay();
         SMALL_DELAY_MS = SHORT_DELAY_MS * 5;
         MEDIUM_DELAY_MS = SHORT_DELAY_MS * 10;
@@ -272,13 +293,16 @@ public class JSR166TestCase extends TestCase {
      * threadFail with message "should throw exception"
      */
     public void threadShouldThrow() {
-       try {
-           threadFailed = true;
-           fail("should throw exception");
-       } catch (AssertionFailedError e) {
-           e.printStackTrace();
-           throw e;
-       }
+        threadFailed = true;
+        fail("should throw exception");
+    }
+
+    /**
+     * threadFail with message "should throw" + exceptionName
+     */
+    public void threadShouldThrow(String exceptionName) {
+        threadFailed = true;
+        fail("should throw " + exceptionName);
     }
 
     /**
@@ -304,11 +328,11 @@ public class JSR166TestCase extends TestCase {
     public void joinPool(ExecutorService exec) {
         try {
             exec.shutdown();
-            assertTrue(exec.awaitTermination(LONG_DELAY_MS, TimeUnit.MILLISECONDS));
-        } catch(SecurityException ok) {
+            assertTrue(exec.awaitTermination(LONG_DELAY_MS, MILLISECONDS));
+        } catch (SecurityException ok) {
             // Allowed in case test doesn't have privs
-        } catch(InterruptedException ie) {
-            fail("Unexpected exception");
+        } catch (InterruptedException ie) {
+            fail("Unexpected InterruptedException");
         }
     }
 
@@ -321,46 +345,105 @@ public class JSR166TestCase extends TestCase {
     }
 
     /**
+     * fail with message "should throw " + exceptionName
+     */
+    public void shouldThrow(String exceptionName) {
+        fail("Should throw " + exceptionName);
+    }
+
+    /**
      * fail with message "Unexpected exception"
      */
     public void unexpectedException() {
         fail("Unexpected exception");
     }
 
+    /**
+     * fail with message "Unexpected exception", with argument
+     */
+    public void unexpectedException(Throwable ex) {
+        ex.printStackTrace();
+        fail("Unexpected exception: " + ex);
+    }
+
 
     /**
      * The number of elements to place in collections, arrays, etc.
      */
-    static final int SIZE = 20;
+    public static final int SIZE = 20;
 
     // Some convenient Integer constants
 
-    static final Integer zero = new Integer(0);
-    static final Integer one = new Integer(1);
-    static final Integer two = new Integer(2);
-    static final Integer three  = new Integer(3);
-    static final Integer four  = new Integer(4);
-    static final Integer five  = new Integer(5);
-    static final Integer six = new Integer(6);
-    static final Integer seven = new Integer(7);
-    static final Integer eight = new Integer(8);
-    static final Integer nine = new Integer(9);
-    static final Integer m1  = new Integer(-1);
-    static final Integer m2  = new Integer(-2);
-    static final Integer m3  = new Integer(-3);
-    static final Integer m4 = new Integer(-4);
-    static final Integer m5 = new Integer(-5);
-    static final Integer m6 = new Integer(-6);
-    static final Integer m10 = new Integer(-10);
+    public static final Integer zero  = new Integer(0);
+    public static final Integer one   = new Integer(1);
+    public static final Integer two   = new Integer(2);
+    public static final Integer three = new Integer(3);
+    public static final Integer four  = new Integer(4);
+    public static final Integer five  = new Integer(5);
+    public static final Integer six   = new Integer(6);
+    public static final Integer seven = new Integer(7);
+    public static final Integer eight = new Integer(8);
+    public static final Integer nine  = new Integer(9);
+    public static final Integer m1  = new Integer(-1);
+    public static final Integer m2  = new Integer(-2);
+    public static final Integer m3  = new Integer(-3);
+    public static final Integer m4  = new Integer(-4);
+    public static final Integer m5  = new Integer(-5);
+    public static final Integer m6  = new Integer(-6);
+    public static final Integer m10 = new Integer(-10);
 
+
+    /**
+     * Runs Runnable r with a security policy that permits precisely
+     * the specified permissions.  If there is no current security
+     * manager, the runnable is run twice, both with and without a
+     * security manager.  We require that any security manager permit
+     * getPolicy/setPolicy.
+     */
+    public void runWithPermissions(Runnable r, Permission... permissions) {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm == null) {
+            r.run();
+            Policy savedPolicy = Policy.getPolicy();
+            try {
+                Policy.setPolicy(permissivePolicy());
+                System.setSecurityManager(new SecurityManager());
+                runWithPermissions(r, permissions);
+            } finally {
+                System.setSecurityManager(null);
+                Policy.setPolicy(savedPolicy);
+            }
+        } else {
+            Policy savedPolicy = Policy.getPolicy();
+            AdjustablePolicy policy = new AdjustablePolicy(permissions);
+            Policy.setPolicy(policy);
+
+            try {
+                r.run();
+            } finally {
+                policy.addPermission(new SecurityPermission("setPolicy"));
+                Policy.setPolicy(savedPolicy);
+            }
+        }
+    }
+
+    /**
+     * Runs a runnable without any permissions.
+     */
+    public void runWithoutPermissions(Runnable r) {
+        runWithPermissions(r);
+    }
 
     /**
      * A security policy where new permissions can be dynamically added
      * or all cleared.
      */
-    static class AdjustablePolicy extends java.security.Policy {
+    public static class AdjustablePolicy extends java.security.Policy {
         Permissions perms = new Permissions();
-        AdjustablePolicy() { }
+        AdjustablePolicy(Permission... permissions) {
+            for (Permission permission : permissions)
+                perms.add(permission);
+        }
         void addPermission(Permission perm) { perms.add(perm); }
         void clearPermissions() { perms = new Permissions(); }
         public PermissionCollection getPermissions(CodeSource cs) {
@@ -375,197 +458,293 @@ public class JSR166TestCase extends TestCase {
         public void refresh() {}
     }
 
+    /**
+     * Returns a policy containing all the permissions we ever need.
+     */
+    public static Policy permissivePolicy() {
+        return new AdjustablePolicy
+            // Permissions j.u.c. needs directly
+            (new RuntimePermission("modifyThread"),
+             new RuntimePermission("getClassLoader"),
+             new RuntimePermission("setContextClassLoader"),
+             // Permissions needed to change permissions!
+             new SecurityPermission("getPolicy"),
+             new SecurityPermission("setPolicy"),
+             new RuntimePermission("setSecurityManager"),
+             // Permissions needed by the junit test harness
+             new RuntimePermission("accessDeclaredMembers"),
+             new PropertyPermission("*", "read"),
+             new java.io.FilePermission("<<ALL FILES>>", "read"));
+    }
+
+    /**
+     * Sleep until the timeout has elapsed, or interrupted.
+     * Does <em>NOT</em> throw InterruptedException.
+     */
+    void sleepTillInterrupted(long timeoutMillis) {
+        try {
+            Thread.sleep(timeoutMillis);
+        } catch (InterruptedException wakeup) {}
+    }
+
+    /**
+     * Returns a new started Thread running the given runnable.
+     */
+    Thread newStartedThread(Runnable runnable) {
+        Thread t = new Thread(runnable);
+        t.start();
+        return t;
+    }
 
     // Some convenient Runnable classes
 
-    static class NoOpRunnable implements Runnable {
+    public abstract class CheckedRunnable implements Runnable {
+        protected abstract void realRun() throws Throwable;
+
+        public final void run() {
+            try {
+                realRun();
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+        }
+    }
+
+    public abstract class RunnableShouldThrow implements Runnable {
+        protected abstract void realRun() throws Throwable;
+
+        final Class<?> exceptionClass;
+
+        <T extends Throwable> RunnableShouldThrow(Class<T> exceptionClass) {
+            this.exceptionClass = exceptionClass;
+        }
+
+        public final void run() {
+            try {
+                realRun();
+                threadShouldThrow(exceptionClass.getSimpleName());
+            } catch (Throwable t) {
+                if (! exceptionClass.isInstance(t))
+                    threadUnexpectedException(t);
+            }
+        }
+    }
+
+    public abstract class ThreadShouldThrow extends Thread {
+        protected abstract void realRun() throws Throwable;
+
+        final Class<?> exceptionClass;
+
+        <T extends Throwable> ThreadShouldThrow(Class<T> exceptionClass) {
+            this.exceptionClass = exceptionClass;
+        }
+
+        public final void run() {
+            try {
+                realRun();
+                threadShouldThrow(exceptionClass.getSimpleName());
+            } catch (Throwable t) {
+                if (! exceptionClass.isInstance(t))
+                    threadUnexpectedException(t);
+            }
+        }
+    }
+
+    public abstract class CheckedInterruptedRunnable implements Runnable {
+        protected abstract void realRun() throws Throwable;
+
+        public final void run() {
+            try {
+                realRun();
+                threadShouldThrow("InterruptedException");
+            } catch (InterruptedException success) {
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+        }
+    }
+
+    public abstract class CheckedCallable<T> implements Callable<T> {
+        protected abstract T realCall() throws Throwable;
+
+        public final T call() {
+            try {
+                return realCall();
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+            return null;
+        }
+    }
+
+    public abstract class CheckedInterruptedCallable<T> implements Callable<T> {
+        protected abstract T realCall() throws Throwable;
+
+        public final T call() {
+            try {
+                T result = realCall();
+                threadShouldThrow("InterruptedException");
+                return result;
+            } catch (InterruptedException success) {
+            } catch (Throwable t) {
+                threadUnexpectedException(t);
+            }
+            return null;
+        }
+    }
+
+    public static class NoOpRunnable implements Runnable {
         public void run() {}
     }
 
-    static class NoOpCallable implements Callable {
+    public static class NoOpCallable implements Callable {
         public Object call() { return Boolean.TRUE; }
     }
 
-    static final String TEST_STRING = "a test string";
+    public static final String TEST_STRING = "a test string";
 
-    static class StringTask implements Callable<String> {
+    public static class StringTask implements Callable<String> {
         public String call() { return TEST_STRING; }
     }
 
-    static class NPETask implements Callable<String> {
+    public Callable<String> latchAwaitingStringTask(final CountDownLatch latch) {
+        return new CheckedCallable<String>() {
+            public String realCall() {
+                try {
+                    latch.await();
+                } catch (InterruptedException quittingTime) {}
+                return TEST_STRING;
+            }};
+    }
+
+    public static class NPETask implements Callable<String> {
         public String call() { throw new NullPointerException(); }
     }
 
-    static class CallableOne implements Callable<Integer> {
+    public static class CallableOne implements Callable<Integer> {
         public Integer call() { return one; }
     }
 
-    class ShortRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SHORT_DELAY_MS);
-            }
-            catch(Exception e) {
-                threadUnexpectedException(e);
-            }
+    public class ShortRunnable extends CheckedRunnable {
+        protected void realRun() throws Throwable {
+            Thread.sleep(SHORT_DELAY_MS);
         }
     }
 
-    class ShortInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SHORT_DELAY_MS);
-                threadShouldThrow();
-            }
-            catch(InterruptedException success) {
-            }
+    public class ShortInterruptedRunnable extends CheckedInterruptedRunnable {
+        protected void realRun() throws InterruptedException {
+            Thread.sleep(SHORT_DELAY_MS);
         }
     }
 
-    class SmallRunnable implements Runnable {
-        public void run() {
+    public class SmallRunnable extends CheckedRunnable {
+        protected void realRun() throws Throwable {
+            Thread.sleep(SMALL_DELAY_MS);
+        }
+    }
+
+    public class SmallPossiblyInterruptedRunnable extends CheckedRunnable {
+        protected void realRun() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
-            }
-            catch(Exception e) {
-                threadUnexpectedException(e);
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
-    class SmallPossiblyInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-            }
-            catch(Exception e) {
-            }
-        }
-    }
-
-    class SmallCallable implements Callable {
-        public Object call() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-            }
-            catch(Exception e) {
-                threadUnexpectedException(e);
-            }
+    public class SmallCallable extends CheckedCallable {
+        protected Object realCall() throws InterruptedException {
+            Thread.sleep(SMALL_DELAY_MS);
             return Boolean.TRUE;
         }
     }
 
-    class SmallInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(SMALL_DELAY_MS);
-                threadShouldThrow();
-            }
-            catch(InterruptedException success) {
-            }
+    public class SmallInterruptedRunnable extends CheckedInterruptedRunnable {
+        protected void realRun() throws InterruptedException {
+            Thread.sleep(SMALL_DELAY_MS);
         }
     }
 
-
-    class MediumRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(MEDIUM_DELAY_MS);
-            }
-            catch(Exception e) {
-                threadUnexpectedException(e);
-            }
+    public class MediumRunnable extends CheckedRunnable {
+        protected void realRun() throws Throwable {
+            Thread.sleep(MEDIUM_DELAY_MS);
         }
     }
 
-    class MediumInterruptedRunnable implements Runnable {
-        public void run() {
+    public class MediumInterruptedRunnable extends CheckedInterruptedRunnable {
+        protected void realRun() throws InterruptedException {
+            Thread.sleep(MEDIUM_DELAY_MS);
+        }
+    }
+
+    public class MediumPossiblyInterruptedRunnable extends CheckedRunnable {
+        protected void realRun() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
-                threadShouldThrow();
-            }
-            catch(InterruptedException success) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
-    class MediumPossiblyInterruptedRunnable implements Runnable {
-        public void run() {
-            try {
-                Thread.sleep(MEDIUM_DELAY_MS);
-            }
-            catch(InterruptedException success) {
-            }
-        }
-    }
-
-    class LongPossiblyInterruptedRunnable implements Runnable {
-        public void run() {
+    public class LongPossiblyInterruptedRunnable extends CheckedRunnable {
+        protected void realRun() {
             try {
                 Thread.sleep(LONG_DELAY_MS);
-            }
-            catch(InterruptedException success) {
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
     /**
      * For use as ThreadFactory in constructors
      */
-    static class SimpleThreadFactory implements ThreadFactory{
-        public Thread newThread(Runnable r){
+    public static class SimpleThreadFactory implements ThreadFactory {
+        public Thread newThread(Runnable r) {
             return new Thread(r);
         }
     }
 
-    static class TrackedShortRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedShortRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
-            } catch(Exception e){
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
-    static class TrackedMediumRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedMediumRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             try {
                 Thread.sleep(MEDIUM_DELAY_MS);
                 done = true;
-            } catch(Exception e){
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
-    static class TrackedLongRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedLongRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             try {
                 Thread.sleep(LONG_DELAY_MS);
                 done = true;
-            } catch(Exception e){
-            }
+            } catch (InterruptedException ok) {}
         }
     }
 
-    static class TrackedNoOpRunnable implements Runnable {
-        volatile boolean done = false;
+    public static class TrackedNoOpRunnable implements Runnable {
+        public volatile boolean done = false;
         public void run() {
             done = true;
         }
     }
 
-    static class TrackedCallable implements Callable {
-        volatile boolean done = false;
+    public static class TrackedCallable implements Callable {
+        public volatile boolean done = false;
         public Object call() {
             try {
                 Thread.sleep(SMALL_DELAY_MS);
                 done = true;
-            } catch(Exception e){
-            }
+            } catch (InterruptedException ok) {}
             return Boolean.TRUE;
         }
     }
@@ -574,9 +753,9 @@ public class JSR166TestCase extends TestCase {
     /**
      * For use as RejectedExecutionHandler in constructors
      */
-    static class NoOpREHandler implements RejectedExecutionHandler{
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor){}
+    public static class NoOpREHandler implements RejectedExecutionHandler {
+        public void rejectedExecution(Runnable r,
+                                      ThreadPoolExecutor executor) {}
     }
-
 
 }

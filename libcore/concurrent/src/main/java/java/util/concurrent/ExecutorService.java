@@ -258,7 +258,7 @@ public interface ExecutorService extends Executor {
      *         scheduled for execution
      */
 
-    <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
+    <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
         throws InterruptedException;
 
     /**
@@ -288,7 +288,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      *         for execution
      */
-    <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks,
+    <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
                                   long timeout, TimeUnit unit)
         throws InterruptedException;
 
@@ -303,14 +303,14 @@ public interface ExecutorService extends Executor {
      * @param tasks the collection of tasks
      * @return the result returned by one of the tasks
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if tasks or any of its elements
-     *         are <tt>null</tt>
+     * @throws NullPointerException if tasks or any element task
+     *         subject to execution is <tt>null</tt>
      * @throws IllegalArgumentException if tasks is empty
      * @throws ExecutionException if no task successfully completes
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */
-    <T> T invokeAny(Collection<Callable<T>> tasks)
+    <T> T invokeAny(Collection<? extends Callable<T>> tasks)
         throws InterruptedException, ExecutionException;
 
     /**
@@ -327,15 +327,15 @@ public interface ExecutorService extends Executor {
      * @param unit the time unit of the timeout argument
      * @return the result returned by one of the tasks.
      * @throws InterruptedException if interrupted while waiting
-     * @throws NullPointerException if tasks, any of its elements, or
-     *         unit are <tt>null</tt>
+     * @throws NullPointerException if tasks, or unit, or any element
+     *         task subject to execution is <tt>null</tt>
      * @throws TimeoutException if the given timeout elapses before
      *         any task successfully completes
      * @throws ExecutionException if no task successfully completes
      * @throws RejectedExecutionException if tasks cannot be scheduled
      *         for execution
      */
-    <T> T invokeAny(Collection<Callable<T>> tasks,
+    <T> T invokeAny(Collection<? extends Callable<T>> tasks,
                     long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException;
 }

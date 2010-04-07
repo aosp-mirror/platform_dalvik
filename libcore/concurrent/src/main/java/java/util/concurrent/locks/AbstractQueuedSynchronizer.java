@@ -94,6 +94,12 @@ import sun.misc.Unsafe;
  * means of using this class. All other methods are declared
  * <tt>final</tt> because they cannot be independently varied.
  *
+ * <p>You may also find the inherited methods from {@link
+ * AbstractOwnableSynchronizer} useful to keep track of the thread
+ * owning an exclusive synchronizer.  You are encouraged to use them
+ * -- this enables monitoring and diagnostic tools to assist users in
+ * determining which threads hold locks.
+ *
  * <p>Even though this class is based on an internal FIFO queue, it
  * does not automatically enforce FIFO acquisition policies.  The core
  * of exclusive synchronization takes the form:
@@ -119,8 +125,9 @@ import sun.misc.Unsafe;
  * disable barging by internally invoking one or more of the inspection
  * methods, thereby providing a <em>fair</em> FIFO acquisition order.
  * In particular, most fair synchronizers can define <tt>tryAcquire</tt>
- * to return <tt>false</tt> if predecessors are queued.  Other variations
- * are possible.
+ * to return <tt>false</tt> if {@link #hasQueuedPredecessors} (a method
+ * specifically designed to be used by fair synchronizers) returns
+ * <tt>true</tt>.  Other variations are possible.
  *
  * <p>Throughput and scalability are generally highest for the
  * default barging (also known as <em>greedy</em>,
@@ -152,7 +159,10 @@ import sun.misc.Unsafe;
  *
  * <p>Here is a non-reentrant mutual exclusion lock class that uses
  * the value zero to represent the unlocked state, and one to
- * represent the locked state. It also supports conditions and exposes
+ * represent the locked state. While a non-reentrant lock
+ * does not strictly require recording of the current owner
+ * thread, this class does so anyway to make usage easier to monitor.
+ * It also supports conditions and exposes
  * one of the instrumentation methods:
  *
  * <pre>
@@ -168,13 +178,18 @@ import sun.misc.Unsafe;
  *     // Acquire the lock if state is zero
  *     public boolean tryAcquire(int acquires) {
  *       assert acquires == 1; // Otherwise unused
- *       return compareAndSetState(0, 1);
+ *       if (compareAndSetState(0, 1)) {
+ *         setExclusiveOwnerThread(Thread.currentThread());
+ *         return true;
+ *       }
+ *       return false;
  *     }
  *
  *     // Release the lock by setting state to zero
  *     protected boolean tryRelease(int releases) {
  *       assert releases == 1; // Otherwise unused
  *       if (getState() == 0) throw new IllegalMonitorStateException();
+ *       setExclusiveOwnerThread(null);
  *       setState(0);
  *       return true;
  *     }
@@ -787,7 +802,7 @@ public abstract class AbstractQueuedSynchronizer
      * @return {@code true} if interrupted
      */
     private final boolean parkAndCheckInterrupt() {
-        LockSupport.park();
+        LockSupport.park(this);
         return Thread.interrupted();
     }
 
@@ -882,7 +897,7 @@ public abstract class AbstractQueuedSynchronizer
                     return false;
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
@@ -986,7 +1001,7 @@ public abstract class AbstractQueuedSynchronizer
                     return false;
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     nanosTimeout > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);
                 long now = System.nanoTime();
                 nanosTimeout -= now - lastTime;
                 lastTime = now;
@@ -1458,8 +1473,10 @@ public abstract class AbstractQueuedSynchronizer
      * @return {@code true} if there is a queued thread preceding the
      *         current thread, and {@code false} if the current thread
      *         is at the head of the queue or the queue is empty
+     * @since 1.7
+     * @hide
      */
-    final boolean hasQueuedPredecessors() {
+    public final boolean hasQueuedPredecessors() {
         // The correctness of this depends on head being initialized
         // before tail and on head.next being accurate if the current
         // thread is first in queue.
@@ -1926,7 +1943,7 @@ public abstract class AbstractQueuedSynchronizer
             int savedState = fullyRelease(node);
             boolean interrupted = false;
             while (!isOnSyncQueue(node)) {
-                LockSupport.park();
+                LockSupport.park(this);
                 if (Thread.interrupted())
                     interrupted = true;
             }
@@ -1993,7 +2010,7 @@ public abstract class AbstractQueuedSynchronizer
             int savedState = fullyRelease(node);
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
-                LockSupport.park();
+                LockSupport.park(this);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
             }
@@ -2040,7 +2057,7 @@ public abstract class AbstractQueuedSynchronizer
                     transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkNanos(nanosTimeout);
+                LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
 
@@ -2094,7 +2111,7 @@ public abstract class AbstractQueuedSynchronizer
                     timedout = transferAfterCancelledWait(node);
                     break;
                 }
-                LockSupport.parkUntil(abstime);
+                LockSupport.parkUntil(this, abstime);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
             }
@@ -2146,7 +2163,7 @@ public abstract class AbstractQueuedSynchronizer
                     break;
                 }
                 if (nanosTimeout >= spinForTimeoutThreshold)
-                    LockSupport.parkNanos(nanosTimeout);
+                    LockSupport.parkNanos(this, nanosTimeout);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
                 long now = System.nanoTime();

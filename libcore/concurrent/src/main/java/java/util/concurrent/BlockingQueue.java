@@ -42,7 +42,7 @@ import java.util.Queue;
  *    <td>{@link #add add(e)}</td>
  *    <td>{@link #offer offer(e)}</td>
  *    <td>{@link #put put(e)}</td>
- *    <td>{@link #offer offer(e, time, unit)}</td>
+ *    <td>{@link #offer(Object, long, TimeUnit) offer(e, time, unit)}</td>
  *  </tr>
  *  <tr>
  *    <td><b>Remove</b></td>
@@ -156,7 +156,7 @@ public interface BlockingQueue<E> extends Queue<E> {
      * <tt>true</tt> upon success and throwing an
      * <tt>IllegalStateException</tt> if no space is currently available.
      * When using a capacity-restricted queue, it is generally preferable to
-     * use {@link #offer offer}.
+     * use {@link #offer(Object) offer}.
      *
      * @param e the element to add
      * @return <tt>true</tt> (as specified by {@link Collection#add})

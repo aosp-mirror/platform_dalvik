@@ -613,6 +613,24 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
     /**
+     * Creates a new, empty map with the specified initial capacity
+     * and load factor and with the default concurrencyLevel (16).
+     *
+     * @param initialCapacity The implementation performs internal
+     * sizing to accommodate this many elements.
+     * @param loadFactor  the load factor threshold, used to control resizing.
+     * Resizing may be performed when the average number of elements per
+     * bin exceeds this threshold.
+     * @throws IllegalArgumentException if the initial capacity of
+     * elements is negative or the load factor is nonpositive
+     *
+     * @since 1.6
+     */
+    public ConcurrentHashMap(int initialCapacity, float loadFactor) {
+        this(initialCapacity, loadFactor, DEFAULT_CONCURRENCY_LEVEL);
+    }
+
+    /**
      * Creates a new, empty map with the specified initial capacity,
      * and with default load factor (0.75) and concurrencyLevel (16).
      *
@@ -1112,7 +1130,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
      * setValue changes to the underlying map.
      */
     final class WriteThroughEntry
-        extends SimpleEntry<K,V>
+        extends AbstractMap.SimpleEntry<K,V>
     {
         WriteThroughEntry(K k, V v) {
             super(k,v);
@@ -1212,60 +1230,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    /**
-     * This duplicates java.util.AbstractMap.SimpleEntry until this class
-     * is made accessible.
-     */
-    static class SimpleEntry<K,V> implements Entry<K,V> {
-        K key;
-        V value;
-
-        public SimpleEntry(K key, V value) {
-            this.key   = key;
-            this.value = value;
-        }
-
-        public SimpleEntry(Entry<K,V> e) {
-            this.key   = e.getKey();
-            this.value = e.getValue();
-        }
-
-        public K getKey() {
-            return key;
-        }
-
-        public V getValue() {
-            return value;
-        }
-
-        public V setValue(V value) {
-            V oldValue = this.value;
-            this.value = value;
-            return oldValue;
-        }
-
-        public boolean equals(Object o) {
-            if (!(o instanceof Map.Entry))
-                return false;
-            Map.Entry e = (Map.Entry)o;
-            return eq(key, e.getKey()) && eq(value, e.getValue());
-        }
-
-        public int hashCode() {
-            return ((key   == null)   ? 0 :   key.hashCode()) ^
-                    ((value == null)   ? 0 : value.hashCode());
-        }
-
-        public String toString() {
-            return key + "=" + value;
-        }
-
-        static boolean eq(Object o1, Object o2) {
-            return (o1 == null ? o2 == null : o1.equals(o2));
-        }
-    }
-
-   /* ---------------- Serialization Support -------------- */
+    /* ---------------- Serialization Support -------------- */
 
     /**
      * Save the state of the <tt>ConcurrentHashMap</tt> instance to a

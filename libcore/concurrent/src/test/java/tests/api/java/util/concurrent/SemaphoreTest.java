@@ -2,15 +2,16 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
 public class SemaphoreTest extends JSR166TestCase {
@@ -23,10 +24,10 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     static class PublicSemaphore extends Semaphore {
         PublicSemaphore(int p, boolean f) { super(p, f); }
-        public Collection<Thread> getQueuedThreads() { 
-            return super.getQueuedThreads(); 
+        public Collection<Thread> getQueuedThreads() {
+            return super.getQueuedThreads();
         }
-        public void reducePermits(int p) { 
+        public void reducePermits(int p) {
             super.reducePermits(p);
         }
     }
@@ -34,29 +35,26 @@ public class SemaphoreTest extends JSR166TestCase {
     /**
      * A runnable calling acquire
      */
-    class InterruptibleLockRunnable implements Runnable {
+    class InterruptibleLockRunnable extends CheckedRunnable {
         final Semaphore lock;
         InterruptibleLockRunnable(Semaphore l) { lock = l; }
-        public void run() {
+        public void realRun() {
             try {
                 lock.acquire();
-            } catch(InterruptedException success){}
+            }
+            catch (InterruptedException ignored) {}
         }
     }
 
 
     /**
-     * A runnable calling acquire that expects to be
-     * interrupted
+     * A runnable calling acquire that expects to be interrupted
      */
-    class InterruptedLockRunnable implements Runnable {
+    class InterruptedLockRunnable extends CheckedInterruptedRunnable {
         final Semaphore lock;
         InterruptedLockRunnable(Semaphore l) { lock = l; }
-        public void run() {
-            try {
-                lock.acquire();
-                threadShouldThrow();
-            } catch(InterruptedException success){}
+        public void realRun() throws InterruptedException {
+            lock.acquire();
         }
     }
 
@@ -64,30 +62,24 @@ public class SemaphoreTest extends JSR166TestCase {
      * Zero, negative, and positive initial values are allowed in constructor
      */
     public void testConstructor() {
-        Semaphore s0 = new Semaphore(0, false);
-        assertEquals(0, s0.availablePermits());
-        assertFalse(s0.isFair());
-        Semaphore s1 = new Semaphore(-1, false);
-        assertEquals(-1, s1.availablePermits());
-        assertFalse(s1.isFair());
-        Semaphore s2 = new Semaphore(-1, false);
-        assertEquals(-1, s2.availablePermits());
-        assertFalse(s2.isFair());
+        for (int permits : new int[] { -1, 0, 1 }) {
+            for (boolean fair : new boolean[] { false, true }) {
+                Semaphore s = new Semaphore(permits, fair);
+                assertEquals(permits, s.availablePermits());
+                assertEquals(fair, s.isFair());
+            }
+        }
     }
 
     /**
      * Constructor without fairness argument behaves as nonfair
      */
     public void testConstructor2() {
-        Semaphore s0 = new Semaphore(0);
-        assertEquals(0, s0.availablePermits());
-        assertFalse(s0.isFair());
-        Semaphore s1 = new Semaphore(-1);
-        assertEquals(-1, s1.availablePermits());
-        assertFalse(s1.isFair());
-        Semaphore s2 = new Semaphore(-1);
-        assertEquals(-1, s2.availablePermits());
-        assertFalse(s2.isFair());
+        for (int permits : new int[] { -1, 0, 1 }) {
+            Semaphore s = new Semaphore(permits);
+            assertEquals(permits, s.availablePermits());
+            assertFalse(s.isFair());
+        }
     }
 
     /**
@@ -105,296 +97,245 @@ public class SemaphoreTest extends JSR166TestCase {
     /**
      * Acquire and release of semaphore succeed if initially available
      */
-    public void testAcquireReleaseInSameThread() {
+    public void testAcquireReleaseInSameThread()
+        throws InterruptedException {
         Semaphore s = new Semaphore(1, false);
-        try {
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            assertEquals(1, s.availablePermits());
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        assertEquals(1, s.availablePermits());
     }
 
     /**
      * Uninterruptible acquire and release of semaphore succeed if
      * initially available
      */
-    public void testAcquireUninterruptiblyReleaseInSameThread() {
+    public void testAcquireUninterruptiblyReleaseInSameThread()
+        throws InterruptedException {
         Semaphore s = new Semaphore(1, false);
-        try {
-            s.acquireUninterruptibly();
-            s.release();
-            s.acquireUninterruptibly();
-            s.release();
-            s.acquireUninterruptibly();
-            s.release();
-            s.acquireUninterruptibly();
-            s.release();
-            s.acquireUninterruptibly();
-            s.release();
-            assertEquals(1, s.availablePermits());
-        } finally {
-        }
+        s.acquireUninterruptibly();
+        s.release();
+        s.acquireUninterruptibly();
+        s.release();
+        s.acquireUninterruptibly();
+        s.release();
+        s.acquireUninterruptibly();
+        s.release();
+        s.acquireUninterruptibly();
+        s.release();
+        assertEquals(1, s.availablePermits());
     }
 
     /**
      * Timed Acquire and release of semaphore succeed if
      * initially available
      */
-    public void testTimedAcquireReleaseInSameThread() {
+    public void testTimedAcquireReleaseInSameThread()
+        throws InterruptedException {
         Semaphore s = new Semaphore(1, false);
-        try {
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertEquals(1, s.availablePermits());
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertEquals(1, s.availablePermits());
     }
 
     /**
      * A release in one thread enables an acquire in another thread
      */
-    public void testAcquireReleaseInDifferentThreads() {
+    public void testAcquireReleaseInDifferentThreads()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, false);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.acquire();
-                        s.release();
-                        s.release();
-                        s.acquire();
-                    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            s.release();
-            s.release();
-            s.acquire();
-            s.acquire();
-            s.release();
-            t.join();
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquire();
+                s.release();
+                s.release();
+                s.acquire();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        s.release();
+        s.release();
+        s.acquire();
+        s.acquire();
+        s.release();
+        t.join();
     }
 
     /**
      * A release in one thread enables an uninterruptible acquire in another thread
      */
-    public void testUninterruptibleAcquireReleaseInDifferentThreads() {
+    public void testUninterruptibleAcquireReleaseInDifferentThreads()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, false);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    s.acquireUninterruptibly();
-                    s.release();
-                    s.release();
-                    s.acquireUninterruptibly();
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            s.release();
-            s.release();
-            s.acquireUninterruptibly();
-            s.acquireUninterruptibly();
-            s.release();
-            t.join();
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquireUninterruptibly();
+                s.release();
+                s.release();
+                s.acquireUninterruptibly();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        s.release();
+        s.release();
+        s.acquireUninterruptibly();
+        s.acquireUninterruptibly();
+        s.release();
+        t.join();
     }
 
 
     /**
      *  A release in one thread enables a timed acquire in another thread
      */
-    public void testTimedAcquireReleaseInDifferentThreads() {
+    public void testTimedAcquireReleaseInDifferentThreads()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(1, false);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.release();
-                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        s.release();
-                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.release();
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                s.release();
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+            }});
 
-                    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            s.release();
-            t.join();
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        t.start();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        s.release();
+        t.join();
     }
 
     /**
      * A waiting acquire blocks interruptibly
      */
-    public void testAcquire_InterruptedException() {
+    public void testAcquire_InterruptedException()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, false);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.acquire();
-                        threadShouldThrow();
-                    } catch(InterruptedException success){}
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquire();
+            }});
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
-    
+
     /**
      *  A waiting timed acquire blocks interruptibly
      */
-    public void testTryAcquire_InterruptedException() {
+    public void testTryAcquire_InterruptedException()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, false);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.tryAcquire(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch(InterruptedException success){
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.tryAcquire(MEDIUM_DELAY_MS, MILLISECONDS);
+            }});
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * hasQueuedThreads reports whether there are waiting threads
      */
-    public void testHasQueuedThreads() { 
+    public void testHasQueuedThreads() throws InterruptedException {
         final Semaphore lock = new Semaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertFalse(lock.hasQueuedThreads());
-            lock.acquireUninterruptibly();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            lock.release();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(lock.hasQueuedThreads());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
-    } 
+        assertFalse(lock.hasQueuedThreads());
+        lock.acquireUninterruptibly();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        lock.release();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(lock.hasQueuedThreads());
+        t1.join();
+        t2.join();
+    }
 
     /**
      * getQueueLength reports number of waiting threads
      */
-    public void testGetQueueLength() { 
+    public void testGetQueueLength() throws InterruptedException {
         final Semaphore lock = new Semaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertEquals(0, lock.getQueueLength());
-            lock.acquireUninterruptibly();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(2, lock.getQueueLength());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            lock.release();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(0, lock.getQueueLength());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
-    } 
+        assertEquals(0, lock.getQueueLength());
+        lock.acquireUninterruptibly();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(2, lock.getQueueLength());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        lock.release();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(0, lock.getQueueLength());
+        t1.join();
+        t2.join();
+    }
 
     /**
      * getQueuedThreads includes waiting threads
      */
-    public void testGetQueuedThreads() { 
+    public void testGetQueuedThreads() throws InterruptedException {
         final PublicSemaphore lock = new PublicSemaphore(1, false);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            lock.acquireUninterruptibly();
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().contains(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().contains(t1));
-            assertTrue(lock.getQueuedThreads().contains(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(lock.getQueuedThreads().contains(t1));
-            assertTrue(lock.getQueuedThreads().contains(t2));
-            lock.release();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
-    } 
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        lock.acquireUninterruptibly();
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().contains(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().contains(t1));
+        assertTrue(lock.getQueuedThreads().contains(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(lock.getQueuedThreads().contains(t1));
+        assertTrue(lock.getQueuedThreads().contains(t2));
+        lock.release();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        t1.join();
+        t2.join();
+    }
 
     /**
      * drainPermits reports and removes given number of permits
@@ -425,26 +366,22 @@ public class SemaphoreTest extends JSR166TestCase {
     /**
      * a deserialized serialized semaphore has same number of permits
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         Semaphore l = new Semaphore(3, false);
-        try {
-            l.acquire();
-            l.release();
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        l.acquire();
+        l.release();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            Semaphore r = (Semaphore) in.readObject();
-            assertEquals(3, r.availablePermits());
-            assertFalse(r.isFair());
-            r.acquire();
-            r.release();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        Semaphore r = (Semaphore) in.readObject();
+        assertEquals(3, r.availablePermits());
+        assertFalse(r.isFair());
+        r.acquire();
+        r.release();
     }
 
 
@@ -487,45 +424,39 @@ public class SemaphoreTest extends JSR166TestCase {
     /**
      * Acquire and release of semaphore succeed if initially available
      */
-    public void testAcquireReleaseInSameThread_fair() {
+    public void testAcquireReleaseInSameThread_fair()
+        throws InterruptedException {
         Semaphore s = new Semaphore(1, true);
-        try {
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            s.acquire();
-            s.release();
-            assertEquals(1, s.availablePermits());
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        s.acquire();
+        s.release();
+        assertEquals(1, s.availablePermits());
     }
 
     /**
      * Acquire(n) and release(n) of semaphore succeed if initially available
      */
-    public void testAcquireReleaseNInSameThread_fair() {
+    public void testAcquireReleaseNInSameThread_fair()
+        throws InterruptedException {
         Semaphore s = new Semaphore(1, true);
-        try {
-            s.release(1);
-            s.acquire(1);
-            s.release(2);
-            s.acquire(2);
-            s.release(3);
-            s.acquire(3);
-            s.release(4);
-            s.acquire(4);
-            s.release(5);
-            s.acquire(5);
-            assertEquals(1, s.availablePermits());
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        s.release(1);
+        s.acquire(1);
+        s.release(2);
+        s.acquire(2);
+        s.release(3);
+        s.acquire(3);
+        s.release(4);
+        s.acquire(4);
+        s.release(5);
+        s.acquire(5);
+        assertEquals(1, s.availablePermits());
     }
 
     /**
@@ -533,369 +464,287 @@ public class SemaphoreTest extends JSR166TestCase {
      */
     public void testAcquireUninterruptiblyReleaseNInSameThread_fair() {
         Semaphore s = new Semaphore(1, true);
-        try {
-            s.release(1);
-            s.acquireUninterruptibly(1);
-            s.release(2);
-            s.acquireUninterruptibly(2);
-            s.release(3);
-            s.acquireUninterruptibly(3);
-            s.release(4);
-            s.acquireUninterruptibly(4);
-            s.release(5);
-            s.acquireUninterruptibly(5);
-            assertEquals(1, s.availablePermits());
-        } finally {
-        }
+        s.release(1);
+        s.acquireUninterruptibly(1);
+        s.release(2);
+        s.acquireUninterruptibly(2);
+        s.release(3);
+        s.acquireUninterruptibly(3);
+        s.release(4);
+        s.acquireUninterruptibly(4);
+        s.release(5);
+        s.acquireUninterruptibly(5);
+        assertEquals(1, s.availablePermits());
     }
 
     /**
      * release(n) in one thread enables timed acquire(n) in another thread
      */
-    public void testTimedAcquireReleaseNInSameThread_fair() {
+    public void testTimedAcquireReleaseNInSameThread_fair()
+        throws InterruptedException {
         Semaphore s = new Semaphore(1, true);
-        try {
-            s.release(1);
-            assertTrue(s.tryAcquire(1, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release(2);
-            assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release(3);
-            assertTrue(s.tryAcquire(3, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release(4);
-            assertTrue(s.tryAcquire(4, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release(5);
-            assertTrue(s.tryAcquire(5, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            assertEquals(1, s.availablePermits());
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        s.release(1);
+        assertTrue(s.tryAcquire(1, SHORT_DELAY_MS, MILLISECONDS));
+        s.release(2);
+        assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
+        s.release(3);
+        assertTrue(s.tryAcquire(3, SHORT_DELAY_MS, MILLISECONDS));
+        s.release(4);
+        assertTrue(s.tryAcquire(4, SHORT_DELAY_MS, MILLISECONDS));
+        s.release(5);
+        assertTrue(s.tryAcquire(5, SHORT_DELAY_MS, MILLISECONDS));
+        assertEquals(1, s.availablePermits());
     }
 
     /**
      * release in one thread enables timed acquire in another thread
      */
-    public void testTimedAcquireReleaseInSameThread_fair() {
+    public void testTimedAcquireReleaseInSameThread_fair()
+        throws InterruptedException {
         Semaphore s = new Semaphore(1, true);
-        try {
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release();
-            assertEquals(1, s.availablePermits());
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+        s.release();
+        assertEquals(1, s.availablePermits());
     }
 
     /**
      * A release in one thread enables an acquire in another thread
      */
-    public void testAcquireReleaseInDifferentThreads_fair() {
+    public void testAcquireReleaseInDifferentThreads_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.acquire();
-                        s.acquire();
-                        s.acquire();
-                        s.acquire();
-                    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            s.release();
-            s.release();
-            s.release();
-            s.release();
-            s.release();
-            s.release();
-            t.join();
-            assertEquals(2, s.availablePermits());
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquire();
+                s.acquire();
+                s.acquire();
+                s.acquire();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        s.release();
+        s.release();
+        s.release();
+        s.release();
+        s.release();
+        s.release();
+        t.join();
+        assertEquals(2, s.availablePermits());
     }
 
     /**
      * release(n) in one thread enables acquire(n) in another thread
      */
-    public void testAcquireReleaseNInDifferentThreads_fair() {
+    public void testAcquireReleaseNInDifferentThreads_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.acquire();
-                        s.release(2);
-                        s.acquire();
-                    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            s.release(2);
-            s.acquire(2);
-            s.release(1);
-            t.join();
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquire();
+                s.release(2);
+                s.acquire();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        s.release(2);
+        s.acquire(2);
+        s.release(1);
+        t.join();
     }
 
     /**
      * release(n) in one thread enables acquire(n) in another thread
      */
-    public void testAcquireReleaseNInDifferentThreads_fair2() {
+    public void testAcquireReleaseNInDifferentThreads_fair2()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.acquire(2);
-                        s.acquire(2);
-                        s.release(4);
-                    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            s.release(6);
-            s.acquire(2);
-            s.acquire(2);
-            s.release(2);
-            t.join();
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquire(2);
+                s.acquire(2);
+                s.release(4);
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        s.release(6);
+        s.acquire(2);
+        s.acquire(2);
+        s.release(2);
+        t.join();
     }
-
-
-
 
 
     /**
      * release in one thread enables timed acquire in another thread
      */
-    public void testTimedAcquireReleaseInDifferentThreads_fair() {
+    public void testTimedAcquireReleaseInDifferentThreads_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(1, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        threadAssertTrue(s.tryAcquire(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+                assertTrue(s.tryAcquire(SHORT_DELAY_MS, MILLISECONDS));
+            }});
 
-                    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-                }
-            });
         t.start();
-        try {
-            s.release();
-            s.release();
-            s.release();
-            s.release();
-            s.release();
-            t.join();
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        s.release();
+        s.release();
+        s.release();
+        s.release();
+        s.release();
+        t.join();
     }
 
     /**
      * release(n) in one thread enables timed acquire(n) in another thread
      */
-    public void testTimedAcquireReleaseNInDifferentThreads_fair() {
+    public void testTimedAcquireReleaseNInDifferentThreads_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(2, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        s.release(2);
-                        threadAssertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        s.release(2);
-                    } catch(InterruptedException ie){
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
+                s.release(2);
+                assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
+                s.release(2);
+            }});
+
         t.start();
-        try {
-            assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release(2);
-            assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            s.release(2);
-            t.join();
-        } catch( InterruptedException e){
-            unexpectedException();
-        }
+        assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
+        s.release(2);
+        assertTrue(s.tryAcquire(2, SHORT_DELAY_MS, MILLISECONDS));
+        s.release(2);
+        t.join();
     }
 
     /**
      * A waiting acquire blocks interruptibly
      */
-    public void testAcquire_InterruptedException_fair() {
+    public void testAcquire_InterruptedException_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.acquire();
-                        threadShouldThrow();
-                    } catch(InterruptedException success){}
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquire();
+            }});
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * A waiting acquire(n) blocks interruptibly
      */
-    public void testAcquireN_InterruptedException_fair() {
+    public void testAcquireN_InterruptedException_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(2, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.acquire(3);
-                        threadShouldThrow();
-                    } catch(InterruptedException success){}
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.acquire(3);
+            }});
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
-    
+
     /**
      *  A waiting tryAcquire blocks interruptibly
      */
-    public void testTryAcquire_InterruptedException_fair() {
+    public void testTryAcquire_InterruptedException_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(0, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.tryAcquire(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch(InterruptedException success){
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.tryAcquire(MEDIUM_DELAY_MS, MILLISECONDS);
+            }});
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      *  A waiting tryAcquire(n) blocks interruptibly
      */
-    public void testTryAcquireN_InterruptedException_fair() {
+    public void testTryAcquireN_InterruptedException_fair()
+        throws InterruptedException {
         final Semaphore s = new Semaphore(1, true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        s.tryAcquire(4, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch(InterruptedException success){
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                s.tryAcquire(4, MEDIUM_DELAY_MS, MILLISECONDS);
+            }});
+
         t.start();
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * getQueueLength reports number of waiting threads
      */
-    public void testGetQueueLength_fair() { 
+    public void testGetQueueLength_fair() throws InterruptedException {
         final Semaphore lock = new Semaphore(1, true);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertEquals(0, lock.getQueueLength());
-            lock.acquireUninterruptibly();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(2, lock.getQueueLength());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            lock.release();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(0, lock.getQueueLength());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
-    } 
+        assertEquals(0, lock.getQueueLength());
+        lock.acquireUninterruptibly();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(2, lock.getQueueLength());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        lock.release();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(0, lock.getQueueLength());
+        t1.join();
+        t2.join();
+    }
 
 
     /**
      * a deserialized serialized semaphore has same number of permits
      */
-    public void testSerialization_fair() {
+    public void testSerialization_fair() throws Exception {
         Semaphore l = new Semaphore(3, true);
 
-        try {
-            l.acquire();
-            l.release();
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        l.acquire();
+        l.release();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            Semaphore r = (Semaphore) in.readObject();
-            assertEquals(3, r.availablePermits());
-            assertTrue(r.isFair());
-            r.acquire();
-            r.release();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        Semaphore r = (Semaphore) in.readObject();
+        assertEquals(3, r.availablePermits());
+        assertTrue(r.isFair());
+        r.acquire();
+        r.release();
     }
 
     /**

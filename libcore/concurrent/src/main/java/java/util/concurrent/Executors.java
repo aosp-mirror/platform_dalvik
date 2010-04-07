@@ -13,6 +13,7 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedActionException;
 import java.security.AccessControlException;
+// import sun.security.util.SecurityConstants; // android-removed
 
 /**
  * Factory and utility methods for {@link Executor}, {@link
@@ -359,7 +360,7 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(final PrivilegedAction action) {
+    public static Callable<Object> callable(final PrivilegedAction<?> action) {
         if (action == null)
             throw new NullPointerException();
         return new Callable<Object>() {
@@ -374,7 +375,7 @@ public class Executors {
      * @return a callable object
      * @throws NullPointerException if action null
      */
-    public static Callable<Object> callable(final PrivilegedExceptionAction action) {
+    public static Callable<Object> callable(final PrivilegedExceptionAction<?> action) {
         if (action == null)
             throw new NullPointerException();
         return new Callable<Object>() {
@@ -484,7 +485,7 @@ public class Executors {
                 // Calls to getContextClassLoader from this class
                 // never trigger a security check, but we check
                 // whether our callers have this permission anyways.
-                sm.checkPermission(new RuntimePermission("getContextClassLoader"));
+                sm.checkPermission(new RuntimePermission("getContextClassLoader")); // android-changed
 
                 // Whether setContextClassLoader turns out to be necessary
                 // or not, we fail fast if permission is not available.
@@ -565,7 +566,7 @@ public class Executors {
                 // Calls to getContextClassLoader from this class
                 // never trigger a security check, but we check
                 // whether our callers have this permission anyways.
-                sm.checkPermission(new RuntimePermission("getContextClassLoader"));
+                sm.checkPermission(new RuntimePermission("getContextClassLoader")); // android-changed
 
                 // Fail fast
                 sm.checkPermission(new RuntimePermission("setContextClassLoader"));
@@ -614,20 +615,20 @@ public class Executors {
         public <T> Future<T> submit(Runnable task, T result) {
             return e.submit(task, result);
         }
-        public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
             throws InterruptedException {
             return e.invokeAll(tasks);
         }
-        public <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks,
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks,
                                              long timeout, TimeUnit unit)
             throws InterruptedException {
             return e.invokeAll(tasks, timeout, unit);
         }
-        public <T> T invokeAny(Collection<Callable<T>> tasks)
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
             throws InterruptedException, ExecutionException {
             return e.invokeAny(tasks);
         }
-        public <T> T invokeAny(Collection<Callable<T>> tasks,
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks,
                                long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
             return e.invokeAny(tasks, timeout, unit);

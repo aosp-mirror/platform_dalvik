@@ -421,6 +421,15 @@ public interface Condition {
      * <p>If any threads are waiting on this condition then one
      * is selected for waking up. That thread must then re-acquire the
      * lock before returning from {@code await}.
+     *
+     * <p><b>Implementation Considerations</b>
+     *
+     * <p>The current thread is assumed to hold the lock associated
+     * with this {@code Condition} when this method is called.  It is
+     * up to the implementation to determine if this is the case and
+     * if not, how to respond. Typically, an exception will be thrown
+     * (such as {@link IllegalMonitorStateException}) and the
+     * implementation must document that fact.
      */
     void signal();
 
@@ -430,6 +439,15 @@ public interface Condition {
      * <p>If any threads are waiting on this condition then they are
      * all woken up. Each thread must re-acquire the lock before it can
      * return from {@code await}.
+     *
+     * <p><b>Implementation Considerations</b>
+     *
+     * <p>The current thread is assumed to hold the lock associated
+     * with this {@code Condition} when this method is called.  It is
+     * up to the implementation to determine if this is the case and
+     * if not, how to respond. Typically, an exception will be thrown
+     * (such as {@link IllegalMonitorStateException}) and the
+     * implementation must document that fact.
      */
     void signalAll();
 }

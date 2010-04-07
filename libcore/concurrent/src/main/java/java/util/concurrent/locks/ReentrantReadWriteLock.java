@@ -1161,6 +1161,32 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
                                        "[Locked by thread " + o.getName() + "]");
         }
 
+        /**
+         * Queries if this write lock is held by the current thread.
+         * Identical in effect to {@link
+         * ReentrantReadWriteLock#isWriteLockedByCurrentThread}.
+         *
+         * @return {@code true} if the current thread holds this lock and
+         *         {@code false} otherwise
+         * @since 1.6
+         */
+        public boolean isHeldByCurrentThread() {
+            return sync.isHeldExclusively();
+        }
+
+        /**
+         * Queries the number of holds on this write lock by the current
+         * thread.  A thread has a hold on a lock for each lock action
+         * that is not matched by an unlock action.  Identical in effect
+         * to {@link ReentrantReadWriteLock#getWriteHoldCount}.
+         *
+         * @return the number of holds on this lock by the current thread,
+         *         or zero if this lock is not held by the current thread
+         * @since 1.6
+         */
+        public int getHoldCount() {
+            return sync.getWriteHoldCount();
+        }
     }
 
     // Instrumentation and status
@@ -1233,6 +1259,19 @@ public class ReentrantReadWriteLock implements ReadWriteLock, java.io.Serializab
      */
     public int getWriteHoldCount() {
         return sync.getWriteHoldCount();
+    }
+
+    /**
+     * Queries the number of reentrant read holds on this lock by the
+     * current thread.  A reader thread has a hold on a lock for
+     * each lock action that is not matched by an unlock action.
+     *
+     * @return the number of holds on the read lock by the current thread,
+     *         or zero if the read lock is not held by the current thread
+     * @since 1.6
+     */
+    public int getReadHoldCount() {
+        return sync.getReadHoldCount();
     }
 
     /**

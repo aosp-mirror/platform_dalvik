@@ -24,9 +24,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     private static final long serialVersionUID = 6214790243416807050L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
-    // BEGIN android-changed
-    private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
-    // END android-changed
+    private static final Unsafe unsafe = UnsafeAccess.THE_ONE; // android-changed
     private static final long valueOffset;
 
     static {
@@ -69,6 +67,16 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      */
     public final void set(int newValue) {
         value = newValue;
+    }
+
+    /**
+     * Eventually sets to the given value.
+     *
+     * @param newValue the new value
+     * @since 1.6
+     */
+    public final void lazySet(int newValue) {
+        unsafe.putOrderedInt(this, valueOffset, newValue);
     }
 
     /**

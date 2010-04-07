@@ -92,9 +92,12 @@ import java.util.*;
  * threads will be constructed. This parameter can also be changed
  * dynamically using method {@link #setKeepAliveTime}. Using a value
  * of {@code Long.MAX_VALUE} {@link TimeUnit#NANOSECONDS} effectively
- * disables idle threads from ever terminating prior to shut down. The
- * keep-alive policy applies only when there are more than
- * corePoolSizeThreads.</dd>
+ * disables idle threads from ever terminating prior to shut down. By
+ * default, the keep-alive policy applies only when there are more
+ * than corePoolSizeThreads. But method {@link
+ * #allowCoreThreadTimeOut(boolean)} can be used to apply this
+ * time-out policy to core threads as well, so long as the
+ * keepAliveTime value is non-zero. </dd>
  *
  * <dt>Queuing</dt>
  *
@@ -228,7 +231,8 @@ import java.util.*;
  * you would like to ensure that unreferenced pools are reclaimed even
  * if users forget to call {@link #shutdown}, then you must arrange
  * that unused threads eventually die, by setting appropriate
- * keep-alive times using a lower bound of zero core threads.  </dd>
+ * keep-alive times, using a lower bound of zero core threads and/or
+ * setting {@link #allowCoreThreadTimeOut(boolean)}.  </dd>
  *
  * </dl>
  *
@@ -473,13 +477,22 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * Timeout in nanoseconds for idle threads waiting for work.
      * Threads use this timeout when there are more than corePoolSize
-     * present. Otherwise they wait forever for new work.
+     * present or if allowCoreThreadTimeOut. Otherwise they wait
+     * forever for new work.
      */
     private volatile long keepAliveTime;
 
     /**
+     * If false (default), core threads stay alive even when idle.
+     * If true, core threads use keepAliveTime to time out waiting
+     * for work.
+     */
+    private volatile boolean allowCoreThreadTimeOut;
+
+    /**
      * Core pool size is the minimum number of workers to keep alive
-     * (and not allow to time out etc).
+     * (and not allow to time out etc) unless allowCoreThreadTimeOut
+     * is set, in which case the minimum is zero.
      */
     private volatile int corePoolSize;
 
@@ -941,7 +954,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         int c = ctl.get();
         if (runStateLessThan(c, STOP)) {
             if (!completedAbruptly) {
-                int min = corePoolSize;
+                int min = allowCoreThreadTimeOut ? 0 : corePoolSize;
                 if (min == 0 && ! workQueue.isEmpty())
                     min = 1;
                 if (workerCountOf(c) >= min)
@@ -961,7 +974,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * 3. The pool is shutdown and the queue is empty.
      * 4. This worker timed out waiting for a task, and timed-out
      *    workers are subject to termination (that is,
-     *    {@code workerCount > corePoolSize})
+     *    {@code allowCoreThreadTimeOut || workerCount > corePoolSize})
      *    both before and after the timed wait.
      *
      * @return task, or null if the worker must exit, in which case
@@ -985,7 +998,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
             for (;;) {
                 int wc = workerCountOf(c);
-                timed = wc > corePoolSize;
+                timed = allowCoreThreadTimeOut || wc > corePoolSize;
 
                 if (wc <= maximumPoolSize && ! (timedOut && timed))
                     break;
@@ -1096,7 +1109,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * methods instead of this general purpose constructor.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param maximumPoolSize the maximum number of threads to allow in the
      *        pool
      * @param keepAliveTime when the number of threads is greater than
@@ -1127,7 +1140,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * parameters and default rejected execution handler.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param maximumPoolSize the maximum number of threads to allow in the
      *        pool
      * @param keepAliveTime when the number of threads is greater than
@@ -1162,7 +1175,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * parameters and default thread factory.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param maximumPoolSize the maximum number of threads to allow in the
      *        pool
      * @param keepAliveTime when the number of threads is greater than
@@ -1197,7 +1210,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param maximumPoolSize the maximum number of threads to allow in the
      *        pool
      * @param keepAliveTime when the number of threads is greater than
@@ -1518,6 +1531,50 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     }
 
     /**
+     * Returns true if this pool allows core threads to time out and
+     * terminate if no tasks arrive within the keepAlive time, being
+     * replaced if needed when new tasks arrive. When true, the same
+     * keep-alive policy applying to non-core threads applies also to
+     * core threads. When false (the default), core threads are never
+     * terminated due to lack of incoming tasks.
+     *
+     * @return {@code true} if core threads are allowed to time out,
+     *         else {@code false}
+     *
+     * @since 1.6
+     */
+    public boolean allowsCoreThreadTimeOut() {
+        return allowCoreThreadTimeOut;
+    }
+
+    /**
+     * Sets the policy governing whether core threads may time out and
+     * terminate if no tasks arrive within the keep-alive time, being
+     * replaced if needed when new tasks arrive. When false, core
+     * threads are never terminated due to lack of incoming
+     * tasks. When true, the same keep-alive policy applying to
+     * non-core threads applies also to core threads. To avoid
+     * continual thread replacement, the keep-alive time must be
+     * greater than zero when setting {@code true}. This method
+     * should in general be called before the pool is actively used.
+     *
+     * @param value {@code true} if should time out, else {@code false}
+     * @throws IllegalArgumentException if value is {@code true}
+     *         and the current keep-alive time is not greater than zero
+     *
+     * @since 1.6
+     */
+    public void allowCoreThreadTimeOut(boolean value) {
+        if (value && keepAliveTime <= 0)
+            throw new IllegalArgumentException("Core threads must have nonzero keep alive times");
+        if (value != allowCoreThreadTimeOut) {
+            allowCoreThreadTimeOut = value;
+            if (value)
+                interruptIdleWorkers();
+        }
+    }
+
+    /**
      * Sets the maximum allowed number of threads. This overrides any
      * value set in the constructor. If the new value is smaller than
      * the current value, excess existing threads will be
@@ -1564,6 +1621,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     public void setKeepAliveTime(long time, TimeUnit unit) {
         if (time < 0)
             throw new IllegalArgumentException();
+        if (time == 0 && allowsCoreThreadTimeOut())
+            throw new IllegalArgumentException("Core threads must have nonzero keep alive times");
         long keepAliveTime = unit.toNanos(time);
         long delta = keepAliveTime - this.keepAliveTime;
         this.keepAliveTime = keepAliveTime;
