@@ -353,6 +353,10 @@ public class SSLSocketTest extends TestCase {
                     assertNotNull(socket);
                     assertSame(client, socket);
 
+                    synchronized (handshakeCompletedListenerCalled) {
+                        handshakeCompletedListenerCalled[0] = true;
+                        handshakeCompletedListenerCalled.notify();
+                    }
                     handshakeCompletedListenerCalled[0] = true;
                 } catch (RuntimeException e) {
                     throw e;
@@ -362,8 +366,12 @@ public class SSLSocketTest extends TestCase {
             }
         });
         client.startHandshake();
-        assertTrue(handshakeCompletedListenerCalled[0]);
         thread.join();
+        synchronized (handshakeCompletedListenerCalled) {
+            while (!handshakeCompletedListenerCalled[0]) {
+                handshakeCompletedListenerCalled.wait();
+            }
+        }
     }
 
     /**

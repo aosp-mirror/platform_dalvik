@@ -44,7 +44,7 @@ public class SSLSessionContextTest extends TestCase {
         byte[] serverId = (byte[]) serverIds.nextElement();
         assertEquals(32, clientId.length);
         assertEquals(32, serverId.length);
-        assertEquals(clientId, serverId);
+        assertTrue(Arrays.equals(clientId, serverId));
     }
 
     @KnownFailure("Should throw NullPointerException on getSession(null)")
@@ -65,8 +65,8 @@ public class SSLSessionContextTest extends TestCase {
         byte[] serverId = (byte[]) server.getIds().nextElement();
         assertNotNull(client.getSession(clientId));
         assertNotNull(server.getSession(serverId));
-        assertEquals(clientId, client.getSession(clientId).getId());
-        assertEquals(serverId, server.getSession(serverId).getId());
+        assertTrue(Arrays.equals(clientId, client.getSession(clientId).getId()));
+        assertTrue(Arrays.equals(serverId, server.getSession(serverId).getId()));
     }
 
     @KnownFailure("Should return 0 for unlimited, not 10 entries")

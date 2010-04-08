@@ -112,7 +112,7 @@ public class SSLSessionTest extends TestCase {
         assertEquals(0, s.invalid.getId().length);
         assertEquals(32, s.server.getId().length);
         assertEquals(32, s.client.getId().length);
-        assertEquals(s.server.getId(), s.client.getId());
+        assertTrue(Arrays.equals(s.server.getId(), s.client.getId()));
     }
 
     public void test_SSLSession_getLastAccessedTime() {
