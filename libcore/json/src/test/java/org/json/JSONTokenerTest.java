@@ -250,6 +250,17 @@ public class JSONTokenerTest extends TestCase {
         assertEquals('E', tokener.nextClean());
     }
 
+    /**
+     * Some applications rely on parsing '#' to lead an end-of-line comment.
+     * http://b/2571423
+     */
+    public void testNextCleanHashComments() throws JSONException {
+        JSONTokener tokener = new JSONTokener("A # B */ /* C */ \nD #");
+        assertEquals('A', tokener.nextClean());
+        assertEquals('D', tokener.nextClean());
+        assertEquals('\0', tokener.nextClean());
+    }
+
     public void testNextCleanCommentsTrailingSingleSlash() throws JSONException {
         JSONTokener tokener = new JSONTokener(" / S /");
         assertEquals('/', tokener.nextClean());

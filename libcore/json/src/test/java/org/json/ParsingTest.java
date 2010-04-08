@@ -131,6 +131,11 @@ public class ParsingTest extends TestCase {
 
     public void testParsingWithCommentsAndWhitespace() throws JSONException {
         assertParsed("baz", "  // foo bar \n baz");
+        assertParsed("baz", "  // foo bar \r baz");
+        assertParsed("baz", "  // foo bar \r\n baz");
+        assertParsed("baz", "  # foo bar \n baz");
+        assertParsed("baz", "  # foo bar \r baz");
+        assertParsed("baz", "  # foo bar \r\n baz");
         assertParsed(5, "  /* foo bar \n baz */ 5");
         assertParsed(5, "  /* foo bar \n baz */ 5 // quux");
         assertParsed(5, "  5   ");
