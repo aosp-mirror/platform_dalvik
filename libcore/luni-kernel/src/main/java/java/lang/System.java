@@ -89,11 +89,6 @@ public final class System {
     private static Properties systemProperties;
 
     /**
-     * The System default SecurityManager.
-     */
-    private static SecurityManager securityManager;
-
-    /**
      * Initialize all the slots in System on first use.
      */
     static {
@@ -496,13 +491,13 @@ public final class System {
     }
 
     /**
-     * Returns the active security manager.
+     * Returns null. Android does not use {@code SecurityManager}. This method
+     * is only provided for source compatibility.
      * 
-     * @return the system security manager object.
-     * @since Android 1.0
+     * @return null
      */
     public static SecurityManager getSecurityManager() {
-        return securityManager;
+        return null;
     }
 
     /**
@@ -603,13 +598,11 @@ public final class System {
     }
 
     /**
-     * <strong>Warning:</strong> security managers do <strong>not</strong>
-     * provide a secure environment for executing untrusted code. Untrusted code
-     * cannot be safely isolated within the Dalvik VM.
+     * Throws {@code UnsupportedOperationException}.
      *
-     * <p>Sets the active security manager. Note that once the security manager
-     * has been set, it can not be changed. Attempts to do that will cause a
-     * security exception.
+     * <p>Security managers do <i>not</i> provide a secure environment for
+     * executing untrusted code and are unsupported on Android. Untrusted code
+     * cannot be safely isolated within the Dalvik VM.
      *
      * @param sm
      *            the new security manager.
@@ -617,28 +610,11 @@ public final class System {
      *             if the security manager has already been set and if its
      *             checkPermission method does not allow to redefine the
      *             security manager.
-     * @since Android 1.0
      */
-    public static void setSecurityManager(final SecurityManager sm) {
-        if (securityManager != null) {
-            securityManager.checkPermission(new java.lang.RuntimePermission("setSecurityManager"));
-        }
-
+    public static void setSecurityManager(SecurityManager sm) {
         if (sm != null) {
-            // before the new manager assumed office, make a pass through
-            // the common operations and let it load needed classes (if any),
-            // to avoid infinite recursion later on
-            try {
-                sm.checkPermission(new SecurityPermission("getProperty.package.access"));
-            } catch (Exception ignore) {
-            }
-            try {
-                sm.checkPackageAccess("java.lang");
-            } catch (Exception ignore) {
-            }
+            throw new UnsupportedOperationException();
         }
-
-        securityManager = sm;
     }
 
     /**
