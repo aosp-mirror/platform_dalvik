@@ -109,9 +109,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      *             If an error occurs closing the entry.
      */
     public void closeEntry() throws IOException {
-        if (cDir == null) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
+        checkClosed();
         if (currentEntry == null) {
             return;
         }
@@ -196,8 +194,9 @@ public class ZipOutputStream extends DeflaterOutputStream implements
      */
     @Override
     public void finish() throws IOException {
+        // TODO: is there a bug here? why not checkClosed?
         if (out == null) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
+            throw new IOException("Stream is closed");
         }
         if (cDir == null) {
             return;
@@ -261,10 +260,7 @@ public class ZipOutputStream extends DeflaterOutputStream implements
                 throw new ZipException(Messages.getString("archive.21")); //$NON-NLS-1$
             }
         }
-        /* [MSG "archive.1E", "Stream is closed"] */
-        if (cDir == null) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
+        checkClosed();
         if (entries.contains(ze.name)) {
             /* [MSG "archive.29", "Entry already exists: {0}"] */
             throw new ZipException(Messages.getString("archive.29", ze.name)); //$NON-NLS-1$
@@ -449,5 +445,11 @@ public class ZipOutputStream extends DeflaterOutputStream implements
             }
         }
         return result;
+    }
+
+    private void checkClosed() throws IOException {
+        if (cDir == null) {
+            throw new IOException("Stream is closed");
+        }
     }
 }

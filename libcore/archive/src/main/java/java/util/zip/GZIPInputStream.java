@@ -159,7 +159,7 @@ public class GZIPInputStream extends InflaterInputStream {
     @Override
     public int read(byte[] buffer, int off, int nbytes) throws IOException {
         if (closed) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
+            throw new IOException("Stream is closed");
         }
         if (eos) {
             return -1;

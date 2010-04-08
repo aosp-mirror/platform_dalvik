@@ -151,12 +151,8 @@ public class InflaterInputStream extends FilterInputStream {
      */
     @Override
     public int read(byte[] buffer, int off, int nbytes) throws IOException {
-        /* archive.1E=Stream is closed */
-        if (closed) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
-
-        if (null == buffer) {
+        checkClosed();
+        if (buffer == null) {
             throw new NullPointerException();
         }
 
@@ -216,9 +212,7 @@ public class InflaterInputStream extends FilterInputStream {
      *             if an {@code IOException} occurs.
      */
     protected void fill() throws IOException {
-        if (closed) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
+        checkClosed();
         // BEGIN android-only
         if (nativeEndBufSize > 0) {
             ZipFile.RAFStream is = (ZipFile.RAFStream)in;
@@ -283,10 +277,7 @@ public class InflaterInputStream extends FilterInputStream {
      */
     @Override
     public int available() throws IOException {
-        if (closed) {
-            // archive.1E=Stream is closed
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
+        checkClosed();
         if (eof) {
             return 0;
         }
@@ -345,4 +336,9 @@ public class InflaterInputStream extends FilterInputStream {
         return false;
     }
 
+    private void checkClosed() throws IOException {
+        if (closed) {
+            throw new IOException("Stream is closed");
+        }
+    }
 }

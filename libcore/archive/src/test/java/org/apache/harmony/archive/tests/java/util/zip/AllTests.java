@@ -25,19 +25,19 @@ import junit.framework.TestSuite;
  */
 public class AllTests {
     public static Test suite() {
-        TestSuite suite = new TestSuite(
-                "Suite org.apache.harmony.archive.tests.java.util.zip");
-        // $JUnit-BEGIN$
+        TestSuite suite = new TestSuite("Suite org.apache.harmony.archive.tests.java.util.zip");
         suite.addTestSuite(Adler32Test.class);
         suite.addTestSuite(CheckedInputStreamTest.class);
         suite.addTestSuite(CheckedOutputStreamTest.class);
         suite.addTestSuite(CRC32Test.class);
         suite.addTestSuite(DataFormatExceptionTest.class);
+        suite.addTestSuite(DeflaterInputStreamTest.class);
         suite.addTestSuite(DeflaterOutputStreamTest.class);
         suite.addTestSuite(DeflaterTest.class);
         suite.addTestSuite(GZIPInputStreamTest.class);
         suite.addTestSuite(GZIPOutputStreamTest.class);
         suite.addTestSuite(InflaterInputStreamTest.class);
+        suite.addTestSuite(InflaterOutputStreamTest.class);
         suite.addTestSuite(InflaterTest.class);
         suite.addTestSuite(ZipEntryTest.class);
         suite.addTestSuite(ZipExceptionTest.class);

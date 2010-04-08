@@ -181,7 +181,7 @@ public class ZipFile implements ZipConstants {
 
     private void checkNotClosed() {
         if (mRaf == null) {
-            throw new IllegalStateException("Zip File closed.");
+            throw new IllegalStateException("Zip file closed");
         }
     }
 
@@ -458,6 +458,12 @@ public class ZipFile implements ZipConstants {
 
         @Override
         public int available() throws IOException {
+            if (closed) {
+                // Our superclass will throw an exception, but there's a jtreg test that
+                // explicitly checks that the InputStream returned from ZipFile.getInputStream
+                // returns 0 even when closed.
+                return 0;
+            }
             return super.available() == 0 ? 0 : (int) (entry.getSize() - bytesRead);
         }
     }

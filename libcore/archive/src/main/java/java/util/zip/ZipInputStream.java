@@ -103,15 +103,13 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
      *             if an {@code IOException} occurs.
      */
     public void closeEntry() throws IOException {
-        if (closed) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
+        checkClosed();
         if (currentEntry == null) {
             return;
         }
         if (currentEntry instanceof java.util.jar.JarEntry) {
             Attributes temp = ((JarEntry) currentEntry).getAttributes();
-            if (temp != null && temp.containsKey("hidden")) { //$NON-NLS-1$
+            if (temp != null && temp.containsKey("hidden")) {
                 return;
             }
         }
@@ -301,9 +299,7 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
      */
     @Override
     public int read(byte[] buffer, int start, int length) throws IOException {
-        if (closed) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
+        checkClosed();
         if (inf.finished() || currentEntry == null) {
             return -1;
         }
@@ -385,9 +381,7 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
     @Override
     public int available() throws IOException {
-        if (closed) {
-            throw new IOException(Messages.getString("archive.1E")); //$NON-NLS-1$
-        }
+        checkClosed();
         // The InflaterInputStream contract says we must only return 0 or 1.
         return (currentEntry == null || inRead < currentEntry.size) ? 1 : 0;
     }
@@ -414,5 +408,11 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
         l |= (buffer[off + 2] & 0xFF) << 16;
         l |= ((long) (buffer[off + 3] & 0xFF)) << 24;
         return l;
+    }
+
+    private void checkClosed() throws IOException {
+        if (closed) {
+            throw new IOException("Stream is closed");
+        }
     }
 }
