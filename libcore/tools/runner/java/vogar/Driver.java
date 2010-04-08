@@ -17,6 +17,7 @@
 package vogar;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -54,6 +55,7 @@ final class Driver implements HostMonitor.Handler {
     private final long timeoutSeconds;
     private int successes = 0;
     private int failures = 0;
+    private List<String> failureNames = new ArrayList<String>();
 
     private Timer actionTimeoutTimer = new Timer("action timeout", true);
 
@@ -188,6 +190,8 @@ final class Driver implements HostMonitor.Handler {
         }
 
         if (failures > 0 || unsupportedActions > 0) {
+            Collections.sort(failureNames);
+            console.summarizeFailures(failureNames);
             logger.info(String.format("Outcomes: %s. Passed: %d, Failed: %d, Skipped: %d",
                     (successes + failures), successes, failures, unsupportedActions));
         } else {
@@ -253,6 +257,7 @@ final class Driver implements HostMonitor.Handler {
             successes++;
         } else {
             failures++;
+            failureNames.add(outcome.getName());
         }
         console.outcome(outcome.getName());
         console.printResult(outcome.getResult(), ok);

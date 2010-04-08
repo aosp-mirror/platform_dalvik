@@ -18,6 +18,7 @@ package vogar;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -133,6 +134,13 @@ public class Console {
 
         currentName = null;
         currentLine = CurrentLine.NEW;
+    }
+
+    public void summarizeFailures(List<String> failureNames) {
+        System.out.println("Failure summary:");
+        for (String failureName : failureNames) {
+            System.out.println(red(failureName));
+        }
     }
 
     /**
