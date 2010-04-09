@@ -41,6 +41,10 @@
  * a function, allows determination of whether execution has
  * completed, and provides a means to cancel execution.
  *
+ * A {@link java.util.concurrent.RunnableFuture} is a {@code Future}
+ * that possesses a {@code run} method that upon execution,
+ * sets its results.
+ *
  * <p>
  *
  * <b>Implementations.</b>
@@ -59,6 +63,13 @@
  * assists in coordinating the processing of groups of
  * asynchronous tasks.
  *
+ * <p>Class {@link java.util.concurrent.ForkJoinPool} provides an
+ * Executor primarily designed for processing instances of {@link
+ * java.util.concurrent.ForkJoinTask} and its subclasses.  These
+ * classes employ a work-stealing scheduler that attains high
+ * throughput for tasks conforming to restrictions that often hold in
+ * computation-intensive parallel processing.
+ *
  * <h2>Queues</h2>
  *
  * The {@link java.util.concurrent.ConcurrentLinkedQueue} class
@@ -76,6 +87,18 @@
  * The different classes cover the most common usage contexts
  * for producer-consumer, messaging, parallel tasking, and
  * related concurrent designs.
+ *
+ * <p> Extended interface {@link java.util.concurrent.TransferQueue},
+ * and implementation {@link java.util.concurrent.LinkedTransferQueue}
+ * introduce a synchronous {@code transfer} method (along with related
+ * features) in which a producer may optionally block awaiting its
+ * consumer.
+ *
+ * <p>The {@link java.util.concurrent.BlockingDeque} interface
+ * extends {@code BlockingQueue} to support both FIFO and LIFO
+ * (stack-based) operations.
+ * Class {@link java.util.concurrent.LinkedBlockingDeque}
+ * provides an implementation.
  *
  * <h2>Timing</h2>
  *
@@ -97,28 +120,45 @@
  *
  * <h2>Synchronizers</h2>
  *
- * Four classes aid common special-purpose synchronization idioms.
- * {@link java.util.concurrent.Semaphore} is a classic concurrency tool.
- * {@link java.util.concurrent.CountDownLatch} is a very simple yet very
- * common utility for blocking until a given number of signals, events,
- * or conditions hold.  A {@link java.util.concurrent.CyclicBarrier} is a
- * resettable multiway synchronization point useful in some styles of
- * parallel programming.  An {@link java.util.concurrent.Exchanger} allows
- * two threads to exchange objects at a rendezvous point, and is useful
- * in several pipeline designs.
+ * Five classes aid common special-purpose synchronization idioms.
+ * <ul>
+ *
+ * <li>{@link java.util.concurrent.Semaphore} is a classic concurrency tool.
+ *
+ * <li>{@link java.util.concurrent.CountDownLatch} is a very simple yet
+ * very common utility for blocking until a given number of signals,
+ * events, or conditions hold.
+ *
+ * <li>A {@link java.util.concurrent.CyclicBarrier} is a resettable
+ * multiway synchronization point useful in some styles of parallel
+ * programming.
+ *
+ * <li>A {@link java.util.concurrent.Phaser} provides
+ * a more flexible form of barrier that may be used to control phased
+ * computation among multiple threads.
+ *
+ * <li>An {@link java.util.concurrent.Exchanger} allows two threads to
+ * exchange objects at a rendezvous point, and is useful in several
+ * pipeline designs.
+ *
+ * </ul>
  *
  * <h2>Concurrent Collections</h2>
  *
  * Besides Queues, this package supplies Collection implementations
  * designed for use in multithreaded contexts:
  * {@link java.util.concurrent.ConcurrentHashMap},
+ * {@link java.util.concurrent.ConcurrentSkipListMap},
+ * {@link java.util.concurrent.ConcurrentSkipListSet},
  * {@link java.util.concurrent.CopyOnWriteArrayList}, and
  * {@link java.util.concurrent.CopyOnWriteArraySet}.
  * When many threads are expected to access a given collection, a
  * {@code ConcurrentHashMap} is normally preferable to a synchronized
- * {@code HashMap}. A {@code CopyOnWriteArrayList} is preferable to a
- * synchronized {@code ArrayList} when the expected number of reads and
- * traversals greatly outnumber the number of updates to a list.
+ * {@code HashMap}, and a {@code ConcurrentSkipListMap} is normally
+ * preferable to a synchronized {@code TreeMap}.
+ * A {@code CopyOnWriteArrayList} is preferable to a synchronized
+ * {@code ArrayList} when the expected number of reads and traversals
+ * greatly outnumber the number of updates to a list.
 
  * <p>The "Concurrent" prefix used with some classes in this package
  * is a shorthand indicating several differences from similar
@@ -216,7 +256,8 @@
  *   in each thread <i>happen-before</i> those subsequent to the
  *   corresponding {@code exchange()} in another thread.
  *
- *   <li>Actions prior to calling {@code CyclicBarrier.await}
+ *   <li>Actions prior to calling {@code CyclicBarrier.await} and
+ *   {@code Phaser.awaitAdvance} (as well as its variants)
  *   <i>happen-before</i> actions performed by the barrier action, and
  *   actions performed by the barrier action <i>happen-before</i> actions
  *   subsequent to a successful return from the corresponding {@code await}

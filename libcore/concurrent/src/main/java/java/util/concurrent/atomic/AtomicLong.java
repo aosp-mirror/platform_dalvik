@@ -24,9 +24,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
     private static final long serialVersionUID = 1927816293512124184L;
 
     // setup to use Unsafe.compareAndSwapLong for updates
-    // BEGIN android-changed
-    private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
-    // END android-changed
+    private static final Unsafe unsafe = UnsafeAccess.THE_ONE; // android-changed
     private static final long valueOffset;
 
     /**
@@ -94,6 +92,16 @@ public class AtomicLong extends Number implements java.io.Serializable {
      */
     public final void set(long newValue) {
         value = newValue;
+    }
+
+    /**
+     * Eventually sets to the given value.
+     *
+     * @param newValue the new value
+     * @since 1.6
+     */
+    public final void lazySet(long newValue) {
+        unsafe.putOrderedLong(this, valueOffset, newValue);
     }
 
     /**

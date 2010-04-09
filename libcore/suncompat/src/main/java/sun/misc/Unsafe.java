@@ -17,11 +17,9 @@
 package sun.misc;
 
 import dalvik.system.VMStack;
-
-import org.apache.harmony.kernel.vm.LangAccess;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import org.apache.harmony.kernel.vm.LangAccess;
 
 /**
  * The package name notwithstanding, this class is the quasi-standard
@@ -106,7 +104,6 @@ public final class Unsafe {
      * Helper for {@link #arrayBaseOffset}, which does all the work,
      * assuming the parameter is deemed valid.
      * 
-     * @param field non-null; the instance field
      * @return the offset to the field
      */
     private static native int arrayBaseOffset0(Class clazz);
@@ -130,7 +127,6 @@ public final class Unsafe {
      * Helper for {@link #arrayIndexScale}, which does all the work,
      * assuming the parameter is deemed valid.
      * 
-     * @param field non-null; the instance field
      * @return the offset to the field
      */
     private static native int arrayIndexScale0(Class clazz);
@@ -258,7 +254,15 @@ public final class Unsafe {
      * @param newValue the value to store 
      */
     public native void putInt(Object obj, long offset, int newValue);
-    
+
+    /**
+     * Lazy set an int field.
+     */
+    public void putOrderedInt(Object obj, long offset, int newValue) {
+        // TODO: this should be an intrinsic that executes a store fence followed by a write
+        putIntVolatile(obj, offset, newValue);
+    }
+
     /**
      * Gets a <code>long</code> field from the given object.
      * 
@@ -278,6 +282,14 @@ public final class Unsafe {
     public native void putLong(Object obj, long offset, long newValue);
 
     /**
+     * Lazy set a long field.
+     */
+    public void putOrderedLong(Object obj, long offset, long newValue) {
+        // TODO: this should be an intrinsic that executes a store fence followed by a write
+        putLongVolatile(obj, offset, newValue);
+    }
+
+    /**
      * Gets an <code>Object</code> field from the given object.
      * 
      * @param obj non-null; object containing the field
@@ -294,6 +306,14 @@ public final class Unsafe {
      * @param newValue the value to store 
      */
     public native void putObject(Object obj, long offset, Object newValue);
+
+    /**
+     * Lazy set an object field.
+     */
+    public void putOrderedObject(Object obj, long offset, Object newValue) {
+        // TODO: this should be an intrinsic that executes a store fence followed by a write
+        putObjectVolatile(obj, offset, newValue);
+    }
 
     /**
      * Parks the calling thread for the specified amount of time,
@@ -333,6 +353,4 @@ public final class Unsafe {
             throw new IllegalArgumentException("valid for Threads only");
         }
     }
-
-    // TODO(danfuzz): Stuff goes here.
 }

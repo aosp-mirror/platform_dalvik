@@ -146,7 +146,6 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         return offer(e);
     }
 
-    // BEGIN android-changed
     /**
      * Inserts the specified element into this priority queue.
      *

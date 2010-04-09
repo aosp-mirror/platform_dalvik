@@ -63,6 +63,14 @@
  *   <li> {@code set} has the memory effects of writing (assigning) a
  * {@code volatile} variable.
  *
+ *   <li> {@code lazySet} has the memory effects of writing (assigning)
+ *   a {@code volatile} variable except that it permits reorderings with
+ *   subsequent (but not previous) memory actions that do not themselves
+ *   impose reordering constraints with ordinary non-{@code volatile}
+ *   writes.  Among other usage contexts, {@code lazySet} may apply when
+ *   nulling out, for the sake of garbage collection, a reference that is
+ *   never accessed again.
+ *
  *   <li>{@code weakCompareAndSet} atomically reads and conditionally
  *   writes a variable but does <em>not</em>
  *   create any happens-before orderings, so provides no guarantees

@@ -2,15 +2,16 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.*;
 import java.io.*;
 
@@ -22,13 +23,11 @@ public class ReentrantLockTest extends JSR166TestCase {
     /**
      * A runnable calling lockInterruptibly
      */
-    class InterruptibleLockRunnable implements Runnable {
+    class InterruptibleLockRunnable extends CheckedRunnable {
         final ReentrantLock lock;
         InterruptibleLockRunnable(ReentrantLock l) { lock = l; }
-        public void run() {
-            try {
-                lock.lockInterruptibly();
-            } catch(InterruptedException success){}
+        public void realRun() throws InterruptedException {
+            lock.lockInterruptibly();
         }
     }
 
@@ -37,14 +36,11 @@ public class ReentrantLockTest extends JSR166TestCase {
      * A runnable calling lockInterruptibly that expects to be
      * interrupted
      */
-    class InterruptedLockRunnable implements Runnable {
+    class InterruptedLockRunnable extends CheckedInterruptedRunnable {
         final ReentrantLock lock;
         InterruptedLockRunnable(ReentrantLock l) { lock = l; }
-        public void run() {
-            try {
-                lock.lockInterruptibly();
-                threadShouldThrow();
-            } catch(InterruptedException success){}
+        public void realRun() throws InterruptedException {
+            lock.lockInterruptibly();
         }
     }
 
@@ -59,18 +55,15 @@ public class ReentrantLockTest extends JSR166TestCase {
         public Collection<Thread> getWaitingThreads(Condition c) {
             return super.getWaitingThreads(c);
         }
-
-
     }
 
     /**
      * Constructor sets given fairness
      */
     public void testConstructor() {
-        ReentrantLock rl = new ReentrantLock();
-        assertFalse(rl.isFair());
-        ReentrantLock r2 = new ReentrantLock(true);
-        assertTrue(r2.isFair());
+        assertFalse(new ReentrantLock().isFair());
+        assertFalse(new ReentrantLock(false).isFair());
+        assertTrue(new ReentrantLock(true).isFair());
     }
 
     /**
@@ -81,6 +74,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         rl.lock();
         assertTrue(rl.isLocked());
         rl.unlock();
+        assertFalse(rl.isLocked());
     }
 
     /**
@@ -101,8 +95,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         try {
             rl.unlock();
             shouldThrow();
-
-        } catch(IllegalMonitorStateException success){}
+        } catch (IllegalMonitorStateException success) {}
     }
 
     /**
@@ -119,88 +112,76 @@ public class ReentrantLockTest extends JSR166TestCase {
     /**
      * hasQueuedThreads reports whether there are waiting threads
      */
-    public void testhasQueuedThreads() {
+    public void testhasQueuedThreads() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertFalse(lock.hasQueuedThreads());
-            lock.lock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.hasQueuedThreads());
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(lock.hasQueuedThreads());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        assertFalse(lock.hasQueuedThreads());
+        lock.lock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.hasQueuedThreads());
+        lock.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(lock.hasQueuedThreads());
+        t1.join();
+        t2.join();
     }
 
     /**
      * getQueueLength reports number of waiting threads
      */
-    public void testGetQueueLength() {
+    public void testGetQueueLength() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertEquals(0, lock.getQueueLength());
-            lock.lock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(2, lock.getQueueLength());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(0, lock.getQueueLength());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        assertEquals(0, lock.getQueueLength());
+        lock.lock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(2, lock.getQueueLength());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        lock.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(0, lock.getQueueLength());
+        t1.join();
+        t2.join();
     }
 
     /**
      * getQueueLength reports number of waiting threads
      */
-    public void testGetQueueLength_fair() {
+    public void testGetQueueLength_fair() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock(true);
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertEquals(0, lock.getQueueLength());
-            lock.lock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(2, lock.getQueueLength());
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(1, lock.getQueueLength());
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertEquals(0, lock.getQueueLength());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        assertEquals(0, lock.getQueueLength());
+        lock.lock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(2, lock.getQueueLength());
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(1, lock.getQueueLength());
+        lock.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(0, lock.getQueueLength());
+        t1.join();
+        t2.join();
     }
 
     /**
@@ -211,143 +192,117 @@ public class ReentrantLockTest extends JSR166TestCase {
         try {
             sync.hasQueuedThread(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
      * hasQueuedThread reports whether a thread is queued.
      */
-    public void testHasQueuedThread() {
+    public void testHasQueuedThread() throws InterruptedException {
         final ReentrantLock sync = new ReentrantLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(sync));
         Thread t2 = new Thread(new InterruptibleLockRunnable(sync));
-        try {
-            assertFalse(sync.hasQueuedThread(t1));
-            assertFalse(sync.hasQueuedThread(t2));
-            sync.lock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasQueuedThread(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(sync.hasQueuedThread(t1));
-            assertTrue(sync.hasQueuedThread(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.hasQueuedThread(t1));
-            assertTrue(sync.hasQueuedThread(t2));
-            sync.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.hasQueuedThread(t1));
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(sync.hasQueuedThread(t2));
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        assertFalse(sync.hasQueuedThread(t1));
+        assertFalse(sync.hasQueuedThread(t2));
+        sync.lock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasQueuedThread(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(sync.hasQueuedThread(t1));
+        assertTrue(sync.hasQueuedThread(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.hasQueuedThread(t1));
+        assertTrue(sync.hasQueuedThread(t2));
+        sync.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.hasQueuedThread(t1));
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(sync.hasQueuedThread(t2));
+        t1.join();
+        t2.join();
     }
 
 
     /**
      * getQueuedThreads includes waiting threads
      */
-    public void testGetQueuedThreads() {
+    public void testGetQueuedThreads() throws InterruptedException {
         final PublicReentrantLock lock = new PublicReentrantLock();
         Thread t1 = new Thread(new InterruptedLockRunnable(lock));
         Thread t2 = new Thread(new InterruptibleLockRunnable(lock));
-        try {
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            lock.lock();
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().contains(t1));
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().contains(t1));
-            assertTrue(lock.getQueuedThreads().contains(t2));
-            t1.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertFalse(lock.getQueuedThreads().contains(t1));
-            assertTrue(lock.getQueuedThreads().contains(t2));
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.getQueuedThreads().isEmpty());
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        lock.lock();
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().contains(t1));
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().contains(t1));
+        assertTrue(lock.getQueuedThreads().contains(t2));
+        t1.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertFalse(lock.getQueuedThreads().contains(t1));
+        assertTrue(lock.getQueuedThreads().contains(t2));
+        lock.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.getQueuedThreads().isEmpty());
+        t1.join();
+        t2.join();
     }
 
 
     /**
      * timed tryLock is interruptible.
      */
-    public void testInterruptedException2() {
+    public void testInterruptedException2() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.tryLock(MEDIUM_DELAY_MS,TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch(InterruptedException success){}
-                }
-            });
-        try {
-            t.start();
-            t.interrupt();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.tryLock(MEDIUM_DELAY_MS,MILLISECONDS);
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
 
     /**
      * TryLock on a locked lock fails
      */
-    public void testTryLockWhenLocked() {
+    public void testTryLockWhenLocked() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    threadAssertFalse(lock.tryLock());
-                }
-            });
-        try {
-            t.start();
-            t.join();
-            lock.unlock();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                threadAssertFalse(lock.tryLock());
+            }});
+
+        t.start();
+        t.join();
+        lock.unlock();
     }
 
     /**
      * Timed tryLock on a locked lock times out
      */
-    public void testTryLock_Timeout() {
+    public void testTryLock_Timeout() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertFalse(lock.tryLock(1, TimeUnit.MILLISECONDS));
-                    } catch (Exception ex) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            t.join();
-            lock.unlock();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                threadAssertFalse(lock.tryLock(1, MILLISECONDS));
+            }});
+
+        t.start();
+        t.join();
+        lock.unlock();
     }
 
     /**
@@ -355,13 +310,13 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testGetHoldCount() {
         ReentrantLock lock = new ReentrantLock();
-        for(int i = 1; i <= SIZE; i++) {
+        for (int i = 1; i <= SIZE; i++) {
             lock.lock();
-            assertEquals(i,lock.getHoldCount());
+            assertEquals(i, lock.getHoldCount());
         }
-        for(int i = SIZE; i > 0; i--) {
+        for (int i = SIZE; i > 0; i--) {
             lock.unlock();
-            assertEquals(i-1,lock.getHoldCount());
+            assertEquals(i-1, lock.getHoldCount());
         }
     }
 
@@ -369,92 +324,67 @@ public class ReentrantLockTest extends JSR166TestCase {
     /**
      * isLocked is true when locked and false when not
      */
-    public void testIsLocked() {
+    public void testIsLocked() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
         assertTrue(lock.isLocked());
         lock.unlock();
         assertFalse(lock.isLocked());
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    lock.lock();
-                    try {
-                        Thread.sleep(SMALL_DELAY_MS);
-                    }
-                    catch(Exception e) {
-                        threadUnexpectedException();
-                    }
-                    lock.unlock();
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(lock.isLocked());
-            t.join();
-            assertFalse(lock.isLocked());
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                Thread.sleep(SMALL_DELAY_MS);
+                lock.unlock();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(lock.isLocked());
+        t.join();
+        assertFalse(lock.isLocked());
     }
 
 
     /**
      * lockInterruptibly is interruptible.
      */
-    public void testLockInterruptibly1() {
+    public void testLockInterruptibly1() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         lock.lock();
         Thread t = new Thread(new InterruptedLockRunnable(lock));
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.unlock();
-            t.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.unlock();
+        t.join();
     }
 
     /**
      * lockInterruptibly succeeds when unlocked, else is interruptible
      */
-    public void testLockInterruptibly2() {
+    public void testLockInterruptibly2() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
-        try {
-            lock.lockInterruptibly();
-        } catch(Exception e) {
-            unexpectedException();
-        }
+        lock.lockInterruptibly();
         Thread t = new Thread(new InterruptedLockRunnable(lock));
-        try {
-            t.start();
-            t.interrupt();
-            assertTrue(lock.isLocked());
-            assertTrue(lock.isHeldByCurrentThread());
-            t.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        assertTrue(lock.isLocked());
+        assertTrue(lock.isHeldByCurrentThread());
+        t.join();
     }
 
     /**
      * Calling await without holding lock throws IllegalMonitorStateException
      */
-    public void testAwait_IllegalMonitor() {
+    public void testAwait_IllegalMonitor() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
         try {
             c.await();
             shouldThrow();
-        }
-        catch (IllegalMonitorStateException success) {
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
     /**
@@ -466,95 +396,64 @@ public class ReentrantLockTest extends JSR166TestCase {
         try {
             c.signal();
             shouldThrow();
-        }
-        catch (IllegalMonitorStateException success) {
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
     /**
      * awaitNanos without a signal times out
      */
-    public void testAwaitNanos_Timeout() {
+    public void testAwaitNanos_Timeout() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        try {
-            lock.lock();
-            long t = c.awaitNanos(100);
-            assertTrue(t <= 0);
-            lock.unlock();
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        lock.lock();
+        long t = c.awaitNanos(100);
+        assertTrue(t <= 0);
+        lock.unlock();
     }
 
     /**
      *  timed await without a signal times out
      */
-    public void testAwait_Timeout() {
+    public void testAwait_Timeout() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        try {
-            lock.lock();
-            c.await(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-            lock.unlock();
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        lock.lock();
+        assertFalse(c.await(SHORT_DELAY_MS, MILLISECONDS));
+        lock.unlock();
     }
 
     /**
      * awaitUntil without a signal times out
      */
-    public void testAwaitUntil_Timeout() {
+    public void testAwaitUntil_Timeout() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        try {
-            lock.lock();
-            java.util.Date d = new java.util.Date();
-            c.awaitUntil(new java.util.Date(d.getTime() + 10));
-            lock.unlock();
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        lock.lock();
+        java.util.Date d = new java.util.Date();
+        assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + 10)));
+        lock.unlock();
     }
 
     /**
      * await returns when signalled
      */
-    public void testAwait() {
+    public void testAwait() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                c.await();
+                lock.unlock();
+            }});
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            c.signal();
-            lock.unlock();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        c.signal();
+        lock.unlock();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
@@ -565,10 +464,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         try {
             lock.hasWaiters(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -579,10 +475,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         try {
             lock.getWaitQueueLength(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -594,10 +487,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         try {
             lock.getWaitingThreads(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
     }
 
 
@@ -606,15 +496,12 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testHasWaitersIAE() {
         final ReentrantLock lock = new ReentrantLock();
-        final Condition c = (lock.newCondition());
+        final Condition c = lock.newCondition();
         final ReentrantLock lock2 = new ReentrantLock();
         try {
             lock2.hasWaiters(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -622,14 +509,11 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testHasWaitersIMSE() {
         final ReentrantLock lock = new ReentrantLock();
-        final Condition c = (lock.newCondition());
+        final Condition c = lock.newCondition();
         try {
             lock.hasWaiters(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
@@ -638,15 +522,12 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIAE() {
         final ReentrantLock lock = new ReentrantLock();
-        final Condition c = (lock.newCondition());
+        final Condition c = lock.newCondition();
         final ReentrantLock lock2 = new ReentrantLock();
         try {
             lock2.getWaitQueueLength(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -654,14 +535,11 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testGetWaitQueueLengthIMSE() {
         final ReentrantLock lock = new ReentrantLock();
-        final Condition c = (lock.newCondition());
+        final Condition c = lock.newCondition();
         try {
             lock.getWaitQueueLength(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
 
 
@@ -670,15 +548,12 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIAE() {
         final PublicReentrantLock lock = new PublicReentrantLock();
-        final Condition c = (lock.newCondition());
+        final Condition c = lock.newCondition();
         final PublicReentrantLock lock2 = new PublicReentrantLock();
         try {
             lock2.getWaitingThreads(c);
             shouldThrow();
-        } catch (IllegalArgumentException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -686,186 +561,137 @@ public class ReentrantLockTest extends JSR166TestCase {
      */
     public void testGetWaitingThreadsIMSE() {
         final PublicReentrantLock lock = new PublicReentrantLock();
-        final Condition c = (lock.newCondition());
+        final Condition c = lock.newCondition();
         try {
             lock.getWaitingThreads(c);
             shouldThrow();
-        } catch (IllegalMonitorStateException success) {
-        } catch (Exception ex) {
-            unexpectedException();
-        }
+        } catch (IllegalMonitorStateException success) {}
     }
-
 
 
     /**
      * hasWaiters returns true when a thread is waiting, else false
      */
-    public void testHasWaiters() {
+    public void testHasWaiters() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        threadAssertFalse(lock.hasWaiters(c));
-                        threadAssertEquals(0, lock.getWaitQueueLength(c));
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                threadAssertFalse(lock.hasWaiters(c));
+                threadAssertEquals(0, lock.getWaitQueueLength(c));
+                c.await();
+                lock.unlock();
+            }});
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertTrue(lock.hasWaiters(c));
-            assertEquals(1, lock.getWaitQueueLength(c));
-            c.signal();
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertFalse(lock.hasWaiters(c));
-            assertEquals(0, lock.getWaitQueueLength(c));
-            lock.unlock();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        assertTrue(lock.hasWaiters(c));
+        assertEquals(1, lock.getWaitQueueLength(c));
+        c.signal();
+        lock.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        assertFalse(lock.hasWaiters(c));
+        assertEquals(0, lock.getWaitQueueLength(c));
+        lock.unlock();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * getWaitQueueLength returns number of waiting threads
      */
-    public void testGetWaitQueueLength() {
+    public void testGetWaitQueueLength() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        threadAssertFalse(lock.hasWaiters(c));
-                        threadAssertEquals(0, lock.getWaitQueueLength(c));
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                threadAssertFalse(lock.hasWaiters(c));
+                threadAssertEquals(0, lock.getWaitQueueLength(c));
+                c.await();
+                lock.unlock();
+            }});
 
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        threadAssertTrue(lock.hasWaiters(c));
-                        threadAssertEquals(1, lock.getWaitQueueLength(c));
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                threadAssertTrue(lock.hasWaiters(c));
+                threadAssertEquals(1, lock.getWaitQueueLength(c));
+                c.await();
+                lock.unlock();
+            }});
 
-        try {
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertTrue(lock.hasWaiters(c));
-            assertEquals(2, lock.getWaitQueueLength(c));
-            c.signalAll();
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertFalse(lock.hasWaiters(c));
-            assertEquals(0, lock.getWaitQueueLength(c));
-            lock.unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        assertTrue(lock.hasWaiters(c));
+        assertEquals(2, lock.getWaitQueueLength(c));
+        c.signalAll();
+        lock.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        assertFalse(lock.hasWaiters(c));
+        assertEquals(0, lock.getWaitQueueLength(c));
+        lock.unlock();
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
     /**
      * getWaitingThreads returns only and all waiting threads
      */
-    public void testGetWaitingThreads() {
+    public void testGetWaitingThreads() throws InterruptedException {
         final PublicReentrantLock lock = new PublicReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        threadAssertTrue(lock.getWaitingThreads(c).isEmpty());
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                threadAssertTrue(lock.getWaitingThreads(c).isEmpty());
+                c.await();
+                lock.unlock();
+            }});
 
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        threadAssertFalse(lock.getWaitingThreads(c).isEmpty());
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                threadAssertFalse(lock.getWaitingThreads(c).isEmpty());
+                c.await();
+                lock.unlock();
+            }});
 
-        try {
-            lock.lock();
-            assertTrue(lock.getWaitingThreads(c).isEmpty());
-            lock.unlock();
-            t1.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertTrue(lock.hasWaiters(c));
-            assertTrue(lock.getWaitingThreads(c).contains(t1));
-            assertTrue(lock.getWaitingThreads(c).contains(t2));
-            c.signalAll();
-            lock.unlock();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            assertFalse(lock.hasWaiters(c));
-            assertTrue(lock.getWaitingThreads(c).isEmpty());
-            lock.unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        lock.lock();
+        assertTrue(lock.getWaitingThreads(c).isEmpty());
+        lock.unlock();
+        t1.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        assertTrue(lock.hasWaiters(c));
+        assertTrue(lock.getWaitingThreads(c).contains(t1));
+        assertTrue(lock.getWaitingThreads(c).contains(t2));
+        c.signalAll();
+        lock.unlock();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        assertFalse(lock.hasWaiters(c));
+        assertTrue(lock.getWaitingThreads(c).isEmpty());
+        lock.unlock();
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
     /** A helper class for uninterruptible wait tests */
-    class UninterruptableThread extends Thread {
+    class UninterruptibleThread extends Thread {
         private ReentrantLock lock;
         private Condition c;
 
@@ -873,7 +699,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         public volatile boolean interrupted = false;
         public volatile boolean lockStarted = false;
 
-        public UninterruptableThread(ReentrantLock lock, Condition c) {
+        public UninterruptibleThread(ReentrantLock lock, Condition c) {
             this.lock = lock;
             this.c = c;
         }
@@ -894,256 +720,180 @@ public class ReentrantLockTest extends JSR166TestCase {
     /**
      * awaitUninterruptibly doesn't abort on interrupt
      */
-    public void testAwaitUninterruptibly() {
+    public void testAwaitUninterruptibly() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        UninterruptableThread thread = new UninterruptableThread(lock, c);
+        UninterruptibleThread thread = new UninterruptibleThread(lock, c);
 
-        try {
-            thread.start();
+        thread.start();
 
-            while (!thread.lockStarted) {
-                Thread.sleep(100);
-            }
-
-            lock.lock();
-            try {
-                thread.interrupt();
-                thread.canAwake = true;
-                c.signal();
-            } finally {
-                lock.unlock();
-            }
-
-            thread.join();
-            assertTrue(thread.interrupted);
-            assertFalse(thread.isAlive());
-        } catch (Exception ex) {
-            unexpectedException();
+        while (!thread.lockStarted) {
+            Thread.sleep(100);
         }
+
+        lock.lock();
+        try {
+            thread.interrupt();
+            thread.canAwake = true;
+            c.signal();
+        } finally {
+            lock.unlock();
+        }
+
+        thread.join();
+        assertTrue(thread.interrupted);
+        assertFalse(thread.isAlive());
     }
 
     /**
      * await is interruptible
      */
-    public void testAwait_Interrupt() {
+    public void testAwait_Interrupt() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        c.await();
-                        lock.unlock();
-                        threadShouldThrow();
-                    }
-                    catch(InterruptedException success) {
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                c.await();
+            }});
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * awaitNanos is interruptible
      */
-    public void testAwaitNanos_Interrupt() {
+    public void testAwaitNanos_Interrupt() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        c.awaitNanos(1000 * 1000 * 1000); // 1 sec
-                        lock.unlock();
-                        threadShouldThrow();
-                    }
-                    catch(InterruptedException success) {
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                c.awaitNanos(MILLISECONDS.toNanos(LONG_DELAY_MS));
+            }});
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * awaitUntil is interruptible
      */
-    public void testAwaitUntil_Interrupt() {
+    public void testAwaitUntil_Interrupt() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        java.util.Date d = new java.util.Date();
-                        c.awaitUntil(new java.util.Date(d.getTime() + 10000));
-                        lock.unlock();
-                        threadShouldThrow();
-                    }
-                    catch(InterruptedException success) {
-                    }
-                }
-            });
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                java.util.Date d = new java.util.Date();
+                c.awaitUntil(new java.util.Date(d.getTime() + 10000));
+            }});
 
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join(SHORT_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join(SHORT_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * signalAll wakes up all threads
      */
-    public void testSignalAll() {
+    public void testSignalAll() throws InterruptedException {
         final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                c.await();
+                lock.unlock();
+            }});
 
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        lock.lock();
-                        c.await();
-                        lock.unlock();
-                    }
-                    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                c.await();
+                lock.unlock();
+            }});
 
-        try {
-            t1.start();
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            c.signalAll();
-            lock.unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        c.signalAll();
+        lock.unlock();
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
     /**
      * await after multiple reentrant locking preserves lock count
      */
-    public void testAwaitLockCount() {
-	final ReentrantLock lock = new ReentrantLock();
+    public void testAwaitLockCount() throws InterruptedException {
+        final ReentrantLock lock = new ReentrantLock();
         final Condition c = lock.newCondition();
-	Thread t1 = new Thread(new Runnable() {
-		public void run() {
-		    try {
-			lock.lock();
-                        threadAssertEquals(1, lock.getHoldCount());
-                        c.await();
-                        threadAssertEquals(1, lock.getHoldCount());
-                        lock.unlock();
-		    }
-		    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-		}
-	    });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                threadAssertEquals(1, lock.getHoldCount());
+                c.await();
+                threadAssertEquals(1, lock.getHoldCount());
+                lock.unlock();
+            }});
 
-	Thread t2 = new Thread(new Runnable() {
-		public void run() {
-		    try {
-			lock.lock();
-			lock.lock();
-                        threadAssertEquals(2, lock.getHoldCount());
-                        c.await();
-                        threadAssertEquals(2, lock.getHoldCount());
-                        lock.unlock();
-                        lock.unlock();
-		    }
-		    catch(InterruptedException e) {
-                        threadUnexpectedException();
-                    }
-		}
-	    });
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                lock.lock();
+                lock.lock();
+                threadAssertEquals(2, lock.getHoldCount());
+                c.await();
+                threadAssertEquals(2, lock.getHoldCount());
+                lock.unlock();
+                lock.unlock();
+            }});
 
-        try {
-            t1.start();
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            lock.lock();
-            c.signalAll();
-            lock.unlock();
-            t1.join(SHORT_DELAY_MS);
-            t2.join(SHORT_DELAY_MS);
-            assertFalse(t1.isAlive());
-            assertFalse(t2.isAlive());
-        }
-        catch (Exception ex) {
-            unexpectedException();
-        }
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        lock.lock();
+        c.signalAll();
+        lock.unlock();
+        t1.join(SHORT_DELAY_MS);
+        t2.join(SHORT_DELAY_MS);
+        assertFalse(t1.isAlive());
+        assertFalse(t2.isAlive());
     }
 
     /**
      * A serialized lock deserializes as unlocked
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         ReentrantLock l = new ReentrantLock();
         l.lock();
         l.unlock();
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out =
+            new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            ReentrantLock r = (ReentrantLock) in.readObject();
-            r.lock();
-            r.unlock();
-        } catch(Exception e){
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin =
+            new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in =
+            new ObjectInputStream(new BufferedInputStream(bin));
+        ReentrantLock r = (ReentrantLock) in.readObject();
+        r.lock();
+        r.unlock();
     }
 
     /**

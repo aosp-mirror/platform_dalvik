@@ -5,9 +5,13 @@
  */
 
 package java.util.concurrent;
-import java.util.*;
-import java.util.concurrent.atomic.*;
 
+import java.util.AbstractQueue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 
 // BEGIN android-note
 // removed link to collections framework docs
@@ -126,34 +130,34 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * CAS, so they never regress, although again this is merely an
      * optimization.
      */
+
     private static class Node<E> {
         private volatile E item;
         private volatile Node<E> next;
 
-        private static final
-            AtomicReferenceFieldUpdater<Node, Node>
-            nextUpdater =
-            AtomicReferenceFieldUpdater.newUpdater
-            (Node.class, Node.class, "next");
-        private static final
-            AtomicReferenceFieldUpdater<Node, Object>
-            itemUpdater =
-            AtomicReferenceFieldUpdater.newUpdater
-            (Node.class, Object.class, "item");
-
-
-        Node(E item) { setItem(item); }
+        Node(E item) {
+            // Piggyback on imminent casNext()
+            lazySetItem(item);
+        }
 
         E getItem() {
             return item;
         }
 
         boolean casItem(E cmp, E val) {
-            return itemUpdater.compareAndSet(this, cmp, val);
+            return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
         }
 
         void setItem(E val) {
-            itemUpdater.set(this, val);
+            item = val;
+        }
+
+        void lazySetItem(E val) {
+            UNSAFE.putOrderedObject(this, itemOffset, val);
+        }
+
+        void lazySetNext(Node<E> val) {
+            UNSAFE.putOrderedObject(this, nextOffset, val);
         }
 
         Node<E> getNext() {
@@ -161,42 +165,45 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
 
         boolean casNext(Node<E> cmp, Node<E> val) {
-            return nextUpdater.compareAndSet(this, cmp, val);
+            return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
 
-        void setNext(Node<E> val) {
-            nextUpdater.set(this, val);
+        // Unsafe mechanics
+
+        private static final sun.misc.Unsafe UNSAFE =
+            sun.misc.Unsafe.getUnsafe();
+        private static final long nextOffset =
+            objectFieldOffset(UNSAFE, "next", Node.class);
+        private static final long itemOffset =
+            objectFieldOffset(UNSAFE, "item", Node.class);
     }
-
-    }
-
-    private static final
-        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node>
-        tailUpdater =
-        AtomicReferenceFieldUpdater.newUpdater
-        (ConcurrentLinkedQueue.class, Node.class, "tail");
-    private static final
-        AtomicReferenceFieldUpdater<ConcurrentLinkedQueue, Node>
-        headUpdater =
-        AtomicReferenceFieldUpdater.newUpdater
-        (ConcurrentLinkedQueue.class,  Node.class, "head");
-
-    private boolean casTail(Node<E> cmp, Node<E> val) {
-        return tailUpdater.compareAndSet(this, cmp, val);
-    }
-
-    private boolean casHead(Node<E> cmp, Node<E> val) {
-        return headUpdater.compareAndSet(this, cmp, val);
-    }
-
-
 
     /**
-     * Pointer to first node, initialized to a dummy node.
+     * A node from which the first live (non-deleted) node (if any)
+     * can be reached in O(1) time.
+     * Invariants:
+     * - all live nodes are reachable from head via succ()
+     * - head != null
+     * - (tmp = head).next != tmp || tmp != head
+     * Non-invariants:
+     * - head.item may or may not be null.
+     * - it is permitted for tail to lag behind head, that is, for tail
+     *   to not be reachable from head!
      */
     private transient volatile Node<E> head = new Node<E>(null);
 
-    /** Pointer to last node on list */
+    /**
+     * A node from which the last node on list (that is, the unique
+     * node with node.next == null) can be reached in O(1) time.
+     * Invariants:
+     * - the last node is always reachable from tail via succ()
+     * - tail != null
+     * Non-invariants:
+     * - tail.item may or may not be null.
+     * - it is permitted for tail to lag behind head, that is, for tail
+     *   to not be reachable from head!
+     * - tail.next may or may not be self-pointing to tail.
+     */
     private transient volatile Node<E> tail = head;
 
 
@@ -214,8 +221,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      *         of its elements are null
      */
     public ConcurrentLinkedQueue(Collection<? extends E> c) {
-        for (Iterator<? extends E> it = c.iterator(); it.hasNext();)
-            add(it.next());
+        for (E e : c)
+            add(e);
     }
 
     // Have to override just to update the javadoc
@@ -231,7 +238,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * We don't bother to update head or tail pointers if less than
+     * We don't bother to update head or tail pointers if fewer than
      * HOPS links from "true" location.  We assume that volatile
      * writes are significantly more expensive than volatile reads.
      */
@@ -243,7 +250,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
     final void updateHead(Node<E> h, Node<E> p) {
         if (h != p && casHead(h, p))
-            h.setNext(h);
+            h.lazySetNext(h);
     }
 
     /**
@@ -328,10 +335,12 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     /**
-     * Returns the first actual (non-header) node on list.  This is yet
-     * another variant of poll/peek; here returning out the first
-     * node, not element (so we cannot collapse with peek() without
-     * introducing race.)
+     * Returns the first live (non-deleted) node on list, or null if none.
+     * This is yet another variant of poll/peek; here returning the
+     * first node, not element.  We could make peek() a wrapper around
+     * first(), but that would cost an extra volatile read of item,
+     * and the need to add a retry loop to deal with the possibility
+     * of losing a race to a concurrent poll().
      */
     Node<E> first() {
         Node<E> h = head;
@@ -422,7 +431,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node<E> pred = null;
         for (Node<E> p = first(); p != null; p = succ(p)) {
             E item = p.getItem();
-            if (item != null && o.equals(item) && p.casItem(item, null)) {
+            if (item != null &&
+                o.equals(item) &&
+                p.casItem(item, null)) {
                 Node<E> next = succ(p);
                 if (pred != null && next != null)
                     pred.casNext(p, next);
@@ -522,7 +533,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     /**
      * Returns an iterator over the elements in this queue in proper sequence.
      * The returned iterator is a "weakly consistent" iterator that
-     * will never throw {@link ConcurrentModificationException},
+     * will never throw {@link java.util.ConcurrentModificationException
+     * ConcurrentModificationException},
      * and guarantees to traverse elements as they existed upon
      * construction of the iterator, and may (but is not guaranteed to)
      * reflect any modifications subsequent to construction.
@@ -658,4 +670,35 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         }
     }
 
+    // Unsafe mechanics
+
+    private static final sun.misc.Unsafe UNSAFE = sun.misc.Unsafe.getUnsafe();
+    private static final long headOffset =
+        objectFieldOffset(UNSAFE, "head", ConcurrentLinkedQueue.class);
+    private static final long tailOffset =
+        objectFieldOffset(UNSAFE, "tail", ConcurrentLinkedQueue.class);
+
+    private boolean casTail(Node<E> cmp, Node<E> val) {
+        return UNSAFE.compareAndSwapObject(this, tailOffset, cmp, val);
+    }
+
+    private boolean casHead(Node<E> cmp, Node<E> val) {
+        return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
+    }
+
+    private void lazySetHead(Node<E> val) {
+        UNSAFE.putOrderedObject(this, headOffset, val);
+    }
+
+    static long objectFieldOffset(sun.misc.Unsafe UNSAFE,
+                                  String field, Class<?> klazz) {
+        try {
+            return UNSAFE.objectFieldOffset(klazz.getDeclaredField(field));
+        } catch (NoSuchFieldException e) {
+            // Convert Exception to corresponding Error
+            NoSuchFieldError error = new NoSuchFieldError(field);
+            error.initCause(e);
+            throw error;
+        }
+    }
 }

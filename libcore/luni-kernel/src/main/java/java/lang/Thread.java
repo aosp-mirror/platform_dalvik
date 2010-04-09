@@ -192,6 +192,9 @@ public class Thread implements Runnable {
     /** the park state of the thread */
     private int parkState = ParkState.UNPARKED;
 
+    /** The synchronization object responsible for this thread parking. */
+    private Object parkBlocker;
+
     /**
      * Constructs a new {@code Thread} with no {@code Runnable} object and a
      * newly generated name. The new {@code Thread} will belong to the same

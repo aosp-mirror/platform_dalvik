@@ -471,7 +471,7 @@ public class Exchanger<V> {
             else if (w.isInterrupted())         // Abort on interrupt
                 tryCancel(node, slot);
             else                                // Block
-                LockSupport.park();
+                LockSupport.park(node);
         }
     }
 
@@ -506,7 +506,7 @@ public class Exchanger<V> {
                 else if (w.isInterrupted())
                     tryCancel(node, slot);
                 else
-                    LockSupport.parkNanos(nanos);
+                    LockSupport.parkNanos(node, nanos);
             }
             else if (tryCancel(node, slot) && !w.isInterrupted())
                 return scanOnTimeout(node);

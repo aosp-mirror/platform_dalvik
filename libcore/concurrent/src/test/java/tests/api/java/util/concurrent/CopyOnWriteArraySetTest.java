@@ -2,11 +2,11 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.*;
@@ -18,10 +18,10 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         return new TestSuite(CopyOnWriteArraySetTest.class);
     }
 
-    static CopyOnWriteArraySet populatedSet(int n){
+    static CopyOnWriteArraySet populatedSet(int n) {
         CopyOnWriteArraySet a = new CopyOnWriteArraySet();
         assertTrue(a.isEmpty());
-        for (int i = 0; i < n; ++i) 
+        for (int i = 0; i < n; ++i)
             a.add(new Integer(i));
         assertFalse(a.isEmpty());
         assertEquals(n, a.size());
@@ -44,13 +44,13 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         for (int i = 0; i < SIZE-1; ++i)
             ints[i] = new Integer(i);
         CopyOnWriteArraySet a = new CopyOnWriteArraySet(Arrays.asList(ints));
-        for (int i = 0; i < SIZE; ++i) 
+        for (int i = 0; i < SIZE; ++i)
             assertTrue(a.contains(ints[i]));
     }
-        
+
 
     /**
-     *   addAll  adds each element from the given collection
+     *  addAll adds each element from the given collection
      */
     public void testAddAll() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -63,7 +63,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   addAll adds each element from the given collection that did not
+     *  addAll adds each element from the given collection that did not
      *  already exist in the set
      */
     public void testAddAll2() {
@@ -77,7 +77,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   add will not add the element if it already exists in the set
+     *  add will not add the element if it already exists in the set
      */
     public void testAdd2() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -86,8 +86,8 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   add  adds the element when it does not exist
-     *   in the set
+     *  add  adds the element when it does not exist
+     *  in the set
      */
     public void testAdd3() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -96,7 +96,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   clear  removes all elements from the set
+     *  clear removes all elements from the set
      */
     public void testClear() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -131,9 +131,9 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         assertEquals(a.hashCode(), b.hashCode());
     }
 
-    
+
     /**
-     *   containsAll returns true for collections with subset of elements
+     *  containsAll returns true for collections with subset of elements
      */
     public void testContainsAll() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -146,7 +146,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   isEmpty is true when empty, else false
+     *  isEmpty is true when empty, else false
      */
     public void testIsEmpty() {
         CopyOnWriteArraySet empty = new CopyOnWriteArraySet();
@@ -156,14 +156,14 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   iterator() returns an iterator containing the elements of the set 
+     *  iterator() returns an iterator containing the elements of the set
      */
     public void testIterator() {
         CopyOnWriteArraySet full = populatedSet(3);
         Iterator i = full.iterator();
         int j;
-        for(j = 0; i.hasNext(); j++)
-            assertEquals(j, ((Integer)i.next()).intValue());
+        for (j = 0; i.hasNext(); j++)
+            assertEquals(j, i.next());
         assertEquals(3, j);
     }
 
@@ -177,8 +177,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         try {
             it.remove();
             shouldThrow();
-        }
-        catch (UnsupportedOperationException success) {}
+        } catch (UnsupportedOperationException success) {}
     }
 
     /**
@@ -190,11 +189,11 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
         for (int i = 0; i < 3; ++i) {
             assertTrue(s.indexOf(String.valueOf(i)) >= 0);
         }
-    }        
+    }
 
 
     /**
-     *   removeAll  removes all elements from the given collection
+     *  removeAll  removes all elements from the given collection
      */
     public void testRemoveAll() {
         CopyOnWriteArraySet full = populatedSet(3);
@@ -217,7 +216,7 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   size returns the number of elements
+     *  size returns the number of elements
      */
     public void testSize() {
         CopyOnWriteArraySet empty = new CopyOnWriteArraySet();
@@ -227,29 +226,29 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
     }
 
     /**
-     *   toArray returns an Object array containing all elements from the set
+     *  toArray returns an Object array containing all elements from the set
      */
     public void testToArray() {
         CopyOnWriteArraySet full = populatedSet(3);
         Object[] o = full.toArray();
         assertEquals(3, o.length);
-        assertEquals(0, ((Integer)o[0]).intValue());
-        assertEquals(1, ((Integer)o[1]).intValue());
-        assertEquals(2, ((Integer)o[2]).intValue());
+        assertEquals(0, o[0]);
+        assertEquals(1, o[1]);
+        assertEquals(2, o[2]);
     }
 
     /**
-     *   toArray returns an Integer array containing all elements from
-     *   the set
+     *  toArray returns an Integer array containing all elements from
+     *  the set
      */
     public void testToArray2() {
         CopyOnWriteArraySet full = populatedSet(3);
         Integer[] i = new Integer[3];
         i = (Integer[])full.toArray(i);
         assertEquals(3, i.length);
-        assertEquals(0, i[0].intValue());
-        assertEquals(1, i[1].intValue());
-        assertEquals(2, i[2].intValue());
+        assertEquals(0, (int) i[0]);
+        assertEquals(1, (int) i[1]);
+        assertEquals(2, (int) i[2]);
     }
 
 
@@ -264,30 +263,26 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
             c.add("asdadasd");
             c.toArray(new Long[5]);
             shouldThrow();
-        } catch(ArrayStoreException e){}
+        } catch (ArrayStoreException success) {}
     }
 
     /**
      * A deserialized serialized set is equal
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         CopyOnWriteArraySet q = populatedSet(SIZE);
 
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            CopyOnWriteArraySet r = (CopyOnWriteArraySet)in.readObject();
-            assertEquals(q.size(), r.size());
-            assertTrue(q.equals(r));
-            assertTrue(r.equals(q));
-        } catch(Exception e){
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        CopyOnWriteArraySet r = (CopyOnWriteArraySet)in.readObject();
+        assertEquals(q.size(), r.size());
+        assertTrue(q.equals(r));
+        assertTrue(r.equals(q));
     }
 
 }

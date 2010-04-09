@@ -2,14 +2,15 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.util.*;
 
 public class FutureTaskTest extends JSR166TestCase {
@@ -34,9 +35,7 @@ public class FutureTaskTest extends JSR166TestCase {
         try {
             FutureTask task = new FutureTask(null);
             shouldThrow();
-        }
-        catch(NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -46,16 +45,14 @@ public class FutureTaskTest extends JSR166TestCase {
         try {
             FutureTask task = new FutureTask(null, Boolean.TRUE);
             shouldThrow();
-        }
-        catch(NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
      * isDone is true when a task completes
      */
     public void testIsDone() {
-        FutureTask task = new FutureTask( new NoOpCallable());
+        FutureTask task = new FutureTask(new NoOpCallable());
         task.run();
         assertTrue(task.isDone());
         assertFalse(task.isCancelled());
@@ -86,34 +83,24 @@ public class FutureTaskTest extends JSR166TestCase {
     /**
      * setting value causes get to return it
      */
-    public void testSet() {
+    public void testSet() throws Exception {
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.set(one);
-        try {
-            assertEquals(task.get(), one);
-        }
-        catch(Exception e) {
-            unexpectedException();
-        }
+        assertSame(task.get(), one);
     }
 
     /**
      * setException causes get to throw ExecutionException
      */
-    public void testSetException() {
+    public void testSetException() throws Exception {
         Exception nse = new NoSuchElementException();
         PublicFutureTask task = new PublicFutureTask(new NoOpCallable());
         task.setException(nse);
         try {
             Object x = task.get();
             shouldThrow();
-        }
-        catch(ExecutionException ee) {
-            Throwable cause = ee.getCause();
-            assertEquals(cause, nse);
-        }
-        catch(Exception e) {
-            unexpectedException();
+        } catch (ExecutionException success) {
+            assertSame(success.getCause(), nse);
         }
     }
 
@@ -121,7 +108,7 @@ public class FutureTaskTest extends JSR166TestCase {
      *  Cancelling before running succeeds
      */
     public void testCancelBeforeRun() {
-        FutureTask task = new FutureTask( new NoOpCallable());
+        FutureTask task = new FutureTask(new NoOpCallable());
         assertTrue(task.cancel(false));
         task.run();
         assertTrue(task.isDone());
@@ -132,7 +119,7 @@ public class FutureTaskTest extends JSR166TestCase {
      * Cancel(true) before run succeeds
      */
     public void testCancelBeforeRun2() {
-        FutureTask task = new FutureTask( new NoOpCallable());
+        FutureTask task = new FutureTask(new NoOpCallable());
         assertTrue(task.cancel(true));
         task.run();
         assertTrue(task.isDone());
@@ -143,7 +130,7 @@ public class FutureTaskTest extends JSR166TestCase {
      * cancel of a completed task fails
      */
     public void testCancelAfterRun() {
-        FutureTask task = new FutureTask( new NoOpCallable());
+        FutureTask task = new FutureTask(new NoOpCallable());
         task.run();
         assertFalse(task.cancel(false));
         assertTrue(task.isDone());
@@ -153,320 +140,219 @@ public class FutureTaskTest extends JSR166TestCase {
     /**
      * cancel(true) interrupts a running task
      */
-    public void testCancelInterrupt() {
-        FutureTask task = new FutureTask( new Callable() {
-                public Object call() {
-                    try {
-                        Thread.sleep(MEDIUM_DELAY_MS);
-                        threadShouldThrow();
-                    }
-                    catch (InterruptedException success) {}
+    public void testCancelInterrupt() throws InterruptedException {
+        final FutureTask task =
+            new FutureTask(new CheckedInterruptedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
+                    Thread.sleep(SMALL_DELAY_MS);
                     return Boolean.TRUE;
-                } });
-        Thread t = new  Thread(task);
+                }});
+
+        Thread t = new Thread(task);
         t.start();
-        
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(task.cancel(true));
-            t.join();
-            assertTrue(task.isDone());
-            assertTrue(task.isCancelled());
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(task.cancel(true));
+        t.join();
+        assertTrue(task.isDone());
+        assertTrue(task.isCancelled());
     }
 
 
     /**
      * cancel(false) does not interrupt a running task
      */
-    public void testCancelNoInterrupt() {
-        FutureTask task = new FutureTask( new Callable() {
-                public Object call() {
-                    try {
-                        Thread.sleep(MEDIUM_DELAY_MS);
-                    }
-                    catch (InterruptedException success) {
-                        threadFail("should not interrupt");
-                    }
+    public void testCancelNoInterrupt() throws InterruptedException {
+        final FutureTask task =
+            new FutureTask(new CheckedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
+                    Thread.sleep(MEDIUM_DELAY_MS);
                     return Boolean.TRUE;
-                } });
-        Thread t = new  Thread(task);
+                }});
+
+        Thread t = new Thread(task);
         t.start();
-        
-        try {
-            Thread.sleep(SHORT_DELAY_MS);
-            assertTrue(task.cancel(false));
-            t.join();
-            assertTrue(task.isDone());
-            assertTrue(task.isCancelled());
-        } catch(InterruptedException e){
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        assertTrue(task.cancel(false));
+        t.join();
+        assertTrue(task.isDone());
+        assertTrue(task.isCancelled());
     }
 
     /**
      * set in one thread causes get in another thread to retrieve value
      */
-    public void testGet1() {
-        final FutureTask ft = new FutureTask(new Callable() {
-                public Object call() {
-                    try {
-                        Thread.sleep(MEDIUM_DELAY_MS);
-                    } catch(InterruptedException e){
-                        threadUnexpectedException();
-                    }
+    public void testGet1() throws InterruptedException {
+        final FutureTask ft =
+            new FutureTask(new CheckedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
                     return Boolean.TRUE;
-                }
-        });
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        ft.get();
-                    } catch(Exception e){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            assertFalse(ft.isDone());
-            assertFalse(ft.isCancelled());
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            ft.run();
-            t.join();
-            assertTrue(ft.isDone());
-            assertFalse(ft.isCancelled());
-        } catch(InterruptedException e){
-            unexpectedException();
+                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws Exception {
+                assertSame(Boolean.TRUE, ft.get());
+            }});
 
-        }        
+        assertFalse(ft.isDone());
+        assertFalse(ft.isCancelled());
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        ft.run();
+        t.join();
+        assertTrue(ft.isDone());
+        assertFalse(ft.isCancelled());
     }
 
     /**
      * set in one thread causes timed get in another thread to retrieve value
      */
-    public void testTimedGet1() {
-        final FutureTask ft = new FutureTask(new Callable() {
-                public Object call() {
-                    try {
-                        Thread.sleep(MEDIUM_DELAY_MS);
-                    } catch(InterruptedException e){
-                        threadUnexpectedException();
-                    }
+    public void testTimedGet1() throws InterruptedException {
+        final FutureTask ft =
+            new FutureTask(new CheckedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
                     return Boolean.TRUE;
-                }
-            });
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
-                    } catch(TimeoutException success) {
-                    } catch(Exception e){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            assertFalse(ft.isDone());
-            assertFalse(ft.isCancelled());
-            t.start();
-            ft.run();
-            t.join();
-            assertTrue(ft.isDone());
-            assertFalse(ft.isCancelled());
-        } catch(InterruptedException e){
-            unexpectedException();
-            
-        }        
+                }});
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws Exception {
+                assertSame(Boolean.TRUE, ft.get(SMALL_DELAY_MS, MILLISECONDS));
+            }});
+
+        assertFalse(ft.isDone());
+        assertFalse(ft.isCancelled());
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        ft.run();
+        t.join();
+        assertTrue(ft.isDone());
+        assertFalse(ft.isCancelled());
     }
 
     /**
      *  Cancelling a task causes timed get in another thread to throw CancellationException
      */
-    public void testTimedGet_Cancellation() {
-        final FutureTask ft = new FutureTask(new Callable() {
-                public Object call() {
-                    try {
-                        Thread.sleep(SMALL_DELAY_MS);
-                        threadShouldThrow();
-                    } catch(InterruptedException e) {
-                    }
+    public void testTimedGet_Cancellation() throws InterruptedException {
+        final FutureTask ft =
+            new FutureTask(new CheckedInterruptedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
+                    Thread.sleep(SMALL_DELAY_MS);
                     return Boolean.TRUE;
-                }
-            });
-        try {
-            Thread t1 = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            ft.get(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS);
-                            threadShouldThrow();
-                        } catch(CancellationException success) {}
-                        catch(Exception e){
-                            threadUnexpectedException();
-                        }
-                    }
-                });
-            Thread t2 = new Thread(ft);
-            t1.start(); 
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            ft.cancel(true);
-            t1.join();
-            t2.join();
-        } catch(InterruptedException ie){
-            unexpectedException();
-        }
+                }});
+
+        Thread t1 = new ThreadShouldThrow(CancellationException.class) {
+            public void realRun() throws Exception {
+                ft.get(MEDIUM_DELAY_MS, MILLISECONDS);
+            }};
+        Thread t2 = new Thread(ft);
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        ft.cancel(true);
+        t1.join();
+        t2.join();
     }
 
     /**
      * Cancelling a task causes get in another thread to throw CancellationException
      */
-    public void testGet_Cancellation() {
-        final FutureTask ft = new FutureTask(new Callable() {
-                public Object call() {
-                    try {
-                        Thread.sleep(MEDIUM_DELAY_MS);
-                        threadShouldThrow();
-                    } catch(InterruptedException e){
-                    }
+    public void testGet_Cancellation() throws InterruptedException {
+        final FutureTask ft =
+            new FutureTask(new CheckedInterruptedCallable<Object>() {
+                public Object realCall() throws InterruptedException {
+                    Thread.sleep(SMALL_DELAY_MS);
                     return Boolean.TRUE;
-                }
-            });
-        try {
-            Thread t1 = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            ft.get();
-                            threadShouldThrow();
-                        } catch(CancellationException success){
-                        }
-                        catch(Exception e){
-                            threadUnexpectedException();
-                        }
-                    }
-                });
-            Thread t2 = new Thread(ft);
-            t1.start(); 
-            t2.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            ft.cancel(true);
-            t1.join();
-            t2.join();
-        } catch(InterruptedException success){
-            unexpectedException();
-        }
+                }});
+        Thread t1 = new ThreadShouldThrow(CancellationException.class) {
+            public void realRun() throws Exception {
+                ft.get();
+            }};
+
+        Thread t2 = new Thread(ft);
+        t1.start();
+        t2.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        ft.cancel(true);
+        t1.join();
+        t2.join();
     }
-    
+
 
     /**
      * A runtime exception in task causes get to throw ExecutionException
      */
-    public void testGet_ExecutionException() {
+    public void testGet_ExecutionException() throws InterruptedException {
         final FutureTask ft = new FutureTask(new Callable() {
-                public Object call() {
-                    int i = 5/0;
-                    return Boolean.TRUE;
-                }
-            });
+            public Object call() {
+                return 5/0;
+            }});
+
+        ft.run();
         try {
-            ft.run();
             ft.get();
             shouldThrow();
-        } catch(ExecutionException success){
-        }
-        catch(Exception e){
-            unexpectedException();
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof ArithmeticException);
         }
     }
-  
+
     /**
      *  A runtime exception in task causes timed get to throw ExecutionException
      */
-    public void testTimedGet_ExecutionException2() {
+    public void testTimedGet_ExecutionException2() throws Exception {
         final FutureTask ft = new FutureTask(new Callable() {
-                public Object call() {
-                    int i = 5/0;
-                    return Boolean.TRUE;
-                }
-            });
+            public Object call() {
+                return 5/0;
+            }});
+
+        ft.run();
         try {
-            ft.run();
-            ft.get(SHORT_DELAY_MS, TimeUnit.MILLISECONDS);
+            ft.get(SHORT_DELAY_MS, MILLISECONDS);
             shouldThrow();
-        } catch(ExecutionException success) { 
-        } catch(TimeoutException success) { } // unlikely but OK
-        catch(Exception e){
-            unexpectedException();
+        } catch (ExecutionException success) {
+            assertTrue(success.getCause() instanceof ArithmeticException);
         }
     }
-      
+
 
     /**
      * Interrupting a waiting get causes it to throw InterruptedException
      */
-    public void testGet_InterruptedException() {
+    public void testGet_InterruptedException() throws InterruptedException {
         final FutureTask ft = new FutureTask(new NoOpCallable());
-        Thread t = new Thread(new Runnable() {
-                public void run() {                    
-                    try {
-                        ft.get();
-                        threadShouldThrow();
-                    } catch(InterruptedException success){
-                    } catch(Exception e){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws Exception {
+                ft.get();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      *  Interrupting a waiting timed get causes it to throw InterruptedException
      */
-    public void testTimedGet_InterruptedException2() {
+    public void testTimedGet_InterruptedException2() throws InterruptedException {
         final FutureTask ft = new FutureTask(new NoOpCallable());
-        Thread t = new Thread(new Runnable() {
-                 public void run() {                    
-                    try {
-                        ft.get(LONG_DELAY_MS,TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch(InterruptedException success){}
-                    catch(Exception e){
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws Exception {
+                ft.get(LONG_DELAY_MS,MILLISECONDS);
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
-    
+
     /**
      * A timed out timed get throws TimeoutException
      */
-    public void testGet_TimeoutException() {
+    public void testGet_TimeoutException() throws Exception {
         try {
             FutureTask ft = new FutureTask(new NoOpCallable());
-            ft.get(1,TimeUnit.MILLISECONDS);
+            ft.get(1,MILLISECONDS);
             shouldThrow();
-        } catch(TimeoutException success){}
-        catch(Exception success){
-            unexpectedException();
-        }
+        } catch (TimeoutException success) {}
     }
-    
+
 }

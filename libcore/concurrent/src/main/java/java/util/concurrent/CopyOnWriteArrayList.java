@@ -17,8 +17,6 @@
 package java.util.concurrent;
 import java.util.*;
 import java.util.concurrent.locks.*;
-import java.lang.reflect.Array;
-
 import sun.misc.Unsafe;
 
 // BEGIN android-note
@@ -102,7 +100,7 @@ public class CopyOnWriteArrayList<E>
         Object[] elements = c.toArray();
         // c.toArray might (incorrectly) not return Object[] (see 6260652)
         if (elements.getClass() != Object[].class)
-            elements = Java6Arrays.copyOf(elements, elements.length, Object[].class);
+            elements = Arrays.copyOf(elements, elements.length, Object[].class);
         setArray(elements);
     }
 
@@ -114,7 +112,7 @@ public class CopyOnWriteArrayList<E>
      * @throws NullPointerException if the specified array is null
      */
     public CopyOnWriteArrayList(E[] toCopyIn) {
-        setArray(Java6Arrays.copyOf(toCopyIn, toCopyIn.length, Object[].class));
+        setArray(Arrays.copyOf(toCopyIn, toCopyIn.length, Object[].class));
     }
 
     /**
@@ -288,7 +286,7 @@ public class CopyOnWriteArrayList<E>
      */
     public Object[] toArray() {
         Object[] elements = getArray();
-        return Java6Arrays.copyOf(elements, elements.length);
+        return Arrays.copyOf(elements, elements.length);
     }
 
     /**
@@ -335,7 +333,7 @@ public class CopyOnWriteArrayList<E>
         Object[] elements = getArray();
         int len = elements.length;
         if (a.length < len)
-            return (T[]) Java6Arrays.copyOf(elements, len, a.getClass());
+            return (T[]) Arrays.copyOf(elements, len, a.getClass());
         else {
             System.arraycopy(elements, 0, a, 0, len);
             if (a.length > len)
@@ -375,7 +373,7 @@ public class CopyOnWriteArrayList<E>
 
             if (oldValue != element) {
                 int len = elements.length;
-                Object[] newElements = Java6Arrays.copyOf(elements, len);
+                Object[] newElements = Arrays.copyOf(elements, len);
                 newElements[index] = element;
                 setArray(newElements);
             } else {
@@ -400,7 +398,7 @@ public class CopyOnWriteArrayList<E>
         try {
             Object[] elements = getArray();
             int len = elements.length;
-            Object[] newElements = Java6Arrays.copyOf(elements, len + 1);
+            Object[] newElements = Arrays.copyOf(elements, len + 1);
             newElements[len] = e;
             setArray(newElements);
             return true;
@@ -428,7 +426,7 @@ public class CopyOnWriteArrayList<E>
             Object[] newElements;
             int numMoved = len - index;
             if (numMoved == 0)
-                newElements = Java6Arrays.copyOf(elements, len + 1);
+                newElements = Arrays.copyOf(elements, len + 1);
             else {
                 newElements = new Object[len + 1];
                 System.arraycopy(elements, 0, newElements, 0, index);
@@ -458,7 +456,7 @@ public class CopyOnWriteArrayList<E>
             E oldValue = get(elements, index);
             int numMoved = len - index - 1;
             if (numMoved == 0)
-                setArray(Java6Arrays.copyOf(elements, len - 1));
+                setArray(Arrays.copyOf(elements, len - 1));
             else {
                 Object[] newElements = new Object[len - 1];
                 System.arraycopy(elements, 0, newElements, 0, index);
@@ -544,7 +542,7 @@ public class CopyOnWriteArrayList<E>
             int newlen = len - (toIndex - fromIndex);
             int numMoved = len - toIndex;
             if (numMoved == 0)
-                setArray(Java6Arrays.copyOf(elements, newlen));
+                setArray(Arrays.copyOf(elements, newlen));
             else {
                 Object[] newElements = new Object[newlen];
                 System.arraycopy(elements, 0, newElements, 0, fromIndex);
@@ -636,7 +634,7 @@ public class CopyOnWriteArrayList<E>
                         temp[newlen++] = element;
                 }
                 if (newlen != len) {
-                    setArray(Java6Arrays.copyOf(temp, newlen));
+                    setArray(Arrays.copyOf(temp, newlen));
                     return true;
                 }
             }
@@ -676,7 +674,7 @@ public class CopyOnWriteArrayList<E>
                         temp[newlen++] = element;
                 }
                 if (newlen != len) {
-                    setArray(Java6Arrays.copyOf(temp, newlen));
+                    setArray(Arrays.copyOf(temp, newlen));
                     return true;
                 }
             }
@@ -715,7 +713,7 @@ public class CopyOnWriteArrayList<E>
                     uniq[added++] = e;
             }
             if (added > 0) {
-                Object[] newElements = Java6Arrays.copyOf(elements, len + added);
+                Object[] newElements = Arrays.copyOf(elements, len + added);
                 System.arraycopy(uniq, 0, newElements, len, added);
                 setArray(newElements);
             }
@@ -758,7 +756,7 @@ public class CopyOnWriteArrayList<E>
         try {
             Object[] elements = getArray();
             int len = elements.length;
-            Object[] newElements = Java6Arrays.copyOf(elements, len + cs.length);
+            Object[] newElements = Arrays.copyOf(elements, len + cs.length);
             System.arraycopy(cs, 0, newElements, len, cs.length);
             setArray(newElements);
             return true;
@@ -798,7 +796,7 @@ public class CopyOnWriteArrayList<E>
             int numMoved = len - index;
             Object[] newElements;
             if (numMoved == 0)
-                newElements = Java6Arrays.copyOf(elements, len + cs.length);
+                newElements = Arrays.copyOf(elements, len + cs.length);
             else {
                 newElements = new Object[len + cs.length];
                 System.arraycopy(elements, 0, newElements, 0, index);
@@ -1314,4 +1312,5 @@ public class CopyOnWriteArrayList<E>
     private void resetLock() {
         unsafe.putObjectVolatile(this, lockOffset, new ReentrantLock());
     }
+
 }

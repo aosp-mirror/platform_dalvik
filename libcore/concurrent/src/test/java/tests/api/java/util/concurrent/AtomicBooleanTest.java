@@ -2,11 +2,11 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.concurrent.atomic.*;
@@ -21,8 +21,8 @@ public class AtomicBooleanTest extends JSR166TestCase {
      * constructor initializes to given value
      */
     public void testConstructor() {
-        AtomicBoolean ai = new AtomicBoolean(true);
-        assertEquals(true,ai.get());
+        assertTrue(new AtomicBoolean(true).get());
+        assertFalse(new AtomicBoolean(false).get());
     }
 
     /**
@@ -30,7 +30,7 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         AtomicBoolean ai = new AtomicBoolean();
-        assertEquals(false,ai.get());
+        assertFalse(ai.get());
     }
 
     /**
@@ -38,12 +38,23 @@ public class AtomicBooleanTest extends JSR166TestCase {
      */
     public void testGetSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
-        assertEquals(true,ai.get());
+        assertTrue(ai.get());
         ai.set(false);
-        assertEquals(false,ai.get());
+        assertFalse(ai.get());
         ai.set(true);
-        assertEquals(true,ai.get());
-        
+        assertTrue(ai.get());
+    }
+
+    /**
+     * get returns the last value lazySet in same thread
+     */
+    public void testGetLazySet() {
+        AtomicBoolean ai = new AtomicBoolean(true);
+        assertTrue(ai.get());
+        ai.lazySet(false);
+        assertFalse(ai.get());
+        ai.lazySet(true);
+        assertTrue(ai.get());
     }
 
     /**
@@ -52,48 +63,44 @@ public class AtomicBooleanTest extends JSR166TestCase {
     public void testCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
         assertTrue(ai.compareAndSet(true,false));
-        assertEquals(false,ai.get());
+        assertFalse(ai.get());
         assertTrue(ai.compareAndSet(false,false));
-        assertEquals(false,ai.get());
+        assertFalse(ai.get());
         assertFalse(ai.compareAndSet(true,false));
-        assertFalse((ai.get()));
+        assertFalse(ai.get());
         assertTrue(ai.compareAndSet(false,true));
-        assertEquals(true,ai.get());
+        assertTrue(ai.get());
     }
 
     /**
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws Exception {
         final AtomicBoolean ai = new AtomicBoolean(true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while(!ai.compareAndSet(false, true)) Thread.yield();
-                }});
-        try {
-            t.start();
-            assertTrue(ai.compareAndSet(true, false));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-        }
-        catch(Exception e) {
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!ai.compareAndSet(false, true)) Thread.yield();
+            }});
+
+        t.start();
+        assertTrue(ai.compareAndSet(true, false));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
     }
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet() {
         AtomicBoolean ai = new AtomicBoolean(true);
-        while(!ai.weakCompareAndSet(true,false));
-        assertEquals(false,ai.get());
-        while(!ai.weakCompareAndSet(false,false));
-        assertEquals(false,ai.get());
-        while(!ai.weakCompareAndSet(false,true));
-        assertEquals(true,ai.get());
+        while (!ai.weakCompareAndSet(true,false));
+        assertFalse(ai.get());
+        while (!ai.weakCompareAndSet(false,false));
+        assertFalse(ai.get());
+        while (!ai.weakCompareAndSet(false,true));
+        assertTrue(ai.get());
     }
 
     /**
@@ -104,37 +111,32 @@ public class AtomicBooleanTest extends JSR166TestCase {
         assertEquals(true,ai.getAndSet(false));
         assertEquals(false,ai.getAndSet(false));
         assertEquals(false,ai.getAndSet(true));
-        assertEquals(true,ai.get());
+        assertTrue(ai.get());
     }
 
     /**
      * a deserialized serialized atomic holds same value
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         AtomicBoolean l = new AtomicBoolean();
 
-        try {
-            l.set(true);
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(l);
-            out.close();
+        l.set(true);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(l);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            AtomicBoolean r = (AtomicBoolean) in.readObject();
-            assertEquals(l.get(), r.get());
-        } catch(Exception e){
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        AtomicBoolean r = (AtomicBoolean) in.readObject();
+        assertEquals(l.get(), r.get());
     }
 
     /**
      * toString returns current value.
-     */ 
+     */
     public void testToString() {
-        AtomicBoolean ai = new AtomicBoolean(); 
+        AtomicBoolean ai = new AtomicBoolean();
         assertEquals(ai.toString(), Boolean.toString(false));
         ai.set(true);
         assertEquals(ai.toString(), Boolean.toString(true));

@@ -2,11 +2,11 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import java.util.concurrent.atomic.*;
 import junit.framework.*;
@@ -24,60 +24,36 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      * Construction with non-existent field throws RuntimeException
      */
     public void testConstructor() {
-        try{
-            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
+        try {
+            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "y");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
      * construction with field not of given type throws RuntimeException
      */
     public void testConstructor2() {
-        try{
-            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
+        try {
+            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "z");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
      * construction with non-volatile field throws RuntimeException
      */
     public void testConstructor3() {
-        try{
-            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> 
+        try {
+            AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>
                 a = AtomicIntegerFieldUpdater.newUpdater
                 (AtomicIntegerFieldUpdaterTest.class, "w");
             shouldThrow();
-        }
-        catch (RuntimeException rt) {}
-    }
-
-    static class Base {
-        protected volatile int f = 0;
-    }
-    static class Sub1 extends Base {
-        AtomicIntegerFieldUpdater<Base> fUpdater
-                = AtomicIntegerFieldUpdater.newUpdater(Base.class, "f");
-    }
-    static class Sub2 extends Base {}
-
-    public void testProtectedFieldOnAnotherSubtype() {
-        Sub1 sub1 = new Sub1();
-        Sub2 sub2 = new Sub2();
-
-        sub1.fUpdater.set(sub1, 1);
-        try {
-            sub1.fUpdater.set(sub2, 2);
-            shouldThrow();
-        } 
-        catch (RuntimeException rt) {}
+        } catch (RuntimeException success) {}
     }
 
     /**
@@ -96,7 +72,24 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         assertEquals(2,a.get(this));
         a.set(this,-3);
         assertEquals(-3,a.get(this));
-        
+    }
+
+    /**
+     *  get returns the last value lazySet by same thread
+     */
+    public void testGetLazySet() {
+        AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;
+        try {
+            a = AtomicIntegerFieldUpdater.newUpdater(AtomicIntegerFieldUpdaterTest.class, "x");
+        } catch (RuntimeException ok) {
+            return;
+        }
+        x = 1;
+        assertEquals(1,a.get(this));
+        a.lazySet(this,2);
+        assertEquals(2,a.get(this));
+        a.lazySet(this,-3);
+        assertEquals(-3,a.get(this));
     }
 
     /**
@@ -114,7 +107,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
         assertTrue(a.compareAndSet(this,2,-4));
         assertEquals(-4,a.get(this));
         assertFalse(a.compareAndSet(this,-5,7));
-        assertFalse((7 == a.get(this)));
+        assertEquals(-4,a.get(this));
         assertTrue(a.compareAndSet(this,-4,7));
         assertEquals(7,a.get(this));
     }
@@ -124,7 +117,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
      * compareAndSet in one thread enables another waiting for value
      * to succeed
      */
-    public void testCompareAndSetInMultipleThreads() {
+    public void testCompareAndSetInMultipleThreads() throws Exception {
         x = 1;
         final AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest>a;
         try {
@@ -133,25 +126,22 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
             return;
         }
 
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    while(!a.compareAndSet(AtomicIntegerFieldUpdaterTest.this, 2, 3)) Thread.yield();
-                }});
-        try {
-            t.start();
-            assertTrue(a.compareAndSet(this, 1, 2));
-            t.join(LONG_DELAY_MS);
-            assertFalse(t.isAlive());
-            assertEquals(a.get(this), 3);
-        }
-        catch(Exception e) {
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() {
+                while (!a.compareAndSet(AtomicIntegerFieldUpdaterTest.this, 2, 3))
+                    Thread.yield();
+            }});
+
+        t.start();
+        assertTrue(a.compareAndSet(this, 1, 2));
+        t.join(LONG_DELAY_MS);
+        assertFalse(t.isAlive());
+        assertEquals(a.get(this), 3);
     }
 
     /**
      * repeated weakCompareAndSet succeeds in changing value when equal
-     * to expected 
+     * to expected
      */
     public void testWeakCompareAndSet() {
         AtomicIntegerFieldUpdater<AtomicIntegerFieldUpdaterTest> a;
@@ -161,10 +151,10 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
             return;
         }
         x = 1;
-        while(!a.weakCompareAndSet(this,1,2));
-        while(!a.weakCompareAndSet(this,2,-4));
+        while (!a.weakCompareAndSet(this,1,2));
+        while (!a.weakCompareAndSet(this,2,-4));
         assertEquals(-4,a.get(this));
-        while(!a.weakCompareAndSet(this,-4,7));
+        while (!a.weakCompareAndSet(this,-4,7));
         assertEquals(7,a.get(this));
     }
 

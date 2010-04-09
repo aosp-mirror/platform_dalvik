@@ -419,9 +419,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 else if (s.waiter == null)
                     s.waiter = w; // establish waiter so can park next iter
                 else if (!timed)
-                    LockSupport.park();
+                    LockSupport.park(this);
                 else if (nanos > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(nanos);
+                    LockSupport.parkNanos(this, nanos);
             }
         }
 
@@ -711,9 +711,9 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
                 else if (s.waiter == null)
                     s.waiter = w;
                 else if (!timed)
-                    LockSupport.park();
+                    LockSupport.park(this);
                 else if (nanos > spinForTimeoutThreshold)
-                    LockSupport.parkNanos(nanos);
+                    LockSupport.parkNanos(this, nanos);
             }
         }
 
@@ -991,19 +991,6 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         return null;
     }
 
-
-    static class EmptyIterator<E> implements Iterator<E> {
-        public boolean hasNext() {
-            return false;
-        }
-        public E next() {
-            throw new NoSuchElementException();
-        }
-        public void remove() {
-            throw new IllegalStateException();
-        }
-    }
-
     /**
      * Returns an empty iterator in which <tt>hasNext</tt> always returns
      * <tt>false</tt>.
@@ -1011,7 +998,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
      * @return an empty iterator
      */
     public Iterator<E> iterator() {
-        return new EmptyIterator<E>();
+        return Collections.<E>emptySet().iterator(); // android-changed
     }
 
     /**

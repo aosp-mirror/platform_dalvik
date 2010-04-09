@@ -4,10 +4,6 @@
  * http://creativecommons.org/licenses/publicdomain
  */
 
-/*
- * Modified in Apache Harmony.
- */
-
 package java.util.concurrent;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
@@ -27,6 +23,15 @@ import java.util.*;
  * execution time are enabled in first-in-first-out (FIFO) order of
  * submission.
  *
+ * <p>When a submitted task is cancelled before it is run, execution
+ * is suppressed. By default, such a cancelled task is not
+ * automatically removed from the work queue until its delay
+ * elapses. While this enables further inspection and monitoring, it
+ * may also cause unbounded retention of cancelled tasks. To avoid
+ * this, set {@link #setRemoveOnCancelPolicy} to {@code true}, which
+ * causes tasks to be immediately removed from the work queue at
+ * time of cancellation.
+ *
  * <p>Successive executions of a task scheduled via
  * <code>scheduleAtFixedRate</code> or
  * <code>scheduleWithFixedDelay</code> do not overlap. While different
@@ -37,9 +42,47 @@ import java.util.*;
  *
  * <p>While this class inherits from {@link ThreadPoolExecutor}, a few
  * of the inherited tuning methods are not useful for it. In
- * particular, because it acts as a fixed-sized pool using {@code
- * corePoolSize} threads and an unbounded queue, adjustments to {@code
- * maximumPoolSize} have no useful effect.
+ * particular, because it acts as a fixed-sized pool using
+ * {@code corePoolSize} threads and an unbounded queue, adjustments
+ * to {@code maximumPoolSize} have no useful effect. Additionally, it
+ * is almost never a good idea to set {@code corePoolSize} to zero or
+ * use {@code allowCoreThreadTimeOut} because this may leave the pool
+ * without threads to handle tasks once they become eligible to run.
+ *
+ * <p><b>Extension notes:</b> This class overrides the
+ * {@link ThreadPoolExecutor#execute execute} and
+ * {@link AbstractExecutorService#submit(Runnable) submit}
+ * methods to generate internal {@link ScheduledFuture} objects to
+ * control per-task delays and scheduling.  To preserve
+ * functionality, any further overrides of these methods in
+ * subclasses must invoke superclass versions, which effectively
+ * disables additional task customization.  However, this class
+ * provides alternative protected extension method
+ * {@code decorateTask} (one version each for {@code Runnable} and
+ * {@code Callable}) that can be used to customize the concrete task
+ * types used to execute commands entered via {@code execute},
+ * {@code submit}, {@code schedule}, {@code scheduleAtFixedRate},
+ * and {@code scheduleWithFixedDelay}.  By default, a
+ * {@code ScheduledThreadPoolExecutor} uses a task type extending
+ * {@link FutureTask}. However, this may be modified or replaced using
+ * subclasses of the form:
+ *
+ *  <pre> {@code
+ * public class CustomScheduledExecutor extends ScheduledThreadPoolExecutor {
+ *
+ *   static class CustomTask<V> implements RunnableScheduledFuture<V> { ... }
+ *
+ *   protected <V> RunnableScheduledFuture<V> decorateTask(
+ *                Runnable r, RunnableScheduledFuture<V> task) {
+ *       return new CustomTask<V>(r, task);
+ *   }
+ *
+ *   protected <V> RunnableScheduledFuture<V> decorateTask(
+ *                Callable<V> c, RunnableScheduledFuture<V> task) {
+ *       return new CustomTask<V>(c, task);
+ *   }
+ *   // ... add constructors, etc.
+ * }}</pre>
  *
  * @since 1.5
  * @author Doug Lea
@@ -96,23 +139,15 @@ public class ScheduledThreadPoolExecutor
      */
     private static final AtomicLong sequencer = new AtomicLong(0);
 
-
-    /**
-     * Value of System.nanoTime upon static initialization.  This is
-     * used as an offset by now() to avoid wraparound of time values
-     * that would make them appear negative.
-     */
-    static final long initialNanoTime = System.nanoTime();
-
     /**
      * Returns current nanosecond time.
      */
-    static long now() {
-        return System.nanoTime() - initialNanoTime;
+    final long now() {
+        return System.nanoTime();
     }
 
     private class ScheduledFutureTask<V>
-            extends FutureTask<V> implements ScheduledFuture<V> {
+            extends FutureTask<V> implements RunnableScheduledFuture<V> {
 
         /** Sequence number to break ties FIFO */
         private final long sequenceNumber;
@@ -129,7 +164,7 @@ public class ScheduledThreadPoolExecutor
         private final long period;
 
         /** The actual task to be re-enqueued by reExecutePeriodic */
-        ScheduledFutureTask<V> outerTask = this;
+        RunnableScheduledFuture<V> outerTask = this;
 
         /**
          * Index into delay queue, to support faster cancellation.
@@ -167,8 +202,7 @@ public class ScheduledThreadPoolExecutor
         }
 
         public long getDelay(TimeUnit unit) {
-            long d = time - now();
-            return d<=0? 0 : unit.convert(d, TimeUnit.NANOSECONDS);
+            return unit.convert(time - now(), TimeUnit.NANOSECONDS);
         }
 
         public int compareTo(Delayed other) {
@@ -208,7 +242,7 @@ public class ScheduledThreadPoolExecutor
             if (p > 0)
                 time += p;
             else
-                time = now() - p;
+                time = triggerTime(-p);
         }
 
         public boolean cancel(boolean mayInterruptIfRunning) {
@@ -257,7 +291,7 @@ public class ScheduledThreadPoolExecutor
      *
      * @param task the task
      */
-    private void delayedExecute(ScheduledFutureTask<?> task) {
+    private void delayedExecute(RunnableScheduledFuture<?> task) {
         if (isShutdown())
             reject(task);
         else {
@@ -277,7 +311,7 @@ public class ScheduledThreadPoolExecutor
      *
      * @param task the task
      */
-    void reExecutePeriodic(ScheduledFutureTask<?> task) {
+    void reExecutePeriodic(RunnableScheduledFuture<?> task) {
         if (canRunInCurrentRunState(true)) {
             super.getQueue().add(task);
             if (!canRunInCurrentRunState(true) && remove(task))
@@ -302,9 +336,9 @@ public class ScheduledThreadPoolExecutor
         else {
             // Traverse snapshot to avoid iterator exceptions
             for (Object e : q.toArray()) {
-                if (e instanceof ScheduledFutureTask) {
-                    ScheduledFutureTask<?> t =
-                        (ScheduledFutureTask<?>)e;
+                if (e instanceof RunnableScheduledFuture) {
+                    RunnableScheduledFuture<?> t =
+                        (RunnableScheduledFuture<?>)e;
                     if ((t.isPeriodic() ? !keepPeriodic : !keepDelayed) ||
                         t.isCancelled()) { // also remove if already cancelled
                         if (q.remove(t))
@@ -317,11 +351,43 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
+     * Modifies or replaces the task used to execute a runnable.
+     * This method can be used to override the concrete
+     * class used for managing internal tasks.
+     * The default implementation simply returns the given task.
+     *
+     * @param runnable the submitted Runnable
+     * @param task the task created to execute the runnable
+     * @return a task that can execute the runnable
+     * @since 1.6
+     */
+    protected <V> RunnableScheduledFuture<V> decorateTask(
+        Runnable runnable, RunnableScheduledFuture<V> task) {
+        return task;
+    }
+
+    /**
+     * Modifies or replaces the task used to execute a callable.
+     * This method can be used to override the concrete
+     * class used for managing internal tasks.
+     * The default implementation simply returns the given task.
+     *
+     * @param callable the submitted Callable
+     * @param task the task created to execute the callable
+     * @return a task that can execute the callable
+     * @since 1.6
+     */
+    protected <V> RunnableScheduledFuture<V> decorateTask(
+        Callable<V> callable, RunnableScheduledFuture<V> task) {
+        return task;
+    }
+
+    /**
      * Creates a new {@code ScheduledThreadPoolExecutor} with the
      * given core pool size.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @throws IllegalArgumentException if {@code corePoolSize < 0}
      */
     public ScheduledThreadPoolExecutor(int corePoolSize) {
@@ -334,7 +400,7 @@ public class ScheduledThreadPoolExecutor
      * given initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param threadFactory the factory to use when the executor
      *        creates a new thread
      * @throws IllegalArgumentException if {@code corePoolSize < 0}
@@ -351,7 +417,7 @@ public class ScheduledThreadPoolExecutor
      * initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param handler the handler to use when execution is blocked
      *        because the thread bounds and queue capacities are reached
      * @throws IllegalArgumentException if {@code corePoolSize < 0}
@@ -368,7 +434,7 @@ public class ScheduledThreadPoolExecutor
      * initial parameters.
      *
      * @param corePoolSize the number of threads to keep in the pool, even
-     *        if they are idle
+     *        if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param threadFactory the factory to use when the executor
      *        creates a new thread
      * @param handler the handler to use when execution is blocked
@@ -385,17 +451,35 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
-     * Returns the trigger time of a delayed action
+     * Returns the trigger time of a delayed action.
      */
-    private static long nextTriggerTime(long delay, TimeUnit unit) {
-        long triggerTime;
-        long now = now();
-        if (delay <= 0)
-            return now;            // avoid negative trigger times
-        else if ((triggerTime = now + unit.toNanos(delay)) < 0)
-            return Long.MAX_VALUE; // avoid numerical overflow
-        else
-            return triggerTime;
+    private long triggerTime(long delay, TimeUnit unit) {
+        return triggerTime(unit.toNanos((delay < 0) ? 0 : delay));
+    }
+
+    /**
+     * Returns the trigger time of a delayed action.
+     */
+    long triggerTime(long delay) {
+        return now() +
+            ((delay < (Long.MAX_VALUE >> 1)) ? delay : overflowFree(delay));
+    }
+
+    /**
+     * Constrains the values of all delays in the queue to be within
+     * Long.MAX_VALUE of each other, to avoid overflow in compareTo.
+     * This may occur if a task is eligible to be dequeued, but has
+     * not yet been, while some other task is added with a delay of
+     * Long.MAX_VALUE.
+     */
+    private long overflowFree(long delay) {
+        Delayed head = (Delayed) super.getQueue().peek();
+        if (head != null) {
+            long headDelay = head.getDelay(TimeUnit.NANOSECONDS);
+            if (headDelay < 0 && (delay - headDelay < 0))
+                delay = Long.MAX_VALUE + headDelay;
+        }
+        return delay;
     }
 
     /**
@@ -407,9 +491,9 @@ public class ScheduledThreadPoolExecutor
                                        TimeUnit unit) {
         if (command == null || unit == null)
             throw new NullPointerException();
-        long triggerTime = nextTriggerTime(delay, unit);
-        ScheduledFutureTask<?> t
-                = new ScheduledFutureTask<Void>(command, null, triggerTime);
+        RunnableScheduledFuture<?> t = decorateTask(command,
+            new ScheduledFutureTask<Void>(command, null,
+                                          triggerTime(delay, unit)));
         delayedExecute(t);
         return t;
     }
@@ -423,9 +507,9 @@ public class ScheduledThreadPoolExecutor
                                            TimeUnit unit) {
         if (callable == null || unit == null)
             throw new NullPointerException();
-        long triggerTime = nextTriggerTime(delay, unit);
-        ScheduledFutureTask<V> t
-                = new ScheduledFutureTask<V>(callable, triggerTime);
+        RunnableScheduledFuture<V> t = decorateTask(callable,
+            new ScheduledFutureTask<V>(callable,
+                                       triggerTime(delay, unit)));
         delayedExecute(t);
         return t;
     }
@@ -443,16 +527,15 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (period <= 0)
             throw new IllegalArgumentException();
-        if (initialDelay < 0) initialDelay = 0;
-        long triggerTime = nextTriggerTime(initialDelay, unit);
         ScheduledFutureTask<Void> sft =
             new ScheduledFutureTask<Void>(command,
                                           null,
-                                          triggerTime,
+                                          triggerTime(initialDelay, unit),
                                           unit.toNanos(period));
-        sft.outerTask = sft;
-        delayedExecute(sft);
-        return sft;
+        RunnableScheduledFuture<Void> t = decorateTask(command, sft);
+        sft.outerTask = t;
+        delayedExecute(t);
+        return t;
     }
 
     /**
@@ -468,15 +551,15 @@ public class ScheduledThreadPoolExecutor
             throw new NullPointerException();
         if (delay <= 0)
             throw new IllegalArgumentException();
-        long triggerTime = nextTriggerTime(initialDelay, unit);
         ScheduledFutureTask<Void> sft =
             new ScheduledFutureTask<Void>(command,
                                           null,
-                                          triggerTime,
+                                          triggerTime(initialDelay, unit),
                                           unit.toNanos(-delay));
-        sft.outerTask = sft;
-        delayedExecute(sft);
-        return sft;
+        RunnableScheduledFuture<Void> t = decorateTask(command, sft);
+        sft.outerTask = t;
+        delayedExecute(t);
+        return t;
     }
 
     /**
@@ -595,6 +678,33 @@ public class ScheduledThreadPoolExecutor
     }
 
     /**
+     * Sets the policy on whether cancelled tasks should be immediately
+     * removed from the work queue at time of cancellation.  This value is
+     * by default {@code false}.
+     *
+     * @param value if {@code true}, remove on cancellation, else don't
+     * @see #getRemoveOnCancelPolicy
+     * @since 1.7
+     */
+    /*public*/ void setRemoveOnCancelPolicy(boolean value) { // android-changed
+        removeOnCancel = value;
+    }
+
+    /**
+     * Gets the policy on whether cancelled tasks should be immediately
+     * removed from the work queue at time of cancellation.  This value is
+     * by default {@code false}.
+     *
+     * @return {@code true} if cancelled tasks are immediately removed
+     *         from the queue
+     * @see #setRemoveOnCancelPolicy
+     * @since 1.7
+     */
+    /*public*/ boolean getRemoveOnCancelPolicy() { // android-changed
+        return removeOnCancel;
+    }
+
+    /**
      * Initiates an orderly shutdown in which previously submitted
      * tasks are executed, but no new tasks will be accepted.
      * Invocation has no additional effect if already shut down.
@@ -688,8 +798,8 @@ public class ScheduledThreadPoolExecutor
          */
 
         private static final int INITIAL_CAPACITY = 16;
-        private ScheduledFutureTask[] queue =
-            new ScheduledFutureTask[INITIAL_CAPACITY];
+        private RunnableScheduledFuture[] queue =
+            new RunnableScheduledFuture[INITIAL_CAPACITY];
         private final ReentrantLock lock = new ReentrantLock();
         private int size = 0;
 
@@ -720,7 +830,7 @@ public class ScheduledThreadPoolExecutor
         /**
          * Set f's heapIndex if it is a ScheduledFutureTask.
          */
-        private void setIndex(ScheduledFutureTask f, int idx) {
+        private void setIndex(RunnableScheduledFuture f, int idx) {
             if (f instanceof ScheduledFutureTask)
                 ((ScheduledFutureTask)f).heapIndex = idx;
         }
@@ -729,10 +839,10 @@ public class ScheduledThreadPoolExecutor
          * Sift element added at bottom up to its heap-ordered spot.
          * Call only when holding lock.
          */
-        private void siftUp(int k, ScheduledFutureTask key) {
+        private void siftUp(int k, RunnableScheduledFuture key) {
             while (k > 0) {
                 int parent = (k - 1) >>> 1;
-                ScheduledFutureTask e = queue[parent];
+                RunnableScheduledFuture e = queue[parent];
                 if (key.compareTo(e) >= 0)
                     break;
                 queue[k] = e;
@@ -747,11 +857,11 @@ public class ScheduledThreadPoolExecutor
          * Sift element added at top down to its heap-ordered spot.
          * Call only when holding lock.
          */
-        private void siftDown(int k, ScheduledFutureTask key) {
+        private void siftDown(int k, RunnableScheduledFuture key) {
             int half = size >>> 1;
             while (k < half) {
                 int child = (k << 1) + 1;
-                ScheduledFutureTask c = queue[child];
+                RunnableScheduledFuture c = queue[child];
                 int right = child + 1;
                 if (right < size && c.compareTo(queue[right]) > 0)
                     c = queue[child = right];
@@ -773,7 +883,7 @@ public class ScheduledThreadPoolExecutor
             int newCapacity = oldCapacity + (oldCapacity >> 1); // grow 50%
             if (newCapacity < 0) // overflow
                 newCapacity = Integer.MAX_VALUE;
-            queue = Java6Arrays.copyOf(queue, newCapacity);
+            queue = Arrays.copyOf(queue, newCapacity);
         }
 
         /**
@@ -816,7 +926,7 @@ public class ScheduledThreadPoolExecutor
 
                 setIndex(queue[i], -1);
                 int s = --size;
-                ScheduledFutureTask replacement = queue[s];
+                RunnableScheduledFuture replacement = queue[s];
                 queue[s] = null;
                 if (s != i) {
                     siftDown(i, replacement);
@@ -847,7 +957,7 @@ public class ScheduledThreadPoolExecutor
             return Integer.MAX_VALUE;
         }
 
-        public ScheduledFutureTask peek() {
+        public RunnableScheduledFuture peek() {
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
@@ -860,7 +970,7 @@ public class ScheduledThreadPoolExecutor
         public boolean offer(Runnable x) {
             if (x == null)
                 throw new NullPointerException();
-            ScheduledFutureTask e = (ScheduledFutureTask)x;
+            RunnableScheduledFuture e = (RunnableScheduledFuture)x;
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
@@ -902,9 +1012,9 @@ public class ScheduledThreadPoolExecutor
          * holding lock.
          * @param f the task to remove and return
          */
-        private ScheduledFutureTask finishPoll(ScheduledFutureTask f) {
+        private RunnableScheduledFuture finishPoll(RunnableScheduledFuture f) {
             int s = --size;
-            ScheduledFutureTask x = queue[s];
+            RunnableScheduledFuture x = queue[s];
             queue[s] = null;
             if (s != 0)
                 siftDown(0, x);
@@ -912,11 +1022,11 @@ public class ScheduledThreadPoolExecutor
             return f;
         }
 
-        public ScheduledFutureTask poll() {
+        public RunnableScheduledFuture poll() {
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-                ScheduledFutureTask first = queue[0];
+                RunnableScheduledFuture first = queue[0];
                 if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
                     return null;
                 else
@@ -926,12 +1036,12 @@ public class ScheduledThreadPoolExecutor
             }
         }
 
-        public ScheduledFutureTask take() throws InterruptedException {
+        public RunnableScheduledFuture take() throws InterruptedException {
             final ReentrantLock lock = this.lock;
             lock.lockInterruptibly();
             try {
                 for (;;) {
-                    ScheduledFutureTask first = queue[0];
+                    RunnableScheduledFuture first = queue[0];
                     if (first == null)
                         available.await();
                     else {
@@ -959,14 +1069,14 @@ public class ScheduledThreadPoolExecutor
             }
         }
 
-        public ScheduledFutureTask poll(long timeout, TimeUnit unit)
+        public RunnableScheduledFuture poll(long timeout, TimeUnit unit)
             throws InterruptedException {
             long nanos = unit.toNanos(timeout);
             final ReentrantLock lock = this.lock;
             lock.lockInterruptibly();
             try {
                 for (;;) {
-                    ScheduledFutureTask first = queue[0];
+                    RunnableScheduledFuture first = queue[0];
                     if (first == null) {
                         if (nanos <= 0)
                             return null;
@@ -1005,7 +1115,7 @@ public class ScheduledThreadPoolExecutor
             lock.lock();
             try {
                 for (int i = 0; i < size; i++) {
-                    ScheduledFutureTask t = queue[i];
+                    RunnableScheduledFuture t = queue[i];
                     if (t != null) {
                         queue[i] = null;
                         setIndex(t, -1);
@@ -1021,8 +1131,8 @@ public class ScheduledThreadPoolExecutor
          * Return and remove first element only if it is expired.
          * Used only by drainTo.  Call only when holding lock.
          */
-        private ScheduledFutureTask pollExpired() {
-            ScheduledFutureTask first = queue[0];
+        private RunnableScheduledFuture pollExpired() {
+            RunnableScheduledFuture first = queue[0];
             if (first == null || first.getDelay(TimeUnit.NANOSECONDS) > 0)
                 return null;
             return finishPoll(first);
@@ -1036,7 +1146,7 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-                ScheduledFutureTask first;
+                RunnableScheduledFuture first;
                 int n = 0;
                 while ((first = pollExpired()) != null) {
                     c.add(first);
@@ -1058,7 +1168,7 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-                ScheduledFutureTask first;
+                RunnableScheduledFuture first;
                 int n = 0;
                 while (n < maxElements && (first = pollExpired()) != null) {
                     c.add(first);
@@ -1074,7 +1184,7 @@ public class ScheduledThreadPoolExecutor
             final ReentrantLock lock = this.lock;
             lock.lock();
             try {
-                return Java6Arrays.copyOf(queue, size, Object[].class);
+                return Arrays.copyOf(queue, size, Object[].class);
             } finally {
                 lock.unlock();
             }
@@ -1086,7 +1196,7 @@ public class ScheduledThreadPoolExecutor
             lock.lock();
             try {
                 if (a.length < size)
-                    return (T[]) Java6Arrays.copyOf(queue, size, a.getClass());
+                    return (T[]) Arrays.copyOf(queue, size, a.getClass());
                 System.arraycopy(queue, 0, a, 0, size);
                 if (a.length > size)
                     a[size] = null;
@@ -1097,18 +1207,18 @@ public class ScheduledThreadPoolExecutor
         }
 
         public Iterator<Runnable> iterator() {
-            return new Itr(Java6Arrays.copyOf(queue, size));
+            return new Itr(Arrays.copyOf(queue, size));
         }
 
         /**
          * Snapshot iterator that works off copy of underlying q array.
          */
         private class Itr implements Iterator<Runnable> {
-            final ScheduledFutureTask[] array;
+            final RunnableScheduledFuture[] array;
             int cursor = 0;     // index of next element to return
             int lastRet = -1;   // index of last element, or -1 if no such
 
-            Itr(ScheduledFutureTask[] array) {
+            Itr(RunnableScheduledFuture[] array) {
                 this.array = array;
             }
 

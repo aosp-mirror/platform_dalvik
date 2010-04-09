@@ -2,15 +2,16 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.*;
 import java.util.concurrent.*;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import java.io.*;
 
 public class SynchronousQueueTest extends JSR166TestCase {
@@ -48,7 +49,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
             q.offer(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -59,7 +60,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) { }   
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -79,8 +80,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             assertEquals(0, q.remainingCapacity());
             q.add(one);
             shouldThrow();
-        } catch (IllegalStateException success){
-        }   
+        } catch (IllegalStateException success) {}
     }
 
     /**
@@ -91,8 +91,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -103,8 +102,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             SynchronousQueue q = new SynchronousQueue();
             q.addAll(q);
             shouldThrow();
-        }
-        catch (IllegalArgumentException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
@@ -116,8 +114,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[1];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll throws ISE if no active taker
@@ -130,243 +127,171 @@ public class SynchronousQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (IllegalStateException success) {}
+        } catch (IllegalStateException success) {}
     }
 
     /**
      * put(null) throws NPE
      */
-    public void testPutNull() {
+    public void testPutNull() throws InterruptedException {
         try {
             SynchronousQueue q = new SynchronousQueue();
             q.put(null);
             shouldThrow();
-        } 
-        catch (NullPointerException success){
-        }   
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+        } catch (NullPointerException success) {}
      }
 
     /**
      * put blocks interruptibly if no active taker
      */
-    public void testBlockingPut() {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        SynchronousQueue q = new SynchronousQueue();
-                        q.put(zero);
-                        threadShouldThrow();
-                    } catch (InterruptedException ie){
-                    }   
-                }});
+    public void testBlockingPut() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                SynchronousQueue q = new SynchronousQueue();
+                q.put(zero);
+            }});
+
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
-           t.interrupt();
-           t.join();
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
-     * put blocks waiting for take 
+     * put blocks waiting for take
      */
-    public void testPutWithTake() {
+    public void testPutWithTake() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        q.put(new Object());
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                int added = 0;
+                try {
+                    while (true) {
+                        q.put(added);
                         ++added;
-                        q.put(new Object());
-                        ++added;
-                        q.put(new Object());
-                        ++added;
-                        q.put(new Object());
-                        ++added;
-                        threadShouldThrow();
-                    } catch (InterruptedException e){
-                        assertTrue(added >= 1);
                     }
+                } catch (InterruptedException success) {
+                    assertTrue(added == 1);
                 }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            q.take();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(0, q.take());
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * timed offer times out if elements not taken
      */
-    public void testTimedOffer() {
+    public void testTimedOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+            }});
 
-                        threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch (InterruptedException success){}
-                }
-            });
-        
-        try {
-            t.start();
-            Thread.sleep(SMALL_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SMALL_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
 
     /**
      * take blocks interruptibly when empty
      */
-    public void testTakeFromEmpty() {
+    public void testTakeFromEmpty() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.take();
-                        threadShouldThrow();
-                    } catch (InterruptedException success){ }                
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                q.take();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
 
     /**
      * put blocks interruptibly if no active taker
      */
-    public void testFairBlockingPut() {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        SynchronousQueue q = new SynchronousQueue(true);
-                        q.put(zero);
-                        threadShouldThrow();
-                    } catch (InterruptedException ie){
-                    }   
-                }});
+    public void testFairBlockingPut() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                SynchronousQueue q = new SynchronousQueue(true);
+                q.put(zero);
+            }});
+
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
-           t.interrupt();
-           t.join();
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
-     * put blocks waiting for take 
+     * put blocks waiting for take
      */
-    public void testFairPutWithTake() {
+    public void testFairPutWithTake() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    int added = 0;
-                    try {
-                        q.put(new Object());
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                int added = 0;
+                try {
+                    while (true) {
+                        q.put(added);
                         ++added;
-                        q.put(new Object());
-                        ++added;
-                        q.put(new Object());
-                        ++added;
-                        q.put(new Object());
-                        ++added;
-                        threadShouldThrow();
-                    } catch (InterruptedException e){
-                        assertTrue(added >= 1);
                     }
+                } catch (InterruptedException success) {
+                    assertTrue(added == 1);
                 }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            q.take();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        assertEquals(0, q.take());
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      * timed offer times out if elements not taken
      */
-    public void testFairTimedOffer() {
+    public void testFairTimedOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertFalse(q.offer(new Object(), SHORT_DELAY_MS, MILLISECONDS));
+                q.offer(new Object(), LONG_DELAY_MS, MILLISECONDS);
+            }});
 
-                        threadAssertFalse(q.offer(new Object(), SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        q.offer(new Object(), LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch (InterruptedException success){}
-                }
-            });
-        
-        try {
-            t.start();
-            Thread.sleep(SMALL_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
+        t.start();
+        Thread.sleep(SMALL_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
 
     /**
      * take blocks interruptibly when empty
      */
-    public void testFairTakeFromEmpty() {
+    public void testFairTakeFromEmpty() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.take();
-                        threadShouldThrow();
-                    } catch (InterruptedException success){ }                
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SHORT_DELAY_MS);
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                q.take();
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
@@ -380,128 +305,98 @@ public class SynchronousQueueTest extends JSR166TestCase {
     /**
      * timed pool with zero timeout times out if no active taker
      */
-    public void testTimedPoll0() {
-        try {
-            SynchronousQueue q = new SynchronousQueue();
-            assertNull(q.poll(0, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e){
-            unexpectedException();
-        }   
+    public void testTimedPoll0() throws InterruptedException {
+        SynchronousQueue q = new SynchronousQueue();
+        assertNull(q.poll(0, MILLISECONDS));
     }
 
     /**
      * timed pool with nonzero timeout times out if no active taker
      */
-    public void testTimedPoll() {
-        try {
-            SynchronousQueue q = new SynchronousQueue();
-            assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-        } catch (InterruptedException e){
-            unexpectedException();
-        }   
+    public void testTimedPoll() throws InterruptedException {
+        SynchronousQueue q = new SynchronousQueue();
+        assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
     }
 
     /**
      * Interrupted timed poll throws InterruptedException instead of
      * returning timeout status
      */
-    public void testInterruptedTimedPoll() {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        SynchronousQueue q = new SynchronousQueue();
-                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                    } catch (InterruptedException success){
-                    }   
-                }});
-        t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
-           t.interrupt();
-           t.join();
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
-    }
-
-    /**
-     *  timed poll before a delayed offer fails; after offer succeeds;
-     *  on interruption throws
-     */
-    public void testTimedPollWithOffer() {
+    public void testInterruptedTimedPoll() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch (InterruptedException success) { }                
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SMALL_DELAY_MS);
-            assertTrue(q.offer(zero, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
-    }  
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                q.poll(SMALL_DELAY_MS, MILLISECONDS);
+            }});
 
-    /**
-     * Interrupted timed poll throws InterruptedException instead of
-     * returning timeout status
-     */
-    public void testFairInterruptedTimedPoll() {
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        SynchronousQueue q = new SynchronousQueue(true);
-                        assertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                    } catch (InterruptedException success){
-                    }   
-                }});
         t.start();
-        try { 
-           Thread.sleep(SHORT_DELAY_MS); 
-           t.interrupt();
-           t.join();
-        }
-        catch (InterruptedException ie) {
-            unexpectedException();
-        }
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
     }
 
     /**
      *  timed poll before a delayed offer fails; after offer succeeds;
      *  on interruption throws
      */
-    public void testFairTimedPollWithOffer() {
+    public void testTimedPollWithOffer() throws InterruptedException {
+        final SynchronousQueue q = new SynchronousQueue();
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    shouldThrow();
+                } catch (InterruptedException success) {}
+            }});
+
+        t.start();
+        Thread.sleep(SMALL_DELAY_MS);
+        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
+        t.interrupt();
+        t.join();
+    }
+
+    /**
+     * Interrupted timed poll throws InterruptedException instead of
+     * returning timeout status
+     */
+    public void testFairInterruptedTimedPoll() throws InterruptedException {
+        Thread t = new Thread(new CheckedInterruptedRunnable() {
+            public void realRun() throws InterruptedException {
+                SynchronousQueue q = new SynchronousQueue(true);
+                q.poll(SMALL_DELAY_MS, MILLISECONDS);
+            }});
+
+        t.start();
+        Thread.sleep(SHORT_DELAY_MS);
+        t.interrupt();
+        t.join();
+    }
+
+    /**
+     *  timed poll before a delayed offer fails; after offer succeeds;
+     *  on interruption throws
+     */
+    public void testFairTimedPollWithOffer() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue(true);
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        threadAssertNull(q.poll(SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        q.poll(LONG_DELAY_MS, TimeUnit.MILLISECONDS);
-                        threadShouldThrow();
-                    } catch (InterruptedException success) { }                
-                }
-            });
-        try {
-            t.start();
-            Thread.sleep(SMALL_DELAY_MS);
-            assertTrue(q.offer(zero, SHORT_DELAY_MS, TimeUnit.MILLISECONDS));
-            t.interrupt();
-            t.join();
-        } catch (Exception e){
-            unexpectedException();
-        }
-    }  
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertNull(q.poll(SHORT_DELAY_MS, MILLISECONDS));
+                assertSame(zero, q.poll(LONG_DELAY_MS, MILLISECONDS));
+                try {
+                    q.poll(LONG_DELAY_MS, MILLISECONDS);
+                    threadShouldThrow();
+                } catch (InterruptedException success) {}
+            }});
+
+        t.start();
+        Thread.sleep(SMALL_DELAY_MS);
+        assertTrue(q.offer(zero, SHORT_DELAY_MS, MILLISECONDS));
+        t.interrupt();
+        t.join();
+    }
 
 
     /**
@@ -520,8 +415,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -532,8 +426,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success){
-        }   
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -544,7 +437,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         assertFalse(q.remove(zero));
         assertTrue(q.isEmpty());
     }
-        
+
     /**
      * contains returns false
      */
@@ -613,16 +506,16 @@ public class SynchronousQueueTest extends JSR166TestCase {
         Integer[] ints = new Integer[1];
         assertNull(ints[0]);
     }
-    
+
     /**
      * toArray(null) throws NPE
      */
     public void testToArray_BadArg() {
+        SynchronousQueue q = new SynchronousQueue();
         try {
-            SynchronousQueue q = new SynchronousQueue();
             Object o[] = q.toArray(null);
             shouldThrow();
-        } catch(NullPointerException success){}
+        } catch (NullPointerException success) {}
     }
 
 
@@ -636,8 +529,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             Object x = it.next();
             shouldThrow();
-        }
-        catch (NoSuchElementException success) {}
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -649,8 +541,9 @@ public class SynchronousQueueTest extends JSR166TestCase {
         try {
             it.remove();
             shouldThrow();
+        } catch (IllegalStateException success) {
+        } catch (UnsupportedOperationException success) { // android-added
         }
-        catch (IllegalStateException success) {}
     }
 
     /**
@@ -660,7 +553,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
         SynchronousQueue q = new SynchronousQueue();
         String s = q.toString();
         assertNotNull(s);
-    }        
+    }
 
 
     /**
@@ -669,35 +562,21 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testOfferInExecutor() {
         final SynchronousQueue q = new SynchronousQueue();
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        final Integer one = new Integer(1);
 
-        executor.execute(new Runnable() {
-            public void run() {
-                threadAssertFalse(q.offer(one));
-                try {
-                    threadAssertTrue(q.offer(one, MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
-                    threadAssertEquals(0, q.remainingCapacity());
-                }
-                catch (InterruptedException e) {
-                    threadUnexpectedException();
-                }
-            }
-        });
+        executor.execute(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertFalse(q.offer(one));
+                assertTrue(q.offer(one, MEDIUM_DELAY_MS, MILLISECONDS));
+                assertEquals(0, q.remainingCapacity());
+            }});
 
-        executor.execute(new Runnable() {
-            public void run() {
-                try {
-                    Thread.sleep(SMALL_DELAY_MS);
-                    threadAssertEquals(one, q.take());
-                }
-                catch (InterruptedException e) {
-                    threadUnexpectedException();
-                }
-            }
-        });
-        
+        executor.execute(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                Thread.sleep(SMALL_DELAY_MS);
+                assertSame(one, q.take());
+            }});
+
         joinPool(executor);
-
     }
 
     /**
@@ -706,84 +585,65 @@ public class SynchronousQueueTest extends JSR166TestCase {
     public void testPollInExecutor() {
         final SynchronousQueue q = new SynchronousQueue();
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        executor.execute(new Runnable() {
-            public void run() {
-                threadAssertNull(q.poll());
-                try {
-                    threadAssertTrue(null != q.poll(MEDIUM_DELAY_MS, TimeUnit.MILLISECONDS));
-                    threadAssertTrue(q.isEmpty());
-                }
-                catch (InterruptedException e) {
-                    threadUnexpectedException();
-                }
-            }
-        });
+        executor.execute(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                assertNull(q.poll());
+                assertSame(one, q.poll(MEDIUM_DELAY_MS, MILLISECONDS));
+                assertTrue(q.isEmpty());
+            }});
 
-        executor.execute(new Runnable() {
-            public void run() {
-                try {
-                    Thread.sleep(SMALL_DELAY_MS);
-                    q.put(new Integer(1));
-                }
-                catch (InterruptedException e) {
-                    threadUnexpectedException();
-                }
-            }
-        });
-        
+        executor.execute(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                Thread.sleep(SHORT_DELAY_MS);
+                q.put(one);
+            }});
+
         joinPool(executor);
     }
 
     /**
      * a deserialized serialized queue is usable
      */
-    public void testSerialization() {
+    public void testSerialization() throws Exception {
         SynchronousQueue q = new SynchronousQueue();
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
-            ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
-            out.writeObject(q);
-            out.close();
+        ByteArrayOutputStream bout = new ByteArrayOutputStream(10000);
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(bout));
+        out.writeObject(q);
+        out.close();
 
-            ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
-            SynchronousQueue r = (SynchronousQueue)in.readObject();
-            assertEquals(q.size(), r.size());
-            while (!q.isEmpty()) 
-                assertEquals(q.remove(), r.remove());
-        } catch(Exception e){
-            e.printStackTrace();
-            unexpectedException();
-        }
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(bin));
+        SynchronousQueue r = (SynchronousQueue)in.readObject();
+        assertEquals(q.size(), r.size());
+        while (!q.isEmpty())
+            assertEquals(q.remove(), r.remove());
     }
 
     /**
      * drainTo(null) throws NPE
-     */ 
+     */
     public void testDrainToNull() {
         SynchronousQueue q = new SynchronousQueue();
         try {
             q.drainTo(null);
             shouldThrow();
-        } catch(NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
      * drainTo(this) throws IAE
-     */ 
+     */
     public void testDrainToSelf() {
         SynchronousQueue q = new SynchronousQueue();
         try {
             q.drainTo(q);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
      * drainTo(c) of empty queue doesn't transfer elements
-     */ 
+     */
     public void testDrainTo() {
         SynchronousQueue q = new SynchronousQueue();
         ArrayList l = new ArrayList();
@@ -794,98 +654,74 @@ public class SynchronousQueueTest extends JSR166TestCase {
 
     /**
      * drainTo empties queue, unblocking a waiting put.
-     */ 
-    public void testDrainToWithActivePut() {
+     */
+    public void testDrainToWithActivePut() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-        Thread t = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.put(new Integer(1));
-                    } catch (InterruptedException ie){ 
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        try {
-            t.start();
-            ArrayList l = new ArrayList();
-            Thread.sleep(SHORT_DELAY_MS);
-            q.drainTo(l);
-            assertTrue(l.size() <= 1);
-            if (l.size() > 0)
-                assertEquals(l.get(0), new Integer(1));
-            t.join();
-            assertTrue(l.size() <= 1);
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                q.put(new Integer(1));
+            }});
+
+        t.start();
+        ArrayList l = new ArrayList();
+        Thread.sleep(SHORT_DELAY_MS);
+        q.drainTo(l);
+        assertTrue(l.size() <= 1);
+        if (l.size() > 0)
+            assertEquals(l.get(0), new Integer(1));
+        t.join();
+        assertTrue(l.size() <= 1);
     }
 
     /**
      * drainTo(null, n) throws NPE
-     */ 
+     */
     public void testDrainToNullN() {
         SynchronousQueue q = new SynchronousQueue();
         try {
             q.drainTo(null, 0);
             shouldThrow();
-        } catch(NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
      * drainTo(this, n) throws IAE
-     */ 
+     */
     public void testDrainToSelfN() {
         SynchronousQueue q = new SynchronousQueue();
         try {
             q.drainTo(q, 0);
             shouldThrow();
-        } catch(IllegalArgumentException success) {
-        }
+        } catch (IllegalArgumentException success) {}
     }
 
     /**
      * drainTo(c, n) empties up to n elements of queue into c
-     */ 
-    public void testDrainToN() {
+     */
+    public void testDrainToN() throws InterruptedException {
         final SynchronousQueue q = new SynchronousQueue();
-        Thread t1 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.put(one);
-                    } catch (InterruptedException ie){ 
-                        threadUnexpectedException();
-                    }
-                }
-            });
-        Thread t2 = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        q.put(two);
-                    } catch (InterruptedException ie){ 
-                        threadUnexpectedException();
-                    }
-                }
-            });
+        Thread t1 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                q.put(one);
+            }});
 
-        try {
-            t1.start();
-            t2.start();
-            ArrayList l = new ArrayList();
-            Thread.sleep(SHORT_DELAY_MS);
-            q.drainTo(l, 1);
-            assertTrue(l.size() == 1);
-            q.drainTo(l, 1);
-            assertTrue(l.size() == 2);
-            assertTrue(l.contains(one));
-            assertTrue(l.contains(two));
-            t1.join();
-            t2.join();
-        } catch(Exception e){
-            unexpectedException();
-        }
+        Thread t2 = new Thread(new CheckedRunnable() {
+            public void realRun() throws InterruptedException {
+                q.put(two);
+            }});
+
+        t1.start();
+        t2.start();
+        ArrayList l = new ArrayList();
+        Thread.sleep(SHORT_DELAY_MS);
+        q.drainTo(l, 1);
+        assertTrue(l.size() == 1);
+        q.drainTo(l, 1);
+        assertTrue(l.size() == 2);
+        assertTrue(l.contains(one));
+        assertTrue(l.contains(two));
+        t1.join();
+        t2.join();
     }
-
 
 }

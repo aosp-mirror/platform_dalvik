@@ -18,9 +18,7 @@ import sun.misc.Unsafe;
 public class AtomicReference<V>  implements java.io.Serializable {
     private static final long serialVersionUID = -1848883965231344442L;
 
-    // BEGIN android-changed
-    private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
-    // END android-changed
+    private static final Unsafe unsafe = UnsafeAccess.THE_ONE; // android-changed
     private static final long valueOffset;
 
     static {
@@ -63,6 +61,16 @@ public class AtomicReference<V>  implements java.io.Serializable {
      */
     public final void set(V newValue) {
         value = newValue;
+    }
+
+    /**
+     * Eventually sets to the given value.
+     *
+     * @param newValue the new value
+     * @since 1.6
+     */
+    public final void lazySet(V newValue) {
+        unsafe.putOrderedObject(this, valueOffset, newValue);
     }
 
     /**

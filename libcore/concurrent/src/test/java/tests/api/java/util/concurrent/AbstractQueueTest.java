@@ -2,11 +2,11 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.*;
@@ -20,9 +20,9 @@ public class AbstractQueueTest extends JSR166TestCase {
     }
 
     static class Succeed extends AbstractQueue<Integer> {
-        public boolean offer(Integer x) { 
+        public boolean offer(Integer x) {
             if (x == null) throw new NullPointerException();
-            return true; 
+            return true;
         }
         public Integer peek() { return one; }
         public Integer poll() { return one; }
@@ -31,9 +31,9 @@ public class AbstractQueueTest extends JSR166TestCase {
     }
 
     static class Fail extends AbstractQueue<Integer> {
-        public boolean offer(Integer x) { 
+        public boolean offer(Integer x) {
             if (x == null) throw new NullPointerException();
-            return false; 
+            return false;
         }
         public Integer peek() { return null; }
         public Integer poll() { return null; }
@@ -57,8 +57,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.add(one);
             shouldThrow();
-        } catch (IllegalStateException success) {
-        }
+        } catch (IllegalStateException success) {}
     }
 
     /**
@@ -69,8 +68,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.add(null);
             shouldThrow();
-        } catch (NullPointerException success) {
-        }
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -89,8 +87,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.remove();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
 
@@ -110,8 +107,7 @@ public class AbstractQueueTest extends JSR166TestCase {
         try {
             q.element();
             shouldThrow();
-        } catch (NoSuchElementException success) {
-        }
+        } catch (NoSuchElementException success) {}
     }
 
     /**
@@ -122,8 +118,7 @@ public class AbstractQueueTest extends JSR166TestCase {
             Succeed q = new Succeed();
             q.addAll(null);
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
 
     /**
@@ -134,8 +129,7 @@ public class AbstractQueueTest extends JSR166TestCase {
             Succeed q = new Succeed();
             q.addAll(q);
             shouldThrow();
-        }
-        catch (IllegalArgumentException success) {}
+        } catch (IllegalArgumentException success) {}
     }
 
 
@@ -148,8 +142,7 @@ public class AbstractQueueTest extends JSR166TestCase {
             Integer[] ints = new Integer[SIZE];
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll of a collection with any null elements throws NPE after
@@ -163,8 +156,7 @@ public class AbstractQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (NullPointerException success) {}
+        } catch (NullPointerException success) {}
     }
     /**
      * addAll throws ISE if an add fails
@@ -177,8 +169,7 @@ public class AbstractQueueTest extends JSR166TestCase {
                 ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
-        }
-        catch (IllegalStateException success) {}
+        } catch (IllegalStateException success) {}
     }
 
 }

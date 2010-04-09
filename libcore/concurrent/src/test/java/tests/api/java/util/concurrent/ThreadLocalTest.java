@@ -2,11 +2,11 @@
  * Written by Doug Lea with assistance from members of JCP JSR-166
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/licenses/publicdomain
- * Other contributors include Andrew Wright, Jeffrey Hayes, 
- * Pat Fisher, Mike Judd. 
+ * Other contributors include Andrew Wright, Jeffrey Hayes,
+ * Pat Fisher, Mike Judd.
  */
 
-package tests.api.java.util.concurrent;
+package tests.api.java.util.concurrent; // android-added
 
 import junit.framework.*;
 import java.util.concurrent.Semaphore;
@@ -27,7 +27,7 @@ public class ThreadLocalTest extends JSR166TestCase {
             protected Integer initialValue() {
                 return zero;
             }
-            
+
             protected Integer childValue(Integer parentValue) {
                 return new Integer(parentValue.intValue() + 1);
             }
@@ -37,11 +37,11 @@ public class ThreadLocalTest extends JSR166TestCase {
      * remove causes next access to return initial value
      */
     public void testRemove() {
-        assertEquals(tl.get(), one);
+        assertSame(tl.get(), one);
         tl.set(two);
-        assertEquals(tl.get(), two);
+        assertSame(tl.get(), two);
         tl.remove();
-        assertEquals(tl.get(), one);
+        assertSame(tl.get(), one);
     }
 
     /**
@@ -49,11 +49,11 @@ public class ThreadLocalTest extends JSR166TestCase {
      * initial value
      */
     public void testRemoveITL() {
-        assertEquals(itl.get(), zero);
+        assertSame(itl.get(), zero);
         itl.set(two);
-        assertEquals(itl.get(), two);
+        assertSame(itl.get(), two);
         itl.remove();
-        assertEquals(itl.get(), zero);
+        assertSame(itl.get(), zero);
     }
 
     private class ITLThread extends Thread {
@@ -66,18 +66,18 @@ public class ThreadLocalTest extends JSR166TestCase {
                 child.start();
             }
             Thread.currentThread().yield();
-            
+
             int threadId = itl.get().intValue();
             for (int j = 0; j < threadId; j++) {
                 x[threadId]++;
                 Thread.currentThread().yield();
             }
-            
+
             if (child != null) { // Wait for child (if any)
                 try {
                     child.join();
-                } catch(InterruptedException e) {
-                    threadUnexpectedException();
+                } catch (InterruptedException e) {
+                    threadUnexpectedException(e);
                 }
             }
         }
@@ -86,19 +86,14 @@ public class ThreadLocalTest extends JSR166TestCase {
     /**
      * InheritableThreadLocal propagates generic values.
      */
-    public void testGenericITL() {
+    public void testGenericITL() throws InterruptedException {
         final int threadCount = 10;
         final int x[] = new int[threadCount];
         Thread progenitor = new ITLThread(x);
-        try {
-            progenitor.start();
-            progenitor.join();
-            for(int i = 0; i < threadCount; i++) {
-                assertEquals(i, x[i]);
-            }
-        } catch(InterruptedException e) {
-            unexpectedException();
+        progenitor.start();
+        progenitor.join();
+        for (int i = 0; i < threadCount; i++) {
+            assertEquals(i, x[i]);
         }
     }
 }
-

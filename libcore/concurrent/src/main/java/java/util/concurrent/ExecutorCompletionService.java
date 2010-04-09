@@ -84,7 +84,7 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
      * FutureTask extension to enqueue upon completion
      */
     private class QueueingFuture extends FutureTask<Void> {
-        QueueingFuture(FutureTask<V> task) {
+        QueueingFuture(RunnableFuture<V> task) {
             super(task, null);
             this.task = task;
         }
@@ -92,12 +92,18 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
         private final Future<V> task;
     }
 
-    private FutureTask<V> newTaskFor(Callable<V> task) {
-        return new FutureTask<V>(task);
+    private RunnableFuture<V> newTaskFor(Callable<V> task) {
+        if (aes == null)
+            return new FutureTask<V>(task);
+        else
+            return aes.newTaskFor(task);
     }
 
-    private FutureTask<V> newTaskFor(Runnable task, V result) {
-        return new FutureTask<V>(task, result);
+    private RunnableFuture<V> newTaskFor(Runnable task, V result) {
+        if (aes == null)
+            return new FutureTask<V>(task, result);
+        else
+            return aes.newTaskFor(task, result);
     }
 
     /**
@@ -142,14 +148,14 @@ public class ExecutorCompletionService<V> implements CompletionService<V> {
 
     public Future<V> submit(Callable<V> task) {
         if (task == null) throw new NullPointerException();
-        FutureTask<V> f = newTaskFor(task);
+        RunnableFuture<V> f = newTaskFor(task);
         executor.execute(new QueueingFuture(f));
         return f;
     }
 
     public Future<V> submit(Runnable task, V result) {
         if (task == null) throw new NullPointerException();
-        FutureTask<V> f = newTaskFor(task, result);
+        RunnableFuture<V> f = newTaskFor(task, result);
         executor.execute(new QueueingFuture(f));
         return f;
     }

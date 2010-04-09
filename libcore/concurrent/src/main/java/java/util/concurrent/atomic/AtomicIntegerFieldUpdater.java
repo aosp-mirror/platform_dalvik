@@ -5,11 +5,9 @@
  */
 
 package java.util.concurrent.atomic;
+import dalvik.system.VMStack;
 import sun.misc.Unsafe;
 import java.lang.reflect.*;
-
-import org.apache.harmony.kernel.vm.VM;
-import dalvik.system.VMStack;
 
 /**
  * A reflection-based utility that enables atomic updates to
@@ -98,6 +96,17 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * @param newValue the new value
      */
     public abstract void set(T obj, int newValue);
+
+    /**
+     * Eventually sets the field of the given object managed by this
+     * updater to the given updated value.
+     *
+     * @param obj An object whose field to set
+     * @param newValue the new value
+     * @since 1.6
+     */
+    public abstract void lazySet(T obj, int newValue);
+
 
     /**
      * Gets the current value held in the field of the given object managed
@@ -226,9 +235,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
      * Standard hotspot implementation using intrinsics
      */
     private static class AtomicIntegerFieldUpdaterImpl<T> extends AtomicIntegerFieldUpdater<T> {
-        // BEGIN android-changed
-        private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
-        // END android-changed
+        private static final Unsafe unsafe = UnsafeAccess.THE_ONE; // android-changed
         private final long offset;
         private final Class<T> tclass;
         private final Class cclass;
@@ -244,6 +251,7 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
                 // END android-changed
                 modifiers = field.getModifiers();
 
+                // BEGIN android-added
                 SecurityManager smgr = System.getSecurityManager();
                 if (smgr != null) {
                     int type = Modifier.isPublic(modifiers)
@@ -251,6 +259,13 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
                     smgr.checkMemberAccess(tclass, type);
                     smgr.checkPackageAccess(tclass.getPackage().getName());
                 }
+                // END android-added
+                // BEGIN android-removed
+                // modifiers = field.getModifiers();
+                // sun.reflect.misc.ReflectUtil.ensureMemberAccess(
+                //     caller, tclass, null, modifiers);
+                // sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
+                // END android-removed
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -288,6 +303,11 @@ public abstract class  AtomicIntegerFieldUpdater<T>  {
         public void set(T obj, int newValue) {
             if (obj == null || obj.getClass() != tclass || cclass != null) fullCheck(obj);
             unsafe.putIntVolatile(obj, offset, newValue);
+        }
+
+        public void lazySet(T obj, int newValue) {
+            if (obj == null || obj.getClass() != tclass || cclass != null) fullCheck(obj);
+            unsafe.putOrderedInt(obj, offset, newValue);
         }
 
         public final int get(T obj) {

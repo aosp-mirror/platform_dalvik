@@ -30,7 +30,7 @@ import java.util.concurrent.locks.*;
  * @author Doug Lea
  * @param <V> The result type returned by this FutureTask's <tt>get</tt> method
  */
-public class FutureTask<V> implements Future<V>, Runnable {
+public class FutureTask<V> implements RunnableFuture<V> {
     /** Synchronization control for FutureTask */
     private final Sync sync;
 
