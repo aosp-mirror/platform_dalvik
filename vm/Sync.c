@@ -33,6 +33,7 @@
  */
 #include "Dalvik.h"
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -347,29 +348,119 @@ void dvmSweepMonitorList(Monitor** mon, int (*isUnmarkedObject)(void*))
     *mon = handle.next;
 }
 
+static char *logWriteInt(char *dst, int value)
+{
+    *dst++ = EVENT_TYPE_INT;
+    set4LE((u1 *)dst, value);
+    return dst + 4;
+}
+
+static char *logWriteString(char *dst, const char *value, size_t len)
+{
+    *dst++ = EVENT_TYPE_STRING;
+    set4LE((u1 *)dst, len);
+    dst += 4;
+    len = len < 32 ? len : 32;
+    memcpy(dst, value, len);
+    return dst + len;
+}
+
+#define EVENT_LOG_TAG_dvm_lock_contention 20003
+
+static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
+{
+    const StackSaveArea *saveArea;
+    const Method *meth;
+    u4 relativePc;
+    char eventBuffer[131];
+    const char *fileName;
+    char procName[32], *selfName, *ownerName;
+    char *cp;
+    int fd, len;
+
+    saveArea = SAVEAREA_FROM_FP(self->curFrame);
+    meth = saveArea->method;
+    cp = eventBuffer;
+
+    /* Emit the event list length, 1 byte. */
+    *cp++ = 7;
+
+    /* Emit the process name, <= 37 bytes. */
+    fd = open("/proc/self/cmdline", O_RDONLY);
+    len = read(fd, procName, sizeof(procName));
+    close(fd);
+    cp = logWriteString(cp, procName, (len > 0 ? len : 0));
+
+    /* Emit the main thread status, 5 bytes. */
+    bool isMainThread = (self->systemTid == getpid());
+    cp = logWriteInt(cp, isMainThread);
+
+    /* Emit self thread name string, <= 37 bytes. */
+    selfName = dvmGetThreadName(self);
+    cp = logWriteString(cp, selfName, strlen(selfName));
+    free(selfName);
+
+    /* Emit the wait time, 5 bytes. */
+    cp = logWriteInt(cp, waitMs);
+
+    /* Emit the source code file name, <= 37 bytes. */
+    fileName = dvmGetMethodSourceFile(meth);
+    if (fileName == NULL) fileName = "";
+    cp = logWriteString(cp, fileName, strlen(fileName));
+
+    /* Emit the source code line number, 5 bytes. */
+    relativePc = saveArea->xtra.currentPc - saveArea->method->insns;
+    cp = logWriteInt(cp, dvmLineNumFromPC(meth, relativePc));
+
+    /* Emit the sample percentage, 5 bytes. */
+    cp = logWriteInt(cp, samplePercent);
+
+    assert((size_t)(cp - eventBuffer) <= sizeof(eventBuffer));
+    android_btWriteLog(EVENT_LOG_TAG_dvm_lock_contention,
+                       EVENT_TYPE_LIST,
+                       eventBuffer,
+                       (size_t)(cp - eventBuffer));
+}
+
 /*
  * Lock a monitor.
  */
 static void lockMonitor(Thread* self, Monitor* mon)
 {
-    int cc;
+    Thread *owner;
+    ThreadStatus oldStatus;
+    u4 waitThreshold, samplePercent;
+    u8 waitStart, waitEnd, waitMs;
 
     if (mon->owner == self) {
         mon->lockCount++;
-    } else {
-        ThreadStatus oldStatus;
-
-        if (pthread_mutex_trylock(&mon->lock) != 0) {
-            /* mutex is locked, switch to wait status and sleep on it */
-            oldStatus = dvmChangeStatus(self, THREAD_MONITOR);
-            cc = pthread_mutex_lock(&mon->lock);
-            assert(cc == 0);
-            dvmChangeStatus(self, oldStatus);
-        }
-
-        mon->owner = self;
-        assert(mon->lockCount == 0);
+        return;
     }
+    if (pthread_mutex_trylock(&mon->lock) != 0) {
+        oldStatus = dvmChangeStatus(self, THREAD_MONITOR);
+        waitThreshold = gDvm.lockProfThreshold;
+        if (waitThreshold) {
+            waitStart = dvmGetRelativeTimeUsec();
+        }
+        dvmLockMutex(&mon->lock);
+        if (waitThreshold) {
+            waitEnd = dvmGetRelativeTimeUsec();
+        }
+        dvmChangeStatus(self, oldStatus);
+        if (waitThreshold) {
+            waitMs = (waitEnd - waitStart) / 1000;
+            if (waitMs >= waitThreshold) {
+                samplePercent = 100;
+            } else {
+                samplePercent = 1 + 100 * waitMs / gDvm.lockProfSample;
+            }
+            if ((u4)rand() % 100 < samplePercent) {
+                logContentionEvent(self, waitMs, samplePercent);
+            }
+        }
+    }
+    mon->owner = self;
+    assert(mon->lockCount == 0);
 }
 
 /*
