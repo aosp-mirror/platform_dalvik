@@ -37,6 +37,7 @@
 /* private structures */
 typedef struct GcHeap GcHeap;
 typedef struct BreakpointSet BreakpointSet;
+typedef struct InlineSub InlineSub;
 
 /*
  * One of these for each -ea/-da/-esa/-dsa on the command line.
@@ -477,6 +478,9 @@ struct DvmGlobals {
     InstructionFlags*   instrFlags;
     /* instruction format table, used for verification */
     InstructionFormat*  instrFormat;
+
+    /* inline substitution table, used during optimization */
+    InlineSub*          inlineSubs;
 
     /*
      * Bootstrap class loader linear allocator.

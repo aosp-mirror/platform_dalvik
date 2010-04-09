@@ -42,6 +42,13 @@
 
 
 /* fwd */
+static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
+    DexClassLookup** ppClassLookup);
+static bool loadAllClasses(DvmDex* pDvmDex);
+static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
+    bool doOpt);
+static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
+    const DexClassDef* pClassDef, bool doVerify, bool doOpt);
 static void updateChecksum(u1* addr, int len, DexHeader* pHeader);
 static int writeDependencies(int fd, u4 modWhen, u4 crc);
 static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,\
@@ -297,27 +304,6 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
     else
         lastPart = fileName;
 
-    /*
-     * For basic optimizations (byte-swapping and structure aligning) we
-     * don't need to fork().  It looks like fork+exec is causing problems
-     * with gdb on our bewildered Linux distro, so in some situations we
-     * want to avoid this.
-     *
-     * For optimization and/or verification, we need to load all the classes.
-     *
-     * We don't check gDvm.generateRegisterMaps, since that is dependent
-     * upon the verifier state.
-     */
-    if (gDvm.classVerifyMode == VERIFY_MODE_NONE &&
-        (gDvm.dexOptMode == OPTIMIZE_MODE_NONE ||
-         gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED))
-    {
-        LOGD("DexOpt: --- BEGIN (quick) '%s' ---\n", lastPart);
-        return dvmContinueOptimization(fd, dexOffset, dexLength,
-                fileName, modWhen, crc, isBootstrap);
-    }
-
-
     LOGD("DexOpt: --- BEGIN '%s' (bootstrap=%d) ---\n", lastPart, isBootstrap);
 
     pid_t pid;
@@ -474,8 +460,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
 }
 
 /*
- * Do the actual optimization.  This is called directly for "minimal"
- * optimization, or from a newly-created process for "full" optimization.
+ * Do the actual optimization.  This is executed in the dexopt process.
  *
  * For best use of disk/memory, we want to extract once and perform
  * optimizations in place.  If the file has to expand or contract
@@ -493,22 +478,9 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     DexClassLookup* pClassLookup = NULL;
     IndexMapSet* pIndexMapSet = NULL;
     RegisterMapBuilder* pRegMapBuilder = NULL;
-    bool doVerify, doOpt;
     u4 headerFlags = 0;
 
-    if (gDvm.classVerifyMode == VERIFY_MODE_NONE)
-        doVerify = false;
-    else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE)
-        doVerify = !isBootstrap;
-    else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/
-        doVerify = true;
-
-    if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE)
-        doOpt = false;
-    else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED)
-        doOpt = doVerify;
-    else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/
-        doOpt = true;
+    assert(gDvm.optimizing);
 
     LOGV("Continuing optimization (%s, isb=%d, vfy=%d, opt=%d)\n",
         fileName, isBootstrap, doVerify, doOpt);
@@ -561,8 +533,8 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
          * This sets "headerFlags" and creates the class lookup table as
          * part of doing the processing.
          */
-        success = dvmRewriteDex(((u1*) mapAddr) + dexOffset, dexLength,
-                    doVerify, doOpt, &headerFlags, &pClassLookup);
+        success = rewriteDex(((u1*) mapAddr) + dexOffset, dexLength,
+                    &headerFlags, &pClassLookup);
 
         if (success) {
             DvmDex* pDvmDex = NULL;
@@ -582,8 +554,9 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
                 pIndexMapSet = dvmRewriteConstants(pDvmDex);
 
                 /*
-                 * If configured to do so, generate a full set of register
-                 * maps for all verified classes.
+                 * If configured to do so, generate register map output
+                 * for all verified classes.  The register maps were
+                 * generated during verification, and will now be serialized.
                  */
                 if (gDvm.generateRegisterMaps) {
                     pRegMapBuilder = dvmGenerateRegisterMaps(pDvmDex);
@@ -714,6 +687,297 @@ bail:
     dvmFreeRegisterMapBuilder(pRegMapBuilder);
     free(pClassLookup);
     return result;
+}
+
+
+/*
+ * Perform in-place rewrites on a memory-mapped DEX file.
+ *
+ * This happens in a short-lived child process, so we can go nutty with
+ * loading classes and allocating memory.
+ */
+static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
+    DexClassLookup** ppClassLookup)
+{
+    u8 prepWhen, loadWhen, verifyOptWhen;
+    DvmDex* pDvmDex = NULL;
+    bool doVerify, doOpt;
+    bool result = false;
+
+    *pHeaderFlags = 0;
+
+    /* if the DEX is in the wrong byte order, swap it now */
+    if (dexFixByteOrdering(addr, len) != 0)
+        goto bail;
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+    *pHeaderFlags |= DEX_OPT_FLAG_BIG;
+#endif
+
+    if (gDvm.classVerifyMode == VERIFY_MODE_NONE)
+        doVerify = false;
+    else if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE)
+        doVerify = !gDvm.optimizingBootstrapClass;
+    else /*if (gDvm.classVerifyMode == VERIFY_MODE_ALL)*/
+        doVerify = true;
+
+    if (gDvm.dexOptMode == OPTIMIZE_MODE_NONE)
+        doOpt = false;
+    else if (gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED)
+        doOpt = doVerify;
+    else /*if (gDvm.dexOptMode == OPTIMIZE_MODE_ALL)*/
+        doOpt = true;
+
+    /* TODO: decide if this is actually useful */
+    if (doVerify)
+        *pHeaderFlags |= DEX_FLAG_VERIFIED;
+    if (doOpt)
+        *pHeaderFlags |= DEX_OPT_FLAG_FIELDS | DEX_OPT_FLAG_INVOCATIONS;
+
+    /*
+     * Now that the DEX file can be read directly, create a DexFile struct
+     * for it.
+     */
+    if (dvmDexFileOpenPartial(addr, len, &pDvmDex) != 0) {
+        LOGE("Unable to create DexFile\n");
+        goto bail;
+    }
+
+    /*
+     * Create the class lookup table.  This will eventually be appended
+     * to the end of the .odex.
+     */
+    *ppClassLookup = dexCreateClassLookup(pDvmDex->pDexFile);
+    if (*ppClassLookup == NULL)
+        goto bail;
+
+    /*
+     * If we're not going to attempt to verify or optimize the classes,
+     * there's no value in loading them, so bail out early.
+     */
+    if (!doVerify && !doOpt) {
+        result = true;
+        goto bail;
+    }
+
+    /* this is needed for the next part */
+    pDvmDex->pDexFile->pClassLookup = *ppClassLookup;
+
+    prepWhen = dvmGetRelativeTimeUsec();
+
+    /*
+     * Load all classes found in this DEX file.  If they fail to load for
+     * some reason, they won't get verified (which is as it should be).
+     */
+    if (!loadAllClasses(pDvmDex))
+        goto bail;
+    loadWhen = dvmGetRelativeTimeUsec();
+
+    /*
+     * Verify and optimize all classes in the DEX file (command-line
+     * options permitting).
+     *
+     * This is best-effort, so there's really no way for dexopt to
+     * fail at this point.
+     */
+    verifyAndOptimizeClasses(pDvmDex->pDexFile, doVerify, doOpt);
+    verifyOptWhen = dvmGetRelativeTimeUsec();
+
+    const char* msgStr = "???";
+    if (doVerify && doOpt)
+        msgStr = "verify+opt";
+    else if (doVerify)
+        msgStr = "verify";
+    else if (doOpt)
+        msgStr = "opt";
+    LOGD("DexOpt: load %dms, %s %dms\n",
+        (int) (loadWhen - prepWhen) / 1000,
+        msgStr,
+        (int) (verifyOptWhen - loadWhen) / 1000);
+
+    result = true;
+
+bail:
+    /* free up storage */
+    dvmDexFileFree(pDvmDex);
+
+    return result;
+}
+
+/*
+ * Try to load all classes in the specified DEX.  If they have some sort
+ * of broken dependency, e.g. their superclass lives in a different DEX
+ * that wasn't previously loaded into the bootstrap class path, loading
+ * will fail.  This is the desired behavior.
+ *
+ * We have no notion of class loader at this point, so we load all of
+ * the classes with the bootstrap class loader.  It turns out this has
+ * exactly the behavior we want, and has no ill side effects because we're
+ * running in a separate process and anything we load here will be forgotten.
+ *
+ * We set the CLASS_MULTIPLE_DEFS flag here if we see multiple definitions.
+ * This works because we only call here as part of optimization / pre-verify,
+ * not during verification as part of loading a class into a running VM.
+ *
+ * This returns "false" if the world is too screwed up to do anything
+ * useful at all.
+ */
+static bool loadAllClasses(DvmDex* pDvmDex)
+{
+    u4 count = pDvmDex->pDexFile->pHeader->classDefsSize;
+    u4 idx;
+    int loaded = 0;
+
+    LOGV("DexOpt: +++ trying to load %d classes\n", count);
+
+    dvmSetBootPathExtraDex(pDvmDex);
+
+    /*
+     * We have some circularity issues with Class and Object that are most
+     * easily avoided by ensuring that Object is never the first thing we
+     * try to find.  Take care of that here.  (We only need to do this when
+     * loading classes from the DEX file that contains Object, and only
+     * when Object comes first in the list, but it costs very little to
+     * do it in all cases.)
+     */
+    if (dvmFindSystemClass("Ljava/lang/Class;") == NULL) {
+        LOGE("ERROR: java.lang.Class does not exist!\n");
+        return false;
+    }
+
+    for (idx = 0; idx < count; idx++) {
+        const DexClassDef* pClassDef;
+        const char* classDescriptor;
+        ClassObject* newClass;
+
+        pClassDef = dexGetClassDef(pDvmDex->pDexFile, idx);
+        classDescriptor =
+            dexStringByTypeIdx(pDvmDex->pDexFile, pClassDef->classIdx);
+
+        LOGV("+++  loading '%s'", classDescriptor);
+        //newClass = dvmDefineClass(pDexFile, classDescriptor,
+        //        NULL);
+        newClass = dvmFindSystemClassNoInit(classDescriptor);
+        if (newClass == NULL) {
+            LOGV("DexOpt: failed loading '%s'\n", classDescriptor);
+            dvmClearOptException(dvmThreadSelf());
+        } else if (newClass->pDvmDex != pDvmDex) {
+            /*
+             * We don't load the new one, and we tag the first one found
+             * with the "multiple def" flag so the resolver doesn't try
+             * to make it available.
+             */
+            LOGD("DexOpt: '%s' has an earlier definition; blocking out\n",
+                classDescriptor);
+            SET_CLASS_FLAG(newClass, CLASS_MULTIPLE_DEFS);
+        } else {
+            loaded++;
+        }
+    }
+    LOGV("DexOpt: +++ successfully loaded %d classes\n", loaded);
+
+    dvmSetBootPathExtraDex(NULL);
+    return true;
+}
+
+/*
+ * Verify and/or optimize all classes that were successfully loaded from
+ * this DEX file.
+ */
+static void verifyAndOptimizeClasses(DexFile* pDexFile, bool doVerify,
+    bool doOpt)
+{
+    u4 count = pDexFile->pHeader->classDefsSize;
+    u4 idx;
+
+    /*
+     * Create a data structure for use by the bytecode optimizer.  We
+     * stuff it into a global so we don't have to pass it around as
+     * a function argument.
+     *
+     * We could create this at VM startup, but there's no need to do so
+     * unless we're optimizing, which means we're in dexopt, and we're
+     * only going to call here once.
+     */
+    if (doOpt) {
+        gDvm.inlineSubs = dvmCreateInlineSubsTable();
+        if (gDvm.inlineSubs == NULL)
+            return;
+    }
+
+    for (idx = 0; idx < count; idx++) {
+        const DexClassDef* pClassDef;
+        const char* classDescriptor;
+        ClassObject* clazz;
+
+        pClassDef = dexGetClassDef(pDexFile, idx);
+        classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
+
+        /* all classes are loaded into the bootstrap class loader */
+        clazz = dvmLookupClass(classDescriptor, NULL, false);
+        if (clazz != NULL) {
+            verifyAndOptimizeClass(pDexFile, clazz, pClassDef, doVerify, doOpt);
+
+        } else {
+            // TODO: log when in verbose mode
+            LOGV("DexOpt: not optimizing unavailable class '%s'\n",
+                classDescriptor);
+        }
+    }
+
+    if (gDvm.inlineSubs != NULL) {
+        dvmFreeInlineSubsTable(gDvm.inlineSubs);
+        gDvm.inlineSubs = NULL;
+    }
+}
+
+/*
+ * Verify and/or optimize a specific class.
+ */
+static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
+    const DexClassDef* pClassDef, bool doVerify, bool doOpt)
+{
+    const char* classDescriptor;
+    bool verified = false;
+
+    classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
+
+    /*
+     * First, try to verify it.
+     */
+    if (doVerify) {
+        if (clazz->pDvmDex->pDexFile != pDexFile) {
+            LOGD("DexOpt: not verifying '%s': multiple definitions\n",
+                classDescriptor);
+        } else {
+            if (dvmVerifyClass(clazz, VERIFY_DEFAULT)) {
+                /*
+                 * Set the "is preverified" flag in the DexClassDef.  We
+                 * do it here, rather than in the ClassObject structure,
+                 * because the DexClassDef is part of the odex file.
+                 */
+                assert((clazz->accessFlags & JAVA_FLAGS_MASK) ==
+                    pClassDef->accessFlags);
+                ((DexClassDef*)pClassDef)->accessFlags |=
+                    CLASS_ISPREVERIFIED;
+                verified = true;
+            } else {
+                // TODO: log when in verbose mode
+                LOGV("DexOpt: '%s' failed verification\n", classDescriptor);
+            }
+        }
+    }
+
+    if (doOpt) {
+        if (!verified && gDvm.dexOptMode == OPTIMIZE_MODE_VERIFIED) {
+            LOGV("DexOpt: not optimizing '%s': not verified\n",
+                classDescriptor);
+        } else {
+            dvmOptimizeClass(clazz);
+
+            /* set the flag whether or not we actually changed anything */
+            ((DexClassDef*)pClassDef)->accessFlags |= CLASS_ISOPTIMIZED;
+        }
+    }
 }
 
 

@@ -56,61 +56,6 @@ void dvmVerificationShutdown(void)
     free(gDvm.instrFlags);
 }
 
-/*
- * Induce verification on all classes loaded from this DEX file as part
- * of pre-verification and optimization.  This is never called from a
- * normally running VM.
- *
- * Returns "true" when all classes have been processed.
- */
-bool dvmVerifyAllClasses(DexFile* pDexFile)
-{
-    u4 count = pDexFile->pHeader->classDefsSize;
-    u4 idx;
-
-    assert(gDvm.optimizing);
-
-    if (gDvm.classVerifyMode == VERIFY_MODE_NONE) {
-        LOGV("+++ verification is disabled, skipping all classes\n");
-        return true;
-    }
-    if (gDvm.classVerifyMode == VERIFY_MODE_REMOTE &&
-        gDvm.optimizingBootstrapClass)
-    {
-        LOGV("+++ verification disabled for bootstrap classes\n");
-        return true;
-    }
-
-    for (idx = 0; idx < count; idx++) {
-        const DexClassDef* pClassDef;
-        const char* classDescriptor;
-        ClassObject* clazz;
-
-        pClassDef = dexGetClassDef(pDexFile, idx);
-        classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
-
-        /* all classes are loaded into the bootstrap class loader */
-        clazz = dvmLookupClass(classDescriptor, NULL, false);
-        if (clazz != NULL) {
-            if (clazz->pDvmDex->pDexFile != pDexFile) {
-                LOGD("DexOpt: not verifying '%s': multiple definitions\n",
-                    classDescriptor);
-            } else {
-                if (dvmVerifyClass(clazz, VERIFY_DEFAULT)) {
-                    assert((clazz->accessFlags & JAVA_FLAGS_MASK) ==
-                        pClassDef->accessFlags);
-                    ((DexClassDef*)pClassDef)->accessFlags |=
-                        CLASS_ISPREVERIFIED;
-                }
-                /* keep going even if one fails */
-            }
-        } else {
-            LOGV("DexOpt: +++  not verifying '%s'\n", classDescriptor);
-        }
-    }
-
-    return true;
-}
 
 /*
  * Verify a class.
@@ -129,8 +74,6 @@ bool dvmVerifyClass(ClassObject* clazz, int verifyFlags)
         LOGD("Ignoring duplicate verify attempt on %s\n", clazz->descriptor);
         return true;
     }
-
-    //LOGI("Verify1 '%s'\n", clazz->descriptor);
 
     // TODO - verify class structure in DEX?
 
