@@ -651,7 +651,7 @@ ArmEncodingMap EncodingMap[kArmLast] = {
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1,
                  IS_QUAD_OP | REG_DEF0_USE12 | SETS_CCODES,
-                 "acds", "r!0d, r!1d, r!2d, shift !3d", 2),
+                 "adcs", "r!0d, r!1d, r!2d, shift !3d", 2),
     ENCODING_MAP(kThumb2AndRRR,  0xea000000,
                  kFmtBitBlt, 11, 8, kFmtBitBlt, 19, 16, kFmtBitBlt, 3, 0,
                  kFmtShift, -1, -1, IS_QUAD_OP | REG_DEF0_USE12,

@@ -2991,8 +2991,11 @@ static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
 #endif
 }
 
-static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
+// Generates an inlined String.isEmpty or String.length.
+static bool genInlinedStringIsEmptyOrLength(CompilationUnit *cUnit, MIR *mir,
+                                            bool isEmpty)
 {
+    // dst = src.length();
     RegLocation rlObj = dvmCompilerGetSrc(cUnit, mir, 0);
     RegLocation rlDest = inlinedTarget(cUnit, mir, false);
     rlObj = loadValue(cUnit, rlObj, kCoreReg);
@@ -3000,8 +3003,24 @@ static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
     genNullCheck(cUnit, rlObj.sRegLow, rlObj.lowReg, mir->offset, NULL);
     loadWordDisp(cUnit, rlObj.lowReg, gDvm.offJavaLangString_count,
                  rlResult.lowReg);
+    if (isEmpty) {
+        // dst = (dst == 0);
+        int tReg = dvmCompilerAllocTemp(cUnit);
+        opRegReg(cUnit, kOpNeg, tReg, rlResult.lowReg);
+        opRegRegReg(cUnit, kOpAdc, rlResult.lowReg, rlResult.lowReg, tReg);
+    }
     storeValue(cUnit, rlDest, rlResult);
     return false;
+}
+
+static bool genInlinedStringLength(CompilationUnit *cUnit, MIR *mir)
+{
+    return genInlinedStringIsEmptyOrLength(cUnit, mir, false);
+}
+
+static bool genInlinedStringIsEmpty(CompilationUnit *cUnit, MIR *mir)
+{
+    return genInlinedStringIsEmptyOrLength(cUnit, mir, true);
 }
 
 static bool genInlinedStringCharAt(CompilationUnit *cUnit, MIR *mir)
@@ -3093,6 +3112,8 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
                     return false;  /* Nop */
                 case INLINE_STRING_LENGTH:
                     return genInlinedStringLength(cUnit, mir);
+                case INLINE_STRING_IS_EMPTY:
+                    return genInlinedStringIsEmpty(cUnit, mir);
                 case INLINE_MATH_ABS_INT:
                     return genInlinedAbsInt(cUnit, mir);
                 case INLINE_MATH_ABS_LONG:
