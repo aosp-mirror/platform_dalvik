@@ -169,8 +169,6 @@ public final class Pattern implements Serializable {
      * <p>Otherwise, the {@code limit} parameter controls the contents of the
      * returned array as described below.
      *
-     * @param inputSeq
-     *            the input sequence.
      * @param limit
      *            Determines the maximum number of entries in the resulting
      *            array, and the treatment of trailing empty strings.
@@ -188,61 +186,15 @@ public final class Pattern implements Serializable {
      *            special, as described above, and the limit parameter does
      *            not apply there.)
      *            </ul>
-     *
-     * @return the resulting array.
      */
-    public String[] split(CharSequence inputSeq, int limit) {
-        if (inputSeq.length() == 0) {
-            // Unlike Perl, which considers the result of splitting the empty
-            // string to be the empty array, Java returns an array containing
-            // the empty string.
-            return new String[] { "" };
-        }
-
-        int maxLength = limit <= 0 ? Integer.MAX_VALUE : limit;
-
-        String input = inputSeq.toString();
-        ArrayList<String> list = new ArrayList<String>();
-
-        Matcher matcher = new Matcher(this, inputSeq);
-        int savedPos = 0;
-
-        // Add text preceding each occurrence, if enough space.
-        while(matcher.find() && list.size() + 1 < maxLength) {
-            list.add(input.substring(savedPos, matcher.start()));
-            savedPos = matcher.end();
-        }
-
-        // Add trailing text if enough space.
-        if (list.size() < maxLength) {
-            if (savedPos < input.length()) {
-                list.add(input.substring(savedPos));
-            } else {
-                list.add("");
-            }
-        }
-
-        // Remove trailing empty matches in the limit == 0 case.
-        if (limit == 0) {
-            int i = list.size() - 1;
-            while (i >= 0 && "".equals(list.get(i))) {
-                list.remove(i);
-                i--;
-            }
-        }
-
-        return list.toArray(new String[list.size()]);
+    public String[] split(CharSequence input, int limit) {
+        return Splitter.split(this, pattern, input.toString(), limit);
     }
 
     /**
      * Splits a given input around occurrences of a regular expression. This is
      * a convenience method that is equivalent to calling the method
      * {@link #split(java.lang.CharSequence, int)} with a limit of 0.
-     *
-     * @param input
-     *            the input sequence.
-     *
-     * @return the resulting array.
      */
     public String[] split(CharSequence input) {
         return split(input, 0);
