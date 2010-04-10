@@ -2047,7 +2047,8 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_close(
              * let the Java layer know about this by throwing an
              * exception.
              */
-            throwIOExceptionWithSslErrors(env, ret, 0, "SSL shutdown failed.");
+            int sslErrorCode = SSL_get_error(ssl, ret);
+            throwIOExceptionWithSslErrors(env, ret, sslErrorCode, "SSL shutdown failed");
             break;
     }
 
