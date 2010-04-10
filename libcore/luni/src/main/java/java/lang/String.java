@@ -649,9 +649,8 @@ public final class String implements Serializable, Comparable<String>,
         if (codePoints == null) {
             throw new NullPointerException();
         }
-        if (offset < 0 || count < 0
-                || (long) offset + (long) count > codePoints.length) {
-            throw new IndexOutOfBoundsException();
+        if (offset < 0 || count < 0 || (long) offset + (long) count > codePoints.length) {
+            throw new StringIndexOutOfBoundsException();
         }
         this.offset = 0;
         this.value = new char[count * 2];
@@ -2196,7 +2195,7 @@ public final class String implements Serializable, Comparable<String>,
      */
     public int codePointAt(int index) {
         if (index < 0 || index >= count) {
-            throw new IndexOutOfBoundsException();
+            throw new StringIndexOutOfBoundsException();
         }
         int s = index + offset;
         return Character.codePointAt(value, s, offset + count);
@@ -2217,7 +2216,7 @@ public final class String implements Serializable, Comparable<String>,
      */
     public int codePointBefore(int index) {
         if (index < 1 || index > count) {
-            throw new IndexOutOfBoundsException();
+            throw new StringIndexOutOfBoundsException();
         }
         int s = index + offset;
         return Character.codePointBefore(value, s);
@@ -2241,7 +2240,7 @@ public final class String implements Serializable, Comparable<String>,
      */
     public int codePointCount(int beginIndex, int endIndex) {
         if (beginIndex < 0 || endIndex > count || beginIndex > endIndex) {
-            throw new IndexOutOfBoundsException();
+            throw new StringIndexOutOfBoundsException();
         }
         int s = beginIndex + offset;
         return Character.codePointCount(value, s, endIndex - beginIndex);
