@@ -17,6 +17,8 @@
 package com.ibm.icu4jni.regex;
 
 public final class NativeRegEx {
+    private NativeRegEx() {
+    }
 
     /**
      * Opens (compiles) an ICU regular expression.

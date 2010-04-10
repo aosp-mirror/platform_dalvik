@@ -17,25 +17,20 @@
 
 package java.lang;
 
+import com.ibm.icu4jni.regex.NativeRegEx;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.util.Comparator;
-import java.util.Formatter;
-import java.util.Locale;
-
-import java.util.regex.Pattern;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.security.AccessController;
+import java.util.Comparator;
+import java.util.Formatter;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-// BEGIN android-removed
-// import org.apache.harmony.kernel.vm.VM;
-// END android-removed
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
@@ -2123,7 +2118,8 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Splits this string using the supplied regular expression {@code expr}.
+     * Splits this string using the supplied regular expression {@code expr},
+     * as if by {@code split(expr, 0)}.
      * 
      * @param expr
      *            the regular expression used to divide the string.
@@ -2138,13 +2134,14 @@ public final class String implements Serializable, Comparable<String>,
      * @since 1.4
      */
     public String[] split(String expr) {
-        return Pattern.compile(expr).split(this);
+        return split(expr, 0);
     }
 
     /**
      * Splits this string using the supplied regular expression {@code expr}.
      * The parameter {@code max} controls the behavior how many times the
-     * pattern is applied to the string.
+     * pattern is applied to the string; see {@link Pattern#split(CharSequence, int)}
+     * for details.
      * 
      * @param expr
      *            the regular expression used to divide the string.
@@ -2161,7 +2158,8 @@ public final class String implements Serializable, Comparable<String>,
      * @since 1.4
      */
     public String[] split(String expr, int max) {
-        return Pattern.compile(expr).split(this, max);
+        String[] result = java.util.regex.Splitter.fastSplit(expr, this, max);
+        return result != null ? result : Pattern.compile(expr).split(this, max);
     }
 
     /**

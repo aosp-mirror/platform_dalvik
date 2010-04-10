@@ -206,8 +206,7 @@ public final class Matcher implements MatchResult {
             throw new IllegalArgumentException();
         }
 
-        if (start < 0 || end < 0 || start > input.length() ||
-                end > input.length() || start > end) {
+        if (start < 0 || end < 0 || start > input.length() || end > input.length() || start > end) {
             throw new IllegalArgumentException();
         }
 
