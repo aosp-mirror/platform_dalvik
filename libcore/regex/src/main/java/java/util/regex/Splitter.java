@@ -19,7 +19,7 @@ package java.util.regex;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
+/**
  * Used to make {@code String.split} fast (and to help {@code Pattern.split} too).
  * @hide
  */
@@ -100,18 +100,16 @@ public class Splitter {
     }
 
     private static String[] finishSplit(List<String> list, String input, int begin, int maxSize, int limit) {
-        // Add trailing text if enough space.
-        if (list.size() < maxSize) {
-            if (begin < input.length()) {
-                list.add(input.substring(begin));
-            } else {
-                list.add("");
-            }
+        // Add trailing text.
+        if (begin < input.length()) {
+            list.add(input.substring(begin));
+        } else if (limit != 0) { // No point adding the empty string if limit == 0, just to remove it below.
+            list.add("");
         }
-        // Remove trailing empty matches in the limit == 0 case.
+        // Remove all trailing empty matches in the limit == 0 case.
         if (limit == 0) {
             int i = list.size() - 1;
-            while (i >= 0 && "".equals(list.get(i))) {
+            while (i >= 0 && list.get(i).isEmpty()) {
                 list.remove(i);
                 i--;
             }
