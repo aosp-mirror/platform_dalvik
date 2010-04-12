@@ -1130,20 +1130,11 @@ public final class String implements Serializable, Comparable<String>,
      *         character isn't found.
      */
     public int indexOf(int c) {
-        // BEGIN android-changed
-        int _count = count;
-        if (0 < _count) {
-            int _offset = offset;
-            int last = _offset + _count;
-            char[] _value = value;
-            for (int i = _offset; i < last; i++) {
-                if (_value[i] == c) {
-                    return i - _offset;
-                }
-            }
+        // TODO: just "return indexOf(c, 0);" when the JIT can inline that deep.
+        if (c > 0xffff) {
+            return indexOfSupplementary(c, 0);
         }
-        return -1;
-        // END android-changed
+        return fastIndexOf(c, 0);
     }
 
     /**
@@ -1159,6 +1150,13 @@ public final class String implements Serializable, Comparable<String>,
      *         character isn't found.
      */
     public int indexOf(int c, int start) {
+        if (c > 0xffff) {
+            return indexOfSupplementary(c, start);
+        }
+        return fastIndexOf(c, start);
+    }
+
+    private int fastIndexOf(int c, int start) {
         // BEGIN android-changed
         int _count = count;
         if (start < _count) {
@@ -1176,6 +1174,15 @@ public final class String implements Serializable, Comparable<String>,
         }
         return -1;
         // END android-changed
+    }
+
+    private int indexOfSupplementary(int c, int start) {
+        if (!Character.isSupplementaryCodePoint(c)) {
+            return -1;
+        }
+        char[] chars = Character.toChars(c);
+        String needle = new String(0, chars.length, chars);
+        return indexOf(needle, start);
     }
 
     /**
@@ -1303,6 +1310,9 @@ public final class String implements Serializable, Comparable<String>,
      *         character isn't found.
      */
     public int lastIndexOf(int c) {
+        if (c > 0xffff) {
+            return lastIndexOfSupplementary(c, Integer.MAX_VALUE);
+        }
         // BEGIN android-changed
         int _count = count;
         int _offset = offset;
@@ -1329,6 +1339,9 @@ public final class String implements Serializable, Comparable<String>,
      *         character isn't found.
      */
     public int lastIndexOf(int c, int start) {
+        if (c > 0xffff) {
+            return lastIndexOfSupplementary(c, start);
+        }
         // BEGIN android-changed
         int _count = count;
         int _offset = offset;
@@ -1345,6 +1358,15 @@ public final class String implements Serializable, Comparable<String>,
         }
         return -1;
         // END android-changed
+    }
+
+    private int lastIndexOfSupplementary(int c, int start) {
+        if (!Character.isSupplementaryCodePoint(c)) {
+            return -1;
+        }
+        char[] chars = Character.toChars(c);
+        String needle = new String(0, chars.length, chars);
+        return lastIndexOf(needle, start);
     }
 
     /**
@@ -2181,15 +2203,9 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Retrieves the Unicode code point (character) value at the specified
-     * {@code index}.
+     * Returns the Unicode code point at the given {@code index}.
      * 
-     * @param index
-     *            the index to the {@code char} code unit within this string.
-     * @return the Unicode code point value.
-     * @throws IndexOutOfBoundsException
-     *             if {@code index} is negative or greater than or equal to
-     *             {@code length()}.
+     * @throws IndexOutOfBoundsException if {@code index < 0 || index >= length()}
      * @see Character#codePointAt(char[], int, int)
      * @since 1.5
      */
@@ -2197,20 +2213,13 @@ public final class String implements Serializable, Comparable<String>,
         if (index < 0 || index >= count) {
             throw new StringIndexOutOfBoundsException();
         }
-        int s = index + offset;
-        return Character.codePointAt(value, s, offset + count);
+        return Character.codePointAt(value, offset + index, offset + count);
     }
 
     /**
-     * Retrieves the Unicode code point value that precedes the specified
-     * {@code index}.
+     * Returns the Unicode code point that precedes the given {@code index}.
      * 
-     * @param index
-     *            the index to the {@code char} code unit within this string.
-     * @return the Unicode code point value.
-     * @throws IndexOutOfBoundsException
-     *             if {@code index} is less than 1 or greater than
-     *             {@code length()}.
+     * @throws IndexOutOfBoundsException if {@code index < 1 || index > length()}
      * @see Character#codePointBefore(char[], int, int)
      * @since 1.5
      */
@@ -2218,8 +2227,7 @@ public final class String implements Serializable, Comparable<String>,
         if (index < 1 || index > count) {
             throw new StringIndexOutOfBoundsException();
         }
-        int s = index + offset;
-        return Character.codePointBefore(value, s);
+        return Character.codePointBefore(value, offset + index, offset);
     }
 
     /**
@@ -2232,9 +2240,7 @@ public final class String implements Serializable, Comparable<String>,
      *            the exclusive end index of the subsequence.
      * @return the number of Unicode code points in the subsequence.
      * @throws IndexOutOfBoundsException
-     *             if {@code beginIndex} is negative or greater than {@code
-     *             endIndex} or {@code endIndex} is greater than {@code
-     *             length()}.
+     *         if {@code beginIndex < 0 || endIndex > length() || beginIndex > endIndex}
      * @see Character#codePointCount(CharSequence, int, int)
      * @since 1.5
      */
@@ -2242,8 +2248,7 @@ public final class String implements Serializable, Comparable<String>,
         if (beginIndex < 0 || endIndex > count || beginIndex > endIndex) {
             throw new StringIndexOutOfBoundsException();
         }
-        int s = beginIndex + offset;
-        return Character.codePointCount(value, s, endIndex - beginIndex);
+        return Character.codePointCount(value, offset + beginIndex, endIndex - beginIndex);
     }
 
     /**
@@ -2280,8 +2285,7 @@ public final class String implements Serializable, Comparable<String>,
      */
     public int offsetByCodePoints(int index, int codePointOffset) {
         int s = index + offset;
-        int r = Character.offsetByCodePoints(value, offset, count, s,
-                codePointOffset);
+        int r = Character.offsetByCodePoints(value, offset, count, s, codePointOffset);
         return r - offset;
     }
 

@@ -407,8 +407,8 @@ static bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
  * Determine the index of the first character matching "ch".  The string
  * to search is described by "chars", "offset", and "count".
  *
- * The "ch" parameter is allowed to be > 0xffff.  Our Java-language
- * implementation does not currently handle this, so neither do we.
+ * The character must be <= 0xffff. Supplementary characters are handled in
+ * Java.
  *
  * The "start" parameter must be clamped to [0..count].
  *
@@ -455,27 +455,13 @@ static inline int indexOfCommon(Object* strObj, int ch, int start)
 }
 
 /*
- * public int indexOf(int c)
- *
- * Scan forward through the string for a matching character.
- */
-static bool javaLangString_indexOf_I(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult)
-{
-    /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
-        return false;
-
-    pResult->i = indexOfCommon((Object*) arg0, arg1, 0);
-    return true;
-}
-
-/*
  * public int indexOf(int c, int start)
  *
  * Scan forward through the string for a matching character.
+ * The character must be <= 0xffff; this method does not handle supplementary
+ * characters.
  */
-static bool javaLangString_indexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+static bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /* null reference check on "this" */
@@ -666,10 +652,8 @@ const InlineOperation gDvmInlineOpsTable[] = {
         "Ljava/lang/String;", "compareTo", "(Ljava/lang/String;)I" },
     { javaLangString_equals,
         "Ljava/lang/String;", "equals", "(Ljava/lang/Object;)Z" },
-    { javaLangString_indexOf_I,
-        "Ljava/lang/String;", "indexOf", "(I)I" },
-    { javaLangString_indexOf_II,
-        "Ljava/lang/String;", "indexOf", "(II)I" },
+    { javaLangString_fastIndexOf_II,
+        "Ljava/lang/String;", "fastIndexOf", "(II)I" },
     { javaLangString_isEmpty,
         "Ljava/lang/String;", "isEmpty", "()Z" },
     { javaLangString_length,

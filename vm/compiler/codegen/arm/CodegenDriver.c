@@ -2966,7 +2966,7 @@ static bool genInlinedCompareTo(CompilationUnit *cUnit, MIR *mir)
 #endif
 }
 
-static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
+static bool genInlinedFastIndexOf(CompilationUnit *cUnit, MIR *mir)
 {
 #if defined(USE_GLOBAL_STRING_DEFS)
     return false;
@@ -2976,12 +2976,8 @@ static bool genInlinedIndexOf(CompilationUnit *cUnit, MIR *mir, bool singleI)
 
     loadValueDirectFixed(cUnit, rlThis, r0);
     loadValueDirectFixed(cUnit, rlChar, r1);
-    if (!singleI) {
-        RegLocation rlStart = dvmCompilerGetSrc(cUnit, mir, 2);
-        loadValueDirectFixed(cUnit, rlStart, r2);
-    } else {
-        loadConstant(cUnit, r2, 0);
-    }
+    RegLocation rlStart = dvmCompilerGetSrc(cUnit, mir, 2);
+    loadValueDirectFixed(cUnit, rlStart, r2);
     /* Test objects for NULL */
     genNullCheck(cUnit, rlThis.sRegLow, r0, mir->offset, NULL);
     genDispatchToHandler(cUnit, TEMPLATE_STRING_INDEXOF);
@@ -3144,13 +3140,8 @@ static bool handleExecuteInline(CompilationUnit *cUnit, MIR *mir)
                         return false;
                     else
                         break;
-                case INLINE_STRING_INDEXOF_I:
-                    if (genInlinedIndexOf(cUnit, mir, true /* I */))
-                        return false;
-                    else
-                        break;
-                case INLINE_STRING_INDEXOF_II:
-                    if (genInlinedIndexOf(cUnit, mir, false /* I */))
+                case INLINE_STRING_FASTINDEXOF_II:
+                    if (genInlinedFastIndexOf(cUnit, mir))
                         return false;
                     else
                         break;
