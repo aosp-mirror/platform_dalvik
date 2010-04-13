@@ -91,6 +91,9 @@ struct DvmGlobals {
     int         jdwpPort;
     bool        jdwpSuspend;
 
+    u4          lockProfThreshold;
+    u4          lockProfSample;
+
     int         (*vfprintfHook)(FILE*, const char*, va_list);
     void        (*exitHook)(int);
     void        (*abortHook)(void);
