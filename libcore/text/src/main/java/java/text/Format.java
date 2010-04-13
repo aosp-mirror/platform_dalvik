@@ -20,11 +20,7 @@ package java.text;
 import java.io.Serializable;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-// BEGIN android-added
 import java.util.Locale;
-// END android-added
-
-import org.apache.harmony.text.internal.nls.Messages;
 
 /**
  * The base class for all formats.
@@ -103,19 +99,16 @@ public abstract class Format implements Serializable, Cloneable {
             }
             if (!quote && (index = fromChars.indexOf(next)) != -1) {
                 output.append(toChars.charAt(index));
-            } else if (check
-                    && !quote
+            } else if (check && !quote
                     && ((next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z'))) {
-                // text.05=Invalid pattern char {0} in {1}
-                throw new IllegalArgumentException(Messages.getString(
-                        "text.05", String.valueOf(next), template)); //$NON-NLS-1$
+                throw new IllegalArgumentException("Invalid pattern character '" + next + "' in " +
+                        "'" + template + "'");
             } else {
                 output.append(next);
             }
         }
         if (quote) {
-            // text.04=Unterminated quote
-            throw new IllegalArgumentException(Messages.getString("text.04")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Unterminated quote");
         }
         return output.toString();
     }
@@ -189,9 +182,7 @@ public abstract class Format implements Serializable, Cloneable {
         ParsePosition position = new ParsePosition(0);
         Object result = parseObject(string, position);
         if (position.getIndex() == 0) {
-            // text.1C=Format.parseObject(String) parse failure
-            throw new ParseException(
-                    Messages.getString("text.1C"), position.getErrorIndex()); //$NON-NLS-1$
+            throw new ParseException("parse failure", position.getErrorIndex());
         }
         return result;
     }
@@ -263,8 +254,7 @@ public abstract class Format implements Serializable, Cloneable {
             }
             buffer.append(ch);
         }
-        // text.07=Unmatched braces in the pattern
-        throw new IllegalArgumentException(Messages.getString("text.07")); //$NON-NLS-1$
+        throw new IllegalArgumentException("Unmatched braces in the pattern");
     }
 
     /**

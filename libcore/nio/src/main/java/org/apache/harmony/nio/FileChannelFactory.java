@@ -48,8 +48,7 @@ public class FileChannelFactory {
             case IFileSystem.O_APPEND:
                 return new WriteOnlyFileChannel(stream, fd, true);
             default:
-                // nio.09=Unknown file channel type: {0}
-                throw new RuntimeException(Messages.getString("nio.09", mode)); //$NON-NLS-1$
+                throw new RuntimeException("Unknown file channel type " + mode);
         }
     }
 }

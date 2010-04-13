@@ -17,20 +17,17 @@
 
 package java.sql;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Enumeration;
-import java.util.Iterator;
+import dalvik.system.VMStack;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.Vector;
 import java.security.AccessController;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Vector;
 import org.apache.harmony.luni.util.PriviAction;
-import org.apache.harmony.sql.internal.nls.Messages;
-// BEGIN android-changed
-import dalvik.system.VMStack;
-// END android-changed
 
 /**
  * Provides facilities for managing JDBC drivers.
@@ -59,8 +56,7 @@ public class DriverManager {
     private static final List<Driver> theDrivers = new ArrayList<Driver>(10);
 
     // Permission for setting log
-    private static final SQLPermission logPermission = new SQLPermission(
-            "setLog"); //$NON-NLS-1$
+    private static final SQLPermission logPermission = new SQLPermission("setLog");
 
     /*
      * Load drivers on initialization
@@ -75,7 +71,7 @@ public class DriverManager {
      */
     private static void loadInitialDrivers() {
         String theDriverList = AccessController
-                .doPrivileged(new PriviAction<String>("jdbc.drivers", null)); //$NON-NLS-1$
+                .doPrivileged(new PriviAction<String>("jdbc.drivers", null));
 
         if (theDriverList == null) {
             return;
@@ -85,7 +81,7 @@ public class DriverManager {
          * Get the names of the drivers as an array of Strings from the system
          * property by splitting the property at the separator character ':'
          */
-        String[] theDriverNames = theDriverList.split(":"); //$NON-NLS-1$
+        String[] theDriverNames = theDriverList.split(":");
 
         for (String element : theDriverNames) {
             try {
@@ -125,15 +121,10 @@ public class DriverManager {
         if (driver == null) {
             return;
         }
-        // BEGIN android-changed
         ClassLoader callerClassLoader = VMStack.getCallingClassLoader();
-        // END android-changed
-
         if (!DriverManager.isClassFromClassLoader(driver, callerClassLoader)) {
-            // sql.1=DriverManager: calling class not authorized to deregister
-            // JDBC driver
-            throw new SecurityException(Messages.getString("sql.1")); //$NON-NLS-1$
-        } // end if
+            throw new SecurityException("calling class not authorized to deregister JDBC driver");
+        }
         synchronized (theDrivers) {
             theDrivers.remove(driver);
         }
@@ -172,14 +163,12 @@ public class DriverManager {
      *             if there is an error while attempting to connect to the
      *             database identified by the URL.
      */
-    public static Connection getConnection(String url, Properties info)
-            throws SQLException {
+    public static Connection getConnection(String url, Properties info) throws SQLException {
         // 08 - connection exception
         // 001 - SQL-client unable to establish SQL-connection
-        String sqlState = "08001"; //$NON-NLS-1$
+        String sqlState = "08001";
         if (url == null) {
-            // sql.5=The url cannot be null
-            throw new SQLException(Messages.getString("sql.5"), sqlState); //$NON-NLS-1$
+            throw new SQLException("The url cannot be null", sqlState);
         }
         synchronized (theDrivers) {
             /*
@@ -195,8 +184,7 @@ public class DriverManager {
             }
         }
         // If we get here, none of the drivers are able to resolve the URL
-        // sql.6=No suitable driver
-        throw new SQLException(Messages.getString("sql.6"), sqlState); //$NON-NLS-1$ 
+        throw new SQLException("No suitable driver", sqlState);
     }
 
     /**
@@ -218,10 +206,10 @@ public class DriverManager {
             String password) throws SQLException {
         Properties theProperties = new Properties();
         if (null != user) {
-            theProperties.setProperty("user", user); //$NON-NLS-1$
+            theProperties.setProperty("user", user);
         }
         if (null != password) {
-            theProperties.setProperty("password", password); //$NON-NLS-1$
+            theProperties.setProperty("password", password);
         }
         return getConnection(url, theProperties);
     }
@@ -258,10 +246,9 @@ public class DriverManager {
             }
         }
         // If no drivers understand the URL, throw an SQLException
-        // sql.6=No suitable driver
         // SQLState: 08 - connection exception
         // 001 - SQL-client unable to establish SQL-connection
-        throw new SQLException(Messages.getString("sql.6"), "08001"); //$NON-NLS-1$ //$NON-NLS-2$
+        throw new SQLException("No suitable driver", "08001");
     }
 
     /**

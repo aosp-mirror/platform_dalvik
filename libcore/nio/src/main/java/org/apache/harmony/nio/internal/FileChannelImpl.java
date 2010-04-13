@@ -112,12 +112,10 @@ public abstract class FileChannelImpl extends FileChannel {
 
     protected FileLock basicLock(long position, long size, boolean shared,
             boolean wait) throws IOException {
-        if ((position < 0) || (size < 0)) {
-            // nio.0A=Lock position and size must be non-negative.
-            throw new IllegalArgumentException(Messages.getString("nio.0A")); //$NON-NLS-1$
+        if (position < 0 || size < 0) {
+            throw new IllegalArgumentException("Lock position and size must be non-negative");
         }
-        int lockType = shared ? IFileSystem.SHARED_LOCK_TYPE
-                : IFileSystem.EXCLUSIVE_LOCK_TYPE;
+        int lockType = shared ? IFileSystem.SHARED_LOCK_TYPE : IFileSystem.EXCLUSIVE_LOCK_TYPE;
         FileLock pendingLock = new FileLockImpl(this, position, size, shared);
         lockManager.addLock(pendingLock);
 
@@ -222,8 +220,7 @@ public abstract class FileChannelImpl extends FileChannel {
     public FileChannel position(long newPosition) throws IOException {
         openCheck();
         if (newPosition < 0) {
-            // nio.0B=New position must be non-negative.
-            throw new IllegalArgumentException(Messages.getString("nio.0B")); //$NON-NLS-1$
+            throw new IllegalArgumentException("New position must be non-negative");
         }
 
         synchronized (repositioningLock) {

@@ -227,9 +227,7 @@ abstract class DirectByteBuffer extends BaseByteBuffer implements DirectBuffer {
 
     public final void addressValidityCheck() {
         if (!isAddressValid()) {
-            // nio.08=Cannot use the direct byte buffer after it has been
-            // explicitly freed.
-            throw new IllegalStateException(Messages.getString("nio.08")); //$NON-NLS-1$
+            throw new IllegalStateException("Cannot use a direct byte buffer after it has been explicitly freed");
         }
     }
 

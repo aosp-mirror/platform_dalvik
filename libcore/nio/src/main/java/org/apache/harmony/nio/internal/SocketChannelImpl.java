@@ -868,7 +868,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
                 throws SocketException {
             checkOpen();
             if (size < 1) {
-                throw new IllegalArgumentException(Msg.getString("K0035")); //$NON-NLS-1$
+                throw new IllegalArgumentException(Msg.getString("K0035"));
             }
             socketImpl
                     .setOption(SocketOptions.SO_RCVBUF, Integer.valueOf(size));
@@ -885,7 +885,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         public synchronized void setSendBufferSize(int size) throws SocketException {
             checkOpen();
             if (size < 1) {
-                throw new IllegalArgumentException(Msg.getString("K0035")); //$NON-NLS-1$
+                throw new IllegalArgumentException(Msg.getString("K0035"));
             }
             socketImpl.setOption(SocketOptions.SO_SNDBUF, Integer.valueOf(size));
         }
@@ -894,7 +894,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         public void setSoLinger(boolean on, int timeout) throws SocketException {
             checkOpen();
             if (on && timeout < 0) {
-                throw new IllegalArgumentException(Msg.getString("K0045")); //$NON-NLS-1$
+                throw new IllegalArgumentException(Msg.getString("K0045"));
             }
             int val = on ? (65535 < timeout ? 65535 : timeout) : -1;
             socketImpl.setOption(SocketOptions.SO_LINGER, Integer.valueOf(val));
@@ -904,7 +904,7 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
         public synchronized void setSoTimeout(int timeout) throws SocketException {
             checkOpen();
             if (timeout < 0) {
-                throw new IllegalArgumentException(Msg.getString("K0036")); //$NON-NLS-1$
+                throw new IllegalArgumentException(Msg.getString("K0036"));
             }
             socketImpl.setOption(SocketOptions.SO_TIMEOUT, Integer.valueOf(timeout));
         }
@@ -929,17 +929,9 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
          */
         @Override
         public OutputStream getOutputStream() throws IOException {
-            if (!channel.isOpen()) {
-                // nio.00=Socket is closed
-                throw new SocketException(Messages.getString("nio.00")); //$NON-NLS-1$
-            }
-            if (!channel.isConnected()) {
-                // nio.01=Socket is not connected
-                throw new SocketException(Messages.getString("nio.01")); //$NON-NLS-1$
-            }
+            checkOpenAndConnected();
             if (isOutputShutdown()) {
-                // nio.02=Socket output is shutdown
-                throw new SocketException(Messages.getString("nio.02")); //$NON-NLS-1$
+                throw new SocketException("Socket output is shutdown");
             }
             return new SocketChannelOutputStream(channel);
         }
@@ -949,28 +941,28 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
          */
         @Override
         public InputStream getInputStream() throws IOException {
-            if (!channel.isOpen()) {
-                // nio.00=Socket is closed
-                throw new SocketException(Messages.getString("nio.00")); //$NON-NLS-1$
-            }
-            if (!channel.isConnected()) {
-                // nio.01=Socket is not connected
-                throw new SocketException(Messages.getString("nio.01")); //$NON-NLS-1$
-            }
+            checkOpenAndConnected();
             if (isInputShutdown()) {
-                // nio.03=Socket input is shutdown
-                throw new SocketException(Messages.getString("nio.03")); //$NON-NLS-1$
+                throw new SocketException("Socket input is shutdown");
             }
             return new SocketChannelInputStream(channel);
         }
-
+        
+        private void checkOpenAndConnected() throws SocketException {
+            if (!channel.isOpen()) {
+                throw new SocketException("Socket is closed");
+            }
+            if (!channel.isConnected()) {
+                throw new SocketException("Socket is not connected");
+            }
+        }
+        
         /*
          * Checks whether the channel is open.
          */
         private void checkOpen() throws SocketException {
             if (isClosed()) {
-                // nio.00=Socket is closed
-                throw new SocketException(Messages.getString("nio.00")); //$NON-NLS-1$
+                throw new SocketException("Socket is closed");
             }
         }
 

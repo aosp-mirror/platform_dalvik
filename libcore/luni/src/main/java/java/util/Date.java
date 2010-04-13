@@ -25,8 +25,6 @@ import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 
-import org.apache.harmony.luni.internal.nls.Messages;
-
 /**
  * {@code Date} represents a specific moment in time, to the millisecond.
  *
@@ -44,13 +42,6 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     private static int creationYear = new Date().getYear();
 
     private transient long milliseconds;
-
-    private static String[] dayOfWeekNames = { "Sun", "Mon", "Tue", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        "Wed", "Thu", "Fri", "Sat" }; //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-
-    private static String[] monthNames = { "Jan", "Feb", "Mar", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        "Apr", "May", "Jun", "Jul", //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        "Aug", "Sep", "Oct", "Nov", "Dec"};  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
     /**
      * Initializes this {@code Date} instance to the current time.
@@ -377,10 +368,8 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
      */
     @Deprecated
     public static long parse(String string) {
-
         if (string == null) {
-            // luni.06=The string argument is null
-            throw new IllegalArgumentException(Messages.getString("luni.06")); //$NON-NLS-1$
+            throw new IllegalArgumentException("The string argument is null");
         }
 
         char sign = 0;
@@ -415,7 +404,7 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
                 nextState = LETTERS;
             } else if ('0' <= next && next <= '9') {
                 nextState = NUMBERS;
-            } else if (!Character.isSpace(next) && ",+-:/".indexOf(next) == -1) { //$NON-NLS-1$
+            } else if (!Character.isSpace(next) && ",+-:/".indexOf(next) == -1) {
                 throw new IllegalArgumentException();
             }
 
@@ -486,13 +475,13 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
                 if (text.length() == 1) {
                     throw new IllegalArgumentException();
                 }
-                if (text.equals("AM")) { //$NON-NLS-1$
+                if (text.equals("AM")) {
                     if (hour == 12) {
                         hour = 0;
                     } else if (hour < 1 || hour > 12) {
                         throw new IllegalArgumentException();
                     }
-                } else if (text.equals("PM")) { //$NON-NLS-1$
+                } else if (text.equals("PM")) {
                     if (hour == 12) {
                         hour = 0;
                     } else if (hour < 1 || hour > 12) {
@@ -505,10 +494,8 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
                             .getMonths();
                     int value;
                     if (parse(text, weekdays) != -1) {/* empty */
-                    } else if (month == -1
-                            && (month = parse(text, months)) != -1) {/* empty */
-                    } else if (text.equals("GMT") || text.equals("UT") //$NON-NLS-1$ //$NON-NLS-2$
-                            || text.equals("UTC")) { //$NON-NLS-1$
+                    } else if (month == -1 && (month = parse(text, months)) != -1) {/* empty */
+                    } else if (text.equals("GMT") || text.equals("UT") || text.equals("UTC")) {
                         zone = true;
                         zoneOffset = 0;
                     } else if ((value = zone(text)) != 0) {
@@ -676,10 +663,9 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     @Deprecated
     public String toGMTString() {
         // TODO: why does this insert the year manually instead of using one SimpleDateFormat?
-        SimpleDateFormat format1 = new SimpleDateFormat("d MMM ", Locale.US); //$NON-NLS-1$
-        SimpleDateFormat format2 = new SimpleDateFormat(
-                " HH:mm:ss 'GMT'", Locale.US); //$NON-NLS-1$
-        TimeZone gmtZone = TimeZone.getTimeZone("GMT"); //$NON-NLS-1$
+        SimpleDateFormat format1 = new SimpleDateFormat("d MMM ", Locale.US);
+        SimpleDateFormat format2 = new SimpleDateFormat(" HH:mm:ss 'GMT'", Locale.US);
+        TimeZone gmtZone = TimeZone.getTimeZone("GMT");
         format1.setTimeZone(gmtZone);
         format2.setTimeZone(gmtZone);
         GregorianCalendar gc = new GregorianCalendar(gmtZone);
@@ -719,18 +705,22 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
         //   return new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy").format(d);
         Calendar cal = new GregorianCalendar(milliseconds);
         TimeZone tz = cal.getTimeZone();
-        return dayOfWeekNames[cal.get(Calendar.DAY_OF_WEEK) - 1] + " " + monthNames[cal.get(Calendar.MONTH)]//$NON-NLS-1$
-                + " " + toTwoDigits(cal.get(Calendar.DAY_OF_MONTH)) + " " + toTwoDigits(cal.get(Calendar.HOUR_OF_DAY))//$NON-NLS-1$ //$NON-NLS-2$
-                + ":" + toTwoDigits(cal.get(Calendar.MINUTE)) + ":" + toTwoDigits(cal.get(Calendar.SECOND))//$NON-NLS-1$ //$NON-NLS-2$
-                + " " + tz.getDisplayName(tz.inDaylightTime(this), TimeZone.SHORT) + " " + cal.get(Calendar.YEAR);//$NON-NLS-1$ //$NON-NLS-2$
+        return dayOfWeekNames[cal.get(Calendar.DAY_OF_WEEK) - 1] + " " + monthNames[cal.get(Calendar.MONTH)]
+                + " " + toTwoDigits(cal.get(Calendar.DAY_OF_MONTH)) + " " + toTwoDigits(cal.get(Calendar.HOUR_OF_DAY))
+                + ":" + toTwoDigits(cal.get(Calendar.MINUTE)) + ":" + toTwoDigits(cal.get(Calendar.SECOND))
+                + " " + tz.getDisplayName(tz.inDaylightTime(this), TimeZone.SHORT) + " " + cal.get(Calendar.YEAR);
         // END android-changed
     }
+    private static final String[] dayOfWeekNames =
+            { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    private static final String[] monthNames =
+            { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
     private String toTwoDigits(int n) {
         if (n >= 10) {
-            return Integer.toString(n);//$NON-NLS-1$
+            return Integer.toString(n);
         } else {
-            return "0" + n;//$NON-NLS-1$
+            return "0" + n;
         }
     }
 
@@ -760,34 +750,34 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     public static long UTC(int year, int month, int day, int hour, int minute,
             int second) {
         GregorianCalendar cal = new GregorianCalendar(false);
-        cal.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
+        cal.setTimeZone(TimeZone.getTimeZone("GMT"));
         cal.set(1900 + year, month, day, hour, minute, second);
         return cal.getTimeInMillis();
     }
 
     private static int zone(String text) {
-        if (text.equals("EST")) { //$NON-NLS-1$
+        if (text.equals("EST")) {
             return -5;
         }
-        if (text.equals("EDT")) { //$NON-NLS-1$
+        if (text.equals("EDT")) {
             return -4;
         }
-        if (text.equals("CST")) { //$NON-NLS-1$
+        if (text.equals("CST")) {
             return -6;
         }
-        if (text.equals("CDT")) { //$NON-NLS-1$
+        if (text.equals("CDT")) {
             return -5;
         }
-        if (text.equals("MST")) { //$NON-NLS-1$
+        if (text.equals("MST")) {
             return -7;
         }
-        if (text.equals("MDT")) { //$NON-NLS-1$
+        if (text.equals("MDT")) {
             return -6;
         }
-        if (text.equals("PST")) { //$NON-NLS-1$
+        if (text.equals("PST")) {
             return -8;
         }
-        if (text.equals("PDT")) { //$NON-NLS-1$
+        if (text.equals("PDT")) {
             return -7;
         }
         return 0;

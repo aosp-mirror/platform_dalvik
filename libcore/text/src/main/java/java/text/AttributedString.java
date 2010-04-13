@@ -28,8 +28,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.harmony.text.internal.nls.Messages;
-
 /**
  * Holds a string with attributes describing the characters of
  * this string.
@@ -389,8 +387,7 @@ public class AttributedString {
      */
     public AttributedString(AttributedCharacterIterator iterator) {
         if (iterator.getBeginIndex() > iterator.getEndIndex()) {
-            // text.0A=Invalid substring range
-            throw new IllegalArgumentException(Messages.getString("text.0A")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Invalid substring range");
         }
         StringBuilder buffer = new StringBuilder();
         for (int i = iterator.getBeginIndex(); i < iterator.getEndIndex(); i++) {
@@ -554,8 +551,7 @@ public class AttributedString {
             throw new NullPointerException();
         }
         if (value.length() == 0 && !attributes.isEmpty()) {
-            // text.0B=Cannot add attributes to empty string
-            throw new IllegalArgumentException(Messages.getString("text.0B")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Cannot add attributes to empty string");
         }
         text = value;
         attributeMap = new HashMap<Attribute, List<Range>>(
