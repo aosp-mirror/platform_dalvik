@@ -314,19 +314,17 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @param l
      *            the locale used in the method. No localization will be applied
      *            if {@code l} is {@code null}.
-     * @param format
-     *            the format string used for {@link java.util.Formatter#format}.
+     * @param format the format string (see {@link java.util.Formatter#format})
      * @param args
      *            the list of arguments passed to the formatter. If there are
-     *            more arguments than required by the {@code format} string,
-     *            then the additional arguments are ignored.
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return this stream.
      * @throws IllegalFormatException
      *             if the format string is illegal or incompatible with the
      *             arguments, if there are not enough arguments or if any other
      *             error regarding the format string or arguments is detected.
-     * @throws NullPointerException
-     *             if {@code format} is {@code null}.
+     * @throws NullPointerException if {@code format == null}
      */
     public PrintStream format(Locale l, String format, Object... args) {
         if (format == null) {
@@ -341,20 +339,17 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * this stream's {@code #format(String, Object...)} method. For the locale,
      * the default value of the current virtual machine instance is used.
      *
-     * @param format
-     *            the format string used for
-     *            {@link java.util.Formatter#format}.
+     * @param format the format string (see {@link java.util.Formatter#format})
      * @param args
      *            the list of arguments passed to the formatter. If there are
-     *            more arguments than required by the {@code format} string,
-     *            then the additional arguments are ignored.
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return this stream.
      * @throws IllegalFormatException
      *             if the format string is illegal or incompatible with the
      *             arguments, if there are not enough arguments or if any other
      *             error regarding the format string or arguments is detected.
-     * @throws NullPointerException
-     *             if {@code format} is {@code null}.
+     * @throws NullPointerException if {@code format == null}
      */
     public PrintStream printf(String format, Object... args) {
         return format(format, args);
@@ -367,19 +362,17 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      * @param l
      *            the locale used in the method. No localization will be applied
      *            if {@code l} is {@code null}.
-     * @param format
-     *            the format string used for {@link java.util.Formatter#format}.
+     * @param format the format string (see {@link java.util.Formatter#format})
      * @param args
      *            the list of arguments passed to the formatter. If there are
-     *            more arguments than required by the {@code format} string,
-     *            then the additional arguments are ignored.
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return this stream.
      * @throws IllegalFormatException
      *             if the format string is illegal or incompatible with the
      *             arguments, if there are not enough arguments or if any other
      *             error regarding the format string or arguments is detected.
-     * @throws NullPointerException
-     *             if {@code format} is {@code null}.
+     * @throws NullPointerException if {@code format == null}.
      */
     public PrintStream printf(Locale l, String format, Object... args) {
         return format(l, format, args);

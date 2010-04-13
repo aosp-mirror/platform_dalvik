@@ -67,22 +67,25 @@ public final class Console implements Flushable {
      * Writes a formatted string to the console using
      * the specified format string and arguments.
      *
-     * @param fmt the format string.
-     * @param args the arguments used by the formatter.
+     * @param format the format string (see {@link java.util.Formatter#format})
+     * @param args
+     *            the list of arguments passed to the formatter. If there are
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return the console instance.
      */
-    public Console format(String fmt, Object... args) {
+    public Console format(String format, Object... args) {
         Formatter f = new Formatter(writer);
-        f.format(fmt, args);
+        f.format(format, args);
         f.flush();
         return this;
     }
 
     /**
-     * Equivalent to {@code format(fmt, args)}.
+     * Equivalent to {@code format(format, args)}.
      */
-    public Console printf(String fmt, Object... args) {
-        return format(fmt, args);
+    public Console printf(String format, Object... args) {
+        return format(format, args);
     }
 
     /**
@@ -112,13 +115,16 @@ public final class Console implements Flushable {
      * prompt contains {@code %} characters, you must use the format string {@code "%s"}
      * and pass the actual prompt as a parameter.
      *
-     * @param fmt the format string.
-     * @param args the arguments used by the formatter.
+     * @param format the format string (see {@link java.util.Formatter#format})
+     * @param args
+     *            the list of arguments passed to the formatter. If there are
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return the line, or null at EOF.
      */
-    public String readLine(String fmt, Object... args) {
+    public String readLine(String format, Object... args) {
         synchronized (CONSOLE_LOCK) {
-            format(fmt, args);
+            format(format, args);
             return readLine();
         }
     }
@@ -154,13 +160,16 @@ public final class Console implements Flushable {
      * Reads a password from the console. The password will not be echoed to the display.
      * A formatted prompt is also displayed.
      *
-     * @param fmt the format string.
-     * @param args the arguments used by the formatter.
+     * @param format the format string (see {@link java.util.Formatter#format})
+     * @param args
+     *            the list of arguments passed to the formatter. If there are
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return a character array containing the password, or null at EOF.
      */
-    public char[] readPassword(String fmt, Object... args) {
+    public char[] readPassword(String format, Object... args) {
         synchronized (CONSOLE_LOCK) {
-            format(fmt, args);
+            format(format, args);
             return readPassword();
         }
     }

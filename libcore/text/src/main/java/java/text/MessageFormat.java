@@ -733,25 +733,24 @@ public class MessageFormat extends Format {
     /**
      * Formats the supplied objects using the specified message format pattern.
      * 
-     * @param template
-     *            the pattern to use for formatting.
-     * @param objects
-     *            the array of objects to format.
+     * @param format the format string (see {@link java.util.Formatter#format})
+     * @param args
+     *            the list of arguments passed to the formatter. If there are
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return the formatted result.
      * @throws IllegalArgumentException
      *            if the pattern cannot be parsed.
      */
-    public static String format(String template, Object... objects) {
-        if (objects != null) {
-            for (int i = 0; i < objects.length; i++) {
-                if (objects[i] == null) {
-                    objects[i] = "null";
+    public static String format(String format, Object... args) {
+        if (args != null) {
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] == null) {
+                    args[i] = "null";
                 }
             }
         }
-        // BEGIN android-changed
-        return new MessageFormat(template).format(objects);
-        // END android-changed
+        return new MessageFormat(format).format(args);
     }
 
     /**

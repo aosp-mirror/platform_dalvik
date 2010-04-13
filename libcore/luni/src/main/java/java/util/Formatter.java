@@ -984,10 +984,8 @@ public final class Formatter implements Closeable, Flushable {
      *             if the {@code Formatter} has been closed.
      */
     public Formatter format(String format, Object... args) {
-        // BEGIN android-changed
         doFormat(format, args);
         return this;
-        // END android-changed
     }
 
     // BEGIN android-added
@@ -1022,7 +1020,6 @@ public final class Formatter implements Closeable, Flushable {
      *             if the {@code Formatter} has been closed.
      */
     public Formatter format(Locale l, String format, Object... args) {
-        // BEGIN android-changed
         Locale originalLocale = locale;
         try {
             this.locale = l;
@@ -1031,7 +1028,6 @@ public final class Formatter implements Closeable, Flushable {
             this.locale = originalLocale;
         }
         return this;
-        // END android-changed
     }
 
     // BEGIN android-changed
