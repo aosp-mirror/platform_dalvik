@@ -44,18 +44,11 @@ import org.apache.harmony.luni.util.PriviAction;
  * @see Charset
  * @since 1.0
  */
-public final class String implements Serializable, Comparable<String>,
-        CharSequence {
+public final class String implements Serializable, Comparable<String>, CharSequence {
 
     private static final long serialVersionUID = -6849794470754667710L;
 
-    // BEGIN android-added
     private static final char REPLACEMENT_CHAR = (char) 0xfffd;
-    // END android-added
-
-    // BEGIN android-removed
-    // static class ConsolePrintStream extends java.io.PrintStream ...
-    // END android-removed
 
     /**
      * CaseInsensitiveComparator compares Strings ignoring the case of the
@@ -394,7 +387,7 @@ public final class String implements Serializable, Comparable<String>,
             } catch (Exception e) {
                 // do nothing. according to spec:
                 // behavior is unspecified for invalid array
-                cb = CharBuffer.wrap("\u003f".toCharArray()); //$NON-NLS-1$
+                cb = CharBuffer.wrap("\u003f".toCharArray());
             }
             if ((result = cb.length()) > 0) {
                 value = cb.array();
@@ -688,7 +681,7 @@ public final class String implements Serializable, Comparable<String>,
     @SuppressWarnings("unused")
     private String(String s1, int v1) {
         if (s1 == null) {
-            s1 = "null"; //$NON-NLS-1$
+            s1 = "null";
         }
         String s2 = String.valueOf(v1);
         int len = s1.count + s2.count;
@@ -856,8 +849,7 @@ public final class String implements Serializable, Comparable<String>,
     private Charset defaultCharset() {
         if (DefaultCharset == null) {
             String encoding = AccessController
-                    .doPrivileged(new PriviAction<String>(
-                            "file.encoding", "ISO8859_1")); //$NON-NLS-1$ //$NON-NLS-2$
+                    .doPrivileged(new PriviAction<String>("file.encoding", "ISO8859_1"));
             // calling System.getProperty() may cause DefaultCharset to be
             // initialized
             try {
@@ -869,7 +861,7 @@ public final class String implements Serializable, Comparable<String>,
             }
 
             if (DefaultCharset == null) {
-                DefaultCharset = Charset.forName("ISO-8859-1"); //$NON-NLS-1$
+                DefaultCharset = Charset.forName("ISO-8859-1");
             }
         }
         return DefaultCharset;
@@ -1713,18 +1705,16 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts this string to lowercase, using the rules of the specified locale.
-     * <p>
-     * Most case mappings are unaffected by the language of a {@code Locale}. Exceptions include
+     * Converts this string to lowercase, using the rules of {@code locale}.
+     *
+     * <p>Most case mappings are unaffected by the language of a {@code Locale}. Exceptions include
      * dotted and dotless I in Azeri and Turkish locales, and dotted and dotless I and J in
-     * Lithuanian locales. On the other hand, it isn't necessary to provide, a Greek locale to get
+     * Lithuanian locales. On the other hand, it isn't necessary to provide a Greek locale to get
      * correct case mapping of Greek characters: any locale will do.
-     * <p>
-     * See <a href="http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt">http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt</a>
+     *
+     * <p>See <a href="http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt">http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt</a>
      * for full details of context- and language-specific special cases.
-     * 
-     * @param locale
-     *            the Locale to use.
+     *
      * @return a new lowercase string, or {@code this} if it's already all-lowercase.
      */
     public String toLowerCase(Locale locale) {
@@ -1742,145 +1732,29 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the characters in this string to uppercase, using the default
-     * Locale.
+     * Converts this this string to uppercase, using the rules of the default locale.
      * 
-     * @return a new string containing the uppercase characters equivalent to
-     *         the characters in this string.
+     * @return a new uppercase string, or {@code this} if it's already all-uppercase.
      */
     public String toUpperCase() {
-        return toUpperCase(Locale.getDefault());
-    }
-
-    // BEGIN android-note
-    // put this in a helper class so that it's only initialized on demand?
-    // END android-note
-    private static final char[] upperValues = "SS\u0000\u02bcN\u0000J\u030c\u0000\u0399\u0308\u0301\u03a5\u0308\u0301\u0535\u0552\u0000H\u0331\u0000T\u0308\u0000W\u030a\u0000Y\u030a\u0000A\u02be\u0000\u03a5\u0313\u0000\u03a5\u0313\u0300\u03a5\u0313\u0301\u03a5\u0313\u0342\u1f08\u0399\u0000\u1f09\u0399\u0000\u1f0a\u0399\u0000\u1f0b\u0399\u0000\u1f0c\u0399\u0000\u1f0d\u0399\u0000\u1f0e\u0399\u0000\u1f0f\u0399\u0000\u1f08\u0399\u0000\u1f09\u0399\u0000\u1f0a\u0399\u0000\u1f0b\u0399\u0000\u1f0c\u0399\u0000\u1f0d\u0399\u0000\u1f0e\u0399\u0000\u1f0f\u0399\u0000\u1f28\u0399\u0000\u1f29\u0399\u0000\u1f2a\u0399\u0000\u1f2b\u0399\u0000\u1f2c\u0399\u0000\u1f2d\u0399\u0000\u1f2e\u0399\u0000\u1f2f\u0399\u0000\u1f28\u0399\u0000\u1f29\u0399\u0000\u1f2a\u0399\u0000\u1f2b\u0399\u0000\u1f2c\u0399\u0000\u1f2d\u0399\u0000\u1f2e\u0399\u0000\u1f2f\u0399\u0000\u1f68\u0399\u0000\u1f69\u0399\u0000\u1f6a\u0399\u0000\u1f6b\u0399\u0000\u1f6c\u0399\u0000\u1f6d\u0399\u0000\u1f6e\u0399\u0000\u1f6f\u0399\u0000\u1f68\u0399\u0000\u1f69\u0399\u0000\u1f6a\u0399\u0000\u1f6b\u0399\u0000\u1f6c\u0399\u0000\u1f6d\u0399\u0000\u1f6e\u0399\u0000\u1f6f\u0399\u0000\u1fba\u0399\u0000\u0391\u0399\u0000\u0386\u0399\u0000\u0391\u0342\u0000\u0391\u0342\u0399\u0391\u0399\u0000\u1fca\u0399\u0000\u0397\u0399\u0000\u0389\u0399\u0000\u0397\u0342\u0000\u0397\u0342\u0399\u0397\u0399\u0000\u0399\u0308\u0300\u0399\u0308\u0301\u0399\u0342\u0000\u0399\u0308\u0342\u03a5\u0308\u0300\u03a5\u0308\u0301\u03a1\u0313\u0000\u03a5\u0342\u0000\u03a5\u0308\u0342\u1ffa\u0399\u0000\u03a9\u0399\u0000\u038f\u0399\u0000\u03a9\u0342\u0000\u03a9\u0342\u0399\u03a9\u0399\u0000FF\u0000FI\u0000FL\u0000FFIFFLST\u0000ST\u0000\u0544\u0546\u0000\u0544\u0535\u0000\u0544\u053b\u0000\u054e\u0546\u0000\u0544\u053d\u0000".value; //$NON-NLS-1$
-
-    /**
-     * Return the index of the specified character into the upperValues table.
-     * The upperValues table contains three entries at each position. These
-     * three characters are the upper case conversion. If only two characters
-     * are used, the third character in the table is \u0000.
-     *
-     * @param ch
-     *            the char being converted to upper case
-     *
-     * @return the index into the upperValues table, or -1
-     */
-    private int upperIndex(int ch) {
-        int index = -1;
-        if (ch >= 0xdf) {
-            if (ch <= 0x587) {
-                if (ch == 0xdf) {
-                    index = 0;
-                } else if (ch <= 0x149) {
-                    if (ch == 0x149) {
-                        index = 1;
-                    }
-                } else if (ch <= 0x1f0) {
-                    if (ch == 0x1f0) {
-                        index = 2;
-                    }
-                } else if (ch <= 0x390) {
-                    if (ch == 0x390) {
-                        index = 3;
-                    }
-                } else if (ch <= 0x3b0) {
-                    if (ch == 0x3b0) {
-                        index = 4;
-                    }
-                } else if (ch <= 0x587) {
-                    if (ch == 0x587) {
-                        index = 5;
-                    }
-                }
-            } else if (ch >= 0x1e96) {
-                if (ch <= 0x1e9a) {
-                    index = 6 + ch - 0x1e96;
-                } else if (ch >= 0x1f50 && ch <= 0x1ffc) {
-                    index = "\u000b\u0000\f\u0000\r\u0000\u000e\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>\u0000\u0000?@A\u0000BC\u0000\u0000\u0000\u0000D\u0000\u0000\u0000\u0000\u0000EFG\u0000HI\u0000\u0000\u0000\u0000J\u0000\u0000\u0000\u0000\u0000KL\u0000\u0000MN\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000OPQ\u0000RS\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000TUV\u0000WX\u0000\u0000\u0000\u0000Y".value[ch - 0x1f50]; //$NON-NLS-1$
-                    if (index == 0) {
-                        index = -1;
-                    }
-                } else if (ch >= 0xfb00) {
-                    if (ch <= 0xfb06) {
-                        index = 90 + ch - 0xfb00;
-                    } else if (ch >= 0xfb13 && ch <= 0xfb17) {
-                        index = 97 + ch - 0xfb13;
-                    }
-                }
-            }
-        }
-        return index;
+        return CaseMapper.toUpperCase(Locale.getDefault(), this, value, offset, count);
     }
 
     /**
-     * Converts the characters in this string to uppercase, using the specified
-     * Locale.
-     * 
-     * @param locale
-     *            the Locale to use.
-     * @return a new string containing the uppercase characters equivalent to
-     *         the characters in this string.
+     * Converts this this string to uppercase, using the rules of {@code locale}.
+     *
+     * <p>Most case mappings are unaffected by the language of a {@code Locale}. Exceptions include
+     * dotted and dotless I in Azeri and Turkish locales, and dotted and dotless I and J in
+     * Lithuanian locales. On the other hand, it isn't necessary to provide a Greek locale to get
+     * correct case mapping of Greek characters: any locale will do.
+     *
+     * <p>See <a href="http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt">http://www.unicode.org/Public/UNIDATA/SpecialCasing.txt</a>
+     * for full details of context- and language-specific special cases.
+     *
+     * @return a new uppercase string, or {@code this} if it's already all-uppercase.
      */
     public String toUpperCase(Locale locale) {
-        // BEGIN android-changed: support Azeri.
-        String languageCode = locale.getLanguage();
-        boolean turkishOrAzeri = languageCode.equals("tr") || languageCode.equals("az");
-
-        char[] output = null;
-        int i = 0;
-        for (int o = offset, end = offset + count; o < end; o++) {
-            char ch = value[o];
-            int index = upperIndex(ch);
-            if (index == -1) {
-                if (output != null && i >= output.length) {
-                    char[] newoutput = new char[output.length + (count / 6) + 2];
-                    System.arraycopy(output, 0, newoutput, 0, output.length);
-                    output = newoutput;
-                }
-                char upch = !turkishOrAzeri ? Character.toUpperCase(ch)
-                        : (ch != 0x69 ? Character.toUpperCase(ch)
-                                : (char) 0x130);
-                if (ch != upch) {
-                    if (output == null) {
-                        output = new char[count];
-                        i = o - offset;
-                        System.arraycopy(value, offset, output, 0, i);
-                    }
-                    output[i++] = upch;
-                } else if (output != null) {
-                    output[i++] = ch;
-                }
-            } else {
-                int target = index * 3;
-                char val3 = upperValues[target + 2];
-                if (output == null) {
-                    output = new char[count + (count / 6) + 2];
-                    i = o - offset;
-                    System.arraycopy(value, offset, output, 0, i);
-                } else if (i + (val3 == 0 ? 1 : 2) >= output.length) {
-                    char[] newoutput = new char[output.length + (count / 6) + 3];
-                    System.arraycopy(output, 0, newoutput, 0, output.length);
-                    output = newoutput;
-                }
-
-                char val = upperValues[target];
-                output[i++] = val;
-                val = upperValues[target + 1];
-                output[i++] = val;
-                if (val3 != 0) {
-                    output[i++] = val3;
-                }
-            }
-        }
-        if (output == null) {
-            return this;
-        }
-        return output.length == i || output.length - i < 8 ? new String(0, i,
-                output) : new String(output, 0, i);
-        // END android-changed
+        return CaseMapper.toUpperCase(locale, this, value, offset, count);
     }
 
     /**
@@ -2014,7 +1888,7 @@ public final class String implements Serializable, Comparable<String>,
      * @return the object converted to a string, or the string {@code "null"}.
      */
     public static String valueOf(Object value) {
-        return value != null ? value.toString() : "null"; //$NON-NLS-1$
+        return value != null ? value.toString() : "null";
     }
 
     /**
@@ -2027,7 +1901,7 @@ public final class String implements Serializable, Comparable<String>,
      * @return the boolean converted to a string.
      */
     public static String valueOf(boolean value) {
-        return value ? "true" : "false"; //$NON-NLS-1$ //$NON-NLS-2$
+        return value ? "true" : "false";
     }
 
     /**

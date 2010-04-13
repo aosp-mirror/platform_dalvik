@@ -36,7 +36,7 @@ static jstring convertImpl(JNIEnv* env, jclass, jstring s, jint flags, jboolean 
     const size_t srcLength = sus.unicodeString().length();
     UChar dst[256];
     UErrorCode status = U_ZERO_ERROR;
-    int32_t resultLength = toAscii
+    size_t resultLength = toAscii
             ? uidna_IDNToASCII(src, srcLength, &dst[0], sizeof(dst), flags, NULL, &status)
             : uidna_IDNToUnicode(src, srcLength, &dst[0], sizeof(dst), flags, NULL, &status);
     if (U_FAILURE(status)) {

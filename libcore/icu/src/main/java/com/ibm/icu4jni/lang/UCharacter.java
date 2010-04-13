@@ -42,6 +42,8 @@ public final class UCharacter {
     public static native int toLowerCase(int codePoint);
     public static native int toTitleCase(int codePoint);
     public static native int toUpperCase(int codePoint);
+    public static native String toLowerCase(String s, String localeName);
+    public static native String toUpperCase(String s, String localeName);
 
     public static UnicodeBlock[] getBlockTable() {
         /**

@@ -22,9 +22,7 @@
 
 // A smart pointer that provides access to an ICU UnicodeString given a JNI
 // jstring. We give ICU a direct pointer to the characters on the Java heap.
-// It's clever enough to copy-on-write if necessary, but we only provide
-// const UnicodeString access anyway because attempted write access seems
-// likely to be an error.
+// It's clever enough to copy-on-write if necessary.
 class ScopedJavaUnicodeString {
 public:
     ScopedJavaUnicodeString(JNIEnv* env, jstring s) : mEnv(env), mString(s) {
@@ -37,7 +35,11 @@ public:
         mEnv->ReleaseStringChars(mString, mChars);
     }
 
-    const UnicodeString& unicodeString() {
+    const UnicodeString& unicodeString() const {
+        return mUnicodeString;
+    }
+
+    UnicodeString& unicodeString() {
         return mUnicodeString;
     }
 

@@ -17,6 +17,7 @@
 #define LOG_TAG "Resources"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
+#include "ScopedUtfChars.h"
 #include "cutils/log.h"
 #include "unicode/numfmt.h"
 #include "unicode/locid.h"
@@ -67,11 +68,8 @@ private:
     void operator=(const ScopedResourceBundle&);
 };
 
-static Locale getLocale(JNIEnv* env, jstring locale) {
-    const char* name = env->GetStringUTFChars(locale, NULL);
-    Locale result = Locale::createFromName(name);
-    env->ReleaseStringUTFChars(locale, name);
-    return result;
+static Locale getLocale(JNIEnv* env, jstring localeName) {
+    return Locale::createFromName(ScopedUtfChars(env, localeName).data());
 }
 
 static jint getCurrencyFractionDigitsNative(JNIEnv* env, jclass clazz, jstring currencyCode) {
