@@ -436,7 +436,7 @@ static void lockMonitor(Thread* self, Monitor* mon)
         mon->lockCount++;
         return;
     }
-    if (dvmMutexTryLock(&mon->lock) != 0) {
+    if (dvmTryLockMutex(&mon->lock) != 0) {
         oldStatus = dvmChangeStatus(self, THREAD_MONITOR);
         waitThreshold = gDvm.lockProfThreshold;
         if (waitThreshold) {
