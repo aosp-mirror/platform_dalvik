@@ -133,46 +133,32 @@ public final class Currency implements Serializable {
     }
 
     /**
-     * Returns this {@code Currency}'s ISO 4217 currency code.
-     *
-     * @return this {@code Currency}'s ISO 4217 currency code.
+     * Returns this currency's ISO 4217 currency code.
      */
     public String getCurrencyCode() {
         return currencyCode;
     }
 
     /**
-     * Returns the symbol for this currency in the default locale. For instance,
-     * if the default locale is the US, the symbol of the US dollar is "$". For
-     * other locales it may be "US$". If no symbol can be determined, the ISO
-     * 4217 currency code of the US dollar is returned.
-     *
-     * @return the symbol for this {@code Currency} in the default {@code Locale}.
+     * Returns the localized currency symbol for this currency in the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      */
     public String getSymbol() {
         return getSymbol(Locale.getDefault());
     }
 
     /**
-     * Returns the symbol for this currency in the given {@code Locale}.
+     * Returns the localized currency symbol for this currency in {@code locale}.
      * That is, given "USD" and Locale.US, you'd get "$", but given "USD" and a non-US locale,
      * you'd get "US$".
-     * <p>
-     * If the locale only specifies a language rather than a language and a countries (e.g.
-     * {@code Locale.JAPANESE, new Locale("en","")}), the the ISO
-     * 4217 currency code is returned.
-     * <p>
-     * If there is no currency symbol specific to this locale does not exist, the
-     * ISO 4217 currency code is returned.
-     * <p>
      *
-     * @param locale
-     *            the locale for which the currency symbol should be returned.
-     * @return the representation of this {@code Currency}'s symbol in the specified
-     *         locale.
+     * <p>If the locale only specifies a language rather than a language and a country (such as
+     * {@code Locale.JAPANESE} or {new Locale("en", "")} rather than {@code Locale.JAPAN} or
+     * {new Locale("en", "US")}), the ISO 4217 currency code is returned.
+     *
+     * <p>If there is no locale-specific currency symbol, the ISO 4217 currency code is returned.
      */
     public String getSymbol(Locale locale) {
-        // BEGIN android-changed
         if (locale.getCountry().length() == 0) {
             return currencyCode;
         }
@@ -186,7 +172,6 @@ public final class Currency implements Serializable {
         // Try ICU, and fall back to the currency code if ICU has nothing.
         String symbol = Resources.getCurrencySymbolNative(locale.toString(), currencyCode);
         return symbol != null ? symbol : currencyCode;
-        // END android-changed
     }
 
     /**

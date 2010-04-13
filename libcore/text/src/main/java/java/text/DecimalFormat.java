@@ -554,7 +554,8 @@ public class DecimalFormat extends NumberFormat {
 
     /**
      * Constructs a new {@code DecimalFormat} for formatting and parsing numbers
-     * for the default locale.
+     * for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      */
     public DecimalFormat() {
         // BEGIN android-changed: reduce duplication.
@@ -567,8 +568,8 @@ public class DecimalFormat extends NumberFormat {
 
     /**
      * Constructs a new {@code DecimalFormat} using the specified non-localized
-     * pattern and the {@code DecimalFormatSymbols} for the default Locale.
-     * 
+     * pattern and the {@code DecimalFormatSymbols} for the user's default Locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @param pattern
      *            the non-localized pattern.
      * @throws IllegalArgumentException

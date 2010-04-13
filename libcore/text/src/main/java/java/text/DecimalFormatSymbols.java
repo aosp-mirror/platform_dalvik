@@ -65,7 +65,9 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
 
     /**
      * Constructs a new {@code DecimalFormatSymbols} containing the symbols for
-     * the default locale. Best practice is to create a {@code DecimalFormat}
+     * the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * Best practice is to create a {@code DecimalFormat}
      * and then to get the {@code DecimalFormatSymbols} from that object by
      * calling {@link DecimalFormat#getDecimalFormatSymbols()}.
      */
@@ -75,7 +77,9 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
 
     /**
      * Constructs a new DecimalFormatSymbols containing the symbols for the
-     * specified Locale. Best practice is to create a {@code DecimalFormat}
+     * specified Locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * Best practice is to create a {@code DecimalFormat}
      * and then to get the {@code DecimalFormatSymbols} from that object by
      * calling {@link DecimalFormat#getDecimalFormatSymbols()}.
      * 
@@ -103,8 +107,9 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
     }
 
     /**
-     * Returns a new {@code DecimalFormatSymbols} instance for the default locale.
-     *
+     * Returns a new {@code DecimalFormatSymbols} instance for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @return an instance of {@code DecimalFormatSymbols}
      * @since 1.6
      * @hide

@@ -258,8 +258,8 @@ public abstract class BreakIterator implements Cloneable {
 
     /**
      * Returns a new instance of {@code BreakIterator} to iterate over
-     * characters using the default locale.
-     * 
+     * characters using the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getCharacterInstance() {
@@ -280,8 +280,8 @@ public abstract class BreakIterator implements Cloneable {
 
     /**
      * Returns a new instance of {{@code BreakIterator} to iterate over
-     * line breaks using the default locale.
-     * 
+     * line breaks using the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getLineInstance() {
@@ -304,7 +304,7 @@ public abstract class BreakIterator implements Cloneable {
     /**
      * Returns a new instance of {@code BreakIterator} to iterate over
      * sentence-breaks using the default locale.
-     * 
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getSentenceInstance() {
@@ -327,7 +327,7 @@ public abstract class BreakIterator implements Cloneable {
     /**
      * Returns a new instance of {@code BreakIterator} to iterate over
      * word-breaks using the default locale.
-     * 
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @return a new instance of {@code BreakIterator} using the default locale.
      */
     public static BreakIterator getWordInstance() {

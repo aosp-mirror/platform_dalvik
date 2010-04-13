@@ -279,22 +279,16 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     /**
-     * Returns a {@code Collator} instance which is appropriate for the default
+     * Returns a {@code Collator} instance which is appropriate for the user's default
      * {@code Locale}.
-     * 
-     * @return the collator for the default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      */
     public static Collator getInstance() {
         return getInstance(Locale.getDefault());
     }
 
     /**
-     * Returns a {@code Collator} instance which is appropriate for the
-     * specified {@code Locale}.
-     * 
-     * @param locale
-     *            the locale.
-     * @return the collator for {@code locale}.
+     * Returns a {@code Collator} instance which is appropriate for {@code locale}.
      */
     public static Collator getInstance(Locale locale) {
         // BEGIN android-changed: removed non-functional cache.
@@ -312,14 +306,6 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
         return strength_ICU_Java(this.icuColl.getStrength());
     }
 
-    /**
-     * Returns an integer hash code for this collator.
-     * 
-     * @return this collator's hash code.
-     * 
-     * @see #equals(Object)
-     * @see #equals(String, String)
-     */
     @Override
     public abstract int hashCode();
 

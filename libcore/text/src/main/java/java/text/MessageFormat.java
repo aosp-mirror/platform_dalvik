@@ -42,8 +42,8 @@ import org.apache.harmony.text.internal.nls.Messages;
  * {@code Format} classes in that you create a {@code MessageFormat}
  * object with one of its constructors (not with a {@code getInstance}
  * style factory method). The factory methods aren't necessary because
- * {@code MessageFormat} itself doesn't implement locale specific
- * behavior. Any locale specific behavior is defined by the pattern that you
+ * {@code MessageFormat} itself doesn't implement locale-specific
+ * behavior. Any locale-specific behavior is defined by the pattern that you
  * provide as well as the subformats used for inserted arguments.
  *
  * <h4><a name="patterns">Patterns and their interpretation</a></h4>
@@ -338,7 +338,7 @@ public class MessageFormat extends Format {
 
     private static final long serialVersionUID = 6479157306784022952L;
 
-    private Locale locale = Locale.getDefault();
+    private Locale locale;
 
     transient private String[] strings;
 
@@ -351,8 +351,7 @@ public class MessageFormat extends Format {
     transient private int maxArgumentIndex;
 
     /**
-     * Constructs a new {@code MessageFormat} using the specified pattern and
-     * the specified locale for formats.
+     * Constructs a new {@code MessageFormat} using the specified pattern and {@code locale}.
      * 
      * @param template
      *            the pattern.
@@ -368,7 +367,8 @@ public class MessageFormat extends Format {
 
     /**
      * Constructs a new {@code MessageFormat} using the specified pattern and
-     * the default locale for formats.
+     * the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * 
      * @param template
      *            the pattern.
@@ -376,7 +376,7 @@ public class MessageFormat extends Format {
      *            if the pattern cannot be parsed.
      */
     public MessageFormat(String template) {
-        applyPattern(template);
+        this(template, Locale.getDefault());
     }
 
     /**

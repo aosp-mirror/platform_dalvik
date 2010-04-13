@@ -17,22 +17,15 @@
 
 package java.util;
 
-// BEGIN android-changed
-// import java.io.File;
+import com.ibm.icu4jni.util.Resources;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
 import java.security.AccessController;
-// import java.util.zip.ZipEntry;
-// import java.util.zip.ZipFile;
-
 import org.apache.harmony.luni.util.PriviAction;
 import org.apache.harmony.luni.util.Util;
-
-import com.ibm.icu4jni.util.Resources;
-// END android-changed
 
 /**
  * {@code Locale} represents a language/country/variant combination. Locales are used to
@@ -58,9 +51,24 @@ import com.ibm.icu4jni.util.Resources;
  * spoken in Spain), for example. The opposite may well be true for a device sold in Europe.
  * (This limitation even affects those locales pre-defined as constants in this class.)
  *
- * <p>You can use {@code getDefault} to get an appropriate locale for the device you're
- * running on, or {@code getAvailableLocales} to get a list of all the locales available
- * on the device you're running on.
+ * <p>You can use {@code getDefault} to get an appropriate locale for the <i>user</i> of
+ * the device you're running on, or {@code getAvailableLocales} to get a list of all the locales
+ * available on the device you're running on.
+ *
+ * <a name="default_locale"><h3>Be wary of the default locale</h3></a>
+ * <p>Note that there are many convenience methods that automatically use the default locale, but
+ * these may not be as convenient as you imagine. The default locale is appropriate for anything
+ * that involves presenting data to the user. You should use the user's date/time formats, number
+ * formats, rules for conversion to lowercase, and so on. A common mistake is to implicitly use the
+ * default locale when producing output meant to be machine-readable. This tends to work on the
+ * developer's test devices but fail when run on a device whose user is in a less conventional
+ * locale. For example, if you're formatting floating-point numbers some locales will use
+ * {@code ','} as the decimal point. That's correct for human-readable output, but likely to cause
+ * problems if presented to another computer ({@code Double.parseDouble} can't parse such a number,
+ * for example). The best choice for computer-readable output is usually {@code Locale.US}: this
+ * locale is guaranteed to be available on all devices, and the combination of no surprising
+ * behavior and frequent use (especially for computer-computer communication) means that it tends
+ * to be the most efficient choice too.
  *
  * @see ResourceBundle
  */

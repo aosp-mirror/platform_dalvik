@@ -1696,8 +1696,9 @@ public final class String implements Serializable, Comparable<String>, CharSeque
     }
 
     /**
-     * Converts this string to lowercase, using the rules of the default locale.
-     * 
+     * Converts this string to lowercase, using the rules of the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     *
      * @return a new lowercase string, or {@code this} if it's already all-lowercase.
      */
     public String toLowerCase() {
@@ -1732,8 +1733,9 @@ public final class String implements Serializable, Comparable<String>, CharSeque
     }
 
     /**
-     * Converts this this string to uppercase, using the rules of the default locale.
-     * 
+     * Converts this this string to uppercase, using the rules of the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     *
      * @return a new uppercase string, or {@code this} if it's already all-uppercase.
      */
     public String toUpperCase() {
@@ -2167,24 +2169,20 @@ public final class String implements Serializable, Comparable<String>, CharSeque
      * Returns a localized formatted string, using the supplied format and arguments,
      * using the user's default locale.
      * 
-     * <p>Note that this method can be dangerous: the user's default locale may
-     * not be the locale you tested in, and this may have unexpected effects on
-     * the output. In particular, floating point numbers may be output with
-     * ',' instead of '.' as the decimal separator if that's what the user's
-     * locale dictates. If you're formatting a string other than for human
+     * <p>If you're formatting a string other than for human
      * consumption, you should use the {@code format(Locale, String, Object...)}
-     * overload and supply {@code Locale.US}.
+     * overload and supply {@code Locale.US}. See
+     * "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * 
-     * @param format
-     *            a format string.
+     * @param format the format string (see {@link java.util.Formatter#format})
      * @param args
-     *            arguments to replace format specifiers (may be none).
+     *            the list of arguments passed to the formatter. If there are
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return the formatted string.
-     * @throws NullPointerException
-     *             if {@code format} is {@code null}.
+     * @throws NullPointerException if {@code format == null}
      * @throws java.util.IllegalFormatException
      *             if the format is invalid.
-     * @see java.util.Formatter
      * @since 1.5
      */
     public static String format(String format, Object... args) {
@@ -2194,35 +2192,26 @@ public final class String implements Serializable, Comparable<String>, CharSeque
     /**
      * Returns a formatted string, using the supplied format and arguments,
      * localized to the given locale.
-     * <p>
-     * Note that this is a convenience method. Using it involves creating an
-     * internal {@link java.util.Formatter} instance on-the-fly, which is
-     * somewhat costly in terms of memory and time. This is probably acceptable
-     * if you use the method only rarely, but if you rely on it for formatting a
-     * large number of strings, consider creating and reusing your own
-     * {@link java.util.Formatter} instance instead.
-     *
-     * @param loc
+     * 
+     * @param locale
      *            the locale to apply; {@code null} value means no localization.
-     * @param format
-     *            a format string.
+     * @param format the format string (see {@link java.util.Formatter#format})
      * @param args
-     *            arguments to replace format specifiers (may be none).
+     *            the list of arguments passed to the formatter. If there are
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return the formatted string.
-     * @throws NullPointerException
-     *             if {@code format} is {@code null}.
+     * @throws NullPointerException if {@code format == null}
      * @throws java.util.IllegalFormatException
      *             if the format is invalid.
-     * @see java.util.Formatter
      * @since 1.5
      */
-    public static String format(Locale loc, String format, Object... args) {
+    public static String format(Locale locale, String format, Object... args) {
         if (format == null) {
             throw new NullPointerException("null format argument");
         }
-        int bufferSize = format.length()
-                + (args == null ? 0 : args.length * 10);
-        Formatter f = new Formatter(new StringBuilder(bufferSize), loc);
+        int bufferSize = format.length() + (args == null ? 0 : args.length * 10);
+        Formatter f = new Formatter(new StringBuilder(bufferSize), locale);
         return f.format(format, args).toString();
     }
 

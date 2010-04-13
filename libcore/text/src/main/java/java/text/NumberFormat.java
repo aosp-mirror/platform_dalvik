@@ -336,7 +336,8 @@ public abstract class NumberFormat extends Format {
 
     /**
      * Returns a {@code NumberFormat} for formatting and parsing currency values
-     * for the default locale.
+     * for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * 
      * @return a {@code NumberFormat} for handling currency values.
      */
@@ -361,7 +362,8 @@ public abstract class NumberFormat extends Format {
 
     /**
      * Returns a {@code NumberFormat} for formatting and parsing integers for the
-     * default locale.
+     * user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * 
      * @return a {@code NumberFormat} for handling integers.
      */
@@ -458,7 +460,8 @@ public abstract class NumberFormat extends Format {
 
     /**
      * Returns a {@code NumberFormat} for formatting and parsing numbers for the
-     * default locale.
+     * user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * 
      * @return a {@code NumberFormat} for handling {@code Number} objects.
      */
@@ -483,7 +486,8 @@ public abstract class NumberFormat extends Format {
 
     /**
      * Returns a {@code NumberFormat} for formatting and parsing percentage
-     * values for the default locale.
+     * values for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * 
      * @return a {@code NumberFormat} for handling percentage values.
      */

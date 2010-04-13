@@ -431,8 +431,8 @@ public abstract class DateFormat extends Format {
 
     /**
      * Returns a {@code DateFormat} instance for formatting and parsing dates in
-     * the specified style for the default locale.
-     * 
+     * the specified style for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @param style
      *            one of SHORT, MEDIUM, LONG, FULL, or DEFAULT.
      * @return the {@code DateFormat} instance for {@code style} and the default
@@ -480,8 +480,8 @@ public abstract class DateFormat extends Format {
 
     /**
      * Returns a {@code DateFormat} instance for formatting and parsing of both
-     * dates and time values in the manner appropriate for the default locale.
-     * 
+     * dates and time values in the manner appropriate for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @param dateStyle
      *            one of SHORT, MEDIUM, LONG, FULL, or DEFAULT.
      * @param timeStyle
@@ -492,8 +492,7 @@ public abstract class DateFormat extends Format {
      *             if {@code dateStyle} or {@code timeStyle} is not one of
      *             SHORT, MEDIUM, LONG, FULL, or DEFAULT.
      */
-    public final static DateFormat getDateTimeInstance(int dateStyle,
-            int timeStyle) {
+    public final static DateFormat getDateTimeInstance(int dateStyle, int timeStyle) {
         checkTimeStyle(timeStyle);
         checkDateStyle(dateStyle);
         return getDateTimeInstance(dateStyle, timeStyle, Locale.getDefault());
@@ -558,8 +557,8 @@ public abstract class DateFormat extends Format {
 
     /**
      * Returns a {@code DateFormat} instance for formatting and parsing time
-     * values in the specified style for the default locale.
-     * 
+     * values in the specified style for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @param style
      *            one of SHORT, MEDIUM, LONG, FULL, or DEFAULT.
      * @return the {@code DateFormat} instance for {@code style} and the default

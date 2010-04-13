@@ -214,7 +214,8 @@ public abstract class TimeZone implements Serializable, Cloneable {
      * Gets the LONG name for this {@code TimeZone} for the default {@code Locale} in standard
      * time. If the name is not available, the result is in the format
      * {@code GMT[+-]hh:mm}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @return the {@code TimeZone} name.
      */
     public final String getDisplayName() {
@@ -238,7 +239,8 @@ public abstract class TimeZone implements Serializable, Cloneable {
      * Gets the specified style of name ({@code LONG} or {@code SHORT}) for this {@code TimeZone} for
      * the default {@code Locale} in either standard or daylight time as specified. If
      * the name is not available, the result is in the format {@code GMT[+-]hh:mm}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * @param daylightTime
      *            {@code true} for daylight time, {@code false} for standard
      *            time.

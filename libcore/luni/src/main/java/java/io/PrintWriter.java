@@ -281,24 +281,22 @@ public class PrintWriter extends Writer {
     }
 
     /**
-     * Writes a string formatted by an intermediate {@code Formatter} to the
-     * target using the specified format string and arguments. For the locale,
-     * the default value of the current virtual machine instance is used. If
-     * automatic flushing is enabled then the buffer is flushed as well.
+     * Formats {@code args} according to the format string {@code format}, and writes the result
+     * to this stream. This method uses the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * If automatic flushing is enabled then the buffer is flushed as well.
      *
-     * @param format
-     *            the format string used for {@link java.util.Formatter#format}.
+     * @param format the format string (see {@link java.util.Formatter#format})
      * @param args
      *            the list of arguments passed to the formatter. If there are
-     *            more arguments than required by the {@code format} string,
-     *            then the additional arguments are ignored.
+     *            more arguments than required by {@code format},
+     *            additional arguments are ignored.
      * @return this writer.
      * @throws IllegalFormatException
      *             if the format string is illegal or incompatible with the
      *             arguments, if there are not enough arguments or if any other
      *             error regarding the format string or arguments is detected.
-     * @throws NullPointerException
-     *             if {@code format} is {@code null}.
+     * @throws NullPointerException if {@code format == null}
      */
     public PrintWriter format(String format, Object... args) {
         return format(Locale.getDefault(), format, args);

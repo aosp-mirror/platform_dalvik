@@ -553,11 +553,11 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Constructs a {@code Formatter}.
      *
-     * The output is written to a {@code StringBuilder} which can be acquired by invoking
-     * {@link #out()} and whose content can be obtained by calling
-     * {@code toString()}.
+     * <p>The output is written to a {@code StringBuilder} which can be acquired by invoking
+     * {@link #out()} and whose content can be obtained by calling {@code toString}.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      */
     public Formatter() {
         this(new StringBuilder(), Locale.getDefault());
@@ -567,8 +567,9 @@ public final class Formatter implements Closeable, Flushable {
      * Constructs a {@code Formatter} whose output will be written to the
      * specified {@code Appendable}.
      *
-     * The locale for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param a
      *            the output destination of the {@code Formatter}. If {@code a} is {@code null},
      *            then a {@code StringBuilder} will be used.
@@ -580,9 +581,8 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Constructs a {@code Formatter} with the specified {@code Locale}.
      *
-     * The output is written to a {@code StringBuilder} which can be acquired by invoking
-     * {@link #out()} and whose content can be obtained by calling
-     * {@code toString()}.
+     * <p>The output is written to a {@code StringBuilder} which can be acquired by invoking
+     * {@link #out()} and whose content can be obtained by calling {@code toString}.
      *
      * @param l
      *            the {@code Locale} of the {@code Formatter}. If {@code l} is {@code null},
@@ -616,10 +616,11 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Constructs a {@code Formatter} whose output is written to the specified file.
      *
-     * The charset of the {@code Formatter} is the default charset.
+     * <p>The charset of the {@code Formatter} is the default charset.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param fileName
      *            the filename of the file that is used as the output
      *            destination for the {@code Formatter}. The file will be truncated to
@@ -641,8 +642,9 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Constructs a {@code Formatter} whose output is written to the specified file.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param fileName
      *            the filename of the file that is used as the output
      *            destination for the {@code Formatter}. The file will be truncated to
@@ -700,8 +702,9 @@ public final class Formatter implements Closeable, Flushable {
      *
      * The charset of the {@code Formatter} is the default charset.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param file
      *            the {@code File} that is used as the output destination for the
      *            {@code Formatter}. The {@code File} will be truncated to zero size if the {@code File}
@@ -723,8 +726,9 @@ public final class Formatter implements Closeable, Flushable {
      * Constructs a {@code Formatter} with the given charset,
      * and whose output is written to the specified {@code File}.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param file
      *            the {@code File} that is used as the output destination for the
      *            {@code Formatter}. The {@code File} will be truncated to zero size if the {@code File}
@@ -791,10 +795,11 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Constructs a {@code Formatter} whose output is written to the specified {@code OutputStream}.
      *
-     * The charset of the {@code Formatter} is the default charset.
+     * <p>The charset of the {@code Formatter} is the default charset.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param os
      *            the stream to be used as the destination of the {@code Formatter}.
      */
@@ -807,8 +812,9 @@ public final class Formatter implements Closeable, Flushable {
      * Constructs a {@code Formatter} with the given charset,
      * and whose output is written to the specified {@code OutputStream}.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param os
      *            the stream to be used as the destination of the {@code Formatter}.
      * @param csn
@@ -844,10 +850,11 @@ public final class Formatter implements Closeable, Flushable {
     /**
      * Constructs a {@code Formatter} whose output is written to the specified {@code PrintStream}.
      *
-     * The charset of the {@code Formatter} is the default charset.
+     * <p>The charset of the {@code Formatter} is the default charset.
      *
-     * The {@code Locale} for the {@code Formatter} is the default {@code Locale}.
-     *
+     * <p>The {@code Locale} used is the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param ps
      *            the {@code PrintStream} used as destination of the {@code Formatter}. If
      *            {@code ps} is {@code null}, then a {@code NullPointerException} will

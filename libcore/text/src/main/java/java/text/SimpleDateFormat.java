@@ -312,9 +312,7 @@ public class SimpleDateFormat extends DateFormat {
 
     private static final long serialVersionUID = 4774881970558875024L;
 
-    // BEGIN android-changed
-    static final String patternChars = "GyMdkHmsSEDFwWahKzZ"; //$NON-NLS-1$
-    // END android-changed
+    static final String patternChars = "GyMdkHmsSEDFwWahKzZ";
 
     private String pattern;
 
@@ -324,28 +322,22 @@ public class SimpleDateFormat extends DateFormat {
 
     private Date defaultCenturyStart;
 
-    // BEGIN android-removed
-    // private transient String tzId;
-    //
-    // private transient com.ibm.icu.text.SimpleDateFormat icuFormat;
-    // END android-removed
-
     /**
      * Constructs a new {@code SimpleDateFormat} for formatting and parsing
-     * dates and times in the {@code SHORT} style for the default locale.
+     * dates and times in the {@code SHORT} style for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      */
     public SimpleDateFormat() {
         this(Locale.getDefault());
-        // BEGIN android-changed
-        pattern = defaultPattern();
-        // END android-changed
-        formatData = new DateFormatSymbols(Locale.getDefault());
+        this.pattern = defaultPattern();
+        this.formatData = new DateFormatSymbols(Locale.getDefault());
     }
 
     /**
      * Constructs a new {@code SimpleDateFormat} using the specified
      * non-localized pattern and the {@code DateFormatSymbols} and {@code
-     * Calendar} for the default locale.
+     * Calendar} for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      * 
      * @param pattern
      *            the pattern.
@@ -441,8 +433,9 @@ public class SimpleDateFormat extends DateFormat {
     /**
      * Constructs a new {@code SimpleDateFormat} using the specified
      * non-localized pattern and {@code DateFormatSymbols} and the {@code
-     * Calendar} for the default locale.
-     *
+     * Calendar} for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @param template
      *            the pattern.
      * @param value
@@ -455,26 +448,9 @@ public class SimpleDateFormat extends DateFormat {
     public SimpleDateFormat(String template, DateFormatSymbols value) {
         this(Locale.getDefault());
         validatePattern(template);
-        // BEGIN android-removed
-        // icuFormat = new com.ibm.icu.text.SimpleDateFormat(template, Locale.getDefault());
-        // icuFormat.setTimeZone(com.ibm.icu.util.TimeZone.getTimeZone(tzId));
-        // END android-removed
         pattern = template;
         formatData = (DateFormatSymbols) value.clone();
     }
-
-    // BEGIN android-removed
-    // private void copySymbols(DateFormatSymbols value, com.ibm.icu.text.DateFormatSymbols icuSymbols) {
-    //     icuSymbols.setAmPmStrings(value.getAmPmStrings());
-    //     icuSymbols.setEras(value.getEras());
-    //     icuSymbols.setLocalPatternChars(value.getLocalPatternChars());
-    //     icuSymbols.setMonths(value.getMonths());
-    //     icuSymbols.setShortMonths(value.getShortMonths());
-    //     icuSymbols.setShortWeekdays(value.getShortWeekdays());
-    //     icuSymbols.setWeekdays(value.getWeekdays());
-    //     icuSymbols.setZoneStrings(value.getZoneStrings());
-    // }
-    // END android-removed
 
     /**
      * Constructs a new {@code SimpleDateFormat} using the specified
@@ -503,11 +479,6 @@ public class SimpleDateFormat extends DateFormat {
         // END android-changed
     }
 
-    // BEGIN android-removed
-    // SimpleDateFormat(Locale locale, com.ibm.icu.text.SimpleDateFormat icuFormat){
-    // }
-    // END android-removed
-    
     private SimpleDateFormat(Locale locale) {
         numberFormat = NumberFormat.getInstance(locale);
         numberFormat.setParseIntegerOnly(true);
@@ -602,18 +573,13 @@ public class SimpleDateFormat extends DateFormat {
         SimpleDateFormat clone = (SimpleDateFormat) super.clone();
         clone.formatData = (DateFormatSymbols) formatData.clone();
         clone.defaultCenturyStart = new Date(defaultCenturyStart.getTime());
-        // BEGIN android-removed
-        // clone.tzId = tzId;
-        // END android-removed
         return clone;
     }
 
-    // BEGIN android-added
     private static String defaultPattern() {
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(Locale.getDefault());
         return localeData.getDateFormat(SHORT) + " " + localeData.getTimeFormat(SHORT);
     }
-    // END android-added
 
     /**
      * Compares the specified object with this simple date format and indicates

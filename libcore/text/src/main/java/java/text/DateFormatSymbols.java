@@ -102,7 +102,8 @@ public class DateFormatSymbols implements Serializable, Cloneable {
 
     /**
      * Constructs a new {@code DateFormatSymbols} instance containing the
-     * symbols for the default locale.
+     * symbols for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      */
     public DateFormatSymbols() {
         this(Locale.getDefault());
@@ -130,8 +131,9 @@ public class DateFormatSymbols implements Serializable, Cloneable {
     }
 
     /**
-     * Returns a new {@code DateFormatSymbols} instance for the default locale.
-     *
+     * Returns a new {@code DateFormatSymbols} instance for the user's default locale.
+     * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
+     * 
      * @return an instance of {@code DateFormatSymbols}
      * @since 1.6
      * @hide
