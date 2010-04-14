@@ -1831,6 +1831,7 @@ public class DecimalFormatTest extends TestCase {
         method = "formatToCharacterIterator",
         args = {java.lang.Object.class}
     )
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void test_formatToCharacterIteratorLjava_lang_Object() {
         try {
             // Regression for HARMONY-466

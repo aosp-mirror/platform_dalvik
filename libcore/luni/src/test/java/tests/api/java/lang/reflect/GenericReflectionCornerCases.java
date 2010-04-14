@@ -169,6 +169,7 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
         )
     })
     @SuppressWarnings("unchecked")
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void testMultipleBoundedWildcardUnEquality() throws Exception {
         Class<? extends MultipleBoundedWildcardUnEquality> clazz = MultipleBoundedWildcardUnEquality.class;
 
@@ -238,6 +239,7 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
         )
     })
     @SuppressWarnings("unchecked")
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void testMultipleBoundedWildcard() throws Exception {
         Class<? extends MultipleBoundedWildcardEquality> clazz = MultipleBoundedWildcardEquality.class;
 

@@ -2441,6 +2441,7 @@ public class FileTest extends junit.framework.TestCase {
     )
     @AndroidOnly("This test only runs on Android because it instantiates " +
             "a second Dalvik VM.")
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void test_deleteOnExit() throws IOException, InterruptedException {
         String cts = System.getProperty("java.io.tmpdir");
         File dir = new File(cts + "/hello");

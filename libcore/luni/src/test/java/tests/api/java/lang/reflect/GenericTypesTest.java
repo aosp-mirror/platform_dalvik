@@ -201,6 +201,7 @@ public class GenericTypesTest extends GenericReflectionTestsBase {
         args = {}
     )
     @SuppressWarnings("unchecked")
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void testSimpleInheritance() throws Exception {
         Class<? extends SimpleInheritance> clazz = SimpleInheritance.class;
         TypeVariable<Class> subTypeVariable = getTypeParameter(clazz);

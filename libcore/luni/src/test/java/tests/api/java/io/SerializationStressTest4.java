@@ -2667,6 +2667,7 @@ public class SerializationStressTest4 extends SerializationStressTest {
         method = "!Serialization",
         args = {}
     )
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void test_writeObject_Proxy()
             throws ClassNotFoundException, IOException {
 

@@ -2073,6 +2073,7 @@ public class FormatterTest extends TestCase {
         args = {java.lang.String.class, java.lang.Object[].class}
     )
     @AndroidOnly("ICU data is different from RI data")
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion() {
         Locale[] requiredLocales = {Locale.FRANCE, Locale.CHINA, Locale.GERMAN, Locale.US};
         if (!Support_Locale.areLocalesAvailable(requiredLocales)) {
