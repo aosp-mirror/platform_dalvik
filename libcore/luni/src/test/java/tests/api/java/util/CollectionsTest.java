@@ -43,8 +43,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Arrays;
 
-import org.apache.harmony.luni.internal.nls.Messages;
-
 import tests.support.Support_CollectionTest;
 import tests.support.Support_ListTest;
 import tests.support.Support_SetTest;

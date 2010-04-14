@@ -24,7 +24,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Locale;
 import java.util.ServiceLoader;
-import org.apache.harmony.prefs.internal.nls.Messages;
 
 /**
  * An instance of the class {@code Preferences} represents one node in a
@@ -75,7 +74,7 @@ import org.apache.harmony.prefs.internal.nls.Messages;
  * {@code Preferences} type developed. Every J2SE implementation must provide a
  * default implementation for every supported platform, and must also provide a
  * means of replacing the default implementation. This implementation uses the
- * system property {@code java.util.prefs.PreferencesFactory} to detemine which
+ * system property {@code java.util.prefs.PreferencesFactory} to determine which
  * preferences implementation to use.
  * <p>
  * The methods of this class are thread-safe. If multiple JVMs are using the
@@ -450,9 +449,8 @@ public abstract class Preferences {
      */
     public static void importPreferences (InputStream istream) throws InvalidPreferencesFormatException, IOException {
         checkSecurity();
-        if(null == istream){
-            // prefs.0=Inputstream cannot be null\!
-            throw new MalformedURLException(Messages.getString("prefs.0")); //$NON-NLS-1$
+        if (istream == null){
+            throw new MalformedURLException("Inputstream cannot be null");
         }
         XMLParser.importPrefs(istream);
     }
@@ -868,9 +866,9 @@ public abstract class Preferences {
     private static String getNodeName(Class<?> c){
         Package p = c.getPackage();
         if(null == p){
-            return "/<unnamed>"; //$NON-NLS-1$
+            return "/<unnamed>";
         }
-        return "/"+p.getName().replace('.', '/'); //$NON-NLS-1$
+        return "/"+p.getName().replace('.', '/');
     }
 
     /**

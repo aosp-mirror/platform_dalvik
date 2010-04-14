@@ -20,7 +20,6 @@ package java.text;
 import com.ibm.icu4jni.text.NativeBreakIterator;
 import com.ibm.icu4jni.util.Resources;
 import java.util.Locale;
-import org.apache.harmony.text.internal.nls.Messages;
 
 /**
  * Locates boundaries in text. This class defines a protocol for objects that

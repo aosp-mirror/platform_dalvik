@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.TimeZone;
-import org.apache.harmony.text.internal.nls.Messages;
 
 /**
  * An abstract class for date/time formatting subclasses which formats and
@@ -635,9 +634,7 @@ public abstract class DateFormat extends Format {
         ParsePosition position = new ParsePosition(0);
         Date date = parse(string, position);
         if (position.getIndex() == 0) {
-            // text.19=Unparseable date: {0}
-            throw new ParseException(
-                    Messages.getString("text.19", string), position.getErrorIndex()); //$NON-NLS-1$
+            throw new ParseException("Unparseable date " + string, position.getErrorIndex());
         }
         return date;
     }
@@ -756,100 +753,95 @@ public abstract class DateFormat extends Format {
         /**
          * Marks the era part of a date.
          */
-        public final static Field ERA = new Field("era", Calendar.ERA); //$NON-NLS-1$
+        public final static Field ERA = new Field("era", Calendar.ERA);
 
         /**
          * Marks the year part of a date.
          */
-        public final static Field YEAR = new Field("year", Calendar.YEAR); //$NON-NLS-1$
+        public final static Field YEAR = new Field("year", Calendar.YEAR);
 
         /**
          * Marks the month part of a date.
          */
-        public final static Field MONTH = new Field("month", Calendar.MONTH); //$NON-NLS-1$
+        public final static Field MONTH = new Field("month", Calendar.MONTH);
 
         /**
          * Marks the hour of the day part of a date (0-11).
          */
-        public final static Field HOUR_OF_DAY0 = new Field("hour of day", //$NON-NLS-1$
-                Calendar.HOUR_OF_DAY);
+        public final static Field HOUR_OF_DAY0 = new Field("hour of day", Calendar.HOUR_OF_DAY);
 
         /**
          * Marks the hour of the day part of a date (1-12).
          */
-        public final static Field HOUR_OF_DAY1 = new Field("hour of day 1", -1); //$NON-NLS-1$
+        public final static Field HOUR_OF_DAY1 = new Field("hour of day 1", -1);
 
         /**
          * Marks the minute part of a time.
          */
-        public final static Field MINUTE = new Field("minute", Calendar.MINUTE); //$NON-NLS-1$
+        public final static Field MINUTE = new Field("minute", Calendar.MINUTE);
 
         /**
          * Marks the second part of a time.
          */
-        public final static Field SECOND = new Field("second", Calendar.SECOND); //$NON-NLS-1$
+        public final static Field SECOND = new Field("second", Calendar.SECOND);
 
         /**
          * Marks the millisecond part of a time.
          */
-        public final static Field MILLISECOND = new Field("millisecond", //$NON-NLS-1$
-                Calendar.MILLISECOND);
+        public final static Field MILLISECOND = new Field("millisecond", Calendar.MILLISECOND);
 
         /**
          * Marks the day of the week part of a date.
          */
-        public final static Field DAY_OF_WEEK = new Field("day of week", //$NON-NLS-1$
-                Calendar.DAY_OF_WEEK);
+        public final static Field DAY_OF_WEEK = new Field("day of week", Calendar.DAY_OF_WEEK);
 
         /**
          * Marks the day of the month part of a date.
          */
-        public final static Field DAY_OF_MONTH = new Field("day of month", //$NON-NLS-1$
-                Calendar.DAY_OF_MONTH);
+        public final static Field DAY_OF_MONTH = new Field("day of month", Calendar.DAY_OF_MONTH);
 
         /**
          * Marks the day of the year part of a date.
          */
-        public final static Field DAY_OF_YEAR = new Field("day of year", //$NON-NLS-1$
-                Calendar.DAY_OF_YEAR);
+        public final static Field DAY_OF_YEAR = new Field("day of year", Calendar.DAY_OF_YEAR);
 
         /**
          * Marks the day of the week in the month part of a date.
          */
-        public final static Field DAY_OF_WEEK_IN_MONTH = new Field(
-                "day of week in month", Calendar.DAY_OF_WEEK_IN_MONTH); //$NON-NLS-1$
+        public final static Field DAY_OF_WEEK_IN_MONTH = new Field("day of week in month",
+                Calendar.DAY_OF_WEEK_IN_MONTH);
 
         /**
          * Marks the week of the year part of a date.
          */
-        public final static Field WEEK_OF_YEAR = new Field("week of year", //$NON-NLS-1$
+        public final static Field WEEK_OF_YEAR = new Field("week of year",
                 Calendar.WEEK_OF_YEAR);
 
         /**
          * Marks the week of the month part of a date.
          */
-        public final static Field WEEK_OF_MONTH = new Field("week of month", //$NON-NLS-1$
+        public final static Field WEEK_OF_MONTH = new Field("week of month",
                 Calendar.WEEK_OF_MONTH);
 
         /**
          * Marks the time indicator part of a date.
          */
-        public final static Field AM_PM = new Field("am pm", Calendar.AM_PM); //$NON-NLS-1$
+        public final static Field AM_PM = new Field("am pm", Calendar.AM_PM);
 
         /**
          * Marks the hour part of a date (0-11).
          */
-        public final static Field HOUR0 = new Field("hour", Calendar.HOUR); //$NON-NLS-1$
+        public final static Field HOUR0 = new Field("hour", Calendar.HOUR);
 
         /**
          * Marks the hour part of a date (1-12).
          */
-        public final static Field HOUR1 = new Field("hour 1", -1); //$NON-NLS-1$
+        public final static Field HOUR1 = new Field("hour 1", -1);
 
         /**
          * Marks the time zone part of a date.
          */
-        public final static Field TIME_ZONE = new Field("time zone", -1); //$NON-NLS-1$
+        public final static Field TIME_ZONE = new Field("time zone", -1);
 
         /**
          * The calendar field that this field represents.
@@ -912,11 +904,9 @@ public abstract class DateFormat extends Format {
          */
         @Override
         protected Object readResolve() throws InvalidObjectException {
-        	if (this.getClass() != Field.class) {
-                // text.0C=cannot resolve subclasses
-                throw new InvalidObjectException(Messages.getString("text.0C")); //$NON-NLS-1$
+            if (this.getClass() != Field.class) {
+                throw new InvalidObjectException("cannot resolve subclasses");
             }
-        	
             if (calendarField != -1) {
                 try {
                     Field result = ofCalendarField(calendarField);
@@ -925,9 +915,7 @@ public abstract class DateFormat extends Format {
                         return result;
                     }
                 } catch (IllegalArgumentException e) {
-                    // text.02=Unknown attribute
-                    throw new InvalidObjectException(Messages
-                            .getString("text.02")); //$NON-NLS-1$
+                    throw new InvalidObjectException("Unknown attribute");
                 }
             } else {
                 if (this.equals(TIME_ZONE)) {
@@ -940,26 +928,21 @@ public abstract class DateFormat extends Format {
                     return HOUR_OF_DAY1;
                 }
             }
-            // text.02=Unknown attribute
-            throw new InvalidObjectException(Messages.getString("text.02")); //$NON-NLS-1$
+            throw new InvalidObjectException("Unknown attribute");
         }
     }
 
     private static void checkDateStyle(int style) {
         if (!(style == SHORT || style == MEDIUM || style == LONG
                 || style == FULL || style == DEFAULT)) {
-            // text.0E=Illegal date style: {0}
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.0E", style)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Illegal date style " + style);
         }
     }
 
     private static void checkTimeStyle(int style) {
         if (!(style == SHORT || style == MEDIUM || style == LONG
                 || style == FULL || style == DEFAULT)) {
-            // text.0F=Illegal time style: {0}
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.0F", style)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Illegal time style " + style);
         }
     }
 }

@@ -17,8 +17,6 @@
 
 package java.text;
 
-import org.apache.harmony.text.internal.nls.Messages;
-
 /**
  * A concrete implementation class for {@code Collation}.
  * <p>
@@ -30,7 +28,7 @@ import org.apache.harmony.text.internal.nls.Messages;
  * <li> All non-mentioned Unicode characters are at the end of the collation
  * order.</li>
  * <li> If a character is not located in the {@code RuleBasedCollator}, the
- * default Unicode Collation Algorithm (UCA) rulebased table is automatically
+ * default Unicode Collation Algorithm (UCA) rule-based table is automatically
  * searched as a backup.</li>
  * </ol>
  * <p>
@@ -288,26 +286,16 @@ public class RuleBasedCollator extends Collator {
         if (rules == null) {
             throw new NullPointerException();
         }
-        // BEGIN android-removed
-        // if (rules.length() == 0) {
-        //     // text.06=Build rules empty
-        //     throw new ParseException(Messages.getString("text.06"), 0); //$NON-NLS-1$
-        // }
-        // END andriod-removed
-
         try {
             this.icuColl = new com.ibm.icu4jni.text.RuleBasedCollator(rules);
-            // BEGIN android-added
-            this.icuColl.setDecomposition(
-                    com.ibm.icu4jni.text.Collator.CANONICAL_DECOMPOSITION);
-            // END android-added
+            this.icuColl.setDecomposition(com.ibm.icu4jni.text.Collator.CANONICAL_DECOMPOSITION);
         } catch (Exception e) {
             if (e instanceof ParseException) {
                 throw (ParseException) e;
             }
             /*
              * -1 means it's not a ParseException. Maybe IOException thrown when
-             * an error occured while reading internal data.
+             * an error occurred while reading internal data.
              */
             throw new ParseException(e.getMessage(), -1);
         }
@@ -401,8 +389,7 @@ public class RuleBasedCollator extends Collator {
     @Override
     public int compare(String source, String target) {
         if (source == null || target == null) {
-            // text.08=one of arguments is null
-            throw new NullPointerException(Messages.getString("text.08")); //$NON-NLS-1$
+            throw new NullPointerException();
         }
         return this.icuColl.compare(source, target);
     }

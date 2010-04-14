@@ -19,8 +19,6 @@ package java.sql;
 
 import java.io.Serializable;
 
-import org.apache.harmony.sql.internal.nls.Messages;
-
 /**
  * An exception class that holds information about Database access warnings.
  */
@@ -95,7 +93,7 @@ public class SQLWarning extends SQLException implements Serializable {
         if (next instanceof SQLWarning) {
             return (SQLWarning) next;
         }
-        throw new Error(Messages.getString("sql.8")); //$NON-NLS-1$
+        throw new Error("SQLWarning chain holds value that is not a SQLWarning");
     }
 
     /**

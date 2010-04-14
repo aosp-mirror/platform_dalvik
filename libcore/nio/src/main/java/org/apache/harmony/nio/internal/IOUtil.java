@@ -26,9 +26,6 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
 
-import org.apache.harmony.nio.Util;
-import org.apache.harmony.nio.internal.nls.Messages;
-
 /**
  * Static methods for I/O util. Used by io package and nio package.
  */
@@ -59,8 +56,16 @@ public final class IOUtil {
                 }
                 return chars.get();
             }
-            // nio.06=InputStreamReader is closed.
-            throw new IOException(Messages.getString("nio.06")); //$NON-NLS-1$
+            throw new IOException("InputStreamReader is closed");
+        }
+    }
+
+    private static void assertArrayIndex(int arrayLength, int offset, int length) {
+        if (offset < 0 || length < 0) {
+            throw new IndexOutOfBoundsException("Negative index specified");
+        }
+        if ((long) offset + (long) length > arrayLength) {
+            throw new IndexOutOfBoundsException("Size mismatch");
         }
     }
 
@@ -75,7 +80,7 @@ public final class IOUtil {
                 if (length == 0) {
                     return 0;
                 }
-                Util.assertArrayIndex(buf, offset, length);
+                assertArrayIndex(buf.length, offset, length);
                 // read at least once
                 if (chars.limit() == chars.position()) {
                     fillBuf(in, bytes, chars, decoder);
@@ -105,8 +110,7 @@ public final class IOUtil {
                 chars.position(chars.position() + needChars);
                 return length;
             }
-            // nio.06=InputStreamReader is closed.
-            throw new IOException(Messages.getString("nio.06")); //$NON-NLS-1$
+            throw new IOException("InputStreamReader is closed");
         }
     }
 
@@ -143,9 +147,15 @@ public final class IOUtil {
     public static void writeOutputStreamWriter(String str, int offset,
             int count, OutputStream out, ByteBuffer bytes,
             CharsetEncoder encoder, Object lock) throws IOException {
-        Util.assertArrayIndex(str.length(), offset, count);
+        assertArrayIndex(str.length(), offset, count);
         CharBuffer chars = CharBuffer.wrap(str, offset, count + offset);
         convert(lock, encoder, bytes, chars, out);
+    }
+
+    private static void checkEncoder(CharsetEncoder encoder) throws IOException {
+        if (encoder == null) {
+            throw new IOException("Writer is closed");
+        }
     }
 
     /*
@@ -155,10 +165,7 @@ public final class IOUtil {
             ByteBuffer bytes, CharsetEncoder encoder, Object lock)
             throws IOException {
         synchronized (lock) {
-            if (encoder == null) {
-                // nio.07=Writer is closed.
-                throw new IOException(Messages.getString("nio.07")); //$NON-NLS-1$
-            }
+            checkEncoder(encoder);
             CharBuffer chars = CharBuffer.wrap(new char[] { (char) oneChar });
             convert(lock, encoder, bytes, chars, out);
         }
@@ -170,7 +177,7 @@ public final class IOUtil {
     public static void writeOutputStreamWriter(char[] buf, int offset,
             int count, OutputStream out, ByteBuffer bytes,
             CharsetEncoder encoder, Object lock) throws IOException {
-        Util.assertArrayIndex(buf, offset, count);
+        assertArrayIndex(buf.length, offset, count);
         CharBuffer chars = CharBuffer.wrap(buf, offset, count);
         convert(lock, encoder, bytes, chars, out);
     }
@@ -182,10 +189,7 @@ public final class IOUtil {
             ByteBuffer bytes, CharsetEncoder encoder, Object lock)
             throws IOException {
         synchronized (lock) {
-            if (encoder == null) {
-                // nio.07=Writer is closed.
-                throw new IOException(Messages.getString("nio.07")); //$NON-NLS-1$
-            }
+            checkEncoder(encoder);
             int position;
             if ((position = bytes.position()) > 0) {
                 bytes.flip();
@@ -203,10 +207,7 @@ public final class IOUtil {
             ByteBuffer bytes, CharBuffer chars, OutputStream out)
             throws IOException {
         synchronized (lock) {
-            if (encoder == null) {
-                // nio.07=Writer is closed.
-                throw new IOException(Messages.getString("nio.07")); //$NON-NLS-1$
-            }
+            checkEncoder(encoder);
             CoderResult result = encoder.encode(chars, bytes, true);
             while (true) {
                 if (result.isError()) {

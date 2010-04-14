@@ -17,6 +17,8 @@
 
 package java.text;
 
+import com.ibm.icu4jni.util.LocaleData;
+import com.ibm.icu4jni.util.Resources;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,15 +27,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
-// BEGIN android-added
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
-// END android-added
 import java.util.Vector;
-
-import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
-import org.apache.harmony.text.internal.nls.Messages;
 
 /**
  * A concrete class for formatting and parsing dates in a locale-sensitive
@@ -363,9 +359,7 @@ public class SimpleDateFormat extends DateFormat {
     private void validateFormat(char format) {
         int index = patternChars.indexOf(format);
         if (index == -1) {
-            // text.03=Unknown pattern character - '{0}'
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.03", format)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Unknown pattern character '" + format + "'");
         }
     }
 
@@ -424,10 +418,8 @@ public class SimpleDateFormat extends DateFormat {
         }
 
         if (quote) {
-            // text.04=Unterminated quote {0}
-            throw new IllegalArgumentException(Messages.getString("text.04")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Unterminated quote");
         }
-
     }
     
     /**
@@ -742,9 +734,7 @@ public class SimpleDateFormat extends DateFormat {
         int field = -1;
         int index = patternChars.indexOf(format);
         if (index == -1) {
-            // text.03=Unknown pattern character - '{0}'
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.03", format)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Unknown pattern character '" + format + "'");
         }
 
         int beginPosition = buffer.length();
@@ -1010,9 +1000,7 @@ public class SimpleDateFormat extends DateFormat {
     private int parse(String string, int offset, char format, int count) {
         int index = patternChars.indexOf(format);
         if (index == -1) {
-            // text.03=Unknown pattern character - '{0}'
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.03", format)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Unknown pattern character '" + format + "'");
         }
         int field = -1;
         int absolute = 0;
@@ -1294,7 +1282,7 @@ public class SimpleDateFormat extends DateFormat {
         // BEGIN android-changed
         String[][] zones = formatData.internalZoneStrings();
         // END android-changed
-        boolean foundGMT = string.regionMatches(offset, "GMT", 0, 3); //$NON-NLS-1$
+        boolean foundGMT = string.regionMatches(offset, "GMT", 0, 3);
         if (foundGMT) {
             offset += 3;
         }
@@ -1323,11 +1311,11 @@ public class SimpleDateFormat extends DateFormat {
             if (sign == '-') {
                 raw = -raw;
             }
-            calendar.setTimeZone(new SimpleTimeZone(raw, "")); //$NON-NLS-1$
+            calendar.setTimeZone(new SimpleTimeZone(raw, ""));
             return position.getIndex();
         }
         if (foundGMT) {
-            calendar.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
+            calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
             return offset;
         }
         for (String[] element : zones) {
@@ -1342,7 +1330,7 @@ public class SimpleDateFormat extends DateFormat {
                     if (j >= 3 && zone.useDaylightTime()) {
                         raw += 3600000;
                     }
-                    calendar.setTimeZone(new SimpleTimeZone(raw, "")); //$NON-NLS-1$
+                    calendar.setTimeZone(new SimpleTimeZone(raw, ""));
                     return offset + element[j].length();
                 }
             }
@@ -1407,32 +1395,32 @@ public class SimpleDateFormat extends DateFormat {
     }
 
     private static final ObjectStreamField[] serialPersistentFields = {
-            new ObjectStreamField("defaultCenturyStart", Date.class), //$NON-NLS-1$
-            new ObjectStreamField("formatData", DateFormatSymbols.class), //$NON-NLS-1$
-            new ObjectStreamField("pattern", String.class), //$NON-NLS-1$
-            new ObjectStreamField("serialVersionOnStream", Integer.TYPE), }; //$NON-NLS-1$
+            new ObjectStreamField("defaultCenturyStart", Date.class),
+            new ObjectStreamField("formatData", DateFormatSymbols.class),
+            new ObjectStreamField("pattern", String.class),
+            new ObjectStreamField("serialVersionOnStream", Integer.TYPE), };
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
         ObjectOutputStream.PutField fields = stream.putFields();
-        fields.put("defaultCenturyStart", defaultCenturyStart); //$NON-NLS-1$
-        fields.put("formatData", formatData); //$NON-NLS-1$
-        fields.put("pattern", pattern); //$NON-NLS-1$
-        fields.put("serialVersionOnStream", 1); //$NON-NLS-1$
+        fields.put("defaultCenturyStart", defaultCenturyStart);
+        fields.put("formatData", formatData);
+        fields.put("pattern", pattern);
+        fields.put("serialVersionOnStream", 1);
         stream.writeFields();
     }
 
     private void readObject(ObjectInputStream stream) throws IOException,
             ClassNotFoundException {
         ObjectInputStream.GetField fields = stream.readFields();
-        int version = fields.get("serialVersionOnStream", 0); //$NON-NLS-1$
+        int version = fields.get("serialVersionOnStream", 0);
         Date date;
         if (version > 0) {
-            date = (Date) fields.get("defaultCenturyStart", new Date()); //$NON-NLS-1$
+            date = (Date) fields.get("defaultCenturyStart", new Date());
         } else {
             date = new Date();
         }
         set2DigitYearStart(date);
-        formatData = (DateFormatSymbols) fields.get("formatData", null); //$NON-NLS-1$
-        pattern = (String) fields.get("pattern", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        formatData = (DateFormatSymbols) fields.get("formatData", null);
+        pattern = (String) fields.get("pattern", "");
     }
 }

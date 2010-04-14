@@ -33,35 +33,23 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.StringTokenizer;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-// BEGIN android-removed
-// import javax.xml.transform.TransformerException;
-// END android-removed
-
-import org.apache.harmony.prefs.internal.nls.Messages;
-// BEGIN android-removed
-// import org.apache.xpath.XPathAPI;
-// END android-removed
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-
-// BEGIN android-added
-import java.util.ArrayList;
-import org.w3c.dom.DocumentType;
-import org.w3c.dom.Node;
-// END android-added
 
 /**
  * Utility class for the Preferences import/export from XML file.
@@ -71,31 +59,31 @@ class XMLParser {
     /*
      * Constant - the specified DTD URL
      */
-    static final String PREFS_DTD_NAME = "http://java.sun.com/dtd/preferences.dtd"; //$NON-NLS-1$
+    static final String PREFS_DTD_NAME = "http://java.sun.com/dtd/preferences.dtd";
 
     /*
      * Constant - the DTD string
      */
-    static final String PREFS_DTD = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" //$NON-NLS-1$
-        + "    <!ELEMENT preferences (root)>" //$NON-NLS-1$
-        + "    <!ATTLIST preferences EXTERNAL_XML_VERSION CDATA \"0.0\" >" //$NON-NLS-1$
-        + "    <!ELEMENT root (map, node*) >" //$NON-NLS-1$
-        + "    <!ATTLIST root type (system|user) #REQUIRED >" //$NON-NLS-1$
-        + "    <!ELEMENT node (map, node*) >" //$NON-NLS-1$
-        + "    <!ATTLIST node name CDATA #REQUIRED >" //$NON-NLS-1$
-        + "    <!ELEMENT map (entry*) >" //$NON-NLS-1$
-        + "    <!ELEMENT entry EMPTY >" //$NON-NLS-1$
-        + "    <!ATTLIST entry key   CDATA #REQUIRED value CDATA #REQUIRED >"; //$NON-NLS-1$
+    static final String PREFS_DTD = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        + "    <!ELEMENT preferences (root)>"
+        + "    <!ATTLIST preferences EXTERNAL_XML_VERSION CDATA \"0.0\" >"
+        + "    <!ELEMENT root (map, node*) >"
+        + "    <!ATTLIST root type (system|user) #REQUIRED >"
+        + "    <!ELEMENT node (map, node*) >"
+        + "    <!ATTLIST node name CDATA #REQUIRED >"
+        + "    <!ELEMENT map (entry*) >"
+        + "    <!ELEMENT entry EMPTY >"
+        + "    <!ATTLIST entry key   CDATA #REQUIRED value CDATA #REQUIRED >";
 
     /*
      * Constant - the specified header
      */
-    static final String HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"; //$NON-NLS-1$
+    static final String HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     /*
      * Constant - the specified DOCTYPE
      */
-    static final String DOCTYPE = "<!DOCTYPE preferences SYSTEM"; //$NON-NLS-1$
+    static final String DOCTYPE = "<!DOCTYPE preferences SYSTEM";
 
     /*
      * empty string array constant
@@ -105,7 +93,7 @@ class XMLParser {
     /*
      * Constant - used by FilePreferencesImpl, which is default implementation of Linux platform
      */
-    private static final String FILE_PREFS = "<!DOCTYPE map SYSTEM 'http://java.sun.com/dtd/preferences.dtd'>"; //$NON-NLS-1$
+    private static final String FILE_PREFS = "<!DOCTYPE map SYSTEM 'http://java.sun.com/dtd/preferences.dtd'>";
 
     /*
      * Constant - specify the DTD version
@@ -144,9 +132,7 @@ class XMLParser {
                     result.setSystemId(PREFS_DTD_NAME);
                     return result;
                 }
-                // prefs.1=Invalid DOCTYPE declaration: {0}
-                throw new SAXException(
-                        Messages.getString("prefs.1", systemId));  //$NON-NLS-1$
+                throw new SAXException("Invalid DOCTYPE declaration " + systemId);
             }
         });
         builder.setErrorHandler(new ErrorHandler() {
@@ -179,37 +165,35 @@ class XMLParser {
         out.newLine();
 
         out.write(DOCTYPE);
-        out.write(" '"); //$NON-NLS-1$
+        out.write(" '");
         out.write(PREFS_DTD_NAME);
-        out.write("'>"); //$NON-NLS-1$
+        out.write("'>");
         out.newLine();
         out.newLine();
 
-        flushStartTag(
-                "preferences", new String[] { "EXTERNAL_XML_VERSION" }, new String[] { String.valueOf(XML_VERSION) }, out); //$NON-NLS-1$ //$NON-NLS-2$
-        flushStartTag(
-                "root", new String[] { "type" }, new String[] { prefs.isUserNode() ? "user" : "system" }, out); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        flushEmptyElement("map", out); //$NON-NLS-1$
+        flushStartTag("preferences", new String[] { "EXTERNAL_XML_VERSION" },
+                new String[] { String.valueOf(XML_VERSION) }, out);
+        flushStartTag("root", new String[] { "type" },
+                new String[] { prefs.isUserNode() ? "user" : "system" }, out);
+        flushEmptyElement("map", out);
 
-        StringTokenizer ancestors = new StringTokenizer(prefs.absolutePath(),
-        "/"); //$NON-NLS-1$
+        StringTokenizer ancestors = new StringTokenizer(prefs.absolutePath(), "/");
         exportNode(ancestors, prefs, withSubTree, out);
 
-        flushEndTag("root", out); //$NON-NLS-1$
-        flushEndTag("preferences", out); //$NON-NLS-1$
+        flushEndTag("root", out);
+        flushEndTag("preferences", out);
         out.flush();
         out = null;
     }
 
     private static void exportNode(StringTokenizer ancestors,
             Preferences prefs, boolean withSubTree, BufferedWriter out)
-    throws IOException, BackingStoreException {
+            throws IOException, BackingStoreException {
         if (ancestors.hasMoreTokens()) {
             String name = ancestors.nextToken();
-            flushStartTag(
-                    "node", new String[] { "name" }, new String[] { name }, out); //$NON-NLS-1$ //$NON-NLS-2$
+            flushStartTag("node", new String[] { "name" }, new String[] { name }, out);
             if (ancestors.hasMoreTokens()) {
-                flushEmptyElement("map", out); //$NON-NLS-1$
+                flushEmptyElement("map", out);
                 exportNode(ancestors, prefs, withSubTree, out);
             } else {
                 exportEntries(prefs, out);
@@ -217,7 +201,7 @@ class XMLParser {
                     exportSubTree(prefs, out);
                 }
             }
-            flushEndTag("node", out); //$NON-NLS-1$
+            flushEndTag("node", out);
         }
     }
 
@@ -227,11 +211,10 @@ class XMLParser {
         if (names.length > 0) {
             for (int i = 0; i < names.length; i++) {
                 Preferences child = prefs.node(names[i]);
-                flushStartTag(
-                        "node", new String[] { "name" }, new String[] { names[i] }, out); //$NON-NLS-1$ //$NON-NLS-2$
+                flushStartTag("node", new String[] { "name" }, new String[] { names[i] }, out);
                 exportEntries(child, out);
                 exportSubTree(child, out);
-                flushEndTag("node", out); //$NON-NLS-1$
+                flushEndTag("node", out);
             }
         }
     }
@@ -249,34 +232,34 @@ class XMLParser {
     private static void exportEntries(String[] keys, String[] values,
             BufferedWriter out) throws IOException {
         if (keys.length == 0) {
-            flushEmptyElement("map", out); //$NON-NLS-1$
+            flushEmptyElement("map", out);
             return;
         }
-        flushStartTag("map", out); //$NON-NLS-1$
+        flushStartTag("map", out);
         for (int i = 0; i < keys.length; i++) {
             if (values[i] != null) {
-                flushEmptyElement(
-                        "entry", new String[] { "key", "value" }, new String[] { keys[i], values[i] }, out); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                flushEmptyElement("entry", new String[] { "key", "value" },
+                        new String[] { keys[i], values[i] }, out);
             }
         }
-        flushEndTag("map", out); //$NON-NLS-1$
+        flushEndTag("map", out);
     }
 
     private static void flushEndTag(String tagName, BufferedWriter out)
     throws IOException {
         flushIndent(indent--, out);
-        out.write("</"); //$NON-NLS-1$
+        out.write("</");
         out.write(tagName);
-        out.write(">"); //$NON-NLS-1$
+        out.write(">");
         out.newLine();
     }
 
     private static void flushEmptyElement(String tagName, BufferedWriter out)
     throws IOException {
         flushIndent(++indent, out);
-        out.write("<"); //$NON-NLS-1$
+        out.write("<");
         out.write(tagName);
-        out.write(" />"); //$NON-NLS-1$
+        out.write(" />");
         out.newLine();
         indent--;
     }
@@ -284,10 +267,10 @@ class XMLParser {
     private static void flushEmptyElement(String tagName, String[] attrKeys,
             String[] attrValues, BufferedWriter out) throws IOException {
         flushIndent(++indent, out);
-        out.write("<"); //$NON-NLS-1$
+        out.write("<");
         out.write(tagName);
         flushPairs(attrKeys, attrValues, out);
-        out.write(" />"); //$NON-NLS-1$
+        out.write(" />");
         out.newLine();
         indent--;
     }
@@ -295,37 +278,37 @@ class XMLParser {
     private static void flushPairs(String[] attrKeys, String[] attrValues,
             BufferedWriter out) throws IOException {
         for (int i = 0; i < attrKeys.length; i++) {
-            out.write(" "); //$NON-NLS-1$
+            out.write(" ");
             out.write(attrKeys[i]);
-            out.write("=\""); //$NON-NLS-1$
+            out.write("=\"");
             out.write(htmlEncode(attrValues[i]));
-            out.write("\""); //$NON-NLS-1$
+            out.write("\"");
         }
     }
 
     private static void flushIndent(int ind, BufferedWriter out)
     throws IOException {
         for (int i = 0; i < ind; i++) {
-            out.write("  "); //$NON-NLS-1$
+            out.write("  ");
         }
     }
 
     private static void flushStartTag(String tagName, String[] attrKeys,
             String[] attrValues, BufferedWriter out) throws IOException {
         flushIndent(++indent, out);
-        out.write("<"); //$NON-NLS-1$
+        out.write("<");
         out.write(tagName);
         flushPairs(attrKeys, attrValues, out);
-        out.write(">"); //$NON-NLS-1$
+        out.write(">");
         out.newLine();
     }
 
     private static void flushStartTag(String tagName, BufferedWriter out)
     throws IOException {
         flushIndent(++indent, out);
-        out.write("<"); //$NON-NLS-1$
+        out.write("<");
         out.write(tagName);
-        out.write(">"); //$NON-NLS-1$
+        out.write(">");
         out.newLine();
     }
 
@@ -336,19 +319,19 @@ class XMLParser {
             c = s.charAt(i);
             switch (c) {
             case '<':
-                sb.append("&lt;"); //$NON-NLS-1$
+                sb.append("&lt;");
                 break;
             case '>':
-                sb.append("&gt;"); //$NON-NLS-1$
+                sb.append("&gt;");
                 break;
             case '&':
-                sb.append("&amp;"); //$NON-NLS-1$
+                sb.append("&amp;");
                 break;
             case '\\':
-                sb.append("&apos;"); //$NON-NLS-1$
+                sb.append("&apos;");
                 break;
             case '"':
-                sb.append("&quot;"); //$NON-NLS-1$
+                sb.append("&quot;");
                 break;
             default:
                 sb.append(c);
@@ -360,8 +343,7 @@ class XMLParser {
     /***************************************************************************
      * utilities for Preferences import
      **************************************************************************/
-    static void importPrefs(InputStream in) throws IOException,
-    InvalidPreferencesFormatException {
+    static void importPrefs(InputStream in) throws IOException, InvalidPreferencesFormatException {
         try {
             // load XML document
             Document doc = builder.parse(new InputSource(in));
@@ -369,19 +351,18 @@ class XMLParser {
             // check preferences' export version
             Element preferences;
             preferences = doc.getDocumentElement();
-            String version = preferences.getAttribute("EXTERNAL_XML_VERSION"); //$NON-NLS-1$
+            String version = preferences.getAttribute("EXTERNAL_XML_VERSION");
             if (version != null && Float.parseFloat(version) > XML_VERSION) {
-                // prefs.2=This preferences exported version is not supported:{0}
-                throw new InvalidPreferencesFormatException(
-                        Messages.getString("prefs.2", version));  //$NON-NLS-1$
+                throw new InvalidPreferencesFormatException("Preferences version " + version +
+                        " is not supported");
             }
 
             // check preferences root's type
             Element root = (Element) preferences
-            .getElementsByTagName("root").item(0); //$NON-NLS-1$
+            .getElementsByTagName("root").item(0);
             Preferences prefsRoot = null;
-            String type = root.getAttribute("type"); //$NON-NLS-1$
-            if (type.equals("user")) { //$NON-NLS-1$
+            String type = root.getAttribute("type");
+            if (type.equals("user")) {
                 prefsRoot = Preferences.userRoot();
             } else {
                 prefsRoot = Preferences.systemRoot();
@@ -407,8 +388,8 @@ class XMLParser {
         // END android-note
         // load preferences
         // BEGIN android-changed
-        NodeList children = selectNodeList(node, "node"); //$NON-NLS-1$
-        NodeList entries = selectNodeList(node, "map/entry"); //$NON-NLS-1$
+        NodeList children = selectNodeList(node, "node");
+        NodeList entries = selectNodeList(node, "map/entry");
         // END android-changed
         int childNumber = children.getLength();
         Preferences[] prefChildren = new Preferences[childNumber];
@@ -419,14 +400,14 @@ class XMLParser {
             }
             for (int i = 0; i < entryNumber; i++) {
                 Element entry = (Element) entries.item(i);
-                String key = entry.getAttribute("key"); //$NON-NLS-1$
-                String value = entry.getAttribute("value"); //$NON-NLS-1$
+                String key = entry.getAttribute("key");
+                String value = entry.getAttribute("value");
                 prefs.put(key, value);
             }
             // get children preferences node
             for (int i = 0; i < childNumber; i++) {
                 Element child = (Element) children.item(i);
-                String name = child.getAttribute("name"); //$NON-NLS-1$
+                String name = child.getAttribute("name");
                 prefChildren[i] = prefs.node(name);
             }
         }
@@ -517,25 +498,17 @@ class XMLParser {
                 FileChannel channel = istream.getChannel();
                 lock = channel.lock(0L, Long.MAX_VALUE, true);
                 Document doc = builder.parse(in);
-                // BEGIN android-modified
-                NodeList entries = selectNodeList(doc
-                        .getDocumentElement(), "entry"); //$NON-NLS-1$
-                // END android-modified
+                NodeList entries = selectNodeList(doc.getDocumentElement(), "entry");
                 int length = entries.getLength();
                 for (int i = 0; i < length; i++) {
                     Element node = (Element) entries.item(i);
-                    String key = node.getAttribute("key"); //$NON-NLS-1$
-                    String value = node.getAttribute("value"); //$NON-NLS-1$
+                    String key = node.getAttribute("key");
+                    String value = node.getAttribute("value");
                     result.setProperty(key, value);
                 }
                 return result;
             } catch (IOException e) {
             } catch (SAXException e) {
-            // BEGIN android-removed
-            // } catch (TransformerException e) {
-            //     // transform shouldn't fail for xpath call
-            //     throw new AssertionError(e);
-            // END android-removed
             } finally {
                 releaseQuietly(lock);
                 closeQuietly(in);

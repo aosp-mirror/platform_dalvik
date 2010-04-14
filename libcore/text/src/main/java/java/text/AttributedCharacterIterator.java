@@ -22,8 +22,6 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.harmony.text.internal.nls.Messages;
-
 /**
  * Extends the
  * {@link CharacterIterator} interface, adding support for iterating over
@@ -48,14 +46,13 @@ public interface AttributedCharacterIterator extends CharacterIterator {
          * The value objects are of the type {@code Annotation} which contain
          * {@code null}.
          */
-        public static final Attribute INPUT_METHOD_SEGMENT = new Attribute(
-                "input_method_segment"); //$NON-NLS-1$
+        public static final Attribute INPUT_METHOD_SEGMENT = new Attribute("input_method_segment");
 
         /**
          * The attribute describing the language of a character. The value
          * objects are of type {@code Locale} or a subtype of it.
          */
-        public static final Attribute LANGUAGE = new Attribute("language"); //$NON-NLS-1$
+        public static final Attribute LANGUAGE = new Attribute("language");
 
         /**
          * For languages that have different reading directions of text (like
@@ -63,7 +60,7 @@ public interface AttributedCharacterIterator extends CharacterIterator {
          * used. The value objects are of type {@code Annotation} which
          * contain a {@code String}.
          */
-        public static final Attribute READING = new Attribute("reading"); //$NON-NLS-1$
+        public static final Attribute READING = new Attribute("reading");
 
         private String name;
 
@@ -123,11 +120,8 @@ public interface AttributedCharacterIterator extends CharacterIterator {
          */
         protected Object readResolve() throws InvalidObjectException {
             if (this.getClass() != Attribute.class) {
-                // text.0C=cannot resolve subclasses
-                throw new InvalidObjectException(Messages.getString("text.0C")); //$NON-NLS-1$
+                throw new InvalidObjectException("cannot resolve subclasses");
             }
-            // BEGIN android-changed
-            // call getName() only once
             String name = this.getName();
             if (name.equals(INPUT_METHOD_SEGMENT.getName())) {
                 return INPUT_METHOD_SEGMENT;
@@ -138,9 +132,7 @@ public interface AttributedCharacterIterator extends CharacterIterator {
             if (name.equals(READING.getName())) {
                 return READING;
             }
-            // END android-changed
-            // text.02=Unknown attribute
-            throw new InvalidObjectException(Messages.getString("text.02")); //$NON-NLS-1$
+            throw new InvalidObjectException("Unknown attribute");
         }
 
         /**

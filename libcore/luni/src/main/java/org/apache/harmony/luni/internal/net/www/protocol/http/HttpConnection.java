@@ -24,12 +24,9 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
 import java.net.SocketException;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-
-import org.apache.harmony.luni.internal.nls.Messages;
 
 /**
  * An <code>HttpConnection</code> represents a persistent http or https connection and contains
@@ -158,16 +155,15 @@ public class HttpConnection {
     }
     
     public SSLSocket getSecureSocket(SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier) throws IOException {
-        if(!usingSecureSocket) {
+        if (!usingSecureSocket) {
             String hostName = config.getHostName();
             int port = config.getHostPort();
             // create the wrapper over connected socket
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket(socket,
-                    hostName, port, true);
+            sslSocket = (SSLSocket) sslSocketFactory.createSocket(socket, hostName, port, true);
             sslSocket.setUseClientMode(true);
             sslSocket.startHandshake();
             if (!hostnameVerifier.verify(hostName, sslSocket.getSession())) {
-                throw new IOException(Messages.getString("luni.02", hostName)); //$NON-NLS-1$
+                throw new IOException("Hostname '" + hostName + "' was not verified");
             }
             usingSecureSocket = true;
         }

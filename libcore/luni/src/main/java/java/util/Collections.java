@@ -22,8 +22,6 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-
-import org.apache.harmony.luni.internal.nls.Messages;
 import org.apache.harmony.luni.util.Msg;
 
 /**
@@ -2687,10 +2685,8 @@ public class Collections {
      */
     static <E> E checkType(E obj, Class<? extends E> type) {
         if (obj != null && !type.isInstance(obj)) {
-            // luni.05=Attempt to insert {0} element into collection with
-            // element type {1}
-            throw new ClassCastException(Messages.getString(
-                    "luni.05", obj.getClass(), type)); //$NON-NLS-1$
+            throw new ClassCastException("Attempt to insert element of type " + obj.getClass() +
+                    " into collection of type " + type);
         }
         return obj;
     }

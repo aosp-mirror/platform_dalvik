@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.harmony.prefs.internal.nls.Messages;
-
 /**
  * The default implementation of <code>AbstractPreferences</code> for the Linux
  * platform, using the file system as its back end.
@@ -44,7 +42,7 @@ class FilePreferencesImpl extends AbstractPreferences {
      */
 
     //prefs file name
-    private static final String PREFS_FILE_NAME = "prefs.xml"; //$NON-NLS-1$
+    private static final String PREFS_FILE_NAME = "prefs.xml";
 
     //home directory for user prefs
     private static String USER_HOME;
@@ -102,7 +100,7 @@ class FilePreferencesImpl extends AbstractPreferences {
      * user root if userNode is true, system root otherwise
      */
     FilePreferencesImpl(boolean userNode) {
-        super(null, ""); //$NON-NLS-1$
+        super(null, "");
         this.userNode = userNode;
         path = userNode ? USER_HOME : SYSTEM_HOME;
         initPrefs();
@@ -142,9 +140,7 @@ class FilePreferencesImpl extends AbstractPreferences {
             }
         });
         if (null == names) {// file is not a directory, exception case
-            // prefs.3=Cannot get children names for {0}!
-            throw new BackingStoreException(
-                    Messages.getString("prefs.3", toString()));  //$NON-NLS-1$
+            throw new BackingStoreException("Cannot get child names for " + toString());
         }
         return names;
     }
@@ -218,8 +214,7 @@ class FilePreferencesImpl extends AbstractPreferences {
             }
         })).booleanValue();
         if (!removeSucceed) {
-            // prefs.4=Cannot remove {0}!
-            throw new BackingStoreException(Messages.getString("prefs.4", toString()));  //$NON-NLS-1$
+            throw new BackingStoreException("Cannot remove " + toString());
         }
     }
 

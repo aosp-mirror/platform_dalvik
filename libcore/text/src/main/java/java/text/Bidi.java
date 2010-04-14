@@ -15,22 +15,14 @@
  * limitations under the License.
  */
 
-// BEGIN android-note
-// changed from icu.text.Bidi to BidiWrapper
-// END android-note
-
 package java.text;
 
-// BEGIN android-added
 import java.awt.font.NumericShaper;
 import java.awt.font.TextAttribute;
 import java.util.Arrays;
 import java.util.LinkedList;
-
 import org.apache.harmony.text.BidiRun;
 import org.apache.harmony.text.BidiWrapper;
-// END android-added
-import org.apache.harmony.text.internal.nls.Messages;
 
 /**
  * Provides the Unicode Bidirectional Algorithm. The algorithm is
@@ -110,16 +102,14 @@ public final class Bidi {
      * @param paragraph
      *            the String containing the paragraph text to perform the
      *            algorithm.
-     * @throws IllegalArgumentException
-     *             if {@code paragraph} is {@code null}.
+     * @throws IllegalArgumentException if {@code paragraph == null}
      * @see java.awt.font.TextAttribute#BIDI_EMBEDDING
      * @see java.awt.font.TextAttribute#NUMERIC_SHAPING
      * @see java.awt.font.TextAttribute#RUN_DIRECTION
      */
     public Bidi(AttributedCharacterIterator paragraph) {
         if (paragraph == null) {
-            // text.14=paragraph is null
-            throw new IllegalArgumentException(Messages.getString("text.14")); //$NON-NLS-1$
+            throw new IllegalArgumentException("paragraph is null");
         }
 
         // BEGIN android-added
@@ -231,19 +221,13 @@ public final class Bidi {
         }
 
         if (textStart < 0) {
-            // text.0D=Negative textStart value {0}
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.0D", textStart)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Negative textStart value " + textStart);
         }
         if (embStart < 0) {
-            // text.10=Negative embStart value {0}
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.10", embStart)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Negative embStart value " + embStart);
         }
         if (paragraphLength < 0) {
-            // text.11=Negative paragraph length {0}
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.11", paragraphLength)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Negative paragraph length " + paragraphLength);
         }
         
         // BEGIN android-changed
@@ -396,9 +380,8 @@ public final class Bidi {
      */
     public Bidi createLineBidi(int lineStart, int lineLimit) {
         if (lineStart < 0 || lineLimit < 0 || lineLimit > length || lineStart > lineLimit) {
-            // text.12=Invalid ranges (start={0}, limit={1}, length={2})
-            throw new IllegalArgumentException(Messages.getString(
-                    "text.12", new Object[] { lineStart, lineLimit, length })); //$NON-NLS-1$
+            throw new IllegalArgumentException("Invalid ranges (start=" + lineStart + ", " +
+                    "limit=" + lineLimit + ", length=" + length + ")");
         }
 
         char[] text = new char[this.length];
@@ -589,11 +572,9 @@ public final class Bidi {
         if (count < 0 || levelStart < 0 || objectStart < 0
                 || count > levels.length - levelStart
                 || count > objects.length - objectStart) {
-            // text.13=Invalid ranges (levels={0}, levelStart={1}, objects={2},
-            // objectStart={3}, count={4})
-            throw new IllegalArgumentException(Messages.getString("text.13", //$NON-NLS-1$
-                    new Object[] { levels.length, levelStart, objects.length,
-                            objectStart, count }));
+            throw new IllegalArgumentException("Invalid ranges (levels=" + levels.length +
+                    ", levelStart=" + levelStart + ", objects=" + objects.length +
+                    ", objectStart=" + objectStart + ", count=" + count + ")");
         }
         
         // BEGIN android-changed
