@@ -27,6 +27,8 @@ import dalvik.annotation.TestTargetNew;
 @TestTargetClass(PipedInputStream.class) 
 public class PipedInputStreamTest extends junit.framework.TestCase {
 
+    private final int BUFFER_SIZE = 1024;
+
     static class PWriter implements Runnable {
         PipedOutputStream pos;
 
@@ -150,13 +152,12 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
 
         PipedInputStream pin = new PipedInputStream();
         PipedOutputStream pout = new PipedOutputStream(pin);
-        // We know the PipedInputStream buffer size is 1024.
         // Writing another byte would cause the write to wait
         // for a read before returning
-        for (int i = 0; i < 1024; i++)
+        for (int i = 0; i < BUFFER_SIZE; i++)
             pout.write(i);
         assertEquals("Test 2: Incorrect number of bytes available. ", 
-                     1024 , pin.available());
+                     BUFFER_SIZE, pin.available());
     }
 
     /**
@@ -433,8 +434,9 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
                         Thread.sleep(100);
                     }
                     try {
-                        // should throw exception since reader thread
-                        // is now dead
+                        pos.write(new byte[BUFFER_SIZE]);
+                        // should throw exception since buffer is full and
+                        // reader thread is now dead
                         pos.write(1);
                     } catch (IOException e) {
                         pass = true;
