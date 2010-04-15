@@ -68,4 +68,12 @@ public class NumberFormatTest extends junit.framework.TestCase {
         NumberFormat integerFormat = NumberFormat.getIntegerInstance(new Locale("ar"));
         assertEquals("#,##0;#,##0-", ((DecimalFormat) integerFormat).toPattern());
     }
+
+    public void test_numberLocalization() throws Exception {
+        Locale arabic = new Locale("ar");
+        NumberFormat nf = NumberFormat.getNumberInstance(arabic);
+        assertEquals('\u0660', new DecimalFormatSymbols(arabic).getZeroDigit());
+        assertEquals("\u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667\u066c\u0668\u0669\u0660",
+                nf.format(1234567890));
+    }
 }

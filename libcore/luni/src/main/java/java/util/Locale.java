@@ -62,7 +62,8 @@ import org.apache.harmony.luni.util.Util;
  * formats, rules for conversion to lowercase, and so on. A common mistake is to implicitly use the
  * default locale when producing output meant to be machine-readable. This tends to work on the
  * developer's test devices but fail when run on a device whose user is in a less conventional
- * locale. For example, if you're formatting floating-point numbers some locales will use
+ * locale. For example, if you're formatting integers some locales will use non-ASCII decimal
+ * digits. As another example, if you're formatting floating-point numbers some locales will use
  * {@code ','} as the decimal point. That's correct for human-readable output, but likely to cause
  * problems if presented to another computer ({@code Double.parseDouble} can't parse such a number,
  * for example). The best choice for computer-readable output is usually {@code Locale.US}: this

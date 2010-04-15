@@ -15,6 +15,8 @@
  */
 package java.util;
 
+import com.ibm.icu4jni.util.LocaleData;
+import com.ibm.icu4jni.util.Resources;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
@@ -32,14 +34,9 @@ import java.math.MathContext;
 import java.nio.charset.Charset;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.text.DateFormatSymbols;
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
-
-// BEGIN android-added
 import org.apache.harmony.luni.util.LocaleCache;
-// END android-added
 
 /**
  * Formats arguments according to a format string (like {@code printf} in C).
@@ -517,8 +514,13 @@ format("%6.0E", 123.456f);</td>
  * <td width="30%">{@code CEST}</td>
  * </tr>
  * </table>
- * <p>
- * Formatter is not thread-safe.
+ * <p><i>Number localization</i>. Some conversions use localized decimal digits rather than the
+ * usual ASCII digits. So formatting {@code 123} with {@code %d} will give 123 in English locales
+ * but &#x0661;&#x0662;&#x0663; in appropriate Arabic locales, for example. This number localization
+ * occurs for the decimal integer conversion {@code %d}, the floating point conversions {@code %e},
+ * {@code %f}, and {@code %g}, and all date/time {@code %t} or {@code %T} conversions, but no other
+ * conversions.
+ * <p><i>Thread safety</i>. Formatter is not thread-safe.
  *
  * @since 1.5
  * @see java.text.DateFormat
@@ -526,6 +528,7 @@ format("%6.0E", 123.456f);</td>
  * @see java.text.SimpleDateFormat
  */
 public final class Formatter implements Closeable, Flushable {
+    private static final char[] ZEROS = new char[] { '0', '0', '0', '0', '0', '0', '0', '0', '0' };
 
     /**
      * The enumeration giving the available styles for formatting very large
@@ -988,13 +991,11 @@ public final class Formatter implements Closeable, Flushable {
         return this;
     }
 
-    // BEGIN android-added
     /**
      * Cached transformer. Improves performance when format() is called multiple
      * times.
      */
     private Transformer transformer;
-    // END android-added
 
     /**
      * Writes a formatted string to the output destination of the {@code Formatter}.
@@ -1030,7 +1031,6 @@ public final class Formatter implements Closeable, Flushable {
         return this;
     }
 
-    // BEGIN android-changed
     private void doFormat(String format, Object... args) {
         checkClosed();
 
@@ -1078,9 +1078,7 @@ public final class Formatter implements Closeable, Flushable {
             }
         }
     }
-    // END android-changed
 
-    // BEGIN android-added
     // Fixes http://code.google.com/p/android/issues/detail?id=1767.
     private void outputCharSequence(CharSequence cs, int start, int end) {
         try {
@@ -1089,12 +1087,11 @@ public final class Formatter implements Closeable, Flushable {
             lastIOException = e;
         }
     }
-    // END android-added
 
     private Object getArgument(Object[] args, int index, FormatSpecifierParser fsp,
             Object lastArgument, boolean hasLastArgumentSet) {
         if (index == FormatToken.LAST_ARGUMENT_INDEX && !hasLastArgumentSet) {
-            throw new MissingFormatArgumentException("<"); //$NON-NLS-1$
+            throw new MissingFormatArgumentException("<");
         }
 
         if (args == null) {
@@ -1118,7 +1115,6 @@ public final class Formatter implements Closeable, Flushable {
         }
         try {
             os.close();
-
         } catch (IOException e) {
             // silently
         }
@@ -1337,7 +1333,7 @@ public final class Formatter implements Closeable, Flushable {
                 break;
 
             default:
-                throw new UnknownFormatConversionException(String.valueOf(conversionType));
+                throw unknownFormatConversionException();
             }
             
             // Check for disallowed flags.
@@ -1393,6 +1389,14 @@ public final class Formatter implements Closeable, Flushable {
                 throw new IllegalFormatFlagsException("the '-' and '0' flags are incompatible");
             }
         }
+
+        public UnknownFormatConversionException unknownFormatConversionException() {
+            if (conversionType == 't' || conversionType == 'T') {
+                throw new UnknownFormatConversionException(String.format("%c%c",
+                        conversionType, dateSuffix));
+            }
+            throw new UnknownFormatConversionException(String.valueOf(conversionType));
+        }
     }
 
     /*
@@ -1404,35 +1408,18 @@ public final class Formatter implements Closeable, Flushable {
         private FormatToken formatToken;
         private Object arg;
         private Locale locale;
-        private DecimalFormatSymbols decimalFormatSymbols;
+        private LocaleData localeData;
         private static String lineSeparator;
-
-        // BEGIN android-changed
-        // This object is mutated during use, so can't be cached safely.
-        // private NumberFormat numberFormat;
-        // END android-changed
-
-        private DateTimeUtil dateTimeUtil;
 
         Transformer(Formatter formatter, Locale locale) {
             this.formatter = formatter;
             this.locale = (locale == null ? Locale.US : locale);
+            this.localeData = Resources.getLocaleData(locale);
         }
 
         private NumberFormat getNumberFormat() {
-            // BEGIN android-changed
             return LocaleCache.getNumberFormat(locale);
-            // END android-changed
         }
-
-        // BEGIN android-changed
-        DecimalFormatSymbols getDecimalFormatSymbols() {
-            if (decimalFormatSymbols == null) {
-                decimalFormatSymbols = new DecimalFormatSymbols(locale);
-            }
-            return decimalFormatSymbols;
-        }
-        // END android-changed
 
         /*
          * Gets the formatted string according to the format token and the
@@ -1457,10 +1444,9 @@ public final class Formatter implements Closeable, Flushable {
                     break;
                 case 'd':
                     if (arg instanceof Integer || arg instanceof Long || arg instanceof Short || arg instanceof Byte) {
-                        // TODO: when we fix the rest of formatter to correctly use locale-specific
-                        // digits when getDecimalFormatSymbols().getZeroDigit() != '0', we'll need
-                        // to add a special case here too.
-                        return arg.toString();
+                        if (localeData.decimalPatternChars.charAt(0) == '0') { // ZERO_DIGIT
+                            return arg.toString();
+                        }
                     }
                 }
             }
@@ -1522,10 +1508,8 @@ public final class Formatter implements Closeable, Flushable {
                     result = transformFromDateTime();
                     break;
                 }
-                default: {
-                    throw new UnknownFormatConversionException(String
-                            .valueOf(token.getConversionType()));
-                }
+                default:
+                    throw token.unknownFormatConversionException();
             }
 
             if (Character.isUpperCase(token.getConversionType())) {
@@ -1549,9 +1533,9 @@ public final class Formatter implements Closeable, Flushable {
             if (arg instanceof Boolean) {
                 result = arg.toString();
             } else if (arg == null) {
-                result = "false"; //$NON-NLS-1$
+                result = "false";
             } else {
-                result = "true"; //$NON-NLS-1$
+                result = "true";
             }
             return padding(result, 0);
         }
@@ -1562,7 +1546,7 @@ public final class Formatter implements Closeable, Flushable {
         private CharSequence transformFromHashCode() {
             CharSequence result;
             if (arg == null) {
-                result = "null"; //$NON-NLS-1$
+                result = "null";
             } else {
                 result = Integer.toHexString(arg.hashCode());
             }
@@ -1635,7 +1619,7 @@ public final class Formatter implements Closeable, Flushable {
             if (lineSeparator == null) {
                 lineSeparator = AccessController.doPrivileged(new PrivilegedAction<String>() {
                     public String run() {
-                        return System.getProperty("line.separator"); //$NON-NLS-1$
+                        return System.getProperty("line.separator");
                     }
                 });
             }
@@ -1671,9 +1655,9 @@ public final class Formatter implements Closeable, Flushable {
             char paddingChar = '\u0020'; // space as padding char.
             if (formatToken.flagZero) {
                 if (formatToken.getConversionType() == 'd') {
-                    paddingChar = getDecimalFormatSymbols().getZeroDigit();
+                    paddingChar = localeData.decimalPatternChars.charAt(0); // ZERO_DIGIT
                 } else {
-                    paddingChar = '0';
+                    paddingChar = '0'; // No localized digits for bases other than decimal.
                 }
             } else {
                 // if padding char is space, always pad from the start.
@@ -1732,18 +1716,18 @@ public final class Formatter implements Closeable, Flushable {
 
             if (formatToken.flagSharp) {
                 if (currentConversionType == 'o') {
-                    result.append("0"); //$NON-NLS-1$
+                    result.append("0");
                     startIndex += 1;
                 } else {
-                    result.append("0x"); //$NON-NLS-1$
+                    result.append("0x");
                     startIndex += 2;
                 }
             }
 
             if ('d' == currentConversionType) {
-                if (formatToken.flagComma) {
+                if (formatToken.flagComma || localeData.decimalPatternChars.charAt(0) != '0') { // ZERO_DIGIT
                     NumberFormat numberFormat = getNumberFormat();
-                    numberFormat.setGroupingUsed(true);
+                    numberFormat.setGroupingUsed(formatToken.flagComma);
                     result.append(numberFormat.format(arg));
                 } else {
                     result.append(value);
@@ -1792,20 +1776,20 @@ public final class Formatter implements Closeable, Flushable {
             double d = number.doubleValue();
             String source = null;
             if (Double.isNaN(d)) {
-                source = "NaN"; //$NON-NLS-1$
+                source = "NaN";
             } else if (d == Double.POSITIVE_INFINITY) {
                 if (formatToken.flagAdd) {
-                    source = "+Infinity"; //$NON-NLS-1$
+                    source = "+Infinity";
                 } else if (formatToken.flagSpace) {
-                    source = " Infinity"; //$NON-NLS-1$
+                    source = " Infinity";
                 } else {
-                    source = "Infinity"; //$NON-NLS-1$
+                    source = "Infinity";
                 }
             } else if (d == Double.NEGATIVE_INFINITY) {
                 if (formatToken.flagParenthesis) {
-                    source = "(Infinity)"; //$NON-NLS-1$
+                    source = "(Infinity)";
                 } else {
-                    source = "-Infinity"; //$NON-NLS-1$
+                    source = "-Infinity";
                 }
             } else {
                 return null;
@@ -1818,7 +1802,7 @@ public final class Formatter implements Closeable, Flushable {
 
         private CharSequence transformFromNull() {
             formatToken.flagZero = false;
-            return padding("null", 0); //$NON-NLS-1$
+            return padding("null", 0);
         }
 
         /*
@@ -1850,12 +1834,11 @@ public final class Formatter implements Closeable, Flushable {
             }
             if (formatToken.flagSharp) {
                 startIndex = isNegative ? 1 : 0;
-                if ('o' == currentConversionType) {
-                    result.insert(startIndex, "0"); //$NON-NLS-1$
+                if (currentConversionType == 'o') {
+                    result.insert(startIndex, "0");
                     startIndex += 1;
-                } else if ('x' == currentConversionType
-                        || 'X' == currentConversionType) {
-                    result.insert(startIndex, "0x"); //$NON-NLS-1$
+                } else if (currentConversionType == 'x' || currentConversionType == 'X') {
+                    result.insert(startIndex, "0x");
                     startIndex += 2;
                 }
             }
@@ -1908,14 +1891,13 @@ public final class Formatter implements Closeable, Flushable {
             }
 
             // output result
-            DecimalFormatSymbols decimalFormatSymbols = getDecimalFormatSymbols();
             FloatUtil floatUtil = new FloatUtil(result, formatToken,
-                    (DecimalFormat) getNumberFormat(), decimalFormatSymbols, arg);
+                    (DecimalFormat) getNumberFormat(), localeData, arg);
             floatUtil.transform(currentConversionType);
 
             formatToken.setPrecision(FormatToken.UNSET);
 
-            if (decimalFormatSymbols.getMinusSign() == result.charAt(0)) {
+            if (localeData.decimalPatternChars.charAt(8) == result.charAt(0)) { // MINUS_SIGN
                 if (formatToken.flagParenthesis) {
                     return wrapParentheses(result);
                 }
@@ -1931,8 +1913,7 @@ public final class Formatter implements Closeable, Flushable {
             }
 
             char firstChar = result.charAt(0);
-            if (formatToken.flagZero
-                    && (firstChar == floatUtil.getAddSign() || firstChar == decimalFormatSymbols.getMinusSign())) {
+            if (formatToken.flagZero && (firstChar == floatUtil.getAddSign() || firstChar == localeData.decimalPatternChars.charAt(8))) { // MINUS_SIGN
                 startIndex = 1;
             }
 
@@ -1966,13 +1947,175 @@ public final class Formatter implements Closeable, Flushable {
                 calendar.setTime(date);
             }
 
-            if (dateTimeUtil == null) {
-                dateTimeUtil = new DateTimeUtil(locale);
-            }
             StringBuilder result = new StringBuilder();
-            // output result
-            dateTimeUtil.transform(formatToken, calendar, result);
+            if (!appendT(result, formatToken.getDateSuffix(), calendar)) {
+                throw formatToken.unknownFormatConversionException();
+            }
             return padding(result, 0);
+        }
+        
+        private boolean appendT(StringBuilder result, char conversion, Calendar calendar) {
+            switch (conversion) {
+            case 'A':
+                result.append(localeData.longWeekdayNames[calendar.get(Calendar.DAY_OF_WEEK)]);
+                return true;
+            case 'a':
+                result.append(localeData.shortWeekdayNames[calendar.get(Calendar.DAY_OF_WEEK)]);
+                return true;
+            case 'B':
+                result.append(localeData.longMonthNames[calendar.get(Calendar.MONTH)]);
+                return true;
+            case 'b': case 'h':
+                result.append(localeData.shortMonthNames[calendar.get(Calendar.MONTH)]);
+                return true;
+            case 'C':
+                appendLocalized(result, calendar.get(Calendar.YEAR) / 100, 2);
+                return true;
+            case 'D':
+                appendT(result, 'm', calendar);
+                result.append('/');
+                appendT(result, 'd', calendar);
+                result.append('/');
+                appendT(result, 'y', calendar);
+                return true;
+            case 'F':
+                appendT(result, 'Y', calendar);
+                result.append('-');
+                appendT(result, 'm', calendar);
+                result.append('-');
+                appendT(result, 'd', calendar);
+                return true;
+            case 'H':
+                appendLocalized(result, calendar.get(Calendar.HOUR_OF_DAY), 2);
+                return true;
+            case 'I':
+                appendLocalized(result, to12Hour(calendar.get(Calendar.HOUR)), 2);
+                return true;
+            case 'L':
+                appendLocalized(result, calendar.get(Calendar.MILLISECOND), 3);
+                return true;
+            case 'M':
+                appendLocalized(result, calendar.get(Calendar.MINUTE), 2);
+                return true;
+            case 'N':
+                appendLocalized(result, calendar.get(Calendar.MILLISECOND) * 1000000L, 9);
+                return true;
+            case 'Q':
+                appendLocalized(result, calendar.getTimeInMillis(), 0);
+                return true;
+            case 'R':
+                appendT(result, 'H', calendar);
+                result.append(':');
+                appendT(result, 'M', calendar);
+                return true;
+            case 'S':
+                appendLocalized(result, calendar.get(Calendar.SECOND), 2);
+                return true;
+            case 'T':
+                appendT(result, 'H', calendar);
+                result.append(':');
+                appendT(result, 'M', calendar);
+                result.append(':');
+                appendT(result, 'S', calendar);
+                return true;
+            case 'Y':
+                appendLocalized(result, calendar.get(Calendar.YEAR), 4);
+                return true;
+            case 'Z':
+                TimeZone timeZone = calendar.getTimeZone();
+                result.append(timeZone.getDisplayName(timeZone.inDaylightTime(calendar.getTime()),
+                        TimeZone.SHORT, locale));
+                return true;
+            case 'c':
+                appendT(result, 'a', calendar);
+                result.append(' ');
+                appendT(result, 'b', calendar);
+                result.append(' ');
+                appendT(result, 'd', calendar);
+                result.append(' ');
+                appendT(result, 'T', calendar);
+                result.append(' ');
+                appendT(result, 'Z', calendar);
+                result.append(' ');
+                appendT(result, 'Y', calendar);
+                return true;
+            case 'd':
+                appendLocalized(result, calendar.get(Calendar.DAY_OF_MONTH), 2);
+                return true;
+            case 'e':
+                appendLocalized(result, calendar.get(Calendar.DAY_OF_MONTH), 0);
+                return true;
+            case 'j':
+                appendLocalized(result, calendar.get(Calendar.DAY_OF_YEAR), 3);
+                return true;
+            case 'k':
+                appendLocalized(result, calendar.get(Calendar.HOUR_OF_DAY), 0);
+                return true;
+            case 'l':
+                appendLocalized(result, to12Hour(calendar.get(Calendar.HOUR)), 0);
+                return true;
+            case 'm':
+                // Calendar.JANUARY is 0; humans want January represented as 1.
+                appendLocalized(result, calendar.get(Calendar.MONTH) + 1, 2);
+                return true;
+            case 'p':
+                result.append(localeData.amPm[calendar.get(Calendar.AM_PM)].toLowerCase(locale));
+                return true;
+            case 'r':
+                appendT(result, 'I', calendar);
+                result.append(':');
+                appendT(result, 'M', calendar);
+                result.append(':');
+                appendT(result, 'S', calendar);
+                result.append(' ');
+                result.append(localeData.amPm[calendar.get(Calendar.AM_PM)]);
+                return true;
+            case 's':
+                appendLocalized(result, calendar.getTimeInMillis() / 1000, 0);
+                return true;
+            case 'y':
+                appendLocalized(result, calendar.get(Calendar.YEAR) % 100, 2);
+                return true;
+            case 'z':
+                long offset = calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET);
+                char sign = '+';
+                if (offset < 0) {
+                    sign = '-';
+                    offset = -offset;
+                }
+                result.append(sign);
+                appendLocalized(result, offset / 3600000, 2);
+                appendLocalized(result, (offset % 3600000) / 60000, 2);
+                return true;
+            }
+            return false;
+        }
+        
+        private int to12Hour(int hour) {
+            return hour == 0 ? 12 : hour;
+        }
+        
+        private void appendLocalized(StringBuilder result, long value, int width) {
+            int paddingIndex = result.length();
+            char zeroDigit = localeData.decimalPatternChars.charAt(0); // ZERO_DIGIT
+            if (zeroDigit == '0') {
+                result.append(value);
+            } else {
+                NumberFormat numberFormat = getNumberFormat();
+                numberFormat.setGroupingUsed(false);
+                result.append(numberFormat.format(value));
+            }
+            int zeroCount = width - (result.length() - paddingIndex);
+            if (zeroCount <= 0) {
+                return;
+            }
+            if (zeroDigit == '0') {
+                result.insert(paddingIndex, ZEROS, 0, zeroCount);
+            } else {
+                for (int i = 0; i < zeroCount; ++i) {
+                    result.insert(paddingIndex, zeroDigit);
+                }
+            }
         }
     }
 
@@ -1980,43 +2123,36 @@ public final class Formatter implements Closeable, Flushable {
     private static class FloatUtil {
         private final StringBuilder result;
         private final DecimalFormat decimalFormat;
-        private final DecimalFormatSymbols decimalFormatSymbols;
+        private final LocaleData localeData;
         private final FormatToken formatToken;
         private final Object argument;
 
         FloatUtil(StringBuilder result, FormatToken formatToken, DecimalFormat decimalFormat,
-                DecimalFormatSymbols decimalFormatSymbols, Object argument) {
+                LocaleData localeData, Object argument) {
             this.result = result;
             this.formatToken = formatToken;
             this.decimalFormat = decimalFormat;
-            this.decimalFormatSymbols = decimalFormatSymbols;
+            this.localeData = localeData;
             this.argument = argument;
         }
 
         void transform(char conversionType) {
             switch (conversionType) {
-                case 'e':
-                case 'E': {
-                    transform_e();
-                    break;
-                }
-                case 'f': {
-                    transform_f();
-                    break;
-                }
-                case 'g':
-                case 'G': {
-                    transform_g();
-                    break;
-                }
-                case 'a':
-                case 'A': {
-                    transform_a();
-                    break;
-                }
-                default: {
-                    throw new UnknownFormatConversionException(String.valueOf(conversionType));
-                }
+            case 'a': case 'A':
+                transform_a();
+                break;
+            case 'e': case 'E':
+                transform_e();
+                break;
+            case 'f':
+                transform_f();
+                break;
+            case 'g':
+            case 'G':
+                transform_g();
+                break;
+            default:
+                throw formatToken.unknownFormatConversionException();
             }
         }
 
@@ -2030,20 +2166,18 @@ public final class Formatter implements Closeable, Flushable {
             if (formatToken.getPrecision() > 0) {
                 pattern.append('.');
                 char[] zeros = new char[formatToken.getPrecision()];
-                Arrays.fill(zeros, '0');
+                Arrays.fill(zeros, '0'); // This is a *pattern* character, so no localization.
                 pattern.append(zeros);
             }
-            pattern.append('E');
-            pattern.append("+00"); //$NON-NLS-1$
+            pattern.append("E+00");
             decimalFormat.applyPattern(pattern.toString());
             String formattedString = decimalFormat.format(argument);
             result.append(formattedString.replace('E', 'e'));
 
-            // if the flag is sharp and decimal separator is always given
-            // out.
+            // if the flag is sharp and decimal separator is always given out.
             if (formatToken.flagSharp && formatToken.getPrecision() == 0) {
-                int indexOfE = result.indexOf("e"); //$NON-NLS-1$
-                result.insert(indexOfE, decimalFormatSymbols.getDecimalSeparator());
+                int indexOfE = result.indexOf("e");
+                result.insert(indexOfE, localeData.decimalPatternChars.charAt(2)); // DECIMAL_SEPARATOR
             }
         }
 
@@ -2126,11 +2260,11 @@ public final class Formatter implements Closeable, Flushable {
                         patternBuilder.append(sharps);
                     }
                 }
-                patternBuilder.append(0);
+                patternBuilder.append('0');
                 if (formatToken.getPrecision() > 0) {
                     patternBuilder.append('.');
                     char[] zeros = new char[formatToken.getPrecision()];
-                    Arrays.fill(zeros, '0');
+                    Arrays.fill(zeros, '0'); // This is a *pattern* character, so no localization.
                     patternBuilder.append(zeros);
                 }
                 pattern = patternBuilder.toString();
@@ -2138,10 +2272,9 @@ public final class Formatter implements Closeable, Flushable {
             // TODO: if DecimalFormat.toPattern was cheap, we could make this cheap (preferably *in* DecimalFormat).
             decimalFormat.applyPattern(pattern);
             result.append(decimalFormat.format(argument));
-            // if the flag is sharp and decimal separator is always given
-            // out.
+            // if the flag is sharp and decimal separator is always given out.
             if (formatToken.flagSharp && formatToken.getPrecision() == 0) {
-                result.append(decimalFormatSymbols.getDecimalSeparator());
+                result.append(localeData.decimalPatternChars.charAt(2)); // DECIMAL_SEPARATOR
             }
         }
 
@@ -2162,8 +2295,8 @@ public final class Formatter implements Closeable, Flushable {
 
             int precision = formatToken.getPrecision();
             precision = (0 == precision ? 1 : precision);
-            int indexOfFirstFractionalDigit = result.indexOf(".") + 1; //$NON-NLS-1$
-            int indexOfP = result.indexOf("p"); //$NON-NLS-1$
+            int indexOfFirstFractionalDigit = result.indexOf(".") + 1;
+            int indexOfP = result.indexOf("p");
             int fractionalLength = indexOfP - indexOfFirstFractionalDigit;
 
             if (fractionalLength == precision) {
@@ -2172,7 +2305,7 @@ public final class Formatter implements Closeable, Flushable {
 
             if (fractionalLength < precision) {
                 char zeros[] = new char[precision - fractionalLength];
-                Arrays.fill(zeros, '0');
+                Arrays.fill(zeros, '0'); // %a shouldn't be localized.
                 result.insert(indexOfP, zeros);
                 return;
             }
@@ -2182,383 +2315,6 @@ public final class Formatter implements Closeable, Flushable {
         private IllegalFormatConversionException badArgumentType() {
             throw new IllegalFormatConversionException(formatToken.getConversionType(),
                     argument.getClass());
-        }
-    }
-
-    private static class DateTimeUtil {
-        private Calendar calendar;
-
-        private Locale locale;
-
-        private StringBuilder result;
-
-        private DateFormatSymbols dateFormatSymbols;
-
-        DateTimeUtil(Locale locale) {
-            this.locale = locale;
-        }
-
-        void transform(FormatToken formatToken, Calendar aCalendar,
-                StringBuilder aResult) {
-            this.result = aResult;
-            this.calendar = aCalendar;
-            char suffix = formatToken.getDateSuffix();
-
-            switch (suffix) {
-                case 'H': {
-                    transform_H();
-                    break;
-                }
-                case 'I': {
-                    transform_I();
-                    break;
-                }
-                case 'M': {
-                    transform_M();
-                    break;
-                }
-                case 'S': {
-                    transform_S();
-                    break;
-                }
-                case 'L': {
-                    transform_L();
-                    break;
-                }
-                case 'N': {
-                    transform_N();
-                    break;
-                }
-                case 'k': {
-                    transform_k();
-                    break;
-                }
-                case 'l': {
-                    transform_l();
-                    break;
-                }
-                case 'p': {
-                    transform_p(true);
-                    break;
-                }
-                case 's': {
-                    transform_s();
-                    break;
-                }
-                case 'z': {
-                    transform_z();
-                    break;
-                }
-                case 'Z': {
-                    transform_Z();
-                    break;
-                }
-                case 'Q': {
-                    transform_Q();
-                    break;
-                }
-                case 'B': {
-                    transform_B();
-                    break;
-                }
-                case 'b':
-                case 'h': {
-                    transform_b();
-                    break;
-                }
-                case 'A': {
-                    transform_A();
-                    break;
-                }
-                case 'a': {
-                    transform_a();
-                    break;
-                }
-                case 'C': {
-                    transform_C();
-                    break;
-                }
-                case 'Y': {
-                    transform_Y();
-                    break;
-                }
-                case 'y': {
-                    transform_y();
-                    break;
-                }
-                case 'j': {
-                    transform_j();
-                    break;
-                }
-                case 'm': {
-                    transform_m();
-                    break;
-                }
-                case 'd': {
-                    transform_d();
-                    break;
-                }
-                case 'e': {
-                    transform_e();
-                    break;
-                }
-                case 'R': {
-                    transform_R();
-                    break;
-                }
-
-                case 'T': {
-                    transform_T();
-                    break;
-                }
-                case 'r': {
-                    transform_r();
-                    break;
-                }
-                case 'D': {
-                    transform_D();
-                    break;
-                }
-                case 'F': {
-                    transform_F();
-                    break;
-                }
-                case 'c': {
-                    transform_c();
-                    break;
-                }
-                default: {
-                    throw new UnknownFormatConversionException(String
-                            .valueOf(formatToken.getConversionType())
-                            + formatToken.getDateSuffix());
-                }
-            }
-        }
-
-        private void transform_e() {
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            result.append(day);
-        }
-
-        private void transform_d() {
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            result.append(paddingZeros(day, 2));
-        }
-
-        private void transform_m() {
-            int month = calendar.get(Calendar.MONTH);
-            // The returned month starts from zero, which needs to be
-            // incremented by 1.
-            month++;
-            result.append(paddingZeros(month, 2));
-        }
-
-        private void transform_j() {
-            int day = calendar.get(Calendar.DAY_OF_YEAR);
-            result.append(paddingZeros(day, 3));
-        }
-
-        private void transform_y() {
-            int year = calendar.get(Calendar.YEAR);
-            year %= 100;
-            result.append(paddingZeros(year, 2));
-        }
-
-        private void transform_Y() {
-            int year = calendar.get(Calendar.YEAR);
-            result.append(paddingZeros(year, 4));
-        }
-
-        private void transform_C() {
-            int year = calendar.get(Calendar.YEAR);
-            year /= 100;
-            result.append(paddingZeros(year, 2));
-        }
-
-        private void transform_a() {
-            int day = calendar.get(Calendar.DAY_OF_WEEK);
-            result.append(getDateFormatSymbols().getShortWeekdays()[day]);
-        }
-
-        private void transform_A() {
-            int day = calendar.get(Calendar.DAY_OF_WEEK);
-            result.append(getDateFormatSymbols().getWeekdays()[day]);
-        }
-
-        private void transform_b() {
-            int month = calendar.get(Calendar.MONTH);
-            result.append(getDateFormatSymbols().getShortMonths()[month]);
-        }
-
-        private void transform_B() {
-            int month = calendar.get(Calendar.MONTH);
-            result.append(getDateFormatSymbols().getMonths()[month]);
-        }
-
-        private void transform_Q() {
-            long milliSeconds = calendar.getTimeInMillis();
-            result.append(milliSeconds);
-        }
-
-        private void transform_s() {
-            long milliSeconds = calendar.getTimeInMillis();
-            milliSeconds /= 1000;
-            result.append(milliSeconds);
-        }
-
-        private void transform_Z() {
-            TimeZone timeZone = calendar.getTimeZone();
-            result.append(timeZone
-                    .getDisplayName(
-                            timeZone.inDaylightTime(calendar.getTime()),
-                            TimeZone.SHORT, locale));
-        }
-
-        private void transform_z() {
-            long offset = calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET);
-            char sign = '+';
-            if (offset < 0) {
-                sign = '-';
-                offset = -offset;
-            }
-            result.append(sign);
-            result.append(paddingZeros(offset / 3600000, 2));
-            result.append(paddingZeros((offset % 3600000) / 60000, 2));
-        }
-
-        private void transform_p(boolean isLowerCase) {
-            int i = calendar.get(Calendar.AM_PM);
-            String s = getDateFormatSymbols().getAmPmStrings()[i];
-            if (isLowerCase) {
-                s = s.toLowerCase(locale);
-            }
-            result.append(s);
-        }
-
-        private void transform_N() {
-            long nanosecond = calendar.get(Calendar.MILLISECOND) * 1000000L;
-            result.append(paddingZeros(nanosecond, 9));
-        }
-
-        private void transform_L() {
-            int millisecond = calendar.get(Calendar.MILLISECOND);
-            result.append(paddingZeros(millisecond, 3));
-        }
-
-        private void transform_S() {
-            int second = calendar.get(Calendar.SECOND);
-            result.append(paddingZeros(second, 2));
-        }
-
-        private void transform_M() {
-            int minute = calendar.get(Calendar.MINUTE);
-            result.append(paddingZeros(minute, 2));
-        }
-
-        private void transform_l() {
-            int hour = calendar.get(Calendar.HOUR);
-            if (0 == hour) {
-                hour = 12;
-            }
-            result.append(hour);
-        }
-
-        private void transform_k() {
-            int hour = calendar.get(Calendar.HOUR_OF_DAY);
-            result.append(hour);
-        }
-
-        private void transform_I() {
-            int hour = calendar.get(Calendar.HOUR);
-            if (0 == hour) {
-                hour = 12;
-            }
-            result.append(paddingZeros(hour, 2));
-        }
-
-        private void transform_H() {
-            int hour = calendar.get(Calendar.HOUR_OF_DAY);
-            result.append(paddingZeros(hour, 2));
-        }
-
-        private void transform_R() {
-            transform_H();
-            result.append(':');
-            transform_M();
-        }
-
-        private void transform_T() {
-            transform_H();
-            result.append(':');
-            transform_M();
-            result.append(':');
-            transform_S();
-        }
-
-        private void transform_r() {
-            transform_I();
-            result.append(':');
-            transform_M();
-            result.append(':');
-            transform_S();
-            result.append(' ');
-            transform_p(false);
-        }
-
-        private void transform_D() {
-            transform_m();
-            result.append('/');
-            transform_d();
-            result.append('/');
-            transform_y();
-        }
-
-        private void transform_F() {
-            transform_Y();
-            result.append('-');
-            transform_m();
-            result.append('-');
-            transform_d();
-        }
-
-        private void transform_c() {
-            transform_a();
-            result.append(' ');
-            transform_b();
-            result.append(' ');
-            transform_d();
-            result.append(' ');
-            transform_T();
-            result.append(' ');
-            transform_Z();
-            result.append(' ');
-            transform_Y();
-        }
-
-        // TODO: this doesn't need a temporary StringBuilder!
-        private static String paddingZeros(long number, int length) {
-            int len = length;
-            StringBuilder result = new StringBuilder();
-            result.append(number);
-            int startIndex = 0;
-            if (number < 0) {
-                len++;
-                startIndex = 1;
-            }
-            len -= result.length();
-            if (len > 0) {
-                char[] zeros = new char[len];
-                Arrays.fill(zeros, '0');
-                result.insert(startIndex, zeros);
-            }
-            return result.toString();
-        }
-
-        private DateFormatSymbols getDateFormatSymbols() {
-            if (dateFormatSymbols == null) {
-                dateFormatSymbols = new DateFormatSymbols(locale);
-            }
-            return dateFormatSymbols;
         }
     }
 
