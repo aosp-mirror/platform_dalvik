@@ -130,11 +130,9 @@ LOCAL_SRC_FILES := \
 	alloc/Alloc.c \
 	alloc/HeapBitmap.c.arm \
 	alloc/HeapDebug.c \
-	alloc/HeapSource.c \
 	alloc/HeapTable.c \
 	alloc/HeapWorker.c \
 	alloc/Heap.c.arm \
-	alloc/MarkSweep.c.arm \
 	alloc/DdmHeap.c \
 	alloc/Verify.c \
 	analysis/CodeVerify.c \
@@ -197,6 +195,18 @@ LOCAL_SRC_FILES := \
 	test/AtomicSpeed.c \
 	test/TestHash.c \
 	test/TestIndirectRefTable.c
+
+WITH_COPYING_GC := $(strip $(WITH_COPYING_GC))
+
+ifeq ($(WITH_COPYING_GC),true)
+  LOCAL_CFLAGS += -DWITH_COPYING_GC
+  LOCAL_SRC_FILES += \
+	alloc/Copying.c.arm
+else
+  LOCAL_SRC_FILES += \
+	alloc/HeapSource.c \
+	alloc/MarkSweep.c.arm
+endif
 
 WITH_JIT := $(strip $(WITH_JIT))
 
