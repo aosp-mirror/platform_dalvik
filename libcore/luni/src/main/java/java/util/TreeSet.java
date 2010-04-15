@@ -377,12 +377,9 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
         TreeMap<E, Object> map = new TreeMap<E, Object>(
                 (Comparator<? super E>) stream.readObject());
         int size = stream.readInt();
-        if (size > 0) {
-            TreeMap.Node<E, Object> lastNode = null;
-            for(int i=0; i<size; i++) {
-                E elem = (E)stream.readObject();
-                lastNode = map.addToLast(lastNode,elem, Boolean.TRUE);
-            }
+        for (int i = 0; i < size; i++) {
+            E elem = (E)stream.readObject();
+            map.put(elem, Boolean.TRUE);
         }
         backingMap = map;
     }
