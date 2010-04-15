@@ -21,6 +21,36 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 public class FormatterTest extends junit.framework.TestCase {
+    public void test_numberLocalization() throws Exception {
+        Locale arabic = new Locale("ar");
+        // Check the fast path for %d:
+        assertEquals("12 \u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669\u0660 34",
+                String.format(arabic, "12 %d 34", 1234567890));
+        // And the slow path too:
+        assertEquals("12 \u0661\u066c\u0662\u0663\u0664\u066c\u0665\u0666\u0667\u066c\u0668\u0669\u0660 34",
+                String.format(arabic, "12 %,d 34", 1234567890));
+        // And three localized floating point formats:
+        assertEquals("12 \u0661\u066b\u0662\u0663\u0660e+\u0660\u0660 34",
+                String.format(arabic, "12 %.3e 34", 1.23));
+        assertEquals("12 \u0661\u066b\u0662\u0663\u0660 34",
+                String.format(arabic, "12 %.3f 34", 1.23));
+        assertEquals("12 \u0661\u066b\u0662\u0663 34",
+                String.format(arabic, "12 %.3g 34", 1.23));
+        // And date/time formatting (we assume that all time/date number formatting is done by the
+        // same code, so this is representative):
+        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT-08:00"));
+        c.setTimeInMillis(0);
+        assertEquals("12 \u0661\u0666:\u0660\u0660:\u0660\u0660 34",
+                String.format(arabic, "12 %tT 34", c));
+        // These shouldn't get localized:
+        assertEquals("1234", String.format(arabic, "1234"));
+        assertEquals("1234", String.format(arabic, "%s", "1234"));
+        assertEquals("1234", String.format(arabic, "%s", 1234));
+        assertEquals("2322", String.format(arabic, "%o", 1234));
+        assertEquals("4d2", String.format(arabic, "%x", 1234));
+        assertEquals("0x1.0p0", String.format(arabic, "%a", 1.0));
+    }
+
     // http://b/2301938
     public void test_uppercaseConversions() throws Exception {
         // In most locales, the upper-case equivalent of "i" is "I".
