@@ -17,6 +17,7 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
@@ -843,6 +844,7 @@ public class RuntimeTest extends junit.framework.TestCase {
         method = "traceMethodCalls",
         args = {boolean.class}
     )
+    @KnownFailure("Fails in CTS but passes under run-core-tests")
     public void test_traceMethodCalls() {
         try {
             Runtime.getRuntime().traceMethodCalls(false);
