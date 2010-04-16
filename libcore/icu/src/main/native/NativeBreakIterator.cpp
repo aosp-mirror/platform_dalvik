@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "NativeBreakIterator"
+
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "ErrorCode.h"

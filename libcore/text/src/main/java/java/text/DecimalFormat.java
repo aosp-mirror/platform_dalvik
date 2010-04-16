@@ -17,6 +17,8 @@
 
 package java.text;
 
+import com.ibm.icu4jni.text.NativeDecimalFormat;
+import com.ibm.icu4jni.util.LocaleData;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -28,9 +30,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Currency;
 import java.util.Locale;
-
-import com.ibm.icu4jni.text.NativeDecimalFormat;
-import com.ibm.icu4jni.util.LocaleData;
 
 /**
  * A concrete subclass of {@link NumberFormat} that formats decimal numbers. It
@@ -238,7 +237,7 @@ import com.ibm.icu4jni.util.LocaleData;
  * </tr>
  * </table> </blockquote>
  * <p>
- * A {@code DecimalFormat} pattern contains a postive and negative subpattern,
+ * A {@code DecimalFormat} pattern contains a positive and negative subpattern,
  * for example, "#,##0.00;(#,##0.00)". Each subpattern has a prefix, a numeric
  * part and a suffix. If there is no explicit negative subpattern, the negative
  * subpattern is the localized minus sign prefixed to the positive subpattern.
@@ -353,7 +352,7 @@ import com.ibm.icu4jni.util.LocaleData;
  * example, 0.125 is formatted as "0.12" if the maximum fraction digits is 2.
  * <li>If the number of actual fraction digits is less than the
  * <em>minimum fraction digits</em>, then trailing zeros are added. For
- * example, 0.125 is formatted as "0.1250" if the mimimum fraction digits is set
+ * example, 0.125 is formatted as "0.1250" if the minimum fraction digits is set
  * to 4.
  * <li>Trailing fractional zeros are not displayed if they occur <em>j</em>
  * positions after the decimal, where <em>j</em> is less than the maximum
@@ -499,7 +498,7 @@ import com.ibm.icu4jni.util.LocaleData;
  * number of '@' characters in the pattern - 1, and a maximum fraction digit
  * count of the number of '@' and '#' characters in the pattern - 1. For
  * example, the pattern {@code "@@###E0"} is equivalent to {@code "0.0###E0"}.
- * <li>If signficant digits are in use then the integer and fraction digit
+ * <li>If significant digits are in use then the integer and fraction digit
  * counts, as set via the API, are ignored.
  * </ul>
  * <h4> <strong><font color="red">NEW</font>&nbsp;</strong> Padding</h4>
@@ -558,12 +557,9 @@ public class DecimalFormat extends NumberFormat {
      * See "<a href="../util/Locale.html#default_locale">Be wary of the default locale</a>".
      */
     public DecimalFormat() {
-        // BEGIN android-changed: reduce duplication.
         Locale locale = Locale.getDefault();
         this.symbols = new DecimalFormatSymbols(locale);
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        initNative(localeData.numberPattern);
-        // END android-changed
+        initNative(LocaleData.get(locale).numberPattern);
     }
 
     /**
@@ -576,9 +572,7 @@ public class DecimalFormat extends NumberFormat {
      *            if the pattern cannot be parsed.
      */
     public DecimalFormat(String pattern) {
-        // BEGIN android-changed: reduce duplication.
         this(pattern, Locale.getDefault());
-        // END android-changed
     }
 
     /**
@@ -593,20 +587,16 @@ public class DecimalFormat extends NumberFormat {
      *            if the pattern cannot be parsed.
      */
     public DecimalFormat(String pattern, DecimalFormatSymbols value) {
-        // BEGIN android-changed: reduce duplication.
         this.symbols = (DecimalFormatSymbols) value.clone();
         initNative(pattern);
-        // END android-changed
     }
 
-    // BEGIN android-added: used by NumberFormat.getInstance because cloning DecimalFormatSymbols is slow.
+    // Used by NumberFormat.getInstance because cloning DecimalFormatSymbols is slow.
     DecimalFormat(String pattern, Locale locale) {
         this.symbols = new DecimalFormatSymbols(locale);
         initNative(pattern);
     }
-    // END android-added
 
-    // BEGIN android-changed: reduce duplication.
     private void initNative(String pattern) {
         try {
             this.dform = new NativeDecimalFormat(pattern, symbols);
@@ -618,7 +608,6 @@ public class DecimalFormat extends NumberFormat {
         super.setMinimumFractionDigits(dform.getMinimumFractionDigits());
         super.setMinimumIntegerDigits(dform.getMinimumIntegerDigits());
     }
-    // END android-added
 
     /**
      * Changes the pattern of this decimal format to the specified pattern which

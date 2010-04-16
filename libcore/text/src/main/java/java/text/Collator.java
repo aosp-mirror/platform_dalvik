@@ -17,7 +17,7 @@
 
 package java.text;
 
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Comparator;
@@ -254,7 +254,7 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * are available.
      */
     public static Locale[] getAvailableLocales() {
-        return Resources.getAvailableCollatorLocales();
+        return ICU.getAvailableCollatorLocales();
     }
 
     /**

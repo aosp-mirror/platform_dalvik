@@ -17,7 +17,7 @@
 
 package java.util;
 
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import dalvik.system.VMStack;
 import java.io.File;
 import java.io.IOException;
@@ -632,7 +632,7 @@ public abstract class ResourceBundle {
     }
 
     private void setLocale(String name) {
-        setLocale(Resources.localeFromString(name));
+        setLocale(ICU.localeFromString(name));
     }
 
     public static final void clearCache() {

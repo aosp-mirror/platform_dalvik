@@ -17,13 +17,10 @@
 
 package java.util;
 
+import com.ibm.icu4jni.util.ICU;
 import java.io.Serializable;
-
-// BEGIN android-added
 import org.apache.harmony.luni.internal.util.ZoneInfo;
 import org.apache.harmony.luni.internal.util.ZoneInfoDB;
-import com.ibm.icu4jni.util.Resources;
-// END android-added
 
 /**
  * {@code TimeZone} represents a time zone offset, taking into account
@@ -276,7 +273,7 @@ public abstract class TimeZone implements Serializable, Cloneable {
         if (style == SHORT || style == LONG) {
             boolean useDaylight = daylightTime && useDaylightTime();
 
-            String result = Resources.getDisplayTimeZone(getID(), daylightTime, style, locale.toString());
+            String result = ICU.getDisplayTimeZone(getID(), daylightTime, style, locale.toString());
             if (result != null) {
                 return result;
             }

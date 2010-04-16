@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "NativeRegEx"
+
 #include "AndroidSystemNatives.h"
 
 #include <stdlib.h>

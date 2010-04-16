@@ -18,7 +18,7 @@
 package java.text;
 
 import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -569,7 +569,7 @@ public class SimpleDateFormat extends DateFormat {
     }
 
     private static String defaultPattern() {
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(Locale.getDefault());
+        LocaleData localeData = LocaleData.get(Locale.getDefault());
         return localeData.getDateFormat(SHORT) + " " + localeData.getTimeFormat(SHORT);
     }
 
@@ -886,7 +886,7 @@ public class SimpleDateFormat extends DateFormat {
             }
             // We can't call TimeZone.getDisplayName() because it would not use
             // the custom DateFormatSymbols of this SimpleDateFormat.
-            String custom = Resources.lookupDisplayTimeZone(formatData.zoneStrings, tz.getID(), daylight, style);
+            String custom = ICU.lookupDisplayTimeZone(formatData.zoneStrings, tz.getID(), daylight, style);
             if (custom != null) {
                 buffer.append(custom);
                 return;

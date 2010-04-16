@@ -18,7 +18,7 @@
 package java.text;
 
 import com.ibm.icu4jni.text.NativeBreakIterator;
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import java.util.Locale;
 
 /**
@@ -252,7 +252,7 @@ public abstract class BreakIterator implements Cloneable {
      * are available.
      */
     public static Locale[] getAvailableLocales() {
-        return Resources.getAvailableBreakIteratorLocales();
+        return ICU.getAvailableBreakIteratorLocales();
     }
 
     /**

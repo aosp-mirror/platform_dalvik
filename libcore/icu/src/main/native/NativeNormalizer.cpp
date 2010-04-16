@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "NativeNormalizer"
+
 #include "ErrorCode.h"
 #include "JNIHelp.h"
 #include "ScopedJavaUnicodeString.h"

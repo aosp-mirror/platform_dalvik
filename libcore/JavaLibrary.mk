@@ -149,16 +149,6 @@ LOCAL_MODULE := core-tests-dom
 include $(BUILD_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := $(call all-test-java-files-under,icu)
-LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
-LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core core-tests-support
-LOCAL_DX_FLAGS := --core-library
-LOCAL_MODULE_TAGS := tests
-LOCAL_MODULE := core-tests-icu
-include $(BUILD_JAVA_LIBRARY)
-
-include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(call all-test-java-files-under,json)
 LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
 LOCAL_NO_STANDARD_LIBRARIES := true
@@ -204,7 +194,6 @@ LOCAL_JAVA_LIBRARIES := \
         core-tests-concurrent \
         core-tests-crypto \
         core-tests-dom \
-        core-tests-icu \
         core-tests-json \
         core-tests-logging \
         core-tests-luni-kernel \

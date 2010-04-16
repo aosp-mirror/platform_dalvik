@@ -18,7 +18,7 @@
 package java.text;
 
 import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -82,8 +82,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the locale.
      */
     public DecimalFormatSymbols(Locale locale) {
-        // BEGIN android-changed
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        LocaleData localeData = LocaleData.get(locale);
         this.zeroDigit = localeData.zeroDigit;
         this.digit = localeData.digit;
         this.decimalSeparator = localeData.decimalSeparator;
@@ -106,7 +105,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
             currencySymbol = localeData.currencySymbol;
             intlCurrencySymbol = localeData.internationalCurrencySymbol;
         }
-        // END android-changed
     }
 
     /**
@@ -144,7 +142,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @hide
      */
     public static Locale[] getAvailableLocales() {
-        return Resources.getAvailableDecimalFormatSymbolsLocales();
+        return ICU.getAvailableDecimalFormatSymbolsLocales();
     }
 
     @Override

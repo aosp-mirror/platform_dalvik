@@ -5,6 +5,7 @@
 LOCAL_SRC_FILES := \
 	BidiWrapper.cpp \
 	ErrorCode.cpp \
+	ICU.cpp \
 	NativeBreakIterator.cpp \
 	NativeCollation.cpp \
 	NativeConverter.cpp \
@@ -12,7 +13,6 @@ LOCAL_SRC_FILES := \
 	NativeIDN.cpp \
 	NativeNormalizer.cpp \
 	NativeRegEx.cpp \
-	Resources.cpp \
 	UCharacter.cpp
 
 LOCAL_C_INCLUDES += \

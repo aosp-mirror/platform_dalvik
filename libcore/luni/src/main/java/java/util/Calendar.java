@@ -18,7 +18,7 @@
 package java.util;
 
 import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -724,11 +724,9 @@ public abstract class Calendar implements Serializable, Cloneable, Comparable<Ca
      */
     protected Calendar(TimeZone timezone, Locale locale) {
         this(timezone);
-        // BEGIN android-changed
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        LocaleData localeData = LocaleData.get(locale);
         setFirstDayOfWeek(localeData.firstDayOfWeek.intValue());
         setMinimalDaysInFirstWeek(localeData.minimalDaysInFirstWeek.intValue());
-        // END android-changed
     }
 
 
@@ -962,7 +960,7 @@ public abstract class Calendar implements Serializable, Cloneable, Comparable<Ca
      * are available.
      */
     public static synchronized Locale[] getAvailableLocales() {
-        return Resources.getAvailableCalendarLocales();
+        return ICU.getAvailableCalendarLocales();
     }
 
     /**

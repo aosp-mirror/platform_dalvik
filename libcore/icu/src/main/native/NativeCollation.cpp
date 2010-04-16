@@ -7,6 +7,8 @@
 *******************************************************************************
 */
 
+#define LOG_TAG "NativeCollation"
+
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "ErrorCode.h"

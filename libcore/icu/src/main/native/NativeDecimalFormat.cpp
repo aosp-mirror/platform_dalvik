@@ -15,6 +15,7 @@
  */
 
 #define LOG_TAG "NativeDecimalFormat"
+
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "cutils/log.h"

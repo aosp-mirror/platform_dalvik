@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define LOG_TAG "BidiWrapper"
 #include "AndroidSystemNatives.h"
 #include <JNIHelp.h>
 #include "ErrorCode.h"

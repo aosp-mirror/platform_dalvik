@@ -16,7 +16,6 @@
 package java.util;
 
 import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
@@ -1414,7 +1413,7 @@ public final class Formatter implements Closeable, Flushable {
         Transformer(Formatter formatter, Locale locale) {
             this.formatter = formatter;
             this.locale = (locale == null ? Locale.US : locale);
-            this.localeData = Resources.getLocaleData(locale);
+            this.localeData = LocaleData.get(locale);
         }
 
         private NumberFormat getNumberFormat() {

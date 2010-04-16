@@ -16,7 +16,6 @@
 
 package com.ibm.icu4jni.text;
 
-import com.ibm.icu4jni.util.Resources;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.Locale;

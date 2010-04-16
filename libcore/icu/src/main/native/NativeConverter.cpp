@@ -15,6 +15,8 @@
  * @author: Ram Viswanadha
  */
 
+#define LOG_TAG "NativeConverter"
+
 #include "AndroidSystemNatives.h"
 #include "ErrorCode.h"
 #include "JNIHelp.h"

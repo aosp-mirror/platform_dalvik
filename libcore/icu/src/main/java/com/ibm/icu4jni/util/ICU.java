@@ -16,26 +16,14 @@
 
 package com.ibm.icu4jni.util;
 
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.ListResourceBundle;
 import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
 /**
  * Makes ICU data accessible to Java.
- *
- * TODO: move the LocaleData stuff into LocaleData and rename this class.
  */
-public final class Resources {
-    // A cache for the locale-specific data.
-    private static final HashMap<String, LocaleData> localeDataCache =
-            new HashMap<String, LocaleData>();
-
+public final class ICU {
     /**
      * Cache for ISO language names.
      */
@@ -52,49 +40,6 @@ public final class Resources {
     private static String[] availableTimezones;
 
     /**
-     * Returns a shared LocaleData for the given locale.
-     */
-    public static LocaleData getLocaleData(Locale locale) {
-        if (locale == null) {
-            locale = Locale.getDefault();
-        }
-        String localeName = locale.toString();
-        synchronized (localeDataCache) {
-            LocaleData localeData = localeDataCache.get(localeName);
-            if (localeData != null) {
-                return localeData;
-            }
-        }
-        LocaleData newLocaleData = makeLocaleData(locale);
-        synchronized (localeDataCache) {
-            LocaleData localeData = localeDataCache.get(localeName);
-            if (localeData != null) {
-                return localeData;
-            }
-            localeDataCache.put(localeName, newLocaleData);
-            return newLocaleData;
-        }
-    }
-
-    private static LocaleData makeLocaleData(Locale locale) {
-        String language = locale.getLanguage();
-        String country = locale.getCountry();
-        String variant = locale.getVariant();
-        // Start with data from the parent (next-most-specific) locale...
-        LocaleData result = new LocaleData();
-        if (variant.length() > 0) {
-            result.overrideWithDataFrom(getLocaleData(new Locale(language, country, "")));
-        } else if (country.length() > 0) {
-            result.overrideWithDataFrom(getLocaleData(new Locale(language, "", "")));
-        } else if (language.length() > 0) {
-            result.overrideWithDataFrom(getLocaleData(Locale.ROOT));
-        }
-        // Override with data from this locale.
-        result.overrideWithDataFrom(initLocaleData(locale));
-        return result;
-    }
-
-    /**
      * Returns an array of ISO language names (two-letter codes), fetched either
      * from ICU's database or from our memory cache.
      *
@@ -104,7 +49,6 @@ public final class Resources {
         if (isoLanguages == null) {
             isoLanguages = getISOLanguagesNative();
         }
-
         return isoLanguages.clone();
     }
 
@@ -118,7 +62,6 @@ public final class Resources {
         if (isoCountries == null) {
             isoCountries = getISOCountriesNative();
         }
-
         return isoCountries.clone();
     }
 
@@ -129,11 +72,9 @@ public final class Resources {
      * @return The array.
      */
     public static String[] getKnownTimezones() {
-        // TODO Drop the Linux ZoneInfo stuff in favor of ICU.
         if (availableTimezones == null) {
             availableTimezones = TimeZone.getAvailableIDs();
         }
-
         return availableTimezones.clone();
     }
 
@@ -233,8 +174,7 @@ public final class Resources {
             result[i][4] = arrayToFill[4][i];
         }
 
-        Logger.getLogger(Resources.class.getSimpleName()).info(
-                "Loaded time zone names for " + locale + " in "
+        Logger.global.info("Loaded time zone names for " + locale + " in "
                 + (System.currentTimeMillis() - start) + "ms.");
 
         return result;
@@ -348,17 +288,16 @@ public final class Resources {
     private static native String[] getAvailableLocalesNative();
     private static native String[] getAvailableNumberFormatLocalesNative();
 
+    public static native String getCurrencyCodeNative(String locale);
+    public static native int getCurrencyFractionDigitsNative(String currencyCode);
+    public static native String getCurrencySymbolNative(String locale, String currencyCode);
+
     public static native String getDisplayCountryNative(String countryCode, String locale);
     public static native String getDisplayLanguageNative(String languageCode, String locale);
     public static native String getDisplayVariantNative(String variantCode, String locale);
 
     public static native String getISO3CountryNative(String locale);
     public static native String getISO3LanguageNative(String locale);
-
-    public static native String getCurrencyCodeNative(String locale);
-    public static native String getCurrencySymbolNative(String locale, String currencyCode);
-
-    public static native int getCurrencyFractionDigitsNative(String currencyCode);
 
     private static native String[] getISOLanguagesNative();
     private static native String[] getISOCountriesNative();
@@ -368,30 +307,5 @@ public final class Resources {
     private static native String getDisplayTimeZoneNative(String id, boolean isDST, int style,
             String locale);
 
-    private static LocaleData initLocaleData(Locale locale) {
-        LocaleData localeData = new LocaleData();
-        if (!initLocaleDataImpl(locale.toString(), localeData)) {
-            throw new AssertionError("couldn't initialize LocaleData for locale " + locale);
-        }
-        if (localeData.fullTimeFormat != null) {
-            // There are some full time format patterns in ICU that use the pattern character 'v'.
-            // Java doesn't accept this, so we replace it with 'z' which has about the same result
-            // as 'v', the timezone name.
-            // 'v' -> "PT", 'z' -> "PST", v is the generic timezone and z the standard tz
-            // "vvvv" -> "Pacific Time", "zzzz" -> "Pacific Standard Time"
-            localeData.fullTimeFormat = localeData.fullTimeFormat.replace('v', 'z');
-        }
-        if (localeData.numberPattern != null) {
-            // The number pattern might contain positive and negative subpatterns. Arabic, for
-            // example, might look like "#,##0.###;#,##0.###-" because the minus sign should be
-            // written last. Macedonian supposedly looks something like "#,##0.###;(#,##0.###)".
-            // (The negative subpattern is optional, though, and not present in most locales.)
-            // By only swallowing '#'es and ','s after the '.', we ensure that we don't
-            // accidentally eat too much.
-            localeData.integerPattern = localeData.numberPattern.replaceAll("\\.[#,]*", "");
-        }
-        return localeData;
-    }
-
-    private static native boolean initLocaleDataImpl(String locale, LocaleData result);
+    static native boolean initLocaleDataImpl(String locale, LocaleData result);
 }

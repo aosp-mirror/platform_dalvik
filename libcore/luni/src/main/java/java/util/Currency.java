@@ -17,16 +17,13 @@
 
 package java.util;
 
-// BEGIN android-added
+import com.ibm.icu4jni.util.ICU;
 import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
+import java.io.Serializable;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.logging.Logger;
 import org.apache.harmony.luni.util.Msg;
-// END android-added
-
-import java.security.AccessController;
-import java.io.Serializable;
-import java.security.PrivilegedAction;
 
 /**
  * This class represents a currency as identified in the ISO 4217 currency
@@ -59,12 +56,12 @@ public final class Currency implements Serializable {
         }
 
         // Ensure that we throw if the our currency code isn't an ISO currency code.
-        String symbol = Resources.getCurrencySymbolNative(Locale.US.toString(), currencyCode);
+        String symbol = ICU.getCurrencySymbolNative(Locale.US.toString(), currencyCode);
         if (symbol == null) {
             throw new IllegalArgumentException(Msg.getString("K0322", currencyCode));
         }
 
-        this.defaultFractionDigits = Resources.getCurrencyFractionDigitsNative(currencyCode);
+        this.defaultFractionDigits = ICU.getCurrencyFractionDigitsNative(currencyCode);
         if (defaultFractionDigits < 0) {
             // In practice, I don't think this can fail because ICU doesn't care whether you give
             // it a valid country code, and will just return a sensible default for the default
@@ -120,7 +117,7 @@ public final class Currency implements Serializable {
             country = country + "_" + variant;
         }
 
-        String currencyCode = Resources.getCurrencyCodeNative(country);
+        String currencyCode = ICU.getCurrencyCodeNative(country);
         if (currencyCode == null) {
             throw new IllegalArgumentException(Msg.getString("K0323", locale.toString()));
         } else if (currencyCode.equals("None")) {
@@ -164,13 +161,13 @@ public final class Currency implements Serializable {
         }
 
         // Check the locale first, in case the locale has the same currency.
-        LocaleData localeData = Resources.getLocaleData(locale);
+        LocaleData localeData = LocaleData.get(locale);
         if (localeData.internationalCurrencySymbol.equals(currencyCode)) {
             return localeData.currencySymbol;
         }
 
         // Try ICU, and fall back to the currency code if ICU has nothing.
-        String symbol = Resources.getCurrencySymbolNative(locale.toString(), currencyCode);
+        String symbol = ICU.getCurrencySymbolNative(locale.toString(), currencyCode);
         return symbol != null ? symbol : currencyCode;
     }
 

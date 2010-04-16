@@ -22,7 +22,7 @@ import junit.framework.TestSuite;
 public class AllTests {
     public static final Test suite() {
         TestSuite suite = new TestSuite();
-        suite.addTestSuite(com.ibm.icu4jni.util.ResourcesTest.class);
+        suite.addTestSuite(ICUTest.class);
         return suite;
     }
 }

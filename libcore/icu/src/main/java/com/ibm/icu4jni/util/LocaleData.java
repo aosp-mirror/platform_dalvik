@@ -18,6 +18,8 @@ package com.ibm.icu4jni.util;
 
 import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Locale;
 
 /**
  * Passes locale-specific from ICU native code to Java.
@@ -27,29 +29,32 @@ import java.util.Arrays;
  * them a clone rather than the original.
  */
 public final class LocaleData {
+    // A cache for the locale-specific data.
+    private static final HashMap<String, LocaleData> localeDataCache = new HashMap<String, LocaleData>();
+
     public Integer firstDayOfWeek;
     public Integer minimalDaysInFirstWeek;
-    
+
     public String[] amPm;
-    
+
     public String[] eras;
-    
+
     public String[] longMonthNames;
     public String[] shortMonthNames;
-    
+
     public String[] longWeekdayNames;
     public String[] shortWeekdayNames;
-    
+
     public String fullTimeFormat;
     public String longTimeFormat;
     public String mediumTimeFormat;
     public String shortTimeFormat;
-    
+
     public String fullDateFormat;
     public String longDateFormat;
     public String mediumDateFormat;
     public String shortDateFormat;
-    
+
     // DecimalFormatSymbols.
     public char zeroDigit;
     public char digit;
@@ -63,15 +68,61 @@ public final class LocaleData {
     public String exponentSeparator;
     public String infinity;
     public String NaN;
-    
+
     public String currencySymbol;
     public String internationalCurrencySymbol;
-    
+
     public String numberPattern;
     public String integerPattern;
     public String currencyPattern;
     public String percentPattern;
-    
+
+    private LocaleData() {
+    }
+
+    /**
+     * Returns a shared LocaleData for the given locale.
+     */
+    public static LocaleData get(Locale locale) {
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+        String localeName = locale.toString();
+        synchronized (localeDataCache) {
+            LocaleData localeData = localeDataCache.get(localeName);
+            if (localeData != null) {
+                return localeData;
+            }
+        }
+        LocaleData newLocaleData = makeLocaleData(locale);
+        synchronized (localeDataCache) {
+            LocaleData localeData = localeDataCache.get(localeName);
+            if (localeData != null) {
+                return localeData;
+            }
+            localeDataCache.put(localeName, newLocaleData);
+            return newLocaleData;
+        }
+    }
+
+    private static LocaleData makeLocaleData(Locale locale) {
+        String language = locale.getLanguage();
+        String country = locale.getCountry();
+        String variant = locale.getVariant();
+        // Start with data from the parent (next-most-specific) locale...
+        LocaleData result = new LocaleData();
+        if (!variant.isEmpty()) {
+            result.overrideWithDataFrom(get(new Locale(language, country, "")));
+        } else if (!country.isEmpty()) {
+            result.overrideWithDataFrom(get(new Locale(language, "", "")));
+        } else if (!language.isEmpty()) {
+            result.overrideWithDataFrom(get(Locale.ROOT));
+        }
+        // Override with data from this locale.
+        result.overrideWithDataFrom(initLocaleData(locale));
+        return result;
+    }
+
     @Override public String toString() {
         return "LocaleData[" +
                 "firstDayOfWeek=" + firstDayOfWeek + "," +
@@ -109,8 +160,8 @@ public final class LocaleData {
                 "currencyPattern=" + currencyPattern + "," +
                 "percentPattern=" + percentPattern + "]";
     }
-    
-    public void overrideWithDataFrom(LocaleData overrides) {
+
+    private void overrideWithDataFrom(LocaleData overrides) {
         if (overrides.firstDayOfWeek != null) {
             firstDayOfWeek = overrides.firstDayOfWeek;
         }
@@ -214,7 +265,7 @@ public final class LocaleData {
             percentPattern = overrides.percentPattern;
         }
     }
-    
+
     public String getDateFormat(int style) {
         switch (style) {
         case DateFormat.SHORT:
@@ -228,7 +279,7 @@ public final class LocaleData {
         }
         throw new AssertionError();
     }
-    
+
     public String getTimeFormat(int style) {
         switch (style) {
         case DateFormat.SHORT:
@@ -241,5 +292,30 @@ public final class LocaleData {
             return fullTimeFormat;
         }
         throw new AssertionError();
+    }
+
+    private static LocaleData initLocaleData(Locale locale) {
+        LocaleData localeData = new LocaleData();
+        if (!ICU.initLocaleDataImpl(locale.toString(), localeData)) {
+            throw new AssertionError("couldn't initialize LocaleData for locale " + locale);
+        }
+        if (localeData.fullTimeFormat != null) {
+            // There are some full time format patterns in ICU that use the pattern character 'v'.
+            // Java doesn't accept this, so we replace it with 'z' which has about the same result
+            // as 'v', the timezone name.
+            // 'v' -> "PT", 'z' -> "PST", v is the generic timezone and z the standard tz
+            // "vvvv" -> "Pacific Time", "zzzz" -> "Pacific Standard Time"
+            localeData.fullTimeFormat = localeData.fullTimeFormat.replace('v', 'z');
+        }
+        if (localeData.numberPattern != null) {
+            // The number pattern might contain positive and negative subpatterns. Arabic, for
+            // example, might look like "#,##0.###;#,##0.###-" because the minus sign should be
+            // written last. Macedonian supposedly looks something like "#,##0.###;(#,##0.###)".
+            // (The negative subpattern is optional, though, and not present in most locales.)
+            // By only swallowing '#'es and ','s after the '.', we ensure that we don't
+            // accidentally eat too much.
+            localeData.integerPattern = localeData.numberPattern.replaceAll("\\.[#,]*", "");
+        }
+        return localeData;
     }
 }

@@ -18,7 +18,7 @@
 package java.text;
 
 import com.ibm.icu4jni.util.LocaleData;
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import java.io.InvalidObjectException;
 import java.util.Calendar;
 import java.util.Date;
@@ -406,7 +406,7 @@ public abstract class DateFormat extends Format {
      * are available.
      */
     public static Locale[] getAvailableLocales() {
-        return Resources.getAvailableDateFormatLocales();
+        return ICU.getAvailableDateFormatLocales();
     }
 
     /**
@@ -461,10 +461,7 @@ public abstract class DateFormat extends Format {
      */
     public final static DateFormat getDateInstance(int style, Locale locale) {
         checkDateStyle(style);
-        // BEGIN android-changed
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        return new SimpleDateFormat(localeData.getDateFormat(style), locale);
-        // END android-changed
+        return new SimpleDateFormat(LocaleData.get(locale).getDateFormat(style), locale);
     }
 
     /**
@@ -513,15 +510,12 @@ public abstract class DateFormat extends Format {
      *             if {@code dateStyle} or {@code timeStyle} is not one of
      *             SHORT, MEDIUM, LONG, FULL, or DEFAULT.
      */
-    public final static DateFormat getDateTimeInstance(int dateStyle,
-            int timeStyle, Locale locale) {
+    public final static DateFormat getDateTimeInstance(int dateStyle, int timeStyle, Locale locale) {
         checkTimeStyle(timeStyle);
         checkDateStyle(dateStyle);
-        // BEGIN android-changed
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
+        LocaleData localeData = LocaleData.get(locale);
         String pattern = localeData.getDateFormat(dateStyle) + " " + localeData.getTimeFormat(timeStyle);
         return new SimpleDateFormat(pattern, locale);
-        // END android-changed
     }
 
     /**
@@ -587,10 +581,7 @@ public abstract class DateFormat extends Format {
      */
     public final static DateFormat getTimeInstance(int style, Locale locale) {
         checkTimeStyle(style);
-        // BEGIN android-changed
-        LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        return new SimpleDateFormat(localeData.getTimeFormat(style), locale);
-        // END android-changed
+        return new SimpleDateFormat(LocaleData.get(locale).getTimeFormat(style), locale);
     }
 
     /**

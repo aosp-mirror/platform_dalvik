@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "Resources"
+#define LOG_TAG "ICU"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "ScopedUtfChars.h"
+#include "UniquePtr.h"
 #include "cutils/log.h"
 #include "unicode/numfmt.h"
 #include "unicode/locid.h"
@@ -72,28 +73,23 @@ static Locale getLocale(JNIEnv* env, jstring localeName) {
     return Locale::createFromName(ScopedUtfChars(env, localeName).data());
 }
 
-static jint getCurrencyFractionDigitsNative(JNIEnv* env, jclass clazz, jstring currencyCode) {
+static jint getCurrencyFractionDigitsNative(JNIEnv* env, jclass, jstring currencyCode) {
     UErrorCode status = U_ZERO_ERROR;
-    
-    NumberFormat* fmt = NumberFormat::createCurrencyInstance(status);
+    UniquePtr<NumberFormat> fmt(NumberFormat::createCurrencyInstance(status));
     if (U_FAILURE(status)) {
         return -1;
     }
-
     const jchar* cCode = env->GetStringChars(currencyCode, NULL);
     fmt->setCurrency(cCode, status);
     env->ReleaseStringChars(currencyCode, cCode);
     if (U_FAILURE(status)) {
         return -1;
     }
-    
     // for CurrencyFormats the minimum and maximum fraction digits are the same.
-    int result = fmt->getMinimumFractionDigits(); 
-    delete fmt;
-    return result;
+    return fmt->getMinimumFractionDigits(); 
 }
 
-static jstring getCurrencyCodeNative(JNIEnv* env, jclass clazz, jstring key) {
+static jstring getCurrencyCodeNative(JNIEnv* env, jclass, jstring key) {
     UErrorCode status = U_ZERO_ERROR;
     ScopedResourceBundle supplData(ures_openDirect(NULL, "supplementalData", &status));
     if (U_FAILURE(status)) {
@@ -142,8 +138,7 @@ static jstring getCurrencyCodeNative(JNIEnv* env, jclass clazz, jstring key) {
     return env->NewString(id, length);
 }
 
-static jstring getCurrencySymbolNative(JNIEnv* env, jclass clazz, 
-        jstring locale, jstring currencyCode) {
+static jstring getCurrencySymbolNative(JNIEnv* env, jclass, jstring locale, jstring currencyCode) {
     // LOGI("ENTER getCurrencySymbolNative");
 
     const char* locName = env->GetStringUTFChars(locale, NULL);
@@ -175,8 +170,7 @@ static jstring getCurrencySymbolNative(JNIEnv* env, jclass clazz,
     return (currSymbL == 0) ? NULL : env->NewString(currSymbU, currSymbL);
 }
 
-static jstring getDisplayCountryNative(JNIEnv* env, jclass clazz, 
-        jstring targetLocale, jstring locale) {
+static jstring getDisplayCountryNative(JNIEnv* env, jclass, jstring targetLocale, jstring locale) {
 
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
@@ -186,8 +180,7 @@ static jstring getDisplayCountryNative(JNIEnv* env, jclass clazz,
     return env->NewString(str.getBuffer(), str.length());
 }
 
-static jstring getDisplayLanguageNative(JNIEnv* env, jclass clazz, 
-        jstring targetLocale, jstring locale) {
+static jstring getDisplayLanguageNative(JNIEnv* env, jclass, jstring targetLocale, jstring locale) {
 
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
@@ -197,23 +190,20 @@ static jstring getDisplayLanguageNative(JNIEnv* env, jclass clazz,
     return env->NewString(str.getBuffer(), str.length());
 }
 
-static jstring getDisplayVariantNative(JNIEnv* env, jclass clazz, 
-        jstring targetLocale, jstring locale) {
-
+static jstring getDisplayVariantNative(JNIEnv* env, jclass, jstring targetLocale, jstring locale) {
     Locale loc = getLocale(env, locale);
     Locale targetLoc = getLocale(env, targetLocale);
-
     UnicodeString str;
     targetLoc.getDisplayVariant(loc, str);
     return env->NewString(str.getBuffer(), str.length());
 }
 
-static jstring getISO3CountryNative(JNIEnv* env, jclass clazz, jstring locale) {
+static jstring getISO3CountryNative(JNIEnv* env, jclass, jstring locale) {
     Locale loc = getLocale(env, locale);
     return env->NewStringUTF(loc.getISO3Country());
 }
 
-static jstring getISO3LanguageNative(JNIEnv* env, jclass clazz, jstring locale) {
+static jstring getISO3LanguageNative(JNIEnv* env, jclass, jstring locale) {
     Locale loc = getLocale(env, locale);
     return env->NewStringUTF(loc.getISO3Language());
 }
@@ -232,11 +222,11 @@ static jobjectArray toStringArray(JNIEnv* env, const char* const* strings) {
     return result;
 }
 
-static jobjectArray getISOCountriesNative(JNIEnv* env, jclass clazz) {
+static jobjectArray getISOCountriesNative(JNIEnv* env, jclass) {
     return toStringArray(env, Locale::getISOCountries());
 }
 
-static jobjectArray getISOLanguagesNative(JNIEnv* env, jclass clazz) {
+static jobjectArray getISOLanguagesNative(JNIEnv* env, jclass) {
     return toStringArray(env, Locale::getISOLanguages());
 }
 
@@ -289,9 +279,7 @@ static jstring formatDate(JNIEnv* env, const SimpleDateFormat& fmt, const UDate&
     return env->NewString(str.getBuffer(), str.length());
 }
 
-static void getTimeZonesNative(JNIEnv* env, jclass clazz,
-        jobjectArray outerArray, jstring locale) {
-
+static void getTimeZonesNative(JNIEnv* env, jclass, jobjectArray outerArray, jstring locale) {
     // get all timezone objects
     jobjectArray zoneIdArray = (jobjectArray) env->GetObjectArrayElement(outerArray, 0);
     int count = env->GetArrayLength(zoneIdArray);
@@ -361,18 +349,13 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
     }
 }
 
-static jstring getDisplayTimeZoneNative(JNIEnv* env, jclass clazz,
-        jstring zoneId, jboolean isDST, jint style, jstring localeId) {
-
-    TimeZone* zone = timeZoneFromId(env, zoneId);
+static jstring getDisplayTimeZoneNative(JNIEnv* env, jclass, jstring zoneId, jboolean isDST, jint style, jstring localeId) {
+    UniquePtr<TimeZone> zone(timeZoneFromId(env, zoneId));
     Locale locale = getLocale(env, localeId);
-
     // Try to get the display name of the TimeZone according to the Locale
     UnicodeString displayName;
     zone->getDisplayName((UBool)isDST, (style == 0 ? TimeZone::SHORT : TimeZone::LONG), locale, displayName);
-    jstring result = env->NewString(displayName.getBuffer(), displayName.length());
-    delete zone;
-    return result;
+    return env->NewString(displayName.getBuffer(), displayName.length());
 }
 
 static bool getDayIntVector(JNIEnv* env, UResourceBundle* gregorian, int* values) {
@@ -604,7 +587,7 @@ static void setCharField(JNIEnv* env, jobject obj, const char* fieldName, UResou
     }
 }
 
-static jboolean initLocaleDataImpl(JNIEnv* env, jclass clazz, jstring locale, jobject localeData) {
+static jboolean initLocaleDataImpl(JNIEnv* env, jclass, jstring locale, jobject localeData) {
     const char* loc = env->GetStringUTFChars(locale, NULL);
     UErrorCode status = U_ZERO_ERROR;
     ScopedResourceBundle root(ures_openU(NULL, loc, &status));
@@ -674,7 +657,7 @@ static jboolean initLocaleDataImpl(JNIEnv* env, jclass clazz, jstring locale, jo
     jstring internationalCurrencySymbol = getIntCurrencyCode(env, locale);
     jstring currencySymbol = NULL;
     if (internationalCurrencySymbol != NULL) {
-        currencySymbol = getCurrencySymbolNative(env, clazz, locale, internationalCurrencySymbol);
+        currencySymbol = getCurrencySymbolNative(env, NULL, locale, internationalCurrencySymbol);
     } else {
         internationalCurrencySymbol = env->NewStringUTF("XXX");
     }
@@ -725,6 +708,5 @@ int register_com_ibm_icu4jni_util_Resources(JNIEnv* env) {
     }
     string_class = (jclass) env->NewGlobalRef(stringclass);
 
-    return jniRegisterNativeMethods(env, "com/ibm/icu4jni/util/Resources",
-            gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "com/ibm/icu4jni/util/ICU", gMethods, NELEM(gMethods));
 }

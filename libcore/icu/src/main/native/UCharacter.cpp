@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "UCharacter"
 #include "JNIHelp.h"
 #include "AndroidSystemNatives.h"
 #include "ScopedJavaUnicodeString.h"

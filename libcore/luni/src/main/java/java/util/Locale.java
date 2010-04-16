@@ -17,7 +17,7 @@
 
 package java.util;
 
-import com.ibm.icu4jni.util.Resources;
+import com.ibm.icu4jni.util.ICU;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -84,82 +84,82 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Locale constant for en_CA.
      */
-    public static final Locale CANADA = new Locale("en", "CA"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale CANADA = new Locale("en", "CA");
 
     /**
      * Locale constant for fr_CA.
      */
-    public static final Locale CANADA_FRENCH = new Locale("fr", "CA"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale CANADA_FRENCH = new Locale("fr", "CA");
 
     /**
      * Locale constant for zh_CN.
      */
-    public static final Locale CHINA = new Locale("zh", "CN"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale CHINA = new Locale("zh", "CN");
 
     /**
      * Locale constant for zh.
      */
-    public static final Locale CHINESE = new Locale("zh", ""); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale CHINESE = new Locale("zh", "");
 
     /**
      * Locale constant for en.
      */
-    public static final Locale ENGLISH = new Locale("en", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale ENGLISH = new Locale("en", "");
 
     /**
      * Locale constant for fr_FR.
      */
-    public static final Locale FRANCE = new Locale("fr", "FR"); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale FRANCE = new Locale("fr", "FR");
 
     /**
      * Locale constant for fr.
      */
-    public static final Locale FRENCH = new Locale("fr", ""); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale FRENCH = new Locale("fr", "");
 
     /**
      * Locale constant for de.
      */
-    public static final Locale GERMAN = new Locale("de", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale GERMAN = new Locale("de", "");
 
     /**
      * Locale constant for de_DE.
      */
-    public static final Locale GERMANY = new Locale("de", "DE"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale GERMANY = new Locale("de", "DE");
 
     /**
      * Locale constant for it.
      */
-    public static final Locale ITALIAN = new Locale("it", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale ITALIAN = new Locale("it", "");
 
     /**
      * Locale constant for it_IT.
      */
-    public static final Locale ITALY = new Locale("it", "IT"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale ITALY = new Locale("it", "IT");
 
     /**
      * Locale constant for ja_JP.
      */
-    public static final Locale JAPAN = new Locale("ja", "JP"); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale JAPAN = new Locale("ja", "JP");
 
     /**
      * Locale constant for ja.
      */
-    public static final Locale JAPANESE = new Locale("ja", ""); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale JAPANESE = new Locale("ja", "");
 
     /**
      * Locale constant for ko_KR.
      */
-    public static final Locale KOREA = new Locale("ko", "KR"); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale KOREA = new Locale("ko", "KR");
 
     /**
      * Locale constant for ko.
      */
-    public static final Locale KOREAN = new Locale("ko", ""); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale KOREAN = new Locale("ko", "");
 
     /**
      * Locale constant for zh_CN.
      */
-    public static final Locale PRC = new Locale("zh", "CN"); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale PRC = new Locale("zh", "CN");
 
     /**
      * Locale constant for the root locale. The root locale has an empty language,
@@ -173,40 +173,35 @@ public final class Locale implements Cloneable, Serializable {
     /**
      * Locale constant for zh_CN.
      */
-    public static final Locale SIMPLIFIED_CHINESE = new Locale("zh", "CN"); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale SIMPLIFIED_CHINESE = new Locale("zh", "CN");
 
     /**
      * Locale constant for zh_TW.
      */
-    public static final Locale TAIWAN = new Locale("zh", "TW"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale TAIWAN = new Locale("zh", "TW");
 
     /**
      * Locale constant for zh_TW.
      */
-    public static final Locale TRADITIONAL_CHINESE = new Locale("zh", "TW"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale TRADITIONAL_CHINESE = new Locale("zh", "TW");
 
     /**
      * Locale constant for en_GB.
      */
-    public static final Locale UK = new Locale("en", "GB"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final Locale UK = new Locale("en", "GB");
 
     /**
      * Locale constant for en_US.
      */
-    public static final Locale US = new Locale("en", "US"); //$NON-NLS-1$//$NON-NLS-2$
+    public static final Locale US = new Locale("en", "US");
 
     private static final PropertyPermission setLocalePermission = new PropertyPermission(
-            "user.language", "write"); //$NON-NLS-1$//$NON-NLS-2$
+            "user.language", "write");
 
     static {
-        String language = AccessController
-                .doPrivileged(new PriviAction<String>("user.language", "en")); //$NON-NLS-1$ //$NON-NLS-2$
-        // BEGIN android-changed
-        String region = AccessController.doPrivileged(new PriviAction<String>(
-                "user.region", "US")); //$NON-NLS-1$ //$NON-NLS-2$
-        // END android-changed
-        String variant = AccessController.doPrivileged(new PriviAction<String>(
-                "user.variant", "")); //$NON-NLS-1$ //$NON-NLS-2$
+        String language = AccessController.doPrivileged(new PriviAction<String>("user.language", "en"));
+        String region = AccessController.doPrivileged(new PriviAction<String>("user.region", "US"));
+        String variant = AccessController.doPrivileged(new PriviAction<String>("user.variant", ""));
         defaultLocale = new Locale(language, region, variant);
     }
 
@@ -215,19 +210,15 @@ public final class Locale implements Cloneable, Serializable {
     private transient String variantCode;
     private transient String cachedToStringResult;
 
-    // BEGIN android-removed
-    // private transient ULocale uLocale;
-    // END android-removed
-
-	/**
-	 * Constructs a default which is used during static initialization of the
-	 * default for the platform.
-	 */
-	private Locale() {
-		languageCode = "en"; //$NON-NLS-1$
-		countryCode = "US"; //$NON-NLS-1$
-		variantCode = ""; //$NON-NLS-1$
-	}
+    /**
+     * Constructs a default which is used during static initialization of the
+     * default for the platform.
+     */
+    private Locale() {
+        languageCode = "en";
+        countryCode = "US";
+        variantCode = "";
+    }
 
     /**
      * Constructs a new {@code Locale} using the specified language.
@@ -236,7 +227,7 @@ public final class Locale implements Cloneable, Serializable {
      *            the language this {@code Locale} represents.
      */
     public Locale(String language) {
-        this(language, "", ""); //$NON-NLS-1$//$NON-NLS-2$
+        this(language, "", "");
     }
 
     /**
@@ -248,7 +239,7 @@ public final class Locale implements Cloneable, Serializable {
      *            the country this {@code Locale} represents.
      */
     public Locale(String language, String country) {
-        this(language, country, ""); //$NON-NLS-1$
+        this(language, country, "");
     }
 
     /**
@@ -282,12 +273,12 @@ public final class Locale implements Cloneable, Serializable {
         // END android-changed
         // Map new language codes to the obsolete language
         // codes so the correct resource bundles will be used.
-        if (languageCode.equals("he")) {//$NON-NLS-1$
-            languageCode = "iw"; //$NON-NLS-1$
-        } else if (languageCode.equals("id")) {//$NON-NLS-1$
-            languageCode = "in"; //$NON-NLS-1$
-        } else if (languageCode.equals("yi")) {//$NON-NLS-1$
-            languageCode = "ji"; //$NON-NLS-1$
+        if (languageCode.equals("he")) {
+            languageCode = "iw";
+        } else if (languageCode.equals("id")) {
+            languageCode = "in";
+        } else if (languageCode.equals("yi")) {
+            languageCode = "ji";
         }
 
         // countryCode is defined in ASCII character set
@@ -348,7 +339,7 @@ public final class Locale implements Cloneable, Serializable {
      * @return an array of {@code Locale}s.
      */
     public static Locale[] getAvailableLocales() {
-        return Resources.getAvailableLocales();
+        return ICU.getAvailableLocales();
     }
 
     /**
@@ -391,16 +382,14 @@ public final class Locale implements Cloneable, Serializable {
      * @return a country name.
      */
     public String getDisplayCountry(Locale locale) {
-        // BEGIN android-changed
         if (countryCode.length() == 0) {
             return countryCode;
         }
-        String result = Resources.getDisplayCountryNative(toString(), locale.toString());
+        String result = ICU.getDisplayCountryNative(toString(), locale.toString());
         if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
-            result = Resources.getDisplayCountryNative(toString(), Locale.getDefault().toString());
+            result = ICU.getDisplayCountryNative(toString(), Locale.getDefault().toString());
         }
         return result;
-        // END android-changed
     }
 
     /**
@@ -424,16 +413,14 @@ public final class Locale implements Cloneable, Serializable {
      * @return a language name.
      */
     public String getDisplayLanguage(Locale locale) {
-        // BEGIN android-changed
         if (languageCode.length() == 0) {
             return languageCode;
         }
-        String result = Resources.getDisplayLanguageNative(toString(), locale.toString());
+        String result = ICU.getDisplayLanguageNative(toString(), locale.toString());
         if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
-            result = Resources.getDisplayLanguageNative(toString(), Locale.getDefault().toString());
+            result = ICU.getDisplayLanguageNative(toString(), Locale.getDefault().toString());
         }
         return result;
-        // END android-changed
     }
 
     /**
@@ -463,22 +450,22 @@ public final class Locale implements Cloneable, Serializable {
         }
         if (countryCode.length() > 0) {
             if (count == 1) {
-                buffer.append(" ("); //$NON-NLS-1$
+                buffer.append(" (");
             }
             buffer.append(getDisplayCountry(locale));
             count++;
         }
         if (variantCode.length() > 0) {
             if (count == 1) {
-                buffer.append(" ("); //$NON-NLS-1$
+                buffer.append(" (");
             } else if (count == 2) {
-                buffer.append(","); //$NON-NLS-1$
+                buffer.append(",");
             }
             buffer.append(getDisplayVariant(locale));
             count++;
         }
         if (count > 1) {
-            buffer.append(")"); //$NON-NLS-1$
+            buffer.append(")");
         }
         return buffer.toString();
     }
@@ -504,16 +491,14 @@ public final class Locale implements Cloneable, Serializable {
      * @return a variant name.
      */
     public String getDisplayVariant(Locale locale) {
-        // BEGIN android-changed
         if (variantCode.length() == 0) {
             return variantCode;
         }
-        String result = Resources.getDisplayVariantNative(toString(), locale.toString());
+        String result = ICU.getDisplayVariantNative(toString(), locale.toString());
         if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
-            result = Resources.getDisplayVariantNative(toString(), Locale.getDefault().toString());
+            result = ICU.getDisplayVariantNative(toString(), Locale.getDefault().toString());
         }
         return result;
-        // END android-changed
     }
 
     /**
@@ -525,12 +510,10 @@ public final class Locale implements Cloneable, Serializable {
      *                if there is no matching three letter ISO country code.
      */
     public String getISO3Country() throws MissingResourceException {
-        // BEGIN android-changed
         if (countryCode.length() == 0) {
             return countryCode;
         }
-        return Resources.getISO3CountryNative(toString());
-        // END android-changed
+        return ICU.getISO3CountryNative(toString());
     }
 
     /**
@@ -542,12 +525,10 @@ public final class Locale implements Cloneable, Serializable {
      *                if there is no matching three letter ISO language code.
      */
     public String getISO3Language() throws MissingResourceException {
-        // BEGIN android-changed
         if (languageCode.length() == 0) {
             return languageCode;
         }
-        return Resources.getISO3LanguageNative(toString());
-        // END android-changed
+        return ICU.getISO3LanguageNative(toString());
     }
 
     /**
@@ -557,9 +538,7 @@ public final class Locale implements Cloneable, Serializable {
      * @return an array of strings.
      */
     public static String[] getISOCountries() {
-        // BEGIN android-changed
-        return Resources.getISOCountries();
-        // END android-changed
+        return ICU.getISOCountries();
     }
 
     /**
@@ -569,9 +548,7 @@ public final class Locale implements Cloneable, Serializable {
      * @return an array of strings.
      */
     public static String[] getISOLanguages() {
-        // BEGIN android-changed
-        return Resources.getISOLanguages();
-        // END android-changed
+        return ICU.getISOLanguages();
     }
 
     /**
@@ -670,25 +647,24 @@ public final class Locale implements Cloneable, Serializable {
     }
 
     private static final ObjectStreamField[] serialPersistentFields = {
-            new ObjectStreamField("country", String.class), //$NON-NLS-1$
-            new ObjectStreamField("hashcode", Integer.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("language", String.class), //$NON-NLS-1$
-            new ObjectStreamField("variant", String.class) }; //$NON-NLS-1$
+            new ObjectStreamField("country", String.class),
+            new ObjectStreamField("hashcode", Integer.TYPE),
+            new ObjectStreamField("language", String.class),
+            new ObjectStreamField("variant", String.class) };
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
         ObjectOutputStream.PutField fields = stream.putFields();
-        fields.put("country", countryCode); //$NON-NLS-1$
-        fields.put("hashcode", -1); //$NON-NLS-1$
-        fields.put("language", languageCode); //$NON-NLS-1$
-        fields.put("variant", variantCode); //$NON-NLS-1$
+        fields.put("country", countryCode);
+        fields.put("hashcode", -1);
+        fields.put("language", languageCode);
+        fields.put("variant", variantCode);
         stream.writeFields();
     }
 
-    private void readObject(ObjectInputStream stream) throws IOException,
-            ClassNotFoundException {
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         ObjectInputStream.GetField fields = stream.readFields();
-        countryCode = (String) fields.get("country", ""); //$NON-NLS-1$//$NON-NLS-2$
-        languageCode = (String) fields.get("language", ""); //$NON-NLS-1$//$NON-NLS-2$
-        variantCode = (String) fields.get("variant", ""); //$NON-NLS-1$//$NON-NLS-2$
+        countryCode = (String) fields.get("country", "");
+        languageCode = (String) fields.get("language", "");
+        variantCode = (String) fields.get("variant", "");
     }
 }

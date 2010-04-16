@@ -11,7 +11,6 @@
 package com.ibm.icu4jni.text;
 
 import com.ibm.icu4jni.text.RuleBasedCollator;
-import com.ibm.icu4jni.util.Resources;
 import java.util.Locale;
 
 /**
