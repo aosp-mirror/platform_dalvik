@@ -209,31 +209,26 @@ public class Collections {
         }
     }
 
-    private static final class ReverseComparatorWithComparator<T> implements
-            Comparator<T>, Serializable {
+    private static final class ReverseComparator2<T>
+            implements Comparator<T>, Serializable {
         private static final long serialVersionUID = 4374092139857L;
+        private final Comparator<T> cmp;
 
-        private final Comparator<T> comparator;
-
-        ReverseComparatorWithComparator(Comparator<T> comparator) {
-            super();
-            this.comparator = comparator;
+        ReverseComparator2(Comparator<T> comparator) {
+            this.cmp = comparator;
         }
 
         public int compare(T o1, T o2) {
-            return comparator.compare(o2, o1);
+            return cmp.compare(o2, o1);
         }
 
-        @Override
-        public boolean equals(Object o) {
-            return o instanceof ReverseComparatorWithComparator
-                    && ((ReverseComparatorWithComparator) o).comparator
-                            .equals(comparator);
+        @Override public boolean equals(Object o) {
+            return o instanceof ReverseComparator2
+                    && ((ReverseComparator2) o).cmp.equals(cmp);
         }
 
-        @Override
-        public int hashCode() {
-            return ~comparator.hashCode();
+        @Override public int hashCode() {
+            return ~cmp.hashCode();
         }
     }
 
@@ -1835,10 +1830,10 @@ public class Collections {
         if (c == null) {
             return reverseOrder();
         }
-        if (c instanceof ReverseComparatorWithComparator) {
-            return ((ReverseComparatorWithComparator<T>) c).comparator;
+        if (c instanceof ReverseComparator2) {
+            return ((ReverseComparator2<T>) c).cmp;
         }
-        return new ReverseComparatorWithComparator<T>(c);
+        return new ReverseComparator2<T>(c);
     }
 
     /**
