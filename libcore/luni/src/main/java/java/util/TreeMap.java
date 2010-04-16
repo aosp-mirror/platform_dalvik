@@ -1596,6 +1596,7 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
     }
 
     static abstract class NavigableSubMap<K, V> extends AbstractMap<K, V> implements Serializable {
+        private static final long serialVersionUID = -2102997345730753016L;
         TreeMap<K, V> m;
         Object lo;
         Object hi;
@@ -1608,8 +1609,8 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
             this.m = delegate;
             this.lo = from;
             this.hi = to;
-            this.fromStart = fromBound != NO_BOUND;
-            this.toEnd = toBound != NO_BOUND;
+            this.fromStart = fromBound == NO_BOUND;
+            this.toEnd = toBound == NO_BOUND;
             this.loInclusive = fromBound == INCLUSIVE;
             this.hiInclusive = toBound == INCLUSIVE;
         }
@@ -1619,9 +1620,9 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
         }
 
         @SuppressWarnings("unchecked") // we have to trust that the bounds are Ks
-        private Object readResolve() throws ObjectStreamException {
-            Bound fromBound = fromStart ? (loInclusive ? INCLUSIVE : EXCLUSIVE) : NO_BOUND;
-            Bound toBound = toEnd ? (hiInclusive ? INCLUSIVE : EXCLUSIVE) : NO_BOUND;
+        protected Object readResolve() throws ObjectStreamException {
+            Bound fromBound = fromStart ? NO_BOUND : (loInclusive ? INCLUSIVE : EXCLUSIVE);
+            Bound toBound = toEnd ? NO_BOUND : (hiInclusive ? INCLUSIVE : EXCLUSIVE);
             boolean ascending = !(this instanceof DescendingSubMap);
             return m.new BoundedMap(ascending, (K) lo, fromBound, (K) hi, toBound);
         }
@@ -1642,11 +1643,10 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
         }
     }
 
-    static class SubMap<K, V> extends AbstractMap<K, V> implements Serializable {
+    class SubMap extends AbstractMap<K, V> implements Serializable {
         private static final long serialVersionUID = -6520786458950516097L;
-        TreeMap<K, V> m;
-        Object lo;
-        Object hi;
+        Object fromKey;
+        Object toKey;
         boolean fromStart;
         boolean toEnd;
 
@@ -1655,10 +1655,10 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
         }
 
         @SuppressWarnings("unchecked") // we have to trust that the bounds are Ks
-        private Object readResolve() throws ObjectStreamException {
-            Bound fromBound = fromStart ? INCLUSIVE : NO_BOUND;
-            Bound toBound = toEnd ? EXCLUSIVE : NO_BOUND;
-            return m.new BoundedMap(true, (K) lo, fromBound, (K) hi, toBound);
+        protected Object readResolve() throws ObjectStreamException {
+            Bound fromBound = fromStart ? NO_BOUND : INCLUSIVE;
+            Bound toBound = toEnd ? NO_BOUND : EXCLUSIVE;
+            return new BoundedMap(true, (K) fromKey, fromBound, (K) toKey, toBound);
         }
     }
 }

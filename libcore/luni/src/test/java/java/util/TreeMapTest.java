@@ -155,9 +155,9 @@ public class TreeMapTest extends TestCase {
     }
 
     public void testEmptyMapSerialization() {
-        String s = "aced0005737200166578616d706c65732e6a657373652e547265654d61700cc1f"
-                + "63e2d256ae60300014c000a636f6d70617261746f727400164c6a6176612f75746"
-                + "96c2f436f6d70617261746f723b78707077040000000078";
+        String s = "aced0005737200116a6176612e7574696c2e547265654d61700cc1f63e2d256a"
+                + "e60300014c000a636f6d70617261746f727400164c6a6176612f7574696c2f436"
+                + "f6d70617261746f723b78707077040000000078";
         TreeMap<String, String> map = new TreeMap<String, String>();
         new SerializableTester<TreeMap<String, String>>(map, s).test();
     }
@@ -270,5 +270,53 @@ public class TreeMapTest extends TestCase {
             }
         }.test();
     }
-}
 
+    public void testJava5SerializationWithComparator() {
+        String s = "aced0005737200116a6176612e7574696c2e547265654d61700cc1f63e2d256a"
+                + "e60300014c000a636f6d70617261746f727400164c6a6176612f7574696c2f436"
+                + "f6d70617261746f723b78707372002a6a6176612e6c616e672e537472696e6724"
+                + "43617365496e73656e736974697665436f6d70617261746f7277035c7d5c50e5c"
+                + "e02000078707704000000027400016171007e00057400016271007e000678";
+        TreeMap<String,String> map = new TreeMap<String, String>(
+                String.CASE_INSENSITIVE_ORDER);
+        map.put("a", "a");
+        map.put("b", "b");
+        new SerializableTester<TreeMap<String, String>>(map, s) {
+            @Override protected void verify(TreeMap<String, String> deserialized) {
+                assertEquals(0, deserialized.comparator().compare("X", "x"));
+            }
+        }.test();
+    }
+
+    /**
+     * On JDK5, this fails with a NullPointerException after deserialization!
+     */
+    public void testJava5SubmapSerialization() {
+        String s = "aced0005737200186a6176612e7574696c2e547265654d6170245375624d6170"
+                + "a5818343a213c27f0200055a000966726f6d53746172745a0005746f456e644c0"
+                + "00766726f6d4b65797400124c6a6176612f6c616e672f4f626a6563743b4c0006"
+                + "7468697324307400134c6a6176612f7574696c2f547265654d61703b4c0005746"
+                + "f4b657971007e00017870000074000161737200116a6176612e7574696c2e5472"
+                + "65654d61700cc1f63e2d256ae60300014c000a636f6d70617261746f727400164"
+                + "c6a6176612f7574696c2f436f6d70617261746f723b78707372002a6a6176612e"
+                + "6c616e672e537472696e672443617365496e73656e736974697665436f6d70617"
+                + "261746f7277035c7d5c50e5ce020000787077040000000471007e000471007e00" 
+                + "047400016271007e000a7400016371007e000b7400016471007e000c7871007e0"
+                + "00b";
+        TreeMap<String,String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        map.put("a", "a");
+        map.put("b", "b");
+        map.put("c", "c");
+        map.put("d", "d");
+        SortedMap<String, String> submap = map.subMap("a", "c");
+        new SerializableTester<SortedMap<String, String>>(submap, s) {
+            @Override protected void verify(SortedMap<String, String> deserialized) {
+                try {
+                    deserialized.put("e", "e");
+                    fail();
+                } catch (IllegalArgumentException e) {
+                }
+            }
+        }.test();
+    }
+}
