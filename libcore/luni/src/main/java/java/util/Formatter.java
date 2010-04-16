@@ -1444,7 +1444,7 @@ public final class Formatter implements Closeable, Flushable {
                     break;
                 case 'd':
                     if (arg instanceof Integer || arg instanceof Long || arg instanceof Short || arg instanceof Byte) {
-                        if (localeData.decimalPatternChars.charAt(0) == '0') { // ZERO_DIGIT
+                        if (localeData.zeroDigit == '0') {
                             return arg.toString();
                         }
                     }
@@ -1655,7 +1655,7 @@ public final class Formatter implements Closeable, Flushable {
             char paddingChar = '\u0020'; // space as padding char.
             if (formatToken.flagZero) {
                 if (formatToken.getConversionType() == 'd') {
-                    paddingChar = localeData.decimalPatternChars.charAt(0); // ZERO_DIGIT
+                    paddingChar = localeData.zeroDigit;
                 } else {
                     paddingChar = '0'; // No localized digits for bases other than decimal.
                 }
@@ -1725,7 +1725,7 @@ public final class Formatter implements Closeable, Flushable {
             }
 
             if ('d' == currentConversionType) {
-                if (formatToken.flagComma || localeData.decimalPatternChars.charAt(0) != '0') { // ZERO_DIGIT
+                if (formatToken.flagComma || localeData.zeroDigit != '0') {
                     NumberFormat numberFormat = getNumberFormat();
                     numberFormat.setGroupingUsed(formatToken.flagComma);
                     result.append(numberFormat.format(arg));
@@ -1897,7 +1897,7 @@ public final class Formatter implements Closeable, Flushable {
 
             formatToken.setPrecision(FormatToken.UNSET);
 
-            if (localeData.decimalPatternChars.charAt(8) == result.charAt(0)) { // MINUS_SIGN
+            if (localeData.minusSign == result.charAt(0)) {
                 if (formatToken.flagParenthesis) {
                     return wrapParentheses(result);
                 }
@@ -1913,7 +1913,7 @@ public final class Formatter implements Closeable, Flushable {
             }
 
             char firstChar = result.charAt(0);
-            if (formatToken.flagZero && (firstChar == floatUtil.getAddSign() || firstChar == localeData.decimalPatternChars.charAt(8))) { // MINUS_SIGN
+            if (formatToken.flagZero && (firstChar == floatUtil.getAddSign() || firstChar == localeData.minusSign)) {
                 startIndex = 1;
             }
 
@@ -2097,7 +2097,7 @@ public final class Formatter implements Closeable, Flushable {
         
         private void appendLocalized(StringBuilder result, long value, int width) {
             int paddingIndex = result.length();
-            char zeroDigit = localeData.decimalPatternChars.charAt(0); // ZERO_DIGIT
+            char zeroDigit = localeData.zeroDigit;
             if (zeroDigit == '0') {
                 result.append(value);
             } else {
@@ -2177,7 +2177,7 @@ public final class Formatter implements Closeable, Flushable {
             // if the flag is sharp and decimal separator is always given out.
             if (formatToken.flagSharp && formatToken.getPrecision() == 0) {
                 int indexOfE = result.indexOf("e");
-                result.insert(indexOfE, localeData.decimalPatternChars.charAt(2)); // DECIMAL_SEPARATOR
+                result.insert(indexOfE, localeData.decimalSeparator);
             }
         }
 
@@ -2274,7 +2274,7 @@ public final class Formatter implements Closeable, Flushable {
             result.append(decimalFormat.format(argument));
             // if the flag is sharp and decimal separator is always given out.
             if (formatToken.flagSharp && formatToken.getPrecision() == 0) {
-                result.append(localeData.decimalPatternChars.charAt(2)); // DECIMAL_SEPARATOR
+                result.append(localeData.decimalSeparator);
             }
         }
 

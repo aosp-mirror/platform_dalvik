@@ -43,25 +43,20 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
 
     private static final long serialVersionUID = 5772796243397350300L;
 
-    // Indexes into the patternChars array.
-    private static final int ZERO_DIGIT = 0;
-    private static final int DIGIT = 1;
-    private static final int DECIMAL_SEPARATOR = 2;
-    private static final int GROUPING_SEPARATOR = 3;
-    private static final int PATTERN_SEPARATOR = 4;
-    private static final int PERCENT = 5;
-    private static final int PER_MILL = 6;
-    private static final int MONETARY_DECIMAL_SEPARATOR = 7;
-    private static final int MINUS_SIGN = 8;
-
-    // TODO: replace this with individual char fields.
-    private transient char[] patternChars;
+    private char zeroDigit;
+    private char digit;
+    private char decimalSeparator;
+    private char groupingSeparator;
+    private char patternSeparator;
+    private char percent;
+    private char perMill;
+    private char monetarySeparator;
+    private char minusSign;
+    private String infinity, NaN, currencySymbol, intlCurrencySymbol;
 
     private transient Currency currency;
     private transient Locale locale;
     private transient String exponentSeparator;
-
-    private String infinity, NaN, currencySymbol, intlCurrencySymbol;
 
     /**
      * Constructs a new {@code DecimalFormatSymbols} containing the symbols for
@@ -89,7 +84,15 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
     public DecimalFormatSymbols(Locale locale) {
         // BEGIN android-changed
         LocaleData localeData = com.ibm.icu4jni.util.Resources.getLocaleData(locale);
-        this.patternChars = localeData.decimalPatternChars.toCharArray();
+        this.zeroDigit = localeData.zeroDigit;
+        this.digit = localeData.digit;
+        this.decimalSeparator = localeData.decimalSeparator;
+        this.groupingSeparator = localeData.groupingSeparator;
+        this.patternSeparator = localeData.patternSeparator;
+        this.percent = localeData.percent;
+        this.perMill = localeData.perMill;
+        this.monetarySeparator = localeData.monetarySeparator;
+        this.minusSign = localeData.minusSign;
         this.infinity = localeData.infinity;
         this.NaN = localeData.NaN;
         this.exponentSeparator = localeData.exponentSeparator;
@@ -144,22 +147,12 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
         return Resources.getAvailableDecimalFormatSymbolsLocales();
     }
 
-    /**
-     * Returns a new {@code DecimalFormatSymbols} with the same symbols as this
-     * {@code DecimalFormatSymbols}.
-     * 
-     * @return a shallow copy of this {@code DecimalFormatSymbols}.
-     * 
-     * @see java.lang.Cloneable
-     */
     @Override
     public Object clone() {
         try {
-            DecimalFormatSymbols symbols = (DecimalFormatSymbols) super.clone();
-            symbols.patternChars = patternChars.clone();
-            return symbols;
+            return super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new AssertionError(e); // android-changed
+            throw new AssertionError(e);
         }
     }
 
@@ -185,19 +178,19 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
         DecimalFormatSymbols obj = (DecimalFormatSymbols) object;
         return currency.equals(obj.currency) &&
                 currencySymbol.equals(obj.currencySymbol) &&
-                patternChars[DECIMAL_SEPARATOR] == obj.patternChars[DECIMAL_SEPARATOR] &&
-                patternChars[DIGIT] == obj.patternChars[DIGIT] &&
+                decimalSeparator == obj.decimalSeparator &&
+                digit == obj.digit &&
                 exponentSeparator.equals(obj.exponentSeparator) &&
-                patternChars[GROUPING_SEPARATOR] == obj.patternChars[GROUPING_SEPARATOR] &&
+                groupingSeparator == obj.groupingSeparator &&
                 infinity.equals(obj.infinity) &&
                 intlCurrencySymbol.equals(obj.intlCurrencySymbol) &&
-                patternChars[MINUS_SIGN] == obj.patternChars[MINUS_SIGN] &&
-                patternChars[MONETARY_DECIMAL_SEPARATOR] == obj.patternChars[MONETARY_DECIMAL_SEPARATOR] &&
+                minusSign == obj.minusSign &&
+                monetarySeparator == obj.monetarySeparator &&
                 NaN.equals(obj.NaN) &&
-                patternChars[PATTERN_SEPARATOR] == obj.patternChars[PATTERN_SEPARATOR] &&
-                patternChars[PER_MILL] == obj.patternChars[PER_MILL] &&
-                patternChars[PERCENT] == obj.patternChars[PERCENT] &&
-                patternChars[ZERO_DIGIT] == obj.patternChars[ZERO_DIGIT];
+                patternSeparator == obj.patternSeparator &&
+                perMill == obj.perMill &&
+                percent == obj.percent &&
+                zeroDigit == obj.zeroDigit;
     }
 
     @Override
@@ -205,19 +198,19 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
         return getClass().getName() +
                 "[currency=" + currency +
                 ",currencySymbol=" + currencySymbol +
-                ",decimalSeparator=" + patternChars[DECIMAL_SEPARATOR] +
-                ",digit=" + patternChars[DIGIT] +
+                ",decimalSeparator=" + decimalSeparator +
+                ",digit=" + digit +
                 ",exponentSeparator=" + exponentSeparator +
-                ",groupingSeparator=" + patternChars[GROUPING_SEPARATOR] +
+                ",groupingSeparator=" + groupingSeparator +
                 ",infinity=" + infinity +
                 ",intlCurrencySymbol=" + intlCurrencySymbol +
-                ",minusSign=" + patternChars[MINUS_SIGN] +
-                ",monetaryDecimalSeparator=" + patternChars[MONETARY_DECIMAL_SEPARATOR] +
+                ",minusSign=" + minusSign +
+                ",monetarySeparator=" + monetarySeparator +
                 ",NaN=" + NaN +
-                ",patternSeparator=" + patternChars[PATTERN_SEPARATOR] +
-                ",perMill=" + patternChars[PER_MILL] +
-                ",percent=" + patternChars[PERCENT] +
-                ",zeroDigit=" + patternChars[ZERO_DIGIT] +
+                ",patternSeparator=" + patternSeparator +
+                ",perMill=" + perMill +
+                ",percent=" + percent +
+                ",zeroDigit=" + zeroDigit +
                 "]";
     }
 
@@ -263,7 +256,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the decimal separator character.
      */
     public char getDecimalSeparator() {
-        return patternChars[DECIMAL_SEPARATOR];
+        return decimalSeparator;
     }
 
     /**
@@ -273,7 +266,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the digit pattern character.
      */
     public char getDigit() {
-        return patternChars[DIGIT];
+        return digit;
     }
 
     /**
@@ -282,7 +275,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the thousands separator character.
      */
     public char getGroupingSeparator() {
-        return patternChars[GROUPING_SEPARATOR];
+        return groupingSeparator;
     }
 
     /**
@@ -300,7 +293,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the minus sign as a character.
      */
     public char getMinusSign() {
-        return patternChars[MINUS_SIGN];
+        return minusSign;
     }
 
     /**
@@ -310,7 +303,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the monetary decimal point as a character.
      */
     public char getMonetaryDecimalSeparator() {
-        return patternChars[MONETARY_DECIMAL_SEPARATOR];
+        return monetarySeparator;
     }
 
     /**
@@ -329,7 +322,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the pattern separator character.
      */
     public char getPatternSeparator() {
-        return patternChars[PATTERN_SEPARATOR];
+        return patternSeparator;
     }
 
     /**
@@ -338,7 +331,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the percent character.
      */
     public char getPercent() {
-        return patternChars[PERCENT];
+        return percent;
     }
 
     /**
@@ -347,7 +340,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the per mill sign character.
      */
     public char getPerMill() {
-        return patternChars[PER_MILL];
+        return perMill;
     }
 
     /**
@@ -356,7 +349,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      * @return the zero character.
      */
     public char getZeroDigit() {
-        return patternChars[ZERO_DIGIT];
+        return zeroDigit;
     }
 
     /*
@@ -370,9 +363,22 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
 
     @Override
     public int hashCode() {
-        return new String(patternChars).hashCode() + exponentSeparator.hashCode() +
-                infinity.hashCode() + NaN.hashCode() + currencySymbol.hashCode() +
-                intlCurrencySymbol.hashCode();
+        int result = 17;
+        result = 31*result + zeroDigit;
+        result = 31*result + digit;
+        result = 31*result + decimalSeparator;
+        result = 31*result + groupingSeparator;
+        result = 31*result + patternSeparator;
+        result = 31*result + percent;
+        result = 31*result + perMill;
+        result = 31*result + monetarySeparator;
+        result = 31*result + minusSign;
+        result = 31*result + exponentSeparator.hashCode();
+        result = 31*result + infinity.hashCode();
+        result = 31*result + NaN.hashCode();
+        result = 31*result + currencySymbol.hashCode();
+        result = 31*result + intlCurrencySymbol.hashCode();
+        return result;
     }
 
     /**
@@ -437,7 +443,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the currency symbol.
      */
     public void setCurrencySymbol(String value) {
-        currencySymbol = value;
+        this.currencySymbol = value;
     }
 
     /**
@@ -447,7 +453,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the decimal separator character.
      */
     public void setDecimalSeparator(char value) {
-        patternChars[DECIMAL_SEPARATOR] = value;
+        this.decimalSeparator = value;
     }
 
     /**
@@ -457,7 +463,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the digit character.
      */
     public void setDigit(char value) {
-        patternChars[DIGIT] = value;
+        this.digit = value;
     }
 
     /**
@@ -467,7 +473,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the grouping separator character.
      */
     public void setGroupingSeparator(char value) {
-        patternChars[GROUPING_SEPARATOR] = value;
+        this.groupingSeparator = value;
     }
 
     /**
@@ -477,7 +483,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the string representing infinity.
      */
     public void setInfinity(String value) {
-        infinity = value;
+        this.infinity = value;
     }
 
     /**
@@ -487,7 +493,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the minus sign character.
      */
     public void setMinusSign(char value) {
-        patternChars[MINUS_SIGN] = value;
+        this.minusSign = value;
     }
 
     /**
@@ -498,7 +504,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the monetary decimal separator character.
      */
     public void setMonetaryDecimalSeparator(char value) {
-        patternChars[MONETARY_DECIMAL_SEPARATOR] = value;
+        this.monetarySeparator = value;
     }
 
     /**
@@ -508,7 +514,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the string representing NaN.
      */
     public void setNaN(String value) {
-        NaN = value;
+        this.NaN = value;
     }
 
     /**
@@ -519,7 +525,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the pattern separator character.
      */
     public void setPatternSeparator(char value) {
-        patternChars[PATTERN_SEPARATOR] = value;
+        this.patternSeparator = value;
     }
 
     /**
@@ -529,7 +535,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the percent character.
      */
     public void setPercent(char value) {
-        patternChars[PERCENT] = value;
+        this.percent = value;
     }
 
     /**
@@ -539,7 +545,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the per mill character.
      */
     public void setPerMill(char value) {
-        patternChars[PER_MILL] = value;
+        this.perMill = value;
     }
 
     /**
@@ -549,7 +555,7 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
      *            the zero digit character.
      */
     public void setZeroDigit(char value) {
-        patternChars[ZERO_DIGIT] = value;
+        this.zeroDigit = value;
     }
 
     /**
@@ -609,7 +615,6 @@ public final class DecimalFormatSymbols implements Cloneable, Serializable {
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         ObjectInputStream.GetField fields = stream.readFields();
         final int serialVersionOnStream = fields.get("serialVersionOnStream", 0);
-        patternChars = new char[9];
         currencySymbol = (String) fields.get("currencySymbol", "");
         setDecimalSeparator(fields.get("decimalSeparator", '.'));
         setDigit(fields.get("digit", '#'));

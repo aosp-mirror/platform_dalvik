@@ -50,8 +50,16 @@ public final class LocaleData {
     public String mediumDateFormat;
     public String shortDateFormat;
     
-    public String decimalPatternChars;
-    
+    // DecimalFormatSymbols.
+    public char zeroDigit;
+    public char digit;
+    public char decimalSeparator;
+    public char groupingSeparator;
+    public char patternSeparator;
+    public char percent;
+    public char perMill;
+    public char monetarySeparator;
+    public char minusSign;
     public String exponentSeparator;
     public String infinity;
     public String NaN;
@@ -82,7 +90,15 @@ public final class LocaleData {
                 "longDateFormat=" + longDateFormat + "," +
                 "mediumDateFormat=" + mediumDateFormat + "," +
                 "shortDateFormat=" + shortDateFormat + "," +
-                "decimalPatternChars=" + decimalPatternChars + "," +
+                "zeroDigit=" + zeroDigit + "," +
+                "digit=" + digit + "," +
+                "decimalSeparator=" + decimalSeparator + "," +
+                "groupingSeparator=" + groupingSeparator + "," +
+                "patternSeparator=" + patternSeparator + "," +
+                "percent=" + percent + "," +
+                "perMill=" + perMill + "," +
+                "monetarySeparator=" + monetarySeparator + "," +
+                "minusSign=" + minusSign + "," +
                 "exponentSeparator=" + exponentSeparator + "," +
                 "infinity=" + infinity + "," +
                 "NaN=" + NaN + "," +
@@ -143,8 +159,32 @@ public final class LocaleData {
         if (overrides.shortDateFormat != null) {
             shortDateFormat = overrides.shortDateFormat;
         }
-        if (overrides.decimalPatternChars != null) {
-            decimalPatternChars = overrides.decimalPatternChars;
+        if (overrides.zeroDigit != '\0') {
+            zeroDigit = overrides.zeroDigit;
+        }
+        if (overrides.digit != '\0') {
+            digit = overrides.digit;
+        }
+        if (overrides.decimalSeparator != '\0') {
+            decimalSeparator = overrides.decimalSeparator;
+        }
+        if (overrides.groupingSeparator != '\0') {
+            groupingSeparator = overrides.groupingSeparator;
+        }
+        if (overrides.patternSeparator != '\0') {
+            patternSeparator = overrides.patternSeparator;
+        }
+        if (overrides.percent != '\0') {
+            percent = overrides.percent;
+        }
+        if (overrides.perMill != '\0') {
+            perMill = overrides.perMill;
+        }
+        if (overrides.monetarySeparator != '\0') {
+            monetarySeparator = overrides.monetarySeparator;
+        }
+        if (overrides.minusSign != '\0') {
+            minusSign = overrides.minusSign;
         }
         if (overrides.exponentSeparator != null) {
             exponentSeparator = overrides.exponentSeparator;

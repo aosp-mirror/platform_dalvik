@@ -18,7 +18,6 @@
 package org.apache.harmony.luni.util;
 
 import java.text.NumberFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 /**

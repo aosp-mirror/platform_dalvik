@@ -541,58 +541,18 @@ static jobjectArray getShortWeekdayNames(JNIEnv* env, UResourceBundle* gregorian
     return getWeekdayNames(env, gregorian, false);
 }
 
-static jstring getDecimalPatternChars(JNIEnv* env, UResourceBundle* rootElems) {
-    UErrorCode status = U_ZERO_ERROR;
-
-    int zeroL, digitL, decSepL, groupL, listL, percentL, permillL, currSepL, minusL;
-
-    const jchar* zero = ures_getStringByIndex(rootElems, 4, &zeroL, &status);
-    const jchar* digit = ures_getStringByIndex(rootElems, 5, &digitL, &status);
-    const jchar* decSep = ures_getStringByIndex(rootElems, 0, &decSepL, &status);
-    const jchar* group = ures_getStringByIndex(rootElems, 1, &groupL, &status);
-    const jchar* list = ures_getStringByIndex(rootElems, 2, &listL, &status);
-    const jchar* percent = ures_getStringByIndex(rootElems, 3, &percentL, &status);
-    const jchar* permill = ures_getStringByIndex(rootElems, 8, &permillL, &status);
-    const jchar* currSep = ures_getStringByIndex(rootElems, 0, &currSepL, &status);
-    const jchar* minus = ures_getStringByIndex(rootElems, 6, &minusL, &status);
-
-    if (U_FAILURE(status)) {
-        return NULL;
-    }
-
-    jchar patternChars[] = {
-        zero[0],
-        digit[0],
-        decSep[0],
-        group[0],
-        list[0],
-        percent[0],
-        permill[0],
-        currSep[0],
-        minus[0],
-    };
-    return env->NewString(patternChars, sizeof(patternChars));
-}
-
 static jstring getIntCurrencyCode(JNIEnv* env, jstring locale) {
-    const char* locStr = env->GetStringUTFChars(locale, NULL);
+    ScopedUtfChars localeChars(env, locale);
 
     // Extract the 2-character country name.
-    if (strlen(locStr) < 5) {
-        env->ReleaseStringUTFChars(locale, locStr);
+    if (strlen(localeChars.data()) < 5) {
         return NULL;
     }
-    if (locStr[3] < 'A' || locStr[3] > 'Z' || locStr[4] < 'A' || locStr[4] > 'Z') {
-        env->ReleaseStringUTFChars(locale, locStr);
+    if (localeChars[3] < 'A' || localeChars[3] > 'Z' || localeChars[4] < 'A' || localeChars[4] > 'Z') {
         return NULL;
     }
 
-    char country[3] = {0,0,0};
-    country[0] = locStr[3];
-    country[1] = locStr[4];
-
-    env->ReleaseStringUTFChars(locale, locStr);
-
+    char country[3] = { localeChars[3], localeChars[4], 0 };
     return getCurrencyCodeNative(env, NULL, env->NewStringUTF(country));
 }
 
@@ -627,7 +587,20 @@ static void setStringField(JNIEnv* env, jobject obj, const char* fieldName, URes
     if (U_SUCCESS(status)) {
         setStringField(env, obj, fieldName, env->NewString(chars, charCount));
     } else {
-        LOGE("Error setting field %s from ICU resource: %s", fieldName, u_errorName(status));
+        LOGE("Error setting String field %s from ICU resource: %s", fieldName, u_errorName(status));
+    }
+}
+
+static void setCharField(JNIEnv* env, jobject obj, const char* fieldName, UResourceBundle* bundle, int index) {
+    UErrorCode status = U_ZERO_ERROR;
+    int charCount;
+    const UChar* chars = ures_getStringByIndex(bundle, index, &charCount, &status);
+    if (U_SUCCESS(status)) {
+        jclass localeDataClass = env->FindClass("com/ibm/icu4jni/util/LocaleData");
+        jfieldID fid = env->GetFieldID(localeDataClass, fieldName, "C");
+        env->SetCharField(obj, fid, chars[0]);
+    } else {
+        LOGE("Error setting char field %s from ICU resource: %s", fieldName, u_errorName(status));
     }
 }
 
@@ -683,7 +656,15 @@ static jboolean initLocaleDataImpl(JNIEnv* env, jclass clazz, jstring locale, jo
 
     ScopedResourceBundle numberElements(ures_getByKey(root.get(), "NumberElements", NULL, &status));
     if (U_SUCCESS(status) && ures_getSize(numberElements.get()) >= 11) {
-        setStringField(env, localeData, "decimalPatternChars", getDecimalPatternChars(env, numberElements.get()));
+        setCharField(env, localeData, "zeroDigit", numberElements.get(), 4);
+        setCharField(env, localeData, "digit", numberElements.get(), 5);
+        setCharField(env, localeData, "decimalSeparator", numberElements.get(), 0);
+        setCharField(env, localeData, "groupingSeparator", numberElements.get(), 1);
+        setCharField(env, localeData, "patternSeparator", numberElements.get(), 2);
+        setCharField(env, localeData, "percent", numberElements.get(), 3);
+        setCharField(env, localeData, "perMill", numberElements.get(), 8);
+        setCharField(env, localeData, "monetarySeparator", numberElements.get(), 0);
+        setCharField(env, localeData, "minusSign", numberElements.get(), 6);
         setStringField(env, localeData, "exponentSeparator", numberElements.get(), 7);
         setStringField(env, localeData, "infinity", numberElements.get(), 9);
         setStringField(env, localeData, "NaN", numberElements.get(), 10);
