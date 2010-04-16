@@ -44,13 +44,6 @@ typedef struct {
     const void *finger;   // only used while scanning/recursing.
 } GcMarkContext;
 
-enum RefType {
-    REF_SOFT,
-    REF_WEAK,
-    REF_PHANTOM,
-    REF_WEAKGLOBAL
-};
-
 bool dvmHeapBeginMarkStep(GcMode mode);
 void dvmHeapMarkRootSet(void);
 void dvmHeapScanMarkedObjects(void);
