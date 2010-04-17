@@ -83,15 +83,20 @@ final class Outcome {
      * java.lang.IntegerTest.
      */
     public String getSuiteName() {
-        int lastDot = outcomeName.lastIndexOf('.');
-        return lastDot == -1 ? "defaultpackage" : outcomeName.substring(0, lastDot);
+        int split = split(outcomeName);
+        return split == -1 ? "defaultpackage" : outcomeName.substring(0, split);
     }
 
     /**
      * Returns the specific action name, such as BitTwiddle or testBitTwiddle.
      */
     public String getTestName() {
-        int lastDot = outcomeName.lastIndexOf('.');
-        return lastDot == -1 ? outcomeName : outcomeName.substring(lastDot + 1);
+        int split = split(outcomeName);
+        return split == -1 ? outcomeName : outcomeName.substring(split + 1);
+    }
+
+    private static int split(String name) {
+        int lastHash = name.indexOf('#');
+        return lastHash == -1 ? name.lastIndexOf('.') : lastHash;
     }
 }

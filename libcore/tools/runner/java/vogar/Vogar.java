@@ -141,6 +141,10 @@ public final class Vogar {
             System.out.println("      Usually this is <SDK>/platforms/android-<X.X>/android.jar");
             System.out.println("      where <SDK> is the path to an Android SDK path and <X.X> is");
             System.out.println("      a release version like 1.5.");
+            System.out.println();
+            System.out.println("      To test against APIs added since the latest SDK, use");
+            System.out.println("      out/target/common/obj/JAVA_LIBRARIES/core_intermediates/classes.jar");
+            System.out.println();
             System.out.println("      Default is: " + sdkJar);
             System.out.println();
             System.out.println("  --verbose: turn on verbose output");

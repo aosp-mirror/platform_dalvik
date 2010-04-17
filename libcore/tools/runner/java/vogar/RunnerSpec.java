@@ -35,9 +35,9 @@ public interface RunnerSpec {
     /**
      * Returns true if this runner can exercise {@code clazz}.
      *
-     * @param clazz a fully qualified classname.
+     * @param className a fully qualified classname.
      */
-    boolean supports(String clazz);
+    boolean supports(String className);
 
     /**
      * Return the class for the TestRunner

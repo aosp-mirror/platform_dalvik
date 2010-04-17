@@ -30,8 +30,8 @@ class CaliperSpec extends NamingPatternRunnerSpec {
         return super.matches(file) && file.getName().endsWith("Benchmark.java");
     }
 
-    public boolean supports(String clazz) {
-        return clazz.endsWith("Benchmark");
+    public boolean supports(String className) {
+        return className.endsWith("Benchmark");
     }
 
     public Class<? extends Runner> getRunnerClass() {

@@ -25,7 +25,7 @@ import vogar.target.Runner;
  */
 class MainSpec extends NamingPatternRunnerSpec {
 
-    public boolean supports(String clazz) {
+    public boolean supports(String className) {
         return true;
     }
 

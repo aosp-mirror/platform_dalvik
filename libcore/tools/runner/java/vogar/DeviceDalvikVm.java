@@ -31,7 +31,7 @@ final class DeviceDalvikVm extends Vm {
 
     /** A list of generic names that we avoid when naming generated files. */
     private static final Set<String> BANNED_NAMES = new HashSet<String>();
-    {
+    static {
         BANNED_NAMES.add("classes");
         BANNED_NAMES.add("javalib");
     }

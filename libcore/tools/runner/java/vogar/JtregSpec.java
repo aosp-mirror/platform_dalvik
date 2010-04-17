@@ -94,7 +94,7 @@ class JtregSpec implements RunnerSpec {
         }
     }
 
-    public boolean supports(String clazz) {
+    public boolean supports(String className) {
         // the jtreg runner cannot run prebuilt classes
         return false;
     }

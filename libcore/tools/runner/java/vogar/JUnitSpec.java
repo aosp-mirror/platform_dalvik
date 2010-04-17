@@ -32,10 +32,10 @@ class JUnitSpec extends NamingPatternRunnerSpec {
                 || filename.contains("Tests"));
     }
 
-    public boolean supports(String clazz) {
-        return clazz.endsWith("Test")
-                || clazz.endsWith("TestSuite")
-                || clazz.contains("Tests");
+    public boolean supports(String className) {
+        return className.endsWith("Test")
+                || className.endsWith("TestSuite")
+                || className.contains("Tests");
     }
 
     public Class<? extends Runner> getRunnerClass() {
@@ -49,7 +49,6 @@ class JUnitSpec extends NamingPatternRunnerSpec {
     public Classpath getClasspath() {
         // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
         return Classpath.of(
-                new File("out/target/common/obj/JAVA_LIBRARIES/core-tests-luni_intermediates/classes.jar").getAbsoluteFile(),
                 new File("out/host/common/obj/JAVA_LIBRARIES/junit_intermediates/javalib.jar").getAbsoluteFile());
     }
 }
