@@ -16,10 +16,8 @@
 
 package java.math;
 
-import org.apache.harmony.math.internal.nls.Messages;
-import org.openssl.NativeBN;
-
 import java.util.Random;
+import org.openssl.NativeBN;
 
 /*
  * In contrast to BigIntegers this class doesn't fake two's complement representation.
@@ -85,12 +83,10 @@ class BigInt
         while ((e = NativeBN.ERR_get_error()) != 0) {
             reason = e & 255;
             if (reason == 103) {
-                // math.17=BigInteger divide by zero
-                throw new ArithmeticException(Messages.getString("math.17")); //$NON-NLS-1$
+                throw new ArithmeticException("BigInteger division by zero");
             }
             if (reason == 108) {
-                // math.19=BigInteger not invertible.
-                throw new ArithmeticException(Messages.getString("math.19")); //$NON-NLS-1$
+                throw new ArithmeticException("BigInteger not invertible");
             }
             if (reason == 65) {
                 throw new OutOfMemoryError();

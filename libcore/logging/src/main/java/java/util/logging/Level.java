@@ -17,6 +17,7 @@
 
 package java.util.logging;
 
+import dalvik.system.VMStack;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -25,11 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-
-import org.apache.harmony.logging.internal.nls.Messages;
-// BEGIN android-changed
-import dalvik.system.VMStack;
-// END android-changed
 
 /**
  * {@code Level} objects are used to indicate the level of logging. There are a
@@ -107,8 +103,7 @@ public class Level implements Serializable {
      */
     public static Level parse(String name) throws IllegalArgumentException {
         if (name == null) {
-            // logging.1C=The 'name' parameter is null.
-            throw new NullPointerException(Messages.getString("logging.1C")); //$NON-NLS-1$
+            throw new NullPointerException("name == null");
         }
 
         boolean isNameAnInt;
@@ -142,9 +137,7 @@ public class Level implements Serializable {
         }
 
         if (!isNameAnInt) {
-            // logging.1D=Cannot parse this name: {0}
-            throw new IllegalArgumentException(Messages.getString(
-                    "logging.1D", name)); //$NON-NLS-1$
+            throw new IllegalArgumentException("Cannot parse name '" + name + "'");
         }
 
         return new Level(name, nameAsInt);
@@ -207,8 +200,7 @@ public class Level implements Serializable {
      */
     protected Level(String name, int level, String resourceBundleName) {
         if (name == null) {
-            // logging.1C=The 'name' parameter is null.
-            throw new NullPointerException(Messages.getString("logging.1C")); //$NON-NLS-1$
+            throw new NullPointerException("name == null");
         }
         this.name = name;
         this.value = level;

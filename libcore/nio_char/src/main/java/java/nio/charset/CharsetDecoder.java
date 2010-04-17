@@ -21,8 +21,6 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
-import org.apache.harmony.niochar.internal.nls.Messages;
-
 /**
  * A converter that can convert a byte sequence from a charset into a 16-bit
  * Unicode character sequence.
@@ -138,12 +136,10 @@ public abstract class CharsetDecoder {
     protected CharsetDecoder(Charset charset, float averageCharsPerByte,
             float maxCharsPerByte) {
         if (averageCharsPerByte <= 0 || maxCharsPerByte <= 0) {
-            // niochar.00=Characters number for one byte must be positive.
-            throw new IllegalArgumentException(Messages.getString("niochar.00")); //$NON-NLS-1$
+            throw new IllegalArgumentException("averageCharsPerByte and maxCharsPerByte must be positive");
         }
         if (averageCharsPerByte > maxCharsPerByte) {
-            // niochar.01=averageCharsPerByte is greater than maxCharsPerByte
-            throw new IllegalArgumentException(Messages.getString("niochar.01")); //$NON-NLS-1$
+            throw new IllegalArgumentException("averageCharsPerByte is greater than maxCharsPerByte");
         }
         averChars = averageCharsPerByte;
         maxChars = maxCharsPerByte;
@@ -151,7 +147,7 @@ public abstract class CharsetDecoder {
         status = INIT;
         malformAction = CodingErrorAction.REPORT;
         unmapAction = CodingErrorAction.REPORT;
-        replace = "\ufffd"; //$NON-NLS-1$
+        replace = "\ufffd";
     }
 
     /**
@@ -692,14 +688,11 @@ public abstract class CharsetDecoder {
      *             mentioned above.
      */
     public final CharsetDecoder replaceWith(String newReplacement) {
-        if (null == newReplacement || newReplacement.length() == 0) {
-            // niochar.06=Replacement string cannot be null or empty.
-            throw new IllegalArgumentException(Messages.getString("niochar.06")); //$NON-NLS-1$
+        if (newReplacement == null || newReplacement.isEmpty()) {
+            throw new IllegalArgumentException("Replacement string cannot be null or empty");
         }
         if (newReplacement.length() > maxChars) {
-            // niochar.07=Replacement string's length cannot be larger than max
-            // characters per byte.
-            throw new IllegalArgumentException(Messages.getString("niochar.07")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Replacement string cannot be longer than max characters per byte");
         }
         replace = newReplacement;
         implReplaceWith(newReplacement);

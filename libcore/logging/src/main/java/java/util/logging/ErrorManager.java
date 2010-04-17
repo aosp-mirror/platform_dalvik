@@ -17,8 +17,6 @@
 
 package java.util.logging;
 
-import org.apache.harmony.logging.internal.nls.Messages;
-
 /**
  * An error reporting facility for {@link Handler} implementations to record any
  * error that may happen during logging. {@code Handlers} should report errors
@@ -98,15 +96,12 @@ public class ErrorManager {
             }
             called = true;
         }
-        System.err.println(this.getClass().getName()
-                + ": " + FAILURES[errorCode]); //$NON-NLS-1$
+        System.err.println(this.getClass().getName() + ": " + FAILURES[errorCode]);
         if (message != null) {
-            // logging.1E=Error message - {0}
-            System.err.println(Messages.getString("logging.1E", message)); //$NON-NLS-1$
+            System.err.println("Error message - " + message);
         }
         if (exception != null) {
-            // logging.1F=Exception - {0}
-            System.err.println(Messages.getString("logging.1F", exception)); //$NON-NLS-1$
+            System.err.println("Exception - " + exception);
         }
     }
 }

@@ -20,8 +20,6 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.util.WeakHashMap;
 
-import org.apache.harmony.niochar.internal.nls.Messages;
-
 /**
  * Used to indicate the result of encoding/decoding. There are four types of
  * results:
@@ -124,9 +122,7 @@ public class CoderResult {
                 return r;
             }
         }
-        // niochar.08=The length must be positive: {0}.
-        throw new IllegalArgumentException(Messages.getString(
-                "niochar.08", length)); //$NON-NLS-1$
+        throw new IllegalArgumentException("Length must be greater than 0; was " + length);
     }
 
     /**
@@ -154,9 +150,7 @@ public class CoderResult {
                 return r;
             }
         }
-        // niochar.08=The length must be positive: {0}.
-        throw new IllegalArgumentException(Messages.getString(
-                "niochar.08", length)); //$NON-NLS-1$
+        throw new IllegalArgumentException("Length must be greater than 0; was " + length);
     }
 
     /**
@@ -216,14 +210,10 @@ public class CoderResult {
      *             if this result is an overflow or underflow.
      */
     public int length() throws UnsupportedOperationException {
-        if (this.type == TYPE_MALFORMED_INPUT
-                || this.type == TYPE_UNMAPPABLE_CHAR) {
+        if (this.type == TYPE_MALFORMED_INPUT || this.type == TYPE_UNMAPPABLE_CHAR) {
             return this.length;
         }
-        // niochar.09=The length of the erroneous input is only meaningful to
-        // a malformed-input error or an unmappble character error
-        throw new UnsupportedOperationException(Messages
-                .getString("niochar.09")); //$NON-NLS-1$
+        throw new UnsupportedOperationException("length meaningless for " + toString());
     }
 
     /**
