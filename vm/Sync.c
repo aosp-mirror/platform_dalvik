@@ -1315,7 +1315,7 @@ u4 dvmIdentityHashCode(Object *obj)
 {
     Thread *self, *thread;
     volatile u4 *lw;
-    size_t length;
+    size_t size;
     u4 lock, owner, hashState;
 
     if (obj == NULL) {
@@ -1341,12 +1341,12 @@ retry:
          * aligned word following the instance data.
          */
         if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
-            length = dvmArrayObjectLength((ArrayObject *)obj);
-            length = (length + 3) & ~3;
+            size = dvmArrayObjectSize((ArrayObject *)obj);
+            size = (size + 3) & ~3;
         } else {
-            length = obj->clazz->objectSize;
+            size = obj->clazz->objectSize;
         }
-        return *(u4 *)(((char *)obj) + length);
+        return *(u4 *)(((char *)obj) + size);
     } else if (hashState == LW_HASH_STATE_UNHASHED) {
         /*
          * The object has never been hashed.  Change the hash state to
