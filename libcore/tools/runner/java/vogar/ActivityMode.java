@@ -19,17 +19,13 @@ package vogar;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.logging.Logger;
 import vogar.commands.Aapt;
 import vogar.commands.Command;
 import vogar.commands.Dx;
-import vogar.commands.Mkdir;
 import vogar.commands.Rm;
 
 /**
@@ -43,114 +39,47 @@ final class ActivityMode extends Mode {
 
     ActivityMode(Integer debugPort, File sdkJar, List<String> javacArgs,
             int monitorPort, File localTemp, boolean cleanBefore, boolean cleanAfter,
-            File deviceRunnerDir) {
+            File deviceRunnerDir, Classpath classpath) {
         super(new EnvironmentDevice(cleanBefore, cleanAfter,
                 debugPort, monitorPort, localTemp, deviceRunnerDir),
-                sdkJar, javacArgs, monitorPort);
+                sdkJar, javacArgs, monitorPort, classpath);
     }
 
     private EnvironmentDevice getEnvironmentDevice() {
         return (EnvironmentDevice) environment;
     }
 
-    @Override protected void prepare(Set<File> testRunnerJava, Classpath testRunnerClasspath) {
-        testRunnerJava.add(new File("dalvik/libcore/tools/runner/lib/TestActivity.java"));
-        super.prepare(testRunnerJava, testRunnerClasspath);
+    @Override protected void prepare(Set<RunnerSpec> runners) {
+        runnerJava.add(new File("dalvik/libcore/tools/runner/lib/TestActivity.java"));
+        super.prepare(runners);
     }
 
-    @Override protected void postCompileRunner() {
-    }
-
-    @Override protected void postCompile(Action action) {
+    @Override protected void postCompile(Action action, File jar) {
         logger.fine("aapt and push " + action.getName());
 
-        // Some things of note:
-        // 1. we can't put multiple dex files in one apk
-        // 2. we can't just give dex multiple jars with conflicting class names
-        // 3. dex is slow if we give it too much to chew on
-        // 4. dex can run out of memory if given too much to chew on
+        // We can't put multiple dex files in one apk.
+        // We can't just give dex multiple jars with conflicting class names
 
         // With that in mind, the APK packaging strategy is as follows:
-        // 1. make an empty classes temporary directory
-        // 2. add test runner classes
-        // 3. find original jar test came from, add contents to classes
-        // 4. add supported runner classes specified by finder
-        // 5. add latest test classes to output
-        // 6. dx to create a dex
-        // 7. aapt the dex to create apk
-        // 8. sign the apk
-        // 9. install the apk
-        File packagingDir = makePackagingDirectory(action);
-        addRunnerClasses(packagingDir);
-        List<File> found = new ArrayList<File>();
-        File originalJar = findOriginalJar(action);
-        if (originalJar != null) {
-            found.add(originalJar);
-        }
-        found.addAll(action.getRunnerClasspath().getElements());
-        extractJars(packagingDir, found);
-        addActionClasses(action, packagingDir);
-        File dex = createDex(action, packagingDir);
+        // 1. dx to create a dex
+        // 2. aapt the dex to create apk
+        // 3. sign the apk
+        // 4. install the apk
+        File dex = createDex(action, jar);
         File apkUnsigned = createApk(action, dex);
         File apkSigned = signApk(action, apkUnsigned);
         installApk(action, apkSigned);
     }
 
-    private File makePackagingDirectory(Action action) {
-        File packagingDir = new File(environment.actionCompilationDir(action), "packaging");
-        new Rm().directoryTree(packagingDir);
-        new Mkdir().mkdirs(packagingDir);
-        return packagingDir;
-    }
-
-    private void addRunnerClasses(File packagingDir) {
-        new Command("rsync", "-a",
-                    environment.runnerClassesDir() + "/",
-                    packagingDir + "/").execute();
-    }
-
-    private File findOriginalJar(Action action) {
-        String targetClass = action.getTargetClass();
-        String targetClassFile = targetClass.replace('.', '/') + ".class";
-        for (File element : classpath.getElements()) {
-            try {
-                JarFile jar = new JarFile(element);
-                JarEntry jarEntry = jar.getJarEntry(targetClassFile);
-                if (jarEntry != null) {
-                    return element;
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(
-                        "Could not find element " + element +
-                        " of class path " + classpath, e);
-            }
-        }
-        return null;
-    }
-
-    private static void extractJars(File packagingDir, List<File> jars) {
-        for (File jar : jars) {
-            new Command.Builder()
-                    .args("unzip")
-                    .args("-q")
-                    .args("-o")
-                    .args(jar)
-                    .args("-d")
-                    .args(packagingDir).execute();
-        }
-        new Rm().directoryTree(new File(packagingDir, "META-INF"));
-    }
-
-    private void addActionClasses(Action action, File packagingDir) {
-        File classesDir = environment.classesDir(action);
-        new Command("rsync", "-a",
-                    classesDir + "/",
-                    packagingDir + "/").execute();
-    }
-    private File createDex(Action action, File packagingDir) {
-        File classesDir = environment.classesDir(action);
-        File dex = new File(classesDir + ".dex");
-        new Dx().dex(dex, Classpath.of(packagingDir));
+    /**
+     * Returns a single dexfile containing {@code action}'s classes and all
+     * dependencies.
+     */
+    private File createDex(Action action, File actionJar) {
+        File dex = environment.file(action, "classes.dex");
+        Classpath classesToDex = Classpath.of(actionJar);
+        classesToDex.addAll(this.classpath);
+        new Dx().dex(dex, classesToDex);
         return dex;
     }
 
@@ -179,9 +108,7 @@ final class ActivityMode extends Mode {
             "        </activity>\n" +
             "    </application>\n" +
             "</manifest>\n";
-        File androidManifestFile =
-                new File(environment.actionCompilationDir(action),
-                        "AndroidManifest.xml");
+        File androidManifestFile = environment.file(action, "classes", "AndroidManifest.xml");
         try {
             FileOutputStream androidManifestOut =
                     new FileOutputStream(androidManifestFile);
@@ -191,17 +118,15 @@ final class ActivityMode extends Mode {
             throw new RuntimeException("Problem writing " + androidManifestFile, e);
         }
 
-        File classesDir = environment.classesDir(action);
-        File apkUnsigned = new File(classesDir  + ".apk.unsigned");
+        File apkUnsigned = environment.file(action, action + ".apk.unsigned");
         new Aapt().apk(apkUnsigned, androidManifestFile);
         new Aapt().add(apkUnsigned, dex);
-        new Aapt().add(apkUnsigned, new File(classesDir , TestProperties.FILE));
+        new Aapt().add(apkUnsigned, environment.file(action, "classes", TestProperties.FILE));
         return apkUnsigned;
     }
 
     private File signApk(Action action, File apkUnsigned) {
-        File classesDir = environment.classesDir(action);
-        File apkSigned = new File(classesDir, action.getName() + ".apk");
+        File apkSigned = environment.file(action, action + ".apk");
         // TODO: we should be able to work with a shipping SDK, not depend on out/...
         // TODO: we should be able to work without hardwired keys, not depend on build/...
         new Command.Builder()

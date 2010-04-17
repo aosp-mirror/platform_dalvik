@@ -51,7 +51,10 @@ class EnvironmentDevice extends Environment {
     @Override protected void prepareUserDir(Action action) {
         File actionClassesDirOnDevice = actionClassesDirOnDevice(action);
         adb.mkdir(actionClassesDirOnDevice);
-        adb.push(action.getJavaDirectory(), actionClassesDirOnDevice);
+        File resourcesDirectory = action.getResourcesDirectory();
+        if (resourcesDirectory != null) {
+            adb.push(resourcesDirectory, actionClassesDirOnDevice);
+        }
         action.setUserDir(actionClassesDirOnDevice);
     }
 
@@ -67,6 +70,7 @@ class EnvironmentDevice extends Environment {
     }
 
     @Override void shutdown() {
+        super.shutdown();
         if (cleanAfter) {
             adb.rm(runnerDir);
         }

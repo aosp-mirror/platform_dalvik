@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Command line interface for running benchmarks and tests on dalvik.
@@ -33,9 +34,17 @@ public final class Vogar {
     static final File HOME = new File("dalvik/libcore/tools/runner");
     static final File HOME_JAVA = new File(HOME, "java");
 
+    static final Pattern CLASS_NAME_PATTERN
+            = Pattern.compile("(\\w+)(\\.\\w+)*\\.[A-Z]\\w*");
+
     private static class Options {
 
+        private final Classpath classpath = Classpath.of(
+            // TODO: we should be able to work with a shipping SDK, not depend on out/...
+            new File("out/host/common/obj/JAVA_LIBRARIES/kxml2-2.3.0_intermediates/javalib.jar").getAbsoluteFile());
+
         private final List<File> actionFiles = new ArrayList<File>();
+        private final List<String> actionClasses = new ArrayList<String>();
         private final List<String> targetArgs = new ArrayList<String>();
 
         @Option(names = { "--expectations" })
@@ -101,8 +110,9 @@ public final class Vogar {
         private void printUsage() {
             System.out.println("Usage: Vogar [options]... <actions>... [target args]...");
             System.out.println();
-            System.out.println("  <actions>: .java files or directories containing jtreg tests, JUnit");
-            System.out.println("      tests, Caliper benchmarks, or executable Java classes.");
+            System.out.println("  <actions>: .java files, .jar files, directories, or class names.");
+            System.out.println("      These should be JUnit tests, jtreg tests, Caliper benchmarks");
+            System.out.println("      or executable Java classes.");
             System.out.println();
             System.out.println("  [args]: arguments passed to the target process. This is only useful when");
             System.out.println("      the target process is a Caliper benchmark or main method.");
@@ -258,23 +268,31 @@ public final class Vogar {
             }
 
             // separate the actions and the target args
-            boolean action = true;
-            for (String arg : actionsAndTargetArgs) {
+            int index = 0;
+            for (; index < actionsAndTargetArgs.size(); index++) {
+                String arg = actionsAndTargetArgs.get(index);
                 if (arg.equals("--")) {
-                    action = false;
-                    continue;
+                    index++;
+                    break;
                 }
 
-                File actionFile = new File(arg);
-                if (action && actionFile.exists()) {
-                    actionFiles.add(actionFile);
+                File file = new File(arg);
+                if (file.exists()) {
+                    if (arg.endsWith(".jar")) {
+                        classpath.addAll(file);
+                    } else {
+                        actionFiles.add(file);
+                    }
+                } else if (CLASS_NAME_PATTERN.matcher(arg).matches()) {
+                    actionClasses.add(arg);
                 } else {
-                    targetArgs.add(arg);
-                    action = false;
+                    break;
                 }
             }
 
-            if (actionFiles.isEmpty()) {
+            targetArgs.addAll(actionsAndTargetArgs.subList(index, actionsAndTargetArgs.size()));
+
+            if (actionFiles.isEmpty() && actionClasses.isEmpty()) {
                 System.out.println("No actions provided.");
                 return false;
             }
@@ -311,7 +329,8 @@ public final class Vogar {
                     options.targetArgs,
                     options.cleanBefore,
                     options.cleanAfter,
-                    options.deviceRunnerDir);
+                    options.deviceRunnerDir,
+                    options.classpath);
         } else if (options.mode.equals(Options.MODE_HOST)) {
             monitorPort = 8788;
             mode = new JavaVm(
@@ -324,8 +343,8 @@ public final class Vogar {
                     options.vmArgs,
                     options.targetArgs,
                     options.cleanBefore,
-                    options.cleanAfter
-            );
+                    options.cleanAfter,
+                    options.classpath);
         } else if (options.mode.equals(Options.MODE_ACTIVITY)) {
             monitorPort = 8787;
             mode = new ActivityMode(
@@ -336,7 +355,8 @@ public final class Vogar {
                     localTemp,
                     options.cleanBefore,
                     options.cleanAfter,
-                    options.deviceRunnerDir);
+                    options.deviceRunnerDir,
+                    options.classpath);
         } else {
             System.out.println("Unknown mode mode " + options.mode + ".");
             return;
@@ -344,11 +364,11 @@ public final class Vogar {
 
         HostMonitor monitor = new HostMonitor(options.monitorTimeout);
 
-        List<CodeFinder> codeFinders = Arrays.asList(
-                new JtregFinder(localTemp),
-                new JUnitFinder(),
-                new CaliperFinder(),
-                new MainFinder());
+        List<RunnerSpec> runnerSpecs = Arrays.asList(
+                new JtregSpec(localTemp),
+                new JUnitSpec(),
+                new CaliperSpec(),
+                new MainSpec());
 
         ExpectationStore expectationStore;
         try {
@@ -366,16 +386,14 @@ public final class Vogar {
                 localTemp,
                 mode,
                 expectationStore,
-                codeFinders,
+                runnerSpecs,
                 xmlReportPrinter,
                 console,
                 monitor,
                 monitorPort,
                 options.timeoutSeconds);
 
-        driver.buildAndRunAllActions(options.actionFiles);
-
-        mode.shutdown();
+        driver.buildAndRun(options.actionFiles, options.actionClasses);
     }
 
     public static void main(String[] args) {

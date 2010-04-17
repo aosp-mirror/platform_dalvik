@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,28 +21,36 @@ import java.util.Set;
 import vogar.target.Runner;
 
 /**
- * A strategy for finding runnable things in a directory.
+ * Defines a runner for a type of Java code, such as a JUnit test, benchmark,
+ * or class with main method.
  */
-public interface CodeFinder {
+public interface RunnerSpec {
 
     /**
      * Returns all actions in the given file or directory. If the returned set
      * is empty, no executable code of this kind were found.
      */
-    public Set<Action> findActions(File file);
+    Set<Action> findActions(File file);
+
+    /**
+     * Returns true if this runner can exercise {@code clazz}.
+     *
+     * @param clazz a fully qualified classname.
+     */
+    boolean supports(String clazz);
 
     /**
      * Return the class for the TestRunner
      */
-    public Class<? extends Runner> getRunnerClass();
+    Class<? extends Runner> getRunnerClass();
 
     /**
      * Return the Java file for the TestRunner
      */
-    public File getRunnerJava();
+    File getSource();
 
     /**
      * Return the compile classpath for the TestRunner
      */
-    public Classpath getRunnerClasspath();
+    Classpath getClasspath();
 }

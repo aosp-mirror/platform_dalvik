@@ -57,22 +57,5 @@ final public class TestProperties {
      */
     public static final String MONITOR_PORT = "monitorPort";
 
-    /**
-     * Result value for successful test
-     */
-    public static final String RESULT_SUCCESS = "SUCCESS";
-
-    /**
-     * Result value for failed test
-     */
-    public static final String RESULT_FAILURE = "FAILURE";
-
-    public static String result(boolean success) {
-        return success ? RESULT_SUCCESS : RESULT_FAILURE;
-    }
-
-    /**
-     * This class should not be instantiated
-     */
     private TestProperties() {}
 }

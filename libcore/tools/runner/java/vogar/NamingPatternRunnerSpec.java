@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * A code finder that traverses through the directory tree looking for matching
  * naming patterns.
  */
-abstract class NamingPatternCodeFinder implements CodeFinder {
+abstract class NamingPatternRunnerSpec implements RunnerSpec {
 
     private final String PACKAGE_PATTERN = "(?m)^\\s*package\\s+(\\S+)\\s*;";
 
@@ -61,10 +61,7 @@ abstract class NamingPatternCodeFinder implements CodeFinder {
         }
 
         String className = fileToClass(file);
-        File directory = file.getParentFile();
-        String description = null;
-        sink.add(new Action(className, className, directory, file, description,
-                getRunnerClass(), getRunnerJava(), getRunnerClasspath()));
+        sink.add(new Action(className, className, null, file, this));
     }
 
     /**

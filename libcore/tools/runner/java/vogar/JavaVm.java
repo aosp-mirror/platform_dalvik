@@ -28,31 +28,25 @@ final class JavaVm extends Vm {
 
     JavaVm(Integer debugPort, File sdkJar, List<String> javacArgs, int monitorPort,
             File localTemp, File javaHome, List<String> additionalVmArgs,
-            List<String> targetArgs, boolean cleanBefore, boolean cleanAfter) {
+            List<String> targetArgs, boolean cleanBefore, boolean cleanAfter,
+            Classpath classpath) {
         super(new EnvironmentHost(cleanBefore, cleanAfter, debugPort, localTemp),
-                sdkJar, javacArgs, additionalVmArgs, targetArgs, monitorPort);
+                sdkJar, javacArgs, additionalVmArgs, targetArgs, monitorPort, classpath);
         this.javaHome = javaHome;
     }
 
-    @Override protected void postCompileRunner() {
-    }
-
-    @Override protected void postCompile(Action action) {
-    }
-
-    @Override protected VmCommandBuilder newVmCommandBuilder(
-            File workingDirectory) {
+    @Override protected VmCommandBuilder newVmCommandBuilder(File workingDirectory) {
         String java = javaHome == null ? "java" : new File(javaHome, "bin/java").getPath();
         return new VmCommandBuilder()
                 .vmCommand(java)
                 .workingDir(workingDirectory);
     }
-    @Override protected Classpath getRuntimeSupportClasspath(Action action) {
-        Classpath classpath = new Classpath();
-        classpath.addAll(environment.classesDir(action));
-        classpath.addAll(this.classpath);
-        classpath.addAll(environment.runnerClassesDir());
-        classpath.addAll(runnerClasspath);
+
+    @Override protected Classpath getRuntimeClasspath(Action action) {
+        Classpath result = new Classpath();
+        result.addAll(classpath);
+        result.addAll(environment.hostJar(action));
+
         /*
          * For javax.net.ssl tests dependency on Bouncy Castle for
          * creating a self-signed X509 certificate. Needs to be run
@@ -61,7 +55,7 @@ final class JavaVm extends Vm {
          *
          * --java-home /usr/lib/jvm/java-6-openjdk
          */
-        classpath.addAll(new File("/usr/share/java/bcprov.jar"));
-        return classpath;
+        result.addAll(new File("/usr/share/java/bcprov.jar"));
+        return result;
     }
 }

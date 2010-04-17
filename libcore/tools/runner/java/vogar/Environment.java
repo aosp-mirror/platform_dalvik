@@ -58,29 +58,16 @@ abstract class Environment {
     void cleanup(Action action) {
         if (cleanAfter) {
             logger.fine("clean " + action.getName());
-            new Rm().directoryTree(actionCompilationDir(action));
-            new Rm().directoryTree(actionUserDir(action));
+            new Rm().directoryTree(file(action));
         }
     }
 
-    final File actionDir(String name) {
-        return new File(localTemp, name);
+    final File file(Object... path) {
+        return new File(localTemp + "/" + Strings.join(path, "/"));
     }
 
-    final File runnerDir(String name) {
-        return new File(actionDir("testrunner"), name);
-    }
-
-    final File runnerClassesDir() {
-        return runnerDir("classes");
-    }
-
-    final File actionCompilationDir(Action action) {
-        return new File(localTemp, action.getName());
-    }
-
-    final File classesDir(Action action) {
-        return new File(actionCompilationDir(action), "classes");
+    final File hostJar(Object nameOrAction) {
+        return file(nameOrAction, nameOrAction + ".jar");
     }
 
     final File actionUserDir(Action action) {
@@ -88,5 +75,9 @@ abstract class Environment {
         return new File(testTemp, action.getName());
     }
 
-    abstract void shutdown();
+    void shutdown() {
+        if (cleanAfter) {
+            new Rm().directoryTree(localTemp);
+        }
+    }
 }

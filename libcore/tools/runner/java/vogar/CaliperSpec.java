@@ -17,30 +17,35 @@
 package vogar;
 
 import java.io.File;
-import vogar.target.JUnitRunner;
+import vogar.target.CaliperRunner;
 import vogar.target.Runner;
 
 /**
- * Create {@link Action}s for {@code .java} files with JUnit tests in them.
+ * Create {@link Action}s for {@code .java} files with Caliper benchmarks in
+ * them.
  */
-class JUnitFinder extends NamingPatternCodeFinder {
+class CaliperSpec extends NamingPatternRunnerSpec {
 
     @Override protected boolean matches(File file) {
-        String filename = file.getName();
-        return super.matches(file) 
-                && (filename.endsWith("Test.java") || filename.endsWith("TestSuite.java"));
+        return super.matches(file) && file.getName().endsWith("Benchmark.java");
+    }
+
+    public boolean supports(String clazz) {
+        return clazz.endsWith("Benchmark");
     }
 
     public Class<? extends Runner> getRunnerClass() {
-        return JUnitRunner.class;
+        return CaliperRunner.class;
     }
 
-    public File getRunnerJava() {
-        return new File(Vogar.HOME_JAVA, "vogar/target/JUnitRunner.java");
+    public File getSource() {
+        return new File(Vogar.HOME_JAVA, "vogar/target/CaliperRunner.java");
     }
 
-    public Classpath getRunnerClasspath() {
-        // TODO: we should be able to work with a shipping SDK, not depend on out/...
-        return Classpath.of(new File("out/host/common/obj/JAVA_LIBRARIES/junit_intermediates/javalib.jar").getAbsoluteFile());
+    public Classpath getClasspath() {
+        return Classpath.of(
+                new File("dalvik/libcore/tools/runner/lib/jsr305.jar"),
+                new File("dalvik/libcore/tools/runner/lib/guava.jar"),
+                new File("dalvik/libcore/tools/runner/lib/caliper.jar"));
     }
 }

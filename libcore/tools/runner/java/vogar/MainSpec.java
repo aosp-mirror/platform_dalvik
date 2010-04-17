@@ -17,28 +17,27 @@
 package vogar;
 
 import java.io.File;
-import vogar.target.CaliperRunner;
+import vogar.target.MainRunner;
 import vogar.target.Runner;
 
 /**
- * Create {@link Action}s for {@code .java} files with Caliper benchmarks in
- * them.
+ * Create {@link Action}s for {@code .java} files with main methods in them.
  */
-class CaliperFinder extends NamingPatternCodeFinder {
+class MainSpec extends NamingPatternRunnerSpec {
 
-    @Override protected boolean matches(File file) {
-        return super.matches(file) && file.getName().endsWith("Benchmark.java");
+    public boolean supports(String clazz) {
+        return true;
     }
 
     public Class<? extends Runner> getRunnerClass() {
-        return CaliperRunner.class;
+        return MainRunner.class;
     }
 
-    public File getRunnerJava() {
-        return new File(Vogar.HOME_JAVA, "vogar/target/CaliperRunner.java");
+    public File getSource() {
+        return new File(Vogar.HOME_JAVA, "vogar/target/MainRunner.java");
     }
 
-    public Classpath getRunnerClasspath() {
+    public Classpath getClasspath() {
         return new Classpath();
     }
 }

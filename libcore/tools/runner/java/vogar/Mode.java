@@ -56,42 +56,34 @@ abstract class Mode {
     protected final Set<File> runnerJava = new HashSet<File>();
 
     /**
-     * Classpath of runner on the host side including any supporting libraries
-     * for runnerJava. Useful for compiling runnerJava as well as executing it
-     * on the host. Execution on the device requires further packaging typically
-     * done by postCompile.
+     * User classes that need to be included in the classpath for both
+     * compilation and execution. Also includes dependencies of all active
+     * runners.
      */
-    protected final Classpath runnerClasspath = new Classpath();
+    protected final Classpath classpath = new Classpath();
 
-    // TODO: this should be an immutable collection.
-    protected final Classpath classpath = Classpath.of(
-            new File("dalvik/libcore/tools/runner/lib/jsr305.jar"),
-            new File("dalvik/libcore/tools/runner/lib/guava.jar"),
-            new File("dalvik/libcore/tools/runner/lib/caliper.jar"),
-            // TODO: we should be able to work with a shipping SDK, not depend on out/...
-            // dalvik/libcore/**/test/ for junit
-            // TODO: jar up just the junit classes and drop the jar in our lib/ directory.
-            new File("out/host/common/obj/JAVA_LIBRARIES/kxml2-2.3.0_intermediates/javalib.jar").getAbsoluteFile(),
-            new File("out/target/common/obj/JAVA_LIBRARIES/core-tests-luni_intermediates/classes.jar").getAbsoluteFile());
-
-    Mode(Environment environment, File sdkJar, List<String> javacArgs, int monitorPort) {
+    Mode(Environment environment, File sdkJar, List<String> javacArgs,
+            int monitorPort, Classpath classpath) {
         this.environment = environment;
         this.sdkJar = sdkJar;
         this.javacArgs = javacArgs;
         this.monitorPort = monitorPort;
+        this.classpath.addAll(classpath);
     }
 
     /**
      * Initializes the temporary directories and harness necessary to run
      * actions.
      */
-    protected void prepare(Set<File> runnerJava, Classpath runnerClasspath) {
-        this.runnerJava.add(new File(Vogar.HOME_JAVA, "vogar/target/TestRunner.java"));
-        this.runnerJava.addAll(dalvikAnnotationSourceFiles());
-        this.runnerJava.addAll(runnerJava);
-        this.runnerClasspath.addAll(runnerClasspath);
+    protected void prepare(Set<RunnerSpec> runners) {
+        for (RunnerSpec runnerSpec : runners) {
+            runnerJava.add(runnerSpec.getSource());
+            classpath.addAll(runnerSpec.getClasspath());
+        }
+        runnerJava.add(new File(Vogar.HOME_JAVA, "vogar/target/TestRunner.java"));
         environment.prepare();
-        compileRunner();
+        classpath.addAll(compileRunner());
+        installRunner();
     }
 
     private List<File> dalvikAnnotationSourceFiles() {
@@ -106,29 +98,25 @@ abstract class Mode {
         return Arrays.asList(javaSourceFiles);
     }
 
-    private void compileRunner() {
+    /**
+     * Returns a .jar file containing the compiled runner .java files.
+     */
+    private File compileRunner() {
         logger.fine("build runner");
-
-        Classpath classpath = new Classpath();
-        classpath.addAll(this.classpath);
-        classpath.addAll(runnerClasspath);
-
-        File base = environment.runnerClassesDir();
-        new Mkdir().mkdirs(base);
+        File classes = environment.file("runner", "classes");
+        File jar = environment.hostJar("runner");
+        new Mkdir().mkdirs(classes);
         new Javac()
                 .bootClasspath(sdkJar)
                 .classpath(classpath)
                 .sourcepath(Vogar.HOME_JAVA)
-                .destination(base)
+                .destination(classes)
                 .extra(javacArgs)
                 .compile(runnerJava);
-        postCompileRunner();
+        new Command("jar", "cvfM", jar.getPath(),
+                 "-C", classes.getPath(), "./").execute();
+        return jar;
     }
-
-    /**
-     * Hook method called after runner compilation.
-     */
-    abstract protected void postCompileRunner();
 
     /**
      * Compiles classes for the given action and makes them ready for execution.
@@ -140,7 +128,8 @@ abstract class Mode {
         logger.fine("build " + action.getName());
 
         try {
-            compile(action);
+            File jar = compile(action);
+            postCompile(action, jar);
         } catch (CommandFailedException e) {
             return new Outcome(action.getName(), action.getName(),
                     Result.COMPILE_FAILED, e.getOutputLines());
@@ -152,17 +141,12 @@ abstract class Mode {
     }
 
     /**
-     * Compiles the classes for the described action.
+     * Returns the .jar file containing the action's compiled classes.
      *
      * @throws CommandFailedException if javac fails
      */
-    private void compile(Action action) throws IOException {
-        if (!JAVA_SOURCE_PATTERN.matcher(action.getJavaFile().toString()).find()) {
-            throw new CommandFailedException(Collections.<String>emptyList(),
-                    Collections.singletonList("Cannot compile: " + action.getJavaFile()));
-        }
-
-        File classesDir = environment.classesDir(action);
+    private File compile(Action action) throws IOException {
+        File classesDir = environment.file(action, "classes");
         new Mkdir().mkdirs(classesDir);
         FileOutputStream propertiesOut = new FileOutputStream(
                 new File(classesDir, TestProperties.FILE));
@@ -171,30 +155,32 @@ abstract class Mode {
         properties.store(propertiesOut, "generated by " + Mode.class.getName());
         propertiesOut.close();
 
-        Classpath classpath = new Classpath();
-        classpath.addAll(this.classpath);
-        classpath.addAll(action.getRunnerClasspath());
+        Javac javac = new Javac();
 
         Set<File> sourceFiles = new HashSet<File>();
-        sourceFiles.add(action.getJavaFile());
         sourceFiles.addAll(dalvikAnnotationSourceFiles());
 
-        // compile the action case
-        new Javac()
-                .bootClasspath(sdkJar)
+        File javaFile = action.getJavaFile();
+        if (javaFile != null) {
+            if (!JAVA_SOURCE_PATTERN.matcher(javaFile.toString()).find()) {
+                throw new CommandFailedException(Collections.<String>emptyList(),
+                        Collections.singletonList("Cannot compile: " + javaFile));
+            }
+            sourceFiles.add(javaFile);
+            javac.sourcepath(javaFile.getParentFile());
+        }
+
+        javac.bootClasspath(sdkJar)
                 .classpath(classpath)
-                .sourcepath(action.getJavaDirectory())
                 .destination(classesDir)
                 .extra(javacArgs)
                 .compile(sourceFiles);
-        postCompile(action);
+
+        File jar = environment.hostJar(action);
+        new Command("jar", "cvfM", jar.getPath(),
+                "-C", classesDir.getPath(), "./").execute();
+        return jar;
     }
-
-    /**
-     * Hook method called after action compilation.
-     */
-    abstract protected void postCompile(Action action);
-
 
     /**
      * Fill in properties for running in this mode
@@ -202,9 +188,19 @@ abstract class Mode {
     protected void fillInProperties(Properties properties, Action action) {
         properties.setProperty(TestProperties.TEST_CLASS, action.getTargetClass());
         properties.setProperty(TestProperties.QUALIFIED_NAME, action.getName());
-        properties.setProperty(TestProperties.RUNNER_CLASS, action.getRunnerClass().getName());
+        properties.setProperty(TestProperties.RUNNER_CLASS, action.getRunnerSpec().getRunnerClass().getName());
         properties.setProperty(TestProperties.MONITOR_PORT, String.valueOf(monitorPort));
     }
+
+    /**
+     * Hook method called after runner compilation.
+     */
+    protected void installRunner() {}
+
+    /**
+     * Hook method called after action compilation.
+     */
+    protected void postCompile(Action action, File jar) {}
 
     /**
      * Create the command that executes the action.

@@ -37,11 +37,15 @@ class EnvironmentHost extends Environment {
             throw new IllegalStateException();
         }
 
-        new Mkdir().mkdirs(actionUserDir.getParentFile());
-        new Command("cp", "-r", action.getJavaDirectory().toString(),
-                actionUserDir.toString()).execute();
+        File resourcesDirectory = action.getResourcesDirectory();
+        if (resourcesDirectory != null) {
+            new Mkdir().mkdirs(actionUserDir.getParentFile());
+            new Command("cp", "-r", resourcesDirectory.toString(),
+                    actionUserDir.toString()).execute();
+        } else {
+            new Mkdir().mkdirs(actionUserDir);
+        }
+
         action.setUserDir(actionUserDir);
     }
-
-    @Override void shutdown() {}
 }

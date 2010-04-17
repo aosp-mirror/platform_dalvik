@@ -48,7 +48,7 @@ public class TestActivity extends Activity {
                 1, Threads.daemonThreadFactory());
         executor.submit(new Runnable() {
             public void run() {
-                new TestRunner().run(args);
+                new TestRunner().run();
             }
         });
         executor.shutdown();

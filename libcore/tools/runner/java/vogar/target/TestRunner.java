@@ -75,7 +75,7 @@ public class TestRunner {
         }
     }
 
-    public void run(String[] args) {
+    public void run(String... args) {
         final TargetMonitor monitor = new TargetMonitor();
         monitor.await(monitorPort);
 
