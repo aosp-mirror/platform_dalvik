@@ -902,8 +902,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
 
         } else if (strncmp(argv[i], "-Xlockprofthreshold:", 20) == 0) {
             gDvm.lockProfThreshold = atoi(argv[i] + 20);
-        } else if (strncmp(argv[i], "-Xlockprofsample:", 17) == 0) {
-            gDvm.lockProfSample = atoi(argv[i] + 17);
 
 #ifdef WITH_JIT
         } else if (strncmp(argv[i], "-Xjitop", 7) == 0) {

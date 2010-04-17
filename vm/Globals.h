@@ -90,8 +90,13 @@ struct DvmGlobals {
     int         jdwpPort;
     bool        jdwpSuspend;
 
+    /*
+     * Lock profiling threshold value in milliseconds.  Acquires that
+     * exceed threshold are logged.  Acquires within the threshold are
+     * logged with a probability of $\frac{time}{threshold}$ .  If the
+     * threshold is unset no additional logging occurs.
+     */
     u4          lockProfThreshold;
-    u4          lockProfSample;
 
     int         (*vfprintfHook)(FILE*, const char*, va_list);
     void        (*exitHook)(int);
