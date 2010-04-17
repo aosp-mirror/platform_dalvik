@@ -20,8 +20,7 @@ import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-
-import org.apache.harmony.niochar.internal.nls.Messages;
+import java.util.Arrays;
 
 /**
  * A converter that can converts a 16-bit Unicode character sequence to a byte
@@ -168,12 +167,10 @@ public abstract class CharsetEncoder {
     protected CharsetEncoder(Charset cs, float averageBytesPerChar,
             float maxBytesPerChar, byte[] replacement) {
         if (averageBytesPerChar <= 0 || maxBytesPerChar <= 0) {
-            // niochar.02=Bytes number for one character must be positive.
-            throw new IllegalArgumentException(Messages.getString("niochar.02")); //$NON-NLS-1$
+            throw new IllegalArgumentException("averageBytesPerChar and maxBytesPerChar must both be positive");
         }
         if (averageBytesPerChar > maxBytesPerChar) {
-            // niochar.03=averageBytesPerChar is greater than maxBytesPerChar.
-            throw new IllegalArgumentException(Messages.getString("niochar.03")); //$NON-NLS-1$
+            throw new IllegalArgumentException("averageBytesPerChar is greater than maxBytesPerChar");
         }
         this.cs = cs;
         averBytes = averageBytesPerChar;
@@ -221,8 +218,7 @@ public abstract class CharsetEncoder {
             status = INIT;
         }
         if (status != INIT) {
-            // niochar.0B=Another encoding process is ongoing\!
-            throw new IllegalStateException(Messages.getString("niochar.0B")); //$NON-NLS-1$
+            throw new IllegalStateException("encoding already in progress");
         }
         CodingErrorAction malformBak = malformAction;
         CodingErrorAction unmapBak = unmapAction;
@@ -688,9 +684,8 @@ public abstract class CharsetEncoder {
      *             if the given newAction is null.
      */
     public final CharsetEncoder onMalformedInput(CodingErrorAction newAction) {
-        if (null == newAction) {
-            // niochar.0C=Action on malformed input error cannot be null\!
-            throw new IllegalArgumentException(Messages.getString("niochar.0C")); //$NON-NLS-1$
+        if (newAction == null) {
+            throw new IllegalArgumentException("newAction == null");
         }
         malformAction = newAction;
         implOnMalformedInput(newAction);
@@ -710,11 +705,9 @@ public abstract class CharsetEncoder {
      * @throws IllegalArgumentException
      *             if the given newAction is null.
      */
-    public final CharsetEncoder onUnmappableCharacter(
-            CodingErrorAction newAction) {
-        if (null == newAction) {
-            // niochar.0D=Action on unmappable character error cannot be null\!
-            throw new IllegalArgumentException(Messages.getString("niochar.0D")); //$NON-NLS-1$
+    public final CharsetEncoder onUnmappableCharacter(CodingErrorAction newAction) {
+        if (newAction == null) {
+            throw new IllegalArgumentException("newAction == null");
         }
         unmapAction = newAction;
         implOnUnmappableCharacter(newAction);
@@ -742,18 +735,16 @@ public abstract class CharsetEncoder {
      *            the replacement byte array, cannot be null or empty, its
      *            length cannot be larger than <code>maxBytesPerChar</code>,
      *            and it must be legal replacement, which can be justified by
-     *            calling <code>isLegalReplacement(byte[] repl)</code>.
+     *            calling <code>isLegalReplacement(byte[] replacement)</code>.
      * @return this encoder.
      * @throws IllegalArgumentException
      *             if the given replacement cannot satisfy the requirement
      *             mentioned above.
      */
     public final CharsetEncoder replaceWith(byte[] replacement) {
-        if (null == replacement || 0 == replacement.length
-                || maxBytes < replacement.length
+        if (replacement == null || replacement.length == 0 || maxBytes < replacement.length
                 || !isLegalReplacement(replacement)) {
-            // niochar.0E=Replacement is illegal
-            throw new IllegalArgumentException(Messages.getString("niochar.0E")); //$NON-NLS-1$
+            throw new IllegalArgumentException("bad replacement: " + Arrays.toString(replacement));
         }
         replace = replacement;
         implReplaceWith(replacement);

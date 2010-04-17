@@ -29,8 +29,6 @@ import java.io.ObjectOutputStream;
 import java.util.Random;
 import java.io.Serializable;
 
-import org.apache.harmony.math.internal.nls.Messages;
-
 /**
  * This class represents immutable integer numbers of arbitrary length. Large
  * numbers are typically used in security applications and therefore BigIntegers
@@ -220,8 +218,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public BigInteger(int numBits, Random rnd) {
         if (numBits < 0) {
-            // math.1B=numBits must be non-negative
-            throw new IllegalArgumentException(Messages.getString("math.1B")); //$NON-NLS-1$
+            throw new IllegalArgumentException("numBits must be non-negative");
         }
         if (numBits == 0) {
             sign = 0;
@@ -265,8 +262,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public BigInteger(int bitLength, int certainty, Random rnd) {
         if (bitLength < 2) {
-            // math.1C=bitLength < 2
-            throw new ArithmeticException(Messages.getString("math.1C")); //$NON-NLS-1$
+            throw new ArithmeticException("bitLength < 2");
         }
         bigInt = BigInt.generatePrimeDefault(bitLength, rnd, null);
         bigIntIsValid = true;
@@ -327,12 +323,10 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
             // !oldReprIsValid
         } else {
             if ((radix < Character.MIN_RADIX) || (radix > Character.MAX_RADIX)) {
-                // math.11=Radix out of range
-                throw new NumberFormatException(Messages.getString("math.11")); //$NON-NLS-1$
+                throw new NumberFormatException("Radix out of range");
             }
             if (val.length() == 0) {
-                // math.12=Zero length BigInteger
-                throw new NumberFormatException(Messages.getString("math.12")); //$NON-NLS-1$
+                throw new NumberFormatException("Zero-length BigInteger");
             }
             BigInteger.setFromString(this, val, radix);
             // oldReprIsValid == true;
@@ -361,15 +355,13 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
         if (magnitude == null) {
             throw new NullPointerException();
         }
-        if ((signum < -1) || (signum > 1)) {
-            // math.13=Invalid signum value
-            throw new NumberFormatException(Messages.getString("math.13")); //$NON-NLS-1$
+        if (signum < -1 || signum > 1) {
+            throw new NumberFormatException("Invalid signum value");
         }
         if (signum == 0) {
             for (byte element : magnitude) {
                 if (element != 0) {
-                    // math.14=signum-magnitude mismatch
-                    throw new NumberFormatException(Messages.getString("math.14")); //$NON-NLS-1$
+                    throw new NumberFormatException("signum-magnitude mismatch");
                 }
             }
         }
@@ -393,8 +385,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public BigInteger(byte[] val) {
         if (val.length == 0) {
-            // math.12=Zero length BigInteger
-            throw new NumberFormatException(Messages.getString("math.12")); //$NON-NLS-1$
+            throw new NumberFormatException("Zero-length BigInteger");
         }
         bigInt = new BigInt();
         bigInt.putBigEndianTwosComplement(val);
@@ -600,8 +591,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public boolean testBit(int n) {
         if (n < 0) {
-            // math.15=Negative bit address
-            throw new ArithmeticException(Messages.getString("math.15")); //$NON-NLS-1$
+            throw new ArithmeticException("n < 0");
         }
         int sign = signum();
         if ((sign > 0) && bigIntIsValid && !oldReprIsValid) {
@@ -700,8 +690,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
     public BigInteger flipBit(int n) {
         establishOldRepresentation("flipBit");
         if (n < 0) {
-            // math.15=Negative bit address
-            throw new ArithmeticException(Messages.getString("math.15")); //$NON-NLS-1$
+            throw new ArithmeticException("n < 0");
         }
         return BitLevel.flipBit(this, n);
     }
@@ -1062,8 +1051,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public BigInteger pow(int exp) {
         if (exp < 0) {
-            // math.16=Negative exponent
-            throw new ArithmeticException(Messages.getString("math.16")); //$NON-NLS-1$
+            throw new ArithmeticException("exp < 0");
         }
         validate1("pow", this);
         return new BigInteger(BigInt.exp(bigInt, exp, null));
@@ -1151,8 +1139,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public BigInteger modInverse(BigInteger m) {
         if (m.signum() <= 0) {
-            // math.18=BigInteger: modulus not positive
-            throw new ArithmeticException(Messages.getString("math.18")); //$NON-NLS-1$
+            throw new ArithmeticException("modulus not positive");
         }
         validate2("modInverse", this, m);
         return new BigInteger(BigInt.modInverse(bigInt, m.bigInt, null));
@@ -1179,8 +1166,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public BigInteger modPow(BigInteger exponent, BigInteger m) {
         if (m.signum() <= 0) {
-            // math.18=BigInteger: modulus not positive
-            throw new ArithmeticException(Messages.getString("math.18")); //$NON-NLS-1$
+            throw new ArithmeticException("modulus not positive");
         }
         BigInteger base;
         if (exponent.signum() < 0) {
@@ -1210,8 +1196,7 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      */
     public BigInteger mod(BigInteger m) {
         if (m.signum() <= 0) {
-            // math.18=BigInteger: modulus not positive
-            throw new ArithmeticException(Messages.getString("math.18")); //$NON-NLS-1$
+            throw new ArithmeticException("modulus not positive");
         }
         validate2("mod", this, m);
         return new BigInteger(BigInt.modulus(bigInt, m.bigInt, null));
@@ -1239,14 +1224,13 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      * a {@code BigInteger} instance. The probability that the returned {@code
      * BigInteger} is prime is beyond (1-1/2^80).
      * 
-     * @return smallest integer > {@code this} which is robably prime.
+     * @return smallest integer > {@code this} which is probably prime.
      * @throws ArithmeticException
      *             if {@code this < 0}.
      */
     public BigInteger nextProbablePrime() {
         if (sign < 0) {
-            // math.1A=start < 0: {0}
-            throw new ArithmeticException(Messages.getString("math.1A", this)); //$NON-NLS-1$
+            throw new ArithmeticException("sign < 0");
         }
         return Primality.nextProbablePrime(this);
     }

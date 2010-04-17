@@ -29,8 +29,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Hashtable;
 
-import org.apache.harmony.logging.internal.nls.Messages;
-
 /**
  * A {@code FileHandler} writes logging records into a specified file or a
  * rotating set of files.
@@ -228,9 +226,8 @@ public class FileHandler extends StreamHandler {
         String className = this.getClass().getName();
         pattern = (null == p) ? getStringProperty(className + ".pattern",
                 DEFAULT_PATTERN) : p;
-        if (null == pattern || "".equals(pattern)) {
-            // logging.19=Pattern cannot be empty
-            throw new NullPointerException(Messages.getString("logging.19"));
+        if (pattern == null || pattern.isEmpty()) {
+            throw new NullPointerException("Pattern cannot be empty or null");
         }
         append = (null == a) ? getBooleanProperty(className + ".append",
                 DEFAULT_APPEND) : a.booleanValue();
@@ -255,9 +252,7 @@ public class FileHandler extends StreamHandler {
             output = new MeasureOutputStream(new BufferedOutputStream(
                     new FileOutputStream(files[0])));
         } catch (FileNotFoundException e1) {
-            // logging.1A=Error happened when open log file.
-            this.getErrorManager().error(Messages.getString("logging.1A"), //$NON-NLS-1$
-                    e1, ErrorManager.OPEN_FAILURE);
+            this.getErrorManager().error("Error opening log file", e1, ErrorManager.OPEN_FAILURE);
         }
         setOutputStream(output);
     }
@@ -401,12 +396,10 @@ public class FileHandler extends StreamHandler {
      *             if the pattern is {@code null}.
      */
     public FileHandler(String pattern) throws IOException {
-        if (pattern.equals("")) { //$NON-NLS-1$
-            // logging.19=Pattern cannot be empty
-            throw new IllegalArgumentException(Messages.getString("logging.19")); //$NON-NLS-1$
+        if (pattern.isEmpty()) {
+            throw new IllegalArgumentException("Pattern cannot be empty");
         }
-        init(pattern, null, Integer.valueOf(DEFAULT_LIMIT), Integer
-                .valueOf(DEFAULT_COUNT));
+        init(pattern, null, Integer.valueOf(DEFAULT_LIMIT), Integer.valueOf(DEFAULT_COUNT));
     }
 
     /**
@@ -435,10 +428,9 @@ public class FileHandler extends StreamHandler {
      *             if {@code pattern} is {@code null}.
      */
     public FileHandler(String pattern, boolean append) throws IOException {
-        if (pattern.equals("")) { //$NON-NLS-1$
-            throw new IllegalArgumentException(Messages.getString("logging.19")); //$NON-NLS-1$
+        if (pattern.isEmpty()) {
+            throw new IllegalArgumentException("Pattern cannot be empty");
         }
-
         init(pattern, Boolean.valueOf(append), Integer.valueOf(DEFAULT_LIMIT),
                 Integer.valueOf(DEFAULT_COUNT));
     }
@@ -473,13 +465,11 @@ public class FileHandler extends StreamHandler {
      *             if {@code pattern} is {@code null}.
      */
     public FileHandler(String pattern, int limit, int count) throws IOException {
-        if (pattern.equals("")) { //$NON-NLS-1$
-            throw new IllegalArgumentException(Messages.getString("logging.19")); //$NON-NLS-1$
+        if (pattern.isEmpty()) {
+            throw new IllegalArgumentException("Pattern cannot be empty");
         }
         if (limit < 0 || count < 1) {
-            // logging.1B=The limit and count property must be larger than 0 and
-            // 1, respectively
-            throw new IllegalArgumentException(Messages.getString("logging.1B")); //$NON-NLS-1$
+            throw new IllegalArgumentException("limit < 0 || count < 1");
         }
         init(pattern, null, Integer.valueOf(limit), Integer.valueOf(count));
     }
@@ -516,18 +506,14 @@ public class FileHandler extends StreamHandler {
      * @throws NullPointerException
      *             if {@code pattern} is {@code null}.
      */
-    public FileHandler(String pattern, int limit, int count, boolean append)
-            throws IOException {
-        if (pattern.equals("")) { //$NON-NLS-1$
-            throw new IllegalArgumentException(Messages.getString("logging.19")); //$NON-NLS-1$
+    public FileHandler(String pattern, int limit, int count, boolean append) throws IOException {
+        if (pattern.isEmpty()) {
+            throw new IllegalArgumentException("Pattern cannot be empty");
         }
         if (limit < 0 || count < 1) {
-            // logging.1B=The limit and count property must be larger than 0 and
-            // 1, respectively
-            throw new IllegalArgumentException(Messages.getString("logging.1B")); //$NON-NLS-1$
+            throw new IllegalArgumentException("limit < 0 || count < 1");
         }
-        init(pattern, Boolean.valueOf(append), Integer.valueOf(limit), Integer
-                .valueOf(count));
+        init(pattern, Boolean.valueOf(append), Integer.valueOf(limit), Integer.valueOf(count));
     }
 
     /**

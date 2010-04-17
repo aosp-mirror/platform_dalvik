@@ -44,7 +44,6 @@ public class AllTests {
         suite.addTestSuite(SocketHandlerTest.class);
         suite.addTestSuite(StreamHandlerTest.class);
         suite.addTestSuite(XMLFormatterTest.class);
-        suite.addTestSuite(MessagesTest.class);
         // $JUnit-END$
         return suite;
     }

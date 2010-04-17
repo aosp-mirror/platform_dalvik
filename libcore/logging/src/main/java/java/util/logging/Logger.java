@@ -26,8 +26,6 @@ package java.util.logging;
 
 import dalvik.system.DalvikLogHandler;
 import dalvik.system.DalvikLogging;
-import org.apache.harmony.logging.internal.nls.Messages;
-
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -340,9 +338,8 @@ public class Logger {
                 // Failed to load using the current class's classloader, ignore
             }
         }
-        // logging.8=Failed to load the specified resource bundle "{0}".
-        throw new MissingResourceException(Messages.getString("logging.8", //$NON-NLS-1$
-                resourceBundleName), resourceBundleName, null);
+        throw new MissingResourceException("Failed to load the specified resource bundle \"" +
+                resourceBundleName + "\"", resourceBundleName, null);
     }
 
     /**
@@ -394,11 +391,7 @@ public class Logger {
             if (current.equals(resourceBundleName)) {
                 return;
             } else {
-                // logging.9=The specified resource bundle name "{0}" is
-                // inconsistent with the existing one "{1}".
-                throw new IllegalArgumentException(Messages.getString(
-                        "logging.9", //$NON-NLS-1$
-                        resourceBundleName, current));
+                throw new IllegalArgumentException("Resource bundle name '" + resourceBundleName + "' is inconsistent with the existing '" + current + "'");
             }
         }
 
@@ -458,8 +451,7 @@ public class Logger {
      */
     public void addHandler(Handler handler) {
         if (handler == null) {
-            // logging.A=The 'handler' parameter is null.
-            throw new NullPointerException(Messages.getString("logging.A")); //$NON-NLS-1$
+            throw new NullPointerException("handler == null");
         }
         // Anonymous loggers can always add handlers
         if (this.isNamed) {
@@ -655,8 +647,7 @@ public class Logger {
      */
     public void setParent(Logger parent) {
         if (parent == null) {
-            // logging.B=The 'parent' parameter is null.
-            throw new NullPointerException(Messages.getString("logging.B")); //$NON-NLS-1$
+            throw new NullPointerException("parent == null");
         }
 
         // even anonymous loggers are checked

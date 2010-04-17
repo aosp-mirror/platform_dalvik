@@ -22,8 +22,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
 
-import org.apache.harmony.math.internal.nls.Messages;
-
 /**
  * Immutable objects describing settings such as rounding mode and digit
  * precision for the numerical operations provided by class {@link BigDecimal}.
@@ -130,12 +128,10 @@ public final class MathContext implements Serializable {
      */
     public MathContext(int precision, RoundingMode roundingMode) {
         if (precision < 0) {
-            // math.0C=Digits < 0
-            throw new IllegalArgumentException(Messages.getString("math.0C")); //$NON-NLS-1$
+            throw new IllegalArgumentException("precision < 0");
         }
         if (roundingMode == null) {
-            // math.0D=null RoundingMode
-            throw new NullPointerException(Messages.getString("math.0D")); //$NON-NLS-1$
+            throw new NullPointerException("roundingMode == null");
         }
         this.precision = precision;
         this.roundingMode = roundingMode;
@@ -162,8 +158,7 @@ public final class MathContext implements Serializable {
         int digit; // It will contain the digit parsed
 
         if ((charVal.length < 27) || (charVal.length > 45)) {
-            // math.0E=bad string format
-            throw new IllegalArgumentException(Messages.getString("math.0E")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Bad string format");
         }
         // Parsing "precision=" String
         for (i = 0; (i < chPrecision.length) && (charVal[i] == chPrecision[i]); i++) {
@@ -171,14 +166,12 @@ public final class MathContext implements Serializable {
         }
 
         if (i < chPrecision.length) {
-            // math.0E=bad string format
-            throw new IllegalArgumentException(Messages.getString("math.0E")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Bad string format");
         }
         // Parsing the value for "precision="...
         digit = Character.digit(charVal[i], 10);
         if (digit == -1) {
-            // math.0E=bad string format
-            throw new IllegalArgumentException(Messages.getString("math.0E")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Bad string format");
         }
         // BEGIN android-changed
         this.precision = digit;
@@ -194,14 +187,12 @@ public final class MathContext implements Serializable {
                     break;
                 }
                 // It isn't  a valid digit, and isn't a white space
-                // math.0E=bad string format
-                throw new IllegalArgumentException(Messages.getString("math.0E")); //$NON-NLS-1$
+                throw new IllegalArgumentException("Bad string format");
             }
             // Accumulating the value parsed
             this.precision = this.precision * 10 + digit;
             if (this.precision < 0) {
-                // math.0E=bad string format
-                throw new IllegalArgumentException(Messages.getString("math.0E")); //$NON-NLS-1$
+                throw new IllegalArgumentException("Bad string format");
             }
             i++;
         } while (true);
@@ -212,8 +203,7 @@ public final class MathContext implements Serializable {
         }
 
         if (j < chRoundingMode.length) {
-            // math.0E=bad string format
-            throw new IllegalArgumentException(Messages.getString("math.0E")); //$NON-NLS-1$
+            throw new IllegalArgumentException("Bad string format");
         }
         // Parsing the value for "roundingMode"...
         this.roundingMode = RoundingMode.valueOf(String.valueOf(charVal, i,
@@ -314,16 +304,13 @@ public final class MathContext implements Serializable {
      * @throws StreamCorruptedException
      *             if {@code roundingMode == null}
      */
-    private void readObject(ObjectInputStream s) throws IOException,
-            ClassNotFoundException {
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         s.defaultReadObject();
         if (precision < 0) {
-            // math.0F=bad precision value
-            throw new StreamCorruptedException(Messages.getString("math.0F")); //$NON-NLS-1$
+            throw new StreamCorruptedException("precision < 0");
         }
         if (roundingMode == null) {
-            // math.10=null roundingMode
-            throw new StreamCorruptedException(Messages.getString("math.10")); //$NON-NLS-1$
+            throw new StreamCorruptedException("roundingMode == null");
         }
     }
 

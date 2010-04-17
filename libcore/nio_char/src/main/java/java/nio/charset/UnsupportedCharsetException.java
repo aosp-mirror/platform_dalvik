@@ -17,8 +17,6 @@
 
 package java.nio.charset;
 
-import org.apache.harmony.niochar.internal.nls.Messages;
-
 /**
  * An {@code UnsupportedCharsetException} is thrown when an unsupported charset
  * name is encountered.
@@ -42,8 +40,7 @@ public class UnsupportedCharsetException extends IllegalArgumentException {
      *            the encountered unsupported charset name.
      */
     public UnsupportedCharsetException(String charset) {
-        // niochar.04=The unsupported charset name is "{0}".
-        super(Messages.getString("niochar.04", charset)); //$NON-NLS-1$
+        super(charset);
         this.charsetName = charset;
     }
 

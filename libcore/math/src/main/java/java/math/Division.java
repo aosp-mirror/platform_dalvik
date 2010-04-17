@@ -17,10 +17,6 @@
 
 package java.math;
 
-// BEGIN android-removed
-// import org.apache.harmony.math.internal.nls.Messages;
-// END android-removed
-
 /**
  * Static library that provides all operations related with division and modular
  * arithmetic to {@link BigInteger}. Some methods are provided in both mutable

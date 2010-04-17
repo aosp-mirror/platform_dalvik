@@ -22,8 +22,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import org.apache.harmony.math.internal.nls.Messages;
-
 /**
  * This class represents immutable integer numbers of arbitrary length. Large
  * numbers are typically used in security applications and therefore BigIntegers
@@ -378,8 +376,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             newScale = (long)scale - Integer.parseInt(scaleString);
             scale = (int)newScale;
             if (newScale != scale) {
-                // math.02=Scale out of range.
-                throw new NumberFormatException(Messages.getString("math.02")); //$NON-NLS-1$
+                throw new NumberFormatException("Scale out of range");
             }
         }
         // Parsing the unscaled value
@@ -523,8 +520,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      */
     public BigDecimal(double val) {
         if (Double.isInfinite(val) || Double.isNaN(val)) {
-            // math.03=Infinity or NaN
-            throw new NumberFormatException(Messages.getString("math.03")); //$NON-NLS-1$
+            throw new NumberFormatException("Infinity or NaN");
         }
         long bits = Double.doubleToLongBits(val); // IEEE-754
         long mantisa;
@@ -802,8 +798,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      */
     public static BigDecimal valueOf(double val) {
         if (Double.isInfinite(val) || Double.isNaN(val)) {
-            // math.03=Infinity or NaN
-            throw new NumberFormatException(Messages.getString("math.03")); //$NON-NLS-1$
+            throw new NumberFormatException("Infinity or NaN");
         }
         return new BigDecimal(Double.toString(val));
     }
@@ -1113,8 +1108,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             throw new NullPointerException();
         }
         if (divisor.isZero()) {
-            // math.04=Division by zero
-            throw new ArithmeticException(Messages.getString("math.04")); //$NON-NLS-1$
+            throw new ArithmeticException("Division by zero");
         }
 
         long diffScale = ((long)this.scale - divisor.scale) - scale;
@@ -1289,8 +1283,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         int lastPow = FIVE_POW.length - 1;
 
         if (divisor.isZero()) {
-            // math.04=Division by zero
-            throw new ArithmeticException(Messages.getString("math.04")); //$NON-NLS-1$
+            throw new ArithmeticException("Division by zero");
         }
         if (p.signum() == 0) {
             return zeroScaledBy(diffScale);
@@ -1320,8 +1313,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         } while (true);
         // If  abs(q) != 1  then the quotient is periodic
         if (!q.abs().equals(BigInteger.ONE)) {
-            // math.05=Non-terminating decimal expansion; no exact representable decimal result.
-            throw new ArithmeticException(Messages.getString("math.05")); //$NON-NLS-1$
+            throw new ArithmeticException("Non-terminating decimal expansion; no exact representable decimal result");
         }
         // The sign of the is fixed and the quotient will be saved in 'p'
         if (q.signum() < 0) {
@@ -1434,8 +1426,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         int lastPow = TEN_POW.length - 1;
 
         if (divisor.isZero()) {
-            // math.04=Division by zero
-            throw new ArithmeticException(Messages.getString("math.04")); //$NON-NLS-1$
+            throw new ArithmeticException("Division by zero");
         }
         if ((divisor.aproxPrecision() + newScale > this.aproxPrecision() + 1L)
         || (this.isZero())) {
@@ -1544,9 +1535,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
                     compRemDiv = Math.abs(quotAndRem[1].signum());
                 }
                 if (compRemDiv > 0) {
-                    // The quotient won't fit in 'mc.precision()' digits
-                    // math.06=Division impossible
-                    throw new ArithmeticException(Messages.getString("math.06")); //$NON-NLS-1$
+                    throw new ArithmeticException("Division impossible");
                 }
             }
         }
@@ -1579,8 +1568,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         }
         // To check if the result fit in 'mc.precision()' digits
         if (resultPrecision > mcPrecision) {
-            // math.06=Division impossible
-            throw new ArithmeticException(Messages.getString("math.06")); //$NON-NLS-1$
+            throw new ArithmeticException("Division impossible");
         }
         integralValue.scale = toIntScale(newScale);
         integralValue.setUnscaledValue(strippedBI);
@@ -1706,14 +1694,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             return ONE;
         }
         if ((n < 0) || (n > 999999999)) {
-            // math.07=Invalid Operation
-            throw new ArithmeticException(Messages.getString("math.07")); //$NON-NLS-1$
+            throw new ArithmeticException("Invalid operation");
         }
         long newScale = scale * (long)n;
         // Let be: this = [u,s]   so:  this^n = [u^n, s*n]
-        return ((isZero())
-        ? zeroScaledBy(newScale)
-        : new BigDecimal(getUnscaledValue().pow(n), toIntScale(newScale)));
+        return isZero() ? zeroScaledBy(newScale)
+                : new BigDecimal(getUnscaledValue().pow(n), toIntScale(newScale));
     }
 
     /**
@@ -1746,8 +1732,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         }
         if ((m > 999999999) || ((mcPrecision == 0) && (n < 0))
                 || ((mcPrecision > 0) && (elength > mcPrecision))) {
-            // math.07=Invalid Operation
-            throw new ArithmeticException(Messages.getString("math.07")); //$NON-NLS-1$
+            throw new ArithmeticException("Invalid operation");
         }
         if (mcPrecision > 0) {
             newPrecision = new MathContext( mcPrecision + elength + 1,
@@ -2336,7 +2321,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             if (exponent >= 0) {
                 result.insert(end - scale, '.');
             } else {
-                result.insert(begin - 1, "0."); //$NON-NLS-1$
+                result.insert(begin - 1, "0.");
                 result.insert(begin + 1, CH_ZEROS, 0, -(int)exponent - 1);
             }
         } else {
@@ -2380,7 +2365,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             if (exponent >= 0) {
                 result.insert(end - scale, '.');
             } else {
-                result.insert(begin - 1, "0."); //$NON-NLS-1$
+                result.insert(begin - 1, "0.");
                 result.insert(begin + 1, CH_ZEROS, 0, -(int)exponent - 1);
             }
         } else {
@@ -2452,7 +2437,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         if (scale > 0) {
             delta -= (intStr.length() - begin);
             if (delta >= 0) {
-                result.append("0."); //$NON-NLS-1$
+                result.append("0.");
                 // To append zeros after the decimal point
                 for (; delta > CH_ZEROS.length; delta -= CH_ZEROS.length) {
                     result.append(CH_ZEROS);
@@ -2510,14 +2495,12 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             BigInteger[] integerAndFraction;
             // An optimization before do a heavy division
             if ((scale > aproxPrecision()) || (scale > getUnscaledValue().getLowestSetBit())) {
-                // math.08=Rounding necessary
-                throw new ArithmeticException(Messages.getString("math.08")); //$NON-NLS-1$
+                throw new ArithmeticException("Rounding necessary");
             }
             integerAndFraction = getUnscaledValue().divideAndRemainder(Multiplication.powerOf10(scale));
             if (integerAndFraction[1].signum() != 0) {
                 // It exists a non-zero fractional part
-                // math.08=Rounding necessary
-                throw new ArithmeticException(Messages.getString("math.08")); //$NON-NLS-1$
+                throw new ArithmeticException("Rounding necessary");
             }
             return integerAndFraction[0];
         }
@@ -2908,8 +2891,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
         switch (roundingMode) {
             case UNNECESSARY:
                 if (fraction != 0) {
-                    // math.08=Rounding necessary
-                    throw new ArithmeticException(Messages.getString("math.08")); //$NON-NLS-1$
+                    throw new ArithmeticException("Rounding necessary");
                 }
                 break;
             case UP:
@@ -2964,8 +2946,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
             // It fits in the primitive type
             return bigInteger.longValue();
         }
-        // math.08=Rounding necessary
-        throw new ArithmeticException(Messages.getString("math.08")); //$NON-NLS-1$
+        throw new ArithmeticException("Rounding necessary");
     }
 
     /**
@@ -2998,11 +2979,9 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>, Serial
      */
     private static int toIntScale(long longScale) {
         if (longScale < Integer.MIN_VALUE) {
-            // math.09=Overflow
-            throw new ArithmeticException(Messages.getString("math.09")); //$NON-NLS-1$
+            throw new ArithmeticException("Overflow");
         } else if (longScale > Integer.MAX_VALUE) {
-            // math.0A=Underflow
-            throw new ArithmeticException(Messages.getString("math.0A")); //$NON-NLS-1$
+            throw new ArithmeticException("Underflow");
         } else {
             return (int)longScale;
         }

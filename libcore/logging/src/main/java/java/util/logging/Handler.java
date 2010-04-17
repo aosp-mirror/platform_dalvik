@@ -22,8 +22,6 @@ import java.nio.charset.Charset;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 
-import org.apache.harmony.logging.internal.nls.Messages;
-
 /**
  * A {@code Handler} object accepts a logging request and exports the desired
  * messages to a target, for example, a file, the console, etc. It can be
@@ -98,11 +96,7 @@ public abstract class Handler {
 
     // print error message in some format
     void printInvalidPropMessage(String key, String value, Exception e) {
-        // logging.12=Invalid property value for
-        String msg = new StringBuilder().append(
-                Messages.getString("logging.12")) //$NON-NLS-1$
-                .append(prefix).append(":").append(key).append("/").append( //$NON-NLS-1$//$NON-NLS-2$
-                        value).toString();
+        String msg = "Invalid property value for " + prefix + ":" + key + "/" + value;
         errorMan.error(msg, e, ErrorManager.GENERIC_FAILURE);
     }
 
@@ -286,21 +280,16 @@ public abstract class Handler {
      * @throws UnsupportedEncodingException
      *             if the specified encoding is not supported by the runtime.
      */
-    void internalSetEncoding(String newEncoding)
-            throws UnsupportedEncodingException {
+    void internalSetEncoding(String newEncoding) throws UnsupportedEncodingException {
         // accepts "null" because it indicates using default encoding
-        if (null == newEncoding) {
+        if (newEncoding == null) {
             this.encoding = null;
         } else {
             if (Charset.isSupported(newEncoding)) {
                 this.encoding = newEncoding;
             } else {
-                // logging.13=The encoding "{0}" is not supported.
-                throw new UnsupportedEncodingException(Messages.getString(
-                        "logging.13", //$NON-NLS-1$
-                        newEncoding));
+                throw new UnsupportedEncodingException(newEncoding);
             }
-
         }
     }
 

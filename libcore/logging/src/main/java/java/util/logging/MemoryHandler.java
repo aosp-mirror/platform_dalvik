@@ -20,8 +20,6 @@ package java.util.logging;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 
-import org.apache.harmony.logging.internal.nls.Messages;
-
 /**
  * A {@code Handler} put the description of log events into a cycled memory
  * buffer.
@@ -92,7 +90,7 @@ public class MemoryHandler extends Handler {
         super();
         String className = this.getClass().getName();
         // init target
-        final String targetName = manager.getProperty(className + ".target"); //$NON-NLS-1$
+        final String targetName = manager.getProperty(className + ".target");
         try {
             Class<?> targetClass = AccessController
                     .doPrivileged(new PrivilegedExceptionAction<Class<?>>() {
@@ -107,12 +105,10 @@ public class MemoryHandler extends Handler {
                     });
             target = (Handler) targetClass.newInstance();
         } catch (Exception e) {
-            // logging.10=Cannot load target handler:{0}
-            throw new RuntimeException(Messages.getString("logging.10", //$NON-NLS-1$
-                    targetName));
+            throw new RuntimeException("Cannot load target handler '" + targetName + "'");
         }
         // init size
-        String sizeString = manager.getProperty(className + ".size"); //$NON-NLS-1$
+        String sizeString = manager.getProperty(className + ".size");
         if (null != sizeString) {
             try {
                 size = Integer.parseInt(sizeString);
@@ -120,20 +116,20 @@ public class MemoryHandler extends Handler {
                     size = DEFAULT_SIZE;
                 }
             } catch (Exception e) {
-                printInvalidPropMessage(className + ".size", sizeString, e); //$NON-NLS-1$
+                printInvalidPropMessage(className + ".size", sizeString, e);
             }
         }
         // init push level
-        String pushName = manager.getProperty(className + ".push"); //$NON-NLS-1$
+        String pushName = manager.getProperty(className + ".push");
         if (null != pushName) {
             try {
                 push = Level.parse(pushName);
             } catch (Exception e) {
-                printInvalidPropMessage(className + ".push", pushName, e); //$NON-NLS-1$
+                printInvalidPropMessage(className + ".push", pushName, e);
             }
         }
         // init other properties which are common for all Handler
-        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null); //$NON-NLS-1$//$NON-NLS-2$
+        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null);
         buffer = new LogRecord[size];
     }
 
@@ -157,15 +153,14 @@ public class MemoryHandler extends Handler {
      */
     public MemoryHandler(Handler target, int size, Level pushLevel) {
         if (size <= 0) {
-            // logging.11=Size must be positive.
-            throw new IllegalArgumentException(Messages.getString("logging.11")); //$NON-NLS-1$
+            throw new IllegalArgumentException("size <= 0");
         }
         target.getLevel();
         pushLevel.intValue();
         this.target = target;
         this.size = size;
         this.push = pushLevel;
-        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null); //$NON-NLS-1$//$NON-NLS-2$
+        initProperties("ALL", null, "java.util.logging.SimpleFormatter", null);
         buffer = new LogRecord[size];
     }
 
