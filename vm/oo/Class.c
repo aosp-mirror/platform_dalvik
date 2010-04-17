@@ -4952,3 +4952,13 @@ int dvmCompareNameDescriptorAndMethod(const char* name,
 
     return dvmCompareDescriptorAndMethodProto(descriptor, method);
 }
+
+size_t dvmClassObjectSize(const ClassObject *clazz)
+{
+    size_t size;
+
+    assert(clazz != NULL);
+    size = offsetof(ClassObject, sfields);
+    size += sizeof(StaticField) * clazz->sfieldCount;
+    return size;
+}

@@ -273,4 +273,9 @@ int dvmCompareNameProtoAndMethod(const char* name,
 int dvmCompareNameDescriptorAndMethod(const char* name,
     const char* descriptor, const Method* method);
 
+/*
+ * Returns the size of the given class object in bytes.
+ */
+size_t dvmClassObjectSize(const ClassObject *clazz);
+
 #endif /*_DALVIK_OO_CLASS*/

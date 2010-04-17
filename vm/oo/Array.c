@@ -786,13 +786,14 @@ static size_t arrayElementWidth(const ArrayObject *array)
     return 0;  /* Quiet the compiler. */
 }
 
-size_t dvmArrayObjectLength(const ArrayObject *array)
+size_t dvmArrayObjectSize(const ArrayObject *array)
 {
-    size_t length;
+    size_t size;
 
-    length = offsetof(ArrayObject, contents);
-    length += array->length * arrayElementWidth(array);
-    return length;
+    assert(array != NULL);
+    size = offsetof(ArrayObject, contents);
+    size += array->length * arrayElementWidth(array);
+    return size;
 }
 
 /*
