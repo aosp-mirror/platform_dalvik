@@ -35,12 +35,12 @@ import vogar.target.Runner;
 /**
  * Create {@link Action}s for {@code .java} files with jtreg tests in them.
  */
-class JtregFinder implements CodeFinder {
+class JtregSpec implements RunnerSpec {
 
     // TODO: add support for the  @library directive, as seen in
     //   test/com/sun/crypto/provider/Cipher/AES/TestKATForECB_VT.java
 
-    private static final Logger logger = Logger.getLogger(JtregFinder.class.getName());
+    private static final Logger logger = Logger.getLogger(JtregSpec.class.getName());
 
     /**
      * The subpath of a platform implementation under which tests live. Used to
@@ -51,7 +51,7 @@ class JtregFinder implements CodeFinder {
 
     private final File localTemp;
 
-    JtregFinder(File localTemp) {
+    JtregSpec(File localTemp) {
         this.localTemp = localTemp;
     }
 
@@ -85,15 +85,18 @@ class JtregFinder implements CodeFinder {
                 TestDescription description = testResult.getDescription();
                 String qualifiedName = qualifiedName(description);
                 String testClass = description.getName();
-                result.add(new Action(qualifiedName, testClass, description.getDir(), description.getFile(),
-                        description.getTitle(),
-                        getRunnerClass(), getRunnerJava(), getRunnerClasspath()));
+                result.add(new Action(qualifiedName, testClass, description.getDir(), description.getFile(), this));
             }
             return result;
         } catch (Exception jtregFailure) {
             // jtreg shouldn't fail in practice
             throw new RuntimeException(jtregFailure);
         }
+    }
+
+    public boolean supports(String clazz) {
+        // the jtreg runner cannot run prebuilt classes
+        return false;
     }
 
     /**
@@ -128,11 +131,11 @@ class JtregFinder implements CodeFinder {
         return JtregRunner.class;
     }
 
-    public File getRunnerJava() {
+    public File getSource() {
         return new File(Vogar.HOME_JAVA, "vogar/target/JtregRunner.java");
     }
 
-    public Classpath getRunnerClasspath() {
+    public Classpath getClasspath() {
         return new Classpath();
     }
 }

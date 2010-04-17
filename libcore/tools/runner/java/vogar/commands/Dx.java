@@ -33,6 +33,7 @@ public final class Dx {
      * Converts all the .class files on 'classpath' into a dex file written to 'output'.
      */
     public void dex(File output, Classpath classpath) {
+        output.getParentFile().mkdirs();
         File key = DEX_CACHE.makeKey(classpath);
         if (key != null && key.exists()) {
             logger.fine("dex cache hit for " + classpath);

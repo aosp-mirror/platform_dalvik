@@ -35,8 +35,9 @@ public abstract class Vm extends Mode {
     protected final List<String> targetArgs;
 
     Vm(Environment environment, File sdkJar, List<String> javacArgs,
-            List<String> additionalVmArgs, List<String> targetArgs, int monitorPort) {
-        super(environment, sdkJar, javacArgs, monitorPort);
+            List<String> additionalVmArgs, List<String> targetArgs, int monitorPort,
+            Classpath classpath) {
+        super(environment, sdkJar, javacArgs, monitorPort, classpath);
         this.additionalVmArgs = additionalVmArgs;
         this.targetArgs = targetArgs;
     }
@@ -46,7 +47,7 @@ public abstract class Vm extends Mode {
      */
     @Override protected Command createActionCommand(Action action) {
         return newVmCommandBuilder(action.getUserDir())
-                .classpath(getRuntimeSupportClasspath(action))
+                .classpath(getRuntimeClasspath(action))
                 .userDir(action.getUserDir())
                 .debugPort(environment.debugPort)
                 .vmArgs(additionalVmArgs)
@@ -64,7 +65,7 @@ public abstract class Vm extends Mode {
      * Returns the classpath containing JUnit and the dalvik annotations
      * required for action execution.
      */
-    protected abstract Classpath getRuntimeSupportClasspath(Action action);
+    protected abstract Classpath getRuntimeClasspath(Action action);
 
     /**
      * Builds a virtual machine command.

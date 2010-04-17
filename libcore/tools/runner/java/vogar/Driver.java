@@ -46,7 +46,7 @@ final class Driver implements HostMonitor.Handler {
 
     private final File localTemp;
     private final ExpectationStore expectationStore;
-    private final List<CodeFinder> codeFinders;
+    private final List<RunnerSpec> runnerSpecs;
     private final Mode mode;
     private final XmlReportPrinter reportPrinter;
     private final Console console;
@@ -59,6 +59,7 @@ final class Driver implements HostMonitor.Handler {
 
     private Timer actionTimeoutTimer = new Timer("action timeout", true);
 
+    private final Set<RunnerSpec> runnerSpecsBearingActions = new HashSet<RunnerSpec>();
     private final Map<String, Action> actions = Collections.synchronizedMap(
             new LinkedHashMap<String, Action>());
     private final Map<String, Outcome> outcomes = Collections.synchronizedMap(
@@ -71,13 +72,13 @@ final class Driver implements HostMonitor.Handler {
     private int unsupportedActions = 0;
 
     public Driver(File localTemp, Mode mode, ExpectationStore expectationStore,
-            List<CodeFinder> codeFinders, XmlReportPrinter reportPrinter,
+            List<RunnerSpec> runnerSpecs, XmlReportPrinter reportPrinter,
             Console console, HostMonitor monitor, int monitorPort, long timeoutSeconds) {
         this.localTemp = localTemp;
         this.expectationStore = expectationStore;
         this.mode = mode;
         this.console = console;
-        this.codeFinders = codeFinders;
+        this.runnerSpecs = runnerSpecs;
         this.reportPrinter = reportPrinter;
         this.monitor = monitor;
         this.monitorPort = monitorPort;
@@ -87,44 +88,27 @@ final class Driver implements HostMonitor.Handler {
     /**
      * Builds and executes the actions in the given files.
      */
-    public void buildAndRunAllActions(Collection<File> files) {
+    public void buildAndRun(Collection<File> files, Collection<String> classes) {
         if (!actions.isEmpty()) {
             throw new IllegalStateException("Drivers are not reusable");
         }
 
         new Mkdir().mkdirs(localTemp);
-        for (File file : files) {
-            Set<Action> actionsForFile = Collections.emptySet();
 
-            for (CodeFinder codeFinder : codeFinders) {
-                actionsForFile = codeFinder.findActions(file);
+        filesToActions(files);
+        classesToActions(classes);
 
-                // break as soon as we find any match. We don't need multiple
-                // matches for the same file, since that would run it twice.
-                if (!actionsForFile.isEmpty()) {
-                    break;
-                }
-            }
-
-            for (Action action : actionsForFile) {
-                actions.put(action.getName(), action);
-            }
+        if (actions.isEmpty()) {
+            logger.info("Nothing to do.");
+            return;
         }
 
-        // compute TestRunner java and classpath to pass to mode.prepare
-        Set<File> runnerJava = new HashSet<File>();
-        Classpath runnerClasspath = new Classpath();
-        for (final Action action : actions.values()) {
-            runnerJava.add(action.getRunnerJava());
-            runnerClasspath.addAll(action.getRunnerClasspath());
-        }
+        logger.info("Actions: " + actions.size());
 
         // mode.prepare before mode.buildAndInstall to ensure the runner is
         // built. packaging of activity APK files needs the runner along with
         // the action-specific files.
-        mode.prepare(runnerJava, runnerClasspath);
-
-        logger.info("Actions: " + actions.size());
+        mode.prepare(runnerSpecsBearingActions);
 
         // build and install actions in a background thread. Using lots of
         // threads helps for packages that contain many unsupported actions
@@ -189,6 +173,8 @@ final class Driver implements HostMonitor.Handler {
             logger.info(numFiles + " XML files written.");
         }
 
+        mode.shutdown();
+
         if (failures > 0 || unsupportedActions > 0) {
             Collections.sort(failureNames);
             console.summarizeFailures(failureNames);
@@ -197,6 +183,40 @@ final class Driver implements HostMonitor.Handler {
         } else {
             logger.info(String.format("Outcomes: %s. All successful.", 
                     (successes + failures)));
+        }
+    }
+
+    private void classesToActions(Collection<String> classes) {
+        for (String clazz : classes) {
+            for (RunnerSpec runnerSpec : runnerSpecs) {
+                if (runnerSpec.supports(clazz)) {
+                    runnerSpecsBearingActions.add(runnerSpec);
+                    Action action = new Action(clazz, clazz, null, null, runnerSpec);
+                    actions.put(action.getName(), action);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void filesToActions(Collection<File> files) {
+        for (File file : files) {
+            Set<Action> actionsForFile = Collections.emptySet();
+
+            for (RunnerSpec runnerSpec : runnerSpecs) {
+                actionsForFile = runnerSpec.findActions(file);
+
+                // break as soon as we find any match. We don't need multiple
+                // matches for the same file, since that would run it twice.
+                if (!actionsForFile.isEmpty()) {
+                    runnerSpecsBearingActions.add(runnerSpec);
+                    break;
+                }
+            }
+
+            for (Action action : actionsForFile) {
+                actions.put(action.getName(), action);
+            }
         }
     }
 

@@ -17,7 +17,6 @@
 package vogar;
 
 import java.io.File;
-import vogar.target.Runner;
 
 /**
  * A named job such as a test or benchmark run. This class tracks the resource
@@ -27,36 +26,34 @@ public final class Action {
 
     private final String name;
     private final String actionClass;
-    private final File actionDirectory;
-    private final File actionJava;
-    private final String description;
-    private final Class<? extends Runner> runnerClass;
-    private final File runnerJava;
-    private final Classpath runnerClasspath;
+    private final File resourcesDirectory;
+    private final File javaFile;
+    private final RunnerSpec runnerSpec;
     private File userDir = new File(System.getProperty("user.dir"));
 
-    public Action(String name, String actionClass, File actionDirectory,
-            File actionJava, String description, Class<? extends Runner> runnerClass,
-            File runnerJava, Classpath runnerClasspath) {
+    public Action(String name, String actionClass, File resourcesDirectory,
+            File javaFile, RunnerSpec runnerSpec) {
         this.name = name;
         this.actionClass = actionClass;
-        this.actionDirectory = actionDirectory;
-        this.actionJava = actionJava;
-        this.description = description;
-        this.runnerClass = runnerClass;
-        this.runnerJava = runnerJava;
-        this.runnerClasspath = runnerClasspath;
+        this.resourcesDirectory = resourcesDirectory;
+        this.javaFile = javaFile;
+        this.runnerSpec = runnerSpec;
     }
 
     /**
-     * Returns the local directory containing this action's java file.
+     * Returns the local directory containing this action's required resource
+     * files, or {@code null} if this action is standalone.
      */
-    public File getJavaDirectory() {
-        return actionDirectory;
+    public File getResourcesDirectory() {
+        return resourcesDirectory;
     }
 
+    /**
+     * Returns this action's java file, or {@code null} if this file wasn't
+     * built from source.
+     */
     public File getJavaFile() {
-        return actionJava;
+        return javaFile;
     }
 
     /**
@@ -74,12 +71,8 @@ public final class Action {
         return name;
     }
 
-    /**
-     * Returns an English description of this action, or null if no such
-     * description is known.
-     */
-    public String getDescription() {
-        return description;
+    public RunnerSpec getRunnerSpec() {
+        return runnerSpec;
     }
 
     /**
@@ -92,18 +85,6 @@ public final class Action {
 
     public File getUserDir() {
         return userDir;
-    }
-
-    public Class<? extends Runner> getRunnerClass() {
-        return runnerClass;
-    }
-
-    public File getRunnerJava() {
-        return runnerJava;
-    }
-
-    public Classpath getRunnerClasspath() {
-        return runnerClasspath;
     }
 
     @Override public String toString() {
