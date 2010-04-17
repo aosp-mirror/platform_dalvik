@@ -169,11 +169,7 @@ static jfloat copySign_f(JNIEnv* env, jclass clazz, jfloat a, jfloat b) {
     return copysignf(a, isnan(b) ? 1.0 : b);
 }
 
-/*
- * JNI registration.
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "IEEEremainder", "(DD)D", jieee_remainder },
     { "acos",   "(D)D", jacos },
     { "asin",   "(D)D", jasin },
@@ -203,8 +199,6 @@ static JNINativeMethod gMethods[] = {
     { "tanh",   "(D)D", jtanh },
 };
 
-int register_java_lang_Math(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/lang/Math", gMethods,
-        NELEM(gMethods));
+int register_java_lang_Math(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/lang/Math", gMethods, NELEM(gMethods));
 }

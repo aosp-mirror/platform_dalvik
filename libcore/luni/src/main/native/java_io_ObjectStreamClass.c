@@ -16,7 +16,6 @@
  */
 
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 
 static jobject java_io_osc_getFieldSignature(JNIEnv * env, jclass clazz,
                                                   jobject reflectField) {
@@ -109,11 +108,7 @@ static void java_io_osc_oneTimeInitialization(JNIEnv * env, jclass clazz) {
   // dummy to stay compatible to harmony
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "getFieldSignature",       
     	"(Ljava/lang/reflect/Field;)Ljava/lang/String;",
     	(void*) java_io_osc_getFieldSignature },
@@ -129,6 +124,5 @@ static JNINativeMethod gMethods[] = {
     	(void*) java_io_osc_oneTimeInitialization }
 };
 int register_java_io_ObjectStreamClass(JNIEnv* env) {
-	return jniRegisterNativeMethods(env, "java/io/ObjectStreamClass",
-                gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "java/io/ObjectStreamClass", gMethods, NELEM(gMethods));
 }

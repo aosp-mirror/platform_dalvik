@@ -185,15 +185,10 @@ void jniSetFileDescriptorOfFD (JNIEnv* env, jobject fileDescriptor, int value) {
     setFd(env, fileDescriptor, value);
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "oneTimeInitialization", "()V",              nativeClassInit },
     { "syncImpl",           "()V",                 fd_sync }
 };
 int register_java_io_FileDescriptor(JNIEnv* env) {
-    return jniRegisterNativeMethods(env, "java/io/FileDescriptor",
-        gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "java/io/FileDescriptor", gMethods, NELEM(gMethods));
 }

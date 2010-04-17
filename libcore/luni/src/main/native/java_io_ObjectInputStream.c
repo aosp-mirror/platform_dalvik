@@ -16,7 +16,6 @@
  */
 
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 
 static void java_setFieldBool (JNIEnv * env, jclass clazz, 
                                          jobject targetObject, 
@@ -244,11 +243,7 @@ static void java_setFieldObj (JNIEnv * env, jclass clazz,
     }
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "setField",          
         "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/String;J)V",
         (void*) java_setFieldLong },
@@ -282,6 +277,5 @@ static JNINativeMethod gMethods[] = {
 
 };
 int register_java_io_ObjectInputStream(JNIEnv* env) {
-    return jniRegisterNativeMethods(env, "java/io/ObjectInputStream",
-                gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "java/io/ObjectInputStream", gMethods, NELEM(gMethods));
 }

@@ -17,7 +17,6 @@
 
 #define LOG_TAG "NativeConverter"
 
-#include "AndroidSystemNatives.h"
 #include "ErrorCode.h"
 #include "JNIHelp.h"
 #include "ScopedUtfChars.h"
@@ -989,11 +988,7 @@ static jobject charsetForName(JNIEnv* env, jclass, jstring charsetName) {
             javaCanonicalName, env->NewStringUTF(icuCanonicalName), aliases);
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "canEncode", "(JI)Z", (void*) canEncode },
     { "charsetForName", "(Ljava/lang/String;)Ljava/nio/charset/Charset;", (void*) charsetForName },
     { "closeConverter", "(J)V", (void*) closeConverter },
@@ -1017,8 +1012,7 @@ static JNINativeMethod gMethods[] = {
     { "setSubstitutionBytes", "(J[BI)I", (void*) setSubstitutionBytes },
     { "setSubstitutionChars", "(J[CI)I", (void*) setSubstitutionChars },
 };
-
-int register_com_ibm_icu4jni_converters_NativeConverter(JNIEnv *_env) {
-    return jniRegisterNativeMethods(_env, "com/ibm/icu4jni/charset/NativeConverter",
+int register_com_ibm_icu4jni_converters_NativeConverter(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "com/ibm/icu4jni/charset/NativeConverter",
                 gMethods, NELEM(gMethods));
 }

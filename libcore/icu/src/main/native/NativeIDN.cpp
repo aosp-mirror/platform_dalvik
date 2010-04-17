@@ -61,6 +61,6 @@ static jstring convertImpl(JNIEnv* env, jclass, jstring s, jint flags, jboolean 
 static JNINativeMethod gMethods[] = {
     {"convertImpl", "(Ljava/lang/String;IZ)Ljava/lang/String;", (void*) convertImpl},
 };
-extern "C" int register_com_ibm_icu4jni_text_NativeIDN(JNIEnv* env) {
+int register_com_ibm_icu4jni_text_NativeIDN(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "com/ibm/icu4jni/text/NativeIDN", gMethods, NELEM(gMethods));
 }

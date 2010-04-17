@@ -15,8 +15,8 @@
  */
 
 #define LOG_TAG "UCharacter"
+
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 #include "ScopedJavaUnicodeString.h"
 #include "ScopedUtfChars.h"
 #include "unicode/locid.h"
@@ -171,11 +171,7 @@ static int ofImpl(JNIEnv*, jclass, jint codePoint) {
     return ublock_getCode(codePoint);
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "digit", "(II)I", (void*) digitImpl },
     { "forName", "(Ljava/lang/String;)I", (void*) forNameImpl },
     { "getDirectionality", "(I)B", (void*) getDirectionalityImpl },
@@ -201,7 +197,6 @@ static JNINativeMethod gMethods[] = {
     { "toLowerCase", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", (void*) toLowerCaseStringImpl },
     { "toUpperCase", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", (void*) toUpperCaseStringImpl },
 };
-
 int register_com_ibm_icu4jni_lang_UCharacter(JNIEnv* env) {
     return jniRegisterNativeMethods(env, "com/ibm/icu4jni/lang/UCharacter",
                 gMethods, NELEM(gMethods));

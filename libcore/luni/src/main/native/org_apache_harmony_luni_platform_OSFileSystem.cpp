@@ -38,7 +38,6 @@
 #define HyOpenSync      128
 #define SHARED_LOCK_TYPE 1L
 
-#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 #include "LocalArray.h"
 #include "ScopedByteArray.h"
@@ -501,11 +500,7 @@ static jint harmony_io_ioctlAvailable(JNIEnv*env, jobject, jobject fileDescripto
     return (jint) avail;
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "close",              "(I)V",       (void*) harmony_io_close },
     { "fflush",             "(IZ)V",      (void*) harmony_io_fflush },
     { "getAllocGranularity","()I",        (void*) harmony_io_getAllocGranularity },
@@ -524,8 +519,7 @@ static JNINativeMethod gMethods[] = {
     { "writeImpl",          "(I[BII)J",   (void*) harmony_io_writeImpl },
     { "writev",             "(I[I[I[II)J",(void*) harmony_io_writev },
 };
-int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv* _env) {
-    return jniRegisterNativeMethods(_env,
-            "org/apache/harmony/luni/platform/OSFileSystem", gMethods,
+int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "org/apache/harmony/luni/platform/OSFileSystem", gMethods,
             NELEM(gMethods));
 }

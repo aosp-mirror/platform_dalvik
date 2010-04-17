@@ -29,7 +29,6 @@
 #include "jni.h"
 #include "JNIHelp.h"
 #include "utils/Log.h"
-#include "AndroidSystemNatives.h"
 
 /** Environment variables. */
 extern char **environ;
@@ -415,8 +414,6 @@ static JNINativeMethod methods[] = {
     { "exec",             "([Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Ljava/io/FileDescriptor;Z)I",
                                                          (void*) java_lang_ProcessManager_exec },
 };
-
 int register_java_lang_ProcessManager(JNIEnv* env) {
-    return jniRegisterNativeMethods(
-            env, "java/lang/ProcessManager", methods, NELEM(methods));
+    return jniRegisterNativeMethods(env, "java/lang/ProcessManager", methods, NELEM(methods));
 }

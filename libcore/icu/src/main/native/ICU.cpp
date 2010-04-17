@@ -15,8 +15,8 @@
  */
 
 #define LOG_TAG "ICU"
+
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 #include "ScopedUtfChars.h"
 #include "UniquePtr.h"
 #include "cutils/log.h"
@@ -679,7 +679,6 @@ static jboolean initLocaleDataImpl(JNIEnv* env, jclass, jstring locale, jobject 
 }
 
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     {"getAvailableBreakIteratorLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableBreakIteratorLocalesNative},
     {"getAvailableCalendarLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableCalendarLocalesNative},
     {"getAvailableCollatorLocalesNative", "()[Ljava/lang/String;", (void*) getAvailableCollatorLocalesNative},
@@ -700,7 +699,6 @@ static JNINativeMethod gMethods[] = {
     {"getTimeZonesNative", "([[Ljava/lang/String;Ljava/lang/String;)V", (void*) getTimeZonesNative},
     {"initLocaleDataImpl", "(Ljava/lang/String;Lcom/ibm/icu4jni/util/LocaleData;)Z", (void*) initLocaleDataImpl},
 };
-
 int register_com_ibm_icu4jni_util_Resources(JNIEnv* env) {
     jclass stringclass = env->FindClass("java/lang/String");
     if (stringclass == NULL) {

@@ -23,7 +23,6 @@
 
 #define LOG_TAG "OSNetworkSystem"
 
-#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 #include "LocalArray.h"
 #include "jni.h"
@@ -2834,11 +2833,7 @@ static void osNetworkSystem_socketClose(JNIEnv* env, jobject, jobject fileDescri
     close(fd);
 }
 
-/*
- * JNI registration.
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "accept",                            "(Ljava/io/FileDescriptor;Ljava/net/SocketImpl;Ljava/io/FileDescriptor;I)V",(void*) osNetworkSystem_accept },
     { "bind",                              "(Ljava/io/FileDescriptor;Ljava/net/InetAddress;I)V",                       (void*) osNetworkSystem_bind },
     { "byteArrayToIpString",               "([B)Ljava/lang/String;",                                                   (void*) osNetworkSystem_byteArrayToIpString },
@@ -2878,11 +2873,8 @@ static JNINativeMethod gMethods[] = {
     { "writeDirect",                       "(Ljava/io/FileDescriptor;III)I",                                           (void*) osNetworkSystem_writeDirect },
     { "write",                             "(Ljava/io/FileDescriptor;[BII)I",                                          (void*) osNetworkSystem_write },
 };
-
 int register_org_apache_harmony_luni_platform_OSNetworkSystem(JNIEnv* env) {
     return initCachedFields(env) && jniRegisterNativeMethods(env,
-            "org/apache/harmony/luni/platform/OSNetworkSystem",
-            gMethods,
-            NELEM(gMethods));
+            "org/apache/harmony/luni/platform/OSNetworkSystem", gMethods, NELEM(gMethods));
 }
 // END android-changed

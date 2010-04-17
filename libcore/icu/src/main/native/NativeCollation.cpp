@@ -10,7 +10,6 @@
 #define LOG_TAG "NativeCollation"
 
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 #include "ErrorCode.h"
 #include "unicode/ucol.h"
 #include "unicode/ucoleitr.h"
@@ -499,7 +498,6 @@ static void setText(JNIEnv *env, jclass obj, jint address,
 }
 
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "openCollator", "()I", (void*) openCollator__ },
     { "openCollator", "(Ljava/lang/String;)I", (void*) openCollator__Ljava_lang_String_2 },
     { "openCollatorFromRules", "(Ljava/lang/String;II)I", (void*) openCollatorFromRules },
@@ -523,7 +521,6 @@ static JNINativeMethod gMethods[] = {
     { "getOffset", "(I)I", (void*) getOffset },
     { "setOffset", "(II)V", (void*) setOffset }
 };
-
 int register_com_ibm_icu4jni_text_NativeCollator(JNIEnv *_env) { 
     return jniRegisterNativeMethods(_env, "com/ibm/icu4jni/text/NativeCollation",
                 gMethods, NELEM(gMethods));

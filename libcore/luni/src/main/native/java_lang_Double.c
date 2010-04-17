@@ -60,18 +60,11 @@ static jdouble longBitsToDouble(JNIEnv* env, jclass clazz, jlong val)
     return d.d;
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "doubleToLongBits",       "(D)J",     doubleToLongBits },
     { "doubleToRawLongBits",    "(D)J",     doubleToRawLongBits },
     { "longBitsToDouble",       "(J)D",     longBitsToDouble },
 };
-int register_java_lang_Double(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/lang/Double",
-                gMethods, NELEM(gMethods));
+int register_java_lang_Double(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/lang/Double", gMethods, NELEM(gMethods));
 }
-

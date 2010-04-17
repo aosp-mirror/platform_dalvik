@@ -41,11 +41,10 @@ static jboolean isNormalizedImpl(JNIEnv* env, jclass, jstring s, jint intMode) {
 }
 
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     {"normalizeImpl", "(Ljava/lang/String;I)Ljava/lang/String;", (void*) normalizeImpl},
     {"isNormalizedImpl", "(Ljava/lang/String;I)Z", (void*) isNormalizedImpl},
 };
-extern "C" int register_com_ibm_icu4jni_text_NativeNormalizer(JNIEnv* env) {
-    return jniRegisterNativeMethods(env,
-            "com/ibm/icu4jni/text/NativeNormalizer", gMethods, NELEM(gMethods));
+int register_com_ibm_icu4jni_text_NativeNormalizer(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "com/ibm/icu4jni/text/NativeNormalizer",
+            gMethods, NELEM(gMethods));
 }

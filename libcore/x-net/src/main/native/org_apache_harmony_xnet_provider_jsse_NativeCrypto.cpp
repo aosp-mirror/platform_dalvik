@@ -2386,15 +2386,7 @@ static JNINativeClass sClasses[] = {
     { "org/apache/harmony/xnet/provider/jsse/OpenSSLServerSocketImpl", sServerSocketImplMethods, NELEM(sServerSocketImplMethods) },
     { "org/apache/harmony/xnet/provider/jsse/OpenSSLSessionImpl", sSessionImplMethods, NELEM(sSessionImplMethods) },
 };
-
-/*
- * Peforms the actual registration of the native methods.
- * Also looks up the fields that belong to the class (if
- * any) and stores the field IDs. Simply remove what you
- * don't need.
- */
-extern "C" int register_org_apache_harmony_xnet_provider_jsse_NativeCrypto(JNIEnv* env) {
-
+int register_org_apache_harmony_xnet_provider_jsse_NativeCrypto(JNIEnv* env) {
     // Register org.apache.harmony.xnet.provider.jsse.* methods
     for (int i = 0; i < NELEM(sClasses); i++) {
         int result = jniRegisterNativeMethods(env,

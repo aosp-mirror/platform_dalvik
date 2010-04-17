@@ -1526,11 +1526,7 @@ static JNINativeMethod attributeMethods[] = {
         (void*) getAttributeValueForQName },
     { "freeAttributes", "(I)V", (void*) freeAttributes },
 };
-
-/**
- * Called from Register.c.
- */
-extern "C" int register_org_apache_harmony_xml_ExpatParser(JNIEnv* env) {
+int register_org_apache_harmony_xml_ExpatParser(JNIEnv* env) {
     int result = jniRegisterNativeMethods(env, "org/apache/harmony/xml/ExpatParser",
         parserMethods, NELEM(parserMethods));
     if (result != 0) {

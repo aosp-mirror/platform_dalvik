@@ -15,7 +15,6 @@
  *  limitations under the License.
  */
 
-#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 #include "jni.h"
 #include "ScopedFd.h"
@@ -229,7 +228,6 @@ static jboolean supportsMulticastImpl(JNIEnv* env, jclass, jstring name, jint in
 }
 
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "getAllInterfaceAddressesImpl", "()[Ljava/net/InterfaceAddress;", (void*) getAllInterfaceAddressesImpl },
     { "getHardwareAddressImpl", "(Ljava/lang/String;I)[B", (void*) getHardwareAddressImpl },
     { "getMTUImpl", "(Ljava/lang/String;I)I", (void*) getMTUImpl },
@@ -239,6 +237,5 @@ static JNINativeMethod gMethods[] = {
     { "supportsMulticastImpl", "(Ljava/lang/String;I)Z", (void*) supportsMulticastImpl },
 };
 int register_java_net_NetworkInterface(JNIEnv* env) {
-    return jniRegisterNativeMethods(env, "java/net/NetworkInterface",
-            gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "java/net/NetworkInterface", gMethods, NELEM(gMethods));
 }

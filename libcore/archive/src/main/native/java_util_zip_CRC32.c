@@ -41,17 +41,10 @@ Java_java_util_zip_CRC32_updateByteImpl (JNIEnv * env, jobject recv,
   return crc32 ((uLong) crc, (Bytef *) (&val), 1);
 }
 
-
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "updateImpl", "([BIIJ)J",     Java_java_util_zip_CRC32_updateImpl },
     { "updateByteImpl", "(BJ)J",     Java_java_util_zip_CRC32_updateByteImpl },
 };
-int register_java_util_zip_CRC32(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/util/zip/CRC32",
-                gMethods, NELEM(gMethods));
+int register_java_util_zip_CRC32(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/util/zip/CRC32", gMethods, NELEM(gMethods));
 }

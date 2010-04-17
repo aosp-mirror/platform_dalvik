@@ -15,7 +15,6 @@
  *  limitations under the License.
  */
 
-#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 
 #include <errno.h>
@@ -46,7 +45,6 @@ static jint java_io_Console_setEcho(JNIEnv* env, jclass, jboolean on, jint previ
 }
 
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "isatty", "(I)Z", (void*) java_io_Console_isatty },
     { "setEchoImpl", "(ZI)I", (void*) java_io_Console_setEcho },
 };

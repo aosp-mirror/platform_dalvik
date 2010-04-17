@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #define LOG_TAG "BidiWrapper"
-#include "AndroidSystemNatives.h"
+
 #include <JNIHelp.h>
 #include "ErrorCode.h"
 #include "UniquePtr.h"

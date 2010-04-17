@@ -214,17 +214,12 @@ static jstring InetAddress_getnameinfo(JNIEnv* env, jobject obj,
     return env->NewStringUTF(name);
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "getaddrinfo", "(Ljava/lang/String;)[[B", (void*) InetAddress_getaddrinfo },
     { "gethostname", "()Ljava/lang/String;", (void*) InetAddress_gethostname  },
     { "getnameinfo", "([B)Ljava/lang/String;", (void*) InetAddress_getnameinfo },
 };
-
-extern "C" int register_java_net_InetAddress(JNIEnv* env) {
+int register_java_net_InetAddress(JNIEnv* env) {
     jclass tempClass = env->FindClass("[B");
     if (tempClass) {
         byteArrayClass = (jclass) env->NewGlobalRef(tempClass);

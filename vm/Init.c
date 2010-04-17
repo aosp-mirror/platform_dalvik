@@ -36,8 +36,6 @@
 
 /*
  * Register VM-agnostic native methods for system classes.
- *
- * Currently defined in ../include/nativehelper/AndroidSystemNatives.h
  */
 extern int jniRegisterSystemMethods(JNIEnv* env);
 
