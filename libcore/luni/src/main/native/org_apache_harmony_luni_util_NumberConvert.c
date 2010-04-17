@@ -271,21 +271,13 @@ Java_org_apache_harmony_luni_util_NumberConverter_bigIntDigitGeneratorInstImpl (
 
   fid = (*env)->GetFieldID (env, clazz, "firstK", "I");
   (*env)->SetIntField (env, inst, fid, firstK);
-
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* NAME,                          SIGNATURE,               FUNCPTR */
     { "bigIntDigitGeneratorInstImpl", "(JIZZI)V"              ,
         Java_org_apache_harmony_luni_util_NumberConverter_bigIntDigitGeneratorInstImpl },
 };
-
-int register_org_apache_harmony_luni_util_NumberConvert(JNIEnv *env)
-{
-    return jniRegisterNativeMethods(env,
-               "org/apache/harmony/luni/util/NumberConverter",
+int register_org_apache_harmony_luni_util_NumberConvert(JNIEnv *env) {
+    return jniRegisterNativeMethods(env, "org/apache/harmony/luni/util/NumberConverter",
                 gMethods, NELEM(gMethods));
 }

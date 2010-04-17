@@ -17,7 +17,6 @@
 #define LOG_TAG "NativeDecimalFormat"
 
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 #include "cutils/log.h"
 #include "unicode/unum.h"
 #include "unicode/numfmt.h"
@@ -586,7 +585,6 @@ static jint cloneDecimalFormatImpl(JNIEnv *env, jclass, jint addr) {
 }
 
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     {"applyPatternImpl", "(IZLjava/lang/String;)V", (void*) applyPatternImpl},
     {"cloneDecimalFormatImpl", "(I)I", (void*) cloneDecimalFormatImpl},
     {"closeDecimalFormatImpl", "(I)V", (void*) closeDecimalFormatImpl},
@@ -605,7 +603,6 @@ static JNINativeMethod gMethods[] = {
     {"toPatternImpl", "(IZ)Ljava/lang/String;", (void*) toPatternImpl},
 };
 int register_com_ibm_icu4jni_text_NativeDecimalFormat(JNIEnv* env) {
-    return jniRegisterNativeMethods(env,
-            "com/ibm/icu4jni/text/NativeDecimalFormat", gMethods,
+    return jniRegisterNativeMethods(env, "com/ibm/icu4jni/text/NativeDecimalFormat", gMethods,
             NELEM(gMethods));
 }

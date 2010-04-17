@@ -184,11 +184,7 @@ static jfloat jnextafterf(JNIEnv* env, jclass clazz, jfloat arg1, jfloat arg2)
     return arg1;
 }
 
-/*
- * JNI registration.
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "IEEEremainder", "(DD)D", jieee_remainder },
     { "acos",   "(D)D", jacos },
     { "asin",   "(D)D", jasin },
@@ -216,8 +212,6 @@ static JNINativeMethod gMethods[] = {
     { "tanh",   "(D)D", jtanh },
 };
 
-int register_java_lang_StrictMath(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/lang/StrictMath", gMethods,
-        NELEM(gMethods));
+int register_java_lang_StrictMath(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/lang/StrictMath", gMethods, NELEM(gMethods));
 }

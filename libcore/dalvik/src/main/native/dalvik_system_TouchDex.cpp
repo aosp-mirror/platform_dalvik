@@ -259,20 +259,12 @@ static void logProcStatus(pid_t pid)
     fclose(fp);
 }
 
-/*
- * JNI registration.
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "trampoline", "(Ljava/lang/String;Ljava/lang/String;)I",
         (void*) dalvik_system_TouchDex_trampoline },
 };
-
-extern "C" int register_dalvik_system_TouchDex(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, JAVA_PACKAGE "/TouchDex",
-        gMethods, NELEM(gMethods));
+int register_dalvik_system_TouchDex(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, JAVA_PACKAGE "/TouchDex", gMethods, NELEM(gMethods));
 }
 
 }; // namespace android
-

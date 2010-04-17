@@ -17,7 +17,6 @@
 #define LOG_TAG "NativeBreakIterator"
 
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 #include "ErrorCode.h"
 #include "ScopedUtfChars.h"
 #include "unicode/ubrk.h"

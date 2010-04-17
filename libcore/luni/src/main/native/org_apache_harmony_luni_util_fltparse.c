@@ -589,19 +589,13 @@ Java_org_apache_harmony_luni_util_FloatingPointParser_parseDblImpl (JNIEnv * env
   return 0.0;
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* NAME,          SIGNATURE,                FUNCPTR */
     { "parseFltImpl", "(Ljava/lang/String;I)F",
         Java_org_apache_harmony_luni_util_FloatingPointParser_parseFltImpl },
     { "parseDblImpl", "(Ljava/lang/String;I)D",
         Java_org_apache_harmony_luni_util_FloatingPointParser_parseDblImpl },
 };
-int register_org_apache_harmony_luni_util_fltparse(JNIEnv *env)
-{
-    return jniRegisterNativeMethods(env,
-               "org/apache/harmony/luni/util/FloatingPointParser",
+int register_org_apache_harmony_luni_util_fltparse(JNIEnv *env) {
+    return jniRegisterNativeMethods(env, "org/apache/harmony/luni/util/FloatingPointParser",
                 gMethods, NELEM(gMethods));
 }

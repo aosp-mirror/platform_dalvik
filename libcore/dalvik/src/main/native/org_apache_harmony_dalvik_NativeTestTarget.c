@@ -50,11 +50,7 @@ static void emptyJniStaticMethod6L(JNIEnv* env, jclass clazz,
     // This space intentionally left blank.
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "emptyJniStaticMethod0",  "()V",  emptyJniStaticMethod0 },
     { "emptyJniStaticMethod6",  "(IIIIII)V", emptyJniStaticMethod6 },
     { "emptyJniStaticMethod6L",
@@ -62,9 +58,7 @@ static JNINativeMethod gMethods[] = {
       "Ljava/lang/Object;[Ljava/lang/Object;[[[[Ljava/lang/Object;)V",
       emptyJniStaticMethod6L },
 };
-
-int register_org_apache_harmony_dalvik_NativeTestTarget(JNIEnv* env)
-{
+int register_org_apache_harmony_dalvik_NativeTestTarget(JNIEnv* env) {
     int result = jniRegisterNativeMethods(env,
             "org/apache/harmony/dalvik/NativeTestTarget",
             gMethods, NELEM(gMethods));
@@ -75,4 +69,3 @@ int register_org_apache_harmony_dalvik_NativeTestTarget(JNIEnv* env)
     }
     return 0;
 }
-

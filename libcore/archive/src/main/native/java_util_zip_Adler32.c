@@ -43,17 +43,10 @@ Java_java_util_zip_Adler32_updateByteImpl (JNIEnv * env, jobject recv,
   return adler32 ((uLong) crc, (Bytef *) (&bytefVal), 1);
 }
 
-
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "updateImpl", "([BIIJ)J",     Java_java_util_zip_Adler32_updateImpl },
     { "updateByteImpl", "(IJ)J",     Java_java_util_zip_Adler32_updateByteImpl },
 };
-int register_java_util_zip_Adler32(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/util/zip/Adler32",
-                gMethods, NELEM(gMethods));
+int register_java_util_zip_Adler32(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/util/zip/Adler32", gMethods, NELEM(gMethods));
 }

@@ -286,11 +286,7 @@ Java_java_util_zip_Deflater_oneTimeInitialization (JNIEnv * env, jclass clazz)
     gCachedFields.finished = (*env)->GetFieldID (env, clazz, "finished", "Z");
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "setDictionaryImpl", "([BIIJ)V",     Java_java_util_zip_Deflater_setDictionaryImpl },
     { "getTotalInImpl", "(J)J",     Java_java_util_zip_Deflater_getTotalInImpl },
     { "getTotalOutImpl", "(J)J",     Java_java_util_zip_Deflater_getTotalOutImpl },
@@ -303,8 +299,6 @@ static JNINativeMethod gMethods[] = {
     { "setLevelsImpl", "(IIJ)V",     Java_java_util_zip_Deflater_setLevelsImpl },
     { "oneTimeInitialization", "()V",     Java_java_util_zip_Deflater_oneTimeInitialization },
 };
-int register_java_util_zip_Deflater(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/util/zip/Deflater",
-                gMethods, NELEM(gMethods));
+int register_java_util_zip_Deflater(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/util/zip/Deflater", gMethods, NELEM(gMethods));
 }

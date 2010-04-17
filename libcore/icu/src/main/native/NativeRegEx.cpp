@@ -16,8 +16,6 @@
 
 #define LOG_TAG "NativeRegEx"
 
-#include "AndroidSystemNatives.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

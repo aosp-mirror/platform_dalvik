@@ -68,18 +68,11 @@ static jfloat intBitsToFloat(JNIEnv* env, jclass clazz, jint val)
     return f.f;
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "floatToIntBits",         "(F)I",     floatToIntBits },
     { "floatToRawIntBits",      "(F)I",     floatToRawBits },
     { "intBitsToFloat",         "(I)F",     intBitsToFloat },
 };
-int register_java_lang_Float(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/lang/Float",
-        gMethods, NELEM(gMethods));
+int register_java_lang_Float(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/lang/Float", gMethods, NELEM(gMethods));
 }
-

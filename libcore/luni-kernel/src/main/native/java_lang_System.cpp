@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 
 #include <stdlib.h>
@@ -84,17 +83,11 @@ static void java_setFieldImpl(JNIEnv* env, jclass clazz,
     env->ReleaseStringUTFChars(sig, fieldSig);
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "getEnvByName",   "(Ljava/lang/String;)Ljava/lang/String;",                    (void*) java_getEnvByName  },
     { "getEnvByIndex",  "(I)Ljava/lang/String;",                                     (void*) java_getEnvByIndex },
     { "setFieldImpl",   "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V", (void*) java_setFieldImpl },
 };
-
 int register_java_lang_System(JNIEnv* env) {
-    return jniRegisterNativeMethods(env, "java/lang/System",
-            gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "java/lang/System", gMethods, NELEM(gMethods));
 }

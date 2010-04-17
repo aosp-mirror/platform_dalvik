@@ -322,11 +322,7 @@ Java_java_util_zip_Inflater_oneTimeInitialization (JNIEnv * env, jclass clazz)
     gCachedFields.needsDictionary = (*env)->GetFieldID (env, clazz, "needsDictionary", "Z");
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "createStream", "(Z)J",     Java_java_util_zip_Inflater_createStream },
     { "setInputImpl", "([BIIJ)V",     Java_java_util_zip_Inflater_setInputImpl },
     { "setFileInputImpl", "(Ljava/io/FileDescriptor;JIJ)I",     Java_java_util_zip_Inflater_setFileInputImpl },
@@ -339,8 +335,6 @@ static JNINativeMethod gMethods[] = {
     { "getTotalInImpl", "(J)J",     Java_java_util_zip_Inflater_getTotalInImpl },
     { "oneTimeInitialization", "()V",     Java_java_util_zip_Inflater_oneTimeInitialization },
 };
-int register_java_util_zip_Inflater(JNIEnv* env)
-{
-    return jniRegisterNativeMethods(env, "java/util/zip/Inflater",
-                gMethods, NELEM(gMethods));
+int register_java_util_zip_Inflater(JNIEnv* env) {
+    return jniRegisterNativeMethods(env, "java/util/zip/Inflater", gMethods, NELEM(gMethods));
 }

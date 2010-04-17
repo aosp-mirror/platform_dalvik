@@ -4,7 +4,8 @@
 
 LOCAL_SRC_FILES := \
 	java_lang_ProcessManager.cpp \
-	java_lang_System.cpp
+	java_lang_System.cpp \
+	Register.cpp
 
 LOCAL_C_INCLUDES +=
 

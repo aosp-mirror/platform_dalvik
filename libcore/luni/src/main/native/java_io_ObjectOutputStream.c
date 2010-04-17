@@ -16,7 +16,6 @@
  */
 
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 
 static jlong java_getFieldLong(JNIEnv * env, jclass clazz,
                                               jobject targetObject,
@@ -205,11 +204,7 @@ static jint java_getFieldInt(JNIEnv * env, jclass clazz,
     }
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "getFieldLong",   
     	"(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/String;)J",
     	(void*) java_getFieldLong },
@@ -240,7 +235,5 @@ static JNINativeMethod gMethods[] = {
 
 };
 int register_java_io_ObjectOutputStream(JNIEnv* env) {
-	return jniRegisterNativeMethods(env, "java/io/ObjectOutputStream",
-                gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "java/io/ObjectOutputStream", gMethods, NELEM(gMethods));
 }
-

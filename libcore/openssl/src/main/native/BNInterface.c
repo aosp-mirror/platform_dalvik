@@ -650,12 +650,6 @@ static jboolean NativeBN_BN_is_prime_ex(JNIEnv* env, jclass cls, BIGNUM* p, int 
     return BN_is_prime_ex(p, nchecks, ctx, (BN_GENCB*) cb);
 }
 
-
-/**
- * Defines the mapping from Java methods and their signatures
- * to native functions. Order is Java name, Java signature,
- * then pointer to C function.
- */
 static JNINativeMethod METHODS[] = {
    { "ERR_get_error", "()I", (void*)NativeBN_ERR_get_error },
    { "ERR_error_string", "(I)Ljava/lang/String;", (void*)NativeBN_ERR_error_string },
@@ -699,7 +693,6 @@ static JNINativeMethod METHODS[] = {
    { "BN_generate_prime_ex", "(IIZIII)Z", (void*)NativeBN_BN_generate_prime_ex },
    { "BN_is_prime_ex", "(IIII)Z", (void*)NativeBN_BN_is_prime_ex }
 };
-
 int register_org_openssl_NativeBN(JNIEnv* env) {
    return jniRegisterNativeMethods(env, "org/openssl/NativeBN", METHODS, NELEM(METHODS));
 }

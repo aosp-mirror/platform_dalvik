@@ -15,8 +15,8 @@
  */
 
 #define LOG_TAG "OSMemory"
+
 #include "JNIHelp.h"
-#include "AndroidSystemNatives.h"
 #include "utils/misc.h"
 #include "utils/Log.h"
 #include <sys/mman.h>
@@ -535,11 +535,7 @@ static jint harmony_nio_flushImpl(JNIEnv *_env, jobject _this, jint address,
     return msync((void *)address, size, MS_SYNC);
 }
 
-/*
- * JNI registration
- */
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "isLittleEndianImpl", "()Z",     (void*) harmony_nio_littleEndian },
     { "getPointerSizeImpl", "()I",     (void*) harmony_nio_getPointerSizeImpl },
     { "malloc",             "(I)I",    (void*) harmony_nio_mallocImpl },
@@ -570,7 +566,7 @@ static JNINativeMethod gMethods[] = {
     { "isLoadedImpl",       "(IJ)Z",   (void*) harmony_nio_isLoadedImpl },
     { "flushImpl",          "(IJ)I",   (void*) harmony_nio_flushImpl }
 };
-int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv *_env) {
+int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv* env) {
     /*
      * We need to call VMRuntime.trackExternal{Allocation,Free}.  Cache
      * method IDs and a reference to the singleton.
@@ -579,16 +575,16 @@ int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv *_env) {
     jmethodID method_getRuntime;
     jclass clazz;
 
-    clazz = _env->FindClass(kVMRuntimeName);
+    clazz = env->FindClass(kVMRuntimeName);
     if (clazz == NULL) {
         LOGE("Unable to find class %s\n", kVMRuntimeName);
         return -1;
     }
-    gIDCache.method_trackExternalAllocation = _env->GetMethodID(clazz,
+    gIDCache.method_trackExternalAllocation = env->GetMethodID(clazz,
         "trackExternalAllocation", "(J)Z");
-    gIDCache.method_trackExternalFree = _env->GetMethodID(clazz,
+    gIDCache.method_trackExternalFree = env->GetMethodID(clazz,
         "trackExternalFree", "(J)V");
-    method_getRuntime = _env->GetStaticMethodID(clazz,
+    method_getRuntime = env->GetStaticMethodID(clazz,
         "getRuntime", "()Ldalvik/system/VMRuntime;");
 
     if (gIDCache.method_trackExternalAllocation == NULL ||
@@ -599,17 +595,13 @@ int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv *_env) {
         return -1;
     }
 
-    jobject instance = _env->CallStaticObjectMethod(clazz, method_getRuntime);
+    jobject instance = env->CallStaticObjectMethod(clazz, method_getRuntime);
     if (instance == NULL) {
         LOGE("Unable to obtain VMRuntime instance\n");
         return -1;
     }
-    gIDCache.runtimeInstance = _env->NewGlobalRef(instance);
+    gIDCache.runtimeInstance = env->NewGlobalRef(instance);
 
-    /*
-     * Register methods.
-     */
-    return jniRegisterNativeMethods(_env,
-                "org/apache/harmony/luni/platform/OSMemory",
-                gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "org/apache/harmony/luni/platform/OSMemory",
+            gMethods, NELEM(gMethods));
 }

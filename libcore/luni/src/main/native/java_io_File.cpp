@@ -15,7 +15,6 @@
  *  limitations under the License.
  */
 
-#include "AndroidSystemNatives.h"
 #include "JNIHelp.h"
 #include "LocalArray.h"
 #include "ScopedByteArray.h"
@@ -395,7 +394,6 @@ static jboolean java_io_File_renameToImpl(JNIEnv* env, jobject, jbyteArray oldPa
 }
 
 static JNINativeMethod gMethods[] = {
-    /* name, signature, funcPtr */
     { "canExecuteImpl",     "([B)Z", (void*) java_io_File_canExecuteImpl },
     { "canReadImpl",        "([B)Z", (void*) java_io_File_canReadImpl },
     { "canWriteImpl",       "([B)Z", (void*) java_io_File_canWriteImpl },
@@ -420,6 +418,5 @@ static JNINativeMethod gMethods[] = {
     { "setLastModifiedImpl","([BJ)Z", (void*) java_io_File_setLastModifiedImpl },
 };
 int register_java_io_File(JNIEnv* env) {
-    return jniRegisterNativeMethods(env, "java/io/File",
-            gMethods, NELEM(gMethods));
+    return jniRegisterNativeMethods(env, "java/io/File", gMethods, NELEM(gMethods));
 }
