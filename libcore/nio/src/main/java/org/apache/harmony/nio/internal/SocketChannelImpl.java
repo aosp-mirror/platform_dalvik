@@ -53,7 +53,6 @@ import org.apache.harmony.luni.platform.Platform;
 //import org.apache.harmony.luni.util.ErrorCodeException; android-removed
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.nio.AddressUtil;
-import org.apache.harmony.nio.internal.nls.Messages;
 
 /*
  * The default implementation class of java.nio.channels.SocketChannel.

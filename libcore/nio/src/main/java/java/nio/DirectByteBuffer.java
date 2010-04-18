@@ -20,7 +20,6 @@ package java.nio;
 import org.apache.harmony.luni.platform.PlatformAddress;
 import org.apache.harmony.luni.platform.PlatformAddressFactory;
 import org.apache.harmony.nio.internal.DirectBuffer;
-import org.apache.harmony.nio.internal.nls.Messages;
 
 /**
  * DirectByteBuffer, ReadWriteDirectByteBuffer and ReadOnlyDirectByteBuffer
