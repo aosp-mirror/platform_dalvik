@@ -25,10 +25,6 @@ import java.text.AttributedCharacterIterator.Attribute;
 import java.util.HashMap;
 import java.util.Map;
 
-// BEGIN android-deleted
-//import org.apache.harmony.awt.internal.nls.Messages;
-// END android-deleted
-
 /**
  * The TextAttribute class defines attribute keys and attribute values 
  * for text rendering. Each TextAttributes should have the following
@@ -73,9 +69,7 @@ public final class TextAttribute extends Attribute {
         if (result != null) {
             return result;
         }
-        // BEGIN android-changed
         throw new InvalidObjectException("Unknown attribute name");
-        // END android-changed
     }
 
     /** 

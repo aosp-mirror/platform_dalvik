@@ -41,7 +41,6 @@ import org.apache.harmony.luni.platform.IFileSystem;
 import org.apache.harmony.luni.platform.Platform;
 import org.apache.harmony.luni.platform.PlatformAddress;
 import org.apache.harmony.luni.platform.PlatformAddressFactory;
-import org.apache.harmony.nio.internal.nls.Messages;
 
 /*
  * The file channel impl class is the bridge between the logical channels

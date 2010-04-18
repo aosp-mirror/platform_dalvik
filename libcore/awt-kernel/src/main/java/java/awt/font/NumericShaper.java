@@ -22,12 +22,7 @@ package java.awt.font;
 
 import java.io.IOException;
 import java.io.Serializable;
-
-// BEGIN android-deleted
-//import org.apache.harmony.awt.internal.nls.Messages;
-// END android-deleted
 import org.apache.harmony.misc.HashCode;
-
 
 /**
  * The Class NumericShaper provides methods to convert latin character codes
@@ -467,10 +462,8 @@ public final class NumericShaper implements Serializable {
      * @return one of the script indices according to the specified range.
      */
     private int getIndexFromRange(int range){
-        if (range == 0){
-            // BEGIN android-changed
-            throwRange(range);
-            // END android-changed
+        if (range == 0) {
+            throw rangeException(range);
         }
 
         int index = 0;
@@ -481,10 +474,7 @@ public final class NumericShaper implements Serializable {
             index++;
         }
 
-        // BEGIN android-changed
-        throwRange(range);
-        return -1; // Never executed; quiets the compiler.
-        // END android-changed
+        throw rangeException(range);
     }
 
     /**
@@ -496,31 +486,16 @@ public final class NumericShaper implements Serializable {
      */
     private int getRangeFromIndex(int index){
         if (index < 0 || index >= MAX_INDEX){
-            // BEGIN android-changed
-            throwRange(index);
-            // END android-changed
+            throw rangeException(index);
         }
 
         return 1 << index;
     }
 
-    // BEGIN android-added
-    /**
-     * Throws a standard "out of range" exception.
-     * 
-     * @param value the bogus value
-     */
-    private static void throwRange(int value) {
-        throw new IllegalArgumentException(
-                "Illegal range argument value: " + value);
+    private static IllegalArgumentException rangeException(int value) {
+        throw new IllegalArgumentException("Illegal range argument value: " + value);
     }
-    // END android-added
 
-    /**
-     * Returns a hash code of this NumericShaper.
-     * 
-     * @return a hash code of this NumericShaper.
-     */
     @Override
     public int hashCode() {
         HashCode hash = new HashCode();
@@ -533,14 +508,6 @@ public final class NumericShaper implements Serializable {
 
     }
 
-    /**
-     * Compares this NumericShaper object with the specified Object.
-     * 
-     * @param obj the Object to be compared.
-     * 
-     * @return true, if this NumericShaper object is equal to
-     * the specified Object, false otherwise.
-     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -562,11 +529,6 @@ public final class NumericShaper implements Serializable {
         return false;
     }
 
-    /**
-     * Returns a string representation of this NumericShaper.
-     * 
-     * @return the string representation of this NumericShaper.
-     */
     @Override
     public String toString() {
         /* !! There is no description in the documentation what this method must
