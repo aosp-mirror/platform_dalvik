@@ -27,7 +27,6 @@ import java.nio.channels.FileChannel;
 import org.apache.harmony.nio.internal.ReadOnlyFileChannel;
 import org.apache.harmony.nio.internal.ReadWriteFileChannel;
 import org.apache.harmony.nio.internal.WriteOnlyFileChannel;
-import org.apache.harmony.nio.internal.nls.Messages;
 import org.apache.harmony.luni.platform.IFileSystem;
 
 /**
