@@ -691,3 +691,14 @@ result EXEC_FAILED
 test java.io.File.isDirectory.Applet
 result COMPILE_FAILED
 pattern .*package java.applet does not exist.*
+
+# ICU doesn't like 3-letter names like CST because they're ambiguous.
+# Harmony prefers them because they're more human readable. We'll be
+# consistent with ICU, since that seems least fragile.
+# See https://issues.apache.org/jira/browse/HARMONY-5468
+# and http://bugs.icu-project.org/trac/ticket/6174
+test org.apache.harmony.luni.tests.java.util.DateTest#test_toString
+result EXEC_FAILED
+pattern .*GMT-07:00.*
+
+

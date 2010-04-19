@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  * 'zoneinfo' database as the source of time zone information.  However, to conserve
  * disk space the data for all time zones are concatenated into a single file, and a
  * second file is used to indicate the starting position of each time zone record.  A
- * third file indicates the version of the zoneinfo databse used to generate the data.
+ * third file indicates the version of the zoneinfo database used to generate the data.
  *
  * {@hide}
  */
@@ -41,7 +41,7 @@ public final class ZoneInfoDB {
     private static final int TZINT_LENGTH = 4;
 
     /**
-     * The directory contining the time zone database files.
+     * The directory containing the time zone database files.
      */
     private static final String ZONE_DIRECTORY_NAME =
         System.getenv("ANDROID_ROOT") + "/usr/share/zoneinfo/";
@@ -73,7 +73,6 @@ public final class ZoneInfoDB {
         ZONE_DIRECTORY_NAME + "zoneinfo.version";
 
     private static Object lock = new Object();
-    private static TimeZone defaultZone = null;
 
     private static String version;
     private static String[] names;
@@ -81,12 +80,7 @@ public final class ZoneInfoDB {
     private static int[] lengths;
     private static int[] offsets;
 
-    /**
-     * This class is uninstantiable.
-     */
-    private ZoneInfoDB() {
-        // This space intentionally left blank.
-    }
+    private ZoneInfoDB() {}
 
     private static void readVersion() throws IOException {
         RandomAccessFile versionFile = new RandomAccessFile(VERSION_FILE_NAME, "r");
@@ -307,39 +301,13 @@ public final class ZoneInfoDB {
         return tz;
     }
 
-    public static TimeZone getDefault() {
-        TimeZone zone;
-
+    public static TimeZone getSystemDefault() {
         synchronized (lock) {
-            if (defaultZone != null) {
-                return defaultZone;
-            }
-
-            String zoneName = null;
             TimezoneGetter tzGetter = TimezoneGetter.getInstance();
-            if (tzGetter != null) {
-                zoneName = tzGetter.getId();
-            }
-            if (zoneName != null && zoneName.length() > 0) {
-                zone = TimeZone.getTimeZone(zoneName.trim());
-            } else {
-                // use localtime here so that the simulator works
-                zone = TimeZone.getTimeZone("localtime");
-            }
-
-            defaultZone = zone;
-        }
-        return zone;
-    }
-
-    // TODO - why does this ignore the 'zone' parameter?
-    public static void setDefault(@SuppressWarnings("unused") TimeZone zone) {
-        /*
-         * if (zone == null), the next call to getDefault will set it to the
-         * the system's default time zone.
-         */
-        synchronized (lock) {
-            defaultZone = null;
+            String zoneName = tzGetter != null ? tzGetter.getId() : null;
+            return zoneName != null && !zoneName.isEmpty()
+                    ? TimeZone.getTimeZone(zoneName.trim())
+                    : TimeZone.getTimeZone("localtime"); // use localtime for the simulator
         }
     }
 

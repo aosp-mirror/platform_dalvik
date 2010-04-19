@@ -222,9 +222,6 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Constructs a new {@code Locale} using the specified language.
-     *
-     * @param language
-     *            the language this {@code Locale} represents.
      */
     public Locale(String language) {
         this(language, "", "");
@@ -232,29 +229,14 @@ public final class Locale implements Cloneable, Serializable {
 
     /**
      * Constructs a new {@code Locale} using the specified language and country codes.
-     *
-     * @param language
-     *            the language this {@code Locale} represents.
-     * @param country
-     *            the country this {@code Locale} represents.
      */
     public Locale(String language, String country) {
         this(language, country, "");
     }
 
     /**
-     * Constructs a new {@code Locale} using the specified language, country, and
-     * variant codes.
-     *
-     * @param language
-     *            the language this {@code Locale} represents.
-     * @param country
-     *            the country this {@code Locale} represents.
-     * @param variant
-     *            the variant this {@code Locale} represents.
-     * @throws NullPointerException
-     *             if {@code language}, {@code country}, or
-     *             {@code variant} is {@code null}.
+     * Constructs a new {@code Locale} using the specified language, country,
+     * and variant codes.
      */
     public Locale(String language, String country, String variant) {
         if (language == null || country == null || variant == null) {
@@ -291,35 +273,19 @@ public final class Locale implements Cloneable, Serializable {
         variantCode = variant;
     }
 
-    /**
-     * Returns a new {@code Locale} with the same language, country and variant codes as
-     * this {@code Locale}.
-     *
-     * @return a shallow copy of this {@code Locale}.
-     * @see java.lang.Cloneable
-     */
-    @Override
-    public Object clone() {
+    @Override public Object clone() {
         try {
             return super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new AssertionError(e); // android-changed
+            throw new AssertionError(e);
         }
     }
 
     /**
-     * Compares the specified object to this {@code Locale} and returns whether they are
-     * equal. The object must be an instance of {@code Locale} and have the same
-     * language, country and variant.
-     *
-     * @param object
-     *            the object to compare with this object.
-     * @return {@code true} if the specified object is equal to this {@code Locale},
-     *         {@code false} otherwise.
-     * @see #hashCode
+     * Returns true if {@code object} is a locale with the same language,
+     * country and variant.
      */
-    @Override
-    public boolean equals(Object object) {
+    @Override public boolean equals(Object object) {
         if (object == this) {
             return true;
         }
@@ -333,57 +299,57 @@ public final class Locale implements Cloneable, Serializable {
     }
 
     /**
-     * Gets the list of installed {@code Locale}s. At least a {@code Locale} that is equal to
-     * {@code Locale.US} must be contained in this array.
+     * Returns the system's installed locales. This array always includes {@code
+     * Locale.US}, and usually several others. Most locale-sensitive classes
+     * offer their own {@code getAvailableLocales} method, which should be
+     * preferred over this general purpose method.
      * 
-     * @return an array of {@code Locale}s.
+     * @see java.text.BreakIterator#getAvailableLocales()
+     * @see java.text.Collator#getAvailableLocales()
+     * @see java.text.DateFormat#getAvailableLocales()
+     * @see java.text.DateFormatSymbols#getAvailableLocales()
+     * @see java.text.DecimalFormatSymbols#getAvailableLocales()
+     * @see java.text.NumberFormat#getAvailableLocales()
+     * @see java.util.Calendar#getAvailableLocales()
      */
     public static Locale[] getAvailableLocales() {
         return ICU.getAvailableLocales();
     }
 
     /**
-     * Gets the country code for this {@code Locale} or an empty string of no country
-     * was set.
-     *
-     * @return a country code.
+     * Returns the country code for this locale, or {@code ""} if this locale
+     * doesn't correspond to a specific country.
      */
     public String getCountry() {
         return countryCode;
     }
 
     /**
-     * Gets the default {@code Locale}.
+     * Returns the user's preferred locale. This may have been overridden for
+     * this process with {@link #setDefault}.
      *
-     * @return the default {@code Locale}.
+     * <p>Since the user's locale changes dynamically, avoid caching this value.
+     * Instead, use this method to look it up for each use.
      */
     public static Locale getDefault() {
         return defaultLocale;
     }
 
     /**
-     * Gets the full country name in the default {@code Locale} for the country code of
-     * this {@code Locale}. If there is no matching country name, the country code is
-     * returned.
-     *
-     * @return a country name.
+     * Equivalent to {@code getDisplayCountry(Locale.getDefault())}.
      */
     public final String getDisplayCountry() {
         return getDisplayCountry(getDefault());
     }
 
     /**
-     * Gets the full country name in the specified {@code Locale} for the country code
-     * of this {@code Locale}. If there is no matching country name, the country code is
-     * returned.
-     *
-     * @param locale
-     *            the {@code Locale} for which the display name is retrieved.
-     * @return a country name.
+     * Returns the name of this locale's country, localized to {@code locale}.
+     * Returns the empty string if this locale does not correspond to a specific
+     * country.
      */
     public String getDisplayCountry(Locale locale) {
-        if (countryCode.length() == 0) {
-            return countryCode;
+        if (countryCode.isEmpty()) {
+            return "";
         }
         String result = ICU.getDisplayCountryNative(toString(), locale.toString());
         if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
@@ -393,28 +359,19 @@ public final class Locale implements Cloneable, Serializable {
     }
 
     /**
-     * Gets the full language name in the default {@code Locale} for the language code
-     * of this {@code Locale}. If there is no matching language name, the language code
-     * is returned.
-     *
-     * @return a language name.
+     * Equivalent to {@code getDisplayLanguage(Locale.getDefault())}.
      */
     public final String getDisplayLanguage() {
         return getDisplayLanguage(getDefault());
     }
 
     /**
-     * Gets the full language name in the specified {@code Locale} for the language code
-     * of this {@code Locale}. If there is no matching language name, the language code
-     * is returned.
-     *
-     * @param locale
-     *            the {@code Locale} for which the display name is retrieved.
-     * @return a language name.
+     * Returns the name of this locale's language, localized to {@code locale}.
+     * If the language name is unknown, the language code is returned.
      */
     public String getDisplayLanguage(Locale locale) {
-        if (languageCode.length() == 0) {
-            return languageCode;
+        if (languageCode.isEmpty()) {
+            return "";
         }
         String result = ICU.getDisplayLanguageNative(toString(), locale.toString());
         if (result == null) { // TODO: do we need to do this, or does ICU do it for us?
@@ -424,22 +381,19 @@ public final class Locale implements Cloneable, Serializable {
     }
 
     /**
-     * Gets the full language, country, and variant names in the default {@code Locale}
-     * for the codes of this {@code Locale}.
-     *
-     * @return a {@code Locale} name.
+     * Equivalent to {@code getDisplayName(Locale.getDefault())}.
      */
     public final String getDisplayName() {
         return getDisplayName(getDefault());
     }
 
     /**
-     * Gets the full language, country, and variant names in the specified
-     * Locale for the codes of this {@code Locale}.
-     *
-     * @param locale
-     *            the {@code Locale} for which the display name is retrieved.
-     * @return a {@code Locale} name.
+     * Returns this locale's language name, country name, and variant, localized
+     * to {@code locale}. The exact output form depends on whether this locale
+     * corresponds to a specific language, country and variant, such as:
+     * {@code English}, {@code English (United States)}, {@code English (United
+     * States,Computer)}, {@code anglais (États-Unis)}, {@code anglais
+     * (États-Unis,informatique)}.
      */
     public String getDisplayName(Locale locale) {
         int count = 0;
@@ -585,24 +539,24 @@ public final class Locale implements Cloneable, Serializable {
     }
 
     /**
-     * Sets the default {@code Locale} to the specified {@code Locale}.
-     *
-     * @param locale
-     *            the new default {@code Locale}.
-     * @throws SecurityException
-     *                if there is a {@code SecurityManager} in place which does not allow this
-     *                operation.
+     * Overrides the default locale. This does not affect system configuration,
+     * and attempts to override the system-provided default locale may
+     * themselves be overridden by actual changes to the system configuration.
+     * Code that calls this method is usually incorrect, and should be fixed by
+     * passing the appropriate locale to each locale-sensitive method that's
+     * called.
      */
     public synchronized static void setDefault(Locale locale) {
-        if (locale != null) {
-            SecurityManager security = System.getSecurityManager();
-            if (security != null) {
-                security.checkPermission(setLocalePermission);
-            }
-            defaultLocale = locale;
-        } else {
+        if (locale == null) {
             throw new NullPointerException();
         }
+
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkPermission(setLocalePermission);
+        }
+
+        defaultLocale = locale;
     }
 
     /**
