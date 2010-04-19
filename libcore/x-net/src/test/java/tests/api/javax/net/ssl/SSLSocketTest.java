@@ -27,7 +27,7 @@ import javax.security.cert.X509Certificate;
 import java.net.*;
 import java.security.KeyStore;
 import java.security.SecureRandom;
-import java.lang.String;
+import java.util.Arrays;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -636,8 +636,10 @@ public class SSLSocketTest extends TestCase {
         }
         ssl.setEnabledCipherSuites(ssl.getSupportedCipherSuites());
         String[] res = ssl.getEnabledCipherSuites();
-        assertEquals("not all supported cipher suites where enabled",
-                ssl.getSupportedCipherSuites().length, res.length);
+        assertNotNull("NULL result", res);
+        assertEquals("not all supported cipher suites were enabled",
+                     Arrays.asList(ssl.getSupportedCipherSuites()), 
+                     Arrays.asList(res));
     }
     
     /**

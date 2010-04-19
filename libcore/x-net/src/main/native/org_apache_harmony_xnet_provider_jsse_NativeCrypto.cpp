@@ -1717,9 +1717,16 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_setenabledpr
 }
 
 static jobjectArray makeCipherList(JNIEnv* env, SSL* ssl) {
+    STACK_OF(SSL_CIPHER)* cipher_list = SSL_get_ciphers(ssl);
     // Count the ciphers.
+    int num = sk_SSL_CIPHER_num(cipher_list);
     int cipherCount = 0;
-    while (SSL_get_cipher_list(ssl, cipherCount) != NULL) {
+    for (int i = 0; i < num; ++i) {
+        SSL_CIPHER* cipher = sk_SSL_CIPHER_value(cipher_list, i);
+        if (strcmp(SSL_CIPHER_get_version(cipher), SSL_TXT_SSLV2) == 0) {
+            // openssl-1.0.0 includes duplicate names for SSLv2 and SSLv3 ciphers
+            continue;
+        }
         ++cipherCount;
     }
 
@@ -1734,9 +1741,14 @@ static jobjectArray makeCipherList(JNIEnv* env, SSL* ssl) {
     }
 
     // Fill in the cipher names.
-    for (int i = 0; i < cipherCount; ++i) {
-        const char* c = SSL_get_cipher_list(ssl, i);
-        env->SetObjectArrayElement(array, i, env->NewStringUTF(c));
+    int cipherIndex = 0;
+    for (int i = 0; i < num; ++i) {
+        SSL_CIPHER* cipher = sk_SSL_CIPHER_value(cipher_list, i);
+        if (strcmp(SSL_CIPHER_get_version(cipher), SSL_TXT_SSLV2) == 0) {
+            continue;
+        }
+        env->SetObjectArrayElement(array, cipherIndex, env->NewStringUTF(cipher->name));
+        ++cipherIndex;
     }
     return array;
 }
@@ -1801,15 +1813,14 @@ static void OpenSSLSocketImpl_nativeSetEnabledCipherSuites(JNIEnv* env, jclass,
     setEnabledCipherSuites(env, controlString, ssl_ctx);
 }
 
-#define SSL_AUTH_MASK           0x00007F00L
-#define SSL_aRSA                0x00000100L /* Authenticate with RSA */
-#define SSL_aDSS                0x00000200L /* Authenticate with DSS */
-#define SSL_DSS                 SSL_aDSS
-#define SSL_aFZA                0x00000400L
-#define SSL_aNULL               0x00000800L /* no Authenticate, ADH */
-#define SSL_aDH                 0x00001000L /* no Authenticate, ADH */
-#define SSL_aKRB5               0x00002000L /* Authenticate with KRB5 */
-#define SSL_aECDSA              0x00004000L /* Authenticate with ECDSA */
+#define SSL_aRSA                0x00000001L
+#define SSL_aDSS                0x00000002L
+#define SSL_aNULL               0x00000004L
+#define SSL_aDH                 0x00000008L
+#define SSL_aECDH               0x00000010L
+#define SSL_aKRB5               0x00000020L
+#define SSL_aECDSA              0x00000040L
+#define SSL_aPSK                0x00000080L
 
 /**
  * Sets  the client's crypto algorithms and authentication methods.
@@ -1818,10 +1829,10 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_cipheraut
         jobject object)
 {
     SSL* ssl;
-    SSL_CIPHER *cipher;
+    const SSL_CIPHER *cipher;
     jstring ret;
     char buf[512];
-    unsigned long alg;
+    unsigned long alg_auth;
     const char *au;
 
     ssl = getSslPointer(env, object, true);
@@ -1831,9 +1842,9 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_cipheraut
 
     cipher = SSL_get_current_cipher(ssl);
 
-    alg = cipher->algorithms;
+    alg_auth = cipher->algorithm_auth;
 
-    switch (alg&SSL_AUTH_MASK) {
+    switch (alg_auth) {
         case SSL_aRSA:
             au="RSA";
             break;
@@ -1843,14 +1854,20 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_cipheraut
         case SSL_aDH:
             au="DH";
             break;
-        case SSL_aFZA:
-            au = "FZA";
+        case SSL_aKRB5:
+            au="KRB5";
+            break;
+        case SSL_aECDH:
+            au = "ECDH";
             break;
         case SSL_aNULL:
             au="None";
             break;
         case SSL_aECDSA:
             au="ECDSA";
+            break;
+        case SSL_aPSK:
+            au="PSK";
             break;
         default:
             au="unknown";
@@ -2514,7 +2531,7 @@ static jstring OpenSSLSessionImpl_getCipherSuite(JNIEnv* env, jobject object) {
 
     SSL_set_session(ssl, ssl_session);
 
-    SSL_CIPHER* cipher = SSL_get_current_cipher(ssl);
+    const SSL_CIPHER* cipher = SSL_get_current_cipher(ssl);
     jstring result = env->NewStringUTF(SSL_CIPHER_get_name(cipher));
 
     SSL_free(ssl);
