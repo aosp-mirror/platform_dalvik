@@ -30,12 +30,9 @@ public class BigIntegerTest extends junit.framework.TestCase {
         new BigInteger("1a", 16);
         new BigInteger("-1", 10);
         new BigInteger("-1a", 16);
+        // This is allowed from Java 7 on.
+        new BigInteger("+1");
         // Now check the invalid cases...
-        try {
-            new BigInteger("+1"); // no positive sign allowed.
-            fail();
-        } catch (NumberFormatException expected) {
-        }
         try {
             new BigInteger("-a"); // no digits from other bases.
             fail();

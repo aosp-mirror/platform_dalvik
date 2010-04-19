@@ -271,8 +271,9 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
 
     /**
      * Constructs a new {@code BigInteger} instance from the string
-     * representation. The string representation consists of an optional minus
+     * representation. The string representation consists of an optional plus or minus
      * sign followed by a non-empty sequence of decimal digits.
+     * Digits are interpreted as if by {@code Character.digit(char, 10)}.
      * 
      * @param val
      *            string representation of the new {@code BigInteger}.
@@ -291,10 +292,9 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
 
     /**
      * Constructs a new {@code BigInteger} instance from the string
-     * representation. The string representation consists of an optional minus
+     * representation. The string representation consists of an optional plus or minus
      * sign followed by a non-empty sequence of digits in the specified radix.
-     * For the conversion the method {@code Character.digit(char, radix)} is
-     * used.
+     * Digits are interpreted as if by {@code Character.digit(char, radix)}.
      * 
      * @param val
      *            string representation of the new {@code BigInteger}.
@@ -1215,6 +1215,9 @@ public class BigInteger extends Number implements Comparable<BigInteger>,
      *         otherwise.
      */
     public boolean isProbablePrime(int certainty) {
+        if (certainty <= 0) {
+            return true;
+        }
         validate1("isProbablePrime", this);
         return bigInt.isPrime(certainty, null, null);
     }

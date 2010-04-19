@@ -151,49 +151,80 @@ class BigInt
         Check(NativeBN.putULongInt(this.bignum, val, neg));
     }
 
-    public void putDecString(String str) {
-        checkString(str, 10);
+    public void putDecString(String original) {
+        String s = checkString(original, 10);
         this.makeValid();
-        int usedLen = NativeBN.BN_dec2bn(this.bignum, str);
+        int usedLen = NativeBN.BN_dec2bn(this.bignum, s);
         Check((usedLen > 0));
-        if (usedLen < str.length()) {
-            throw new NumberFormatException(str);
+        if (usedLen < s.length()) {
+            throw new NumberFormatException(original);
         }
     }
 
-    public void putHexString(String str) {
-        checkString(str, 16);
+    public void putHexString(String original) {
+        String s = checkString(original, 16);
         this.makeValid();
-        int usedLen = NativeBN.BN_hex2bn(this.bignum, str);
+        int usedLen = NativeBN.BN_hex2bn(this.bignum, s);
         Check((usedLen > 0));
-        if (usedLen < str.length()) {
-            throw new NumberFormatException(str);
+        if (usedLen < s.length()) {
+            throw new NumberFormatException(original);
         }
     }
 
     /**
+     * Returns a string suitable for passing to OpenSSL.
      * Throws if 's' doesn't match Java's rules for valid BigInteger strings.
      * BN_dec2bn and BN_hex2bn do very little checking, so we need to manually
      * ensure we comply with Java's rules.
      * http://code.google.com/p/android/issues/detail?id=7036
      */
-    public void checkString(String s, int radix) {
+    public String checkString(String s, int radix) {
         if (s == null) {
             throw new NullPointerException();
         }
-        // A valid big integer consists of an optional '-' followed by
+        // A valid big integer consists of an optional '-' or '+' followed by
         // one or more digit characters appropriate to the given radix,
         // and no other characters.
-        final int charCount = s.length();
-        int i = (charCount > 0 && s.charAt(0) == '-') ? 1 : 0;
+        int charCount = s.length();
+        int i = 0;
+        if (charCount > 0) {
+            char ch = s.charAt(0);
+            if (ch == '+') {
+                // Java supports leading +, but OpenSSL doesn't, so we need to strip it.
+                s = s.substring(1);
+                --charCount;
+            } else if (ch == '-') {
+                ++i;
+            }
+        }
         if (charCount - i == 0) {
             throw new NumberFormatException(s);
         }
+        boolean nonAscii = false;
         for (; i < charCount; ++i) {
-            if (Character.digit(s.charAt(i), radix) == -1) {
+            char ch = s.charAt(i);
+            if (Character.digit(ch, radix) == -1) {
                 throw new NumberFormatException(s);
             }
+            if (ch < '0' || ch > '9') {
+                nonAscii = true;
+            }
         }
+        return nonAscii ? toAscii(s) : s;
+    }
+
+    // Java supports non-ASCII digits, but OpenSSL doesn't.
+    private static String toAscii(String s) {
+        int length = s.length();
+        StringBuilder result = new StringBuilder(length);
+        for (int i = 0; i < length; ++i) {
+            char ch = s.charAt(i);
+            if (ch != '-') {
+                ch = (char) ('0' + Character.digit(ch, 10));
+            }
+            result.append(ch);
+        }
+        return result.toString();
     }
 
     public void putBigEndian(byte[] a, boolean neg) {
