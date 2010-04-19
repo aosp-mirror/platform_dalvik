@@ -960,13 +960,14 @@ static jobject charsetForName(JNIEnv* env, jclass, jstring charsetName) {
     }
 
     // Check that this charset is supported.
-    UErrorCode errorCode = U_ZERO_ERROR;
-    UConverter* conv = ucnv_open(icuCanonicalName, &errorCode);
-    icu4jni_error(env, errorCode);
-    closeConverter(env, NULL, (jlong) conv);
-    if (env->ExceptionOccurred()) {
+    // ICU doesn't offer any "isSupported", so we just open and immediately close.
+    // We ignore the UErrorCode because ucnv_open returning NULL is all the information we need.
+    UErrorCode dummy = U_ZERO_ERROR;
+    UConverter* conv = ucnv_open(icuCanonicalName, &dummy);
+    if (conv == NULL) {
         return NULL;
     }
+    ucnv_close(conv);
 
     // Get the aliases for this charset.
     jobjectArray aliases = getAliases(env, icuCanonicalName);
