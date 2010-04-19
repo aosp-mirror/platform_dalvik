@@ -33,8 +33,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 import vogar.commands.Command;
+import vogar.commands.CommandFailedException;
 import vogar.commands.Mkdir;
 
 /**
@@ -159,8 +161,9 @@ final class Driver implements HostMonitor.Handler {
             }
 
             if (action == null) {
-                throw new IllegalStateException("Expected " + actions.size()
-                        + " actions but found only " + i);
+                outcome(new Outcome("vogar.Vogar", Result.ERROR,
+                        "Expected " + actions.size() + " actions but found only " + i));
+                break;
             }
 
             execute(action);
@@ -230,31 +233,39 @@ final class Driver implements HostMonitor.Handler {
         if (earlyFailure == null) {
             final Command command = mode.createActionCommand(action);
             Future<List<String>> consoleOut = command.executeLater();
-            final AtomicBoolean done = new AtomicBoolean();
+            final AtomicReference<Result> result = new AtomicReference<Result>();
 
             actionTimeoutTimer.schedule(new TimerTask() {
                 @Override public void run() {
-                    if (!done.get()) {
-                        // TODO: set a "timout" bit somewhere so we know why this failed.
-                        //       currently we report ERROR for all timeouts.
+                    if (result.compareAndSet(null, Result.EXEC_TIMEOUT)) {
                         logger.fine("killing " + action.getName() + " because it "
                                 + "timed out after " + timeoutSeconds + " seconds");
+                        command.destroy();
                     }
-                    command.destroy();
                 }
             }, timeoutSeconds * 1000);
 
-            boolean success = monitor.monitor(monitorPort, this);
-            done.set(true);
-            if (success) {
-                return;
+            boolean completedNormally = monitor.monitor(monitorPort, this);
+            if (completedNormally) {
+                if (result.compareAndSet(null, Result.SUCCESS)) {
+                    command.destroy();
+                }
+                return; // outcomes will have been reported via outcome()
             }
 
+            if (result.compareAndSet(null, Result.ERROR)) {
+                command.destroy();
+            }
             try {
                 earlyFailure = new Outcome(action.getName(), action.getName(),
-                        Result.ERROR, consoleOut.get());
+                        result.get(), consoleOut.get());
             } catch (Exception e) {
-                earlyFailure = new Outcome(action.getName(), Result.ERROR, e);
+                if (e.getCause() instanceof CommandFailedException) {
+                    earlyFailure = new Outcome(action.getName(), action.getName(), result.get(),
+                            ((CommandFailedException) e.getCause()).getOutputLines());
+                } else {
+                    earlyFailure = new Outcome(action.getName(), result.get(), e);
+                }
             }
         }
 

@@ -94,7 +94,7 @@ class HostMonitor {
             logger.log(Level.WARNING, "Connection error from localhost:" + port, e);
             return false;
         } catch (SAXException e) {
-            logger.log(Level.WARNING, "Received bad XML from localhost:" + port, e);
+            logger.log(Level.WARNING, "Received bad XML from localhost:" + port + " " + e);
             return false;
         }
 
