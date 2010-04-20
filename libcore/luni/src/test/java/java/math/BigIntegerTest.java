@@ -30,6 +30,10 @@ public class BigIntegerTest extends junit.framework.TestCase {
         new BigInteger("1a", 16);
         new BigInteger("-1", 10);
         new BigInteger("-1a", 16);
+        new BigInteger("\u0661", 10);
+        new BigInteger("\u0661a", 16);
+        new BigInteger("-\u0661", 10);
+        new BigInteger("-\u0661a", 16);
         // This is allowed from Java 7 on.
         new BigInteger("+1");
         // Now check the invalid cases...

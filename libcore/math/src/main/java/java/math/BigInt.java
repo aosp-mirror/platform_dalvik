@@ -178,12 +178,12 @@ class BigInt
      * ensure we comply with Java's rules.
      * http://code.google.com/p/android/issues/detail?id=7036
      */
-    public String checkString(String s, int radix) {
+    public String checkString(String s, int base) {
         if (s == null) {
             throw new NullPointerException();
         }
         // A valid big integer consists of an optional '-' or '+' followed by
-        // one or more digit characters appropriate to the given radix,
+        // one or more digit characters appropriate to the given base,
         // and no other characters.
         int charCount = s.length();
         int i = 0;
@@ -203,24 +203,27 @@ class BigInt
         boolean nonAscii = false;
         for (; i < charCount; ++i) {
             char ch = s.charAt(i);
-            if (Character.digit(ch, radix) == -1) {
+            if (Character.digit(ch, base) == -1) {
                 throw new NumberFormatException(s);
             }
-            if (ch < '0' || ch > '9') {
+            if (ch > 128) {
                 nonAscii = true;
             }
         }
-        return nonAscii ? toAscii(s) : s;
+        return nonAscii ? toAscii(s, base) : s;
     }
 
-    // Java supports non-ASCII digits, but OpenSSL doesn't.
-    private static String toAscii(String s) {
+    // Java supports non-ASCII decimal digits, but OpenSSL doesn't.
+    // We need to translate the decimal digits but leave any other characters alone.
+    // This method assumes it's being called on a string that has already been validated.
+    private static String toAscii(String s, int base) {
         int length = s.length();
         StringBuilder result = new StringBuilder(length);
         for (int i = 0; i < length; ++i) {
             char ch = s.charAt(i);
-            if (ch != '-') {
-                ch = (char) ('0' + Character.digit(ch, 10));
+            int value = Character.digit(ch, base);
+            if (value >= 0 && value <= 9) {
+                ch = (char) ('0' + value);
             }
             result.append(ch);
         }
