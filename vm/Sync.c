@@ -418,9 +418,6 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
     /* Emit the sample percentage, 5 bytes. */
     cp = logWriteInt(cp, samplePercent);
 
-    /* Emit a trailing newline, apparently the EVENT_TYPE_LIST convention. */
-    *cp = '\n';
-
     assert((size_t)(cp - eventBuffer) <= sizeof(eventBuffer));
     android_btWriteLog(EVENT_LOG_TAG_dvm_lock_sample,
                        EVENT_TYPE_LIST,
@@ -460,7 +457,7 @@ static void lockMonitor(Thread* self, Monitor* mon)
             } else {
                 samplePercent = 100 * waitMs / waitThreshold;
             }
-            if (samplePercent != 0 && ((u4)rand() % 100 < samplePercent)) { 
+            if (samplePercent != 0 && ((u4)rand() % 100 < samplePercent)) {
                 logContentionEvent(self, waitMs, samplePercent);
             }
         }
