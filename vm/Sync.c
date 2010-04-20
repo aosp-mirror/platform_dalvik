@@ -517,8 +517,8 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
          * The JNI spec says that we should throw IllegalMonitorStateException
          * in this case.
          */
-        dvmThrowExceptionFmt("Ljava/lang/IllegalMonitorStateException;",
-                             "unlock of unowned monitor");
+        dvmThrowException("Ljava/lang/IllegalMonitorStateException;",
+                          "unlock of unowned monitor");
         return false;
     }
     return true;
