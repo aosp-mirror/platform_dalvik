@@ -50,7 +50,10 @@ public final class Vogar {
         @Option(names = { "--expectations" })
         private Set<File> expectationFiles = new LinkedHashSet<File>();
         {
-            expectationFiles.add(new File("dalvik/libcore/tools/runner/expectations.txt"));
+            File[] files = new File("dalvik/libcore/tools/runner/expectations").listFiles();
+            if (files != null) {
+                expectationFiles.addAll(Arrays.asList(files));
+            }
         }
 
         private static String MODE_DEVICE = "device";

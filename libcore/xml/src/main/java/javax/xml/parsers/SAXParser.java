@@ -63,7 +63,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * given {@link org.xml.sax.HandlerBase} or the
  * {@link org.xml.sax.helpers.DefaultHandler} are called.<p>
  *
- * Implementors of this class which wrap an underlaying implementation
+ * Implementations of this class which wrap an underlying implementation
  * can consider using the {@link org.xml.sax.helpers.ParserAdapter}
  * class to initially adapt their SAX1 implementation to work under
  * this revised class.

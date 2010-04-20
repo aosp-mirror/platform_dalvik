@@ -57,19 +57,20 @@ class DocumentBuilderImpl extends DocumentBuilder {
     private static DOMImplementationImpl dom = DOMImplementationImpl.getInstance();
 
     private boolean coalescing;
-
     private EntityResolver entityResolver;
-
     private ErrorHandler errorHandler;
-
     private boolean ignoreComments;
-
     private boolean ignoreElementContentWhitespace;
-
     private boolean namespaceAware;
+    // adding a new field? don't forget to update reset().
 
-    DocumentBuilderImpl() {
-        // Do nothing.
+    @Override public void reset() {
+        coalescing = false;
+        entityResolver = null;
+        errorHandler = null;
+        ignoreComments = false;
+        ignoreElementContentWhitespace = false;
+        namespaceAware = false;
     }
 
     @Override

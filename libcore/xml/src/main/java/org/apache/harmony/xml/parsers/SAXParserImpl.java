@@ -16,6 +16,8 @@
 
 package org.apache.harmony.xml.parsers;
 
+import java.util.Collections;
+import java.util.HashMap;
 import org.apache.harmony.xml.ExpatReader;
 
 import java.util.Map;
@@ -30,22 +32,41 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderAdapter;
 
 /**
- * Provides a straightforward SAXParser implementation based on ExpatReader.
- * The class is used internally only, thus only notable members that are not
- * already in the abstract superclass are documented. Hope that's ok.
+ * A SAX parser based on Expat.
  */
-class SAXParserImpl extends SAXParser {
+final class SAXParserImpl extends SAXParser {
 
+    private Map<String, Boolean> initialFeatures;
     private XMLReader reader;
-
     private Parser parser;
 
-    SAXParserImpl(Map<String, Boolean> features)
+    SAXParserImpl(Map<String, Boolean> initialFeatures)
             throws SAXNotRecognizedException, SAXNotSupportedException {
-        reader = new ExpatReader();
+        this.initialFeatures = initialFeatures.isEmpty()
+                ? Collections.<String, Boolean>emptyMap()
+                : new HashMap<String, Boolean>(initialFeatures);
+        resetInternal();
+    }
 
-        for (Map.Entry<String,Boolean> entry : features.entrySet()) {
+    private void resetInternal()
+            throws SAXNotSupportedException, SAXNotRecognizedException {
+        reader = new ExpatReader();
+        for (Map.Entry<String,Boolean> entry : initialFeatures.entrySet()) {
             reader.setFeature(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Override public void reset() {
+        /*
+         * The exceptions are impossible. If any features are unrecognized or
+         * unsupported, construction of this instance would have failed.
+         */
+        try {
+            resetInternal();
+        } catch (SAXNotRecognizedException e) {
+            throw new AssertionError();
+        } catch (SAXNotSupportedException e) {
+            throw new AssertionError();
         }
     }
 
