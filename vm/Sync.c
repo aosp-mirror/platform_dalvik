@@ -358,25 +358,26 @@ static char *logWriteInt(char *dst, int value)
 static char *logWriteString(char *dst, const char *value, size_t len)
 {
     *dst++ = EVENT_TYPE_STRING;
+    len = len < 32 ? len : 32;
     set4LE((u1 *)dst, len);
     dst += 4;
-    len = len < 32 ? len : 32;
     memcpy(dst, value, len);
     return dst + len;
 }
 
-#define EVENT_LOG_TAG_dvm_lock_contention 20003
+#define EVENT_LOG_TAG_dvm_lock_sample 20003
 
 static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
 {
     const StackSaveArea *saveArea;
     const Method *meth;
     u4 relativePc;
-    char eventBuffer[131];
+    char eventBuffer[132];
     const char *fileName;
-    char procName[32], *selfName, *ownerName;
+    char procName[33], *selfName, *ownerName;
     char *cp;
-    int fd, len;
+    size_t len;
+    int fd;
 
     saveArea = SAVEAREA_FROM_FP(self->curFrame);
     meth = saveArea->method;
@@ -387,9 +388,11 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
 
     /* Emit the process name, <= 37 bytes. */
     fd = open("/proc/self/cmdline", O_RDONLY);
-    len = read(fd, procName, sizeof(procName));
+    memset(procName, 0, sizeof(procName));
+    read(fd, procName, sizeof(procName) - 1);
     close(fd);
-    cp = logWriteString(cp, procName, (len > 0 ? len : 0));
+    len = strlen(procName);
+    cp = logWriteString(cp, procName, len);
 
     /* Emit the main thread status, 5 bytes. */
     bool isMainThread = (self->systemTid == getpid());
@@ -415,8 +418,11 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
     /* Emit the sample percentage, 5 bytes. */
     cp = logWriteInt(cp, samplePercent);
 
+    /* Emit a trailing newline, apparently the EVENT_TYPE_LIST convention. */
+    *cp = '\n';
+
     assert((size_t)(cp - eventBuffer) <= sizeof(eventBuffer));
-    android_btWriteLog(EVENT_LOG_TAG_dvm_lock_contention,
+    android_btWriteLog(EVENT_LOG_TAG_dvm_lock_sample,
                        EVENT_TYPE_LIST,
                        eventBuffer,
                        (size_t)(cp - eventBuffer));
@@ -452,9 +458,9 @@ static void lockMonitor(Thread* self, Monitor* mon)
             if (waitMs >= waitThreshold) {
                 samplePercent = 100;
             } else {
-                samplePercent = 1 + 100 * waitMs / gDvm.lockProfSample;
+                samplePercent = 100 * waitMs / waitThreshold;
             }
-            if ((u4)rand() % 100 < samplePercent) {
+            if (samplePercent != 0 && ((u4)rand() % 100 < samplePercent)) { 
                 logContentionEvent(self, waitMs, samplePercent);
             }
         }
