@@ -1,0 +1,99 @@
+# This file contains expectations for tests that we'd like to eventually fix.
+# Severe problems should be accompanied by a tracking bug.
+
+# Dalvik doesn't support XML Schemas, DTDs or validation
+# http://code.google.com/p/android/issues/detail?id=7395
+test tests.xml.DomTest#testEntityDeclarations
+result EXEC_FAILED
+pattern .*This implementation does not parse entity declarations.*
+
+test tests.xml.DomTest#testGetWholeTextWithEntityReference
+result EXEC_FAILED
+pattern .*This implementation doesn't resolve entity references in getWholeText.*
+
+test tests.xml.DomTest#testIsElementContentWhitespaceWithDeclaration
+result EXEC_FAILED
+pattern .*This implementation does not recognize element content whitespace.*
+
+test tests.xml.DomTest#testNotations
+result EXEC_FAILED
+pattern .*This implementation does not parse notations.*
+
+test tests.xml.DeclarationTest#testGetXmlEncoding
+result EXEC_FAILED
+pattern .*This implementation doesn't parse the encoding from the XML declaration expected:<ISO-8859-1> but was:<null>.*
+
+test tests.xml.DeclarationTest#testGetXmlStandalone
+pattern .*This implementation doesn't parse standalone from the XML declaration expected:<true> but was:<false>.*
+result EXEC_FAILED
+
+test tests.xml.DeclarationTest#testGetXmlVersion
+pattern .*This implementation doesn't parse the version from the XML declaration expected:<...1> but was:<...0>.*
+result EXEC_FAILED
+
+test tests.xml.NormalizeTest#testSchemaTypeDtd
+result EXEC_FAILED
+pattern .*This implementation's setParameter\(\) supports an unexpected value: schema-type=http://www.w3.org/TR/REC-xml.*
+
+test tests.api.javax.xml.parsers.DocumentBuilderTest#testSetEntityResolver
+result EXEC_FAILED
+pattern .*java.lang.ClassCastException: org.apache.harmony.xml.dom.EntityReferenceImpl.*
+
+
+# low-impact XML bugs:
+test tests.xml.DomTest#testAttributeNamedIdIsNotAnIdByDefault
+result EXEC_FAILED
+pattern .*This implementation incorrectly interprets the "id" attribute as an identifier by default.*
+
+test tests.xml.DomTest#testDocumentAddChild
+result EXEC_FAILED
+pattern .*Document nodes shouldn't accept child nodes.*
+
+test tests.xml.DomTest#testElementTraversalFeature
+result EXEC_FAILED
+pattern .*This implementation is expected to support ElementTraversal v. 1.0 but does not..*
+
+test tests.xml.DomTest#testLoadSaveFeature
+result EXEC_FAILED
+pattern .*This implementation is expected to support LS v. 3.0 but does not..*
+
+test tests.xml.SaxTest#testYesPrefixesYesNamespaces
+result EXEC_FAILED
+pattern .*The 'namespace-prefix' feature is not supported while the 'namespaces' feature is enabled..*
+
+test tests.api.javax.xml.parsers.SAXParserFactoryTest#test_newInstance
+result EXEC_FAILED
+pattern .*Expected FactoryConfigurationError was not thrown.*
+
+test tests.api.javax.xml.parsers.DocumentBuilderFactoryTest#test_isSetXIncludeAware
+result EXEC_FAILED
+pattern .*java.lang.UnsupportedOperationException: This parser does not support specification "Unknown" version "0.0".*
+
+test tests.api.javax.xml.parsers.DocumentBuilderTest#testIsXIncludeAware
+result EXEC_FAILED
+pattern .*java.lang.UnsupportedOperationException: This parser does not support specification "Unknown" version "0.0".*
+
+test tests.api.javax.xml.parsers.SAXParserFactoryTest#test_setIsXIncludeAware
+result EXEC_FAILED
+pattern .*java.lang.UnsupportedOperationException: This parser does not support specification "Unknown" version "0.0".*
+
+test tests.api.javax.xml.parsers.SAXParserTest#testIsXIncludeAware
+result EXEC_FAILED
+pattern .*java.lang.UnsupportedOperationException: This parser does not support specification "Unknown" version "0.0".*
+
+# a low-impact bug: "Shared FileDescriptors get closed too early"
+#   http://code.google.com/p/android/issues/detail?id=5923
+test java.io.FileDescriptor.Finalize
+result EXEC_FAILED
+pattern .*java.io.IOException.*openCheck.*
+
+
+# a low-impact bug, also present in Crockford's implementation of org.json
+test org.json.ParsingTest#test64BitHexValues
+result EXEC_FAILED
+pattern .*Large hex longs shouldn't be yield ints or strings expected:<-1> but was:<0xFFFFFFFFFFFFFFFF>.*
+
+
+# this test needs to be fixed. We supply optional qnames, but this test doesn't expect them
+test tests.api.javax.xml.parsers.SAXParserTest#test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String
+result EXEC_FAILED

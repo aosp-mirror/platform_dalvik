@@ -1,3 +1,5 @@
+# This file contains expectations for tests that we don't ever intend to fix.
+
 # The RI avoids blocking calls when '\r' is the last character. We don't
 # bother since that adds complexity to every other read call, and '\r' as the
 # last character will be diminishingly rare anyway.
@@ -664,6 +666,7 @@ result UNSUPPORTED
 test sun.security.smartcardio
 result UNSUPPORTED
 
+
 # Our exception messages don't match the RIs
 test java.lang.StringBuilder.Exceptions
 result EXEC_FAILED
@@ -674,11 +677,14 @@ result EXEC_FAILED
 pattern .*got java\.lang\.StringIndexOutOfBoundsException: null - FAILED.*
 
 
-# A low-impact bug that we're ignoring: "Shared FileDescriptors get closed too early"
-#   http://code.google.com/p/android/issues/detail?id=5923
-test java.io.FileDescriptor.Finalize
+# this test is invalid, proxy.equals isn't symmetric
+test org.apache.harmony.luni.tests.java.util.HashMapTest#test_proxies
 result EXEC_FAILED
-pattern .*java.io.IOException.*openCheck.*
+
+
+# this test is invalid, the mock map's entry set isn't to spec
+test org.apache.harmony.luni.tests.java.util.HashMapTest.test_putAllLjava_util_Map
+result EXEC_FAILED
 
 
 # We don't have AWT

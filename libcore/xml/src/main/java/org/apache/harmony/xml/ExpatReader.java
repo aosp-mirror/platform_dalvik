@@ -148,7 +148,7 @@ public class ExpatReader implements XMLReader {
 
         if (name.equals(LEXICAL_HANDLER_PROPERTY)) {
             // The object must implement LexicalHandler
-            if (value instanceof LexicalHandler) {
+            if (value instanceof LexicalHandler || value == null) {
                 this.lexicalHandler = (LexicalHandler) value;
                 return;
             }
