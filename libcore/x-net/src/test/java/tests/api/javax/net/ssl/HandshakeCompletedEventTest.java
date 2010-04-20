@@ -500,8 +500,8 @@ public class HandshakeCompletedEventTest extends TestCase {
     
     /** 
      * Implements a test SSL socket server. It wait for a connection on a given
-     * port, requests client authentication (if specified), and read 256 bytes
-     * from the socket. 
+     * port, requests client authentication (if specified), reads 256 bytes
+     * from the socket, and writes 256 bytes to the socket.
      */
     class TestServer implements Runnable {
 
@@ -551,16 +551,26 @@ public class HandshakeCompletedEventTest extends TestCase {
                 
                 SSLSocket clientSocket = (SSLSocket)serverSocket.accept();
 
-                InputStream stream = clientSocket.getInputStream();
+                InputStream istream = clientSocket.getInputStream();
 
                 for (int i = 0; i < 256; i++) {
-                    int j = stream.read();
+                    int j = istream.read();
                     if (i != j) {
                         throw new RuntimeException("Error reading socket, expected " + i + ", got " + j);
                     }
                 }
                 
-                stream.close();
+                istream.close();
+
+                OutputStream ostream = clientSocket.getOutputStream();
+
+                for (int i = 0; i < 256; i++) {
+                    ostream.write(i);
+                }
+
+                ostream.flush();
+                ostream.close();
+
                 clientSocket.close();
                 serverSocket.close();
                 
@@ -581,7 +591,8 @@ public class HandshakeCompletedEventTest extends TestCase {
 
     /** 
      * Implements a test SSL socket client. It open a connection to localhost on
-     * a given port and writes 256 bytes to the socket. 
+     * a given port, writes 256 bytes to the socket, and reads 256 bytes from the
+     * socket.
      */
     class TestClient implements Runnable {
         
@@ -614,14 +625,26 @@ public class HandshakeCompletedEventTest extends TestCase {
                 socket.addHandshakeCompletedListener(listener);
                 socket.startHandshake();
 
-                OutputStream stream = socket.getOutputStream();
+                OutputStream ostream = socket.getOutputStream();
                 
                 for (int i = 0; i < 256; i++) {
-                    stream.write(i);
+                    ostream.write(i);
                 }
                 
-                stream.flush();
-                stream.close();
+                ostream.flush();
+                ostream.close();
+
+                InputStream istream = socket.getInputStream();
+
+                for (int i = 0; i < 256; i++) {
+                    int j = istream.read();
+                    if (i != j) {
+                        throw new RuntimeException("Error reading socket, expected " + i + ", got " + j);
+                    }
+                }
+
+                istream.close();
+
                 socket.close();
                 
             } catch (Exception ex) {
@@ -649,7 +672,7 @@ public class HandshakeCompletedEventTest extends TestCase {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(inputStream, PASSWORD.toCharArray());
         inputStream.close();
-        
+
         String algorithm = KeyManagerFactory.getDefaultAlgorithm();
         KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(algorithm);
         keyManagerFactory.init(keyStore, PASSWORD.toCharArray());
