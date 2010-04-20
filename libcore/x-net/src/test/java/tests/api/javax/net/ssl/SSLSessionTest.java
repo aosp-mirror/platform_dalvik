@@ -706,8 +706,8 @@ public class SSLSessionTest extends TestCase {
 
     /** 
      * Implements a test SSL socket server. It waits for a connection on a given
-     * port, requests client authentication (if specified), and reads
-     * from the socket. 
+     * port, requests client authentication (if specified), reads from the socket,
+     * and writes to the socket.
      */
     class TestServer implements Runnable {
 
@@ -761,8 +761,16 @@ public class SSLSessionTest extends TestCase {
                 
                 SSLSocket clientSocket = (SSLSocket)serverSocket.accept();
 
+                InputStream istream = clientSocket.getInputStream();
+                byte[] buffer = new byte[1024];
+                istream.read(buffer);
+
+                OutputStream ostream = clientSocket.getOutputStream();
+                ostream.write(testData.getBytes());
+                ostream.flush();
+
                 while (notFinished) {
-                    clientSocket.getInputStream().read();
+                    Thread.currentThread().sleep(500);
                 }
 
                 clientSocket.close();
@@ -788,8 +796,8 @@ public class SSLSessionTest extends TestCase {
     }
 
     /** 
-     * Implements a test SSL socket client. It open a connection to localhost on
-     * a given port and writes to the socket. 
+     * Implements a test SSL socket client. It opens a connection to localhost on
+     * a given port, writes to the socket, and reads from the socket.
      */
     class TestClient implements Runnable {
         
@@ -825,6 +833,10 @@ public class SSLSessionTest extends TestCase {
                 OutputStream ostream = socket.getOutputStream();
                 ostream.write(testData.getBytes());
                 ostream.flush();
+
+                InputStream istream = socket.getInputStream();
+                byte[] buffer = new byte[1024];
+                istream.read(buffer);
 
                 clientSession = socket.getSession();
                 while (notFinished) {
