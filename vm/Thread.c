@@ -989,7 +989,7 @@ pid_t dvmGetSysThreadId(void)
  * This must be called while executing in the new thread, but before the
  * thread is added to the thread list.
  *
- * *** NOTE: The threadListLock must be held by the caller (needed for
+ * NOTE: The threadListLock must be held by the caller (needed for
  * assignThreadId()).
  */
 static bool prepareThread(Thread* thread)
@@ -1000,6 +1000,10 @@ static bool prepareThread(Thread* thread)
 
     //LOGI("SYSTEM TID IS %d (pid is %d)\n", (int) thread->systemTid,
     //    (int) getpid());
+    /*
+     * If we were called by dvmAttachCurrentThread, the self value is
+     * already correctly established as "thread".
+     */
     setThreadSelf(thread);
 
     LOGV("threadid=%d: interp stack at %p\n",
@@ -1194,8 +1198,7 @@ static void threadExitCheck(void* arg)
  *
  * We reserve zero for use as an invalid ID.
  *
- * This must be called with threadListLock held (unless we're still
- * initializing the system).
+ * This must be called with threadListLock held.
  */
 static void assignThreadId(Thread* thread)
 {
@@ -1623,6 +1626,7 @@ static void* interpThreadStart(void* arg)
     /*
      * Finish initializing the Thread struct.
      */
+    dvmLockThreadList(self);
     prepareThread(self);
 
     LOG_THREAD("threadid=%d: created from interp\n", self->threadId);
@@ -1631,7 +1635,6 @@ static void* interpThreadStart(void* arg)
      * Change our status and wake our parent, who will add us to the
      * thread list and advance our state to VMWAIT.
      */
-    dvmLockThreadList(self);
     self->status = THREAD_STARTING;
     pthread_cond_broadcast(&gDvm.threadStartCond);
 
