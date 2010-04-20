@@ -1803,15 +1803,14 @@ static jint org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_accept(JNIEn
     return (jint) ssl;
 }
 
-#define SSL_AUTH_MASK           0x00007F00L
-#define SSL_aRSA                0x00000100L /* Authenticate with RSA */
-#define SSL_aDSS                0x00000200L /* Authenticate with DSS */
-#define SSL_DSS                 SSL_aDSS
-#define SSL_aFZA                0x00000400L
-#define SSL_aNULL               0x00000800L /* no Authenticate, ADH */
-#define SSL_aDH                 0x00001000L /* no Authenticate, ADH */
-#define SSL_aKRB5               0x00002000L /* Authenticate with KRB5 */
-#define SSL_aECDSA              0x00004000L /* Authenticate with ECDSA */
+#define SSL_aRSA                0x00000001L
+#define SSL_aDSS                0x00000002L
+#define SSL_aNULL               0x00000004L
+#define SSL_aDH                 0x00000008L
+#define SSL_aECDH               0x00000010L
+#define SSL_aKRB5               0x00000020L
+#define SSL_aECDSA              0x00000040L
+#define SSL_aPSK                0x00000080L
 
 /**
  * Sets  the client's crypto algorithms and authentication methods.
@@ -1824,12 +1823,12 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_cipheraut
         return NULL;
     }
 
-    SSL_CIPHER* cipher = SSL_get_current_cipher(ssl);
+    const SSL_CIPHER* cipher = SSL_get_current_cipher(ssl);
 
-    unsigned long alg = cipher->algorithms;
+    unsigned long alg_auth = cipher->algorithm_auth;
 
     const char *au;
-    switch (alg&SSL_AUTH_MASK) {
+    switch (alg_auth) {
         case SSL_aRSA:
             au="RSA";
             break;
@@ -1839,14 +1838,20 @@ static jstring org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_cipheraut
         case SSL_aDH:
             au="DH";
             break;
-        case SSL_aFZA:
-            au = "FZA";
+        case SSL_aKRB5:
+            au="KRB5";
+            break;
+        case SSL_aECDH:
+            au = "ECDH";
             break;
         case SSL_aNULL:
             au="None";
             break;
         case SSL_aECDSA:
             au="ECDSA";
+            break;
+        case SSL_aPSK:
+            au="PSK";
             break;
         default:
             au="unknown";
@@ -2349,7 +2354,7 @@ static jstring OpenSSLSessionImpl_getProtocol(JNIEnv* env, jclass, jint ssl_sess
  */
 static jstring OpenSSLSessionImpl_getCipherSuite(JNIEnv* env, jclass, jint ssl_session_address) {
     SSL_SESSION* ssl_session = reinterpret_cast<SSL_SESSION*>(static_cast<uintptr_t>(ssl_session_address));
-    SSL_CIPHER* cipher = ssl_session->cipher;
+    const SSL_CIPHER* cipher = ssl_session->cipher;
     jstring result = env->NewStringUTF(SSL_CIPHER_get_name(cipher));
     return result;
 }

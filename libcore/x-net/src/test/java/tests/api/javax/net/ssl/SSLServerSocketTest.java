@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -327,7 +328,9 @@ public class SSLServerSocketTest extends TestCase {
         sss.setEnabledCipherSuites(sss.getSupportedCipherSuites());
         String[] res = sss.getEnabledCipherSuites();
         assertNotNull("NULL result", res);
-        assertTrue("No enabled cipher suites.", res.length == count);
+        assertEquals("not all supported cipher suites were enabled",
+                     Arrays.asList(sss.getSupportedCipherSuites()),
+                     Arrays.asList(res));
     }
     
     /**
