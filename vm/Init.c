@@ -895,7 +895,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                     /* keep going */
                 }
             } else {
-                /* disable JIT -- nothing to do here for now */
+                /* disable JIT if it was enabled by default */
+                gDvm.executionMode = kExecutionModeInterpFast;
             }
 
         } else if (strncmp(argv[i], "-Xlockprofthreshold:", 20) == 0) {
