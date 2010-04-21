@@ -242,7 +242,7 @@ public final class Locale implements Cloneable, Serializable {
         if (language == null || country == null || variant == null) {
             throw new NullPointerException();
         }
-        if(language.length() == 0 && country.length() == 0){
+        if(language.isEmpty() && country.isEmpty()){
             languageCode = "";
             countryCode = "";
             variantCode = variant;
@@ -398,25 +398,28 @@ public final class Locale implements Cloneable, Serializable {
     public String getDisplayName(Locale locale) {
         int count = 0;
         StringBuilder buffer = new StringBuilder();
-        if (languageCode.length() > 0) {
-            buffer.append(getDisplayLanguage(locale));
-            count++;
+        if (!languageCode.isEmpty()) {
+            String displayLanguage = getDisplayLanguage(locale);
+            buffer.append(displayLanguage.isEmpty() ? languageCode : displayLanguage);
+            ++count;
         }
-        if (countryCode.length() > 0) {
+        if (!countryCode.isEmpty()) {
             if (count == 1) {
                 buffer.append(" (");
             }
-            buffer.append(getDisplayCountry(locale));
-            count++;
+            String displayCountry = getDisplayCountry(locale);
+            buffer.append(displayCountry.isEmpty() ? countryCode : displayCountry);
+            ++count;
         }
-        if (variantCode.length() > 0) {
+        if (!variantCode.isEmpty()) {
             if (count == 1) {
                 buffer.append(" (");
             } else if (count == 2) {
                 buffer.append(",");
             }
-            buffer.append(getDisplayVariant(locale));
-            count++;
+            String displayVariant = getDisplayVariant(locale);
+            buffer.append(displayVariant.isEmpty() ? variantCode : displayVariant);
+            ++count;
         }
         if (count > 1) {
             buffer.append(")");

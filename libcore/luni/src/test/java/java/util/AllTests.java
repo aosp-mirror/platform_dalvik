@@ -26,6 +26,7 @@ public class AllTests {
         suite.addTestSuite(java.util.CurrencyTest.class);
         suite.addTestSuite(java.util.DateTest.class);
         suite.addTestSuite(java.util.FormatterTest.class);
+        suite.addTestSuite(java.util.LocaleTest.class);
         suite.addTestSuite(java.util.RandomTest.class);
         suite.addTestSuite(java.util.ServiceLoaderTest.class);
         suite.addTestSuite(java.util.TimeZoneTest.class);
