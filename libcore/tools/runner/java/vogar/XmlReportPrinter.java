@@ -122,7 +122,7 @@ public class XmlReportPrinter {
 
             suite.outcomes.add(outcome);
 
-            Expectation expectation = expectationStore.get(outcome.getName());
+            Expectation expectation = expectationStore.get(outcome);
             if (!expectation.matches(outcome)) {
                 if (outcome.getResult() == Result.EXEC_FAILED) {
                     suite.failuresCount++;
@@ -169,7 +169,7 @@ public class XmlReportPrinter {
             serializer.attribute(ns, ATTR_CLASSNAME, outcome.getSuiteName());
             serializer.attribute(ns, ATTR_TIME, "0");
 
-            Expectation expectation = expectationStore.get(outcome.getName());
+            Expectation expectation = expectationStore.get(outcome);
             if (!expectation.matches(outcome)) {
                 String result = outcome.getResult() == Result.EXEC_FAILED ? FAILURE : ERROR;
                 serializer.startTag(ns, result);

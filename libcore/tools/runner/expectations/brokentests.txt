@@ -1,5 +1,14 @@
 # This file contains expectations for tests that we don't ever intend to fix.
 
+# We're retiring the security manager. Unfortunately, tests all over the place
+# need to check that they're secure, so they all fail when we refuse to install
+# a security manager. This suppresses all of these failures.
+# http://b/issue?id=2585285
+failure disable securityManager
+result EXEC_FAILED
+pattern .*java.lang.UnsupportedOperationException\s+at java.lang.System.setSecurityManager.*
+
+
 # The RI avoids blocking calls when '\r' is the last character. We don't
 # bother since that adds complexity to every other read call, and '\r' as the
 # last character will be diminishingly rare anyway.

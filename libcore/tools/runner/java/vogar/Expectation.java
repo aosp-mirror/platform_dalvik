@@ -69,32 +69,6 @@ final class Expectation {
         return result == outcome.getResult() && patternMatches(outcome);
     }
 
-    /**
-     * Returns the failure message for this failed run. This message is intended
-     * to help to diagnose why the run result didn't match what was expected.
-     */
-    public String getFailureMessage(Outcome outcome) {
-        StringBuilder builder = new StringBuilder();
-
-        if (result != Result.SUCCESS && result != outcome.getResult()) {
-            builder.append("Expected result: ")
-                    .append(result)
-                    .append("\n");
-        }
-
-        if (!patternMatches(outcome)) {
-            builder.append("Expected output to match \"")
-                    .append(pattern.pattern())
-                    .append("\"\n");
-        }
-
-        for (String output : outcome.getOutputLines()) {
-            builder.append(output).append("\n");
-        }
-
-        return builder.toString();
-    }
-
     private boolean patternMatches(Outcome outcome) {
         return pattern.matcher(Strings.join(outcome.getOutputLines(), "\n")).matches();
     }
