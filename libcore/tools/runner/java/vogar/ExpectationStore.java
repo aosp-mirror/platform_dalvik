@@ -28,7 +28,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A database of expected outcomes.
+ * A database of expected outcomes. Entries in this database come in two forms.
+ * <ul>
+ *   <li>Outcome expectations name an outcome (or its prefix, such as
+ *       "java.util"), its expected result, and an optional pattern to match
+ *       the expected output.
+ *   <li>Failure expectations include a pattern that may match the output of any
+ *       outcome. These expectations are useful for hiding failures caused by
+ *       cross-cutting features that aren't supported.
+ * </ul>
+ *
+ * <p>If an outcome matches both an outcome expectation and a failure
+ * expectation, the outcome expectation will be returned.
  */
 final class ExpectationStore {
 
@@ -37,26 +48,50 @@ final class ExpectationStore {
     /** Matches lines in the file containing a key and value pair. */
     private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s+(.+)");
 
-    private final Map<String, Expectation> expectedResults;
+    private final Map<String, Expectation> outcomes = new HashMap<String, Expectation>();
+    private final Map<String, Expectation> failures = new HashMap<String, Expectation>();
 
-    private ExpectationStore(Map<String, Expectation> expectedResults) {
-        this.expectedResults = expectedResults;
-    }
+    private ExpectationStore() {}
 
     /**
-     * Finds the expected result for the specified action or outcome. This
+     * Finds the expected result for the specified action or outcome name. This
      * returns a value for all names, even if no explicit expectation was set.
      */
     public Expectation get(String name) {
+        Expectation byName = getByName(name);
+        return byName != null ? byName : Expectation.SUCCESS;
+    }
+
+    /**
+     * Finds the expected result for the specified outcome after it has
+     * completed. Unlike {@code get()}, this also takes into account the
+     * outcome's output.
+     */
+    public Expectation get(Outcome outcome) {
+        Expectation byName = getByName(outcome.getName());
+        if (byName != null) {
+            return byName;
+        }
+
+        for (Map.Entry<String, Expectation> entry : failures.entrySet()) {
+            if (entry.getValue().matches(outcome)) {
+                return entry.getValue();
+            }
+        }
+
+        return Expectation.SUCCESS;
+    }
+
+    private Expectation getByName(String name) {
         while (true) {
-            Expectation expectation = expectedResults.get(name);
+            Expectation expectation = outcomes.get(name);
             if (expectation != null) {
                 return expectation;
             }
 
             int dot = name.lastIndexOf('.');
             if (dot == -1) {
-                return Expectation.SUCCESS;
+                return null;
             }
 
             name = name.substring(0, dot);
@@ -64,26 +99,25 @@ final class ExpectationStore {
     }
 
     public static ExpectationStore parse(Set<File> expectationFiles) throws IOException {
-        Map<String, Expectation> expectedResults = new HashMap<String, Expectation>();
+        ExpectationStore result = new ExpectationStore();
         for (File f : expectationFiles) {
             if (f.exists()) {
-                expectedResults.putAll(parse(f));
+                result.parse(f);
             }
         }
-        return new ExpectationStore(expectedResults);
+        return result;
     }
 
-
-    public static Map<String, Expectation> parse(File expectationsFile)
-            throws IOException {
+    public void parse(File expectationsFile) throws IOException {
         logger.fine("loading expectations file " + expectationsFile);
 
         BufferedReader reader = new BufferedReader(new FileReader(expectationsFile));
+        int count = 0;
         try {
-            Map<String, Expectation> results = new HashMap<String, Expectation>();
             Matcher keyValuePairMatcher = KEY_VALUE_PAIR_PATTERN.matcher("");
 
             // the fields of interest for the current element
+            String type = null;
             String qualifiedName = null;
             Result result = null;
             String pattern = null;
@@ -110,21 +144,16 @@ final class ExpectationStore {
                 } else if (key.equals("pattern") && pattern == null) {
                     pattern = value;
 
-                } else if (key.equals("test")) {
+                } else if (key.equals("test") || key.equals("failure")) {
                     // when we encounter a new qualified name, the previous
                     // element is complete. Add it to the results.
                     if (qualifiedName != null) {
-                        Expectation expectation = new Expectation(result, pattern);
-                        Expectation previous = results.put(qualifiedName, expectation);
-                        if (previous != null) {
-                            throw new IllegalArgumentException(
-                                    "Duplicate expectations for " + qualifiedName);
-                        }
-
+                        count++;
+                        put(type, qualifiedName, result, pattern);
                         result = null;
                         pattern = null;
                     }
-
+                    type = key;
                     qualifiedName = value;
 
                 } else {
@@ -135,18 +164,22 @@ final class ExpectationStore {
 
             // add the last element in the file
             if (qualifiedName != null) {
-                Expectation expectation = new Expectation(result, pattern);
-                Expectation previous = results.put(qualifiedName, expectation);
-                if (previous != null) {
-                    throw new IllegalArgumentException(
-                            "Duplicate expectations for " + qualifiedName);
-                }
+                count++;
+                put(type, qualifiedName, result, pattern);
             }
 
-            logger.fine("loaded " + results.size() + " expectations.");
-            return results;
+            logger.fine("loaded " + count + " expectations from " + expectationsFile);
         } finally {
             reader.close();
+        }
+    }
+
+    void put(String type, String qualifiedName, Result result, String pattern) {
+        Expectation expectation = new Expectation(result, pattern);
+        Map<String, Expectation> map = "test".equals(type) ? outcomes : failures;
+        if (map.put(qualifiedName, expectation) != null) {
+            throw new IllegalArgumentException(
+                    "Duplicate expectations for " + qualifiedName);
         }
     }
 }

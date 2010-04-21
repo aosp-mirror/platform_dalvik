@@ -32,7 +32,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 import vogar.commands.Command;
@@ -282,7 +281,7 @@ final class Driver implements HostMonitor.Handler {
 
     public void outcome(Outcome outcome) {
         outcomes.put(outcome.getName(), outcome);
-        Expectation expectation = expectationStore.get(outcome.getName());
+        Expectation expectation = expectationStore.get(outcome);
         boolean ok = expectation.matches(outcome);
         if (ok) {
             successes++;
