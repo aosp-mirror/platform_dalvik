@@ -619,17 +619,21 @@ public final class URI implements Comparable<URI>, Serializable {
                 return false;
             }
 
-            String label = null;
+            String lastLabel = null;
             StringTokenizer st = new StringTokenizer(host, "."); //$NON-NLS-1$
             while (st.hasMoreTokens()) {
-                label = st.nextToken();
-                if (label.startsWith("-") || label.endsWith("-")) { //$NON-NLS-1$ //$NON-NLS-2$
+                lastLabel = st.nextToken();
+                if (lastLabel.startsWith("-") || lastLabel.endsWith("-")) { //$NON-NLS-1$ //$NON-NLS-2$
                     return false;
                 }
             }
 
-            if (!label.equals(host)) {
-                char ch = label.charAt(0);
+            if (lastLabel == null) {
+                return false;
+            }
+
+            if (!lastLabel.equals(host)) {
+                char ch = lastLabel.charAt(0);
                 if (ch >= '0' && ch <= '9') {
                     return false;
                 }
