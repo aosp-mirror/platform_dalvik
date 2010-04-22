@@ -22,6 +22,7 @@ import junit.framework.TestSuite;
 public class AllTests {
     public static final Test suite() {
         TestSuite suite = new TestSuite();
+        suite.addTestSuite(java.text.CollatorTest.class);
         suite.addTestSuite(java.text.DateFormatSymbolsTest.class);
         suite.addTestSuite(java.text.DecimalFormatTest.class);
         suite.addTestSuite(java.text.DecimalFormatSymbolsTest.class);
