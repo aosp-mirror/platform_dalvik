@@ -82,4 +82,65 @@ public class CollatorTest extends junit.framework.TestCase {
         assertTrue("Error: \u00e0\u0325 should equal to a\u0325\u0300 with decomposition",
                 myCollator.compare("\u00e0\u0325", "a\u0325\u0300") == 0);
     }
+
+    public void testEqualsObject() throws ParseException {
+        String rule = "< a < b < c < d < e";
+        RuleBasedCollator coll = new RuleBasedCollator(rule);
+
+        assertEquals(Collator.TERTIARY, coll.getStrength());
+        // This is a harmony test, but it assumes that RuleBasedCollators default to
+        // NO_DECOMPOSITION, which isn't true on Android.
+        // assertEquals(Collator.NO_DECOMPOSITION, coll.getDecomposition());
+        RuleBasedCollator other = new RuleBasedCollator(rule);
+        assertTrue(coll.equals(other));
+
+        coll.setStrength(Collator.PRIMARY);
+        assertFalse(coll.equals(other));
+
+        coll.setStrength(Collator.TERTIARY);
+        coll.setDecomposition(Collator.CANONICAL_DECOMPOSITION);
+        other.setDecomposition(Collator.NO_DECOMPOSITION); // See comment above.
+        assertFalse(coll.equals(other));
+    }
+
+    public void test_Harmony_1352() throws Exception {
+        // Regression test for HARMONY-1352, that doesn't get run in the harmony test suite because
+        // of an earlier failure.
+        try {
+            new RuleBasedCollator("< a< b< c< d").getCollationElementIterator((CharacterIterator) null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException expected) {
+        }
+    }
+
+    private void assertCollationElementIterator(CollationElementIterator it, Integer... offsets) {
+        for (int offset : offsets) {
+            assertEquals(offset, it.getOffset());
+            it.next();
+        }
+        assertEquals(CollationElementIterator.NULLORDER, it.next());
+    }
+
+    private void assertGetCollationElementIteratorString(Locale l, String s, Integer... offsets) {
+        RuleBasedCollator coll = (RuleBasedCollator) Collator.getInstance(l);
+        assertCollationElementIterator(coll.getCollationElementIterator(s), offsets);
+    }
+
+    private void assertGetCollationElementIteratorCharacterIterator(Locale l, String s, Integer... offsets) {
+        RuleBasedCollator coll = (RuleBasedCollator) Collator.getInstance(l);
+        CharacterIterator it = new StringCharacterIterator(s);
+        assertCollationElementIterator(coll.getCollationElementIterator(it), offsets);
+    }
+
+    public void testGetCollationElementIteratorString() throws Exception {
+        assertGetCollationElementIteratorString(new Locale("es", "", "TRADITIONAL"), "cha", 0, 2, 3);
+        assertGetCollationElementIteratorString(new Locale("es", "", ""), "cha", 0, 1, 2, 3);
+        assertGetCollationElementIteratorString(new Locale("de", "DE", ""), "\u00e6b", 0, 1, 1, 2);
+    }
+
+    public void testGetCollationElementIteratorCharacterIterator() throws Exception {
+        assertGetCollationElementIteratorCharacterIterator(new Locale("es", "", "TRADITIONAL"), "cha", 0, 2, 3);
+        assertGetCollationElementIteratorCharacterIterator(new Locale("es", "", ""), "cha", 0, 1, 2, 3);
+        assertGetCollationElementIteratorCharacterIterator(new Locale("de", "DE", ""), "\u00e6b", 0, 1, 1, 2);
+    }
 }

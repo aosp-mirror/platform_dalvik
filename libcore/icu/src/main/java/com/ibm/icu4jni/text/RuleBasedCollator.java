@@ -516,8 +516,17 @@ public final class RuleBasedCollator extends Collator {
         return result;
     }
 
-    public CollationElementIterator getCollationElementIterator(CharacterIterator source) {
-        return getCollationElementIterator(source.toString());
+    public CollationElementIterator getCollationElementIterator(CharacterIterator it) {
+        // We only implement the String-based API, so build a string from the iterator.
+        return getCollationElementIterator(characterIteratorToString(it));
+    }
+
+    private String characterIteratorToString(CharacterIterator it) {
+        StringBuilder result = new StringBuilder();
+        for (char ch = it.current(); ch != CharacterIterator.DONE; ch = it.next()) {
+            result.append(ch);
+        }
+        return result.toString();
     }
 
     /**
