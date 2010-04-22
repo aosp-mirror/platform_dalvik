@@ -392,8 +392,8 @@ public final class Locale implements Cloneable, Serializable {
      * to {@code locale}. The exact output form depends on whether this locale
      * corresponds to a specific language, country and variant, such as:
      * {@code English}, {@code English (United States)}, {@code English (United
-     * States,Computer)}, {@code anglais (États-Unis)}, {@code anglais
-     * (États-Unis,informatique)}.
+     * States,Computer)}, {@code anglais (&#x00c9;tats-Unis)}, {@code anglais
+     * (&#x00c9;tats-Unis,informatique)}.
      */
     public String getDisplayName(Locale locale) {
         int count = 0;

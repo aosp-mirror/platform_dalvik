@@ -711,3 +711,20 @@ result EXEC_FAILED
 pattern .*GMT-07:00.*
 
 
+# These harmony tests are broken. The RI doesn't ship with es__TRADITIONAL, so
+# they have incorrect expectations.
+# http://b/2608750
+
+test org.apache.harmony.text.tests.java.text.RuleBasedCollatorTest#testGetCollationElementIteratorCharacterIterator
+result EXEC_FAILED
+pattern .*expected:<1> but was:<2>.*
+
+test org.apache.harmony.text.tests.java.text.RuleBasedCollatorTest#testGetCollationElementIteratorString
+result EXEC_FAILED
+pattern .*expected:<1> but was:<2>.*
+
+# This test fails because on Android, RuleBasedCollators default to
+# CANONICAL_DECOMPOSITION, not NO_DECOMPOSITION.
+test org.apache.harmony.text.tests.java.text.RuleBasedCollatorTest#testEqualsObject
+result EXEC_FAILED
+pattern .*expected:<0> but was:<1>.*

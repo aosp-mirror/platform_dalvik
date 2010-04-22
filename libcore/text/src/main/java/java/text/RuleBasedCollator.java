@@ -269,15 +269,14 @@ public class RuleBasedCollator extends Collator {
      * the result of a former {@link #getRules()} call.
      * <p>
      * Note that the {@code rules} are actually interpreted as a delta to the
-     * standard Unicode Collation Algorithm (UCA). Hence, an empty {@code rules}
-     * string results in the default UCA rules being applied. This differs
+     * standard Unicode Collation Algorithm (UCA). This differs
      * slightly from other implementations which work with full {@code rules}
      * specifications and may result in different behavior.
      *
      * @param rules
      *            the collation rules.
      * @throws NullPointerException
-     *             if {@code rules} is {@code null}.
+     *             if {@code rules == null}.
      * @throws ParseException
      *             if {@code rules} contains rules with invalid collation rule
      *             syntax.
@@ -285,6 +284,9 @@ public class RuleBasedCollator extends Collator {
     public RuleBasedCollator(String rules) throws ParseException {
         if (rules == null) {
             throw new NullPointerException();
+        }
+        if (rules.isEmpty()) {
+            throw new ParseException("empty rules", 0);
         }
         try {
             this.icuColl = new com.ibm.icu4jni.text.RuleBasedCollator(rules);
@@ -310,8 +312,7 @@ public class RuleBasedCollator extends Collator {
      *            the source character iterator.
      * @return a {@code CollationElementIterator} for {@code source}.
      */
-    public CollationElementIterator getCollationElementIterator(
-            CharacterIterator source) {
+    public CollationElementIterator getCollationElementIterator(CharacterIterator source) {
         if (source == null) {
             throw new NullPointerException();
         }
