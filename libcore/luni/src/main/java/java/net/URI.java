@@ -23,56 +23,41 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
-
-import org.apache.harmony.luni.util.Msg;
+import org.apache.harmony.luni.platform.INetworkSystem;
+import org.apache.harmony.luni.platform.Platform;
 
 /**
  * This class represents an instance of a URI as defined by RFC 2396.
  */
 public final class URI implements Comparable<URI>, Serializable {
 
+    private final static INetworkSystem NETWORK_SYSTEM = Platform.getNetworkSystem();
+
     private static final long serialVersionUID = -6052424284110960213l;
 
-    static final String unreserved = "_-!.~\'()*"; //$NON-NLS-1$
-
-    static final String punct = ",;:$&+="; //$NON-NLS-1$
-
-    static final String reserved = punct + "?/[]@"; //$NON-NLS-1$
-
-    static final String someLegal = unreserved + punct;
-
-    static final String allLegal = unreserved + reserved;
+    static final String UNRESERVED = "_-!.~\'()*";
+    static final String PUNCTUATION = ",;:$&+=";
+    static final String RESERVED = PUNCTUATION + "?/[]@";
+    static final String SOME_LEGAL = UNRESERVED + PUNCTUATION;
+    static final String ALL_LEGAL = UNRESERVED + RESERVED;
 
     private String string;
-
     private transient String scheme;
-
-    private transient String schemespecificpart;
-
+    private transient String schemeSpecificPart;
     private transient String authority;
-
-    private transient String userinfo;
-
+    private transient String userInfo;
     private transient String host;
-
     private transient int port = -1;
-
     private transient String path;
-
     private transient String query;
-
     private transient String fragment;
-
     private transient boolean opaque;
-
     private transient boolean absolute;
-
     private transient boolean serverAuthority = false;
 
     private transient int hash = -1;
 
-    private URI() {
-    }
+    private URI() {}
 
     /**
      * Creates a new URI instance according to the given string {@code uri}.
@@ -84,7 +69,7 @@ public final class URI implements Comparable<URI>, Serializable {
      *             specification RFC2396 or could not be parsed correctly.
      */
     public URI(String uri) throws URISyntaxException {
-        new Helper().parseURI(uri, false);
+        parseURI(uri, false);
     }
 
     /**
@@ -113,15 +98,15 @@ public final class URI implements Comparable<URI>, Serializable {
         }
         if (ssp != null) {
             // QUOTE ILLEGAL CHARACTERS
-            uri.append(quoteComponent(ssp, allLegal));
+            uri.append(quoteComponent(ssp, ALL_LEGAL));
         }
         if (frag != null) {
             uri.append('#');
             // QUOTE ILLEGAL CHARACTERS
-            uri.append(quoteComponent(frag, allLegal));
+            uri.append(quoteComponent(frag, ALL_LEGAL));
         }
 
-        new Helper().parseURI(uri.toString(), false);
+        parseURI(uri.toString(), false);
     }
 
     /**
@@ -133,7 +118,7 @@ public final class URI implements Comparable<URI>, Serializable {
      *
      * @param scheme
      *            the scheme part of the URI.
-     * @param userinfo
+     * @param userInfo
      *            the user information of the URI for authentication and
      *            authorization.
      * @param host
@@ -151,19 +136,19 @@ public final class URI implements Comparable<URI>, Serializable {
      *             if the temporary created string doesn't fit to the
      *             specification RFC2396 or could not be parsed correctly.
      */
-    public URI(String scheme, String userinfo, String host, int port,
+    public URI(String scheme, String userInfo, String host, int port,
             String path, String query, String fragment)
             throws URISyntaxException {
 
-        if (scheme == null && userinfo == null && host == null && path == null
+        if (scheme == null && userInfo == null && host == null && path == null
                 && query == null && fragment == null) {
-            this.path = ""; //$NON-NLS-1$
+            this.path = "";
             return;
         }
 
         if (scheme != null && path != null && path.length() > 0
                 && path.charAt(0) != '/') {
-            throw new URISyntaxException(path, Msg.getString("K0302")); //$NON-NLS-1$
+            throw new URISyntaxException(path, "Relative path");
         }
 
         StringBuilder uri = new StringBuilder();
@@ -172,22 +157,22 @@ public final class URI implements Comparable<URI>, Serializable {
             uri.append(':');
         }
 
-        if (userinfo != null || host != null || port != -1) {
-            uri.append("//"); //$NON-NLS-1$
+        if (userInfo != null || host != null || port != -1) {
+            uri.append("//");
         }
 
-        if (userinfo != null) {
-            // QUOTE ILLEGAL CHARACTERS in userinfo
-            uri.append(quoteComponent(userinfo, someLegal));
+        if (userInfo != null) {
+            // QUOTE ILLEGAL CHARACTERS in userInfo
+            uri.append(quoteComponent(userInfo, SOME_LEGAL));
             uri.append('@');
         }
 
         if (host != null) {
-            // check for ipv6 addresses that hasn't been enclosed
+            // check for IPv6 addresses that hasn't been enclosed
             // in square brackets
             if (host.indexOf(':') != -1 && host.indexOf(']') == -1
                     && host.indexOf('[') == -1) {
-                host = "[" + host + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+                host = "[" + host + "]";
             }
             uri.append(host);
         }
@@ -199,22 +184,22 @@ public final class URI implements Comparable<URI>, Serializable {
 
         if (path != null) {
             // QUOTE ILLEGAL CHARS
-            uri.append(quoteComponent(path, "/@" + someLegal)); //$NON-NLS-1$
+            uri.append(quoteComponent(path, "/@" + SOME_LEGAL));
         }
 
         if (query != null) {
             uri.append('?');
             // QUOTE ILLEGAL CHARS
-            uri.append(quoteComponent(query, allLegal));
+            uri.append(quoteComponent(query, ALL_LEGAL));
         }
 
         if (fragment != null) {
             // QUOTE ILLEGAL CHARS
             uri.append('#');
-            uri.append(quoteComponent(fragment, allLegal));
+            uri.append(quoteComponent(fragment, ALL_LEGAL));
         }
 
-        new Helper().parseURI(uri.toString(), true);
+        parseURI(uri.toString(), true);
     }
 
     /**
@@ -267,7 +252,7 @@ public final class URI implements Comparable<URI>, Serializable {
             String fragment) throws URISyntaxException {
         if (scheme != null && path != null && path.length() > 0
                 && path.charAt(0) != '/') {
-            throw new URISyntaxException(path, Msg.getString("K0302")); //$NON-NLS-1$
+            throw new URISyntaxException(path, "Relative path");
         }
 
         StringBuilder uri = new StringBuilder();
@@ -276,556 +261,375 @@ public final class URI implements Comparable<URI>, Serializable {
             uri.append(':');
         }
         if (authority != null) {
-            uri.append("//"); //$NON-NLS-1$
+            uri.append("//");
             // QUOTE ILLEGAL CHARS
-            uri.append(quoteComponent(authority, "@[]" + someLegal)); //$NON-NLS-1$
+            uri.append(quoteComponent(authority, "@[]" + SOME_LEGAL));
         }
 
         if (path != null) {
             // QUOTE ILLEGAL CHARS
-            uri.append(quoteComponent(path, "/@" + someLegal)); //$NON-NLS-1$
+            uri.append(quoteComponent(path, "/@" + SOME_LEGAL));
         }
         if (query != null) {
             // QUOTE ILLEGAL CHARS
             uri.append('?');
-            uri.append(quoteComponent(query, allLegal));
+            uri.append(quoteComponent(query, ALL_LEGAL));
         }
         if (fragment != null) {
             // QUOTE ILLEGAL CHARS
             uri.append('#');
-            uri.append(quoteComponent(fragment, allLegal));
+            uri.append(quoteComponent(fragment, ALL_LEGAL));
         }
 
-        new Helper().parseURI(uri.toString(), false);
+        parseURI(uri.toString(), false);
     }
 
-    private class Helper {
+    private void parseURI(String uri, boolean forceServer) throws URISyntaxException {
+        String temp = uri;
+        // assign uri string to the input value per spec
+        string = uri;
+        int index, index1, index2, index3;
+        // parse into Fragment, Scheme, and SchemeSpecificPart
+        // then parse SchemeSpecificPart if necessary
 
-        private void parseURI(String uri, boolean forceServer)
-                throws URISyntaxException {
-            String temp = uri;
-            // assign uri string to the input value per spec
-            string = uri;
-            int index, index1, index2, index3;
-            // parse into Fragment, Scheme, and SchemeSpecificPart
-            // then parse SchemeSpecificPart if necessary
+        // Fragment
+        index = temp.indexOf('#');
+        if (index != -1) {
+            // remove the fragment from the end
+            fragment = temp.substring(index + 1);
+            validateFragment(uri, fragment, index + 1);
+            temp = temp.substring(0, index);
+        }
 
-            // Fragment
-            index = temp.indexOf('#');
+        // Scheme and SchemeSpecificPart
+        index = index1 = temp.indexOf(':');
+        index2 = temp.indexOf('/');
+        index3 = temp.indexOf('?');
+
+        // if a '/' or '?' occurs before the first ':' the uri has no
+        // specified scheme, and is therefore not absolute
+        if (index != -1 && (index2 >= index || index2 == -1)
+                && (index3 >= index || index3 == -1)) {
+            // the characters up to the first ':' comprise the scheme
+            absolute = true;
+            scheme = temp.substring(0, index);
+            if (scheme.length() == 0) {
+                throw new URISyntaxException(uri, "Scheme expected", index);
+            }
+            validateScheme(uri, scheme, 0);
+            schemeSpecificPart = temp.substring(index + 1);
+            if (schemeSpecificPart.length() == 0) {
+                throw new URISyntaxException(uri, "Scheme-specific part expected", index + 1);
+            }
+        } else {
+            absolute = false;
+            schemeSpecificPart = temp;
+        }
+
+        if (scheme == null || schemeSpecificPart.length() > 0
+                && schemeSpecificPart.charAt(0) == '/') {
+            opaque = false;
+            // the URI is hierarchical
+
+            // Query
+            temp = schemeSpecificPart;
+            index = temp.indexOf('?');
             if (index != -1) {
-                // remove the fragment from the end
-                fragment = temp.substring(index + 1);
-                validateFragment(uri, fragment, index + 1);
+                query = temp.substring(index + 1);
                 temp = temp.substring(0, index);
+                validateQuery(uri, query, index2 + 1 + index);
             }
 
-            // Scheme and SchemeSpecificPart
-            index = index1 = temp.indexOf(':');
-            index2 = temp.indexOf('/');
-            index3 = temp.indexOf('?');
-
-            // if a '/' or '?' occurs before the first ':' the uri has no
-            // specified scheme, and is therefore not absolute
-            if (index != -1 && (index2 >= index || index2 == -1)
-                    && (index3 >= index || index3 == -1)) {
-                // the characters up to the first ':' comprise the scheme
-                absolute = true;
-                scheme = temp.substring(0, index);
-                if (scheme.length() == 0) {
-                    throw new URISyntaxException(uri, Msg.getString("K0342"), //$NON-NLS-1$
-                            index);
-                }
-                validateScheme(uri, scheme, 0);
-                schemespecificpart = temp.substring(index + 1);
-                if (schemespecificpart.length() == 0) {
-                    throw new URISyntaxException(uri, Msg.getString("K0303"), //$NON-NLS-1$
-                            index + 1);
-                }
-            } else {
-                absolute = false;
-                schemespecificpart = temp;
-            }
-
-            if (scheme == null || schemespecificpart.length() > 0
-                    && schemespecificpart.charAt(0) == '/') {
-                opaque = false;
-                // the URI is hierarchical
-
-                // Query
-                temp = schemespecificpart;
-                index = temp.indexOf('?');
+            // Authority and Path
+            if (temp.startsWith("//")) {
+                index = temp.indexOf('/', 2);
                 if (index != -1) {
-                    query = temp.substring(index + 1);
-                    temp = temp.substring(0, index);
-                    validateQuery(uri, query, index2 + 1 + index);
-                }
-
-                // Authority and Path
-                if (temp.startsWith("//")) { //$NON-NLS-1$
-                    index = temp.indexOf('/', 2);
-                    if (index != -1) {
-                        authority = temp.substring(2, index);
-                        path = temp.substring(index);
-                    } else {
-                        authority = temp.substring(2);
-                        if (authority.length() == 0 && query == null
-                                && fragment == null) {
-                            throw new URISyntaxException(uri, Msg
-                                    .getString("K0304"), uri.length()); //$NON-NLS-1$
-                        }
-
-                        path = ""; //$NON-NLS-1$
-                        // nothing left, so path is empty (not null, path should
-                        // never be null)
+                    authority = temp.substring(2, index);
+                    path = temp.substring(index);
+                } else {
+                    authority = temp.substring(2);
+                    if (authority.length() == 0 && query == null
+                            && fragment == null) {
+                        throw new URISyntaxException(uri, "Authority expected", uri.length());
                     }
 
-                    if (authority.length() == 0) {
-                        authority = null;
-                    } else {
-                        validateAuthority(uri, authority, index1 + 3);
-                    }
-                } else { // no authority specified
-                    path = temp;
+                    path = "";
+                    // nothing left, so path is empty (not null, path should
+                    // never be null)
                 }
 
-                int pathIndex = 0;
-                if (index2 > -1) {
-                    pathIndex += index2;
+                if (authority.length() == 0) {
+                    authority = null;
+                } else {
+                    validateAuthority(uri, authority, index1 + 3);
                 }
-                if (index > -1) {
-                    pathIndex += index;
-                }
-                validatePath(uri, path, pathIndex);
-            } else { // if not hierarchical, URI is opaque
-                opaque = true;
-                validateSsp(uri, schemespecificpart, index2 + 2 + index);
+            } else { // no authority specified
+                path = temp;
             }
 
-            parseAuthority(forceServer);
+            int pathIndex = 0;
+            if (index2 > -1) {
+                pathIndex += index2;
+            }
+            if (index > -1) {
+                pathIndex += index;
+            }
+            validatePath(uri, path, pathIndex);
+        } else { // if not hierarchical, URI is opaque
+            opaque = true;
+            validateSsp(uri, schemeSpecificPart, index2 + 2 + index);
         }
 
-        private void validateScheme(String uri, String scheme, int index)
-                throws URISyntaxException {
-            // first char needs to be an alpha char
-            char ch = scheme.charAt(0);
-            if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
-                throw new URISyntaxException(uri, Msg.getString("K0305"), 0); //$NON-NLS-1$
-            }
+        parseAuthority(forceServer);
+    }
 
-            try {
-                URIEncoderDecoder.validateSimple(scheme, "+-."); //$NON-NLS-1$
-            } catch (URISyntaxException e) {
-                throw new URISyntaxException(uri, Msg.getString("K0305"), index //$NON-NLS-1$
-                        + e.getIndex());
-            }
+    private void validateScheme(String uri, String scheme, int index)
+            throws URISyntaxException {
+        // first char needs to be an alpha char
+        char ch = scheme.charAt(0);
+        if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
+            throw new URISyntaxException(uri, "Illegal character in scheme", 0);
         }
 
-        private void validateSsp(String uri, String ssp, int index)
-                throws URISyntaxException {
-            try {
-                URIEncoderDecoder.validate(ssp, allLegal);
-            } catch (URISyntaxException e) {
-                throw new URISyntaxException(uri, Msg.getString("K0306", e //$NON-NLS-1$
-                        .getReason()), index + e.getIndex());
-            }
+        try {
+            URIEncoderDecoder.validateSimple(scheme, "+-.");
+        } catch (URISyntaxException e) {
+            throw new URISyntaxException(uri, "Illegal character in scheme", index + e.getIndex());
+        }
+    }
+
+    private void validateSsp(String uri, String ssp, int index)
+            throws URISyntaxException {
+        try {
+            URIEncoderDecoder.validate(ssp, ALL_LEGAL);
+        } catch (URISyntaxException e) {
+            throw new URISyntaxException(uri,
+                    e.getReason() + " in schemeSpecificPart", index + e.getIndex());
+        }
+    }
+
+    private void validateAuthority(String uri, String authority, int index)
+            throws URISyntaxException {
+        try {
+            URIEncoderDecoder.validate(authority, "@[]" + SOME_LEGAL);
+        } catch (URISyntaxException e) {
+            throw new URISyntaxException(uri, e.getReason() + " in authority", index + e.getIndex());
+        }
+    }
+
+    private void validatePath(String uri, String path, int index)
+            throws URISyntaxException {
+        try {
+            URIEncoderDecoder.validate(path, "/@" + SOME_LEGAL);
+        } catch (URISyntaxException e) {
+            throw new URISyntaxException(uri, e.getReason() + " in path", index + e.getIndex());
+        }
+    }
+
+    private void validateQuery(String uri, String query, int index)
+            throws URISyntaxException {
+        try {
+            URIEncoderDecoder.validate(query, ALL_LEGAL);
+        } catch (URISyntaxException e) {
+            throw new URISyntaxException(uri, e.getReason() + " in query", index + e.getIndex());
+
+        }
+    }
+
+    private void validateFragment(String uri, String fragment, int index)
+            throws URISyntaxException {
+        try {
+            URIEncoderDecoder.validate(fragment, ALL_LEGAL);
+        } catch (URISyntaxException e) {
+            throw new URISyntaxException(uri, e.getReason() + " in fragment", index + e.getIndex());
+        }
+    }
+
+    /**
+     * Parse the authority string into its component parts: user info,
+     * host, and port. This operation doesn't apply to registry URIs, and
+     * calling it on such <i>may</i> result in a syntax exception.
+     *
+     * @param forceServer true to always throw if the authority cannot be
+     *     parsed. If false, this method may still throw for some kinds of
+     *     errors; this unpredictable behaviour is consistent with the RI.
+     */
+    private void parseAuthority(boolean forceServer) throws URISyntaxException {
+        if (authority == null) {
+            return;
         }
 
-        private void validateAuthority(String uri, String authority, int index)
-                throws URISyntaxException {
-            try {
-                URIEncoderDecoder.validate(authority, "@[]" + someLegal); //$NON-NLS-1$
-            } catch (URISyntaxException e) {
-                throw new URISyntaxException(uri, Msg.getString("K0307", e //$NON-NLS-1$
-                        .getReason()), index + e.getIndex());
-            }
+        String tempUserInfo = null;
+        String temp = authority;
+        int index = temp.indexOf('@');
+        int hostIndex = 0;
+        if (index != -1) {
+            // remove user info
+            tempUserInfo = temp.substring(0, index);
+            validateUserInfo(authority, tempUserInfo, 0);
+            temp = temp.substring(index + 1); // host[:port] is left
+            hostIndex = index + 1;
         }
 
-        private void validatePath(String uri, String path, int index)
-                throws URISyntaxException {
-            try {
-                URIEncoderDecoder.validate(path, "/@" + someLegal); //$NON-NLS-1$
-            } catch (URISyntaxException e) {
-                throw new URISyntaxException(uri, Msg.getString("K0308", e //$NON-NLS-1$
-                        .getReason()), index + e.getIndex());
-            }
-        }
+        index = temp.lastIndexOf(':');
+        int endIndex = temp.indexOf(']');
 
-        private void validateQuery(String uri, String query, int index)
-                throws URISyntaxException {
-            try {
-                URIEncoderDecoder.validate(query, allLegal);
-            } catch (URISyntaxException e) {
-                throw new URISyntaxException(uri, Msg.getString("K0309", e //$NON-NLS-1$
-                        .getReason()), index + e.getIndex());
+        String tempHost;
+        int tempPort = -1;
+        if (index != -1 && endIndex < index) {
+            // determine port and host
+            tempHost = temp.substring(0, index);
 
-            }
-        }
-
-        private void validateFragment(String uri, String fragment, int index)
-                throws URISyntaxException {
-            try {
-                URIEncoderDecoder.validate(fragment, allLegal);
-            } catch (URISyntaxException e) {
-                throw new URISyntaxException(uri, Msg.getString("K030a", e //$NON-NLS-1$
-                        .getReason()), index + e.getIndex());
-            }
-        }
-
-        /**
-         * determine the host, port and userinfo if the authority parses
-         * successfully to a server based authority
-         * 
-         * behavour in error cases: if forceServer is true, throw
-         * URISyntaxException with the proper diagnostic messages. if
-         * forceServer is false assume this is a registry based uri, and just
-         * return leaving the host, port and userinfo fields undefined.
-         * 
-         * and there are some error cases where URISyntaxException is thrown
-         * regardless of the forceServer parameter e.g. malformed ipv6 address
-         */
-        private void parseAuthority(boolean forceServer)
-                throws URISyntaxException {
-            if (authority == null) {
-                return;
-            }
-
-            String temp, tempUserinfo = null, tempHost = null;
-            int index, hostindex = 0;
-            int tempPort = -1;
-
-            temp = authority;
-            index = temp.indexOf('@');
-            if (index != -1) {
-                // remove user info
-                tempUserinfo = temp.substring(0, index);
-                validateUserinfo(authority, tempUserinfo, 0);
-                temp = temp.substring(index + 1); // host[:port] is left
-                hostindex = index + 1;
-            }
-
-            index = temp.lastIndexOf(':');
-            int endindex = temp.indexOf(']');
-
-            if (index != -1 && endindex < index) {
-                // determine port and host
-                tempHost = temp.substring(0, index);
-
-                if (index < (temp.length() - 1)) { // port part is not empty
-                    try {
-                        tempPort = Integer.parseInt(temp.substring(index + 1));
-                        if (tempPort < 0) {
-                            if (forceServer) {
-                                throw new URISyntaxException(
-                                        authority,
-                                        Msg.getString("K00b1"), hostindex + index + 1); //$NON-NLS-1$
-                            }
-                            return;
-                        }
-                    } catch (NumberFormatException e) {
+            if (index < (temp.length() - 1)) { // port part is not empty
+                try {
+                    tempPort = Integer.parseInt(temp.substring(index + 1));
+                    if (tempPort < 0) {
                         if (forceServer) {
-                            throw new URISyntaxException(authority, Msg
-                                    .getString("K00b1"), hostindex + index + 1); //$NON-NLS-1$
+                            throw new URISyntaxException(authority,
+                                    "Invalid port number", hostIndex + index + 1);
                         }
                         return;
                     }
+                } catch (NumberFormatException e) {
+                    if (forceServer) {
+                        throw new URISyntaxException(authority,
+                                "Invalid port number", hostIndex + index + 1);
+                    }
+                    return;
                 }
-            } else {
-                tempHost = temp;
             }
-
-            if (tempHost.equals("")) { //$NON-NLS-1$
-                if (forceServer) {
-                    throw new URISyntaxException(authority, Msg
-                            .getString("K030c"), hostindex); //$NON-NLS-1$
-                }
-                return;
-            }
-
-            if (!isValidHost(forceServer, tempHost)) {
-                return;
-            }
-
-            // this is a server based uri,
-            // fill in the userinfo, host and port fields
-            userinfo = tempUserinfo;
-            host = tempHost;
-            port = tempPort;
-            serverAuthority = true;
+        } else {
+            tempHost = temp;
         }
 
-        private void validateUserinfo(String uri, String userinfo, int index)
-                throws URISyntaxException {
-            for (int i = 0; i < userinfo.length(); i++) {
-                char ch = userinfo.charAt(i);
-                if (ch == ']' || ch == '[') {
-                    throw new URISyntaxException(uri, Msg.getString("K030d"), //$NON-NLS-1$
-                            index + i);
-                }
+        if (tempHost.equals("")) {
+            if (forceServer) {
+                throw new URISyntaxException(authority, "Expected host", hostIndex);
             }
+            return;
         }
 
-        /**
-         * distinguish between IPv4, IPv6, domain name and validate it based on
-         * its type
-         */
-        private boolean isValidHost(boolean forceServer, String host)
-                throws URISyntaxException {
-            if (host.charAt(0) == '[') {
-                // ipv6 address
-                if (host.charAt(host.length() - 1) != ']') {
-                    throw new URISyntaxException(host,
-                            Msg.getString("K030e"), 0); //$NON-NLS-1$
-                }
-                if (!isValidIP6Address(host)) {
-                    throw new URISyntaxException(host, Msg.getString("K030f")); //$NON-NLS-1$
-                }
-                return true;
-            }
+        if (!isValidHost(forceServer, tempHost)) {
+            return;
+        }
 
-            // '[' and ']' can only be the first char and last char
-            // of the host name
-            if (host.indexOf('[') != -1 || host.indexOf(']') != -1) {
-                throw new URISyntaxException(host, Msg.getString("K0310"), 0); //$NON-NLS-1$
-            }
+        // this is a server based uri,
+        // fill in the userInfo, host and port fields
+        userInfo = tempUserInfo;
+        host = tempHost;
+        port = tempPort;
+        serverAuthority = true;
+    }
 
-            int index = host.lastIndexOf('.');
-            if (index < 0 || index == host.length() - 1
-                    || !Character.isDigit(host.charAt(index + 1))) {
-                // domain name
-                if (isValidDomainName(host)) {
+    private void validateUserInfo(String uri, String userInfo, int index)
+            throws URISyntaxException {
+        for (int i = 0; i < userInfo.length(); i++) {
+            char ch = userInfo.charAt(i);
+            if (ch == ']' || ch == '[') {
+                throw new URISyntaxException(uri, "Illegal character in userInfo", index + i);
+            }
+        }
+    }
+
+    /**
+     * Returns true if {@code host} is a well-formed host name or IP address.
+     *
+     * @param forceServer true to always throw if the host cannot be parsed. If
+     *     false, this method may still throw for some kinds of errors; this
+     *     unpredictable behaviour is consistent with the RI.
+     */
+    private boolean isValidHost(boolean forceServer, String host) throws URISyntaxException {
+        if (host.startsWith("[")) {
+            // IPv6 address
+            if (!host.endsWith("]")) {
+                throw new URISyntaxException(host,
+                        "Expected a closing square bracket for IPv6 address", 0);
+            }
+            try {
+                byte[] bytes = NETWORK_SYSTEM.ipStringToByteArray(host);
+                /*
+                 * The native IP parser may return 4 bytes for addresses like
+                 * "[::FFFF:127.0.0.1]". This is allowed, but we must not accept
+                 * IPv4-formatted addresses in square braces like "[127.0.0.1]".
+                 */
+                if (bytes.length == 16 || bytes.length == 4 && host.contains(":")) {
                     return true;
                 }
-                if (forceServer) {
-                    throw new URISyntaxException(host,
-                            Msg.getString("K0310"), 0); //$NON-NLS-1$
-                }
-                return false;
+            } catch (UnknownHostException e) {
             }
+            throw new URISyntaxException(host, "Malformed IPv6 address");
+        }
 
-            // IPv4 address
-            if (isValidIPv4Address(host)) {
+        // '[' and ']' can only be the first char and last char
+        // of the host name
+        if (host.indexOf('[') != -1 || host.indexOf(']') != -1) {
+            throw new URISyntaxException(host, "Illegal character in host name", 0);
+        }
+
+        int index = host.lastIndexOf('.');
+        if (index < 0 || index == host.length() - 1
+                || !Character.isDigit(host.charAt(index + 1))) {
+            // domain name
+            if (isValidDomainName(host)) {
                 return true;
             }
             if (forceServer) {
-                throw new URISyntaxException(host, Msg.getString("K0311"), 0); //$NON-NLS-1$
+                throw new URISyntaxException(host, "Illegal character in host name", 0);
             }
             return false;
         }
 
-        private boolean isValidDomainName(String host) {
-            try {
-                URIEncoderDecoder.validateSimple(host, "-."); //$NON-NLS-1$
-            } catch (URISyntaxException e) {
-                return false;
+        // IPv4 address
+        try {
+            if (NETWORK_SYSTEM.ipStringToByteArray(host).length == 4) {
+                return true;
             }
-
-            String lastLabel = null;
-            StringTokenizer st = new StringTokenizer(host, "."); //$NON-NLS-1$
-            while (st.hasMoreTokens()) {
-                lastLabel = st.nextToken();
-                if (lastLabel.startsWith("-") || lastLabel.endsWith("-")) { //$NON-NLS-1$ //$NON-NLS-2$
-                    return false;
-                }
-            }
-
-            if (lastLabel == null) {
-                return false;
-            }
-
-            if (!lastLabel.equals(host)) {
-                char ch = lastLabel.charAt(0);
-                if (ch >= '0' && ch <= '9') {
-                    return false;
-                }
-            }
-            return true;
+        } catch (UnknownHostException e) {
         }
 
-        private boolean isValidIPv4Address(String host) {
-            int index;
-            int index2;
-            try {
-                int num;
-                index = host.indexOf('.');
-                num = Integer.parseInt(host.substring(0, index));
-                if (num < 0 || num > 255) {
-                    return false;
-                }
-                index2 = host.indexOf('.', index + 1);
-                num = Integer.parseInt(host.substring(index + 1, index2));
-                if (num < 0 || num > 255) {
-                    return false;
-                }
-                index = host.indexOf('.', index2 + 1);
-                num = Integer.parseInt(host.substring(index2 + 1, index));
-                if (num < 0 || num > 255) {
-                    return false;
-                }
-                num = Integer.parseInt(host.substring(index + 1));
-                if (num < 0 || num > 255) {
-                    return false;
-                }
-            } catch (Exception e) {
-                return false;
-            }
-            return true;
+        if (forceServer) {
+            throw new URISyntaxException(host, "Malformed IPv4 address", 0);
         }
-
-        private boolean isValidIP6Address(String ipAddress) {
-            int length = ipAddress.length();
-            boolean doubleColon = false;
-            int numberOfColons = 0;
-            int numberOfPeriods = 0;
-            String word = ""; //$NON-NLS-1$
-            char c = 0;
-            char prevChar = 0;
-            int offset = 0; // offset for [] ip addresses
-
-            if (length < 2) {
-                return false;
-            }
-
-            for (int i = 0; i < length; i++) {
-                prevChar = c;
-                c = ipAddress.charAt(i);
-                switch (c) {
-
-                    // case for an open bracket [x:x:x:...x]
-                    case '[':
-                        if (i != 0) {
-                            return false; // must be first character
-                        }
-                        if (ipAddress.charAt(length - 1) != ']') {
-                            return false; // must have a close ]
-                        }
-                        if ((ipAddress.charAt(1) == ':')
-                                && (ipAddress.charAt(2) != ':')) {
-                            return false;
-                        }
-                        offset = 1;
-                        if (length < 4) {
-                            return false;
-                        }
-                        break;
-
-                    // case for a closed bracket at end of IP [x:x:x:...x]
-                    case ']':
-                        if (i != length - 1) {
-                            return false; // must be last character
-                        }
-                        if (ipAddress.charAt(0) != '[') {
-                            return false; // must have a open [
-                        }
-                        break;
-
-                    // case for the last 32-bits represented as IPv4
-                    // x:x:x:x:x:x:d.d.d.d
-                    case '.':
-                        numberOfPeriods++;
-                        if (numberOfPeriods > 3) {
-                            return false;
-                        }
-                        if (!isValidIP4Word(word)) {
-                            return false;
-                        }
-                        if (numberOfColons != 6 && !doubleColon) {
-                            return false;
-                        }
-                        // a special case ::1:2:3:4:5:d.d.d.d allows 7 colons
-                        // with
-                        // an IPv4 ending, otherwise 7 :'s is bad
-                        if (numberOfColons == 7
-                                && ipAddress.charAt(0 + offset) != ':'
-                                && ipAddress.charAt(1 + offset) != ':') {
-                            return false;
-                        }
-                        word = ""; //$NON-NLS-1$
-                        break;
-
-                    case ':':
-                        numberOfColons++;
-                        if (numberOfColons > 7) {
-                            return false;
-                        }
-                        if (numberOfPeriods > 0) {
-                            return false;
-                        }
-                        if (prevChar == ':') {
-                            if (doubleColon) {
-                                return false;
-                            }
-                            doubleColon = true;
-                        }
-                        word = ""; //$NON-NLS-1$
-                        break;
-
-                    default:
-                        if (word.length() > 3) {
-                            return false;
-                        }
-                        if (!isValidHexChar(c)) {
-                            return false;
-                        }
-                        word += c;
-                }
-            }
-
-            // Check if we have an IPv4 ending
-            if (numberOfPeriods > 0) {
-                if (numberOfPeriods != 3 || !isValidIP4Word(word)) {
-                    return false;
-                }
-            } else {
-                // If we're at then end and we haven't had 7 colons then there
-                // is a problem unless we encountered a doubleColon
-                if (numberOfColons != 7 && !doubleColon) {
-                    return false;
-                }
-
-                // If we have an empty word at the end, it means we ended in
-                // either a : or a .
-                // If we did not end in :: then this is invalid
-                if (word == "" && ipAddress.charAt(length - 1 - offset) != ':' //$NON-NLS-1$
-                        && ipAddress.charAt(length - 2 - offset) != ':') {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private boolean isValidIP4Word(String word) {
-            char c;
-            if (word.length() < 1 || word.length() > 3) {
-                return false;
-            }
-            for (int i = 0; i < word.length(); i++) {
-                c = word.charAt(i);
-                if (!(c >= '0' && c <= '9')) {
-                    return false;
-                }
-            }
-            if (Integer.parseInt(word) > 255) {
-                return false;
-            }
-            return true;
-        }
-
-        private boolean isValidHexChar(char c) {
-
-            return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')
-                    || (c >= 'a' && c <= 'f');
-        }
+        return false;
     }
 
-    /*
+    private boolean isValidDomainName(String host) {
+        try {
+            URIEncoderDecoder.validateSimple(host, "-.");
+        } catch (URISyntaxException e) {
+            return false;
+        }
+
+        String lastLabel = null;
+        StringTokenizer st = new StringTokenizer(host, ".");
+        while (st.hasMoreTokens()) {
+            lastLabel = st.nextToken();
+            if (lastLabel.startsWith("-") || lastLabel.endsWith("-")) {
+                return false;
+            }
+        }
+
+        if (lastLabel == null) {
+            return false;
+        }
+
+        if (!lastLabel.equals(host)) {
+            char ch = lastLabel.charAt(0);
+            if (ch >= '0' && ch <= '9') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Quote illegal chars for each component, but not the others
      * 
-     * @param component java.lang.String the component to be converted @param
-     * legalset java.lang.String the legal character set allowed in the
-     * component s @return java.lang.String the converted string
+     * @param component java.lang.String the component to be converted
+     * @param legalSet the legal character set allowed in the component
+     * @return java.lang.String the converted string
      */
-    private String quoteComponent(String component, String legalset) {
+    private String quoteComponent(String component, String legalSet) {
         try {
             /*
              * Use a different encoder than URLEncoder since: 1. chars like "/",
@@ -833,7 +637,7 @@ public final class URI implements Comparable<URI>, Serializable {
              * UTF-8 char set needs to be used for encoding instead of default
              * platform one
              */
-            return URIEncoderDecoder.quoteIllegal(component, legalset);
+            return URIEncoderDecoder.quoteIllegal(component, legalSet);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString());
         }
@@ -845,7 +649,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * argument and a positive value if this URI instance is greater than the
      * given argument. The return value {@code 0} indicates that the two
      * instances represent the same URI. To define the order the single parts of
-     * the URI are compared with each other. String components will be orderer
+     * the URI are compared with each other. String components will be ordered
      * in the natural case-sensitive way. A hierarchical URI is less than an
      * opaque URI and if one part is {@code null} the URI with the undefined
      * part is less than the other one.
@@ -855,7 +659,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * @return the value representing the order of the two instances.
      */
     public int compareTo(URI uri) {
-        int ret = 0;
+        int ret;
 
         // compare schemes
         if (scheme == null && uri.scheme != null) {
@@ -875,7 +679,7 @@ public final class URI implements Comparable<URI>, Serializable {
         } else if (opaque && !uri.opaque) {
             return 1;
         } else if (opaque && uri.opaque) {
-            ret = schemespecificpart.compareTo(uri.schemespecificpart);
+            ret = schemeSpecificPart.compareTo(uri.schemeSpecificPart);
             if (ret != 0) {
                 return ret;
             }
@@ -890,19 +694,19 @@ public final class URI implements Comparable<URI>, Serializable {
                 return -1;
             } else if (authority != null && uri.authority != null) {
                 if (host != null && uri.host != null) {
-                    // both are server based, so compare userinfo, host, port
-                    if (userinfo != null && uri.userinfo == null) {
+                    // both are server based, so compare userInfo, host, port
+                    if (userInfo != null && uri.userInfo == null) {
                         return 1;
-                    } else if (userinfo == null && uri.userinfo != null) {
+                    } else if (userInfo == null && uri.userInfo != null) {
                         return -1;
-                    } else if (userinfo != null && uri.userinfo != null) {
-                        ret = userinfo.compareTo(uri.userinfo);
+                    } else if (userInfo != null && uri.userInfo != null) {
+                        ret = userInfo.compareTo(uri.userInfo);
                         if (ret != 0) {
                             return ret;
                         }
                     }
 
-                    // userinfo's are the same, compare hostname
+                    // userInfo's are the same, compare hostname
                     ret = host.compareToIgnoreCase(uri.host);
                     if (ret != 0) {
                         return ret;
@@ -959,21 +763,18 @@ public final class URI implements Comparable<URI>, Serializable {
     }
 
     /**
-     * Parses the given argument {@code uri} and creates an appropriate URI
-     * instance.
-     *
-     * @param uri
-     *            the string which has to be parsed to create the URI instance.
-     * @return the created instance representing the given URI.
+     * Returns the URI formed by parsing {@code uri}. This method behaves
+     * identically to the string constructor but throws a different exception
+     * on failure. The constructor fails with a checked {@link
+     * URISyntaxException}; this method fails with an unchecked {@link
+     * IllegalArgumentException}.
      */
     public static URI create(String uri) {
-        URI result = null;
         try {
-            result = new URI(uri);
+            return new URI(uri);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
-        return result;
     }
 
     private URI duplicate() {
@@ -987,8 +788,8 @@ public final class URI implements Comparable<URI>, Serializable {
         clone.port = port;
         clone.query = query;
         clone.scheme = scheme;
-        clone.schemespecificpart = schemespecificpart;
-        clone.userinfo = userinfo;
+        clone.schemeSpecificPart = schemeSpecificPart;
+        clone.userInfo = userInfo;
         clone.serverAuthority = serverAuthority;
         return clone;
     }
@@ -998,36 +799,35 @@ public final class URI implements Comparable<URI>, Serializable {
      * converts the hex values following the '%' to lowercase
      */
     private String convertHexToLowerCase(String s) {
-        StringBuilder result = new StringBuilder(""); //$NON-NLS-1$
+        StringBuilder result = new StringBuilder("");
         if (s.indexOf('%') == -1) {
             return s;
         }
 
-        int index = 0, previndex = 0;
-        while ((index = s.indexOf('%', previndex)) != -1) {
-            result.append(s.substring(previndex, index + 1));
+        int index, prevIndex = 0;
+        while ((index = s.indexOf('%', prevIndex)) != -1) {
+            result.append(s.substring(prevIndex, index + 1));
             result.append(s.substring(index + 1, index + 3).toLowerCase());
             index += 3;
-            previndex = index;
+            prevIndex = index;
         }
         return result.toString();
     }
 
-    /*
-     * Takes two strings that may contain hex sequences like %F1 or %2b and
-     * compares them, ignoring case for the hex values hex values must always
-     * occur in pairs like above
+    /**
+     * Returns true if {@code first} and {@code second} are equal after
+     * unescaping hex sequences like %F1 and %2b.
      */
-    private boolean equalsHexCaseInsensitive(String first, String second) {
+    private boolean escapedEquals(String first, String second) {
         if (first.indexOf('%') != second.indexOf('%')) {
             return first.equals(second);
         }
 
-        int index = 0, previndex = 0;
-        while ((index = first.indexOf('%', previndex)) != -1
-                && second.indexOf('%', previndex) == index) {
-            boolean match = first.substring(previndex, index).equals(
-                    second.substring(previndex, index));
+        int index, prevIndex = 0;
+        while ((index = first.indexOf('%', prevIndex)) != -1
+                && second.indexOf('%', prevIndex) == index) {
+            boolean match = first.substring(prevIndex, index).equals(
+                    second.substring(prevIndex, index));
             if (!match) {
                 return false;
             }
@@ -1039,9 +839,9 @@ public final class URI implements Comparable<URI>, Serializable {
             }
 
             index += 3;
-            previndex = index;
+            prevIndex = index;
         }
-        return first.substring(previndex).equals(second.substring(previndex));
+        return first.substring(prevIndex).equals(second.substring(prevIndex));
     }
 
     /**
@@ -1065,7 +865,7 @@ public final class URI implements Comparable<URI>, Serializable {
                 && fragment == null) {
             return false;
         } else if (uri.fragment != null && fragment != null) {
-            if (!equalsHexCaseInsensitive(uri.fragment, fragment)) {
+            if (!escapedEquals(uri.fragment, fragment)) {
                 return false;
             }
         }
@@ -1080,10 +880,10 @@ public final class URI implements Comparable<URI>, Serializable {
         }
 
         if (uri.opaque && opaque) {
-            return equalsHexCaseInsensitive(uri.schemespecificpart,
-                    schemespecificpart);
+            return escapedEquals(uri.schemeSpecificPart,
+                    schemeSpecificPart);
         } else if (!uri.opaque && !opaque) {
-            if (!equalsHexCaseInsensitive(path, uri.path)) {
+            if (!escapedEquals(path, uri.path)) {
                 return false;
             }
 
@@ -1091,7 +891,7 @@ public final class URI implements Comparable<URI>, Serializable {
                     && query != null) {
                 return false;
             } else if (uri.query != null && query != null) {
-                if (!equalsHexCaseInsensitive(uri.query, query)) {
+                if (!escapedEquals(uri.query, query)) {
                     return false;
                 }
             }
@@ -1105,7 +905,7 @@ public final class URI implements Comparable<URI>, Serializable {
                     return false;
                 } else if (uri.host == null && host == null) {
                     // both are registry based, so compare the whole authority
-                    return equalsHexCaseInsensitive(uri.authority, authority);
+                    return escapedEquals(uri.authority, authority);
                 } else { // uri.host != null && host != null, so server-based
                     if (!host.equalsIgnoreCase(uri.host)) {
                         return false;
@@ -1115,11 +915,11 @@ public final class URI implements Comparable<URI>, Serializable {
                         return false;
                     }
 
-                    if (uri.userinfo != null && userinfo == null
-                            || uri.userinfo == null && userinfo != null) {
+                    if (uri.userInfo != null && userInfo == null
+                            || uri.userInfo == null && userInfo != null) {
                         return false;
-                    } else if (uri.userinfo != null && userinfo != null) {
-                        return equalsHexCaseInsensitive(userinfo, uri.userinfo);
+                    } else if (uri.userInfo != null && userInfo != null) {
+                        return escapedEquals(userInfo, uri.userInfo);
                     } else {
                         return true;
                     }
@@ -1231,7 +1031,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * @return the encoded scheme-specific part or {@code null} if undefined.
      */
     public String getRawSchemeSpecificPart() {
-        return schemespecificpart;
+        return schemeSpecificPart;
     }
 
     /**
@@ -1240,7 +1040,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * @return the encoded user-info part or {@code null} if undefined.
      */
     public String getRawUserInfo() {
-        return userinfo;
+        return userInfo;
     }
 
     /**
@@ -1258,7 +1058,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * @return the decoded scheme-specific part or {@code null} if undefined.
      */
     public String getSchemeSpecificPart() {
-        return decode(schemespecificpart);
+        return decode(schemeSpecificPart);
     }
 
     /**
@@ -1267,7 +1067,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * @return the decoded user-info part or {@code null} if undefined.
      */
     public String getUserInfo() {
-        return decode(userinfo);
+        return decode(userInfo);
     }
 
     /**
@@ -1311,39 +1111,39 @@ public final class URI implements Comparable<URI>, Serializable {
     private String normalize(String path) {
         // count the number of '/'s, to determine number of segments
         int index = -1;
-        int pathlen = path.length();
+        int pathLength = path.length();
         int size = 0;
-        if (pathlen > 0 && path.charAt(0) != '/') {
+        if (pathLength > 0 && path.charAt(0) != '/') {
             size++;
         }
         while ((index = path.indexOf('/', index + 1)) != -1) {
-            if (index + 1 < pathlen && path.charAt(index + 1) != '/') {
+            if (index + 1 < pathLength && path.charAt(index + 1) != '/') {
                 size++;
             }
         }
 
-        String[] seglist = new String[size];
+        String[] segList = new String[size];
         boolean[] include = new boolean[size];
 
         // break the path into segments and store in the list
         int current = 0;
-        int index2 = 0;
-        index = (pathlen > 0 && path.charAt(0) == '/') ? 1 : 0;
+        int index2;
+        index = (pathLength > 0 && path.charAt(0) == '/') ? 1 : 0;
         while ((index2 = path.indexOf('/', index + 1)) != -1) {
-            seglist[current++] = path.substring(index, index2);
+            segList[current++] = path.substring(index, index2);
             index = index2 + 1;
         }
 
         // if current==size, then the last character was a slash
         // and there are no more segments
         if (current < size) {
-            seglist[current] = path.substring(index);
+            segList[current] = path.substring(index);
         }
 
         // determine which segments get included in the normalized path
         for (int i = 0; i < size; i++) {
             include[i] = true;
-            if (seglist[i].equals("..")) { //$NON-NLS-1$
+            if (segList[i].equals("..")) {
                 int remove = i - 1;
                 // search back to find a segment to remove, if possible
                 while (remove > -1 && !include[remove]) {
@@ -1351,45 +1151,45 @@ public final class URI implements Comparable<URI>, Serializable {
                 }
                 // if we find a segment to remove, remove it and the ".."
                 // segment
-                if (remove > -1 && !seglist[remove].equals("..")) { //$NON-NLS-1$
+                if (remove > -1 && !segList[remove].equals("..")) {
                     include[remove] = false;
                     include[i] = false;
                 }
-            } else if (seglist[i].equals(".")) { //$NON-NLS-1$
+            } else if (segList[i].equals(".")) {
                 include[i] = false;
             }
         }
 
         // put the path back together
-        StringBuilder newpath = new StringBuilder();
-        if (path.startsWith("/")) { //$NON-NLS-1$
-            newpath.append('/');
+        StringBuilder newPath = new StringBuilder();
+        if (path.startsWith("/")) {
+            newPath.append('/');
         }
 
-        for (int i = 0; i < seglist.length; i++) {
+        for (int i = 0; i < segList.length; i++) {
             if (include[i]) {
-                newpath.append(seglist[i]);
-                newpath.append('/');
+                newPath.append(segList[i]);
+                newPath.append('/');
             }
         }
 
         // if we used at least one segment and the path previously ended with
         // a slash and the last segment is still used, then delete the extra
         // trailing '/'
-        if (!path.endsWith("/") && seglist.length > 0 //$NON-NLS-1$
-                && include[seglist.length - 1]) {
-            newpath.deleteCharAt(newpath.length() - 1);
+        if (!path.endsWith("/") && segList.length > 0
+                && include[segList.length - 1]) {
+            newPath.deleteCharAt(newPath.length() - 1);
         }
 
-        String result = newpath.toString();
+        String result = newPath.toString();
 
         // check for a ':' in the first segment if one exists,
         // prepend "./" to normalize
         index = result.indexOf(':');
         index2 = result.indexOf('/');
         if (index != -1 && (index < index2 || index2 == -1)) {
-            newpath.insert(0, "./"); //$NON-NLS-1$
-            result = newpath.toString();
+            newPath.insert(0, "./");
+            result = newPath.toString();
         }
         return result;
     }
@@ -1429,7 +1229,7 @@ public final class URI implements Comparable<URI>, Serializable {
      */
     public URI parseServerAuthority() throws URISyntaxException {
         if (!serverAuthority) {
-            new Helper().parseAuthority(true);
+            parseAuthority(true);
         }
         return this;
     }
@@ -1467,7 +1267,7 @@ public final class URI implements Comparable<URI>, Serializable {
          */
         if (!thisPath.equals(relativePath)) {
             // if this URI's path doesn't end in a '/', add one
-            if (!thisPath.endsWith("/")) { //$NON-NLS-1$
+            if (!thisPath.endsWith("/")) {
                 thisPath = thisPath + '/';
             }
             /*
@@ -1503,12 +1303,12 @@ public final class URI implements Comparable<URI>, Serializable {
         }
 
         URI result;
-        if (relative.path.equals("") && relative.scheme == null //$NON-NLS-1$
+        if (relative.path.equals("") && relative.scheme == null
                 && relative.authority == null && relative.query == null
                 && relative.fragment != null) {
             // if the relative URI only consists of fragment,
             // the resolved URI is very similar to this URI,
-            // except that it has the fragement from the relative URI.
+            // except that it has the fragment from the relative URI.
             result = duplicate();
             result.fragment = relative.fragment;
             // no need to re-calculate the scheme specific part,
@@ -1531,12 +1331,12 @@ public final class URI implements Comparable<URI>, Serializable {
             result = duplicate();
             result.fragment = relative.fragment;
             result.query = relative.query;
-            if (relative.path.startsWith("/")) { //$NON-NLS-1$
+            if (relative.path.startsWith("/")) {
                 result.path = relative.path;
             } else {
                 // resolve a relative reference
-                int endindex = path.lastIndexOf('/') + 1;
-                result.path = normalize(path.substring(0, endindex)
+                int endIndex = path.lastIndexOf('/') + 1;
+                result.path = normalize(path.substring(0, endIndex)
                         + relative.path);
             }
             // re-calculate the scheme specific part since
@@ -1554,15 +1354,15 @@ public final class URI implements Comparable<URI>, Serializable {
         // ssp = [//authority][path][?query]
         StringBuilder ssp = new StringBuilder();
         if (authority != null) {
-            ssp.append("//" + authority); //$NON-NLS-1$
+            ssp.append("//" + authority);
         }
         if (path != null) {
             ssp.append(path);
         }
         if (query != null) {
-            ssp.append("?" + query); //$NON-NLS-1$
+            ssp.append("?" + query);
         }
-        schemespecificpart = ssp.toString();
+        schemeSpecificPart = ssp.toString();
         // reset string, so that it can be re-calculated correctly when asked.
         string = null;
     }
@@ -1581,17 +1381,13 @@ public final class URI implements Comparable<URI>, Serializable {
         return resolve(create(relative));
     }
 
-    /*
+    /**
      * Encode unicode chars that are not part of US-ASCII char set into the
      * escaped form
      * 
      * i.e. The Euro currency symbol is encoded as "%E2%82%AC".
-     * 
-     * @param component java.lang.String the component to be converted @param
-     * legalset java.lang.String the legal character set allowed in the
-     * component s @return java.lang.String the converted string
      */
-    private String encodeOthers(String s) {
+    private String encodeNonAscii(String s) {
         try {
             /*
              * Use a different encoder than URLEncoder since: 1. chars like "/",
@@ -1624,7 +1420,7 @@ public final class URI implements Comparable<URI>, Serializable {
      * @return the US-ASCII string representation of this URI.
      */
     public String toASCIIString() {
-        return encodeOthers(toString());
+        return encodeNonAscii(toString());
     }
 
     /**
@@ -1641,10 +1437,10 @@ public final class URI implements Comparable<URI>, Serializable {
                 result.append(':');
             }
             if (opaque) {
-                result.append(schemespecificpart);
+                result.append(schemeSpecificPart);
             } else {
                 if (authority != null) {
-                    result.append("//"); //$NON-NLS-1$
+                    result.append("//");
                     result.append(authority);
                 }
 
@@ -1680,19 +1476,19 @@ public final class URI implements Comparable<URI>, Serializable {
             result.append(':');
         }
         if (opaque) {
-            result.append(schemespecificpart);
+            result.append(schemeSpecificPart);
         } else {
             if (authority != null) {
-                result.append("//"); //$NON-NLS-1$
+                result.append("//");
                 if (host == null) {
                     result.append(authority);
                 } else {
-                    if (userinfo != null) {
-                        result.append(userinfo + "@"); //$NON-NLS-1$
+                    if (userInfo != null) {
+                        result.append(userInfo + "@");
                     }
                     result.append(host.toLowerCase());
                     if (port != -1) {
-                        result.append(":" + port); //$NON-NLS-1$
+                        result.append(":" + port);
                     }
                 }
             }
@@ -1725,8 +1521,7 @@ public final class URI implements Comparable<URI>, Serializable {
      */
     public URL toURL() throws MalformedURLException {
         if (!absolute) {
-            throw new IllegalArgumentException(Msg.getString("K0312") + ": " //$NON-NLS-1$//$NON-NLS-2$
-                    + toString());
+            throw new IllegalArgumentException("URI is not absolute: " + toString());
         }
         return new URL(toString());
     }
@@ -1735,7 +1530,7 @@ public final class URI implements Comparable<URI>, Serializable {
             ClassNotFoundException {
         in.defaultReadObject();
         try {
-            new Helper().parseURI(string, false);
+            parseURI(string, false);
         } catch (URISyntaxException e) {
             throw new IOException(e.toString());
         }

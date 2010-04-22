@@ -24,21 +24,14 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.ObjectStreamField;
 import java.io.Serializable;
-import java.security.AccessController;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.StringTokenizer;
-
 import org.apache.harmony.luni.net.NetUtil;
 import org.apache.harmony.luni.platform.INetworkSystem;
 import org.apache.harmony.luni.platform.Platform;
-import org.apache.harmony.luni.util.Inet6Util;
-import org.apache.harmony.luni.util.Msg;
-import org.apache.harmony.luni.util.PriviAction;
 
 /**
  * An Internet Protocol (IP) address. This can be either an IPv4 address or an IPv6 address, and
@@ -63,14 +56,12 @@ import org.apache.harmony.luni.util.PriviAction;
  * @see Inet6Address
  */
 public class InetAddress implements Serializable {
-    // BEGIN android-added: better DNS caching.
-    // Our Java-side DNS cache.
+    /** Our Java-side DNS cache. */
     private static final AddressCache addressCache = new AddressCache();
-    // END android-added
 
     private final static INetworkSystem NETIMPL = Platform.getNetworkSystem();
 
-    private static final String ERRMSG_CONNECTION_REFUSED = "Connection refused"; //$NON-NLS-1$
+    private static final String ERRMSG_CONNECTION_REFUSED = "Connection refused";
 
     private static final long serialVersionUID = 3286316764910316507L;
 
@@ -91,15 +82,6 @@ public class InetAddress implements Serializable {
 
     byte[] ipaddress;
 
-    // BEGIN android-removed
-    // // Fill in the JNI id caches
-    // private static native void oneTimeInitialization(boolean supportsIPv6);
-    //
-    // static {
-    //     oneTimeInitialization(true);
-    // }
-    // END android-removed
-
     /**
      * Constructs an {@code InetAddress}.
      *
@@ -112,17 +94,7 @@ public class InetAddress implements Serializable {
      * InetAddresses (e.g., getByAddress). That is why the API does not have
      * public constructors for any of these classes.
      */
-    InetAddress() {
-        super();
-    }
-
-    // BEGIN android-removed: use Inet4Address/Inet6Address instead, as appropriate.
-    // InetAddress(byte[] address) { ... }
-    // END android-removed
-
-    // BEGIN android-removed: use Inet4Address/Inet6Address instead, as appropriate.
-    // InetAddress(byte[] address, String hostName) { ... }
-    // END android-removed
+    InetAddress() {}
 
     /**
      * Compares this {@code InetAddress} instance against the specified address
@@ -135,12 +107,10 @@ public class InetAddress implements Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        // BEGIN android-changed
         if (!(obj instanceof InetAddress)) {
             return false;
         }
         return Arrays.equals(this.ipaddress, ((InetAddress) obj).ipaddress);
-        // END android-changed
     }
 
     /**
@@ -154,7 +124,6 @@ public class InetAddress implements Serializable {
         return ipaddress.clone();
     }
 
-    // BEGIN android-added
     static final Comparator<byte[]> SHORTEST_FIRST = new Comparator<byte[]>() {
         public int compare(byte[] a1, byte[] a2) {
             return a1.length - a2.length;
@@ -196,7 +165,6 @@ public class InetAddress implements Serializable {
         }
         return returnedAddresses;
     }
-    // END android-added
 
     /**
      * Gets all IP addresses associated with the given {@code host} identified
@@ -210,25 +178,16 @@ public class InetAddress implements Serializable {
      * @return the array of addresses associated with the specified host.
      * @throws UnknownHostException if the address lookup fails.
      */
-    public static InetAddress[] getAllByName(String host)
-            throws UnknownHostException {
-        // BEGIN android-changed
-        return getAllByNameImpl(host, true);
-        // END android-changed
+    public static InetAddress[] getAllByName(String host) throws UnknownHostException {
+        return getAllByNameImpl(host).clone();
     }
 
-    // BEGIN android-added
     /**
-     * Implementation of getAllByName.
-     *
-     * @param host the hostname or literal IP string to be resolved.
-     * @param returnUnshared requests a result that is modifiable by the caller.
-     * @return the array of addresses associated with the specified host.
-     * @throws UnknownHostException if the address lookup fails.
+     * Returns the InetAddresses for {@code host}. The returned array is shared
+     * and must be cloned before it is returned to application code.
      */
-    static InetAddress[] getAllByNameImpl(String host, boolean returnUnshared)
-            throws UnknownHostException {
-        if (host == null || 0 == host.length()) {
+    static InetAddress[] getAllByNameImpl(String host) throws UnknownHostException {
+        if (host == null || host.isEmpty()) {
             if (NetUtil.preferIPv6Addresses()) {
                 return new InetAddress[] { Inet6Address.LOOPBACK,
                                            Inet4Address.LOOPBACK };
@@ -239,33 +198,33 @@ public class InetAddress implements Serializable {
         }
 
         // Special-case "0" for legacy IPv4 applications.
-        if (host.equals("0")) { //$NON-NLS-1$
+        if (host.equals("0")) {
             return new InetAddress[] { Inet4Address.ANY };
         }
 
-        if (isHostName(host)) {
-            SecurityManager security = System.getSecurityManager();
-            if (security != null) {
-                security.checkConnect(host, -1);
-            }
-            if (returnUnshared) {
-                return lookupHostByName(host).clone();
+        try {
+            byte[] hBytes = NETIMPL.ipStringToByteArray(host);
+            if (hBytes.length == 4) {
+                return (new InetAddress[] { new Inet4Address(hBytes) });
+            } else if (hBytes.length == 16) {
+                return (new InetAddress[] { new Inet6Address(hBytes) });
             } else {
-                return lookupHostByName(host);
+                throw new UnknownHostException(wrongAddressLength());
             }
+        } catch (UnknownHostException e) {
         }
 
-        byte[] hBytes = NETIMPL.ipStringToByteArray(host);
-        if (hBytes.length == 4) {
-            return (new InetAddress[] { new Inet4Address(hBytes) });
-        } else if (hBytes.length == 16) {
-            return (new InetAddress[] { new Inet6Address(hBytes) });
-        } else {
-            throw new UnknownHostException(
-                    Msg.getString("K0339")); //$NON-NLS-1$
+        SecurityManager security = System.getSecurityManager();
+        if (security != null) {
+            security.checkConnect(host, -1);
         }
+
+        return lookupHostByName(host);
     }
-    // END android-added
+
+    private static String wrongAddressLength() {
+        return "Invalid IP Address is neither 4 or 16 bytes";
+    }
 
     /**
      * Returns the address of a host according to the given host string name
@@ -281,10 +240,9 @@ public class InetAddress implements Serializable {
      *             if the address lookup fails.
      */
     public static InetAddress getByName(String host) throws UnknownHostException {
-        return getAllByNameImpl(host, false)[0];
+        return getAllByNameImpl(host)[0];
     }
 
-    // BEGIN android-added
     /**
      * Returns the numeric string form of the given IP address.
      *
@@ -300,7 +258,6 @@ public class InetAddress implements Serializable {
             throw new IllegalArgumentException("byte[] neither 4 nor 16 bytes", ex);
         }
     }
-    // END android-added
 
     /**
      * Gets the textual representation of this IP address.
@@ -329,7 +286,7 @@ public class InetAddress implements Serializable {
                     }
                 }
                 hostName = getHostByAddrImpl(ipaddress).hostName;
-                if (hostName.equals("localhost") && ipaddress.length == 4 //$NON-NLS-1$
+                if (hostName.equals("localhost") && ipaddress.length == 4
                         && address != 0x7f000001) {
                     return hostName = ipAddressToString(ipaddress);
                 }
@@ -441,12 +398,9 @@ public class InetAddress implements Serializable {
      */
     @Override
     public int hashCode() {
-        // BEGIN android-changed
         return Arrays.hashCode(ipaddress);
-        // END android-changed
     }
 
-    // BEGIN android-changed
     /*
      * Returns whether this address is an IP multicast address or not. This
      * implementation returns always {@code false}.
@@ -457,7 +411,6 @@ public class InetAddress implements Serializable {
     public boolean isMulticastAddress() {
         return false;
     }
-    // END android-changed
 
     /**
      * Resolves a hostname to its IP addresses using a cache.
@@ -465,7 +418,6 @@ public class InetAddress implements Serializable {
      * @param host the hostname to resolve.
      * @return the IP addresses of the host.
      */
-    // BEGIN android-changed
     private static InetAddress[] lookupHostByName(String host) throws UnknownHostException {
         // Do we have a result cached?
         InetAddress[] cachedResult = addressCache.get(host);
@@ -488,12 +440,6 @@ public class InetAddress implements Serializable {
         }
     }
     private static native byte[][] getaddrinfo(String name) throws UnknownHostException;
-    // END android-changed
-
-    // BEGIN android-deleted
-    // static native InetAddress[] getAliasesByNameImpl(String name)
-    //     throws UnknownHostException;
-    // END android-deleted
 
     /**
      * Query the IP stack for the host address. The host is in address form.
@@ -503,9 +449,6 @@ public class InetAddress implements Serializable {
      * @throws UnknownHostException
      *             if an error occurs during lookup.
      */
-    // BEGIN android-changed
-    // static native InetAddress getHostByAddrImpl(byte[] addr)
-    //    throws UnknownHostException;
     static InetAddress getHostByAddrImpl(byte[] addr)
             throws UnknownHostException {
         if (addr.length == 4) {
@@ -513,8 +456,7 @@ public class InetAddress implements Serializable {
         } else if (addr.length == 16) {
             return new Inet6Address(addr, getnameinfo(addr));
         } else {
-            throw new UnknownHostException(Msg.getString(
-                    "K0339")); //$NON-NLS-1$
+            throw new UnknownHostException(wrongAddressLength());
         }
     }
 
@@ -522,7 +464,6 @@ public class InetAddress implements Serializable {
      * Resolves an IP address to a hostname. Thread safe.
      */
     private static native String getnameinfo(byte[] addr);
-    // END android-changed
 
     static String getHostNameInternal(String host, boolean isCheck) throws UnknownHostException {
         if (host == null || 0 == host.length()) {
@@ -548,7 +489,7 @@ public class InetAddress implements Serializable {
      */
     @Override
     public String toString() {
-        return (hostName == null ? "" : hostName) + "/" + getHostAddress(); //$NON-NLS-1$ //$NON-NLS-2$
+        return (hostName == null ? "" : hostName) + "/" + getHostAddress();
     }
 
     /**
@@ -748,7 +689,7 @@ public class InetAddress implements Serializable {
     public boolean isReachable(NetworkInterface networkInterface, final int ttl,
             final int timeout) throws IOException {
         if (ttl < 0 || timeout < 0) {
-            throw new IllegalArgumentException(Msg.getString("K0051")); //$NON-NLS-1$
+            throw new IllegalArgumentException("ttl < 0 || timeout < 0");
         }
         if (networkInterface == null) {
             return isReachableByTCP(this, null, timeout);
@@ -761,10 +702,8 @@ public class InetAddress implements Serializable {
      * Uses multi-Thread to try if isReachable, returns true if any of threads
      * returns in time
      */
-    // BEGIN android-changed
     private boolean isReachableByMultiThread(NetworkInterface netif,
             final int ttl, final int timeout)
-    // END android-changed
             throws IOException {
         List<InetAddress> addresses = Collections.list(netif.getInetAddresses());
         if (addresses.isEmpty()) {
@@ -805,23 +744,16 @@ public class InetAddress implements Serializable {
 
             needWait = true;
             new Thread() {
-                @Override
-                public void run() {
+                @Override public void run() {
+                    /*
+                     * Spec violation! This implementation doesn't attempt an
+                     * ICMP; it skips right to TCP echo.
+                     */
                     boolean threadReached = false;
-                    // BEGIN android-changed
-                    // if isICMP, tries ICMP ping, else TCP echo
-                    // if (isICMP) {
-                    //     threadReached = NETIMPL.isReachableByICMP(
-                    //             InetAddress.this, addr, ttl, timeout);
-                    // } else {
-                        try {
-                            threadReached = isReachableByTCP(addr,
-                                    InetAddress.this, timeout);
-                        } catch (IOException e) {
-                            // do nothing
-                        }
-                    // }
-                    // END android-changed
+                    try {
+                        threadReached = isReachableByTCP(addr, InetAddress.this, timeout);
+                    } catch (IOException e) {
+                    }
 
                     synchronized (waitReachable) {
                         if (threadReached) {
@@ -858,18 +790,6 @@ public class InetAddress implements Serializable {
 
         return false;
     }
-
-    // BEGIN android-removed
-    // private boolean isReachableByICMPUseMultiThread(NetworkInterface netif,
-    //         int ttl, int timeout) throws IOException {
-    //     return isReachableByMultiThread(netif, ttl, timeout, true);
-    // }
-    //
-    // private boolean isReachableByTCPUseMultiThread(NetworkInterface netif,
-    //         int ttl, int timeout) throws IOException {
-    //     return isReachableByMultiThread(netif, ttl, timeout, false);
-    // }
-    // END android-removed
 
     private boolean isReachableByTCP(InetAddress dest, InetAddress source,
             int timeout) throws IOException {
@@ -1016,11 +936,7 @@ public class InetAddress implements Serializable {
     static InetAddress getByAddressInternal(String hostName, byte[] ipAddress,
             int scope_id) throws UnknownHostException {
         if (ipAddress == null) {
-            // We don't throw NullPointerException here for RI compatibility,
-            // but we do say "address is null" (K0331), instead of "addr is of
-            // illegal length".
-            throw new UnknownHostException(
-                Msg.getString("K0331", hostName)); //$NON-NLS-1$
+            throw new UnknownHostException("ipAddress == null");
         }
         switch (ipAddress.length) {
             case 4:
@@ -1035,15 +951,8 @@ public class InetAddress implements Serializable {
                     return new Inet6Address(ipAddress.clone(), scope_id);
                 }
             default:
-                if (hostName != null) {
-                    // "Invalid IP Address is neither 4 or 16 bytes: <hostName>"
-                    throw new UnknownHostException(
-                            Msg.getString("K0332", hostName)); //$NON-NLS-1$
-                } else {
-                    // "Invalid IP Address is neither 4 or 16 bytes"
-                    throw new UnknownHostException(
-                            Msg.getString("K0339")); //$NON-NLS-1$
-                }
+                throw new UnknownHostException(
+                        "Invalid IP Address is neither 4 or 16 bytes: " + hostName);
         }
     }
 
@@ -1081,19 +990,19 @@ public class InetAddress implements Serializable {
     }
 
     private static final ObjectStreamField[] serialPersistentFields = {
-            new ObjectStreamField("address", Integer.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("family", Integer.TYPE), //$NON-NLS-1$
-            new ObjectStreamField("hostName", String.class) }; //$NON-NLS-1$
+            new ObjectStreamField("address", Integer.TYPE),
+            new ObjectStreamField("family", Integer.TYPE),
+            new ObjectStreamField("hostName", String.class) };
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
         ObjectOutputStream.PutField fields = stream.putFields();
         if (ipaddress == null) {
-            fields.put("address", 0); //$NON-NLS-1$
+            fields.put("address", 0);
         } else {
-            fields.put("address", bytesToInt(ipaddress, 0)); //$NON-NLS-1$
+            fields.put("address", bytesToInt(ipaddress, 0));
         }
-        fields.put("family", family); //$NON-NLS-1$
-        fields.put("hostName", hostName); //$NON-NLS-1$
+        fields.put("family", family);
+        fields.put("hostName", hostName);
 
         stream.writeFields();
     }
@@ -1101,11 +1010,11 @@ public class InetAddress implements Serializable {
     private void readObject(ObjectInputStream stream) throws IOException,
             ClassNotFoundException {
         ObjectInputStream.GetField fields = stream.readFields();
-        int addr = fields.get("address", 0); //$NON-NLS-1$
+        int addr = fields.get("address", 0);
         ipaddress = new byte[4];
         intToBytes(addr, ipaddress, 0);
-        hostName = (String) fields.get("hostName", null); //$NON-NLS-1$
-        family = fields.get("family", 2); //$NON-NLS-1$
+        hostName = (String) fields.get("hostName", null);
+        family = fields.get("family", 2);
     }
 
     /*

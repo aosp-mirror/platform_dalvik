@@ -26,4 +26,24 @@ public class UriTest extends TestCase {
     public void testParsingDotAsHostname() throws URISyntaxException {
         assertEquals(null, new URI("http://./").getHost());
     }
+
+    public void testSquareBracketsWithIPv4() throws URISyntaxException {
+        try {
+            new URI("http://[192.168.0.1]/");
+            fail();
+        } catch (URISyntaxException e) {
+        }
+    }
+
+    public void testSquareBracketsWithHostname() throws URISyntaxException {
+        try {
+            new URI("http://[google.com]/");
+            fail();
+        } catch (URISyntaxException e) {
+        }
+    }
+
+    public void testIPv6WithoutSquareBrackets() throws URISyntaxException {
+        assertEquals(null, new URI("http://fe80::1234/").getHost());
+    }
 }

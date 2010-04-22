@@ -291,7 +291,7 @@ public class URLClassLoader extends SecureClassLoader {
         URL targetURL(URL base, String name) {
             try {
                 String file = base.getFile() + URIEncoderDecoder.quoteIllegal(name,
-                        "/@" + URI.someLegal);
+                        "/@" + URI.SOME_LEGAL);
 
                 return new URL(base.getProtocol(), base.getHost(), base.getPort(),
                         file, null);
