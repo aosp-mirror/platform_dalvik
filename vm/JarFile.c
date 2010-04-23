@@ -283,7 +283,7 @@ tryArchive:
 
                 if (result) {
                     startWhen = dvmGetRelativeTimeUsec();
-                    result = dexZipExtractEntryToFile(&archive, entry, fd);
+                    result = dexZipExtractEntryToFile(&archive, entry, fd) == 0;
                     extractWhen = dvmGetRelativeTimeUsec();
                 }
                 if (result) {
