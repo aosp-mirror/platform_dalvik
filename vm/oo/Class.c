@@ -4286,8 +4286,10 @@ bool dvmInitClass(ClassObject* clazz)
             (gDvm.classVerifyMode == VERIFY_MODE_REMOTE &&
              clazz->classLoader == NULL))
         {
+            /* advance to "verified" state */
             LOGV("+++ not verifying class %s (cl=%p)\n",
                 clazz->descriptor, clazz->classLoader);
+            clazz->status = CLASS_VERIFIED;
             goto noverify;
         }
 
@@ -4320,6 +4322,11 @@ verify_failed:
         clazz->status = CLASS_VERIFIED;
     }
 noverify:
+
+#ifdef WITH_DEBUGGER
+    /* update instruction stream now that the verifier is done */
+    dvmFlushBreakpoints(clazz);
+#endif
 
     if (clazz->status == CLASS_INITIALIZED)
         goto bail_unlock;
