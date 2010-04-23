@@ -150,66 +150,6 @@ bool dvmVerifyClass(ClassObject* clazz, int verifyFlags)
     return true;
 }
 
-/*
- * Temporarily "undo" any breakpoints found in this method.  There is no risk
- * of confusing the interpreter, because unverified code cannot be executed.
- *
- * Breakpoints can be set after a class is loaded but before it has been
- * verified.
- *
- * The "breakpoint" opcode can replace any other opcode, leaving no
- * indication of the original instruction's width or purpose in the
- * instruction stream.  We either have to quietly undo the breakpoints
- * before verification, or look up the original opcode whenever we need it.
- * The latter is more efficient since we only slow down on code that
- * actually has breakpoints, but it requires explicit handling in every
- * function that examines the instruction stream.
- *
- * We need to ensure that the debugger doesn't insert any additional
- * breakpoints while we work.  This either requires holding a lock on the
- * breakpoint set throughout the verification of this method, or adding a
- * "do not touch anything on these pages" list to the set.  Either way,
- * the caller of this method must ensure that it calls "redo" to release
- * state.
- *
- * A debugger could connect while we work, so we return without doing
- * anything if a debugger doesn't happen to be connected now.  We can only
- * avoid doing work if the debugger thread isn't running (dexopt, zygote,
- * or debugging not configured).
- *
- * Returns "false" if we did nothing, "true" if we did stuff (and, hence,
- * need to call "redo" at some point).
- */
-static bool undoBreakpoints(Method* meth)
-{
-#ifdef WITH_DEBUGGER
-    if (gDvm.optimizing || gDvm.zygote || !gDvm.jdwpConfigured)
-        return false;
-    dvmUndoBreakpoints(meth);
-    return true;
-#else
-    return false;
-#endif
-}
-
-/*
- * Restore any breakpoints we undid previously.  Also has to update the
- * stored "original opcode" value for any instruction that we replaced
- * with a throw-verification-error op.
- */
-static void redoBreakpoints(Method* meth)
-{
-#ifdef WITH_DEBUGGER
-    if (gDvm.optimizing || gDvm.zygote || !gDvm.jdwpConfigured) {
-        /* should not be here */
-        assert(false);
-        return;
-    }
-    dvmRedoBreakpoints(meth);
-#else
-    assert(false);
-#endif
-}
 
 /*
  * Perform verification on a single method.
@@ -238,9 +178,6 @@ static bool verifyMethod(Method* meth, int verifyFlags)
     UninitInstanceMap* uninitMap = NULL;
     InsnFlags* insnFlags = NULL;
     int i, newInstanceCount;
-    bool undidBreakpoints;
-
-    undidBreakpoints = undoBreakpoints(meth);
 
     /*
      * If there aren't any instructions, make sure that's expected, then
@@ -322,8 +259,6 @@ success:
     result = true;
 
 bail:
-    if (undidBreakpoints)
-        redoBreakpoints(meth);
     dvmFreeUninitInstanceMap(uninitMap);
     free(insnFlags);
     return result;
