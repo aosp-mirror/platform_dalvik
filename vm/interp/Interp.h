@@ -56,20 +56,9 @@ void dvmClearSingleStep(Thread* thread);
 u1 dvmGetOriginalOpCode(const u2* addr);
 
 /*
- * Temporarily "undo" any breakpoints set in a specific method.  Used
- * during verification.
- *
- * Locks the breakpoint set, and leaves it locked.
+ * Flush any breakpoints associated with methods in "clazz".
  */
-void dvmUndoBreakpoints(Method* method);
-
-/*
- * "Redo" the breakpoints cleared by a previous "undo", re-inserting the
- * breakpoint opcodes and updating the "original opcode" values.
- *
- * Unlocks the breakpoint set, which must be held by a previous "undo".
- */
-void dvmRedoBreakpoints(Method* method);
+void dvmFlushBreakpoints(ClassObject* clazz);
 #endif
 
 #endif /*_DALVIK_INTERP_INTERP*/
