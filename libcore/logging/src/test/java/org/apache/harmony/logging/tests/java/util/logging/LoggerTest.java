@@ -38,6 +38,7 @@ import junit.framework.TestCase;
 
 import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper;
 
+import tests.support.resource.Support_Resources;
 import tests.util.CallVerificationStack;
 
 /**
@@ -53,7 +54,7 @@ public class LoggerTest extends TestCase {
 
     private final static String INVALID_RESOURCE_BUNDLE = "impossible_not_existing";
 
-    private final static String LOGGING_CONFIG_FILE = "src/test/resources/config/java/util/logging/logging.config";
+    private final static String LOGGING_CONFIG_FILE = "/config/java/util/logging/logging.config";
 
     private final static String VALID_KEY = "LOGGERTEST";
 
@@ -3526,7 +3527,8 @@ public class LoggerTest extends TestCase {
      * test initHandler
      */
     public void test_initHandler() throws Exception {
-        File logProps = new File(LOGGING_CONFIG_FILE);
+        File logProps = Support_Resources.getExternalLocalFile(
+                getClass().getResource(LOGGING_CONFIG_FILE).toString());
         LogManager lm = LogManager.getLogManager();
         lm.readConfiguration(new FileInputStream(logProps));
 

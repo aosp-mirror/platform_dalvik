@@ -29,6 +29,18 @@ result EXEC_FAILED
 pattern .*Test failed: should get token \[, but get -1.*
 
 
+# These tests only pass if the root logger hasn't yet been initialized. They
+# incorrectly assume that resetting the LogManager will clear the root logger's
+# resource bundle; this isn't the case.
+test org.apache.harmony.logging.tests.java.util.logging.LoggerTest#testGetLoggerWithRes_InvalidResourceBundle
+result EXEC_FAILED
+pattern .*java.lang.IllegalArgumentException: Resource bundle name 'impossible_not_existing' is inconsistent.*
+
+test org.apache.harmony.logging.tests.java.util.logging.LoggerTest#testGetLogger_Empty
+result EXEC_FAILED
+pattern .*junit.framework.AssertionFailedError.*
+
+
 # Dalvik doesn't include the "SunJCE" crypto provider
 test com.sun.crypto.provider.Cipher.AES.Test4513830
 result EXEC_FAILED
