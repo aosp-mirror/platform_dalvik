@@ -56,7 +56,7 @@ bpath=$framework/core.jar:$framework/ext.jar:$framework/framework.jar
 # Build the classpath by putting together the jar file for each module.
 classpath="$framework/sqlite-jdbc.jar" # Bonus item for jdbc testing.
 modules="annotation archive concurrent crypto dom json \
-        logging luni-kernel luni math nio nio_char prefs regex security sql \
+        logging luni-kernel luni math nio_char prefs regex security sql \
         suncompat support text x-net xml"
 for module in $modules; do
     classpath="$classpath:$framework/core-tests-$module.jar"

@@ -50,7 +50,7 @@ $(shell cd $(LOCAL_PATH) && ls -d */src/$(1)/{java,resources} 2> /dev/null)
 endef
 
 # The Java files and their associated resources.
-core_src_files := $(call all-main-java-files-under,annotation archive auth awt-kernel concurrent crypto dalvik dom icu json junit logging luni luni-kernel math nio nio_char openssl prefs regex security security-kernel sql suncompat support text x-net xml)
+core_src_files := $(call all-main-java-files-under,annotation archive auth awt-kernel concurrent crypto dalvik dom icu json junit logging luni luni-kernel math nio_char openssl prefs regex security security-kernel sql suncompat support text x-net xml)
 core_resource_dirs := $(call all-core-resource-dirs,main)
 test_resource_dirs := $(call all-core-resource-dirs,test)
 
@@ -203,7 +203,6 @@ LOCAL_JAVA_LIBRARIES := \
         core-tests-logging \
         core-tests-luni-kernel \
         core-tests-math \
-        core-tests-nio \
         core-tests-nio_char \
         core-tests-prefs \
         core-tests-regex \
@@ -226,16 +225,6 @@ LOCAL_JAVA_LIBRARIES := core core-tests-support
 LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests-math
-include $(BUILD_JAVA_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_SRC_FILES := $(call all-test-java-files-under,nio)
-LOCAL_JAVA_RESOURCE_DIRS := $(test_resource_dirs)
-LOCAL_NO_STANDARD_LIBRARIES := true
-LOCAL_JAVA_LIBRARIES := core core-tests-support
-LOCAL_DX_FLAGS := --core-library
-LOCAL_MODULE_TAGS := tests
-LOCAL_MODULE := core-tests-nio
 include $(BUILD_JAVA_LIBRARY)
 
 include $(CLEAR_VARS)
