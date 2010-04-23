@@ -41,13 +41,33 @@ static bool verifyReference(const void *obj, const void *addr)
 }
 
 /*
- * Verifies the header, static fields references, and interface
+ * Verifies instance fields.
+ */
+static void verifyInstanceFields(const Object *obj)
+{
+    ClassObject *clazz;
+    int i;
+
+    assert(obj != NULL);
+    assert(obj->clazz != NULL);
+    /* TODO(cshapiro): check reference offsets bitmap for agreement. */
+    for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
+        InstField *field = clazz->ifields;
+        for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
+            void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
+            VERIFY_REFERENCE(((JValue *)addr)->l);
+        }
+    }
+}
+
+/*
+ * Verifies the header, static field references, and interface
  * pointers of a class object.
  */
 static void verifyClassObject(const ClassObject *obj)
 {
+    ClassObject *clazz;
     int i;
-    char ch;
 
     LOGV("Entering verifyClassObject(obj=%p)", obj);
     if (obj == gDvm.unlinkedJavaLangClass) {
@@ -63,11 +83,13 @@ static void verifyClassObject(const ClassObject *obj)
     VERIFY_REFERENCE(obj->classLoader);
     /* Verify static field references. */
     for (i = 0; i < obj->sfieldCount; ++i) {
-        ch = obj->sfields[i].field.signature[0];
+        char ch = obj->sfields[i].field.signature[0];
         if (ch == '[' || ch == 'L') {
             VERIFY_REFERENCE(obj->sfields[i].value.l);
         }
     }
+    /* Verify the instance fields. */
+    verifyInstanceFields((const Object *)obj);
     /* Verify interface references. */
     for (i = 0; i < obj->interfaceCount; ++i) {
         VERIFY_REFERENCE(obj->interfaces[i]);
@@ -82,8 +104,6 @@ exit:
  */
 static void verifyArrayObject(const ArrayObject *array)
 {
-    ClassObject *clazz;
-    Object **contents;
     size_t i;
 
     LOGV("Entering verifyArrayObject(obj=%p)", obj);
@@ -92,7 +112,7 @@ static void verifyArrayObject(const ArrayObject *array)
     VERIFY_REFERENCE(array->obj.clazz);
     if (IS_CLASS_FLAG_SET(array->obj.clazz, CLASS_ISOBJECTARRAY)) {
         /* Verify the array contents. */
-        contents = (Object **) array->contents;
+        Object **contents = (Object **)array->contents;
         for (i = 0; i < array->length; ++i) {
             VERIFY_REFERENCE(contents[i]);
         }
@@ -106,28 +126,18 @@ static void verifyArrayObject(const ArrayObject *array)
 static void verifyDataObject(const DataObject *obj)
 {
     ClassObject *clazz;
-    InstField *field;
-    void *addr;
-    size_t offset;
-    int i, count;
+    int i;
 
     LOGV("Entering verifyDataObject(obj=%p)", obj);
     /* Verify the class object. */
     assert(obj->obj.clazz != NULL);
     VERIFY_REFERENCE(obj->obj.clazz);
     /* Verify the instance fields. */
-    for (clazz = obj->obj.clazz; clazz != NULL; clazz = clazz->super) {
-        field = clazz->ifields;
-        count = clazz->ifieldRefCount;
-        for (i = 0; i < count; ++i, ++field) {
-            addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
-            VERIFY_REFERENCE(((JValue *)addr)->l);
-        }
-    }
+    verifyInstanceFields((const Object *)obj);
     if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
         /* Verify the hidden Reference.referent field. */
-        offset = gDvm.offJavaLangRefReference_referent;
-        addr = BYTE_OFFSET((Object *)obj, offset);
+        size_t offset = gDvm.offJavaLangRefReference_referent;
+        void *addr = BYTE_OFFSET((Object *)obj, offset);
         VERIFY_REFERENCE(((JValue *)addr)->l);
     }
     LOGV("Exiting verifyDataObject(obj=%p) %zx", obj, length);
@@ -143,7 +153,12 @@ void dvmVerifyObject(const Object *obj)
 
     LOGV("Entering dvmVerifyObject(obj=%p)", obj);
     assert(obj != NULL);
+    /* Check that the object is aligned. */
+    assert(((uintptr_t)obj & 7) == 0);
     clazz = obj->clazz;
+    /* Check that the class object is aligned. */
+    assert(((uintptr_t)clazz & 7) == 0);
+    /* Dispatch a type-specific verification routine. */
     if (clazz == gDvm.classJavaLangClass ||
         obj == (Object *)gDvm.unlinkedJavaLangClass) {
         verifyClassObject((ClassObject *)obj);
