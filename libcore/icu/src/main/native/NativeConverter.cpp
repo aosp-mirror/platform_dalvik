@@ -39,11 +39,11 @@ static void JNI_TO_U_CALLBACK_SUBSTITUTE
 
 static jlong openConverter(JNIEnv* env, jclass, jstring converterName) {
     ScopedUtfChars converterNameChars(env, converterName);
-    if (!converterNameChars.data()) {
+    if (!converterNameChars.c_str()) {
         return 0;
     }
     UErrorCode errorCode = U_ZERO_ERROR;
-    UConverter* conv = ucnv_open(converterNameChars.data(), &errorCode);
+    UConverter* conv = ucnv_open(converterNameChars.c_str(), &errorCode);
     icu4jni_error(env, errorCode);
     return (jlong) conv;
 }
@@ -945,11 +945,11 @@ static jboolean contains(JNIEnv* env, jclass, jlong handle1, jlong handle2) {
 
 static jobject charsetForName(JNIEnv* env, jclass, jstring charsetName) {
     ScopedUtfChars charsetNameChars(env, charsetName);
-    if (!charsetNameChars.data()) {
+    if (!charsetNameChars.c_str()) {
         return NULL;
     }
     // Get ICU's canonical name for this charset.
-    const char* icuCanonicalName = getICUCanonicalName(charsetNameChars.data());
+    const char* icuCanonicalName = getICUCanonicalName(charsetNameChars.c_str());
     if (icuCanonicalName == NULL) {
         return NULL;
     }

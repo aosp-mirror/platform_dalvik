@@ -70,7 +70,7 @@ private:
 };
 
 static Locale getLocale(JNIEnv* env, jstring localeName) {
-    return Locale::createFromName(ScopedUtfChars(env, localeName).data());
+    return Locale::createFromName(ScopedUtfChars(env, localeName).c_str());
 }
 
 static jint getCurrencyFractionDigitsNative(JNIEnv* env, jclass, jstring currencyCode) {
@@ -528,7 +528,7 @@ static jstring getIntCurrencyCode(JNIEnv* env, jstring locale) {
     ScopedUtfChars localeChars(env, locale);
 
     // Extract the 2-character country name.
-    if (strlen(localeChars.data()) < 5) {
+    if (strlen(localeChars.c_str()) < 5) {
         return NULL;
     }
     if (localeChars[3] < 'A' || localeChars[3] > 'Z' || localeChars[4] < 'A' || localeChars[4] > 'Z') {

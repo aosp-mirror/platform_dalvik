@@ -34,7 +34,7 @@ public:
         }
     }
 
-    const char* data() const {
+    const char* c_str() const {
         return mUtfChars;
     }
 
