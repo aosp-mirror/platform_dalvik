@@ -26,10 +26,10 @@
 static jint getIterator(JNIEnv* env, jstring locale, UBreakIteratorType type) {
     UErrorCode status = U_ZERO_ERROR;
     ScopedUtfChars localeChars(env, locale);
-    if (!localeChars.data()) {
+    if (!localeChars.c_str()) {
         return 0;
     }
-    UBreakIterator* it = ubrk_open(type, localeChars.data(), NULL, 0, &status);
+    UBreakIterator* it = ubrk_open(type, localeChars.c_str(), NULL, 0, &status);
     icu4jni_error(env, status);
     return reinterpret_cast<uintptr_t>(it);
 }

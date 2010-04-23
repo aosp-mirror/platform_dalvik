@@ -13,64 +13,6 @@ package com.ibm.icu4jni.text;
 import com.ibm.icu4jni.text.RuleBasedCollator;
 import java.util.Locale;
 
-/**
-* Abstract class handling locale specific collation via JNI and ICU.
-* Subclasses implement specific collation strategies. One subclass,
-* com.ibm.icu4jni.text.RuleBasedCollator, is currently provided and is
-* applicable to a wide set of languages. Other subclasses may be created to
-* handle more specialized needs.
-* You can use the static factory method, getInstance(), to obtain the
-* appropriate Collator object for a given locale.
-*
-* <pre>
-* // Compare two strings in the default locale
-* Collator myCollator = Collator.getInstance();
-* if (myCollator.compare("abc", "ABC") < 0) {
-*   System.out.println("abc is less than ABC");
-* }
-* else {
-*   System.out.println("abc is greater than or equal to ABC");
-* }
-* </pre>
-*
-* You can set a Collator's strength property to determine the level of
-* difference considered significant in comparisons.
-* Five strengths in CollationAttribute are provided: VALUE_PRIMARY,
-* VALUE_SECONDARY, VALUE_TERTIARY, VALUE_QUATERNARY and VALUE_IDENTICAL.
-* The exact assignment of strengths to language features is locale-dependent.
-* For example, in Czech, "e" and "f" are considered primary differences, while
-* "e" and "?" latin small letter e with circumflex are secondary differences,
-* "e" and "E" are tertiary differences and "e" and "e" are identical.
-*
-* <p>
-* The following shows how both case and accents could be ignored for US
-* English.
-* <pre>
-* //Get the Collator for US English and set its strength to PRIMARY
-* Collator usCollator = Collator.getInstance(Locale.US);
-* usCollator.setStrength(Collator.PRIMARY);
-* if (usCollator.compare("abc", "ABC") == 0) {
-*   System.out.println("Strings are equivalent");
-* }
-* </pre>
-* For comparing Strings exactly once, the compare method provides the best
-* performance.
-* When sorting a list of Strings however, it is generally necessary to compare
-* each String multiple times.
-* In this case, com.ibm.icu4jni.text.CollationKey provide better performance.
-* The CollationKey class converts a String to a series of bits that can be
-* compared bitwise against other CollationKeys.
-* A CollationKey is created by a Collator object for a given String.
-* Note: CollationKeys from different Collators can not be compared.
-* </p>
-*
-* Considerations :
-* 1) ErrorCode not returned to user throw exceptions instead
-* 2) Similar API to java.text.Collator
-* @author syn wee quek
-* @stable ICU 2.4
-*/
-
 public abstract class Collator implements Cloneable {
     /**
      * Strongest collator strength value. Typically used to denote differences
@@ -164,28 +106,8 @@ public abstract class Collator implements Cloneable {
      */
     public final static int CANONICAL_DECOMPOSITION = CollationAttribute.VALUE_ON;
 
-    public static Collator getInstance() {
-        return getInstance(null);
-    }
-
-    /**
-     * Factory method to create an appropriate Collator which uses the given
-     * locale's collation rules.<br>
-     * Current implementation createInstance() returns a RuleBasedCollator(Locale)
-     * instance. The RuleBasedCollator will be created in the following order,
-     * <ul>
-     * <li> Data from argument locale resource bundle if found, otherwise
-     * <li> Data from parent locale resource bundle of given locale if found, otherwise
-     * <li> Data from built-in default collation rules if found, other
-     * <li> null is returned
-     * </ul>
-     * @param locale to be used for collation
-     * @return an instance of Collator
-     * @stable ICU 2.4
-     */
     public static Collator getInstance(Locale locale) {
-        RuleBasedCollator result = new RuleBasedCollator(locale);
-        return result;
+        return new RuleBasedCollator(locale);
     }
 
     public boolean equals(String source, String target) {

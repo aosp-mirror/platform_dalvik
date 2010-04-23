@@ -23,14 +23,7 @@ final class NativeCollation
   public NativeCollation() {
       
   }
-    
-  /**
-  * Method to create a new C Collator using the default locale rules.
-  * @return new c collator
-  * @internal ICU 2.4
-  */
-  static native int openCollator();
-  
+
   /**
   * Method to create a new C Collator using the argument locale rules.
   * @param locale locale name
@@ -160,14 +153,6 @@ final class NativeCollation
   */
   static native int getCollationElementIterator(int collatoraddress, 
                                                  String source);
-                                                 
-  /**
-  * Returns a hash of this collation object
-  * @param collatoraddress address of C collator
-  * @return hash of this collation object
-  * @internal ICU 2.4
-  */
-  static native int hashCode(int collatoraddress);
 
     
   // collationelementiterator methods -------------------------------------

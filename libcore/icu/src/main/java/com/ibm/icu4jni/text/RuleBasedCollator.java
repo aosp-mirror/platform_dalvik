@@ -454,20 +454,6 @@ public final class RuleBasedCollator extends Collator {
         return NativeCollation.getAttribute(m_collator_, type);
     }
 
-    /**
-     * Get the sort key as an CollationKey object from the argument string.
-     * To retrieve sort key in terms of byte arrays, use the method as below<br>
-     * <br>
-     * <code>
-     * Collator collator = Collator.getInstance();
-     * byte[] array = collator.getSortKey(source);
-     * </code><br>
-     * Byte array result are zero-terminated and can be compared using
-     * java.util.Arrays.equals();
-     * @param source string to be processed.
-     * @return the sort key
-     * @stable ICU 2.4
-     */
     public CollationKey getCollationKey(String source) {
         if (source == null) {
             return null;
@@ -477,17 +463,6 @@ public final class RuleBasedCollator extends Collator {
             return null;
         }
         return new CollationKey(source, key);
-    }
-
-    /**
-     * Get a sort key for the argument string
-     * Sort keys may be compared using java.util.Arrays.equals
-     * @param source string for key to be generated
-     * @return sort key
-     * @stable ICU 2.4
-     */
-    public byte[] getSortKey(String source) {
-        return NativeCollation.getSortKey(m_collator_, source);
     }
 
     /**
@@ -529,21 +504,9 @@ public final class RuleBasedCollator extends Collator {
         return result.toString();
     }
 
-    /**
-     * Returns a hash of this collation object
-     * Note this method is not complete, it only returns 0 at the moment.
-     * @return hash of this collation object
-     * @stable ICU 2.4
-     */
+    @Override
     public int hashCode() {
-        // since rules do not change once it is created, we can cache the hash
-        if (m_hashcode_ == 0) {
-            m_hashcode_ = NativeCollation.hashCode(m_collator_);
-            if (m_hashcode_ == 0) {
-                m_hashcode_ = 1;
-            }
-        }
-        return m_hashcode_;
+        return 42; // No-one uses RuleBasedCollator as a hash key.
     }
 
     /**
@@ -565,50 +528,16 @@ public final class RuleBasedCollator extends Collator {
                 getDecomposition() == rhs.getDecomposition();
     }
 
-    /**
-     * RuleBasedCollator default constructor. This constructor takes the default
-     * locale. The only caller of this class should be Collator.getInstance().
-     * Current implementation createInstance() returns a RuleBasedCollator(Locale)
-     * instance. The RuleBasedCollator will be created in the following order,
-     * <ul>
-     * <li> Data from argument locale resource bundle if found, otherwise
-     * <li> Data from parent locale resource bundle of arguemtn locale if found,
-     *      otherwise
-     * <li> Data from built-in default collation rules if found, other
-     * <li> null is returned
-     * </ul>
-     */
-    RuleBasedCollator() {
-        m_collator_ = NativeCollation.openCollator();
-    }
-
-    /**
-     * RuleBasedCollator constructor. This constructor takes a locale. The
-     * only caller of this class should be Collator.createInstance().
-     * Current implementation createInstance() returns a RuleBasedCollator(Locale)
-     * instance. The RuleBasedCollator will be created in the following order,
-     * <ul>
-     * <li> Data from argument locale resource bundle if found, otherwise
-     * <li> Data from parent locale resource bundle of arguemtn locale if found,
-     *      otherwise
-     * <li> Data from built-in default collation rules if found, other
-     * <li> null is returned
-     * </ul>
-     * @param locale locale used
-     */
     RuleBasedCollator(Locale locale) {
-        if (locale == null) {
-            m_collator_ = NativeCollation.openCollator();
-        } else {
-            m_collator_ = NativeCollation.openCollator(locale.toString());
-        }
+        m_collator_ = NativeCollation.openCollator(locale.toString());
     }
 
+    @Override
     protected void finalize() {
         NativeCollation.closeCollator(m_collator_);
     }
 
-    private RuleBasedCollator(int collatoraddress) {
-        m_collator_ = collatoraddress;
+    private RuleBasedCollator(int addr) {
+        m_collator_ = addr;
     }
 }

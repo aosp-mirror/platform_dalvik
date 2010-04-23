@@ -291,9 +291,10 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
      * Returns a {@code Collator} instance which is appropriate for {@code locale}.
      */
     public static Collator getInstance(Locale locale) {
-        // BEGIN android-changed: removed non-functional cache.
+        if (locale == null) {
+            throw new NullPointerException();
+        }
         return new RuleBasedCollator(com.ibm.icu4jni.text.Collator.getInstance(locale));
-        // END android-changed
     }
 
     /**
