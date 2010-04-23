@@ -71,6 +71,7 @@ void dvmBreakpointShutdown(void)
  * We only remove the breakpoint when the last instance is cleared.
  */
 typedef struct {
+    Method*     method;                 /* method we're associated with */
     u2*         addr;                   /* absolute memory address */
     u1          originalOpCode;         /* original 8-bit opcode value */
     int         setCount;               /* #of times this breakpoint was set */
@@ -116,10 +117,20 @@ static void dvmBreakpointSetFree(BreakpointSet* pSet)
 
 /*
  * Lock the breakpoint set.
+ *
+ * It's not currently necessary to switch to VMWAIT in the event of
+ * contention, because nothing in here can block.  However, it's possible
+ * that the bytecode-updater code could become fancier in the future, so
+ * we do the trylock dance as a bit of future-proofing.
  */
 static void dvmBreakpointSetLock(BreakpointSet* pSet)
 {
-    dvmLockMutex(&pSet->lock);
+    if (dvmTryLockMutex(&pSet->lock) != 0) {
+        Thread* self = dvmThreadSelf();
+        int oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        dvmLockMutex(&pSet->lock);
+        dvmChangeStatus(self, oldStatus);
+    }
 }
 
 /*
@@ -212,6 +223,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
         }
 
         pBreak = &pSet->breakpoints[pSet->count++];
+        pBreak->method = method;
         pBreak->addr = (u2*)addr;
         pBreak->originalOpCode = *(u1*)addr;
         pBreak->setCount = 1;
@@ -219,16 +231,35 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
         /*
          * Change the opcode.  We must ensure that the BreakpointSet
          * updates happen before we change the opcode.
+         *
+         * If the method has not been verified, we do NOT insert the
+         * breakpoint yet, since that will screw up the verifier.  The
+         * debugger is allowed to insert breakpoints in unverified code,
+         * but since we don't execute unverified code we don't need to
+         * alter the bytecode yet.
+         *
+         * The class init code will "flush" all relevant breakpoints when
+         * verification completes.
          */
         MEM_BARRIER();
         assert(*(u1*)addr != OP_BREAKPOINT);
-        dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr, OP_BREAKPOINT);
+        if (dvmIsClassVerified(method->clazz)) {
+            LOGV("Class %s verified, adding breakpoint at %p\n",
+                method->clazz->descriptor, addr);
+            dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr, OP_BREAKPOINT);
+        } else {
+            LOGV("Class %s NOT verified, deferring breakpoint at %p\n",
+                method->clazz->descriptor, addr);
+        }
     } else {
         pBreak = &pSet->breakpoints[idx];
         pBreak->setCount++;
 
-        /* verify instruction stream has break op */
-        assert(*(u1*)addr == OP_BREAKPOINT);
+        /*
+         * Instruction stream may not have breakpoint opcode yet -- flush
+         * may be pending during verification of class.
+         */
+        //assert(*(u1*)addr == OP_BREAKPOINT);
     }
 
     return true;
@@ -262,6 +293,11 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
         if (pBreak->setCount == 1) {
             /*
              * Must restore opcode before removing set entry.
+             *
+             * If the breakpoint was never flushed, we could be ovewriting
+             * a value with the same value.  Not a problem, though we
+             * could end up causing a copy-on-write here when we didn't
+             * need to.  (Not worth worrying about.)
              */
             dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr,
                 pBreak->originalOpCode);
@@ -282,58 +318,30 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
 }
 
 /*
- * Restore the original opcode on any breakpoints that are in the specified
- * method.  The breakpoints are NOT removed from the set.
+ * Flush any breakpoints associated with methods in "clazz".  We want to
+ * change the opcode, which might not have happened when the breakpoint
+ * was initially set because the class was in the process of being
+ * verified.
  *
  * The BreakpointSet's lock must be acquired before calling here.
  */
-static void dvmBreakpointSetUndo(BreakpointSet* pSet, Method* method)
+static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
 {
-    const u2* start = method->insns;
-    const u2* end = method->insns + dvmGetMethodInsnsSize(method);
-
     int i;
     for (i = 0; i < pSet->count; i++) {
         Breakpoint* pBreak = &pSet->breakpoints[i];
-        if (pBreak->addr >= start && pBreak->addr < end) {
-            LOGV("UNDO %s.%s [%d]\n",
-                method->clazz->descriptor, method->name, i);
-            dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)pBreak->addr,
-                pBreak->originalOpCode);
+        if (pBreak->method->clazz == clazz) {
+            /*
+             * The breakpoint is associated with a method in this class.
+             * It might already be there or it might not; either way,
+             * flush it out.
+             */
+            LOGV("Flushing breakpoint at %p for %s\n",
+                pBreak->addr, clazz->descriptor);
+            dvmDexChangeDex1(clazz->pDvmDex, (u1*)pBreak->addr, OP_BREAKPOINT);
         }
     }
 }
-
-/*
- * Put the breakpoint opcode back into the instruction stream, and check
- * to see if the original opcode has changed.
- *
- * The BreakpointSet's lock must be acquired before calling here.
- */
-static void dvmBreakpointSetRedo(BreakpointSet* pSet, Method* method)
-{
-    const u2* start = method->insns;
-    const u2* end = method->insns + dvmGetMethodInsnsSize(method);
-
-    int i;
-    for (i = 0; i < pSet->count; i++) {
-        Breakpoint* pBreak = &pSet->breakpoints[i];
-        if (pBreak->addr >= start && pBreak->addr < end) {
-            LOGV("REDO %s.%s [%d]\n",
-                method->clazz->descriptor, method->name, i);
-            u1 currentOpCode = *(u1*)pBreak->addr;
-            if (pBreak->originalOpCode != currentOpCode) {
-                /* verifier can drop in a throw-verification-error */
-                LOGD("NOTE: updating originalOpCode from 0x%02x to 0x%02x\n",
-                    pBreak->originalOpCode, currentOpCode);
-                pBreak->originalOpCode = currentOpCode;
-            }
-            dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)pBreak->addr,
-                OP_BREAKPOINT);
-        }
-    }
-}
-
 #endif /*WITH_DEBUGGER*/
 
 
@@ -428,32 +436,22 @@ u1 dvmGetOriginalOpCode(const u2* addr)
 }
 
 /*
- * Temporarily "undo" any breakpoints set in a specific method.  Used
- * during verification.
+ * Flush any breakpoints associated with methods in "clazz".
  *
- * Locks the breakpoint set, and leaves it locked.
+ * We don't want to modify the bytecode of a method before the verifier
+ * gets a chance to look at it, so we postpone opcode replacement until
+ * after verification completes.
  */
-void dvmUndoBreakpoints(Method* method)
+void dvmFlushBreakpoints(ClassObject* clazz)
 {
     BreakpointSet* pSet = gDvm.breakpointSet;
 
+    if (pSet == NULL)
+        return;
+
+    assert(dvmIsClassVerified(clazz));
     dvmBreakpointSetLock(pSet);
-    dvmBreakpointSetUndo(pSet, method);
-    /* lock remains held */
-}
-
-/*
- * "Redo" the breakpoints cleared by a previous "undo", re-inserting the
- * breakpoint opcodes and updating the "original opcode" values.
- *
- * Unlocks the breakpoint set, which must be held by a previous "undo".
- */
-void dvmRedoBreakpoints(Method* method)
-{
-    BreakpointSet* pSet = gDvm.breakpointSet;
-
-    /* lock already held */
-    dvmBreakpointSetRedo(pSet, method);
+    dvmBreakpointSetFlush(pSet, clazz);
     dvmBreakpointSetUnlock(pSet);
 }
 #endif
