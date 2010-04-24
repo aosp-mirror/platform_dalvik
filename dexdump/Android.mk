@@ -63,7 +63,13 @@ LOCAL_SRC_FILES := $(dexdump_src_files)
 LOCAL_C_INCLUDES := $(dexdump_c_includes)
 LOCAL_SHARED_LIBRARIES := $(dexdump_shared_libraries)
 LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries) liblog
+
+ifneq ($(strip $(USE_MINGW)),)
+LOCAL_STATIC_LIBRARIES += libz
+else
 LOCAL_LDLIBS += -lpthread -lz
+endif
+
 include $(BUILD_HOST_EXECUTABLE)
 endif # !TARGET_SIMULATOR
 
