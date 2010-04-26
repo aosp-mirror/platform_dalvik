@@ -101,7 +101,7 @@ include $(BUILD_STATIC_LIBRARY)
 # Deal with keystores required for security. Note: The path to this file
 # is hardcoded in TrustManagerFactoryImpl.java.
 ALL_PREBUILT += $(TARGET_OUT)/etc/security/cacerts.bks
-$(TARGET_OUT)/etc/security/cacerts.bks : $(LOCAL_PATH)/security/src/main/files/cacerts.bks | $(ACP)
+$(TARGET_OUT)/etc/security/cacerts.bks : $(LOCAL_PATH)/luni/src/main/files/cacerts.bks | $(ACP)
 	$(transform-prebuilt-to-target)
 
 
