@@ -1352,7 +1352,7 @@ static void mcastAddDropMembership(JNIEnv *env, int handle, jobject optVal,
                     setSockOptVal = IPV6_ADD_MEMBERSHIP;
                 }
                 if (setSockOptVal == IP_DROP_MEMBERSHIP) {
-                    setSockOptVal == IPV6_DROP_MEMBERSHIP;
+                    setSockOptVal = IPV6_DROP_MEMBERSHIP;
                 }
                 requestLength = sizeof(ipv6Request);
                 memset(&ipv6Request, 0, requestLength);
