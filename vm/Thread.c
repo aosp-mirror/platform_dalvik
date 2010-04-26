@@ -1277,7 +1277,17 @@ static bool createFakeEntryFrame(Thread* thread)
         gDvm.methFakeNativeEntry = mainMeth;
     }
 
-    return dvmPushJNIFrame(thread, gDvm.methFakeNativeEntry);
+    if (!dvmPushJNIFrame(thread, gDvm.methFakeNativeEntry))
+        return false;
+
+    /*
+     * Null out the "String[] args" argument.
+     */
+    assert(gDvm.methFakeNativeEntry->registersSize == 1);
+    u4* framePtr = (u4*) thread->curFrame;
+    framePtr[0] = 0;
+
+    return true;
 }
 
 
@@ -1291,8 +1301,13 @@ static bool createFakeRunFrame(Thread* thread)
     ClassObject* nativeStart;
     Method* runMeth;
 
-    nativeStart =
-        dvmFindSystemClassNoInit("Ldalvik/system/NativeStart;");
+    /*
+     * TODO: cache this result so we don't have to dig for it every time
+     * somebody attaches a thread to the VM.  Also consider changing this
+     * to a static method so we don't have a null "this" pointer in the
+     * "ins" on the stack.  (Does it really need to look like a Runnable?)
+     */
+    nativeStart = dvmFindSystemClassNoInit("Ldalvik/system/NativeStart;");
     if (nativeStart == NULL) {
         LOGE("Unable to find dalvik.system.NativeStart class\n");
         return false;
@@ -1304,7 +1319,20 @@ static bool createFakeRunFrame(Thread* thread)
         return false;
     }
 
-    return dvmPushJNIFrame(thread, runMeth);
+    if (!dvmPushJNIFrame(thread, runMeth))
+        return false;
+
+    /*
+     * Provide a NULL 'this' argument.  The method we've put at the top of
+     * the stack looks like a virtual call to run() in a Runnable class.
+     * (If we declared the method static, it wouldn't take any arguments
+     * and we wouldn't have to do this.)
+     */
+    assert(runMeth->registersSize == 1);
+    u4* framePtr = (u4*) thread->curFrame;
+    framePtr[0] = 0;
+
+    return true;
 }
 
 /*
@@ -3805,7 +3833,78 @@ static void gcScanInterpStackReferences(Thread *thread)
 
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = saveArea->method;
-        if (method != NULL && !dvmIsNativeMethod(method)) {
+        if (method == NULL) {
+            /* this is a break frame, nothing to do */
+        } else if (dvmIsNativeMethod(method)) {
+#if 0
+            /*
+             * For purposes of marking references, we don't need to do
+             * anything here, because all of the native "ins" were copied
+             * from registers in the caller's stack frame and won't be
+             * changed (an interpreted method can freely use registers
+             * with parameters like any other register, but natives don't
+             * work that way).
+             *
+             * However, we need to ensure that references visible to
+             * native methods don't move around.  We can do a precise scan
+             * of the arguments by examining the method signature.
+             */
+            LOGD("+++ native scan %s.%s\n",
+                method->clazz->descriptor, method->name);
+            assert(method->registersSize == method->insSize);
+            const char* shorty = method->shorty+1;      // skip return value
+            if (!dvmIsStaticMethod(method)) {
+                /* grab the "this" pointer */
+                Object* obj = (Object*) *framePtr++;
+                if (obj == NULL) {
+                    /*
+                     * This can happen for the "fake" entry frame inserted
+                     * for threads created outside the VM.  There's no actual
+                     * call so there's no object.  If we changed the fake
+                     * entry method to be declared "static" then this
+                     * situation should never occur.
+                     */
+                } else {
+                    if (!dvmIsValidObject(obj))         // debug, remove
+                        LOGD("+++  pin INVALID 'this' %p\n", obj);
+                    else
+                        LOGD("+++  pin 'this' %p\n", obj);
+                    assert(dvmIsValidObject(obj));
+                    // doSomethingClever(obj);
+                }
+            }
+
+            Object* obj;
+            int i;
+            for (i = method->registersSize - 1; i >= 0; i--, framePtr++) {
+                switch (*shorty++) {
+                case 'L':
+                    obj = (Object*) *framePtr;
+                    if (obj != NULL) {
+                        if (!dvmIsValidObject(obj))     // debug, remove
+                            LOGD("+++  pin INVALID %p\n", obj);
+                        else
+                            LOGD("+++  pin %p\n", obj);
+                        assert(dvmIsValidObject(obj));
+                        // doSomethingClever(obj);
+                    }
+                    break;
+                case 'D':
+                case 'J':
+                    framePtr++;
+                    break;
+                default:
+                    /* 32-bit non-reference value */
+                    obj = (Object*) *framePtr;          // debug, remove
+                    if (dvmIsValidObject(obj)) {        // debug, remove
+                        /* if we see a lot of these, our scan might be off */
+                        LOGD("+++  did NOT pin obj %p\n", obj);
+                    }
+                    break;
+                }
+            }
+#endif
+        } else {
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
             if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
@@ -3972,10 +4071,6 @@ static void gcScanInterpStackReferences(Thread *thread)
                 dvmReleaseRegisterMapLine(pMap, regVector);
             }
         }
-        /* else this is a break frame and there is nothing to mark, or
-         * this is a native method and the registers are just the "ins",
-         * copied from various registers in the caller's set.
-         */
 
 #if WITH_EXTRA_GC_CHECKS > 1
         first = false;
