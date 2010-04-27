@@ -1898,6 +1898,37 @@ static int lowestSetBit(unsigned int x) {
     return bit_posn;
 }
 
+// Returns true if it added instructions to 'cUnit' to divide 'rlSrc' by 'lit'
+// and store the result in 'rlDest'.
+static bool handleEasyDivide(CompilationUnit *cUnit,
+                             RegLocation rlSrc, RegLocation rlDest, int lit)
+{
+    if (lit < 2 || !isPowerOfTwo(lit)) {
+        return false;
+    }
+    int k = lowestSetBit(lit);
+    if (k >= 30) {
+        // Avoid special cases.
+        return false;
+    }
+    rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
+    RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
+    int tReg = dvmCompilerAllocTemp(cUnit);
+    if (lit == 2) {
+        // Division by 2 is by far the most common division by constant.
+        opRegRegImm(cUnit, kOpLsr, tReg, rlSrc.lowReg, 32 - k);
+        opRegRegReg(cUnit, kOpAdd, tReg, tReg, rlSrc.lowReg);
+        opRegRegImm(cUnit, kOpAsr, rlResult.lowReg, tReg, k);
+    } else {
+        opRegRegImm(cUnit, kOpAsr, tReg, rlSrc.lowReg, 31);
+        opRegRegImm(cUnit, kOpLsr, tReg, tReg, 32 - k);
+        opRegRegReg(cUnit, kOpAdd, tReg, tReg, rlSrc.lowReg);
+        opRegRegImm(cUnit, kOpAsr, rlResult.lowReg, tReg, k);
+    }
+    storeValue(cUnit, rlDest, rlResult);
+    return true;
+}
+
 // Returns true if it added instructions to 'cUnit' to multiply 'rlSrc' by 'lit'
 // and store the result in 'rlDest'.
 static bool handleEasyMultiply(CompilationUnit *cUnit,
@@ -2017,6 +2048,9 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
             if (lit == 0) {
                 /* Let the interpreter deal with div by 0 */
                 genInterpSingleStep(cUnit, mir);
+                return false;
+            }
+            if (handleEasyDivide(cUnit, rlSrc, rlDest, lit)) {
                 return false;
             }
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
@@ -3947,13 +3981,13 @@ bool dvmCompilerDoWork(CompilerWorkOrder *work)
             /* Start compilation with maximally allowed trace length */
             res = dvmCompileTrace(work->info, JIT_MAX_TRACE_LEN, &work->result,
                                   work->bailPtr);
-            gDvmJit.printMe = oldPrintMe;;
+            gDvmJit.printMe = oldPrintMe;
             break;
         }
         default:
             res = false;
             LOGE("Jit: unknown work order type");
-            assert(0);  // Bail if debug build, discard oteherwise
+            assert(0);  // Bail if debug build, discard otherwise
     }
     return res;
 }
