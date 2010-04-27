@@ -18,6 +18,7 @@
 package java.util;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -1283,7 +1284,7 @@ public class Collections {
                 Iterator<Map.Entry<K, V>> it = iterator();
                 if (size > contents.length) {
                     Class<?> ct = contents.getClass().getComponentType();
-                    contents = (T[]) java.lang.reflect.Array.newInstance(ct, size);
+                    contents = (T[]) Array.newInstance(ct, size);
                 }
                 while (index < size) {
                     contents[index++] = (T) it.next();
@@ -2684,6 +2685,222 @@ public class Collections {
                     " into collection of type " + type);
         }
         return obj;
+    }
+
+    /**
+     * Returns a set backed by {@code map}.
+     *
+     * @throws IllegalArgumentException if the map is not empty
+     * @since 1.6
+     */
+    public static <E> Set<E> newSetFromMap(Map<E, Boolean> map) {
+        if (map.isEmpty()) {
+            return new SetFromMap<E>(map);
+        }
+        throw new IllegalArgumentException();
+    }
+
+    /**
+     * Returns a last-in, first-out queue as a view of {@code deque}.
+     *
+     * @since 1.6
+     */
+    public static <T> Queue<T> asLifoQueue(Deque<T> deque) {
+        return new AsLIFOQueue<T>(deque);
+    }
+
+    private static class SetFromMap<E> extends AbstractSet<E> implements
+            Serializable {
+        private static final long serialVersionUID = 2454657854757543876L;
+
+        // must named as it, to pass serialization compatibility test.
+        private Map<E, Boolean> m;
+
+        private transient Set<E> backingSet;
+
+        SetFromMap(final Map<E, Boolean> map) {
+            super();
+            m = map;
+            backingSet = map.keySet();
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            return backingSet.equals(object);
+        }
+
+        @Override
+        public int hashCode() {
+            return backingSet.hashCode();
+        }
+
+        @Override
+        public boolean add(E object) {
+            return m.put(object, Boolean.TRUE) == null;
+        }
+
+        @Override
+        public void clear() {
+            m.clear();
+        }
+
+        @Override
+        public String toString() {
+            return backingSet.toString();
+        }
+
+        @Override
+        public boolean contains(Object object) {
+            return backingSet.contains(object);
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> collection) {
+            return backingSet.containsAll(collection);
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return m.isEmpty();
+        }
+
+        @Override
+        public boolean remove(Object object) {
+            return m.remove(object) != null;
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> collection) {
+            return backingSet.retainAll(collection);
+        }
+
+        @Override
+        public Object[] toArray() {
+            return backingSet.toArray();
+        }
+
+        @Override
+        public <T> T[] toArray(T[] contents) {
+            return backingSet.toArray(contents);
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return backingSet.iterator();
+        }
+
+        @Override
+        public int size() {
+            return m.size();
+        }
+
+        @SuppressWarnings("unchecked")
+        private void readObject(ObjectInputStream stream)
+                throws IOException, ClassNotFoundException {
+            stream.defaultReadObject();
+            backingSet = m.keySet();
+        }
+    }
+
+    private static class AsLIFOQueue<E> extends AbstractQueue<E> implements
+            Serializable {
+        private static final long serialVersionUID = 1802017725587941708L;
+
+        // must named as it, to pass serialization compatibility test.
+        private final Deque<E> q;
+
+        AsLIFOQueue(final Deque<E> deque) {
+            super();
+            this.q = deque;
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return q.iterator();
+        }
+
+        @Override
+        public int size() {
+            return q.size();
+        }
+
+        public boolean offer(E o) {
+            return q.offerFirst(o);
+        }
+
+        public E peek() {
+            return q.peekFirst();
+        }
+
+        public E poll() {
+            return q.pollFirst();
+        }
+
+        @Override
+        public boolean add(E o) {
+            q.push(o);
+            return true;
+        }
+
+        @Override
+        public void clear() {
+            q.clear();
+        }
+
+        @Override
+        public E element() {
+            return q.getFirst();
+        }
+
+        @Override
+        public E remove() {
+            return q.pop();
+        }
+
+        @Override
+        public boolean contains(Object object) {
+            return q.contains(object);
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> collection) {
+            return q.containsAll(collection);
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return q.isEmpty();
+        }
+
+        @Override
+        public boolean remove(Object object) {
+            return q.remove(object);
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> collection) {
+            return q.removeAll(collection);
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> collection) {
+            return q.retainAll(collection);
+        }
+
+        @Override
+        public Object[] toArray() {
+            return q.toArray();
+        }
+
+        @Override
+        public <T> T[] toArray(T[] contents) {
+            return q.toArray(contents);
+        }
+
+        @Override
+        public String toString() {
+            return q.toString();
+        }
     }
 
     /**

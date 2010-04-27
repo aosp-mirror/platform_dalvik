@@ -30,16 +30,18 @@ import java.io.Serializable;
  *
  * @since 1.2
  */
-public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
+public class TreeSet<E> extends AbstractSet<E> implements NavigableSet<E>,
         Cloneable, Serializable {
 
     private static final long serialVersionUID = -2479143000061671589L;
 
     /** Keys are this set's elements. Values are always Boolean.TRUE */
-    private transient SortedMap<E, Object> backingMap;
+    private transient NavigableMap<E, Object> backingMap;
 
-    private TreeSet(SortedMap<E, Object> map) {
-        this.backingMap = map;
+    private transient NavigableSet<E> descendingSet;
+
+    TreeSet(NavigableMap<E, Object> map) {
+        backingMap = map;
     }
 
     /**
@@ -154,7 +156,7 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
         try {
             TreeSet<E> clone = (TreeSet<E>) super.clone();
             if (backingMap instanceof TreeMap) {
-                clone.backingMap = (SortedMap<E, Object>) ((TreeMap<E, Object>) backingMap)
+                clone.backingMap = (NavigableMap<E, Object>) ((TreeMap<E, Object>) backingMap)
                         .clone();
             } else {
                 clone.backingMap = new TreeMap<E, Object>(backingMap);
@@ -194,45 +196,6 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
     }
 
     /**
-     * Returns the first element in this {@code TreeSet}.
-     *
-     * @return the first element.
-     * @throws NoSuchElementException
-     *             when this {@code TreeSet} is empty.
-     */
-    public E first() {
-        return backingMap.firstKey();
-    }
-
-    /**
-     * Returns a SortedSet of the specified portion of this {@code TreeSet}
-     * which contains elements which are all less than the end element. The
-     * returned SortedSet is backed by this {@code TreeSet} so changes to one
-     * are reflected by the other.
-     *
-     * @param end
-     *            the end element.
-     * @return a subset where the elements are less than {@code end}
-     * @throws ClassCastException
-     *             when the end object cannot be compared with the elements in
-     *             this {@code TreeSet}.
-     * @throws NullPointerException
-     *             when the end object is null and the comparator cannot handle
-     *             null.
-     */
-    @SuppressWarnings("unchecked")
-    public SortedSet<E> headSet(E end) {
-        // Check for errors
-        Comparator<? super E> c = backingMap.comparator();
-        if (c == null) {
-            ((Comparable<E>) end).compareTo(end);
-        } else {
-            c.compare(end, end);
-        }
-        return new TreeSet<E>(backingMap.headMap(end));
-    }
-
-    /**
      * Returns true if this {@code TreeSet} has no element, otherwise false.
      *
      * @return true if this {@code TreeSet} has no element.
@@ -255,15 +218,13 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
     }
 
     /**
-     * Returns the last element in this {@code TreeSet}. The last element is
-     * the highest element.
+     * {@inheritDoc}
      *
-     * @return the last element.
-     * @throws NoSuchElementException
-     *             when this {@code TreeSet} is empty.
+     * @see java.util.NavigableSet#descendingIterator()
+     * @since 1.6
      */
-    public E last() {
-        return backingMap.lastKey();
+    public Iterator<E> descendingIterator() {
+        return descendingSet().iterator();
     }
 
     /**
@@ -296,57 +257,147 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
     }
 
     /**
-     * Returns a SortedSet of the specified portion of this {@code TreeSet}
-     * which contains elements greater or equal to the start element but less
-     * than the end element. The returned SortedSet is backed by this
-     * {@code TreeSet} so changes to one are reflected by the other.
+     * Answers the first element in this TreeSet.
      *
-     * @param start
-     *            the start element.
-     * @param end
-     *            the end element (exclusive).
-     * @return a subset where the elements are greater or equal to {@code start}
-     *         and less than {@code end}
-     * @throws ClassCastException
-     *             when the start or end object cannot be compared with the
-     *             elements in this {@code TreeSet}.
-     * @throws NullPointerException
-     *             when the start or end object is null and the comparator
-     *             cannot handle null.
+     * @return the first element
+     *
+     * @exception NoSuchElementException
+     *                when this TreeSet is empty
+     */
+    public E first() {
+        return backingMap.firstKey();
+    }
+
+    /**
+     * Answers the last element in this TreeSet.
+     *
+     * @return the last element
+     *
+     * @exception NoSuchElementException
+     *                when this TreeSet is empty
+     */
+    public E last() {
+        return backingMap.lastKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#pollFirst()
+     * @since 1.6
+     */
+    public E pollFirst() {
+        Map.Entry<E, Object> entry = backingMap.pollFirstEntry();
+        return (null == entry) ? null : entry.getKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#pollLast()
+     * @since 1.6
+     */
+    public E pollLast() {
+        Map.Entry<E, Object> entry = backingMap.pollLastEntry();
+        return (null == entry) ? null : entry.getKey();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#higher(java.lang.Object)
+     * @since 1.6
+     */
+    public E higher(E e) {
+        return backingMap.higherKey(e);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#lower(java.lang.Object)
+     * @since 1.6
+     */
+    public E lower(E e) {
+        return backingMap.lowerKey(e);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#ceiling(java.lang.Object)
+     * @since 1.6
+     */
+    public E ceiling(E e) {
+        return backingMap.ceilingKey(e);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#floor(java.lang.Object)
+     * @since 1.6
+     */
+    public E floor(E e) {
+        return backingMap.floorKey(e);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#descendingSet()
+     * @since 1.6
+     */
+    public NavigableSet<E> descendingSet() {
+        return (null != descendingSet) ? descendingSet
+                : (descendingSet = new TreeSet<E>(backingMap.descendingMap()));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#subSet(Object, boolean, Object, boolean)
+     * @since 1.6
      */
     @SuppressWarnings("unchecked")
-    public SortedSet<E> subSet(E start, E end) {
+    public NavigableSet<E> subSet(E start, boolean startInclusive, E end,
+            boolean endInclusive) {
         Comparator<? super E> c = backingMap.comparator();
-        if (c == null) {
-            if (((Comparable<E>) start).compareTo(end) <= 0) {
-                return new TreeSet<E>(backingMap.subMap(start, end));
-            }
-        } else {
-            if (c.compare(start, end) <= 0) {
-                return new TreeSet<E>(backingMap.subMap(start, end));
-            }
+        int compare = (c == null) ? ((Comparable<E>) start).compareTo(end) : c
+                .compare(start, end);
+        if (compare <= 0) {
+            return new TreeSet<E>(backingMap.subMap(start, startInclusive, end,
+                    endInclusive));
         }
         throw new IllegalArgumentException();
     }
 
     /**
-     * Returns a SortedSet of the specified portion of this {@code TreeSet}
-     * which contains elements greater or equal to the start element. The
-     * returned SortedSet is backed by this {@code TreeSet} so changes to one
-     * are reflected by the other.
+     * {@inheritDoc}
      *
-     * @param start
-     *            the start element.
-     * @return a subset where the elements are greater or equal to {@code start}
-     * @throws ClassCastException
-     *             when the start object cannot be compared with the elements in
-     *             this {@code TreeSet}.
-     * @throws NullPointerException
-     *             when the start object is null and the comparator cannot
-     *             handle null.
+     * @see java.util.NavigableSet#headSet(Object, boolean)
+     * @since 1.6
      */
     @SuppressWarnings("unchecked")
-    public SortedSet<E> tailSet(E start) {
+    public NavigableSet<E> headSet(E end, boolean endInclusive) {
+        // Check for errors
+        Comparator<? super E> c = backingMap.comparator();
+        if (c == null) {
+            ((Comparable<E>) end).compareTo(end);
+        } else {
+            c.compare(end, end);
+        }
+        return new TreeSet<E>(backingMap.headMap(end, endInclusive));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see java.util.NavigableSet#tailSet(Object, boolean)
+     * @since 1.6
+     */
+    @SuppressWarnings("unchecked")
+    public NavigableSet<E> tailSet(E start, boolean startInclusive) {
         // Check for errors
         Comparator<? super E> c = backingMap.comparator();
         if (c == null) {
@@ -354,7 +405,76 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
         } else {
             c.compare(start, start);
         }
-        return new TreeSet<E>(backingMap.tailMap(start));
+        return new TreeSet<E>(backingMap.tailMap(start, startInclusive));
+    }
+
+    /**
+     * Answers a SortedSet of the specified portion of this TreeSet which
+     * contains elements greater or equal to the start element but less than the
+     * end element. The returned SortedSet is backed by this TreeSet so changes
+     * to one are reflected by the other.
+     *
+     * @param start
+     *            the start element
+     * @param end
+     *            the end element
+     * @return a subset where the elements are greater or equal to
+     *         <code>start</code> and less than <code>end</code>
+     *
+     * @exception ClassCastException
+     *                when the start or end object cannot be compared with the
+     *                elements in this TreeSet
+     * @exception NullPointerException
+     *                when the start or end object is null and the comparator
+     *                cannot handle null
+     */
+    @SuppressWarnings("unchecked")
+    public SortedSet<E> subSet(E start, E end) {
+        return subSet(start, true, end, false);
+    }
+
+    /**
+     * Answers a SortedSet of the specified portion of this TreeSet which
+     * contains elements less than the end element. The returned SortedSet is
+     * backed by this TreeSet so changes to one are reflected by the other.
+     *
+     * @param end
+     *            the end element
+     * @return a subset where the elements are less than <code>end</code>
+     *
+     * @exception ClassCastException
+     *                when the end object cannot be compared with the elements
+     *                in this TreeSet
+     * @exception NullPointerException
+     *                when the end object is null and the comparator cannot
+     *                handle null
+     */
+    @SuppressWarnings("unchecked")
+    public SortedSet<E> headSet(E end) {
+        return headSet(end, false);
+    }
+
+    /**
+     * Answers a SortedSet of the specified portion of this TreeSet which
+     * contains elements greater or equal to the start element. The returned
+     * SortedSet is backed by this TreeSet so changes to one are reflected by
+     * the other.
+     *
+     * @param start
+     *            the start element
+     * @return a subset where the elements are greater or equal to
+     *         <code>start</code>
+     *
+     * @exception ClassCastException
+     *                when the start object cannot be compared with the elements
+     *                in this TreeSet
+     * @exception NullPointerException
+     *                when the start object is null and the comparator cannot
+     *                handle null
+     */
+    @SuppressWarnings("unchecked")
+    public SortedSet<E> tailSet(E start) {
+        return tailSet(start, true);
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
@@ -377,9 +497,11 @@ public class TreeSet<E> extends AbstractSet<E> implements SortedSet<E>,
         TreeMap<E, Object> map = new TreeMap<E, Object>(
                 (Comparator<? super E>) stream.readObject());
         int size = stream.readInt();
-        for (int i = 0; i < size; i++) {
-            E elem = (E)stream.readObject();
-            map.put(elem, Boolean.TRUE);
+        if (size > 0) {
+            for(int i=0; i<size; i++) {
+                E elem = (E)stream.readObject();
+                map.put(elem, Boolean.TRUE);
+            }
         }
         backingMap = map;
     }
