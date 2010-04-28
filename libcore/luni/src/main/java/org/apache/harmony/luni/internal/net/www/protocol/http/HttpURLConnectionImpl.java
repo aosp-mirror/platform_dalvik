@@ -60,13 +60,14 @@ import org.apache.harmony.luni.util.PriviAction;
  * server.
  */
 public class HttpURLConnectionImpl extends HttpURLConnection {
-    private static final String POST = "POST"; //$NON-NLS-1$
-
-    private static final String GET = "GET"; //$NON-NLS-1$
-
-    private static final String PUT = "PUT"; //$NON-NLS-1$
-
-    private static final String HEAD = "HEAD"; //$NON-NLS-1$
+    private static final String POST = "POST";
+    private static final String GET = "GET";
+    private static final String PUT = "PUT";
+    private static final String HEAD = "HEAD";
+    private static final byte[] CRLF = new byte[] { '\r', '\n' };
+    private static final byte[] HEX_DIGITS = new byte[] {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
 
     private final int defaultPort;
 
@@ -284,11 +285,11 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             // Force buf null check first, and avoid int overflow
             if (offset < 0 || offset > buf.length) {
                 // K002e=Offset out of bounds \: {0}
-                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset));
             }
             if (length < 0 || buf.length - offset < length) {
                 // K0031=Length out of bounds \: {0}
-                throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length));
             }
             if (bytesRemaining <= 0) {
                 disconnect(false);
@@ -401,7 +402,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                 readln(); // read CR/LF
             }
             String size = readln();
-            int index = size.indexOf(";"); //$NON-NLS-1$
+            int index = size.indexOf(";");
             if (index >= 0) {
                 size = size.substring(0, index);
             }
@@ -438,11 +439,11 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             // Force buf null check first, and avoid int overflow
             if (offset > buf.length || offset < 0) {
                 // K002e=Offset out of bounds \: {0}
-                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset)); //$NON-NLS-1$
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002e", offset));
             }
             if (length < 0 || buf.length - offset < length) {
                 // K0031=Length out of bounds \: {0}
-                throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length)); //$NON-NLS-1$
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K0031", length));
             }
             if (bytesRemaining <= 0) {
                 readChunkSize();
@@ -527,7 +528,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                 throw new NullPointerException();
             }
             if (offset < 0 || count < 0 || offset > buffer.length || buffer.length - offset < count) {
-                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f"));
             }
             checkSpace(count);
             socketOut.write(buffer, offset, count);
@@ -558,7 +559,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
 
         protected void checkClosed() throws IOException {
             if (closed) {
-                throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
+                throw new IOException(Msg.getString("K0059"));
             }
         }
 
@@ -576,6 +577,8 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         public abstract int size();
     }
 
+    private static final byte[] FINAL_CHUNK = new byte[] { '0', '\r', '\n', '\r', '\n' };
+
     // TODO: pull ChunkedHttpOutputStream out of here.
     private class DefaultHttpOutputStream extends HttpOutputStream {
         private int cacheLength;
@@ -590,7 +593,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             limit = -1;
         }
 
-        public DefaultHttpOutputStream(int limit) {
+        public DefaultHttpOutputStream(int limit, int chunkLength) {
             writeToSocket = true;
             this.limit = limit;
             if (limit > 0) {
@@ -632,22 +635,31 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             return defaultCacheSize - headSize;
         }
 
-        private void output(String output) throws IOException {
-            socketOut.write(output.getBytes("ISO8859_1")); //$NON-NLS-1$
+        /**
+         * Equivalent to, but cheaper than, Integer.toHexString().getBytes().
+         */
+        private void writeHex(int i) throws IOException {
+            int cursor = 8;
+            do {
+                hex[--cursor] = HEX_DIGITS[i & 0xf];
+            } while ((i >>>= 4) != 0);
+            socketOut.write(hex, cursor, 8 - cursor);
         }
+        private byte[] hex = new byte[8];
 
         private void sendCache(boolean close) throws IOException {
             int size = cache.size();
             if (size > 0 || close) {
                 if (limit < 0) {
                     if (size > 0) {
-                        output(Integer.toHexString(size) + "\r\n"); //$NON-NLS-1$
-                        socketOut.write(cache.toByteArray());
+                        writeHex(size);
+                        socketOut.write(CRLF);
+                        cache.writeTo(socketOut);
                         cache.reset();
-                        output("\r\n"); //$NON-NLS-1$
+                        socketOut.write(CRLF);
                     }
                     if (close) {
-                        output("0\r\n\r\n"); //$NON-NLS-1$
+                        socketOut.write(FINAL_CHUNK);
                     }
                 }
             }
@@ -665,7 +677,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         @Override
         public void flushToSocket() throws IOException  {
             if (isCached()) {
-                socketOut.write(cache.toByteArray());
+                cache.writeTo(socketOut);
             }
         }
 
@@ -677,7 +689,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             closed = true;
             if (writeToSocket) {
                 if (limit > 0) {
-                    throw new IOException(Msg.getString("K00a4")); //$NON-NLS-1$
+                    throw new IOException(Msg.getString("K00a4"));
                 }
                 sendCache(closed);
             }
@@ -702,7 +714,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             checkClosed();
             if (limit >= 0) {
                 if (limit == 0) {
-                    throw new IOException(Msg.getString("K00b2")); //$NON-NLS-1$
+                    throw new IOException(Msg.getString("K00b2"));
                 }
                 limit--;
             }
@@ -721,34 +733,36 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             // avoid int overflow
             if (offset < 0 || count < 0 || offset > buffer.length
                     || buffer.length - offset < count) {
-                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f"));
             }
 
             if (limit >= 0) {
                 if (count > limit) {
-                    throw new IOException(Msg.getString("K00b2")); //$NON-NLS-1$
+                    throw new IOException(Msg.getString("K00b2"));
                 }
                 limit -= count;
                 cache.write(buffer, offset, count);
                 if (limit == 0) {
-                    socketOut.write(cache.toByteArray());
+                    cache.writeTo(socketOut);
                 }
             } else {
                 if (!writeToSocket || cache.size() + count < cacheLength) {
                     cache.write(buffer, offset, count);
                 } else {
-                    output(Integer.toHexString(cacheLength) + "\r\n"); //$NON-NLS-1$
+                    writeHex(cacheLength);
+                    socketOut.write(CRLF);
                     int writeNum = cacheLength - cache.size();
                     cache.write(buffer, offset, writeNum);
-                    socketOut.write(cache.toByteArray());
-                    output("\r\n"); //$NON-NLS-1$
+                    cache.writeTo(socketOut);
                     cache.reset();
+                    socketOut.write(CRLF);
                     int left = count - writeNum;
                     int position = offset + writeNum;
                     while (left > cacheLength) {
-                        output(Integer.toHexString(cacheLength) + "\r\n"); //$NON-NLS-1$
+                        writeHex(cacheLength);
+                        socketOut.write(CRLF);
                         socketOut.write(buffer, position, cacheLength);
-                        output("\r\n"); //$NON-NLS-1$
+                        socketOut.write(CRLF);
                         left = left - cacheLength;
                         position = position + cacheLength;
                     }
@@ -1123,7 +1137,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
     @Override
     public Map<String, List<String>> getRequestProperties() {
         if (connected) {
-            throw new IllegalStateException(Msg.getString("K0091")); //$NON-NLS-1$
+            throw new IllegalStateException(Msg.getString("K0091"));
         }
         return reqHeader.getFieldMap();
     }
@@ -1131,7 +1145,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
     @Override
     public InputStream getInputStream() throws IOException {
         if (!doInput) {
-            throw new ProtocolException(Msg.getString("K008d")); //$NON-NLS-1$
+            throw new ProtocolException(Msg.getString("K008d"));
         }
 
         // connect before sending requests
@@ -1156,12 +1170,12 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             return uis;
         }
 
-        String encoding = resHeader.get("Transfer-Encoding"); //$NON-NLS-1$
-        if (encoding != null && encoding.toLowerCase().equals("chunked")) { //$NON-NLS-1$
+        String encoding = resHeader.get("Transfer-Encoding");
+        if (encoding != null && encoding.toLowerCase().equals("chunked")) {
             return uis = new ChunkedInputStream();
         }
 
-        String sLength = resHeader.get("Content-Length"); //$NON-NLS-1$
+        String sLength = resHeader.get("Content-Length");
         if (sLength != null) {
             try {
                 int length = Integer.parseInt(sLength);
@@ -1183,12 +1197,12 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
     @Override
     public OutputStream getOutputStream() throws IOException {
         if (!doOutput) {
-            throw new ProtocolException(Msg.getString("K008e")); //$NON-NLS-1$
+            throw new ProtocolException(Msg.getString("K008e"));
         }
 
         // you can't write after you read
         if (sentRequest) {
-            throw new ProtocolException(Msg.getString("K0090")); //$NON-NLS-1$
+            throw new ProtocolException(Msg.getString("K0090"));
         }
 
         if (os != null) {
@@ -1202,19 +1216,19 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
 
         // If the request method is neither PUT or POST, then you're not writing
         if (method != PUT && method != POST) {
-            throw new ProtocolException(Msg.getString("K008f", method)); //$NON-NLS-1$
+            throw new ProtocolException(Msg.getString("K008f", method));
         }
 
         int limit = -1;
-        String contentLength = reqHeader.get("Content-Length"); //$NON-NLS-1$
+        String contentLength = reqHeader.get("Content-Length");
         if (contentLength != null) {
             limit = Integer.parseInt(contentLength);
         }
 
-        String encoding = reqHeader.get("Transfer-Encoding"); //$NON-NLS-1$
+        String encoding = reqHeader.get("Transfer-Encoding");
         if (httpVersion > 0 && encoding != null) {
             encoding = encoding.toLowerCase();
-            if ("chunked".equals(encoding)) { //$NON-NLS-1$
+            if ("chunked".equals(encoding)) {
                 sendChunked = true;
                 limit = -1;
             }
@@ -1230,7 +1244,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             return os;
         }
         if ((httpVersion > 0 && sendChunked) || limit >= 0) {
-            os = new DefaultHttpOutputStream(limit);
+            os = new DefaultHttpOutputStream(limit, chunkLength);
             doRequest();
             return os;
         }
@@ -1290,7 +1304,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         }
         String file = url.getFile();
         if (file == null || file.length() == 0) {
-            file = "/"; //$NON-NLS-1$
+            file = "/";
         }
         return file;
     }
@@ -1362,11 +1376,11 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             return responseCode;
         }
         String response = resHeader.getStatusLine();
-        if (response == null || !response.startsWith("HTTP/")) { //$NON-NLS-1$
+        if (response == null || !response.startsWith("HTTP/")) {
             return -1;
         }
         response = response.trim();
-        int mark = response.indexOf(" ") + 1; //$NON-NLS-1$
+        int mark = response.indexOf(" ") + 1;
         if (mark == 0) {
             return -1;
         }
@@ -1390,11 +1404,10 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         while (((line = readln()) != null) && (line.length() > 1)) {
             // Header parsing
             int idx;
-            if ((idx = line.indexOf(":")) < 0) { //$NON-NLS-1$
-                resHeader.add("", line.trim()); //$NON-NLS-1$
+            if ((idx = line.indexOf(":")) < 0) {
+                resHeader.add("", line.trim());
             } else {
-                resHeader.add(line.substring(0, idx), line.substring(idx + 1)
-                        .trim());
+                resHeader.add(line.substring(0, idx), line.substring(idx + 1).trim());
             }
         }
     }
@@ -1405,11 +1418,11 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         output.append(' ');
         output.append(requestString());
         output.append(' ');
-        output.append("HTTP/1."); //$NON-NLS-1$
+        output.append("HTTP/1.");
         if (httpVersion == 0) {
-            output.append("0\r\n"); //$NON-NLS-1$
+            output.append("0\r\n");
         } else {
-            output.append("1\r\n"); //$NON-NLS-1$
+            output.append("1\r\n");
         }
         // add user-specified request headers if any
         boolean hasContentLength = false;
@@ -1418,15 +1431,14 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             if (key != null) {
                 String lKey = key.toLowerCase();
                 if ((os != null && !os.isChunked())
-                        || (!lKey.equals("transfer-encoding") && !lKey //$NON-NLS-1$
-                                .equals("content-length"))) { //$NON-NLS-1$
+                        || (!lKey.equals("transfer-encoding") && !lKey.equals("content-length"))) {
                     output.append(key);
                     String value = reqHeader.get(i);
                     /*
                      * duplicates are allowed under certain conditions see
                      * http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
                      */
-                    if (lKey.equals("content-length")) { //$NON-NLS-1$
+                    if (lKey.equals("content-length")) {
                         hasContentLength = true;
                         /*
                          * if both setFixedLengthStreamingMode and
@@ -1437,67 +1449,67 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                         }
                     }
                     if (value != null) {
-                        output.append(": "); //$NON-NLS-1$
+                        output.append(": ");
                         output.append(value);
                     }
-                    output.append("\r\n"); //$NON-NLS-1$
+                    output.append("\r\n");
                 }
             }
         }
         if (fixedContentLength >= 0 && !hasContentLength) {
-            output.append("content-length: "); //$NON-NLS-1$
+            output.append("content-length: ");
             output.append(String.valueOf(fixedContentLength));
-            output.append("\r\n"); //$NON-NLS-1$
+            output.append("\r\n");
         }
 
-        if (reqHeader.get("User-Agent") == null) { //$NON-NLS-1$
-            output.append("User-Agent: "); //$NON-NLS-1$
-            String agent = getSystemProperty("http.agent"); //$NON-NLS-1$
+        if (reqHeader.get("User-Agent") == null) {
+            output.append("User-Agent: ");
+            String agent = getSystemProperty("http.agent");
             if (agent == null) {
-                output.append("Java"); //$NON-NLS-1$
-                output.append(getSystemProperty("java.version")); //$NON-NLS-1$
+                output.append("Java");
+                output.append(getSystemProperty("java.version"));
             } else {
                 output.append(agent);
             }
-            output.append("\r\n"); //$NON-NLS-1$
+            output.append("\r\n");
         }
-        if (reqHeader.get("Host") == null) { //$NON-NLS-1$
-            output.append("Host: "); //$NON-NLS-1$
+        if (reqHeader.get("Host") == null) {
+            output.append("Host: ");
             output.append(url.getHost());
             int port = url.getPort();
             if (port > 0 && port != defaultPort) {
                 output.append(':');
                 output.append(Integer.toString(port));
             }
-            output.append("\r\n"); //$NON-NLS-1$
+            output.append("\r\n");
         }
         // BEGIN android-removed
         //     there's no utility in sending an "accept everything" header "*/*"
-        // if (reqHeader.get("Accept") == null) { //$NON-NLS-1$
+        // if (reqHeader.get("Accept") == null) {
         // }
         // END android-removed
-        if (httpVersion > 0 && reqHeader.get("Connection") == null) { //$NON-NLS-1$
-            output.append("Connection: Keep-Alive\r\n"); //$NON-NLS-1$
+        if (httpVersion > 0 && reqHeader.get("Connection") == null) {
+            output.append("Connection: Keep-Alive\r\n");
         }
 
         // if we are doing output make sure the appropriate headers are sent
         if (os != null) {
-            if (reqHeader.get("Content-Type") == null) { //$NON-NLS-1$
-                output.append("Content-Type: application/x-www-form-urlencoded\r\n"); //$NON-NLS-1$
+            if (reqHeader.get("Content-Type") == null) {
+                output.append("Content-Type: application/x-www-form-urlencoded\r\n");
             }
             if (os.isCached()) {
-                if (reqHeader.get("Content-Length") == null) { //$NON-NLS-1$
-                    output.append("Content-Length: "); //$NON-NLS-1$
+                if (reqHeader.get("Content-Length") == null) {
+                    output.append("Content-Length: ");
                     output.append(Integer.toString(os.size()));
-                    output.append("\r\n"); //$NON-NLS-1$
+                    output.append("\r\n");
                 }
             } else if (os.isChunked()) {
-                output.append("Transfer-Encoding: chunked\r\n"); //$NON-NLS-1$
+                output.append("Transfer-Encoding: chunked\r\n");
             }
         }
         // end the headers
-        output.append("\r\n"); //$NON-NLS-1$
-        return output.toString().getBytes("ISO8859_1"); //$NON-NLS-1$
+        output.append("\r\n");
+        return output.toString().getBytes("ISO8859_1");
     }
 
     /**
@@ -1530,17 +1542,16 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
     public void setIfModifiedSince(long newValue) {
         super.setIfModifiedSince(newValue);
         // convert from millisecond since epoch to date string
-        SimpleDateFormat sdf = new SimpleDateFormat(
-                "E, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US); //$NON-NLS-1$
-        sdf.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
+        SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
         String date = sdf.format(new Date(newValue));
-        reqHeader.add("If-Modified-Since", date); //$NON-NLS-1$
+        reqHeader.add("If-Modified-Since", date);
     }
 
     @Override
     public void setRequestProperty(String field, String newValue) {
         if (connected) {
-            throw new IllegalStateException(Msg.getString("K0092")); //$NON-NLS-1$
+            throw new IllegalStateException(Msg.getString("K0092"));
         }
         if (field == null) {
             throw new NullPointerException();
@@ -1551,7 +1562,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
     @Override
     public void addRequestProperty(String field, String value) {
         if (connected) {
-            throw new IllegalAccessError(Msg.getString("K0092")); //$NON-NLS-1$
+            throw new IllegalAccessError(Msg.getString("K0092"));
         }
         if (field == null) {
             throw new NullPointerException();
@@ -1650,14 +1661,14 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                 if (!usingProxy()) {
                     // KA017=Received HTTP_PROXY_AUTH (407) code while not using
                     // proxy
-                    throw new IOException(Msg.getString("KA017")); //$NON-NLS-1$
+                    throw new IOException(Msg.getString("KA017"));
                 }
                 // username/password
                 // until authorized
-                String challenge = resHeader.get("Proxy-Authenticate"); //$NON-NLS-1$
+                String challenge = resHeader.get("Proxy-Authenticate");
                 if (challenge == null) {
                     // KA016=Received authentication challenge is null.
-                    throw new IOException(Msg.getString("KA016")); //$NON-NLS-1$
+                    throw new IOException(Msg.getString("KA016"));
                 }
                 // drop everything and reconnect, might not be required for
                 // HTTP/1.1
@@ -1670,17 +1681,17 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                     break;
                 }
                 // set up the authorization credentials
-                setRequestProperty("Proxy-Authorization", credentials); //$NON-NLS-1$
+                setRequestProperty("Proxy-Authorization", credentials);
                 // continue to send request
                 continue;
             }
             // HTTP authorization failed ?
             if (responseCode == HTTP_UNAUTHORIZED) {
                 // keep asking for username/password until authorized
-                String challenge = resHeader.get("WWW-Authenticate"); //$NON-NLS-1$
+                String challenge = resHeader.get("WWW-Authenticate");
                 if (challenge == null) {
                     // KA018=Received authentication challenge is null
-                    throw new IOException(Msg.getString("KA018")); //$NON-NLS-1$
+                    throw new IOException(Msg.getString("KA018"));
                 }
                 // drop everything and reconnect, might not be required for
                 // HTTP/1.1
@@ -1693,7 +1704,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                     break;
                 }
                 // set up the authorization credentials
-                setRequestProperty("Authorization", credentials); //$NON-NLS-1$
+                setRequestProperty("Authorization", credentials);
                 // continue to send request
                 continue;
             }
@@ -1710,9 +1721,9 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                         && os == null) {
 
                     if (++redirect > 4) {
-                        throw new ProtocolException(Msg.getString("K0093")); //$NON-NLS-1$
+                        throw new ProtocolException(Msg.getString("K0093"));
                     }
-                    String location = getHeaderField("Location"); //$NON-NLS-1$
+                    String location = getHeaderField("Location");
                     if (location != null) {
                         // start over
                         if (responseCode == HTTP_USE_PROXY) {
@@ -1720,7 +1731,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                             if (location.startsWith(url.getProtocol() + ':')) {
                                 start = url.getProtocol().length() + 1;
                             }
-                            if (location.startsWith("//", start)) { //$NON-NLS-1$
+                            if (location.startsWith("//", start)) {
                                 start += 2;
                             }
                             setProxy(location.substring(start));
@@ -1754,9 +1765,9 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
     private String getAuthorizationCredentials(String challenge)
             throws IOException {
 
-        int idx = challenge.indexOf(" "); //$NON-NLS-1$
+        int idx = challenge.indexOf(" ");
         String scheme = challenge.substring(0, idx);
-        int realm = challenge.indexOf("realm=\"") + 7; //$NON-NLS-1$
+        int realm = challenge.indexOf("realm=\"") + 7;
         String prompt = null;
         if (realm != -1) {
             int end = challenge.indexOf('"', realm);
@@ -1774,10 +1785,10 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             return null;
         }
         // base64 encode the username and password
-        byte[] bytes = (pa.getUserName() + ":" + new String(pa.getPassword())) //$NON-NLS-1$
-                .getBytes("ISO8859_1"); //$NON-NLS-1$
-        String encoded = Base64.encode(bytes, "ISO8859_1"); //$NON-NLS-1$
-        return scheme + " " + encoded; //$NON-NLS-1$
+        byte[] bytes = (pa.getUserName() + ":" + new String(pa.getPassword()))
+                .getBytes("ISO8859_1");
+        String encoded = Base64.encode(bytes, "ISO8859_1");
+        return scheme + " " + encoded;
     }
 
     private void setProxy(String proxy) {
@@ -1791,10 +1802,10 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             try {
                 hostPort = Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(Msg.getString("K00af", port)); //$NON-NLS-1$
+                throw new IllegalArgumentException(Msg.getString("K00af", port));
             }
             if (hostPort < 0 || hostPort > 65535) {
-                throw new IllegalArgumentException(Msg.getString("K00b0")); //$NON-NLS-1$
+                throw new IllegalArgumentException(Msg.getString("K00b0"));
             }
         }
     }
