@@ -43,4 +43,13 @@ public class SocketTest extends junit.framework.TestCase {
             s.close();
         }
     }
+
+    // http://code.google.com/p/android/issues/detail?id=7935
+    public void test_newSocket_connection_refused() throws Exception {
+        try {
+            new Socket("localhost", 80);
+            fail("connection should have been refused");
+        } catch (ConnectException expected) {
+        }
+    }
 }
