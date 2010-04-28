@@ -86,6 +86,9 @@ LOCAL_DX_FLAGS := --core-library
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := core-tests
 
+LOCAL_NO_EMMA_INSTRUMENT := true
+LOCAL_NO_EMMA_COMPILE := true
+
 include $(BUILD_JAVA_LIBRARY)
 
 
