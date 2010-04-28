@@ -21,8 +21,14 @@ import junit.framework.TestSuite;
 
 public class TimeZoneTest extends junit.framework.TestCase {
     // http://code.google.com/p/android/issues/detail?id=877
-    public void test_useDaylightTime() {
+    public void test_useDaylightTime_Taiwan() {
         TimeZone asiaTaipei = TimeZone.getTimeZone("Asia/Taipei");
         assertFalse("Taiwan doesn't use DST", asiaTaipei.useDaylightTime());
+    }
+
+    // http://code.google.com/p/android/issues/detail?id=8016
+    public void test_useDaylightTime_Iceland() {
+        TimeZone atlanticReykjavik = TimeZone.getTimeZone("Atlantic/Reykjavik");
+        assertFalse("Reykjavik doesn't use DST", atlanticReykjavik.useDaylightTime());
     }
 }
