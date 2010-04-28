@@ -1900,9 +1900,12 @@ static int lowestSetBit(unsigned int x) {
 
 // Returns true if it added instructions to 'cUnit' to divide 'rlSrc' by 'lit'
 // and store the result in 'rlDest'.
-static bool handleEasyDivide(CompilationUnit *cUnit,
+static bool handleEasyDivide(CompilationUnit *cUnit, OpCode dalvikOpCode,
                              RegLocation rlSrc, RegLocation rlDest, int lit)
 {
+    if (dalvikOpCode != OP_DIV_INT_LIT8 && dalvikOpCode != OP_DIV_INT_LIT16) {
+        return false;
+    }
     if (lit < 2 || !isPowerOfTwo(lit)) {
         return false;
     }
@@ -2050,7 +2053,7 @@ static bool handleFmt22b_Fmt22s(CompilationUnit *cUnit, MIR *mir)
                 genInterpSingleStep(cUnit, mir);
                 return false;
             }
-            if (handleEasyDivide(cUnit, rlSrc, rlDest, lit)) {
+            if (handleEasyDivide(cUnit, dalvikOpCode, rlSrc, rlDest, lit)) {
                 return false;
             }
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
