@@ -1903,9 +1903,6 @@ static int lowestSetBit(unsigned int x) {
 static bool handleEasyDivide(CompilationUnit *cUnit, OpCode dalvikOpCode,
                              RegLocation rlSrc, RegLocation rlDest, int lit)
 {
-    if (dalvikOpCode != OP_DIV_INT_LIT8 && dalvikOpCode != OP_DIV_INT_LIT16) {
-        return false;
-    }
     if (lit < 2 || !isPowerOfTwo(lit)) {
         return false;
     }
@@ -1914,19 +1911,39 @@ static bool handleEasyDivide(CompilationUnit *cUnit, OpCode dalvikOpCode,
         // Avoid special cases.
         return false;
     }
+    bool div = (dalvikOpCode == OP_DIV_INT_LIT8 || dalvikOpCode == OP_DIV_INT_LIT16);
     rlSrc = loadValue(cUnit, rlSrc, kCoreReg);
     RegLocation rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
-    int tReg = dvmCompilerAllocTemp(cUnit);
-    if (lit == 2) {
-        // Division by 2 is by far the most common division by constant.
-        opRegRegImm(cUnit, kOpLsr, tReg, rlSrc.lowReg, 32 - k);
-        opRegRegReg(cUnit, kOpAdd, tReg, tReg, rlSrc.lowReg);
-        opRegRegImm(cUnit, kOpAsr, rlResult.lowReg, tReg, k);
+    if (div) {
+        int tReg = dvmCompilerAllocTemp(cUnit);
+        if (lit == 2) {
+            // Division by 2 is by far the most common division by constant.
+            opRegRegImm(cUnit, kOpLsr, tReg, rlSrc.lowReg, 32 - k);
+            opRegRegReg(cUnit, kOpAdd, tReg, tReg, rlSrc.lowReg);
+            opRegRegImm(cUnit, kOpAsr, rlResult.lowReg, tReg, k);
+        } else {
+            opRegRegImm(cUnit, kOpAsr, tReg, rlSrc.lowReg, 31);
+            opRegRegImm(cUnit, kOpLsr, tReg, tReg, 32 - k);
+            opRegRegReg(cUnit, kOpAdd, tReg, tReg, rlSrc.lowReg);
+            opRegRegImm(cUnit, kOpAsr, rlResult.lowReg, tReg, k);
+        }
     } else {
-        opRegRegImm(cUnit, kOpAsr, tReg, rlSrc.lowReg, 31);
-        opRegRegImm(cUnit, kOpLsr, tReg, tReg, 32 - k);
-        opRegRegReg(cUnit, kOpAdd, tReg, tReg, rlSrc.lowReg);
-        opRegRegImm(cUnit, kOpAsr, rlResult.lowReg, tReg, k);
+        int cReg = dvmCompilerAllocTemp(cUnit);
+        loadConstant(cUnit, cReg, lit - 1);
+        int tReg1 = dvmCompilerAllocTemp(cUnit);
+        int tReg2 = dvmCompilerAllocTemp(cUnit);
+        if (lit == 2) {
+            opRegRegImm(cUnit, kOpLsr, tReg1, rlSrc.lowReg, 32 - k);
+            opRegRegReg(cUnit, kOpAdd, tReg2, tReg1, rlSrc.lowReg);
+            opRegRegReg(cUnit, kOpAnd, tReg2, tReg2, cReg);
+            opRegRegReg(cUnit, kOpSub, rlResult.lowReg, tReg2, tReg1);
+        } else {
+            opRegRegImm(cUnit, kOpAsr, tReg1, rlSrc.lowReg, 31);
+            opRegRegImm(cUnit, kOpLsr, tReg1, tReg1, 32 - k);
+            opRegRegReg(cUnit, kOpAdd, tReg2, tReg1, rlSrc.lowReg);
+            opRegRegReg(cUnit, kOpAnd, tReg2, tReg2, cReg);
+            opRegRegReg(cUnit, kOpSub, rlResult.lowReg, tReg2, tReg1);
+        }
     }
     storeValue(cUnit, rlDest, rlResult);
     return true;
