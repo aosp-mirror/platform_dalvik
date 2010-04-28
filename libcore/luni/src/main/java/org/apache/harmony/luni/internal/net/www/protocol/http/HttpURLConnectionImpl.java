@@ -332,12 +332,8 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
     }
 
     private class ChunkedInputStream extends InputStream {
-        // BEGIN android-changed
-        // (Made fields private)
         private int bytesRemaining = -1;
-
         private boolean atEnd;
-        // END android-changed
 
         public ChunkedInputStream() throws IOException {
             readChunkSize();
@@ -497,36 +493,113 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         }
     }
 
-    private class HttpOutputStream extends OutputStream {
+    /**
+     * An HttpOutputStream used to implement setFixedLengthStreamingMode.
+     */
+    private class FixedLengthHttpOutputStream extends HttpOutputStream {
+        private final int fixedLength;
+        private int actualLength;
 
-        static final int MAX = 1024;
+        public FixedLengthHttpOutputStream(int fixedLength) {
+            this.fixedLength = fixedLength;
+        }
 
-        int cacheLength;
+        @Override public void close() throws IOException {
+            if (closed) {
+                return;
+            }
+            closed = true;
+            socketOut.flush();
+            if (actualLength != fixedLength) {
+                throw new IOException("actual length of " + actualLength +
+                        " did not match declared fixed length of " + fixedLength);
+            }
+        }
 
-        int defaultCacheSize = MAX;
+        @Override public void flush() throws IOException {
+            checkClosed();
+            socketOut.flush();
+        }
 
-        ByteArrayOutputStream cache;
+        @Override public void write(byte[] buffer, int offset, int count) throws IOException {
+            checkClosed();
+            if (buffer == null) {
+                throw new NullPointerException();
+            }
+            if (offset < 0 || count < 0 || offset > buffer.length || buffer.length - offset < count) {
+                throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+            }
+            checkSpace(count);
+            socketOut.write(buffer, offset, count);
+            actualLength += count;
+        }
 
-        boolean writeToSocket;
+        @Override public void write(int oneByte) throws IOException {
+            checkClosed();
+            checkSpace(1);
+            socketOut.write(oneByte);
+            ++actualLength;
+        }
 
-        boolean closed;
+        @Override public int size() {
+            return fixedLength;
+        }
 
-        int limit;
+        private void checkSpace(int byteCount) throws IOException {
+            if (actualLength + byteCount > fixedLength) {
+                throw new IOException("declared fixed content length of " + fixedLength +
+                        " bytes exceeded");
+            }
+        }
+    }
 
-        public HttpOutputStream() {
+    private abstract class HttpOutputStream extends OutputStream {
+        public boolean closed;
+
+        protected void checkClosed() throws IOException {
+            if (closed) {
+                throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
+            }
+        }
+
+        public boolean isCached() {
+            return false;
+        }
+
+        public boolean isChunked() {
+            return false;
+        }
+
+        public void flushToSocket() throws IOException {
+        }
+
+        public abstract int size();
+    }
+
+    // TODO: pull ChunkedHttpOutputStream out of here.
+    private class DefaultHttpOutputStream extends HttpOutputStream {
+        private int cacheLength;
+        private int defaultCacheSize = 1024;
+        private ByteArrayOutputStream cache;
+        private boolean writeToSocket;
+        private int limit;
+
+        public DefaultHttpOutputStream() {
             cacheLength = defaultCacheSize;
             cache = new ByteArrayOutputStream(cacheLength);
             limit = -1;
         }
 
-        public HttpOutputStream(int limit) {
+        public DefaultHttpOutputStream(int limit) {
             writeToSocket = true;
             this.limit = limit;
             if (limit > 0) {
                 cacheLength = limit;
             } else {
                 // chunkLength must be larger than 3
-                defaultCacheSize = chunkLength > 3 ? chunkLength : MAX;
+                if (chunkLength > 3) {
+                    defaultCacheSize = chunkLength;
+                }
                 cacheLength = calculateChunkDataLength();
             }
             cache = new ByteArrayOutputStream(cacheLength);
@@ -555,8 +628,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
              * here is the calculated head size, not real size (for 19, it
              * counts 3, not real size 4)
              */
-            int headSize = (Integer.toHexString(defaultCacheSize - bitSize - 2)
-                    .length()) + 2;
+            int headSize = (Integer.toHexString(defaultCacheSize - bitSize - 2).length()) + 2;
             return defaultCacheSize - headSize;
         }
 
@@ -583,12 +655,17 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
 
         @Override
         public synchronized void flush() throws IOException {
-            if (closed) {
-                throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
-            }
+            checkClosed();
             if (writeToSocket) {
                 sendCache(false);
                 socketOut.flush();
+            }
+        }
+
+        @Override
+        public void flushToSocket() throws IOException  {
+            if (isCached()) {
+                socketOut.write(cache.toByteArray());
             }
         }
 
@@ -622,9 +699,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
 
         @Override
         public synchronized void write(int data) throws IOException {
-            if (closed) {
-                throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
-            }
+            checkClosed();
             if (limit >= 0) {
                 if (limit == 0) {
                     throw new IOException(Msg.getString("K00b2")); //$NON-NLS-1$
@@ -638,11 +713,8 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         }
 
         @Override
-        public synchronized void write(byte[] buffer, int offset, int count)
-                throws IOException {
-            if (closed) {
-                throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
-            }
+        public synchronized void write(byte[] buffer, int offset, int count) throws IOException {
+            checkClosed();
             if (buffer == null) {
                 throw new NullPointerException();
             }
@@ -685,19 +757,16 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             }
         }
 
-        synchronized int size() {
+        @Override
+        public synchronized int size() {
             return cache.size();
         }
 
-        synchronized byte[] toByteArray() {
-            return cache.toByteArray();
-        }
-
-        boolean isCached() {
+        @Override public boolean isCached() {
             return !writeToSocket;
         }
 
-        boolean isChunked() {
+        @Override public boolean isChunked() {
             return writeToSocket && limit == -1;
         }
     }
@@ -1156,10 +1225,12 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             limit = -1;
         }
         if (fixedContentLength >= 0) {
-            limit = fixedContentLength;
+            os = new FixedLengthHttpOutputStream(fixedContentLength);
+            doRequest();
+            return os;
         }
         if ((httpVersion > 0 && sendChunked) || limit >= 0) {
-            os = new HttpOutputStream(limit);
+            os = new DefaultHttpOutputStream(limit);
             doRequest();
             return os;
         }
@@ -1167,14 +1238,12 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
             // connect and see if there is cache available.
             connect();
         }
-        return os = new HttpOutputStream();
-
+        return os = new DefaultHttpOutputStream();
     }
 
     @Override
     public Permission getPermission() throws IOException {
-        return new SocketPermission(getHostName() + ":" + getHostPort(), //$NON-NLS-1$
-                "connect, resolve"); //$NON-NLS-1$
+        return new SocketPermission(getHostName() + ":" + getHostPort(), "connect, resolve");
     }
 
     @Override
@@ -1249,8 +1318,8 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
         socketOut.write(request);
         sentRequest = true;
         // send any output to the socket (i.e. POST data)
-        if (os != null && os.isCached()) {
-            socketOut.write(os.toByteArray());
+        if (os != null) {
+            os.flushToSocket();
         }
         if (os == null || os.isCached()) {
             readServerResponse();
