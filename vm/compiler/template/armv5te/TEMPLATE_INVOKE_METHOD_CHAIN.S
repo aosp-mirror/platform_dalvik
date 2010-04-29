@@ -18,7 +18,7 @@
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
     ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
-    bxlt    r12                         @ return to raise stack overflow excep.
+    bxlo    r12                         @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
