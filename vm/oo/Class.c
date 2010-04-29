@@ -4402,10 +4402,12 @@ noverify:
         return false;
     }
 
+#ifdef WITH_PROFILER
     u8 startWhen = 0;
     if (gDvm.allocProf.enabled) {
         startWhen = dvmGetRelativeTimeNsec();
     }
+#endif
 
     /*
      * We're ready to go, and have exclusive access to the class.
@@ -4499,6 +4501,7 @@ noverify:
         clazz->status = CLASS_INITIALIZED;
         LOGVV("Initialized class: %s\n", clazz->descriptor);
 
+#ifdef WITH_PROFILER
         /*
          * Update alloc counters.  TODO: guard with mutex.
          */
@@ -4509,6 +4512,7 @@ noverify:
             gDvm.allocProf.classInitCount++;
             self->allocProf.classInitCount++;
         }
+#endif
     }
 
 bail_notify:

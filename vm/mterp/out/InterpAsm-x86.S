@@ -8809,6 +8809,9 @@ common_invokeOld:
  * TUNING: Might be worthwhile to inline this.
  * TODO: Basic-block style Jit will need a hook here as well.  Fold it into
  *       the suspendCount check so we can get both in 1 shot.
+ * TODO: to match the other intepreters, this should handle suspension
+ *       and then check for debugger/profiling after dvmCheckSuspendPending
+ *       returns.
  */
 common_periodicChecks:
     movl    offGlue_pSelfSuspendCount(%ecx),%eax    # eax <- &suspendCount
@@ -8823,9 +8826,11 @@ common_periodicChecks:
     movl   offGlue_pActiveProfilers(%ecx),%ecx     # ecx <- &ActiveProfilers
 #endif
 #if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
+    # TODO: check for NULL before load
     movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
     orl    (%ecx),%eax             # eax <- debuggerActive || activeProfilers
 #elif defined(WITH_DEBUGGER)
+    # TODO: check for NULL before load
     movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
 #elif defined(WITH_PROFILER)
     movl   (%ecx),%eax             # eax <= activeProfilers

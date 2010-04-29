@@ -87,7 +87,13 @@ bool dvmMterpStd(Thread* self, InterpState* glue)
     glue->jitThreshold = gDvmJit.threshold;
 #endif
 #if defined(WITH_DEBUGGER)
-    glue->pDebuggerActive = &gDvm.debuggerActive;
+    if (gDvm.jdwpConfigured) {
+        glue->pDebuggerActive = &gDvm.debuggerActive;
+    } else {
+        /* TODO: fix x86 impl before enabling this */
+        //glue->pDebuggerActive = NULL;
+        glue->pDebuggerActive = &gDvm.debuggerActive;
+    }
 #endif
 #if defined(WITH_PROFILER)
     glue->pActiveProfilers = &gDvm.activeProfilers;

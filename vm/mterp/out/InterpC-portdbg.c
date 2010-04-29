@@ -1445,7 +1445,10 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
     StackSaveArea* debugSaveArea = SAVEAREA_FROM_FP(self->curFrame);
 #endif
 #if INTERP_TYPE == INTERP_DBG
-    bool debugIsMethodEntry = interpState->debugIsMethodEntry;
+    bool debugIsMethodEntry = false;
+# if defined(WITH_DEBUGGER) || defined(WITH_PROFILER) // implied by INTERP_DBG??
+    debugIsMethodEntry = interpState->debugIsMethodEntry;
+# endif
 #endif
 #if defined(WITH_TRACKREF_CHECKS)
     int debugTrackedRefStart = interpState->debugTrackedRefStart;
