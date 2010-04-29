@@ -10275,7 +10275,7 @@ common_invokeMethodNoRange:
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
-    blt     .LstackOverflow             @ yes, this frame will overflow stack
+    blo     .LstackOverflow             @ yes, this frame will overflow stack
 
     @ set up newSaveArea
 #ifdef EASY_GDB
