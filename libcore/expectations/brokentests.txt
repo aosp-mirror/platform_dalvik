@@ -740,3 +740,34 @@ pattern .*expected:<1> but was:<2>.*
 test org.apache.harmony.text.tests.java.text.RuleBasedCollatorTest#testEqualsObject
 result EXEC_FAILED
 pattern .*expected:<0> but was:<1>.*
+
+
+# These Harmony tests are enforcing a buggy behaviour in TreeMap, presumably to be bug-compatible
+# with the RI. Our implementation is more conservative and throws on the bogus inputs.
+test org.apache.harmony.luni.tests.java.util.TreeMapExtendTest#test_AscendingSubMapKeySet_headSet
+result EXEC_FAILED
+pattern .*java.lang.IllegalArgumentException: 100 not in range \(100..109\].*
+
+test org.apache.harmony.luni.tests.java.util.TreeMapExtendTest#test_AscendingSubMapKeySet_tailSet
+result EXEC_FAILED
+pattern .*java.lang.IllegalArgumentException: null not in range \[100..109\).*
+
+test org.apache.harmony.luni.tests.java.util.TreeMapExtendTest#test_DescendingSubMapKeySet_headSet
+result EXEC_FAILED
+pattern .*java.lang.IllegalArgumentException: null not in range \[100..109\).*
+
+test org.apache.harmony.luni.tests.java.util.TreeMapExtendTest#test_DescendingSubMap_tailMap
+result EXEC_FAILED
+pattern .*java.lang.IllegalArgumentException: 100 not in range \(100..109\].*
+
+test org.apache.harmony.luni.tests.java.util.TreeMapExtendTest#test_DescendingSubMapKeySet_tailSet
+result EXEC_FAILED
+pattern .*java.lang.IllegalArgumentException: 100 not in range \(100..109\].*
+
+test org.apache.harmony.luni.tests.java.util.TreeMapExtendTest#test_SubMap_headMap
+result EXEC_FAILED
+pattern .*java.lang.IllegalArgumentException: 100 not in range \(100..109\].*
+
+test org.apache.harmony.luni.tests.java.util.TreeMapExtendTest#test_Entry_setValue
+result EXEC_FAILED
+pattern .*java.lang.UnsupportedOperationException.*.setValue.*

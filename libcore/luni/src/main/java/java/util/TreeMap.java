@@ -1050,9 +1050,33 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
      */
 
     enum Bound {
-        INCLUSIVE,
-        EXCLUSIVE,
-        NO_BOUND
+        INCLUSIVE {
+            @Override public String leftCap(Object from) {
+                return "[" + from;
+            }
+            @Override public String rightCap(Object to) {
+                return to + "]";
+            }
+        },
+        EXCLUSIVE {
+            @Override public String leftCap(Object from) {
+                return "(" + from;
+            }
+            @Override public String rightCap(Object to) {
+                return to + ")";
+            }
+        },
+        NO_BOUND {
+            @Override public String leftCap(Object from) {
+                return ".";
+            }
+            @Override public String rightCap(Object to) {
+                return ".";
+            }
+        };
+
+        public abstract String leftCap(Object from);
+        public abstract String rightCap(Object to);
     }
 
     /**
@@ -1068,7 +1092,7 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
         BoundedMap(boolean ascending, K from, Bound fromBound, K to, Bound toBound) {
             /*
              * Validate the bounds. In addition to checking that from <= to, we
-             * verify that the comparator supports our bound objets.
+             * verify that the comparator supports our bound objects.
              */
             if (fromBound != NO_BOUND && toBound != NO_BOUND) {
                 if (comparator.compare(from, to) > 0) {
@@ -1105,7 +1129,7 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
 
         @Override public V put(K key, V value) {
             if (!isInBounds(key)) {
-                throw new IllegalArgumentException();
+                throw outOfBounds(key, fromBound, toBound);
             }
             return putInternal(key, value);
         }
@@ -1155,10 +1179,6 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
          */
         private Entry<K, V> bound(Entry<K, V> node, Bound fromBound, Bound toBound) {
             return node != null && isInBounds(node.getKey(), fromBound, toBound) ? node : null;
-        }
-
-        private Entry<K, V> bound(Entry<K, V> node) {
-            return bound(node, fromBound, toBound);
         }
 
         /*
@@ -1243,39 +1263,92 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
             }
         }
 
+        /**
+         * Performs a find on the underlying tree after constraining it to the
+         * bounds of this view. Examples:
+         *
+         *   bound is (A..C)
+         *   findBounded(B, FLOOR) stays source.find(B, FLOOR)
+         *
+         *   bound is (A..C)
+         *   findBounded(C, FLOOR) becomes source.find(C, LOWER)
+         *
+         *   bound is (A..C)
+         *   findBounded(D, LOWER) becomes source.find(C, LOWER)
+         *
+         *   bound is (A..C]
+         *   findBounded(D, FLOOR) becomes source.find(C, FLOOR)
+         *
+         *   bound is (A..C]
+         *   findBounded(D, LOWER) becomes source.find(C, FLOOR)
+         */
+        private Entry<K, V> findBounded(K key, Relation relation) {
+            relation = relation.forOrder(ascending);
+            Bound fromBoundForCheck = fromBound;
+            Bound toBoundForCheck = toBound;
+
+            if (toBound != NO_BOUND && (relation == LOWER || relation == FLOOR)) {
+                int comparison = comparator.compare(to, key);
+                if (comparison <= 0) {
+                    key = to;
+                    if (toBound == EXCLUSIVE) {
+                        relation = LOWER; // 'to' is too high
+                    } else if (comparison < 0) {
+                        relation = FLOOR; // we already went lower
+                    }
+                }
+                toBoundForCheck = NO_BOUND; // we've already checked the upper bound
+            }
+
+            if (fromBound != NO_BOUND && (relation == CEILING || relation == HIGHER)) {
+                int comparison = comparator.compare(from, key);
+                if (comparison >= 0) {
+                    key = from;
+                    if (fromBound == EXCLUSIVE) {
+                        relation = HIGHER; // 'from' is too low
+                    } else if (comparison > 0) {
+                        relation = CEILING; // we already went higher
+                    }
+                }
+                fromBoundForCheck = NO_BOUND; // we've already checked the lower bound
+            }
+
+            return bound(find(key, relation), fromBoundForCheck, toBoundForCheck);
+        }
+
         public Entry<K, V> lowerEntry(K key) {
-            return bound(find(key, LOWER.forOrder(ascending)));
+            return findBounded(key, LOWER);
         }
 
         public K lowerKey(K key) {
-            Entry<K, V> entry = bound(find(key, LOWER.forOrder(ascending)));
+            Entry<K, V> entry = findBounded(key, LOWER);
             return entry != null ? entry.getKey() : null;
         }
 
         public Entry<K, V> floorEntry(K key) {
-            return bound(find(key, FLOOR.forOrder(ascending)));
+            return findBounded(key, FLOOR);
         }
 
         public K floorKey(K key) {
-            Entry<K, V> entry = bound(find(key, FLOOR.forOrder(ascending)));
+            Entry<K, V> entry = findBounded(key, FLOOR);
             return entry != null ? entry.getKey() : null;
         }
 
         public Entry<K, V> ceilingEntry(K key) {
-            return bound(find(key, CEILING.forOrder(ascending)));
+            return findBounded(key, CEILING);
         }
 
         public K ceilingKey(K key) {
-            Entry<K, V> entry = bound(find(key, CEILING.forOrder(ascending)));
+            Entry<K, V> entry = findBounded(key, CEILING);
             return entry != null ? entry.getKey() : null;
         }
 
         public Entry<K, V> higherEntry(K key) {
-            return bound(find(key, HIGHER.forOrder(ascending)));
+            return findBounded(key, HIGHER);
         }
 
         public K higherKey(K key) {
-            Entry<K, V> entry = bound(find(key, HIGHER.forOrder(ascending)));
+            Entry<K, V> entry = findBounded(key, HIGHER);
             return entry != null ? entry.getKey() : null;
         }
 
@@ -1354,29 +1427,37 @@ public class TreeMap<K, V> extends AbstractMap<K, V>
                 toBound = fromBoundTmp;
             }
 
+            /*
+             * If both the current and requested bounds are exclusive, the isInBounds check must be
+             * inclusive. For example, to create (C..F) from (A..F), the bound 'F' is in bounds.
+             */
+
             if (fromBound == NO_BOUND) {
                 from = this.from;
                 fromBound = this.fromBound;
-            } else if (this.fromBound != NO_BOUND) {
-                int comparison = comparator.compare(from, this.from);
-                if (comparison < 0 || (comparison == 0
-                        && fromBound == INCLUSIVE && this.fromBound == EXCLUSIVE)) {
-                    throw new IllegalArgumentException();
+            } else {
+                Bound fromBoundToCheck = fromBound == this.fromBound ? INCLUSIVE : this.fromBound;
+                if (!isInBounds(from, fromBoundToCheck, this.toBound)) {
+                    throw outOfBounds(to, fromBoundToCheck, this.toBound);
                 }
             }
 
             if (toBound == NO_BOUND) {
                 to = this.to;
                 toBound = this.toBound;
-            } else if (this.toBound != NO_BOUND) {
-                int comparison = comparator.compare(to, this.to);
-                if (comparison > 0 || (comparison == 0
-                        && toBound == EXCLUSIVE && this.toBound == INCLUSIVE)) {
-                    throw new IllegalArgumentException();
+            } else {
+                Bound toBoundToCheck = toBound == this.toBound ? INCLUSIVE : this.toBound;
+                if (!isInBounds(to, this.fromBound, toBoundToCheck)) {
+                    throw outOfBounds(to, this.fromBound, toBoundToCheck);
                 }
             }
 
             return new BoundedMap(ascending, from, fromBound, to, toBound);
+        }
+
+        private IllegalArgumentException outOfBounds(Object value, Bound fromBound, Bound toBound) {
+            return new IllegalArgumentException(value + " not in range "
+                    + fromBound.leftCap(from) + ".." + toBound.rightCap(to));
         }
 
         /*
