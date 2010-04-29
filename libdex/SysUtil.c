@@ -266,32 +266,22 @@ int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap)
 }
 
 /*
- * Map part of a file (from fd's current offset) into a shared, read-only
- * memory segment.
+ * Map part of a file into a shared, read-only memory segment.  The "start"
+ * offset is absolute, not relative.
  *
  * On success, returns 0 and fills out "pMap".  On failure, returns a nonzero
  * value and does not disturb "pMap".
  */
-int sysMapFileSegmentInShmem(int fd, off_t start, long length,
+int sysMapFileSegmentInShmem(int fd, off_t start, size_t length,
     MemMapping* pMap)
 {
 #ifdef HAVE_POSIX_FILEMAP
-    off_t dummy;
-    size_t fileLength, actualLength;
+    size_t actualLength;
     off_t actualStart;
     int adjust;
     void* memPtr;
 
     assert(pMap != NULL);
-
-    if (getFileStartAndLength(fd, &dummy, &fileLength) < 0)
-        return -1;
-
-    if (start + length > (long)fileLength) {
-        LOGW("bad segment: st=%d len=%ld flen=%d\n",
-            (int) start, length, (int) fileLength);
-        return -1;
-    }
 
     /* adjust to be page-aligned */
     adjust = start % DEFAULT_PAGE_SIZE;
