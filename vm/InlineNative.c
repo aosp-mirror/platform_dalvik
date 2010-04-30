@@ -58,6 +58,12 @@ extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
  * DO NOT replace "synchronized" methods.  We do not support method
  * synchronization here.
  *
+ * DO NOT perform any allocations or do anything that could cause a
+ * garbage collection.  The method arguments are not visible to the GC
+ * and will not be pinned or updated when memory blocks move.  You are
+ * allowed to allocate and throw an exception so long as you only do so
+ * immediately before returning.
+ *
  * Remember that these functions are executing while the thread is in
  * the "RUNNING" state, not the "NATIVE" state.  If you perform a blocking
  * operation you can stall the entire VM if the GC or debugger wants to
