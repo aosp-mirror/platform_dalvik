@@ -238,28 +238,25 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
          * but since we don't execute unverified code we don't need to
          * alter the bytecode yet.
          *
-         * The class init code will "flush" all relevant breakpoints when
-         * verification completes.
+         * The class init code will "flush" all pending opcode writes
+         * before verification completes.
          */
-        MEM_BARRIER();
         assert(*(u1*)addr != OP_BREAKPOINT);
         if (dvmIsClassVerified(method->clazz)) {
             LOGV("Class %s verified, adding breakpoint at %p\n",
                 method->clazz->descriptor, addr);
+            MEM_BARRIER();
             dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr, OP_BREAKPOINT);
         } else {
             LOGV("Class %s NOT verified, deferring breakpoint at %p\n",
                 method->clazz->descriptor, addr);
         }
     } else {
+        /*
+         * Breakpoint already exists, just increase the count.
+         */
         pBreak = &pSet->breakpoints[idx];
         pBreak->setCount++;
-
-        /*
-         * Instruction stream may not have breakpoint opcode yet -- flush
-         * may be pending during verification of class.
-         */
-        //assert(*(u1*)addr == OP_BREAKPOINT);
     }
 
     return true;
