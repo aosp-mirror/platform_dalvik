@@ -66,8 +66,8 @@ cpath=$framework/core-tests.jar
 rm -rf ${datadir}/xml_source
 mkdir -p ${datadir}/xml_source
 mkdir -p ${datadir}/dalvik-cache
-cd $ANDROID_BUILD_TOP/dalvik
-cp -R libcore/xml/src/test/resources/* ${datadir}/xml_source
+cd $ANDROID_BUILD_TOP/libcore
+cp -R xml/src/test/resources/* ${datadir}/xml_source
 
 cd $datadir
 exec $valgrind $exe \
