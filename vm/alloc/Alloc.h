@@ -19,7 +19,7 @@
 #ifndef _DALVIK_ALLOC_ALLOC
 #define _DALVIK_ALLOC_ALLOC
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /*
  * Initialization.
