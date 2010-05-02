@@ -680,7 +680,11 @@ bool dvmHeapSourceContains(const void *addr)
 
     heapSource = gDvm.gcHeap->heapSource;
     bitmap = &heapSource->allocBits;
-    return dvmHeapBitmapIsObjectBitSet(bitmap, addr);
+    if (!dvmHeapBitmapCoversAddress(bitmap, addr)) {
+        return false;
+    } else {
+        return dvmHeapBitmapIsObjectBitSet(bitmap, addr);
+    }
 }
 
 bool dvmHeapSourceGetPtrFlag(const void *ptr, enum HeapSourcePtrFlag flag)
@@ -1551,7 +1555,68 @@ static void scavengeThreadStack(Thread *thread)
 
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = saveArea->method;
-        if (method != NULL && !dvmIsNativeMethod(method)) {
+        if (method == NULL) {
+            /* this is a break frame, nothing to do */
+        } else if (dvmIsNativeMethod(method)) {
+            /*
+             * For purposes of marking references, we don't need to do
+             * anything here, because all of the native "ins" were copied
+             * from registers in the caller's stack frame and won't be
+             * changed (an interpreted method can freely use registers
+             * with parameters like any other register, but natives don't
+             * work that way).
+             *
+             * However, we need to ensure that references visible to
+             * native methods don't move around.  We can do a precise scan
+             * of the arguments by examining the method signature.
+             */
+            LOGI("+++ native scan %s.%s\n",
+                method->clazz->descriptor, method->name);
+            assert(method->registersSize == method->insSize);
+            const char* shorty = method->shorty+1;      // skip return value
+            if (!dvmIsStaticMethod(method)) {
+                /* grab the "this" pointer */
+                Object* obj = (Object*) *framePtr++;
+                if (obj == NULL) {
+                    /*
+                     * This can happen for the "fake" entry frame inserted
+                     * for threads created outside the VM.  There's no actual
+                     * call so there's no object.  If we changed the fake
+                     * entry method to be declared "static" then this
+                     * situation should never occur.
+                     */
+                } else {
+                    assert(dvmIsValidObject(obj));
+                    pinObject(obj);
+                }
+            }
+
+            Object* obj;
+            int i;
+            for (i = method->registersSize - 1; i >= 0; i--, framePtr++) {
+                switch (*shorty++) {
+                case 'L':
+                    obj = (Object*) *framePtr;
+                    if (obj != NULL) {
+                        assert(dvmIsValidObject(obj));
+                        pinObject(obj);
+                    }
+                    break;
+                case 'D':
+                case 'J':
+                    framePtr++;
+                    break;
+                default:
+                    /* 32-bit non-reference value */
+                    obj = (Object*) *framePtr;          // debug, remove
+                    if (dvmIsValidObject(obj)) {        // debug, remove
+                        /* if we see a lot of these, our scan might be off */
+                        LOGI("+++  did NOT pin obj %p\n", obj);
+                    }
+                    break;
+                }
+            }
+        } else {
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
             if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
