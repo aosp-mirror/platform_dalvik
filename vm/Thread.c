@@ -3836,7 +3836,7 @@ static void gcScanInterpStackReferences(Thread *thread)
         if (method == NULL) {
             /* this is a break frame, nothing to do */
         } else if (dvmIsNativeMethod(method)) {
-#if 0
+#ifdef WITH_COPYING_GC
             /*
              * For purposes of marking references, we don't need to do
              * anything here, because all of the native "ins" were copied
@@ -3903,7 +3903,7 @@ static void gcScanInterpStackReferences(Thread *thread)
                     break;
                 }
             }
-#endif
+#endif  /* WITH_COPYING_GC */
         } else {
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
