@@ -456,11 +456,16 @@ void dvmJitStats()
         LOGD("JIT: Lookups: %d hits, %d misses; %d normal, %d punt",
              gDvmJit.addrLookupsFound, gDvmJit.addrLookupsNotFound,
              gDvmJit.normalExit, gDvmJit.puntExit);
+
         LOGD("JIT: noChainExit: %d IC miss, %d interp callsite, "
              "%d switch overflow",
              gDvmJit.noChainExit[kInlineCacheMiss],
              gDvmJit.noChainExit[kCallsiteInterpreted],
              gDvmJit.noChainExit[kSwitchOverflow]);
+
+        LOGD("JIT: ICPatch: %d fast, %d queued; %d dropped",
+             gDvmJit.icPatchFast, gDvmJit.icPatchQueued,
+             gDvmJit.icPatchDropped);
 
         LOGD("JIT: Invoke: %d mono, %d poly, %d native, %d return",
              gDvmJit.invokeMonomorphic, gDvmJit.invokePolymorphic,

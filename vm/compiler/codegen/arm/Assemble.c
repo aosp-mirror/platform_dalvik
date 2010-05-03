@@ -1403,31 +1403,54 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
  * Attempt to enqueue a work order to patch an inline cache for a predicted
  * chaining cell for virtual/interface calls.
  */
-bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
-                             PredictedChainingCell *newContent)
+static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
+                                    PredictedChainingCell *newContent)
 {
     bool result = true;
 
+    /*
+     * Make sure only one thread gets here since updating the cell (ie fast
+     * path and queueing the request (ie the queued path) have to be done
+     * in an atomic fashion.
+     */
     dvmLockMutex(&gDvmJit.compilerICPatchLock);
 
+    /* Fast path for uninitialized chaining cell */
     if (cellAddr->clazz == NULL &&
         cellAddr->branch == PREDICTED_CHAIN_BX_PAIR_INIT) {
+        cellAddr->method = newContent->method;
+        cellAddr->branch = newContent->branch;
+        cellAddr->counter = newContent->counter;
         /*
          * The update order matters - make sure clazz is updated last since it
          * will bring the uninitialized chaining cell to life.
          */
-        cellAddr->method = newContent->method;
-        cellAddr->branch = newContent->branch;
-        cellAddr->counter = newContent->counter;
+        MEM_BARRIER();
         cellAddr->clazz = newContent->clazz;
         cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
+#if defined(WITH_JIT_TUNING)
+        gDvmJit.icPatchFast++;
+#endif
     }
+    /*
+     * Otherwise the patch request will be queued and handled in the next
+     * GC cycle. At that time all other mutator threads are suspended so
+     * there will be no partial update in the inline cache state.
+     */
     else if (gDvmJit.compilerICPatchIndex < COMPILER_IC_PATCH_QUEUE_SIZE)  {
         int index = gDvmJit.compilerICPatchIndex++;
         gDvmJit.compilerICPatchQueue[index].cellAddr = cellAddr;
         gDvmJit.compilerICPatchQueue[index].cellContent = *newContent;
-    } else {
+#if defined(WITH_JIT_TUNING)
+        gDvmJit.icPatchQueued++;
+#endif
+    }
+    /* Queue is full - just drop this patch request */
+    else {
         result = false;
+#if defined(WITH_JIT_TUNING)
+        gDvmJit.icPatchDropped++;
+#endif
     }
 
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
