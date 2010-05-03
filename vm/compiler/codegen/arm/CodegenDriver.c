@@ -2732,69 +2732,76 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
                                      calleeMethod);
             break;
         }
-    /*
+        /*
          * calleeMethod = dvmFindInterfaceMethodInCache(this->clazz,
          *                    BBBB, method, method->clazz->pDvmDex)
          *
-         *  Given "invoke-interface {v0}", the following is the generated code:
+         * The following is an example of generated code for
+         *      "invoke-interface v0"
          *
-         * 0x426a9abe : ldr     r0, [r5, #0]   --+
-         * 0x426a9ac0 : mov     r7, r5           |
-         * 0x426a9ac2 : sub     r7, #24          |
-         * 0x426a9ac4 : cmp     r0, #0           | genProcessArgsNoRange
-         * 0x426a9ac6 : beq     0x426a9afe       |
-         * 0x426a9ac8 : stmia   r7, <r0>       --+
-         * 0x426a9aca : ldr     r4, [pc, #104] --> r4 <- dalvikPC of this invoke
-         * 0x426a9acc : add     r1, pc, #52    --> r1 <- &retChainingCell
-         * 0x426a9ace : add     r2, pc, #60    --> r2 <- &predictedChainingCell
-         * 0x426a9ad0 : blx_1   0x426a918c     --+ TEMPLATE_INVOKE_METHOD_
-         * 0x426a9ad2 : blx_2   see above      --+     PREDICTED_CHAIN
-         * 0x426a9ad4 : b       0x426a9b0c     --> off to the predicted chain
-         * 0x426a9ad6 : b       0x426a9afe     --> punt to the interpreter
-         * 0x426a9ad8 : mov     r8, r1         --+
-         * 0x426a9ada : mov     r9, r2           |
-         * 0x426a9adc : mov     r10, r3          |
-         * 0x426a9ade : mov     r0, r3           |
-         * 0x426a9ae0 : mov     r1, #74          | dvmFindInterfaceMethodInCache
-         * 0x426a9ae2 : ldr     r2, [pc, #76]    |
-         * 0x426a9ae4 : ldr     r3, [pc, #68]    |
-         * 0x426a9ae6 : ldr     r7, [pc, #64]    |
-         * 0x426a9ae8 : blx     r7             --+
-         * 0x426a9aea : mov     r1, r8         --> r1 <- rechain count
-         * 0x426a9aec : cmp     r1, #0         --> compare against 0
-         * 0x426a9aee : bgt     0x426a9af8     --> >=0? don't rechain
-         * 0x426a9af0 : ldr     r7, [r6, #96]  --+
-         * 0x426a9af2 : mov     r2, r9           | dvmJitToPatchPredictedChain
-         * 0x426a9af4 : mov     r3, r10          |
-         * 0x426a9af6 : blx     r7             --+
-         * 0x426a9af8 : add     r1, pc, #8     --> r1 <- &retChainingCell
-         * 0x426a9afa : blx_1   0x426a9098     --+ TEMPLATE_INVOKE_METHOD_NO_OPT
-         * 0x426a9afc : blx_2   see above      --+
-         * -------- reconstruct dalvik PC : 0x428b786c @ +0x001e
-         * 0x426a9afe (0042): ldr     r0, [pc, #52]
+         * -------- dalvik offset: 0x0008 @ invoke-interface v0
+         * 0x47357e36 : ldr     r0, [r5, #0]   --+
+         * 0x47357e38 : sub     r7,r5,#24        |
+         * 0x47357e3c : cmp     r0, #0           | genProcessArgsNoRange
+         * 0x47357e3e : beq     0x47357e82       |
+         * 0x47357e40 : stmia   r7, <r0>       --+
+         * 0x47357e42 : ldr     r4, [pc, #120] --> r4 <- dalvikPC of this invoke
+         * 0x47357e44 : add     r1, pc, #64    --> r1 <- &retChainingCell
+         * 0x47357e46 : add     r2, pc, #72    --> r2 <- &predictedChainingCell
+         * 0x47357e48 : blx_1   0x47348190     --+ TEMPLATE_INVOKE_METHOD_
+         * 0x47357e4a : blx_2   see above      --+     PREDICTED_CHAIN
+         * 0x47357e4c : b       0x47357e90     --> off to the predicted chain
+         * 0x47357e4e : b       0x47357e82     --> punt to the interpreter
+         * 0x47357e50 : mov     r8, r1         --+
+         * 0x47357e52 : mov     r9, r2           |
+         * 0x47357e54 : ldr     r2, [pc, #96]    |
+         * 0x47357e56 : mov     r10, r3          |
+         * 0x47357e58 : movs    r0, r3           | dvmFindInterfaceMethodInCache
+         * 0x47357e5a : ldr     r3, [pc, #88]    |
+         * 0x47357e5c : ldr     r7, [pc, #80]    |
+         * 0x47357e5e : mov     r1, #1452        |
+         * 0x47357e62 : blx     r7             --+
+         * 0x47357e64 : cmp     r0, #0         --> calleeMethod == NULL?
+         * 0x47357e66 : bne     0x47357e6e     --> branch over the throw if !r0
+         * 0x47357e68 : ldr     r0, [pc, #80]  --> load Dalvik PC of the invoke
+         * 0x47357e6a : blx_1   0x47348494     --+ TEMPLATE_THROW_EXCEPTION_
+         * 0x47357e6c : blx_2   see above      --+     COMMON
+         * 0x47357e6e : mov     r1, r8         --> r1 <- &retChainingCell
+         * 0x47357e70 : cmp     r1, #0         --> compare against 0
+         * 0x47357e72 : bgt     0x47357e7c     --> >=0? don't rechain
+         * 0x47357e74 : ldr     r7, [r6, #108] --+
+         * 0x47357e76 : mov     r2, r9           | dvmJitToPatchPredictedChain
+         * 0x47357e78 : mov     r3, r10          |
+         * 0x47357e7a : blx     r7             --+
+         * 0x47357e7c : add     r1, pc, #8     --> r1 <- &retChainingCell
+         * 0x47357e7e : blx_1   0x4734809c     --+ TEMPLATE_INVOKE_METHOD_NO_OPT
+         * 0x47357e80 : blx_2   see above      --+
+         * -------- reconstruct dalvik PC : 0x425719dc @ +0x0008
+         * 0x47357e82 : ldr     r0, [pc, #56]
          * Exception_Handling:
-         * 0x426a9b00 (0044): ldr     r1, [r6, #84]
-         * 0x426a9b02 (0046): blx     r1
-         * 0x426a9b04 (0048): .align4
-         * -------- chaining cell (hot): 0x0021
-         * 0x426a9b04 (0048): ldr     r0, [r6, #92]
-         * 0x426a9b06 (004a): blx     r0
-         * 0x426a9b08 (004c): data    0x7872(30834)
-         * 0x426a9b0a (004e): data    0x428b(17035)
-         * 0x426a9b0c (0050): .align4
+         * 0x47357e84 : ldr     r1, [r6, #92]
+         * 0x47357e86 : blx     r1
+         * 0x47357e88 : .align4
+         * -------- chaining cell (hot): 0x000b
+         * 0x47357e88 : ldr     r0, [r6, #104]
+         * 0x47357e8a : blx     r0
+         * 0x47357e8c : data    0x19e2(6626)
+         * 0x47357e8e : data    0x4257(16983)
+         * 0x47357e90 : .align4
          * -------- chaining cell (predicted)
-         * 0x426a9b0c (0050): data    0x0000(0) --> will be patched into bx
-         * 0x426a9b0e (0052): data    0x0000(0)
-         * 0x426a9b10 (0054): data    0x0000(0) --> class
-         * 0x426a9b12 (0056): data    0x0000(0)
-         * 0x426a9b14 (0058): data    0x0000(0) --> method
-         * 0x426a9b16 (005a): data    0x0000(0)
-         * 0x426a9b18 (005c): data    0x0000(0) --> reset count
-         * 0x426a9b1a (005e): data    0x0000(0)
-         * 0x426a9b28 (006c): .word (0xad0392a5)
-         * 0x426a9b2c (0070): .word (0x6e750)
-         * 0x426a9b30 (0074): .word (0x4109a618)
-         * 0x426a9b34 (0078): .word (0x428b786c)
+         * 0x47357e90 : data    0xe7fe(59390)  --> will be patched into bx
+         * 0x47357e92 : data    0x0000(0)
+         * 0x47357e94 : data    0x0000(0)      --> class
+         * 0x47357e96 : data    0x0000(0)
+         * 0x47357e98 : data    0x0000(0)      --> method
+         * 0x47357e9a : data    0x0000(0)
+         * 0x47357e9c : data    0x0000(0)      --> rechain count
+         * 0x47357e9e : data    0x0000(0)
+         * -------- end of chaining cells (0x006c)
+         * 0x47357eb0 : .word (0xad03e369)
+         * 0x47357eb4 : .word (0x28a90)
+         * 0x47357eb8 : .word (0x41a63394)
+         * 0x47357ebc : .word (0x425719dc)
          */
         case OP_INVOKE_INTERFACE:
         case OP_INVOKE_INTERFACE_RANGE: {
@@ -2876,8 +2883,23 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             LOAD_FUNC_ADDR(cUnit, r7,
                            (intptr_t) dvmFindInterfaceMethodInCache);
             opReg(cUnit, kOpBlx, r7);
-
             /* r0 = calleeMethod (returned from dvmFindInterfaceMethodInCache */
+
+            dvmCompilerClobberCallRegs(cUnit);
+            /* generate a branch over if the interface method is resolved */
+            opRegImm(cUnit, kOpCmp, r0, 0); /* NULL? */
+            ArmLIR *branchOver = opCondBranch(cUnit, kArmCondNe);
+            /*
+             * calleeMethod == NULL -> throw
+             */
+            loadConstant(cUnit, r0,
+                         (int) (cUnit->method->insns + mir->offset));
+            genDispatchToHandler(cUnit, TEMPLATE_THROW_EXCEPTION_COMMON);
+            /* noreturn */
+
+            ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+            target->defMask = ENCODE_ALL;
+            branchOver->generic.target = (LIR *) target;
 
             genRegCopy(cUnit, r1, r8);
 
