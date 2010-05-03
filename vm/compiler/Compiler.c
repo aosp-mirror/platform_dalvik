@@ -340,6 +340,7 @@ bool compilerThreadStartup(void)
 #if defined(WITH_JIT_TUNING)
     /* Track method-level compilation statistics */
     gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
+    gDvm.verboseShutdown = true;
 #endif
 
     dvmUnlockMutex(&gDvmJit.compilerLock);

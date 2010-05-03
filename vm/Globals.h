@@ -742,6 +742,9 @@ struct DvmJitGlobals {
     int                invokePolymorphic;
     int                invokeNative;
     int                returnOp;
+    int                icPatchFast;
+    int                icPatchQueued;
+    int                icPatchDropped;
     u8                 jitTime;
 
     /* Compiled code cache */
