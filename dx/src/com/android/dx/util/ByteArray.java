@@ -321,7 +321,7 @@ public final class ByteArray {
                 length = maxLength;
             }
 
-            System.arraycopy(bytes, cursor, arr, offset, length);
+            System.arraycopy(bytes, cursor + start, arr, offset, length);
             cursor += length;
             return length;
         }
@@ -341,15 +341,6 @@ public final class ByteArray {
         public boolean markSupported() {
             return true;
         }
-
-        /**
-         * Gets the current cursor.
-         * 
-         * @return {@code 0..size();} the cursor
-         */
-        public int getCursor() {
-            return cursor;
-        }
     }
 
     /**
@@ -365,15 +356,6 @@ public final class ByteArray {
             super(wrapped);
 
             this.wrapped = wrapped;
-        }
-
-        /**
-         * Gets the current cursor.
-         * 
-         * @return {@code 0..size();} the cursor
-         */
-        public int getCursor() {
-            return wrapped.getCursor();
         }
     }
 }
