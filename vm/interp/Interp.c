@@ -188,6 +188,29 @@ static bool dvmBreakpointSetOriginalOpCode(const BreakpointSet* pSet,
 }
 
 /*
+ * Check the opcode.  If it's a "magic" NOP, indicating the start of
+ * switch or array data in the instruction stream, we don't want to set
+ * a breakpoint.
+ *
+ * This can happen because the line number information dx generates
+ * associates the switch data with the switch statement's line number,
+ * and some debuggers put breakpoints at every address associated with
+ * a given line.  The result is that the breakpoint stomps on the NOP
+ * instruction that doubles as a data table magic number, and an explicit
+ * check in the interpreter results in an exception being thrown.
+ *
+ * We don't want to simply refuse to add the breakpoint to the table,
+ * because that confuses the housekeeping.  We don't want to reject the
+ * debugger's event request, and we want to be sure that there's exactly
+ * one un-set operation for every set op.
+ */
+static bool instructionIsMagicNop(const u2* addr)
+{
+    u2 curVal = *addr;
+    return ((curVal & 0xff) == OP_NOP && (curVal >> 8) != 0);
+}
+
+/*
  * Add a breakpoint at a specific address.  If the address is already
  * present in the table, this just increments the count.
  *
@@ -246,7 +269,14 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
         if (dvmIsClassVerified(method->clazz)) {
             LOGV("Class %s verified, adding breakpoint at %p\n",
                 method->clazz->descriptor, addr);
-            dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr, OP_BREAKPOINT);
+            if (instructionIsMagicNop(addr)) {
+                LOGV("Refusing to set breakpoint on %04x at %s.%s + 0x%x\n",
+                    *addr, method->clazz->descriptor, method->name,
+                    instrOffset);
+            } else {
+                dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr,
+                    OP_BREAKPOINT);
+            }
         } else {
             LOGV("Class %s NOT verified, deferring breakpoint at %p\n",
                 method->clazz->descriptor, addr);
@@ -281,11 +311,11 @@ static void dvmBreakpointSetRemove(BreakpointSet* pSet, Method* method,
     if (idx < 0) {
         /* breakpoint not found in set -- unexpected */
         if (*(u1*)addr == OP_BREAKPOINT) {
-            LOGE("Unable to restore breakpoint opcode (%s.%s +%u)\n",
+            LOGE("Unable to restore breakpoint opcode (%s.%s +0x%x)\n",
                 method->clazz->descriptor, method->name, instrOffset);
             dvmAbort();
         } else {
-            LOGW("Breakpoint was already restored? (%s.%s +%u)\n",
+            LOGW("Breakpoint was already restored? (%s.%s +0x%x)\n",
                 method->clazz->descriptor, method->name, instrOffset);
         }
     } else {
@@ -338,7 +368,15 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
              */
             LOGV("Flushing breakpoint at %p for %s\n",
                 pBreak->addr, clazz->descriptor);
-            dvmDexChangeDex1(clazz->pDvmDex, (u1*)pBreak->addr, OP_BREAKPOINT);
+            if (instructionIsMagicNop(pBreak->addr)) {
+                const Method* method = pBreak->method;
+                LOGV("Refusing to flush breakpoint on %04x at %s.%s + 0x%x\n",
+                    *pBreak->addr, method->clazz->descriptor,
+                    method->name, pBreak->addr - method->insns);
+            } else {
+                dvmDexChangeDex1(clazz->pDvmDex, (u1*)pBreak->addr,
+                    OP_BREAKPOINT);
+            }
         }
     }
 }
