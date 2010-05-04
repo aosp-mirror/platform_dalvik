@@ -943,7 +943,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
             LOGD("DexOpt: not verifying '%s': multiple definitions\n",
                 classDescriptor);
         } else {
-            if (dvmVerifyClass(clazz, VERIFY_DEFAULT)) {
+            if (dvmVerifyClass(clazz)) {
                 /*
                  * Set the "is preverified" flag in the DexClassDef.  We
                  * do it here, rather than in the ClassObject structure,
@@ -951,8 +951,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
                  */
                 assert((clazz->accessFlags & JAVA_FLAGS_MASK) ==
                     pClassDef->accessFlags);
-                ((DexClassDef*)pClassDef)->accessFlags |=
-                    CLASS_ISPREVERIFIED;
+                ((DexClassDef*)pClassDef)->accessFlags |= CLASS_ISPREVERIFIED;
                 verified = true;
             } else {
                 // TODO: log when in verbose mode

@@ -1239,9 +1239,10 @@ bail:
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-int dexGetInstrOrTableWidthAbs(const InstructionWidth* widths, const u2* insns)
+size_t dexGetInstrOrTableWidthAbs(const InstructionWidth* widths,
+    const u2* insns)
 {
-    int width;
+    size_t width;
 
     if (*insns == kPackedSwitchSignature) {
         width = 4 + insns[1] * 2;

@@ -126,7 +126,8 @@ DEX_INLINE int dexGetInstrWidth(const InstructionWidth* widths, OpCode opCode)
 /*
  * Return the width of the specified instruction, or 0 if not defined.
  */
-DEX_INLINE int dexGetInstrWidthAbs(const InstructionWidth* widths,OpCode opCode)
+DEX_INLINE size_t dexGetInstrWidthAbs(const InstructionWidth* widths,
+    OpCode opCode)
 {
     //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
 
@@ -142,7 +143,8 @@ DEX_INLINE int dexGetInstrWidthAbs(const InstructionWidth* widths,OpCode opCode)
  * works for special OP_NOP entries, including switch statement data tables
  * and array data.
  */
-int dexGetInstrOrTableWidthAbs(const InstructionWidth* widths, const u2* insns);
+size_t dexGetInstrOrTableWidthAbs(const InstructionWidth* widths,
+    const u2* insns);
 
 
 /*

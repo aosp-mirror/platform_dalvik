@@ -4271,7 +4271,7 @@ bool dvmInitClass(ClassObject* clazz)
         }
 
         clazz->status = CLASS_VERIFYING;
-        if (!dvmVerifyClass(clazz, VERIFY_DEFAULT)) {
+        if (!dvmVerifyClass(clazz)) {
 verify_failed:
             dvmThrowExceptionWithClassMessage("Ljava/lang/VerifyError;",
                 clazz->descriptor);

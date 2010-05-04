@@ -224,7 +224,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
      * since we don't count method entry as a GC point.
      */
     gcPointCount = 0;
-    for (i = 0; i < vdata->insnsSize; i++) {
+    for (i = 0; i < (int) vdata->insnsSize; i++) {
         if (dvmInsnIsGcPoint(vdata->insnFlags, i))
             gcPointCount++;
     }
@@ -254,7 +254,7 @@ RegisterMap* dvmGenerateRegisterMapV(VerifierData* vdata)
      * Populate it.
      */
     mapData = pMap->data;
-    for (i = 0; i < vdata->insnsSize; i++) {
+    for (i = 0; i < (int) vdata->insnsSize; i++) {
         if (dvmInsnIsGcPoint(vdata->insnFlags, i)) {
             assert(vdata->addrRegs[i] != NULL);
             if (format == kRegMapFormatCompact8) {
