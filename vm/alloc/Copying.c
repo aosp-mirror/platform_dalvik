@@ -1447,7 +1447,7 @@ static void verifyInternedStrings(void)
  * moved by the collector.  Instead of scavenging each reference in
  * the table we pin each referenced object.
  */
-static void pinReferenceTable(ReferenceTable *table)
+static void pinReferenceTable(const ReferenceTable *table)
 {
     Object **entry;
     int i;
@@ -1506,68 +1506,7 @@ static void scavengeThreadStack(Thread *thread)
 
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = saveArea->method;
-        if (method == NULL) {
-            /* this is a break frame, nothing to do */
-        } else if (dvmIsNativeMethod(method)) {
-            /*
-             * For purposes of marking references, we don't need to do
-             * anything here, because all of the native "ins" were copied
-             * from registers in the caller's stack frame and won't be
-             * changed (an interpreted method can freely use registers
-             * with parameters like any other register, but natives don't
-             * work that way).
-             *
-             * However, we need to ensure that references visible to
-             * native methods don't move around.  We can do a precise scan
-             * of the arguments by examining the method signature.
-             */
-            LOGI("+++ native scan %s.%s\n",
-                method->clazz->descriptor, method->name);
-            assert(method->registersSize == method->insSize);
-            const char* shorty = method->shorty+1;      // skip return value
-            if (!dvmIsStaticMethod(method)) {
-                /* grab the "this" pointer */
-                Object* obj = (Object*) *framePtr++;
-                if (obj == NULL) {
-                    /*
-                     * This can happen for the "fake" entry frame inserted
-                     * for threads created outside the VM.  There's no actual
-                     * call so there's no object.  If we changed the fake
-                     * entry method to be declared "static" then this
-                     * situation should never occur.
-                     */
-                } else {
-                    assert(dvmIsValidObject(obj));
-                    //pinObject(obj);
-                }
-            }
-
-            Object* obj;
-            int i;
-            for (i = method->registersSize - 1; i >= 0; i--, framePtr++) {
-                switch (*shorty++) {
-                case 'L':
-                    obj = (Object*) *framePtr;
-                    if (obj != NULL) {
-                        assert(dvmIsValidObject(obj));
-                        //pinObject(obj);
-                    }
-                    break;
-                case 'D':
-                case 'J':
-                    framePtr++;
-                    break;
-                default:
-                    /* 32-bit non-reference value */
-                    obj = (Object*) *framePtr;          // debug, remove
-                    if (dvmIsValidObject(obj)) {        // debug, remove
-                        /* if we see a lot of these, our scan might be off */
-                        LOGI("+++  did NOT pin obj %p\n", obj);
-                    }
-                    break;
-                }
-            }
-        } else {
+        if (method != NULL && !dvmIsNativeMethod(method)) {
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
             if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
@@ -1945,13 +1884,95 @@ static void verifyThreadList(void)
     dvmUnlockThreadList();
 }
 
-static void pinThread(Thread *thread)
+static void pinNativeMethodArguments(const Thread *thread)
+{
+    const u4 *framePtr;
+    const StackSaveArea *saveArea;
+    const Method *method;
+    const char *shorty;
+    Object *obj;
+    int i;
+
+    saveArea = NULL;
+    framePtr = (const u4 *)thread->curFrame;
+    for (; framePtr != NULL; framePtr = saveArea->prevFrame) {
+        saveArea = SAVEAREA_FROM_FP(framePtr);
+        method = saveArea->method;
+        if (method != NULL && dvmIsNativeMethod(method)) {
+            /*
+             * For purposes of marking references, we don't need to do
+             * anything here, because all of the native "ins" were copied
+             * from registers in the caller's stack frame and won't be
+             * changed (an interpreted method can freely use registers
+             * with parameters like any other register, but natives don't
+             * work that way).
+             *
+             * However, we need to ensure that references visible to
+             * native methods don't move around.  We can do a precise scan
+             * of the arguments by examining the method signature.
+             */
+            LOGI("+++ native scan %s.%s\n",
+                method->clazz->descriptor, method->name);
+            assert(method->registersSize == method->insSize);
+            if (!dvmIsStaticMethod(method)) {
+                /* grab the "this" pointer */
+                obj = (Object *)*framePtr++;
+                if (obj == NULL) {
+                    /*
+                     * This can happen for the "fake" entry frame inserted
+                     * for threads created outside the VM.  There's no actual
+                     * call so there's no object.  If we changed the fake
+                     * entry method to be declared "static" then this
+                     * situation should never occur.
+                     */
+                } else {
+                    assert(dvmIsValidObject(obj));
+                    pinObject(obj);
+                }
+            }
+            shorty = method->shorty+1;      // skip return value
+            for (i = method->registersSize - 1; i >= 0; i--, framePtr++) {
+                switch (*shorty++) {
+                case 'L':
+                    obj = (Object *)*framePtr;
+                    if (obj != NULL) {
+                        assert(dvmIsValidObject(obj));
+                        pinObject(obj);
+                    }
+                    break;
+                case 'D':
+                case 'J':
+                    framePtr++;
+                    break;
+                default:
+                    /* 32-bit non-reference value */
+                    obj = (Object *)*framePtr;          // debug, remove
+                    if (dvmIsValidObject(obj)) {        // debug, remove
+                        /* if we see a lot of these, our scan might be off */
+                        LOGI("+++ did NOT pin obj %p\n", obj);
+                    }
+                    break;
+                }
+            }
+        }
+        /*
+         * Don't fall into an infinite loop if things get corrupted.
+         */
+        assert((uintptr_t)saveArea->prevFrame > (uintptr_t)framePtr ||
+               saveArea->prevFrame == NULL);
+    }
+}
+
+static void pinThread(const Thread *thread)
 {
     assert(thread != NULL);
     assert(thread->status != THREAD_RUNNING ||
            thread->isSuspended ||
            thread == dvmThreadSelf());
     LOGI("pinThread(thread=%p)", thread);
+
+    LOGI("Pin native method arguments");
+    pinNativeMethodArguments(thread);
 
     LOGI("Pin internalLocalRefTable");
     pinReferenceTable(&thread->internalLocalRefTable);
