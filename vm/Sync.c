@@ -1343,9 +1343,11 @@ retry:
          * relocated by the collector.  Use the value of the naturally
          * aligned word following the instance data.
          */
+        assert(obj->clazz != gDvm.classJavaLangClass);
+        assert(obj->clazz != gDvm.unlinkedJavaLangClass);
         if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
             size = dvmArrayObjectSize((ArrayObject *)obj);
-            size = (size + 3) & ~3;
+            size = (size + 2) & ~2;
         } else {
             size = obj->clazz->objectSize;
         }
