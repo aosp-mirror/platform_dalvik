@@ -162,14 +162,16 @@ size_t dvmHeapSourceGetNumHeaps(void);
 void dvmHeapSourceSwapBitmaps(void);
 
 /*
- * Marks all objects outside the threatened region of the heap.
+ * Marks all objects inside the immune region of the heap. Addresses
+ * at or above this pointer are threatened, addresses below this
+ * pointer are immune.
  */
-void dvmMarkImmuneObjects(void);
+void dvmMarkImmuneObjects(const char *immuneLimit);
 
 /*
  * Returns a pointer that demarcates the threatened region of the
  * heap.  Addresses at or above this pointer are threatened, addresses
- * below this pointer are not.
+ * below this pointer are immune.
  */
 void *dvmHeapSourceGetImmuneLimit(GcMode mode);
 
