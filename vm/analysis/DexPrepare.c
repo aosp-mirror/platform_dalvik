@@ -53,8 +53,6 @@ static void updateChecksum(u1* addr, int len, DexHeader* pHeader);
 static int writeDependencies(int fd, u4 modWhen, u4 crc);
 static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,\
     const IndexMapSet* pIndexMapSet, const RegisterMapBuilder* pRegMapBuilder);
-static void logFailedWrite(size_t expected, ssize_t actual, const char* msg,
-    int err);
 static bool computeFileChecksum(int fd, off_t start, size_t length, u4* pSum);
 
 
@@ -671,11 +669,8 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 
     ssize_t actual;
     lseek(fd, 0, SEEK_SET);
-    actual = write(fd, &optHdr, sizeof(optHdr));
-    if (actual != sizeof(optHdr)) {
-        logFailedWrite(sizeof(optHdr), actual, "opt header", errno);
+    if (sysWriteFully(fd, &optHdr, sizeof(optHdr), "DexOpt opt header") != 0)
         goto bail;
-    }
 
     LOGV("Successfully wrote DEX header\n");
     result = true;
@@ -1297,13 +1292,7 @@ static int writeDependencies(int fd, u4 modWhen, u4 crc)
 
     assert(ptr == buf + bufLen);
 
-    actual = write(fd, buf, bufLen);
-    if (actual != bufLen) {
-        result = (errno != 0) ? errno : -1;
-        logFailedWrite(bufLen, actual, "dep info", errno);
-    } else {
-        result = 0;
-    }
+    result = sysWriteFully(fd, buf, bufLen, "DexOpt dep info");
 
     free(buf);
     return result;
@@ -1333,18 +1322,15 @@ static bool writeChunk(int fd, u4 type, const void* data, size_t size)
 
     header.ts.type = type;
     header.ts.size = (u4) size;
-    actual = write(fd, &header, sizeof(header));
-    if (actual != sizeof(header)) {
-        logFailedWrite(size, actual, "aux chunk header write", errno);
+    if (sysWriteFully(fd, &header, sizeof(header),
+            "DexOpt aux chunk header write") != 0)
+    {
         return false;
     }
 
     if (size > 0) {
-        actual = write(fd, data, size);
-        if (actual != (ssize_t) size) {
-            logFailedWrite(size, actual, "aux chunk write", errno);
+        if (sysWriteFully(fd, data, size, "DexOpt aux chunk write") != 0)
             return false;
-        }
     }
 
     /* if necessary, pad to 64-bit alignment */
@@ -1401,16 +1387,6 @@ static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,
     }
 
     return true;
-}
-
-/*
- * Log a failed write.
- */
-static void logFailedWrite(size_t expected, ssize_t actual, const char* msg,
-    int err)
-{
-    LOGE("Write failed: %s (%d of %d): %s\n",
-        msg, (int)actual, (int)expected, strerror(err));
 }
 
 /*
