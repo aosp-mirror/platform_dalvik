@@ -138,15 +138,15 @@
 #endif
 
 static void enqueueBlock(HeapSource *heapSource, size_t block);
-static size_t scavengeReference(Object **obj);
+static void scavengeReference(Object **obj);
 static void verifyReference(const void *obj);
 static void printHeapBitmap(const HeapBitmap *bitmap);
 static void printHeapBitmapSxS(const HeapBitmap *b1, const HeapBitmap *b2);
 static bool isToSpace(const void *addr);
 static bool isFromSpace(const void *addr);
 static size_t sumHeapBitmap(const HeapBitmap *bitmap);
-static size_t scavengeDataObject(DataObject *obj);
-static DataObject *transportDataObject(const DataObject *fromObj);
+static size_t objectSize(const Object *obj);
+static void scavengeDataObject(DataObject *obj);
 
 /*
  * We use 512-byte blocks.
@@ -935,38 +935,21 @@ static void* getPermanentString(const StringObject *obj)
  */
 
 /*
- * Class object scavenging and transporting.
+ * Class object scavenging.
  */
-
-static ClassObject *transportClassObject(const ClassObject *fromObj)
+static void scavengeClassObject(ClassObject *obj)
 {
-    ClassObject *toObj;
-    size_t length;
-
-    LOG_TRANSPORT("transportClassObject(fromObj=%p)", fromObj);
-    length = dvmClassObjectSize(fromObj);  /* TODO: hash code */
-    assert(length != 0);
-    toObj = allocateGray(length);
-    assert(toObj != NULL);
-    memcpy(toObj, fromObj, length);
-    LOG_TRANSPORT("transportClassObject: from %p to %p (%zu)", fromObj, toObj, length);
-    return toObj;
-}
-
-static size_t scavengeClassObject(ClassObject *obj)
-{
-    size_t size;
     int i;
 
-    assert(obj != NULL);
     LOG_SCAVENGE("scavengeClassObject(obj=%p)", obj);
-    /* Scavenge our class object. */
+    assert(obj != NULL);
     assert(obj->obj.clazz != NULL);
     assert(obj->obj.clazz->descriptor != NULL);
     assert(!strcmp(obj->obj.clazz->descriptor, "Ljava/lang/Class;"));
     assert(obj->descriptor != NULL);
     LOG_SCAVENGE("scavengeClassObject: descriptor='%s',vtableCount=%zu",
                  obj->descriptor, obj->vtableCount);
+    /* Scavenge our class object. */
     scavengeReference((Object **) obj);
     /* Scavenge the array element class object. */
     if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
@@ -987,32 +970,11 @@ static size_t scavengeClassObject(ClassObject *obj)
     for (i = 0; i < obj->interfaceCount; ++i) {
         scavengeReference((Object **) &obj->interfaces[i]);
     }
-    size = dvmClassObjectSize(obj);
-    return size;
 }
 
 /*
  * Array object scavenging.
  */
-
-static ArrayObject *transportArrayObject(const ArrayObject *fromObj)
-{
-    ArrayObject *toObj;
-    size_t length;
-
-    LOG_TRANSPORT("transportArrayObject(fromObj=%p)", fromObj);
-    length = dvmArrayObjectSize(fromObj);
-    assert(length != 0);
-    if (length >= BLOCK_SIZE) {
-        LOGI("WARNING: LARGE ARRAY OBJECT %s", fromObj->obj.clazz->descriptor);
-    }
-    toObj = allocateGray(length);
-    LOG_TRANSPORT("transportArrayObject: from %p to %p (%zu)", fromObj, toObj, length);
-    assert(toObj != NULL);
-    memcpy(toObj, fromObj, length);
-    return toObj;
-}
-
 static size_t scavengeArrayObject(ArrayObject *array)
 {
     size_t i, length;
@@ -1114,13 +1076,6 @@ static void enqueueReference(HeapSource *heapSource, DataObject *reference)
     *queue = reference;
 }
 
-static DataObject *transportReferenceObject(const DataObject *fromObj)
-{
-    assert(fromObj != NULL);
-    LOG_TRANSPORT("transportReferenceObject(fromObj=%p)", fromObj);
-    return transportDataObject(fromObj);
-}
-
 /*
  * If a reference points to from-space and has been forwarded, we snap
  * the pointer to its new to-space address.  If the reference points
@@ -1128,10 +1083,8 @@ static DataObject *transportReferenceObject(const DataObject *fromObj)
  * for later processing.  TODO: implement proper reference processing
  * and move the referent scavenging elsewhere.
  */
-static size_t scavengeReferenceObject(DataObject *obj)
+static void scavengeReferenceObject(DataObject *obj)
 {
-    size_t length;
-
     assert(obj != NULL);
     LOG_SCAVENGE("scavengeReferenceObject(obj=%p),'%s'", obj, obj->obj.clazz->descriptor);
     {
@@ -1141,48 +1094,20 @@ static size_t scavengeReferenceObject(DataObject *obj)
         Object **ref = (Object **)(void *)&((JValue *)addr)->l;
         scavengeReference(ref);
     }
-    length = scavengeDataObject(obj);
+    scavengeDataObject(obj);
     if (!isReferentGray(obj)) {
         assert(!"reached");  /* TODO(cshapiro): remove this */
         LOG_SCAVENGE("scavengeReferenceObject: enqueueing %p", obj);
         enqueueReference(gDvm.gcHeap->heapSource, obj);
-        length = obj->obj.clazz->objectSize;
     }
-    return length;
 }
 
 /*
  * Data object scavenging.
  */
-
-static DataObject *transportDataObject(const DataObject *fromObj)
-{
-    DataObject *toObj;
-    ClassObject *clazz;
-    const char *name;
-    size_t length;
-    int flags;
-
-    assert(fromObj != NULL);
-    assert(isFromSpace(fromObj));
-    LOG_TRANSPORT("transportDataObject(fromObj=%p) allocBlocks=%zu", fromObj, gDvm.gcHeap->heapSource->allocBlocks);
-    clazz = fromObj->obj.clazz;
-    assert(clazz != NULL);
-    length = clazz->objectSize;
-    assert(length != 0);
-    /* TODO(cshapiro): don't copy, re-map large data objects. */
-    toObj = allocateGray(length);
-    assert(toObj != NULL);
-    assert(isToSpace(toObj));
-    memcpy(toObj, fromObj, length);
-    LOG_TRANSPORT("transportDataObject: from %p/%zu to %p/%zu (%zu)", fromObj, addressToBlock(gDvm.gcHeap->heapSource,fromObj), toObj, addressToBlock(gDvm.gcHeap->heapSource,toObj), length);
-    return toObj;
-}
-
-static size_t scavengeDataObject(DataObject *obj)
+static void scavengeDataObject(DataObject *obj)
 {
     ClassObject *clazz;
-    size_t length;
     int i;
 
     // LOGI("scavengeDataObject(obj=%p)", obj);
@@ -1193,7 +1118,6 @@ static size_t scavengeDataObject(DataObject *obj)
     /* Scavenge the class object. */
     clazz = obj->obj.clazz;
     scavengeReference((Object **) obj);
-    length = obj->obj.clazz->objectSize;
     /* Scavenge instance fields. */
     if (clazz->refOffsets != CLASS_WALK_SUPER) {
         size_t refOffsets = clazz->refOffsets;
@@ -1214,7 +1138,52 @@ static size_t scavengeDataObject(DataObject *obj)
             }
         }
     }
-    return length;
+}
+
+static Object *transportObject(const Object *fromObj)
+{
+    Object *toObj;
+    size_t allocSize, copySize;
+
+    LOG_TRANSPORT("transportObject(fromObj=%p) allocBlocks=%zu",
+                  fromObj,
+                  gDvm.gcHeap->heapSource->allocBlocks);
+    assert(fromObj != NULL);
+    assert(isFromSpace(fromObj));
+    allocSize = copySize = objectSize(fromObj);
+    if (LW_HASH_STATE(fromObj->lock) != LW_HASH_STATE_UNHASHED) {
+        /*
+         * The object has been hashed or hashed and moved.  We must
+         * reserve an additional word for a hash code.
+         */
+        allocSize += sizeof(u4);
+    }
+    if (LW_HASH_STATE(fromObj->lock) == LW_HASH_STATE_HASHED_AND_MOVED) {
+        /*
+         * The object has its hash code allocated.  Ensure the hash
+         * code is copied along with the instance data.
+         */
+        copySize += sizeof(u4);
+    }
+    /* TODO(cshapiro): don't copy, re-map large data objects. */
+    assert(copySize <= allocSize);
+    toObj = allocateGray(allocSize);
+    assert(toObj != NULL);
+    assert(isToSpace(toObj));
+    memcpy(toObj, fromObj, copySize);
+    if (LW_HASH_STATE(fromObj->lock) == LW_HASH_STATE_HASHED) {
+        /*
+         * The object has had its hash code exposed.  Append it to the
+         * instance and set a bit so we know to look for it there.
+         */
+        *(u4 *)(((char *)toObj) + copySize) = (u4)fromObj >> 3;
+        toObj->lock |= LW_HASH_STATE_HASHED_AND_MOVED << LW_HASH_STATE_SHIFT;
+    }
+    LOG_TRANSPORT("transportObject: from %p/%zu to %p/%zu (%zu,%zu) %s",
+                  fromObj, addressToBlock(gDvm.gcHeap->heapSource,fromObj),
+                  toObj, addressToBlock(gDvm.gcHeap->heapSource,toObj),
+                  copySize, allocSize, copySize < allocSize ? "DIFFERENT" : "");
+    return toObj;
 }
 
 /*
@@ -1234,21 +1203,22 @@ static size_t scavengeDataObject(DataObject *obj)
  * installed it has already been transported and the referent is
  * snapped to the new address.
  */
-static size_t scavengeReference(Object **obj)
+static void scavengeReference(Object **obj)
 {
     ClassObject *clazz;
+    Object *fromObj, *toObj;
     uintptr_t word;
 
     assert(obj);
 
-    if (*obj == NULL) goto exit;
+    if (*obj == NULL) return;
 
     assert(dvmIsValidObject(*obj));
 
     /* The entire block is black. */
     if (isToSpace(*obj)) {
         LOG_SCAVENGE("scavengeReference skipping pinned object @ %p", *obj);
-        goto exit;
+        return;
     }
     LOG_SCAVENGE("scavengeReference(*obj=%p)", *obj);
 
@@ -1259,39 +1229,22 @@ static size_t scavengeReference(Object **obj)
     if (isForward(clazz)) {
         // LOGI("forwarding %p @ %p to %p", *obj, obj, (void *)((uintptr_t)clazz & ~0x1));
         *obj = (Object *)getForward(clazz);
-    } else if (clazz == NULL) {
-        // LOGI("scavangeReference %p has a NULL class object", *obj);
-        assert(!"implemented");
-    } else if (clazz == gDvm.unlinkedJavaLangClass) {
-        // LOGI("scavangeReference %p is an unlinked class object", *obj);
-        assert(!"implemented");
-    } else if (clazz == gDvm.classJavaLangClass) {
-        ClassObject *toObj;
-
-        toObj = transportClassObject((ClassObject *)*obj);
-        setForward(toObj, *obj);
-        *obj = (Object *)toObj;
-    } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
-        ArrayObject *toObj;
-
-        toObj = transportArrayObject((ArrayObject *)*obj);
-        setForward(toObj, *obj);
-        *obj = (Object *)toObj;
-    } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISREFERENCE)) {
-        DataObject *toObj;
-
-        toObj = transportReferenceObject((DataObject *)*obj);
-        setForward(toObj, *obj);
-        *obj = (Object *)toObj;
-    } else {
-        DataObject *toObj;
-
-        toObj = transportDataObject((DataObject *)*obj);
-        setForward(toObj, *obj);
-        *obj = (Object *)toObj;
+        return;
     }
-exit:
-    return sizeof(Object *);
+    fromObj = *obj;
+    if (clazz == NULL) {
+        // LOGI("scavangeReference %p has a NULL class object", fromObj);
+        assert(!"implemented");
+        toObj = NULL;
+    } else if (clazz == gDvm.unlinkedJavaLangClass) {
+        // LOGI("scavangeReference %p is an unlinked class object", fromObj);
+        assert(!"implemented");
+        toObj = NULL;
+    } else {
+        toObj = transportObject(fromObj);
+    }
+    setForward(toObj, fromObj);
+    *obj = (Object *)toObj;
 }
 
 static void verifyReference(const void *obj)
@@ -1317,10 +1270,9 @@ static void verifyReference(const void *obj)
  * Generic object scavenging.
  */
 
-static size_t scavengeObject(Object *obj)
+static void scavengeObject(Object *obj)
 {
     ClassObject *clazz;
-    size_t length;
 
     assert(obj != NULL);
     clazz = obj->clazz;
@@ -1328,15 +1280,14 @@ static size_t scavengeObject(Object *obj)
     assert(!((uintptr_t)clazz & 0x1));
     assert(clazz != gDvm.unlinkedJavaLangClass);
     if (clazz == gDvm.classJavaLangClass) {
-        length = scavengeClassObject((ClassObject *)obj);
+        scavengeClassObject((ClassObject *)obj);
     } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
-        length = scavengeArrayObject((ArrayObject *)obj);
+        scavengeArrayObject((ArrayObject *)obj);
     } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISREFERENCE)) {
-        length = scavengeReferenceObject((DataObject *)obj);
+        scavengeReferenceObject((DataObject *)obj);
     } else {
-        length = scavengeDataObject((DataObject *)obj);
+        scavengeDataObject((DataObject *)obj);
     }
-    return length;
 }
 
 /*
@@ -1587,7 +1538,7 @@ static void scavengeThreadStack(Thread *thread)
                      */
                 } else {
                     assert(dvmIsValidObject(obj));
-                    pinObject(obj);
+                    //pinObject(obj);
                 }
             }
 
@@ -1599,7 +1550,7 @@ static void scavengeThreadStack(Thread *thread)
                     obj = (Object*) *framePtr;
                     if (obj != NULL) {
                         assert(dvmIsValidObject(obj));
-                        pinObject(obj);
+                        //pinObject(obj);
                     }
                     break;
                 case 'D':
@@ -2058,7 +2009,8 @@ static void scavengeBlock(HeapSource *heapSource, size_t block)
     while (cursor < end) {
         u4 word = *(u4 *)cursor;
         if (word != 0) {
-            size = scavengeObject((Object *)cursor);
+            scavengeObject((Object *)cursor);
+            size = objectSize((Object *)cursor);
             size = alignUp(size, ALLOC_ALIGNMENT);
             cursor += size;
         } else if (word == 0 && cursor == (u1 *)gDvm.unlinkedJavaLangClass) {
@@ -2076,17 +2028,23 @@ static void scavengeBlock(HeapSource *heapSource, size_t block)
     }
 }
 
-static size_t objectSize(Object *obj)
+static size_t objectSize(const Object *obj)
 {
     size_t size;
 
+    assert(obj != NULL);
+    assert(obj->clazz != NULL);
     if (obj->clazz == gDvm.classJavaLangClass ||
         obj->clazz == gDvm.unlinkedJavaLangClass) {
         size = dvmClassObjectSize((ClassObject *)obj);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
         size = dvmArrayObjectSize((ArrayObject *)obj);
     } else {
+        assert(obj->clazz->objectSize != 0);
         size = obj->clazz->objectSize;
+    }
+    if (LW_HASH_STATE(obj->lock) == LW_HASH_STATE_HASHED_AND_MOVED) {
+        size += sizeof(u4);
     }
     return size;
 }
