@@ -272,7 +272,7 @@ void dvmHeapMarkRootSet()
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_STICKY_CLASS, 0);
 
     LOG_SCAN("immune objects");
-    dvmMarkImmuneObjects();
+    dvmMarkImmuneObjects(gcHeap->markContext.immuneLimit);
 
     LOG_SCAN("root class loader\n");
     dvmGcScanRootClassLoader();
