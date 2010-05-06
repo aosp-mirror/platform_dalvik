@@ -56,7 +56,8 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
 {
     ZipArchive zippy;
     ZipEntry zipEntry;
-    long uncompLen, modWhen, crc32;
+    size_t uncompLen;
+    long modWhen, crc32;
     off_t dexOffset;
     int err;
     int result = -1;
@@ -100,8 +101,8 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
     /*
      * Extract some info about the zip entry.
      */
-    if (!dexZipGetEntryInfo(&zippy, zipEntry, NULL, &uncompLen, NULL, NULL,
-            &modWhen, &crc32))
+    if (dexZipGetEntryInfo(&zippy, zipEntry, NULL, &uncompLen, NULL, NULL,
+            &modWhen, &crc32) != 0)
     {
         LOGW("DexOptZ: zip archive GetEntryInfo failed on %s\n", debugFileName);
         goto bail;
@@ -114,7 +115,7 @@ static int extractAndProcessZip(int zipFd, int cacheFd,
     /*
      * Extract the DEX data into the cache file at the current offset.
      */
-    if (!dexZipExtractEntryToFile(&zippy, zipEntry, cacheFd)) {
+    if (dexZipExtractEntryToFile(&zippy, zipEntry, cacheFd) != 0) {
         LOGW("DexOptZ: extraction of %s from %s failed\n",
             kClassesDex, debugFileName);
         goto bail;

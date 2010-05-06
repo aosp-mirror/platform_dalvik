@@ -80,7 +80,7 @@ int sysMapFileInShmemWritableReadOnly(int fd, MemMapping* pMap);
 /*
  * Like sysMapFileInShmemReadOnly, but on only part of a file.
  */
-int sysMapFileSegmentInShmem(int fd, off_t start, long length,
+int sysMapFileSegmentInShmem(int fd, off_t start, size_t length,
     MemMapping* pMap);
 
 /*
