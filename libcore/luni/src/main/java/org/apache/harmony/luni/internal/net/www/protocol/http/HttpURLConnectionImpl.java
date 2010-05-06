@@ -917,14 +917,14 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
      * Returns connected socket to be used for this HTTP connection.
      */
     protected HttpConnection getHTTPConnection(Proxy proxy) throws IOException {
-        HttpConnection connection;
+        HttpConfiguration configuration;
         if (proxy == null || proxy.type() == Proxy.Type.DIRECT) {
-          this.proxy = null; // not using proxy
-          connection = HttpConnectionManager.getDefault().getConnection(uri, getConnectTimeout());
+            this.proxy = null; // not using proxy
+            configuration = new HttpConfiguration(uri);
         } else {
-            connection = HttpConnectionManager.getDefault().getConnection(uri, proxy, getConnectTimeout());
+            configuration = new HttpConfiguration(uri, proxy);
         }
-        return connection;
+        return HttpConnectionPool.INSTANCE.get(configuration, getConnectTimeout());
     }
 
     /**
@@ -1000,8 +1000,7 @@ public class HttpURLConnectionImpl extends HttpURLConnection {
                  */
                 connection.closeSocketAndStreams();
             } else {
-                HttpConnectionManager.getDefault().returnConnectionToPool(
-                        connection);
+                HttpConnectionPool.INSTANCE.recycle(connection);
             }
             connection = null;
         }

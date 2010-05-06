@@ -16,9 +16,7 @@
 
 package java.net;
 
-import java.net.*;
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -60,6 +58,14 @@ public class URLConnectionTest extends junit.framework.TestCase {
         mServer.setMaxChunkSize(8);
         assertTrue(readFirstLine().equals("<html>"));
         assertTrue(readFirstLine().equals("<html>"));
+        assertEquals(1, mServer.getNumAcceptedConnections());
+    }
+
+    public void testConnectionsArePooled() throws Exception {
+        readFirstLine();
+        readFirstLine();
+        readFirstLine();
+        assertEquals(1, mServer.getNumAcceptedConnections());
     }
 
     enum UploadKind { CHUNKED, FIXED_LENGTH };

@@ -226,6 +226,10 @@ public class Support_TestWebServer implements Support_HttpConstants {
         return pathToRequest;
     }
 
+    public int getNumAcceptedConnections() {
+        return acceptedConnections;
+    }
+
     /**
      * Cause the thread accepting connections on the server socket to close
      */
@@ -274,23 +278,19 @@ public class Support_TestWebServer implements Support_HttpConstants {
          */
         public synchronized void run() {
             running = true;
-            try {
-                while (running) {
-                    // Log.d(LOGTAG, "TestWebServer run() calling accept()");
+            while (running) {
+                try {
                     Socket s = ss.accept();
                     acceptedConnections++;
                     if (acceptedConnections >= acceptLimit) {
                         running = false;
                     }
-
                     new Thread(new Worker(s), "additional worker").start();
+                } catch (SocketException e) {
+                    log(e.getMessage());
+                } catch (IOException e) {
+                    log(e.getMessage());
                 }
-            } catch (SocketException e) {
-                log("SocketException in AcceptThread: probably closed during accept");
-                running = false;
-            } catch (IOException e) {
-                log("IOException in AcceptThread");
-                running = false;
             }
             log("AcceptThread terminated" + this);
         }

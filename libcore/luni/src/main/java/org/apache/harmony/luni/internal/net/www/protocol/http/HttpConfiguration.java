@@ -30,7 +30,7 @@ import org.apache.harmony.luni.util.Msg;
  * and host name (<code>String</code>) or all three,  depending on whether or not a 
  * <code>Proxy</code> is used and the type of <code>Proxy</code> it is.
  * 
- * <code>HttpConfiguration</code> is used as a key by <code>HttpConnectionManager</code>
+ * <code>HttpConfiguration</code> is used as a key by <code>HttpConnectionPool</code>
  * to retrieve <code>HttpConnection</code>s from its connection pool.
  */
 public class HttpConfiguration {
