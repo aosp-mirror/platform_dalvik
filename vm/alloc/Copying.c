@@ -123,20 +123,22 @@
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof(x[0]))
 
-#if 1
+#if 0
 #define LOG_ALLOC LOGI
-#define LOG_SCAVENGE LOGI
-#define LOG_TRANSPORT LOGI
-#define LOG_PROMOTE LOGI
-#define LOG_VERIFY LOGI
-#define LOG_REFERENCE LOGI
+#define LOG_PIN LOGI
+#define LOG_PROM LOGI
+#define LOG_REF LOGI
+#define LOG_SCAV LOGI
+#define LOG_TRAN LOGI
+#define LOG_VER LOGI
 #else
-#define LOG_ALLOC(...) ((void *)0)
-#define LOG_SCAVENGE(...) ((void *)0)
-#define LOG_TRANSPORT(...) ((void *)0)
-#define LOG_PROMOTE(...) ((void *)0)
-#define LOG_VERIFY(...) ((void *)0)
-#define LOG_REFERENCE(...) ((void *)0)
+#define LOG_ALLOC(...) ((void)0)
+#define LOG_PIN(...) ((void)0)
+#define LOG_PROM(...) ((void)0)
+#define LOG_REF(...) ((void)0)
+#define LOG_SCAV(...) ((void)0)
+#define LOG_TRAN(...) ((void)0)
+#define LOG_VER(...) ((void)0)
 #endif
 
 static void enqueueBlock(HeapSource *heapSource, size_t block);
@@ -411,7 +413,7 @@ static void clearFromSpace(HeapSource *heapSource)
             ++count;
         }
     }
-    LOGI("freed %zu blocks (%zu bytes)", count, count*BLOCK_SIZE);
+    LOG_SCAV("freed %zu blocks (%zu bytes)", count, count*BLOCK_SIZE);
 }
 
 /*
@@ -442,13 +444,13 @@ static void promoteBlockByAddr(HeapSource *heapSource, const void *addr)
 
     block = addressToBlock(heapSource, (const u1 *)addr);
     if (heapSource->blockSpace[block] != BLOCK_TO_SPACE) {
-        // LOGI("promoting block %zu %d @ %p", block, heapSource->blockSpace[block], obj);
+        // LOG_PROM("promoting block %zu %d @ %p", block, heapSource->blockSpace[block], obj);
         heapSource->blockSpace[block] = BLOCK_TO_SPACE;
         enqueueBlock(heapSource, block);
         /* TODO(cshapiro): count continued blocks?*/
         heapSource->allocBlocks += 1;
     } else {
-        // LOGI("NOT promoting block %zu %d @ %p", block, heapSource->blockSpace[block], obj);
+        // LOG_PROM("NOT promoting block %zu %d @ %p", block, heapSource->blockSpace[block], obj);
     }
 }
 
@@ -931,14 +933,14 @@ static void scavengeClassObject(ClassObject *obj)
 {
     int i;
 
-    LOG_SCAVENGE("scavengeClassObject(obj=%p)", obj);
+    LOG_SCAV("scavengeClassObject(obj=%p)", obj);
     assert(obj != NULL);
     assert(obj->obj.clazz != NULL);
     assert(obj->obj.clazz->descriptor != NULL);
     assert(!strcmp(obj->obj.clazz->descriptor, "Ljava/lang/Class;"));
     assert(obj->descriptor != NULL);
-    LOG_SCAVENGE("scavengeClassObject: descriptor='%s',vtableCount=%zu",
-                 obj->descriptor, obj->vtableCount);
+    LOG_SCAV("scavengeClassObject: descriptor='%s',vtableCount=%zu",
+             obj->descriptor, obj->vtableCount);
     /* Scavenge our class object. */
     scavengeReference((Object **) obj);
     /* Scavenge the array element class object. */
@@ -969,7 +971,7 @@ static size_t scavengeArrayObject(ArrayObject *array)
 {
     size_t i, length;
 
-    LOG_SCAVENGE("scavengeArrayObject(array=%p)", array);
+    LOG_SCAV("scavengeArrayObject(array=%p)", array);
     /* Scavenge the class object. */
     assert(toSpaceContains(array));
     assert(array != NULL);
@@ -1069,8 +1071,7 @@ static void enqueueReference(const Object *ref)
     table = &gDvm.gcHeap->referenceOperations;
     op = (Object *)((uintptr_t)ref | WORKER_ENQUEUE);
     if (!dvmHeapAddRefToLargeTable(table, op)) {
-        LOGE("enqueueReference(): "
-             "no room for any more reference operations");
+        LOGE("no room for any more reference operations");
         dvmAbort();
     }
 }
@@ -1197,8 +1198,7 @@ void processFinalizableReferences(void)
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space
         //      by calling finalizers.
-        LOG_REFERENCE("dvmHeapScheduleFinalizations(): no room for "
-                "pending finalizations\n");
+        LOG_REF("no room for pending finalizations\n");
         dvmAbort();
     }
 
@@ -1218,8 +1218,7 @@ void processFinalizableReferences(void)
                 if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
                     //TODO: add the current table and allocate
                     //      a new, smaller one.
-                    LOG_REFERENCE("dvmHeapScheduleFinalizations(): "
-                            "no room for any more pending finalizations: %zd\n",
+                    LOG_REF("no room for any more pending finalizations: %zd\n",
                             dvmHeapNumHeapRefTableEntries(&newPendingRefs));
                     dvmAbort();
                 }
@@ -1244,8 +1243,7 @@ void processFinalizableReferences(void)
         totalPendCount += newPendCount;
         finRefs = finRefs->next;
     }
-    LOG_REFERENCE("processFinalizableReferences(): %zd finalizers triggered.\n",
-                  totalPendCount);
+    LOG_REF("%zd finalizers triggered.\n", totalPendCount);
     if (totalPendCount == 0) {
         /* No objects required finalization.
          * Free the empty temporary table.
@@ -1259,8 +1257,7 @@ void processFinalizableReferences(void)
     if (!dvmHeapAddTableToLargeTable(&gDvm.gcHeap->pendingFinalizationRefs,
                 &newPendingRefs))
     {
-        LOG_REFERENCE("dvmHeapScheduleFinalizations(): can't insert new "
-                      "pending finalizations\n");
+        LOG_REF("can't insert new pending finalizations\n");
         dvmAbort();
     }
 
@@ -1296,7 +1293,7 @@ static void scavengeReferenceObject(Object *obj)
     size_t referentOffset, vmDataOffset;
 
     assert(obj != NULL);
-    LOG_SCAVENGE("scavengeReferenceObject(obj=%p),'%s'", obj, obj->clazz->descriptor);
+    LOG_SCAV("scavengeReferenceObject(obj=%p),'%s'", obj, obj->clazz->descriptor);
     scavengeDataObject(obj);
     referentOffset = gDvm.offJavaLangRefReference_referent;
     referent = dvmGetFieldObject(obj, referentOffset);
@@ -1314,7 +1311,7 @@ static void scavengeReferenceObject(Object *obj)
     vmDataOffset = gDvm.offJavaLangRefReference_vmData;
     dvmSetFieldObject(obj, vmDataOffset, (Object *)*queue);
     *queue = obj;
-    LOG_SCAVENGE("scavengeReferenceObject: enqueueing %p", obj);
+    LOG_SCAV("scavengeReferenceObject: enqueueing %p", obj);
 }
 
 /*
@@ -1325,7 +1322,7 @@ static void scavengeDataObject(Object *obj)
     ClassObject *clazz;
     int i;
 
-    // LOGI("scavengeDataObject(obj=%p)", obj);
+    // LOG_SCAV("scavengeDataObject(obj=%p)", obj);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     assert(obj->clazz->objectSize != 0);
@@ -1360,7 +1357,7 @@ static Object *transportObject(const Object *fromObj)
     Object *toObj;
     size_t allocSize, copySize;
 
-    LOG_TRANSPORT("transportObject(fromObj=%p) allocBlocks=%zu",
+    LOG_TRAN("transportObject(fromObj=%p) allocBlocks=%zu",
                   fromObj,
                   gDvm.gcHeap->heapSource->allocBlocks);
     assert(fromObj != NULL);
@@ -1394,10 +1391,10 @@ static Object *transportObject(const Object *fromObj)
         *(u4 *)(((char *)toObj) + copySize) = (u4)fromObj >> 3;
         toObj->lock |= LW_HASH_STATE_HASHED_AND_MOVED << LW_HASH_STATE_SHIFT;
     }
-    LOG_TRANSPORT("transportObject: from %p/%zu to %p/%zu (%zu,%zu) %s",
-                  fromObj, addressToBlock(gDvm.gcHeap->heapSource,fromObj),
-                  toObj, addressToBlock(gDvm.gcHeap->heapSource,toObj),
-                  copySize, allocSize, copySize < allocSize ? "DIFFERENT" : "");
+    LOG_TRAN("transportObject: from %p/%zu to %p/%zu (%zu,%zu) %s",
+             fromObj, addressToBlock(gDvm.gcHeap->heapSource,fromObj),
+             toObj, addressToBlock(gDvm.gcHeap->heapSource,toObj),
+             copySize, allocSize, copySize < allocSize ? "DIFFERENT" : "");
     return toObj;
 }
 
@@ -1432,27 +1429,27 @@ static void scavengeReference(Object **obj)
 
     /* The entire block is black. */
     if (toSpaceContains(*obj)) {
-        LOG_SCAVENGE("scavengeReference skipping pinned object @ %p", *obj);
+        LOG_SCAV("scavengeReference skipping pinned object @ %p", *obj);
         return;
     }
-    LOG_SCAVENGE("scavengeReference(*obj=%p)", *obj);
+    LOG_SCAV("scavengeReference(*obj=%p)", *obj);
 
     assert(fromSpaceContains(*obj));
 
     clazz = (*obj)->clazz;
 
     if (isForward(clazz)) {
-        // LOGI("forwarding %p @ %p to %p", *obj, obj, (void *)((uintptr_t)clazz & ~0x1));
+        // LOG_SCAV("forwarding %p @ %p to %p", *obj, obj, (void *)((uintptr_t)clazz & ~0x1));
         *obj = (Object *)getForward(clazz);
         return;
     }
     fromObj = *obj;
     if (clazz == NULL) {
-        // LOGI("scavangeReference %p has a NULL class object", fromObj);
+        // LOG_SCAV("scavangeReference %p has a NULL class object", fromObj);
         assert(!"implemented");
         toObj = NULL;
     } else if (clazz == gDvm.unlinkedJavaLangClass) {
-        // LOGI("scavangeReference %p is an unlinked class object", fromObj);
+        // LOG_SCAV("scavangeReference %p is an unlinked class object", fromObj);
         assert(!"implemented");
         toObj = NULL;
     } else {
@@ -1469,13 +1466,13 @@ static void verifyReference(const void *obj)
     char space;
 
     if (obj == NULL) {
-        LOG_VERIFY("verifyReference(obj=%p)", obj);
+        LOG_VER("verifyReference(obj=%p)", obj);
         return;
     }
     heapSource = gDvm.gcHeap->heapSource;
     block = addressToBlock(heapSource, obj);
     space = heapSource->blockSpace[block];
-    LOG_VERIFY("verifyReference(obj=%p),block=%zu,space=%d", obj, block, space);
+    LOG_VER("verifyReference(obj=%p),block=%zu,space=%d", obj, block, space);
     assert(!((uintptr_t)obj & 7));
     assert(toSpaceContains(obj));
     assert(dvmIsValidObject(obj));
@@ -1535,7 +1532,7 @@ static void pinHashTableEntries(HashTable *table)
     void *obj;
     int i;
 
-    LOGI(">>> pinHashTableEntries(table=%p)", table);
+    LOG_PIN(">>> pinHashTableEntries(table=%p)", table);
     if (table == NULL) {
         return;
     }
@@ -1549,7 +1546,7 @@ static void pinHashTableEntries(HashTable *table)
         pinObject(entry->data);
     }
     dvmHashTableUnlock(table);
-    LOGI("<<< pinHashTableEntries(table=%p)", table);
+    LOG_PIN("<<< pinHashTableEntries(table=%p)", table);
 }
 
 static void pinPrimitiveClasses(void)
@@ -1588,11 +1585,11 @@ static void scavengeInternedStrings(void)
         if (obj == NULL || obj == HASH_TOMBSTONE) {
             continue;
         } else if (!isPermanentString((StringObject *)obj)) {
-            // LOGI("entry->data=%p", entry->data);
-            LOG_SCAVENGE(">>> string obj=%p", entry->data);
+            // LOG_SCAV("entry->data=%p", entry->data);
+            LOG_SCAV(">>> string obj=%p", entry->data);
             /* TODO(cshapiro): detach white string objects */
             scavengeReference((Object **)(void *)&entry->data);
-            LOG_SCAVENGE("<<< string obj=%p", entry->data);
+            LOG_SCAV("<<< string obj=%p", entry->data);
         }
     }
     dvmHashTableUnlock(table);
@@ -1617,9 +1614,9 @@ static void pinInternedStrings(void)
             continue;
         } else if (isPermanentString((StringObject *)obj)) {
             obj = (Object *)getPermanentString((StringObject*)obj);
-            LOG_PROMOTE(">>> pin string obj=%p", obj);
+            LOG_PROM(">>> pin string obj=%p", obj);
             pinObject(obj);
-            LOG_PROMOTE("<<< pin string obj=%p", obj);
+            LOG_PROM("<<< pin string obj=%p", obj);
         }
      }
     dvmHashTableUnlock(table);
@@ -1644,13 +1641,13 @@ static void verifyInternedStrings(void)
             continue;
         } else if (isPermanentString((StringObject *)obj)) {
             fwd = (Object *)getForward(obj);
-            LOG_VERIFY(">>> verify string fwd=%p obj=%p", fwd, obj);
+            LOG_VER(">>> verify string fwd=%p obj=%p", fwd, obj);
             verifyReference(fwd);
-            LOG_VERIFY(">>> verify string fwd=%p obj=%p", fwd, obj);
+            LOG_VER(">>> verify string fwd=%p obj=%p", fwd, obj);
         } else {
-            LOG_SCAVENGE(">>> verify string obj=%p %p", obj, entry->data);
+            LOG_SCAV(">>> verify string obj=%p %p", obj, entry->data);
             verifyReference(obj);
-            LOG_SCAVENGE("<<< verify string obj=%p %p", obj, entry->data);
+            LOG_SCAV("<<< verify string obj=%p %p", obj, entry->data);
         }
     }
     dvmHashTableUnlock(table);
@@ -1681,13 +1678,13 @@ static void verifyReferenceTable(const ReferenceTable *table)
     Object **entry;
     int i;
 
-    LOGI(">>> verifyReferenceTable(table=%p)", table);
+    LOG_VER(">>> verifyReferenceTable(table=%p)", table);
     for (entry = table->table; entry < table->nextEntry; ++entry) {
         assert(entry != NULL);
         assert(!isForward(*entry));
         verifyReference(*entry);
     }
-    LOGI("<<< verifyReferenceTable(table=%p)", table);
+    LOG_VER("<<< verifyReferenceTable(table=%p)", table);
 }
 
 static void scavengeLargeHeapRefTable(LargeHeapRefTable *table)
@@ -1724,8 +1721,8 @@ static void scavengeThreadStack(Thread *thread)
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
             if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
-                LOGI("PGC: added %s.%s %p\n",
-                     method->clazz->descriptor, method->name, method);
+                LOG_SCAV("PGC: added %s.%s %p\n",
+                             method->clazz->descriptor, method->name, method);
 #endif
 #if WITH_EXTRA_GC_CHECKS > 1
             /*
@@ -1802,7 +1799,7 @@ static void scavengeThreadStack(Thread *thread)
 
             /* assert(pMap != NULL); */
 
-            //LOGI("PGC: %s.%s\n", method->clazz->descriptor, method->name);
+            //LOG_SCAV("PGC: %s.%s\n", method->clazz->descriptor, method->name);
 
             if (pMap != NULL) {
                 /* found map, get registers for this address */
@@ -1810,12 +1807,12 @@ static void scavengeThreadStack(Thread *thread)
                 regVector = dvmRegisterMapGetLine(pMap, addr);
                 /*
                 if (regVector == NULL) {
-                    LOGI("PGC: map but no entry for %s.%s addr=0x%04x\n",
-                         method->clazz->descriptor, method->name, addr);
+                    LOG_SCAV("PGC: map but no entry for %s.%s addr=0x%04x\n",
+                                 method->clazz->descriptor, method->name, addr);
                 } else {
-                    LOGI("PGC: found map for %s.%s 0x%04x (t=%d)\n",
-                         method->clazz->descriptor, method->name, addr,
-                         thread->threadId);
+                    LOG_SCAV("PGC: found map for %s.%s 0x%04x (t=%d)\n",
+                                 method->clazz->descriptor, method->name, addr,
+                                 thread->threadId);
                 }
                 */
             } else {
@@ -1827,7 +1824,7 @@ static void scavengeThreadStack(Thread *thread)
                  * worth yelling a little.
                  */
                 if (gDvm.preciseGc) {
-                    LOGI("PGC: no map for %s.%s\n", method->clazz->descriptor, method->name);
+                    LOG_SCAV("PGC: no map for %s.%s\n", method->clazz->descriptor, method->name);
                 }
                 regVector = NULL;
             }
@@ -1878,7 +1875,7 @@ static void scavengeThreadStack(Thread *thread)
 #endif
                         {
 
-                            // LOGI("stack reference %u@%p", *framePtr, framePtr);
+                            // LOG_SCAV("stack reference %u@%p", *framePtr, framePtr);
                             /* dvmMarkObjectNonNull((Object *)rval); */
                             scavengeReference((Object **) framePtr);
                         }
@@ -1922,12 +1919,12 @@ static void scavengeThread(Thread *thread)
            thread->isSuspended ||
            thread == dvmThreadSelf());
 
-    // LOGI("scavengeThread(thread=%p)", thread);
+    // LOG_SCAV("scavengeThread(thread=%p)", thread);
 
-    // LOGI("Scavenging threadObj=%p", thread->threadObj);
+    // LOG_SCAV("Scavenging threadObj=%p", thread->threadObj);
     scavengeReference(&thread->threadObj);
 
-    // LOGI("Scavenging exception=%p", thread->exception);
+    // LOG_SCAV("Scavenging exception=%p", thread->exception);
     scavengeReference(&thread->exception);
 
     scavengeThreadStack(thread);
@@ -1968,17 +1965,17 @@ static void verifyThreadStack(const Thread *thread)
 
             /* assert(pMap != NULL); */
 
-            // LOGI("PGC: %s.%s\n", method->clazz->descriptor, method->name);
+            // LOG_VER("PGC: %s.%s\n", method->clazz->descriptor, method->name);
 
             if (pMap != NULL) {
                 /* found map, get registers for this address */
                 int addr = saveArea->xtra.currentPc - method->insns;
                 regVector = dvmRegisterMapGetLine(pMap, addr);
                 if (regVector == NULL) {
-                    LOGI("PGC: map but no entry for %s.%s addr=0x%04x\n",
-                         method->clazz->descriptor, method->name, addr);
+                    LOG_VER("PGC: map but no entry for %s.%s addr=0x%04x\n",
+                               method->clazz->descriptor, method->name, addr);
                 } else {
-                    //LOGI("PGC: found map for %s.%s 0x%04x (t=%d)\n", method->clazz->descriptor, method->name, addr, thread->threadId);
+                    //LOG_VER("PGC: found map for %s.%s 0x%04x (t=%d)\n", method->clazz->descriptor, method->name, addr, thread->threadId);
                 }
             } else {
                 /*
@@ -1989,8 +1986,8 @@ static void verifyThreadStack(const Thread *thread)
                  * worth yelling a little.
                  */
                 if (gDvm.preciseGc) {
-                    LOGI("PGC: no map for %s.%s\n",
-                        method->clazz->descriptor, method->name);
+                    LOG_VER("PGC: no map for %s.%s\n",
+                               method->clazz->descriptor, method->name);
                 }
                 regVector = NULL;
             }
@@ -2031,7 +2028,7 @@ static void verifyThreadStack(const Thread *thread)
                          * Non-null, register marked as live reference.  This
                          * should always be a valid object.
                          */
-                        //LOGI("verify stack reference %p", (Object *)*framePtr);
+                        //LOG_VER("verify stack reference %p", (Object *)*framePtr);
                         verifyReference((Object *)*framePtr);
                     } else {
                         /*
@@ -2062,23 +2059,23 @@ static void verifyThread(const Thread *thread)
            thread->isSuspended ||
            thread == dvmThreadSelf());
 
-    LOGI("verifyThread(thread=%p)", thread);
+    LOG_VER("verifyThread(thread=%p)", thread);
 
-    LOGI("verify threadObj=%p", thread->threadObj);
+    LOG_VER("verify threadObj=%p", thread->threadObj);
     verifyReference(thread->threadObj);
 
-    LOGI("verify exception=%p", thread->exception);
+    LOG_VER("verify exception=%p", thread->exception);
     verifyReference(thread->exception);
 
-    LOGI("verify thread->internalLocalRefTable");
+    LOG_VER("verify thread->internalLocalRefTable");
     verifyReferenceTable(&thread->internalLocalRefTable);
 
-    LOGI("verify thread->jniLocalRefTable");
+    LOG_VER("verify thread->jniLocalRefTable");
     verifyReferenceTable(&thread->jniLocalRefTable);
 
     /* Can the check be pushed into the promote routine? */
     if (thread->jniMonitorRefTable.table) {
-        LOGI("verify thread->jniMonitorRefTable");
+        LOG_VER("verify thread->jniMonitorRefTable");
         verifyReferenceTable(&thread->jniMonitorRefTable);
     }
 
@@ -2125,8 +2122,8 @@ static void pinNativeMethodArguments(const Thread *thread)
              * native methods don't move around.  We can do a precise scan
              * of the arguments by examining the method signature.
              */
-            LOGI("+++ native scan %s.%s\n",
-                method->clazz->descriptor, method->name);
+            LOG_PIN("+++ native scan %s.%s\n",
+                    method->clazz->descriptor, method->name);
             assert(method->registersSize == method->insSize);
             if (!dvmIsStaticMethod(method)) {
                 /* grab the "this" pointer */
@@ -2163,7 +2160,7 @@ static void pinNativeMethodArguments(const Thread *thread)
                     obj = (Object *)*framePtr;          // debug, remove
                     if (dvmIsValidObject(obj)) {        // debug, remove
                         /* if we see a lot of these, our scan might be off */
-                        LOGI("+++ did NOT pin obj %p\n", obj);
+                        LOG_PIN("+++ did NOT pin obj %p\n", obj);
                     }
                     break;
                 }
@@ -2183,20 +2180,20 @@ static void pinThread(const Thread *thread)
     assert(thread->status != THREAD_RUNNING ||
            thread->isSuspended ||
            thread == dvmThreadSelf());
-    LOGI("pinThread(thread=%p)", thread);
+    LOG_PIN("pinThread(thread=%p)", thread);
 
-    LOGI("Pin native method arguments");
+    LOG_PIN("Pin native method arguments");
     pinNativeMethodArguments(thread);
 
-    LOGI("Pin internalLocalRefTable");
+    LOG_PIN("Pin internalLocalRefTable");
     pinReferenceTable(&thread->internalLocalRefTable);
 
-    LOGI("Pin jniLocalRefTable");
+    LOG_PIN("Pin jniLocalRefTable");
     pinReferenceTable(&thread->jniLocalRefTable);
 
     /* Can the check be pushed into the promote routine? */
     if (thread->jniMonitorRefTable.table) {
-        LOGI("Pin jniMonitorRefTable");
+        LOG_PIN("Pin jniMonitorRefTable");
         pinReferenceTable(&thread->jniMonitorRefTable);
     }
 }
@@ -2229,7 +2226,7 @@ static void scavengeBlock(HeapSource *heapSource, size_t block)
     u1 *end;
     size_t size;
 
-    LOG_SCAVENGE("scavengeBlock(heapSource=%p,block=%zu)", heapSource, block);
+    LOG_SCAV("scavengeBlock(heapSource=%p,block=%zu)", heapSource, block);
 
     assert(heapSource != NULL);
     assert(block < heapSource->totalBlocks);
@@ -2237,7 +2234,7 @@ static void scavengeBlock(HeapSource *heapSource, size_t block)
 
     cursor = blockToAddress(heapSource, block);
     end = cursor + BLOCK_SIZE;
-    LOG_SCAVENGE("scavengeBlock start=%p, end=%p", cursor, end);
+    LOG_SCAV("scavengeBlock start=%p, end=%p", cursor, end);
 
     /* Parse and scavenge the current block. */
     size = 0;
@@ -2290,7 +2287,7 @@ static void verifyBlock(HeapSource *heapSource, size_t block)
     u1 *end;
     size_t size;
 
-    // LOGI("verifyBlock(heapSource=%p,block=%zu)", heapSource, block);
+    // LOG_VER("verifyBlock(heapSource=%p,block=%zu)", heapSource, block);
 
     assert(heapSource != NULL);
     assert(block < heapSource->totalBlocks);
@@ -2298,7 +2295,7 @@ static void verifyBlock(HeapSource *heapSource, size_t block)
 
     cursor = blockToAddress(heapSource, block);
     end = cursor + BLOCK_SIZE;
-    // LOGI("verifyBlock start=%p, end=%p", cursor, end);
+    // LOG_VER("verifyBlock start=%p, end=%p", cursor, end);
 
     /* Parse and scavenge the current block. */
     size = 0;
@@ -2331,22 +2328,22 @@ static void describeBlockQueue(const HeapSource *heapSource)
 
     block = heapSource->queueHead;
     count = 0;
-    LOG_SCAVENGE(">>> describeBlockQueue(heapSource=%p)", heapSource);
+    LOG_SCAV(">>> describeBlockQueue(heapSource=%p)", heapSource);
     /* Count the number of blocks enqueued. */
     while (block != QUEUE_TAIL) {
         block = heapSource->blockQueue[block];
         ++count;
     }
-    LOG_SCAVENGE("blockQueue %zu elements, enqueued %zu",
+    LOG_SCAV("blockQueue %zu elements, enqueued %zu",
                  count, heapSource->queueSize);
     block = heapSource->queueHead;
     while (block != QUEUE_TAIL) {
         space = heapSource->blockSpace[block];
-        LOG_SCAVENGE("block=%zu@%p,space=%zu", block, blockToAddress(heapSource,block), space);
+        LOG_SCAV("block=%zu@%p,space=%zu", block, blockToAddress(heapSource,block), space);
         block = heapSource->blockQueue[block];
     }
 
-    LOG_SCAVENGE("<<< describeBlockQueue(heapSource=%p)", heapSource);
+    LOG_SCAV("<<< describeBlockQueue(heapSource=%p)", heapSource);
 }
 
 /*
@@ -2357,17 +2354,17 @@ static void scavengeBlockQueue(void)
     HeapSource *heapSource;
     size_t block;
 
-    LOG_SCAVENGE(">>> scavengeBlockQueue()");
+    LOG_SCAV(">>> scavengeBlockQueue()");
     heapSource = gDvm.gcHeap->heapSource;
     describeBlockQueue(heapSource);
     while (heapSource->queueHead != QUEUE_TAIL) {
         block = heapSource->queueHead;
-        LOG_SCAVENGE("Dequeueing block %zu\n", block);
+        LOG_SCAV("Dequeueing block %zu\n", block);
         scavengeBlock(heapSource, block);
         heapSource->queueHead = heapSource->blockQueue[block];
-        LOGI("New queue head is %zu\n", heapSource->queueHead);
+        LOG_SCAV("New queue head is %zu\n", heapSource->queueHead);
     }
-    LOG_SCAVENGE("<<< scavengeBlockQueue()");
+    LOG_SCAV("<<< scavengeBlockQueue()");
 }
 
 /*
@@ -2392,9 +2389,9 @@ static void verifyNewSpace(void)
         default: assert(!"reached");
         }
     }
-    LOG_VERIFY("Block Demographics: "
-               "Free=%zu,ToSpace=%zu,FromSpace=%zu,Continued=%zu",
-               c0, c1, c2, c7);
+    LOG_VER("Block Demographics: "
+            "Free=%zu,ToSpace=%zu,FromSpace=%zu,Continued=%zu",
+            c0, c1, c2, c7);
     for (i = 0; i < heapSource->totalBlocks; ++i) {
         if (heapSource->blockSpace[i] != BLOCK_TO_SPACE) {
             continue;
@@ -2471,8 +2468,8 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
         size_t alloc, unused, total;
 
         room(&alloc, &unused, &total);
-        LOGI("BEFORE GC: %zu alloc, %zu free, %zu total.",
-             alloc, unused, total);
+        LOG_SCAV("BEFORE GC: %zu alloc, %zu free, %zu total.",
+                     alloc, unused, total);
     }
 
     gcHeap = gDvm.gcHeap;
@@ -2481,26 +2478,12 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     /*
      * Promote blocks with stationary objects.
      */
-
-    // LOGI("Pinning gDvm.threadList");
     pinThreadList();
-
-    // LOGI("Pinning gDvm.jniGlobalRefTable");
     pinReferenceTable(&gDvm.jniGlobalRefTable);
-
-    // LOGI("Pinning gDvm.jniPinRefTable");
     pinReferenceTable(&gDvm.jniPinRefTable);
-
-    // LOGI("Pinning gDvm.gcHeap->nonCollectableRefs");
     pinReferenceTable(&gcHeap->nonCollectableRefs);
-
-    // LOGI("Pinning gDvm.loadedClasses");
     pinHashTableEntries(gDvm.loadedClasses);
-
-    // LOGI("Pinning gDvm.primitiveClass");
     pinPrimitiveClasses();
-
-    // LOGI("Pinning gDvm.internedStrings");
     pinInternedStrings();
 
     // describeBlocks(gcHeap->heapSource);
@@ -2524,71 +2507,64 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
      * Scavenge blocks and relocate movable objects.
      */
 
-    LOGI("Scavenging gDvm.threadList");
+    LOG_SCAV("Scavenging gDvm.threadList");
     scavengeThreadList();
 
-    LOGI("Scavenging gDvm.gcHeap->referenceOperations");
+    LOG_SCAV("Scavenging gDvm.gcHeap->referenceOperations");
     scavengeLargeHeapRefTable(gcHeap->referenceOperations);
 
-    LOGI("Scavenging gDvm.gcHeap->pendingFinalizationRefs");
+    LOG_SCAV("Scavenging gDvm.gcHeap->pendingFinalizationRefs");
     scavengeLargeHeapRefTable(gcHeap->pendingFinalizationRefs);
 
-    LOGI("Scavenging random global stuff");
+    LOG_SCAV("Scavenging random global stuff");
     scavengeReference(&gDvm.outOfMemoryObj);
     scavengeReference(&gDvm.internalErrorObj);
     scavengeReference(&gDvm.noClassDefFoundErrorObj);
 
-    LOGI("Scavenging gDvm.dbgRegistry");
+    LOG_SCAV("Scavenging gDvm.dbgRegistry");
     scavengeHashTable(gDvm.dbgRegistry);
 
-    // LOGI("Scavenging gDvm.internedString");
+    // LOG_SCAV("Scavenging gDvm.internedString");
     scavengeInternedStrings();
 
-    LOGI("Root scavenge has completed.");
+    LOG_SCAV("Root scavenge has completed.");
 
     scavengeBlockQueue();
 
-    LOGI("Re-snap global class pointers.");
+    LOG_SCAV("Re-snap global class pointers.");
     scavengeGlobals();
 
-    LOGI("New space scavenge has completed.");
+    LOG_SCAV("New space scavenge has completed.");
 
     /*
      * Process reference objects in strength order.
      */
 
-    LOG_REFERENCE("Processing soft references...");
+    LOG_REF("Processing soft references...");
     preserveSoftReferences(&gDvm.gcHeap->softReferences);
     clearWhiteReferences(&gDvm.gcHeap->softReferences);
 
-    LOG_REFERENCE("Processing weak references...");
+    LOG_REF("Processing weak references...");
     clearWhiteReferences(&gDvm.gcHeap->weakReferences);
 
-    LOG_REFERENCE("Finding finalizations...");
+    LOG_REF("Finding finalizations...");
     processFinalizableReferences();
 
-    LOG_REFERENCE("Processing f-reachable soft references...");
+    LOG_REF("Processing f-reachable soft references...");
     clearWhiteReferences(&gDvm.gcHeap->softReferences);
 
-    LOG_REFERENCE("Processing f-reachable weak references...");
+    LOG_REF("Processing f-reachable weak references...");
     clearWhiteReferences(&gDvm.gcHeap->weakReferences);
 
-    LOG_REFERENCE("Processing phantom references...");
+    LOG_REF("Processing phantom references...");
     clearWhiteReferences(&gDvm.gcHeap->phantomReferences);
 
     /*
      * Verify the stack and heap.
      */
-
-    // LOGI("Validating new space.");
-
     verifyInternedStrings();
-
     verifyThreadList();
-
     verifyNewSpace();
-
-    // LOGI("New space verify has completed.");
 
     //describeBlocks(gcHeap->heapSource);
 
@@ -2598,7 +2574,7 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
         size_t alloc, rem, total;
 
         room(&alloc, &rem, &total);
-        LOGI("AFTER GC: %zu alloc, %zu free, %zu total.", alloc, rem, total);
+        LOG_SCAV("AFTER GC: %zu alloc, %zu free, %zu total.", alloc, rem, total);
     }
 }
 
