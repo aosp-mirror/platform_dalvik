@@ -70,7 +70,7 @@ UnzipToFileResult dexUnzipToFile(const char* zipFileName,
         goto bail;
     }
 
-    if (!dexZipExtractEntryToFile(&archive, entry, fd)) {
+    if (dexZipExtractEntryToFile(&archive, entry, fd) != 0) {
         fprintf(stderr, "Extract of '%s' from '%s' failed\n",
             kFileToExtract, zipFileName);
         result = kUTFRBadZip;

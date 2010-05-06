@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Read-only access to Zip archives, with minimal heap allocation.
  */
@@ -41,12 +42,15 @@ typedef struct ZipHashEntry {
 /*
  * Read-only Zip archive.
  *
- * We want "open" and "find entry by name" to be fast operations, and we
- * want to use as little memory as possible.  We memory-map the file,
- * and load a hash table with pointers to the filenames (which aren't
- * null-terminated).  The other fields are at a fixed offset from the
- * filename, so we don't need to extract those (but we do need to byte-read
- * and endian-swap them every time we want them).
+ * We want "open" and "find entry by name" to be fast operations, and
+ * we want to use as little memory as possible.  We memory-map the zip
+ * central directory, and load a hash table with pointers to the filenames
+ * (which aren't null-terminated).  The other fields are at a fixed offset
+ * from the filename, so we don't need to extract those (but we do need
+ * to byte-read and endian-swap them every time we want them).
+ *
+ * It's possible that somebody has handed us a massive (~1GB) zip archive,
+ * so we can't expect to mmap the entire file.
  *
  * To speed comparisons when doing a lookup by name, we could make the mapping
  * "private" (copy-on-write) and null-terminate the filenames after verifying
@@ -58,8 +62,9 @@ typedef struct ZipArchive {
     /* open Zip archive */
     int         mFd;
 
-    /* mapped file */
-    MemMapping  mMap;
+    /* mapped central directory area */
+    off_t       mDirectoryOffset;
+    MemMapping  mDirectoryMap;
 
     /* number of entries in the Zip archive */
     int         mNumEntries;
@@ -121,9 +126,11 @@ ZipEntry dexZipFindEntry(const ZipArchive* pArchive,
 /*
  * Retrieve one or more of the "interesting" fields.  Non-NULL pointers
  * are filled in.
+ *
+ * Returns 0 on success.
  */
-bool dexZipGetEntryInfo(const ZipArchive* pArchive, ZipEntry entry,
-    int* pMethod, long* pUncompLen, long* pCompLen, off_t* pOffset,
+int dexZipGetEntryInfo(const ZipArchive* pArchive, ZipEntry entry,
+    int* pMethod, size_t* pUncompLen, size_t* pCompLen, off_t* pOffset,
     long* pModWhen, long* pCrc32);
 
 /*
@@ -136,10 +143,10 @@ DEX_INLINE long dexGetZipEntryOffset(const ZipArchive* pArchive,
     dexZipGetEntryInfo(pArchive, entry, NULL, NULL, NULL, &val, NULL, NULL);
     return (long) val;
 }
-DEX_INLINE long dexGetZipEntryUncompLen(const ZipArchive* pArchive,
+DEX_INLINE size_t dexGetZipEntryUncompLen(const ZipArchive* pArchive,
     const ZipEntry entry)
 {
-    long val = 0;
+    size_t val = 0;
     dexZipGetEntryInfo(pArchive, entry, NULL, &val, NULL, NULL, NULL, NULL);
     return val;
 }
@@ -160,8 +167,10 @@ DEX_INLINE long dexGetZipEntryCrc32(const ZipArchive* pArchive,
 
 /*
  * Uncompress and write an entry to a file descriptor.
+ *
+ * Returns 0 on success.
  */
-bool dexZipExtractEntryToFile(const ZipArchive* pArchive,
+int dexZipExtractEntryToFile(const ZipArchive* pArchive,
     const ZipEntry entry, int fd);
 
 /*
