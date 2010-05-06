@@ -77,7 +77,7 @@
  * objects must not be moved.  This property is known as "pinning".
  * These objects must be dealt with specially.  We use Bartlett's
  * scheme; blocks containing such objects are grayed (promoted) at the
- * start of a garbage collection.  By virtue of this trick, marking
+ * start of a garbage collection.  By virtue of this trick, tracing
  * from the roots proceeds as usual but all objects on those pages are
  * considered promoted and therefore not moved.
  *
@@ -129,12 +129,14 @@
 #define LOG_TRANSPORT LOGI
 #define LOG_PROMOTE LOGI
 #define LOG_VERIFY LOGI
+#define LOG_REFERENCE LOGI
 #else
 #define LOG_ALLOC(...) ((void *)0)
 #define LOG_SCAVENGE(...) ((void *)0)
 #define LOG_TRANSPORT(...) ((void *)0)
 #define LOG_PROMOTE(...) ((void *)0)
 #define LOG_VERIFY(...) ((void *)0)
+#define LOG_REFERENCE(...) ((void *)0)
 #endif
 
 static void enqueueBlock(HeapSource *heapSource, size_t block);
@@ -142,11 +144,12 @@ static void scavengeReference(Object **obj);
 static void verifyReference(const void *obj);
 static void printHeapBitmap(const HeapBitmap *bitmap);
 static void printHeapBitmapSxS(const HeapBitmap *b1, const HeapBitmap *b2);
-static bool isToSpace(const void *addr);
-static bool isFromSpace(const void *addr);
+static bool toSpaceContains(const void *addr);
+static bool fromSpaceContains(const void *addr);
 static size_t sumHeapBitmap(const HeapBitmap *bitmap);
 static size_t objectSize(const Object *obj);
-static void scavengeDataObject(DataObject *obj);
+static void scavengeDataObject(Object *obj);
+static void scavengeBlockQueue(void);
 
 /*
  * We use 512-byte blocks.
@@ -210,14 +213,6 @@ struct HeapSource {
     u1 *allocLimit;
 
     HeapBitmap allocBits;
-
-    /*
-     * Singly-linked lists of live Reference objects.  Built when
-     * scavenging, threaded through the Reference.vmData field.
-     */
-    DataObject *softReferenceList;
-    DataObject *weakReferenceList;
-    DataObject *phantomReferenceList;
 
     /*
      * The starting size of the heap.  This value is the same as the
@@ -665,7 +660,8 @@ void *dvmHeapSourceAllocAndGrow(size_t size)
 /* TODO: refactor along with dvmHeapSourceAlloc */
 void *allocateGray(size_t size)
 {
-    assert(gDvm.gcHeap->heapSource->queueHead != QUEUE_TAIL);
+    /* TODO: add a check that we are in a GC. */
+    /* assert(gDvm.gcHeap->heapSource->queueHead != QUEUE_TAIL); */
     return dvmHeapSourceAlloc(size);
 }
 
@@ -789,12 +785,6 @@ void dvmHeapSourceFlip(void)
     heapSource->queueSize = 0;
     heapSource->queueHead = QUEUE_TAIL;
 
-    /* Hack: reset the reference lists. */
-    /* TODO(cshapiro): implement reference object processing. */
-    heapSource->softReferenceList = NULL;
-    heapSource->weakReferenceList = NULL;
-    heapSource->phantomReferenceList = NULL;
-
     /* TODO(cshapiro): pad the current (prev) block. */
 
     heapSource->allocPtr = NULL;
@@ -836,12 +826,12 @@ static bool isSpaceInternal(u1 *addr, int space)
     return space == space2;
 }
 
-static bool isFromSpace(const void *addr)
+static bool fromSpaceContains(const void *addr)
 {
     return isSpaceInternal((u1 *)addr, BLOCK_FROM_SPACE);
 }
 
-static bool isToSpace(const void *addr)
+static bool toSpaceContains(const void *addr)
 {
     return isSpaceInternal((u1 *)addr, BLOCK_TO_SPACE);
 }
@@ -981,7 +971,7 @@ static size_t scavengeArrayObject(ArrayObject *array)
 
     LOG_SCAVENGE("scavengeArrayObject(array=%p)", array);
     /* Scavenge the class object. */
-    assert(isToSpace(array));
+    assert(toSpaceContains(array));
     assert(array != NULL);
     assert(array->obj.clazz != NULL);
     scavengeReference((Object **) array);
@@ -1000,80 +990,296 @@ static size_t scavengeArrayObject(ArrayObject *array)
  * Reference object scavenging.
  */
 
-static int getReferenceFlags(const DataObject *obj)
+static int getReferenceFlags(const Object *obj)
 {
     int flags;
 
     flags = CLASS_ISREFERENCE |
             CLASS_ISWEAKREFERENCE |
             CLASS_ISPHANTOMREFERENCE;
-    return GET_CLASS_FLAG_GROUP(obj->obj.clazz, flags);
+    return GET_CLASS_FLAG_GROUP(obj->clazz, flags);
 }
 
-static int isReference(const DataObject *obj)
+static int isReference(const Object *obj)
 {
     return getReferenceFlags(obj) != 0;
 }
 
-static int isSoftReference(const DataObject *obj)
+static int isSoftReference(const Object *obj)
 {
     return getReferenceFlags(obj) == CLASS_ISREFERENCE;
 }
 
-static int isWeakReference(const DataObject *obj)
+static int isWeakReference(const Object *obj)
 {
     return getReferenceFlags(obj) & CLASS_ISWEAKREFERENCE;
 }
 
-static bool isPhantomReference(const DataObject *obj)
+static bool isPhantomReference(const Object *obj)
 {
     return getReferenceFlags(obj) & CLASS_ISPHANTOMREFERENCE;
 }
 
-static void clearReference(DataObject *reference)
+/*
+ * Returns true if the reference was registered with a reference queue
+ * but has not yet been appended to it.
+ */
+static bool isReferenceEnqueuable(const Object *ref)
 {
-    size_t offset;
+    Object *queue, *queueNext;
 
-    assert(isSoftReference(reference) || isWeakReference(reference));
-    offset = gDvm.offJavaLangRefReference_referent;
-    dvmSetFieldObject((Object *)reference, offset, NULL);
-}
-
-static bool isReferentGray(const DataObject *reference)
-{
-    Object *obj;
-    size_t offset;
-
-    assert(reference != NULL);
-    assert(isSoftReference(reference) || isWeakReference(reference));
-    offset = gDvm.offJavaLangRefReference_referent;
-    obj = dvmGetFieldObject((Object *)reference, offset);
-    return obj == NULL || isToSpace(obj);
-}
-
-static void enqueueReference(HeapSource *heapSource, DataObject *reference)
-{
-    DataObject **queue;
-    size_t offset;
-
-    LOGI("enqueueReference(heapSource=%p,reference=%p)", heapSource, reference);
-    assert(heapSource != NULL);
-    assert(reference != NULL);
-    assert(isToSpace(reference));
-    assert(isReference(reference));
-    if (isSoftReference(reference)) {
-        queue = &heapSource->softReferenceList;
-    } else if (isWeakReference(reference)) {
-        queue = &heapSource->weakReferenceList;
-    } else if (isPhantomReference(reference)) {
-        queue = &heapSource->phantomReferenceList;
-    } else {
-        assert(!"reached");
-        queue = NULL;
+    queue = dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue);
+    queueNext = dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext);
+    if (queue == NULL || queueNext != NULL) {
+        /*
+         * There is no queue, or the reference has already
+         * been enqueued.  The Reference.enqueue() method
+         * will do nothing even if we call it.
+         */
+        return false;
     }
-    offset = gDvm.offJavaLangRefReference_vmData;
-    dvmSetFieldObject((Object *)reference, offset, (Object *)*queue);
-    *queue = reference;
+
+    /*
+     * We need to call enqueue(), but if we called it from
+     * here we'd probably deadlock.  Schedule a call.
+     */
+    return true;
+}
+
+/*
+ * Schedules a reference to be appended to its reference queue.
+ */
+static void enqueueReference(const Object *ref)
+{
+    LargeHeapRefTable **table;
+    Object *op;
+
+    assert(((uintptr_t)ref & 3) == 0);
+    assert((WORKER_ENQUEUE & ~3) == 0);
+    assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
+    assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext) == NULL);
+    /*
+     * Set the enqueue bit in the bottom of the pointer.  Assumes that
+     * objects are 8-byte aligned.
+     *
+     * Note that we are adding the *Reference* (which is by definition
+     * already black at this point) to this list; we're not adding the
+     * referent (which has already been cleared).
+     */
+    table = &gDvm.gcHeap->referenceOperations;
+    op = (Object *)((uintptr_t)ref | WORKER_ENQUEUE);
+    if (!dvmHeapAddRefToLargeTable(table, op)) {
+        LOGE("enqueueReference(): "
+             "no room for any more reference operations");
+        dvmAbort();
+    }
+}
+
+/*
+ * Sets the referent field of a reference object to NULL.
+ */
+static void clearReference(Object *obj)
+{
+    dvmSetFieldObject(obj, gDvm.offJavaLangRefReference_referent, NULL);
+}
+
+/*
+ * Clears reference objects with white referents.
+ */
+void clearWhiteReferences(Object **list)
+{
+    size_t referentOffset, vmDataOffset;
+    bool doSignal;
+
+    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    referentOffset = gDvm.offJavaLangRefReference_referent;
+    doSignal = false;
+    while (*list != NULL) {
+        Object *ref = *list;
+        JValue *field = dvmFieldPtr(ref, referentOffset);
+        Object *referent = field->l;
+        *list = dvmGetFieldObject(ref, vmDataOffset);
+        assert(referent != NULL);
+        if (isForward(referent->clazz)) {
+            field->l = referent = getForward(referent->clazz);
+            continue;
+        }
+        if (fromSpaceContains(referent)) {
+            /* Referent is white, clear it. */
+            clearReference(ref);
+            if (isReferenceEnqueuable(ref)) {
+                enqueueReference(ref);
+                doSignal = true;
+            }
+        }
+    }
+    /*
+     * If we cleared a reference with a reference queue we must notify
+     * the heap worker to append the reference.
+     */
+    if (doSignal) {
+        dvmSignalHeapWorker(false);
+    }
+    assert(*list == NULL);
+}
+
+/*
+ * Blackens referents subject to the soft reference preservation
+ * policy.
+ */
+void preserveSoftReferences(Object **list)
+{
+    Object *ref;
+    Object *prev, *next;
+    size_t referentOffset, vmDataOffset;
+    unsigned counter;
+    bool white;
+
+    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    referentOffset = gDvm.offJavaLangRefReference_referent;
+    counter = 0;
+    prev = next = NULL;
+    ref = *list;
+    while (ref != NULL) {
+        JValue *field = dvmFieldPtr(ref, referentOffset);
+        Object *referent = field->l;
+        next = dvmGetFieldObject(ref, vmDataOffset);
+        assert(referent != NULL);
+        if (isForward(referent->clazz)) {
+            /* Referent is black. */
+            field->l = referent = getForward(referent->clazz);
+            white = false;
+        } else {
+            white = fromSpaceContains(referent);
+        }
+        if (!white && ((++counter) & 1)) {
+            /* Referent is white and biased toward saving, gray it. */
+            scavengeReference((Object **)(void *)&field->l);
+            white = true;
+        }
+        if (white) {
+            /* Referent is black, unlink it. */
+            if (prev != NULL) {
+                dvmSetFieldObject(ref, vmDataOffset, NULL);
+                dvmSetFieldObject(prev, vmDataOffset, next);
+            }
+        } else {
+            /* Referent is white, skip over it. */
+            prev = ref;
+        }
+        ref = next;
+    }
+    /*
+     * Restart the trace with the newly gray references added to the
+     * root set.
+     */
+    scavengeBlockQueue();
+}
+
+void processFinalizableReferences(void)
+{
+    HeapRefTable newPendingRefs;
+    LargeHeapRefTable *finRefs = gDvm.gcHeap->finalizableRefs;
+    Object **ref;
+    Object **lastRef;
+    size_t totalPendCount;
+
+    /*
+     * All strongly, reachable objects are black.
+     * Any white finalizable objects need to be finalized.
+     */
+
+    /* Create a table that the new pending refs will
+     * be added to.
+     */
+    if (!dvmHeapInitHeapRefTable(&newPendingRefs, 128)) {
+        //TODO: mark all finalizable refs and hope that
+        //      we can schedule them next time.  Watch out,
+        //      because we may be expecting to free up space
+        //      by calling finalizers.
+        LOG_REFERENCE("dvmHeapScheduleFinalizations(): no room for "
+                "pending finalizations\n");
+        dvmAbort();
+    }
+
+    /*
+     * Walk through finalizableRefs and move any white references to
+     * the list of new pending refs.
+     */
+    totalPendCount = 0;
+    while (finRefs != NULL) {
+        Object **gapRef;
+        size_t newPendCount = 0;
+
+        gapRef = ref = finRefs->refs.table;
+        lastRef = finRefs->refs.nextEntry;
+        while (ref < lastRef) {
+            if (fromSpaceContains(*ref)) {
+                if (!dvmHeapAddToHeapRefTable(&newPendingRefs, *ref)) {
+                    //TODO: add the current table and allocate
+                    //      a new, smaller one.
+                    LOG_REFERENCE("dvmHeapScheduleFinalizations(): "
+                            "no room for any more pending finalizations: %zd\n",
+                            dvmHeapNumHeapRefTableEntries(&newPendingRefs));
+                    dvmAbort();
+                }
+                newPendCount++;
+            } else {
+                /* This ref is black, so will remain on finalizableRefs.
+                 */
+                if (newPendCount > 0) {
+                    /* Copy it up to fill the holes.
+                     */
+                    *gapRef++ = *ref;
+                } else {
+                    /* No holes yet; don't bother copying.
+                     */
+                    gapRef++;
+                }
+            }
+            ref++;
+        }
+        finRefs->refs.nextEntry = gapRef;
+        //TODO: if the table is empty when we're done, free it.
+        totalPendCount += newPendCount;
+        finRefs = finRefs->next;
+    }
+    LOG_REFERENCE("processFinalizableReferences(): %zd finalizers triggered.\n",
+                  totalPendCount);
+    if (totalPendCount == 0) {
+        /* No objects required finalization.
+         * Free the empty temporary table.
+         */
+        dvmClearReferenceTable(&newPendingRefs);
+        return;
+    }
+
+    /* Add the new pending refs to the main list.
+     */
+    if (!dvmHeapAddTableToLargeTable(&gDvm.gcHeap->pendingFinalizationRefs,
+                &newPendingRefs))
+    {
+        LOG_REFERENCE("dvmHeapScheduleFinalizations(): can't insert new "
+                      "pending finalizations\n");
+        dvmAbort();
+    }
+
+    //TODO: try compacting the main list with a memcpy loop
+
+    /* Blacken the refs we just moved; we don't want them or their
+     * children to get swept yet.
+     */
+    ref = newPendingRefs.table;
+    lastRef = newPendingRefs.nextEntry;
+    assert(ref < lastRef);
+    HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_FINALIZING, 0);
+    while (ref < lastRef) {
+        scavengeReference(ref);
+        ref++;
+    }
+    HPROF_CLEAR_GC_SCAN_STATE();
+    scavengeBlockQueue();
+    dvmSignalHeapWorker(false);
 }
 
 /*
@@ -1083,40 +1289,49 @@ static void enqueueReference(HeapSource *heapSource, DataObject *reference)
  * for later processing.  TODO: implement proper reference processing
  * and move the referent scavenging elsewhere.
  */
-static void scavengeReferenceObject(DataObject *obj)
+static void scavengeReferenceObject(Object *obj)
 {
+    Object *referent;
+    Object **queue;
+    size_t referentOffset, vmDataOffset;
+
     assert(obj != NULL);
-    LOG_SCAVENGE("scavengeReferenceObject(obj=%p),'%s'", obj, obj->obj.clazz->descriptor);
-    {
-        /* Always scavenge the hidden Reference.referent field. */
-        size_t offset = gDvm.offJavaLangRefReference_referent;
-        void *addr = BYTE_OFFSET((Object *)obj, offset);
-        Object **ref = (Object **)(void *)&((JValue *)addr)->l;
-        scavengeReference(ref);
-    }
+    LOG_SCAVENGE("scavengeReferenceObject(obj=%p),'%s'", obj, obj->clazz->descriptor);
     scavengeDataObject(obj);
-    if (!isReferentGray(obj)) {
-        assert(!"reached");  /* TODO(cshapiro): remove this */
-        LOG_SCAVENGE("scavengeReferenceObject: enqueueing %p", obj);
-        enqueueReference(gDvm.gcHeap->heapSource, obj);
+    referentOffset = gDvm.offJavaLangRefReference_referent;
+    referent = dvmGetFieldObject(obj, referentOffset);
+    if (referent == NULL || toSpaceContains(referent)) {
+        return;
     }
+    if (isSoftReference(obj)) {
+        queue = &gDvm.gcHeap->softReferences;
+    } else if (isWeakReference(obj)) {
+        queue = &gDvm.gcHeap->weakReferences;
+    } else {
+        assert(isPhantomReference(obj));
+        queue = &gDvm.gcHeap->phantomReferences;
+    }
+    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    dvmSetFieldObject(obj, vmDataOffset, (Object *)*queue);
+    *queue = obj;
+    LOG_SCAVENGE("scavengeReferenceObject: enqueueing %p", obj);
 }
 
 /*
  * Data object scavenging.
  */
-static void scavengeDataObject(DataObject *obj)
+static void scavengeDataObject(Object *obj)
 {
     ClassObject *clazz;
     int i;
 
     // LOGI("scavengeDataObject(obj=%p)", obj);
     assert(obj != NULL);
-    assert(obj->obj.clazz != NULL);
-    assert(obj->obj.clazz->objectSize != 0);
-    assert(isToSpace(obj));
+    assert(obj->clazz != NULL);
+    assert(obj->clazz->objectSize != 0);
+    assert(toSpaceContains(obj));
     /* Scavenge the class object. */
-    clazz = obj->obj.clazz;
+    clazz = obj->clazz;
     scavengeReference((Object **) obj);
     /* Scavenge instance fields. */
     if (clazz->refOffsets != CLASS_WALK_SUPER) {
@@ -1149,7 +1364,7 @@ static Object *transportObject(const Object *fromObj)
                   fromObj,
                   gDvm.gcHeap->heapSource->allocBlocks);
     assert(fromObj != NULL);
-    assert(isFromSpace(fromObj));
+    assert(fromSpaceContains(fromObj));
     allocSize = copySize = objectSize(fromObj);
     if (LW_HASH_STATE(fromObj->lock) != LW_HASH_STATE_UNHASHED) {
         /*
@@ -1169,7 +1384,7 @@ static Object *transportObject(const Object *fromObj)
     assert(copySize <= allocSize);
     toObj = allocateGray(allocSize);
     assert(toObj != NULL);
-    assert(isToSpace(toObj));
+    assert(toSpaceContains(toObj));
     memcpy(toObj, fromObj, copySize);
     if (LW_HASH_STATE(fromObj->lock) == LW_HASH_STATE_HASHED) {
         /*
@@ -1216,13 +1431,13 @@ static void scavengeReference(Object **obj)
     assert(dvmIsValidObject(*obj));
 
     /* The entire block is black. */
-    if (isToSpace(*obj)) {
+    if (toSpaceContains(*obj)) {
         LOG_SCAVENGE("scavengeReference skipping pinned object @ %p", *obj);
         return;
     }
     LOG_SCAVENGE("scavengeReference(*obj=%p)", *obj);
 
-    assert(isFromSpace(*obj));
+    assert(fromSpaceContains(*obj));
 
     clazz = (*obj)->clazz;
 
@@ -1262,31 +1477,30 @@ static void verifyReference(const void *obj)
     space = heapSource->blockSpace[block];
     LOG_VERIFY("verifyReference(obj=%p),block=%zu,space=%d", obj, block, space);
     assert(!((uintptr_t)obj & 7));
-    assert(isToSpace(obj));
+    assert(toSpaceContains(obj));
     assert(dvmIsValidObject(obj));
 }
 
 /*
  * Generic object scavenging.
  */
-
 static void scavengeObject(Object *obj)
 {
     ClassObject *clazz;
 
     assert(obj != NULL);
+    assert(obj->clazz != NULL);
+    assert(!((uintptr_t)obj->clazz & 0x1));
+    assert(obj->clazz != gDvm.unlinkedJavaLangClass);
     clazz = obj->clazz;
-    assert(clazz != NULL);
-    assert(!((uintptr_t)clazz & 0x1));
-    assert(clazz != gDvm.unlinkedJavaLangClass);
     if (clazz == gDvm.classJavaLangClass) {
         scavengeClassObject((ClassObject *)obj);
     } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
         scavengeArrayObject((ArrayObject *)obj);
     } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISREFERENCE)) {
-        scavengeReferenceObject((DataObject *)obj);
+        scavengeReferenceObject(obj);
     } else {
-        scavengeDataObject((DataObject *)obj);
+        scavengeDataObject(obj);
     }
 }
 
@@ -1685,7 +1899,7 @@ static void scavengeThreadStack(Thread *thread)
                 dvmReleaseRegisterMapLine(pMap, regVector);
             }
         }
-        /* else this is a break frame and there is nothing to mark, or
+        /* else this is a break frame and there is nothing to gray, or
          * this is a native method and the registers are just the "ins",
          * copied from various registers in the caller's set.
          */
@@ -1829,7 +2043,7 @@ static void verifyThreadStack(const Thread *thread)
                 dvmReleaseRegisterMapLine(pMap, regVector);
             }
         }
-        /* else this is a break frame and there is nothing to mark, or
+        /* else this is a break frame and there is nothing to gray, or
          * this is a native method and the registers are just the "ins",
          * copied from various registers in the caller's set.
          */
@@ -1900,7 +2114,7 @@ static void pinNativeMethodArguments(const Thread *thread)
         method = saveArea->method;
         if (method != NULL && dvmIsNativeMethod(method)) {
             /*
-             * For purposes of marking references, we don't need to do
+             * For purposes of graying references, we don't need to do
              * anything here, because all of the native "ins" were copied
              * from registers in the caller's stack frame and won't be
              * changed (an interpreted method can freely use registers
@@ -2340,6 +2554,29 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     LOGI("New space scavenge has completed.");
 
     /*
+     * Process reference objects in strength order.
+     */
+
+    LOG_REFERENCE("Processing soft references...");
+    preserveSoftReferences(&gDvm.gcHeap->softReferences);
+    clearWhiteReferences(&gDvm.gcHeap->softReferences);
+
+    LOG_REFERENCE("Processing weak references...");
+    clearWhiteReferences(&gDvm.gcHeap->weakReferences);
+
+    LOG_REFERENCE("Finding finalizations...");
+    processFinalizableReferences();
+
+    LOG_REFERENCE("Processing f-reachable soft references...");
+    clearWhiteReferences(&gDvm.gcHeap->softReferences);
+
+    LOG_REFERENCE("Processing f-reachable weak references...");
+    clearWhiteReferences(&gDvm.gcHeap->weakReferences);
+
+    LOG_REFERENCE("Processing phantom references...");
+    clearWhiteReferences(&gDvm.gcHeap->phantomReferences);
+
+    /*
      * Verify the stack and heap.
      */
 
@@ -2371,13 +2608,13 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
 
 void dvmClearWhiteRefs(Object **list)
 {
-    /* TODO */
+    /* do nothing */
     assert(*list == NULL);
 }
 
 void dvmHandleSoftRefs(Object **list)
 {
-    /* TODO */
+    /* do nothing */
     assert(*list == NULL);
 }
 
