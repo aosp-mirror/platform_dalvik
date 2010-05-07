@@ -373,6 +373,16 @@ GOTO_TARGET(invokeStatic, bool methodCallRange)
             ILOGV("+ unknown method\n");
             GOTO_exceptionThrown();
         }
+
+        /*
+         * The JIT needs dvmDexGetResolvedMethod() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
+            /* Class initialization is still ongoing */
+            ABORT_JIT_TSELECT();
+        }
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
 GOTO_TARGET_END
