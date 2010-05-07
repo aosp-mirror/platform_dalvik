@@ -4207,11 +4207,6 @@ bool dvmIsClassInitializing(const ClassObject* clazz)
  *
  * We will often be called recursively, e.g. when the <clinit> code resolves
  * one of its fields, the field resolution will try to initialize the class.
- * In that case we will return "true" even though the class isn't actually
- * ready to go.  The ambiguity can be resolved with dvmIsClassInitializing().
- * (TODO: consider having this return an enum to avoid the extra call --
- * return -1 on failure, 0 on success, 1 on still-initializing.  Looks like
- * dvmIsClassInitializing() is always paired with *Initialized())
  *
  * This can get very interesting if a class has a static field initialized
  * to a new instance of itself.  <clinit> will end up calling <init> on
