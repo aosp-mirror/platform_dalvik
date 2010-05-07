@@ -116,32 +116,10 @@ bool dvmHeapBitmapXorWalk(const HeapBitmap *hb1, const HeapBitmap *hb2,
         void *callbackArg);
 
 /*
- * Similar to dvmHeapBitmapXorWalk(), but compare multiple bitmaps.
- * Regardless of the order of the arrays, the bitmaps will be visited
- * in address order, so that finger will increase monotonically.
- */
-bool dvmHeapBitmapXorWalkLists(const HeapBitmap hbs1[], const HeapBitmap hbs2[],
-        size_t numBitmaps,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg);
-
-/*
  * Similar to dvmHeapBitmapXorWalk(), but visit the set bits
  * in a single bitmap.
  */
 bool dvmHeapBitmapWalk(const HeapBitmap *hb,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg);
-
-/*
- * Similar to dvmHeapBitmapXorWalkList(), but visit the set bits
- * in a single list of bitmaps.  Regardless of the order of the array,
- * the bitmaps will be visited in address order, so that finger will
- * increase monotonically.
- */
-bool dvmHeapBitmapWalkList(const HeapBitmap hbs[], size_t numBitmaps,
         bool (*callback)(size_t numPtrs, void **ptrs,
                          const void *finger, void *arg),
         void *callbackArg);

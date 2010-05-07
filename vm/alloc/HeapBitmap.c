@@ -250,65 +250,6 @@ unsigned long int *p;
 }
 
 /*
- * Fills outIndexList with indices so that for all i:
- *
- *   hb[outIndexList[i]].base < hb[outIndexList[i+1]].base
- */
-static void
-createSortedBitmapIndexList(const HeapBitmap hbs[], size_t numBitmaps,
-        size_t outIndexList[])
-{
-    int i, j;
-
-    /* numBitmaps is usually 2 or 3, so use a simple sort */
-    for (i = 0; i < (int) numBitmaps; i++) {
-        outIndexList[i] = i;
-        for (j = 0; j < i; j++) {
-            if (hbs[j].base > hbs[i].base) {
-                int tmp = outIndexList[i];
-                outIndexList[i] = outIndexList[j];
-                outIndexList[j] = tmp;
-            }
-        }
-    }
-}
-
-/*
- * Similar to dvmHeapBitmapXorWalk(), but compare multiple bitmaps.
- * Regardless of the order of the arrays, the bitmaps will be visited
- * in address order, so that finger will increase monotonically.
- */
-bool
-dvmHeapBitmapXorWalkLists(const HeapBitmap hbs1[], const HeapBitmap hbs2[],
-        size_t numBitmaps,
-        bool (*callback)(size_t numPtrs, void **ptrs,
-                         const void *finger, void *arg),
-        void *callbackArg)
-{
-    size_t indexList[numBitmaps];
-    size_t i;
-
-    /* Sort the bitmaps by address.  Assume that the two lists contain
-     * congruent bitmaps.
-     */
-    createSortedBitmapIndexList(hbs1, numBitmaps, indexList);
-
-    /* Walk each pair of bitmaps, lowest address first.
-     */
-    for (i = 0; i < numBitmaps; i++) {
-        bool ok;
-
-        ok = dvmHeapBitmapXorWalk(&hbs1[indexList[i]], &hbs2[indexList[i]],
-                callback, callbackArg);
-        if (!ok) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/*
  * Similar to dvmHeapBitmapXorWalk(), but visit the set bits
  * in a single bitmap.
  */

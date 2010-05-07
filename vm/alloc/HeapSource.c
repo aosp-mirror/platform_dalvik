@@ -626,7 +626,7 @@ static void aliasBitmap(HeapBitmap *dst, HeapBitmap *src,
 
 /*
  * Initializes a vector of object and mark bits to the object and mark
- * bits of to each heap.  The bits are aliased to the heapsource
+ * bits of each heap.  The bits are aliased to the heapsource
  * object and mark bitmaps.  This routine is used by the sweep code
  * which needs to free each object in the correct heap.
  */

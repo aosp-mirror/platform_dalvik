@@ -49,7 +49,7 @@ void dvmHeapSourceShutdown(GcHeap **gcHeap);
 
 /*
  * Initializes a vector of object and mark bits to the object and mark
- * bits of to each heap.
+ * bits of each heap.
  */
 void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
                                    size_t numHeaps);

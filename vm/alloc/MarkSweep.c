@@ -1026,6 +1026,7 @@ dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
     size_t origObjectsAllocated;
     size_t origBytesAllocated;
     size_t numBitmaps, numSweepBitmaps;
+    size_t i;
 
     /* All reachable objects have been marked.
      * Detach any unreachable interned strings before
@@ -1048,8 +1049,10 @@ dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
     } else {
         numSweepBitmaps = numBitmaps;
     }
-    dvmHeapBitmapXorWalkLists(markBits, liveBits, numSweepBitmaps,
-                              sweepBitmapCallback, NULL);
+    for (i = 0; i < numSweepBitmaps; i++) {
+        dvmHeapBitmapXorWalk(&markBits[i], &liveBits[i],
+                             sweepBitmapCallback, NULL);
+    }
 
     *numFreed = origObjectsAllocated -
             dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED, NULL, 0);
