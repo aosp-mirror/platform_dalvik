@@ -50,6 +50,7 @@ static void verifyInstanceFields(const Object *obj)
 
     assert(obj != NULL);
     assert(obj->clazz != NULL);
+    LOGV("Entering verifyInstanceFields(obj=%p)", obj);
     /* TODO(cshapiro): check reference offsets bitmap for agreement. */
     for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
         InstField *field = clazz->ifields;
@@ -58,6 +59,7 @@ static void verifyInstanceFields(const Object *obj)
             VERIFY_REFERENCE(((JValue *)addr)->l);
         }
     }
+    LOGV("Exiting verifyInstanceFields(obj=%p)", obj);
 }
 
 /*
@@ -106,7 +108,7 @@ static void verifyArrayObject(const ArrayObject *array)
 {
     size_t i;
 
-    LOGV("Entering verifyArrayObject(obj=%p)", obj);
+    LOGV("Entering verifyArrayObject(array=%p)", array);
     /* Verify the class object reference. */
     assert(array->obj.clazz != NULL);
     VERIFY_REFERENCE(array->obj.clazz);
@@ -117,7 +119,7 @@ static void verifyArrayObject(const ArrayObject *array)
             VERIFY_REFERENCE(contents[i]);
         }
     }
-    LOGV("Exiting verifyArrayObject(obj=%p)", obj);
+    LOGV("Exiting verifyArrayObject(array=%p)", array);
 }
 
 /*
@@ -140,7 +142,7 @@ static void verifyDataObject(const DataObject *obj)
         void *addr = BYTE_OFFSET((Object *)obj, offset);
         VERIFY_REFERENCE(((JValue *)addr)->l);
     }
-    LOGV("Exiting verifyDataObject(obj=%p) %zx", obj, length);
+    LOGV("Exiting verifyDataObject(obj=%p)", obj);
 }
 
 /*
