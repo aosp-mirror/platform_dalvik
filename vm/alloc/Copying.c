@@ -662,9 +662,24 @@ void *dvmHeapSourceAllocAndGrow(size_t size)
 /* TODO: refactor along with dvmHeapSourceAlloc */
 void *allocateGray(size_t size)
 {
+    HeapSource *heapSource;
+    void *addr;
+    size_t block;
+
     /* TODO: add a check that we are in a GC. */
-    /* assert(gDvm.gcHeap->heapSource->queueHead != QUEUE_TAIL); */
-    return dvmHeapSourceAlloc(size);
+    heapSource = gDvm.gcHeap->heapSource;
+    addr = dvmHeapSourceAlloc(size);
+    block = addressToBlock(heapSource, (const u1 *)addr);
+    if (heapSource->queueHead == QUEUE_TAIL) {
+        /*
+         * Forcibly append the underlying block to the queue.  This
+         * condition occurs when referents are transported following
+         * the initial trace.
+         */
+        enqueueBlock(heapSource, block);
+        LOG_PROM("forced promoting block %zu %d @ %p", block, heapSource->blockSpace[block], addr);
+    }
+    return addr;
 }
 
 /*
@@ -1309,7 +1324,7 @@ static void scavengeReferenceObject(Object *obj)
         queue = &gDvm.gcHeap->phantomReferences;
     }
     vmDataOffset = gDvm.offJavaLangRefReference_vmData;
-    dvmSetFieldObject(obj, vmDataOffset, (Object *)*queue);
+    dvmSetFieldObject(obj, vmDataOffset, *queue);
     *queue = obj;
     LOG_SCAV("scavengeReferenceObject: enqueueing %p", obj);
 }
@@ -1687,17 +1702,32 @@ static void verifyReferenceTable(const ReferenceTable *table)
     LOG_VER("<<< verifyReferenceTable(table=%p)", table);
 }
 
-static void scavengeLargeHeapRefTable(LargeHeapRefTable *table)
+static void scavengeLargeHeapRefTable(LargeHeapRefTable *table, bool stripLowBits)
 {
-    Object **entry;
-
     for (; table != NULL; table = table->next) {
-        for (entry = table->refs.table; entry < table->refs.nextEntry; ++entry) {
-            if ((uintptr_t)*entry & ~0x3) {
-                /* It's a pending reference operation. */
-                assert(!"implemented");
+        Object **ref = table->refs.table;
+        for (; ref < table->refs.nextEntry; ++ref) {
+            if (stripLowBits) {
+                Object *obj = (Object *)((uintptr_t)*ref & ~3);
+                scavengeReference(&obj);
+                *ref = (Object *)((uintptr_t)obj | ((uintptr_t)*ref & 3));
+            } else {
+                scavengeReference(ref);
             }
-            scavengeReference(entry);
+        }
+    }
+}
+
+static void verifyLargeHeapRefTable(LargeHeapRefTable *table, bool stripLowBits)
+{
+    for (; table != NULL; table = table->next) {
+        Object **ref = table->refs.table;
+        for (; ref < table->refs.nextEntry; ++ref) {
+            if (stripLowBits) {
+                dvmVerifyObject((Object *)((uintptr_t)*ref & ~3));
+            } else {
+                dvmVerifyObject(*ref);
+            }
         }
     }
 }
@@ -2511,10 +2541,10 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     scavengeThreadList();
 
     LOG_SCAV("Scavenging gDvm.gcHeap->referenceOperations");
-    scavengeLargeHeapRefTable(gcHeap->referenceOperations);
+    scavengeLargeHeapRefTable(gcHeap->referenceOperations, true);
 
     LOG_SCAV("Scavenging gDvm.gcHeap->pendingFinalizationRefs");
-    scavengeLargeHeapRefTable(gcHeap->pendingFinalizationRefs);
+    scavengeLargeHeapRefTable(gcHeap->pendingFinalizationRefs, false);
 
     LOG_SCAV("Scavenging random global stuff");
     scavengeReference(&gDvm.outOfMemoryObj);
@@ -2562,6 +2592,8 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     /*
      * Verify the stack and heap.
      */
+    verifyLargeHeapRefTable(gcHeap->referenceOperations, true);
+    verifyLargeHeapRefTable(gcHeap->pendingFinalizationRefs, false);
     verifyInternedStrings();
     verifyThreadList();
     verifyNewSpace();
