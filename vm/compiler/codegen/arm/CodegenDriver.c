@@ -1446,7 +1446,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_CONST_STRING: {
             void *strPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResStrings[mir->dalvikInsn.vB]);
-            assert(strPtr != NULL);
+
+            if (strPtr == NULL) {
+                LOGE("Unexpected null string");
+                dvmAbort();
+            }
+
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadConstantNoClobber(cUnit, rlResult.lowReg, (int) strPtr );
@@ -1456,7 +1461,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
         case OP_CONST_CLASS: {
             void *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
-            assert(classPtr != NULL);
+
+            if (classPtr == NULL) {
+                LOGE("Unexpected null class");
+                dvmAbort();
+            }
+
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kCoreReg, true);
             loadConstantNoClobber(cUnit, rlResult.lowReg, (int) classPtr );
@@ -1473,7 +1483,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             int tReg = dvmCompilerAllocTemp(cUnit);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
-            assert(fieldPtr != NULL);
+
+            if (fieldPtr == NULL) {
+                LOGE("Unexpected null static field");
+                dvmAbort();
+            }
+
             rlDest = dvmCompilerGetDest(cUnit, mir, 0);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
@@ -1489,8 +1504,13 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             int valOffset = offsetof(StaticField, value);
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
+
+            if (fieldPtr == NULL) {
+                LOGE("Unexpected null static field");
+                dvmAbort();
+            }
+
             int tReg = dvmCompilerAllocTemp(cUnit);
-            assert(fieldPtr != NULL);
             rlDest = dvmCompilerGetDestWide(cUnit, mir, 0, 1);
             rlResult = dvmCompilerEvalLoc(cUnit, rlDest, kAnyReg, true);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
@@ -1513,7 +1533,11 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
-            assert(fieldPtr != NULL);
+            if (fieldPtr == NULL) {
+                LOGE("Unexpected null static field");
+                dvmAbort();
+            }
+
             rlSrc = dvmCompilerGetSrc(cUnit, mir, 0);
             rlSrc = loadValue(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
@@ -1530,7 +1554,11 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
             void *fieldPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vB]);
 
-            assert(fieldPtr != NULL);
+            if (fieldPtr == NULL) {
+                LOGE("Unexpected null static field");
+                dvmAbort();
+            }
+
             rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
             rlSrc = loadValueWide(cUnit, rlSrc, kAnyReg);
             loadConstant(cUnit, tReg,  (int) fieldPtr + valOffset);
@@ -1547,8 +1575,12 @@ static bool handleFmt21c_Fmt31c(CompilationUnit *cUnit, MIR *mir)
              */
             ClassObject *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vB]);
-            assert(classPtr != NULL);
-            assert(classPtr->status & CLASS_INITIALIZED);
+
+            if (classPtr == NULL) {
+                LOGE("Unexpected null class");
+                dvmAbort();
+            }
+
             /*
              * If it is going to throw, it should not make to the trace to begin
              * with.  However, Alloc might throw, so we need to genExportPC()
@@ -2118,7 +2150,11 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
         InstField *pInstField = (InstField *)
             cUnit->method->clazz->pDvmDex->pResFields[mir->dalvikInsn.vC];
 
-        assert(pInstField != NULL);
+        if (pInstField == NULL) {
+            LOGE("Unexpected null instance field");
+            dvmAbort();
+        }
+
         fieldOffset = pInstField->byteOffset;
     } else {
         /* Deliberately break the code while make the compiler happy */
@@ -2132,7 +2168,12 @@ static bool handleFmt22c(CompilationUnit *cUnit, MIR *mir)
             RegLocation rlResult;
             void *classPtr = (void*)
               (cUnit->method->clazz->pDvmDex->pResClasses[mir->dalvikInsn.vC]);
-            assert(classPtr != NULL);
+
+            if (classPtr == NULL) {
+                LOGE("Unexpected null class");
+                dvmAbort();
+            }
+
             dvmCompilerFlushAllRegs(cUnit);   /* Everything to home location */
             genExportPC(cUnit, mir);
             loadValueDirectFixed(cUnit, rlSrc, r1);   /* Len */

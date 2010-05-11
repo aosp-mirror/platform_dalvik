@@ -1149,6 +1149,11 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+/*
+ * The JIT needs dvmDexGetResolvedField() to return non-null.
+ * Since we use the portable interpreter to build the trace, the extra
+ * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ */
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1162,6 +1167,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
         ILOGV("+ SGET '%s'=0x%08llx",                                       \
@@ -1183,6 +1191,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
         ILOGV("+ SPUT '%s'=0x%08llx",                                       \
@@ -1190,7 +1201,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
-
 
 /* File: cstubs/enddefs.c */
 

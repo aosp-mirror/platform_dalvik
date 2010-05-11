@@ -1135,6 +1135,11 @@ GOTO_TARGET_DECL(exceptionThrown);
     }                                                                       \
     FINISH(2);
 
+/*
+ * The JIT needs dvmDexGetResolvedField() to return non-null.
+ * Since we use the portable interpreter to build the trace, the extra
+ * checks in HANDLE_SGET_X and HANDLE_SPUT_X are not needed for mterp.
+ */
 #define HANDLE_SGET_X(_opcode, _opname, _ftype, _regsize)                   \
     HANDLE_OPCODE(_opcode /*vAA, field@BBBB*/)                              \
     {                                                                       \
@@ -1148,6 +1153,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
         ILOGV("+ SGET '%s'=0x%08llx",                                       \
@@ -1169,6 +1177,9 @@ GOTO_TARGET_DECL(exceptionThrown);
             sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
                 GOTO_exceptionThrown();                                     \
+            if (dvmDexGetResolvedField(methodClassDex, ref) == NULL) {      \
+                ABORT_JIT_TSELECT();                                        \
+            }                                                               \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
         ILOGV("+ SPUT '%s'=0x%08llx",                                       \
@@ -1176,7 +1187,6 @@ GOTO_TARGET_DECL(exceptionThrown);
         UPDATE_FIELD_PUT(&sfield->field);                                   \
     }                                                                       \
     FINISH(2);
-
 
 /* File: portable/debug.c */
 /* code in here is only included in portable-debug interpreter */
@@ -2054,6 +2064,16 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
 
         if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
             GOTO_exceptionThrown();
+
+        /*
+         * The JIT needs dvmDexGetResolvedClass() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (!dvmDexGetResolvedClass(methodClassDex, ref)) {
+            /* Class initialization is still ongoing - abandon the trace */
+            ABORT_JIT_TSELECT();
+        }
 
         /*
          * Verifier now tests for interface/abstract class.
@@ -3762,6 +3782,16 @@ GOTO_TARGET(invokeStatic, bool methodCallRange)
         if (methodToCall == NULL) {
             ILOGV("+ unknown method\n");
             GOTO_exceptionThrown();
+        }
+
+        /*
+         * The JIT needs dvmDexGetResolvedMethod() to return non-null.
+         * Since we use the portable interpreter to build the trace, this extra
+         * check is not needed for mterp.
+         */
+        if (dvmDexGetResolvedMethod(methodClassDex, ref) == NULL) {
+            /* Class initialization is still ongoing */
+            ABORT_JIT_TSELECT();
         }
     }
     GOTO_invokeMethod(methodCallRange, methodToCall, vsrc1, vdst);
