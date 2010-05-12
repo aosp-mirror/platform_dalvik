@@ -1637,37 +1637,6 @@ static void pinInternedStrings(void)
     dvmHashTableUnlock(table);
 }
 
-static void verifyInternedStrings(void)
-{
-    HashTable *table;
-    HashEntry *entry;
-    Object *fwd, *obj;
-    int i;
-
-    table = gDvm.internedStrings;
-    if (table == NULL) {
-        return;
-    }
-    dvmHashTableLock(table);
-    for (i = 0; i < table->tableSize; ++i) {
-        entry = &table->pEntries[i];
-        obj = (Object *)entry->data;
-        if (obj == NULL || obj == HASH_TOMBSTONE) {
-            continue;
-        } else if (isPermanentString((StringObject *)obj)) {
-            fwd = (Object *)getForward(obj);
-            LOG_VER(">>> verify string fwd=%p obj=%p", fwd, obj);
-            verifyReference(fwd);
-            LOG_VER(">>> verify string fwd=%p obj=%p", fwd, obj);
-        } else {
-            LOG_SCAV(">>> verify string obj=%p %p", obj, entry->data);
-            verifyReference(obj);
-            LOG_SCAV("<<< verify string obj=%p %p", obj, entry->data);
-        }
-    }
-    dvmHashTableUnlock(table);
-}
-
 /*
  * At present, reference tables contain references that must not be
  * moved by the collector.  Instead of scavenging each reference in
@@ -2592,9 +2561,7 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     /*
      * Verify the stack and heap.
      */
-    verifyLargeHeapRefTable(gcHeap->referenceOperations, true);
-    verifyLargeHeapRefTable(gcHeap->pendingFinalizationRefs, false);
-    verifyInternedStrings();
+    dvmVerifyRoots();
     verifyThreadList();
     verifyNewSpace();
 

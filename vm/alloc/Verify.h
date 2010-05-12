@@ -28,4 +28,9 @@ void dvmVerifyObject(const Object *obj);
  */
 void dvmVerifyBitmap(const HeapBitmap *bitmap);
 
+/*
+ * Verifies the contents of various global roots.
+ */
+void dvmVerifyRoots(void);
+
 #endif /* _DALVIK_ALLOC_VERIFY */
