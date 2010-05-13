@@ -669,6 +669,7 @@ void *allocateGray(size_t size)
     /* TODO: add a check that we are in a GC. */
     heapSource = gDvm.gcHeap->heapSource;
     addr = dvmHeapSourceAlloc(size);
+    assert(addr != NULL);
     block = addressToBlock(heapSource, (const u1 *)addr);
     if (heapSource->queueHead == QUEUE_TAIL) {
         /*
@@ -956,8 +957,8 @@ static void scavengeClassObject(ClassObject *obj)
     assert(obj->descriptor != NULL);
     LOG_SCAV("scavengeClassObject: descriptor='%s',vtableCount=%zu",
              obj->descriptor, obj->vtableCount);
-    /* Scavenge our class object. */
-    scavengeReference((Object **) obj);
+    /* Delegate class object and instance field scavenging. */
+    scavengeDataObject((Object *)obj);
     /* Scavenge the array element class object. */
     if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
         scavengeReference((Object **)(void *)&obj->elementClass);
@@ -2621,6 +2622,8 @@ void dvmHeapScheduleFinalizations(void)
 
 void dvmHeapSweepUnmarkedObjects(GcMode mode, int *numFreed, size_t *sizeFreed)
 {
+    *numFreed = 0;
+    *sizeFreed = 0;
     /* do nothing */
 }
 
