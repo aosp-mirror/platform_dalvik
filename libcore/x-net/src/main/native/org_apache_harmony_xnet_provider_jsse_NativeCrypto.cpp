@@ -1306,8 +1306,9 @@ static void org_apache_harmony_xnet_provider_jsse_OpenSSLSocketImpl_init(JNIEnv*
 
     ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 
-    // Note: We explicitly do not allow SSLv2 to be used. It
-    SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL | SSL_OP_NO_SSLv2);
+    // Note: We explicitly do not allow SSLv2 to be used.
+    // We also disable session tickets for better compatability b/2682876
+    SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL | SSL_OP_NO_SSLv2 | SSL_OP_NO_TICKET);
 
     /* Java code in class OpenSSLSocketImpl does the verification. Meaning of 
      * SSL_VERIFY_NONE flag in client mode: if not using an anonymous cipher
