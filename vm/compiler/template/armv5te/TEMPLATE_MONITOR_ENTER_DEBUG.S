@@ -26,7 +26,7 @@
     bx      r2
 1:
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kHeavyweightMonitor
 #endif
     ldr     pc, .LdvmJitToInterpNoChain

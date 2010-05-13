@@ -27,6 +27,12 @@
     ldr     r0, [r2, #8]    @ r0 <- predictedChainCell->method
     ldr     r9, [r2, #12]   @ r9 <- predictedChainCell->counter
     cmp     r3, r8          @ predicted class == actual class?
+#if defined(WITH_JIT_TUNING)
+    ldr     r7, .LdvmICHitCount
+    ldreq   r10, [r7, #0]
+    add     r10, r10, #1
+    streq   r10, [r7, #0]
+#endif
     beq     .LinvokeChain   @ predicted chain is valid
     ldr     r7, [r3, #offClassObject_vtable] @ r7 <- this->class->vtable
     sub     r1, r9, #1      @ count--

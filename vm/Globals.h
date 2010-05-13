@@ -732,20 +732,7 @@ struct DvmJitGlobals {
 
     /* JIT internal stats */
     int                compilerMaxQueued;
-    int                addrLookupsFound;
-    int                addrLookupsNotFound;
-    int                noChainExit[kNoChainExitLast];
-    int                normalExit;
-    int                puntExit;
     int                translationChains;
-    int                invokeMonomorphic;
-    int                invokePolymorphic;
-    int                invokeNative;
-    int                returnOp;
-    int                icPatchFast;
-    int                icPatchQueued;
-    int                icPatchDropped;
-    u8                 jitTime;
 
     /* Compiled code cache */
     void* codeCache;
@@ -821,6 +808,24 @@ struct DvmJitGlobals {
     u4 *signatureBreakpoint;            // Signature content
 #endif
 
+#if defined(WITH_JIT_TUNING)
+    /* Performance tuning counters */
+    int                addrLookupsFound;
+    int                addrLookupsNotFound;
+    int                noChainExit[kNoChainExitLast];
+    int                normalExit;
+    int                puntExit;
+    int                invokeMonomorphic;
+    int                invokePolymorphic;
+    int                invokeNative;
+    int                returnOp;
+    int                icPatchFast;
+    int                icPatchQueued;
+    int                icPatchDropped;
+    u8                 jitTime;
+    int                codeCachePatches;
+#endif
+
     /* Place arrays at the end to ease the display in gdb sessions */
 
     /* Work order queue for compilations */
@@ -831,6 +836,10 @@ struct DvmJitGlobals {
 };
 
 extern struct DvmJitGlobals gDvmJit;
+
+#if defined(WITH_JIT_TUNING)
+extern int gDvmICHitCount;
+#endif
 
 #endif
 

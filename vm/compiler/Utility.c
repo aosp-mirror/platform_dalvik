@@ -203,11 +203,11 @@ void dvmCompilerDumpStats(void)
     if (gDvmJit.methodStatsTable) {
         dvmHashForeach(gDvmJit.methodStatsTable, dumpMethodStats,
                        &totalMethodStats);
+        LOGD("Code size stats: %d/%d (compiled/total Dalvik), %d (native)",
+             totalMethodStats.compiledDalvikSize,
+             totalMethodStats.dalvikSize,
+             totalMethodStats.nativeSize);
     }
-    LOGD("Code size stats: %d/%d (compiled/total Dalvik), %d (native)",
-         totalMethodStats.compiledDalvikSize,
-         totalMethodStats.dalvikSize,
-         totalMethodStats.nativeSize);
 }
 
 /*

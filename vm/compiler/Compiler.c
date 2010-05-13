@@ -577,7 +577,7 @@ static void *compilerThreadStart(void *arg)
             do {
                 CompilerWorkOrder work = workDequeue();
                 dvmUnlockMutex(&gDvmJit.compilerLock);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
                 u8 startTime = dvmGetRelativeTimeUsec();
 #endif
                 /*
@@ -622,7 +622,7 @@ static void *compilerThreadStart(void *arg)
                     }
                 }
                 free(work.info);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
                 gDvmJit.jitTime += dvmGetRelativeTimeUsec() - startTime;
 #endif
                 dvmLockMutex(&gDvmJit.compilerLock);

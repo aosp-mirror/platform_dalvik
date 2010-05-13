@@ -404,7 +404,7 @@ void dvmJitStopTranslationRequests()
     gDvmJit.pProfTable = NULL;
 }
 
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
 /* Convenience function to increment counter from assembly code */
 void dvmBumpNoChain(int from)
 {
@@ -452,10 +452,14 @@ void dvmJitStats()
              hit, not_hit + hit, chains, gDvmJit.threshold,
              gDvmJit.blockingMode ? "Blocking" : "Non-blocking");
 
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
+        LOGD("JIT: Code cache patches: %d", gDvmJit.codeCachePatches);
+
         LOGD("JIT: Lookups: %d hits, %d misses; %d normal, %d punt",
              gDvmJit.addrLookupsFound, gDvmJit.addrLookupsNotFound,
              gDvmJit.normalExit, gDvmJit.puntExit);
+
+        LOGD("JIT: ICHits: %d", gDvmICHitCount);
 
         LOGD("JIT: noChainExit: %d IC miss, %d interp callsite, "
              "%d switch overflow",
@@ -843,7 +847,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
                                (gDvmJit.pProfTable == NULL);
 
         if (npc == dPC) {
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
             gDvmJit.addrLookupsFound++;
 #endif
             return hideTranslation ?
@@ -853,7 +857,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
                 idx = gDvmJit.pJitEntryTable[idx].u.info.chain;
                 if (gDvmJit.pJitEntryTable[idx].dPC == dPC) {
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
                     gDvmJit.addrLookupsFound++;
 #endif
                     return hideTranslation ?
@@ -862,7 +866,7 @@ void* dvmJitGetCodeAddr(const u2* dPC)
             }
         }
     }
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     gDvmJit.addrLookupsNotFound++;
 #endif
     return NULL;

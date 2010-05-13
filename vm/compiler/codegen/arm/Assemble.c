@@ -877,6 +877,13 @@ ArmEncodingMap EncodingMap[kArmLast] = {
  */
 #define PADDING_MOV_R5_R5               0x1C2D
 
+/* Track the number of times that the code cache is patched */
+#if defined(WITH_JIT_TUNING)
+#define UPDATE_CODE_CACHE_PATCHES()    (gDvmJit.codeCachePatches++)
+#else
+#define UPDATE_CODE_CACHE_PATCHES()
+#endif
+
 /* Write the numbers in the literal pool to the codegen stream */
 static void installDataContent(CompilationUnit *cUnit)
 {
@@ -1311,6 +1318,7 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     /* Flush dcache and invalidate the icache to maintain coherence */
     cacheflush((long)cUnit->baseAddr,
                (long)((char *) cUnit->baseAddr + offset), 0);
+    UPDATE_CODE_CACHE_PATCHES();
 
     /* Record code entry point and instruction set */
     info->codeAddress = (char*)cUnit->baseAddr + cUnit->headerSize;
@@ -1393,6 +1401,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
 
         *branchAddr = newInst;
         cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
+        UPDATE_CODE_CACHE_PATCHES();
         gDvmJit.hasNewChain = true;
     }
 
@@ -1428,6 +1437,7 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
         MEM_BARRIER();
         cellAddr->clazz = newContent->clazz;
         cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
+        UPDATE_CODE_CACHE_PATCHES();
 #if defined(WITH_JIT_TUNING)
         gDvmJit.icPatchFast++;
 #endif
@@ -1490,6 +1500,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     if (dvmIsNativeMethod(method)) {
         cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
         cacheflush((long) cell, (long) (cell+1), 0);
+        UPDATE_CODE_CACHE_PATCHES();
         COMPILER_TRACE_CHAINING(
             LOGD("Jit Runtime: predicted chain %p to native method %s ignored",
                  cell, method->name));
@@ -1508,6 +1519,7 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
          */
         cell->counter = PREDICTED_CHAIN_COUNTER_DELAY;
         cacheflush((long) cell, (long) (cell+1), 0);
+        UPDATE_CODE_CACHE_PATCHES();
         COMPILER_TRACE_CHAINING(
             LOGD("Jit Runtime: predicted chain %p to method %s%s delayed",
                  cell, method->clazz->descriptor, method->name));
@@ -1598,6 +1610,7 @@ void dvmCompilerPatchInlineCache(void)
 
     /* Then synchronize the I/D cache */
     cacheflush((long) minAddr, (long) (maxAddr+1), 0);
+    UPDATE_CODE_CACHE_PATCHES();
 
     gDvmJit.compilerICPatchIndex = 0;
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
@@ -1734,6 +1747,7 @@ void dvmJitUnchainAll()
             }
         }
         cacheflush((long)lowAddress, (long)highAddress, 0);
+        UPDATE_CODE_CACHE_PATCHES();
         dvmUnlockMutex(&gDvmJit.tableLock);
         gDvmJit.translationChains = 0;
     }
