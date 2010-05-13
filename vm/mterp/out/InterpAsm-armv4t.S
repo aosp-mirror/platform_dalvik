@@ -9869,6 +9869,7 @@ dvmJitToInterpTraceSelect:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
+    add    rINST, #-4              @  .. which is 9 bytes back
     mov    r0,rPC
     bl     dvmJitGetCodeAddr       @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
@@ -9912,6 +9913,7 @@ dvmJitToInterpNormal:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
+    add    rINST,#-4               @ .. which is 9 bytes back
 #if defined(WITH_JIT_TUNING)
     bl     dvmBumpNormal
 #endif

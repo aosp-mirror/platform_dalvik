@@ -439,7 +439,7 @@ void dvmJitStats()
             if (gDvmJit.pJitEntryTable[i].dPC != 0) {
                 hit++;
                 if (gDvmJit.pJitEntryTable[i].codeAddress ==
-                      gDvmJit.interpretTemplate)
+                      dvmCompilerGetInterpretTemplate())
                     stubs++;
             } else
                 not_hit++;
@@ -503,7 +503,7 @@ void setTraceConstruction(JitEntry *slot, bool value)
 
 void resetTracehead(InterpState* interpState, JitEntry *slot)
 {
-    slot->codeAddress = gDvmJit.interpretTemplate;
+    slot->codeAddress = dvmCompilerGetInterpretTemplate();
     setTraceConstruction(slot, false);
 }
 

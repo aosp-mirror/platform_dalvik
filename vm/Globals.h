@@ -776,9 +776,6 @@ struct DvmJitGlobals {
     /* Vector to disable selected optimizations */
     int disableOpt;
 
-    /* Code address of special interpret-only pseudo-translation */
-    void *interpretTemplate;
-
     /* Table to track the overall and trace statistics of hot methods */
     HashTable*  methodStatsTable;
 

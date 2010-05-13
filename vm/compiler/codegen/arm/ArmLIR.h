@@ -784,4 +784,7 @@ typedef struct ArmLIR {
 
 #define CHAIN_CELL_OFFSET_TAG   0xcdab
 
+#define CHAIN_CELL_NORMAL_SIZE 12
+#define CHAIN_CELL_PREDICTED_SIZE 16
+
 #endif /* _DALVIK_VM_COMPILER_CODEGEN_ARM_ARMLIR_H */

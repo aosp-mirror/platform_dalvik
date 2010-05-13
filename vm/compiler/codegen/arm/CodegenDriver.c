@@ -2501,10 +2501,10 @@ static bool handleFmt23x(CompilationUnit *cUnit, MIR *mir)
  * blx &findPackedSwitchIndex
  * mov pc, r0
  * .align4
- * chaining cell for case 0 [8 bytes]
- * chaining cell for case 1 [8 bytes]
+ * chaining cell for case 0 [12 bytes]
+ * chaining cell for case 1 [12 bytes]
  *               :
- * chaining cell for case MIN(size, MAX_CHAINED_SWITCH_CASES)-1 [8 bytes]
+ * chaining cell for case MIN(size, MAX_CHAINED_SWITCH_CASES)-1 [12 bytes]
  * chaining cell for case default [8 bytes]
  * noChain exit
  */
@@ -2555,7 +2555,7 @@ static s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc)
         jumpIndex = index;
     }
 
-    chainingPC += jumpIndex * 8;
+    chainingPC += jumpIndex * CHAIN_CELL_NORMAL_SIZE;
     return (((s8) caseDPCOffset) << 32) | (u8) chainingPC;
 }
 
@@ -2606,13 +2606,14 @@ static s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc)
             /* MAX_CHAINED_SWITCH_CASES + 1 is the start of the overflow case */
             int jumpIndex = (i < MAX_CHAINED_SWITCH_CASES) ?
                            i : MAX_CHAINED_SWITCH_CASES + 1;
-            chainingPC += jumpIndex * 8;
+            chainingPC += jumpIndex * CHAIN_CELL_NORMAL_SIZE;
             return (((s8) entries[i]) << 32) | (u8) chainingPC;
         } else if (k > testVal) {
             break;
         }
     }
-    return chainingPC + MIN(size, MAX_CHAINED_SWITCH_CASES) * 8;
+    return chainingPC + MIN(size, MAX_CHAINED_SWITCH_CASES) *
+           CHAIN_CELL_NORMAL_SIZE;
 }
 
 static bool handleFmt31t(CompilationUnit *cUnit, MIR *mir)
@@ -3317,6 +3318,27 @@ static bool handleFmt51l(CompilationUnit *cUnit, MIR *mir)
  * Dalvik PC and special-purpose registers are reconstructed here.
  */
 
+/*
+ * Insert a
+ *    b   .+4
+ *    nop
+ * pair at the beginning of a chaining cell.  This serves as the
+ * switch branch that selects between reverting to the interpreter or
+ * not.  Once the cell is chained to a translation, the cell will
+ * contain a 32-bit branch.  Subsequent chain/unchain operations will
+ * then only alter that first 16-bits - the "b .+4" for unchaining,
+ * and the restoration of the first half of the 32-bit branch for
+ * rechaining.
+ */
+static void insertChainingSwitch(CompilationUnit *cUnit)
+{
+    ArmLIR *branch = newLIR0(cUnit, kThumbBUncond);
+    newLIR2(cUnit, kThumbOrr, r0, r0);
+    ArmLIR *target = newLIR0(cUnit, kArmPseudoTargetLabel);
+    target->defMask = ENCODE_ALL;
+    branch->generic.target = (LIR *) target;
+}
+
 /* Chaining cell for code that may need warmup. */
 static void handleNormalChainingCell(CompilationUnit *cUnit,
                                      unsigned int offset)
@@ -3325,6 +3347,7 @@ static void handleNormalChainingCell(CompilationUnit *cUnit,
      * Use raw instruction constructors to guarantee that the generated
      * instructions fit the predefined cell size.
      */
+    insertChainingSwitch(cUnit);
     newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
             offsetof(InterpState,
                      jitToInterpEntries.dvmJitToInterpNormal) >> 2);
@@ -3343,6 +3366,7 @@ static void handleHotChainingCell(CompilationUnit *cUnit,
      * Use raw instruction constructors to guarantee that the generated
      * instructions fit the predefined cell size.
      */
+    insertChainingSwitch(cUnit);
     newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
             offsetof(InterpState,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);
@@ -3359,6 +3383,7 @@ static void handleBackwardBranchChainingCell(CompilationUnit *cUnit,
      * Use raw instruction constructors to guarantee that the generated
      * instructions fit the predefined cell size.
      */
+    insertChainingSwitch(cUnit);
 #if defined(WITH_SELF_VERIFICATION)
     newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
         offsetof(InterpState,
@@ -3380,6 +3405,7 @@ static void handleInvokeSingletonChainingCell(CompilationUnit *cUnit,
      * Use raw instruction constructors to guarantee that the generated
      * instructions fit the predefined cell size.
      */
+    insertChainingSwitch(cUnit);
     newLIR3(cUnit, kThumbLdrRRI5, r0, rGLUE,
             offsetof(InterpState,
                      jitToInterpEntries.dvmJitToInterpTraceSelect) >> 2);

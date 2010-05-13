@@ -195,4 +195,5 @@ void dvmCompilerDataFlowAnalysisDispatcher(struct CompilationUnit *cUnit,
 void dvmCompilerStateRefresh(void);
 JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
                                             const struct JitEntry *desc);
+void *dvmCompilerGetInterpretTemplate();
 #endif /* _DALVIK_VM_COMPILER */

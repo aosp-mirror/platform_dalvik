@@ -1159,7 +1159,7 @@ static void matchSignatureBreakpoint(const CompilationUnit *cUnit,
  *   |  .                            .
  *   |  |                            |
  *   |  +----------------------------+
- *   |  | Chaining Cells             |  -> 8 bytes each, must be 4 byte aligned
+ *   |  | Chaining Cells             |  -> 12/16 bytes each, must be 4 byte aligned
  *   |  .                            .
  *   |  .                            .
  *   |  |                            |
@@ -1395,9 +1395,17 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
          * mix Arm & Thumb[2] translations, the following code should be
          * generalized.
          */
-        thumbTarget = (tgtAddr != gDvmJit.interpretTemplate);
+        thumbTarget = (tgtAddr != dvmCompilerGetInterpretTemplate());
 
         newInst = assembleChainingBranch(branchOffset, thumbTarget);
+
+        /*
+         * The second half-word instruction of the chaining cell must
+         * either be a nop (which represents initial state), or is the
+         * same exact branch halfword that we are trying to install.
+         */
+        assert( ((*branchAddr >> 16) == getSkeleton(kThumbOrr)) ||
+                ((*branchAddr >> 16) == (newInst >> 16)));
 
         *branchAddr = newInst;
         cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
@@ -1512,7 +1520,8 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
      * Compilation not made yet for the callee. Reset the counter to a small
      * value and come back to check soon.
      */
-    if ((tgtAddr == 0) || ((void*)tgtAddr == gDvmJit.interpretTemplate)) {
+    if ((tgtAddr == 0) ||
+        ((void*)tgtAddr == dvmCompilerGetInterpretTemplate())) {
         /*
          * Wait for a few invocations (currently set to be 16) before trying
          * to setup the chain again.
@@ -1641,9 +1650,10 @@ u4* dvmJitUnchain(void* codeAddr)
     /* Get total count of chain cells */
     for (i = 0, cellSize = 0; i < kChainingCellGap; i++) {
         if (i != kChainingCellInvokePredicted) {
-            cellSize += pChainCellCounts->u.count[i] * 2;
+            cellSize += pChainCellCounts->u.count[i] * (CHAIN_CELL_NORMAL_SIZE >> 2);
         } else {
-            cellSize += pChainCellCounts->u.count[i] * 4;
+            cellSize += pChainCellCounts->u.count[i] *
+                (CHAIN_CELL_PREDICTED_SIZE >> 2);
         }
     }
 
@@ -1656,25 +1666,30 @@ u4* dvmJitUnchain(void* codeAddr)
 
     /* The cells are sorted in order - walk through them and reset */
     for (i = 0; i < kChainingCellGap; i++) {
-        int elemSize = 2; /* Most chaining cell has two words */
+        int elemSize = CHAIN_CELL_NORMAL_SIZE >> 2;  /* In 32-bit words */
         if (i == kChainingCellInvokePredicted) {
-            elemSize = 4;
+            elemSize = CHAIN_CELL_PREDICTED_SIZE >> 2;
         }
 
         for (j = 0; j < pChainCellCounts->u.count[i]; j++) {
-            int targetOffset;
             switch(i) {
                 case kChainingCellNormal:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpNormal);
-                    break;
                 case kChainingCellHot:
                 case kChainingCellInvokeSingleton:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpTraceSelect);
+                case kChainingCellBackwardBranch:
+                    /*
+                     * Replace the 1st half-word of the cell with an
+                     * unconditional branch, leaving the 2nd half-word
+                     * untouched.  This avoids problems with a thread
+                     * that is suspended between the two halves when
+                     * this unchaining takes place.
+                     */
+                    newInst = *pChainCells;
+                    newInst &= 0xFFFF0000;
+                    newInst |= getSkeleton(kThumbBUncond); /* b offset is 0 */
+                    *pChainCells = newInst;
                     break;
                 case kChainingCellInvokePredicted:
-                    targetOffset = 0;
                     predChainCell = (PredictedChainingCell *) pChainCells;
                     /*
                      * There could be a race on another mutator thread to use
@@ -1685,37 +1700,12 @@ u4* dvmJitUnchain(void* codeAddr)
                      */
                     predChainCell->clazz = PREDICTED_CHAIN_CLAZZ_INIT;
                     break;
-#if defined(WITH_SELF_VERIFICATION)
-                case kChainingCellBackwardBranch:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpBackwardBranch);
-                    break;
-#elif defined(WITH_JIT_TUNING)
-                case kChainingCellBackwardBranch:
-                    targetOffset = offsetof(InterpState,
-                          jitToInterpEntries.dvmJitToInterpNormal);
-                    break;
-#endif
                 default:
-                    targetOffset = 0; // make gcc happy
                     LOGE("Unexpected chaining type: %d", i);
                     dvmAbort();  // dvmAbort OK here - can't safely recover
             }
             COMPILER_TRACE_CHAINING(
                 LOGD("Jit Runtime: unchaining 0x%x", (int)pChainCells));
-            /*
-             * Thumb code sequence for a chaining cell is:
-             *     ldr  r0, rGLUE, #<word offset>
-             *     blx  r0
-             */
-            if (i != kChainingCellInvokePredicted) {
-                targetOffset = targetOffset >> 2;  /* convert to word offset */
-                thumb1 = 0x6800 | (targetOffset << 6) |
-                         (rGLUE << 3) | (r0 << 0);
-                thumb2 = 0x4780 | (r0 << 3);
-                newInst = thumb2<<16 | thumb1;
-                *pChainCells = newInst;
-            }
             pChainCells += elemSize;  /* Advance by a fixed number of words */
         }
     }
@@ -1735,7 +1725,7 @@ void dvmJitUnchainAll()
             if (gDvmJit.pJitEntryTable[i].dPC &&
                    gDvmJit.pJitEntryTable[i].codeAddress &&
                    (gDvmJit.pJitEntryTable[i].codeAddress !=
-                    gDvmJit.interpretTemplate)) {
+                    dvmCompilerGetInterpretTemplate())) {
                 u4* lastAddress;
                 lastAddress =
                       dvmJitUnchain(gDvmJit.pJitEntryTable[i].codeAddress);
@@ -1797,7 +1787,7 @@ static int dumpTraceProfile(JitEntry *p, bool silent, bool reset,
             LOGD("TRACEPROFILE 0x%08x 0 NULL 0 0", (int)traceBase);
         return 0;
     }
-    if (p->codeAddress == gDvmJit.interpretTemplate) {
+    if (p->codeAddress == dvmCompilerGetInterpretTemplate()) {
         if (!silent)
             LOGD("TRACEPROFILE 0x%08x 0 INTERPRET_ONLY  0 0", (int)traceBase);
         return 0;

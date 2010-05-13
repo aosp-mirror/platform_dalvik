@@ -615,7 +615,7 @@ static void *compilerThreadStart(void *arg)
                     }
                     if (aborted || !compileOK) {
                         dvmCompilerArenaReset();
-                        work.result.codeAddress = gDvmJit.interpretTemplate;
+                        work.result.codeAddress = dvmCompilerGetInterpretTemplate();
                     } else if (!work.result.discardResult) {
                         dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
                                           work.result.instructionSet);
