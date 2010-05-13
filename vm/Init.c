@@ -51,6 +51,15 @@ struct DvmGlobals gDvm;
 /* JIT-specific global state */
 #if defined(WITH_JIT)
 struct DvmJitGlobals gDvmJit;
+
+#if defined(WITH_JIT_TUNING)
+/*
+ * Track the number of hits in the inline cache for predicted chaining.
+ * Use an ugly global variable here since it is accessed in assembly code.
+ */
+int gDvmICHitCount;
+#endif
+
 #endif
 
 /*

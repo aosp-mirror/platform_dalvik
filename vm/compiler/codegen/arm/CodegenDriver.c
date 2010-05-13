@@ -872,7 +872,7 @@ static ArmLIR *genUnconditionalBranch(CompilationUnit *cUnit, ArmLIR *target)
 static void genReturnCommon(CompilationUnit *cUnit, MIR *mir)
 {
     genDispatchToHandler(cUnit, TEMPLATE_RETURN);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     gDvmJit.returnOp++;
 #endif
     int dPC = (int) (cUnit->method->insns + mir->offset);
@@ -1042,12 +1042,12 @@ static void genInvokeSingletonCommon(CompilationUnit *cUnit, MIR *mir,
      */
     if (dvmIsNativeMethod(calleeMethod)) {
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NATIVE);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
         gDvmJit.invokeNative++;
 #endif
     } else {
         genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_CHAIN);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
         gDvmJit.invokeMonomorphic++;
 #endif
         /* Branch to the chaining cell */
@@ -1169,7 +1169,7 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
      * r4PC = callsiteDPC,
      */
     genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     gDvmJit.invokePolymorphic++;
 #endif
     /* Handle exceptions using the interpreter */
@@ -2978,7 +2978,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
              * r4PC = callsiteDPC,
              */
             genDispatchToHandler(cUnit, TEMPLATE_INVOKE_METHOD_NO_OPT);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
             gDvmJit.invokePolymorphic++;
 #endif
             /* Handle exceptions using the interpreter */
@@ -4027,7 +4027,7 @@ gen_fallthrough:
                      jitToInterpEntries.dvmJitToInterpNoChain), r2);
         opRegReg(cUnit, kOpAdd, r1, r1);
         opRegRegReg(cUnit, kOpAdd, r4PC, r0, r1);
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
         loadConstant(cUnit, r0, kSwitchOverflow);
 #endif
         opReg(cUnit, kOpBlx, r2);
