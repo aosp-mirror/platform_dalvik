@@ -132,6 +132,13 @@ public class TestAnnotations {
 
         System.out.println("mapping is " + mapping.getClass() +
             "\n  0='" + mapping[0] + "'\n  1='" + mapping[1] + "'");
+
+        /* while we're here, check isAnnotationPresent on Method */
+        System.out.println("present(getFocusType, ExportedProperty): " +
+            meth.isAnnotationPresent(ExportedProperty.class));
+        System.out.println("present(getFocusType, AnnoSimpleType): " +
+            meth.isAnnotationPresent(AnnoSimpleType.class));
+
         System.out.println("");
     }
 
