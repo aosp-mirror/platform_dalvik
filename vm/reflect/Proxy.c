@@ -183,7 +183,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
                                         ALLOC_DEFAULT);
     if (newClass == NULL)
         goto bail;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
@@ -241,10 +241,12 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmSetStaticFieldObject(sfield, (Object*)throws);
 
     /*
-     * Everything is ready.  See if the linker will lap it up.
+     * Everything is ready. This class didn't come out of a DEX file
+     * so we didn't tuck any indexes into the class object.  We can
+     * advance to LOADED state immediately.
      */
     newClass->status = CLASS_LOADED;
-    if (!dvmLinkClass(newClass, true)) {
+    if (!dvmLinkClass(newClass)) {
         LOGD("Proxy class link failed\n");
         goto bail;
     }

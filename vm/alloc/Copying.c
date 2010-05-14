@@ -1423,10 +1423,6 @@ static void scavengeReference(Object **obj)
         // LOG_SCAV("scavangeReference %p has a NULL class object", fromObj);
         assert(!"implemented");
         toObj = NULL;
-    } else if (clazz == gDvm.unlinkedJavaLangClass) {
-        // LOG_SCAV("scavangeReference %p is an unlinked class object", fromObj);
-        assert(!"implemented");
-        toObj = NULL;
     } else {
         toObj = transportObject(fromObj);
     }
@@ -1444,7 +1440,6 @@ static void scavengeObject(Object *obj)
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     assert(!((uintptr_t)obj->clazz & 0x1));
-    assert(obj->clazz != gDvm.unlinkedJavaLangClass);
     clazz = obj->clazz;
     if (clazz == gDvm.classJavaLangClass) {
         scavengeClassObject((ClassObject *)obj);
@@ -1996,9 +1991,6 @@ static void scavengeBlock(HeapSource *heapSource, size_t block)
             size = objectSize((Object *)cursor);
             size = alignUp(size, ALLOC_ALIGNMENT);
             cursor += size;
-        } else if (word == 0 && cursor == (u1 *)gDvm.unlinkedJavaLangClass) {
-            size = sizeof(ClassObject);
-            cursor += size;
         } else {
             /* Check for padding. */
             while (*(u4 *)cursor == 0) {
@@ -2017,8 +2009,7 @@ static size_t objectSize(const Object *obj)
 
     assert(obj != NULL);
     assert(obj->clazz != NULL);
-    if (obj->clazz == gDvm.classJavaLangClass ||
-        obj->clazz == gDvm.unlinkedJavaLangClass) {
+    if (obj->clazz == gDvm.classJavaLangClass) {
         size = dvmClassObjectSize((ClassObject *)obj);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
         size = dvmArrayObjectSize((ArrayObject *)obj);
@@ -2056,9 +2047,6 @@ static void verifyBlock(HeapSource *heapSource, size_t block)
             dvmVerifyObject((Object *)cursor);
             size = objectSize((Object *)cursor);
             size = alignUp(size, ALLOC_ALIGNMENT);
-            cursor += size;
-        } else if (word == 0 && cursor == (u1 *)gDvm.unlinkedJavaLangClass) {
-            size = sizeof(ClassObject);
             cursor += size;
         } else {
             /* Check for padding. */

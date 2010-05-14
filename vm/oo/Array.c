@@ -423,7 +423,7 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
     if (newClass == NULL)
         return NULL;
-    DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
+    DVM_OBJECT_INIT(&newClass->obj, gDvm.classJavaLangClass);
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = strdup(descriptor);
     newClass->descriptor = newClass->descriptorAlloc;
@@ -518,7 +518,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         /* Clean up the class before letting the
          * GC get its hands on it.
          */
-        assert(newClass->obj.clazz == gDvm.unlinkedJavaLangClass);
         dvmFreeClassInnards(newClass);
 
         /* Let the GC free the class.

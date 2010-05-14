@@ -180,7 +180,6 @@ struct DvmGlobals {
     /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* unlinkedJavaLangClass;
     ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
     ClassObject* classJavaLangError;

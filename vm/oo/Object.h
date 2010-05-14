@@ -139,15 +139,14 @@ typedef enum ClassStatus {
     CLASS_ERROR         = -1,
 
     CLASS_NOTREADY      = 0,
-    CLASS_LOADED        = 1,
-    CLASS_PREPARED      = 2,    /* part of linking */
+    CLASS_IDX           = 1,    /* loaded, DEX idx in super or ifaces */
+    CLASS_LOADED        = 2,    /* DEX idx values resolved */
     CLASS_RESOLVED      = 3,    /* part of linking */
     CLASS_VERIFYING     = 4,    /* in the process of being verified */
     CLASS_VERIFIED      = 5,    /* logically part of linking; done pre-init */
     CLASS_INITIALIZING  = 6,    /* class init in progress */
     CLASS_INITIALIZED   = 7,    /* ready to go */
 } ClassStatus;
-
 
 /*
  * Primitive type identifiers.  We use these values as indexes into an

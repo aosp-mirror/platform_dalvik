@@ -358,7 +358,10 @@ static void scanClassObject(const ClassObject *obj, GcMarkContext *ctx)
     if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
         markObject((Object *)obj->elementClass, ctx);
     }
-    markObject((Object *)obj->super, ctx);
+    /* Do super and the interfaces contain Objects and not dex idx values? */
+    if (obj->status > CLASS_IDX) {
+        markObject((Object *)obj->super, ctx);
+    }
     markObject(obj->classLoader, ctx);
     /* Scan static field references. */
     for (i = 0; i < obj->sfieldCount; ++i) {
@@ -370,8 +373,10 @@ static void scanClassObject(const ClassObject *obj, GcMarkContext *ctx)
     /* Scan the instance fields. */
     scanInstanceFields((const Object *)obj, ctx);
     /* Scan interface references. */
-    for (i = 0; i < obj->interfaceCount; ++i) {
-        markObject((Object *)obj->interfaces[i], ctx);
+    if (obj->status > CLASS_IDX) {
+        for (i = 0; i < obj->interfaceCount; ++i) {
+            markObject((Object *)obj->interfaces[i], ctx);
+        }
     }
 }
 
@@ -513,8 +518,6 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     if (clazz == gDvm.classJavaLangClass) {
         scanClassObject((ClassObject *)obj, ctx);
     } else if (clazz == NULL) {
-        return;
-    } else if (clazz == gDvm.unlinkedJavaLangClass) {
         return;
     } else {
         assert(clazz != NULL);

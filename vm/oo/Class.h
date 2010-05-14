@@ -108,7 +108,7 @@ ClassObject* dvmDefineClass(DvmDex* pDvmDex, const char* descriptor,
  * variations, this is only called explicitly for synthetic class
  * generation (e.g. reflect.Proxy).
  */
-bool dvmLinkClass(ClassObject* clazz, bool classesResolved);
+bool dvmLinkClass(ClassObject* clazz);
 
 /*
  * Determine if a class has been initialized.

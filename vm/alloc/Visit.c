@@ -90,22 +90,20 @@ static void visitClassObject(Visitor *visitor, ClassObject *obj)
     assert(visitor != NULL);
     assert(obj != NULL);
     LOGV("Entering visitClassObject(visitor=%p,obj=%p)", visitor, obj);
-    if (obj == gDvm.unlinkedJavaLangClass) {
-        assert(obj->obj.clazz == NULL);
-        goto exit;
-    } else {
-        assert(!strcmp(obj->obj.clazz->descriptor, "Ljava/lang/Class;"));
-    }
+    assert(!strcmp(obj->obj.clazz->descriptor, "Ljava/lang/Class;"));
     (*visitor)(&obj->obj.clazz);
     if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
         (*visitor)(&obj->elementClass);
     }
-    (*visitor)(&obj->super);
+    if (obj->status > CLASS_IDX) {
+        (*visitor)(&obj->super);
+    }
     (*visitor)(&obj->classLoader);
     visitInstanceFields(visitor, (Object *)obj);
     visitStaticFields(visitor, obj);
-    visitInterfaces(visitor, obj);
-exit:
+    if (obj->status > CLASS_IDX) {
+        visitInterfaces(visitor, obj);
+    }
     LOGV("Exiting visitClassObject(visitor=%p,obj=%p)", visitor, obj);
 }
 
@@ -159,8 +157,7 @@ void dvmVisitObject(Visitor *visitor, Object *obj)
     assert(visitor != NULL);
     assert(obj != NULL);
     LOGV("Entering dvmVisitObject(visitor=%p,obj=%p)", visitor, obj);
-    if (obj == (Object *)gDvm.unlinkedJavaLangClass ||
-        obj->clazz == gDvm.classJavaLangClass) {
+    if (obj->clazz == gDvm.classJavaLangClass) {
         visitClassObject(visitor, (ClassObject *)obj);
     } else {
         assert(obj->clazz != NULL);
