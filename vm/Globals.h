@@ -749,6 +749,12 @@ struct DvmJitGlobals {
     /* Flag to indicate that the code cache is full */
     bool codeCacheFull;
 
+    /* Page size  - 1 */
+    unsigned int pageSizeMask;
+
+    /* Lock to change the protection type of the code cache */
+    pthread_mutex_t    codeCacheProtectionLock;
+
     /* Number of times that the code cache has been reset */
     int numCodeCacheReset;
 
@@ -816,8 +822,10 @@ struct DvmJitGlobals {
     int                invokePolymorphic;
     int                invokeNative;
     int                returnOp;
-    int                icPatchFast;
+    int                icPatchInit;
+    int                icPatchLockFree;
     int                icPatchQueued;
+    int                icPatchRejected;
     int                icPatchDropped;
     u8                 jitTime;
     int                codeCachePatches;

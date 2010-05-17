@@ -1140,6 +1140,8 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                  jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
 
+    genRegCopy(cUnit, r1, rGLUE);
+
     /*
      * r0 = calleeMethod
      * r2 = &predictedChainingCell
@@ -1168,68 +1170,6 @@ static void genInvokeVirtualCommon(CompilationUnit *cUnit, MIR *mir,
     /* Handle exceptions using the interpreter */
     genTrap(cUnit, mir->offset, pcrLabel);
 }
-
-/*
- * Up calling this function, "this" is stored in r0. The actual class will be
- * chased down off r0 and the predicted one will be retrieved through
- * predictedChainingCell then a comparison is performed to see whether the
- * previously established chaining is still valid.
- *
- * The return LIR is a branch based on the comparison result. The actual branch
- * target will be setup in the caller.
- */
-#if 0
-static ArmLIR *genCheckPredictedChain(CompilationUnit *cUnit,
-                                          ArmLIR *predChainingCell,
-                                          ArmLIR *retChainingCell,
-                                          MIR *mir)
-{
-    /*
-     * Note: all Dalvik register state should be flushed to
-     * memory by the point, so register usage restrictions no
-     * longer apply.  All temp & preserved registers may be used.
-     */
-    dvmCompilerLockAllTemps(cUnit);
-
-    /* r3 now contains this->clazz */
-    loadWordDisp(cUnit, r0, offsetof(Object, clazz), r3);
-
-    /*
-     * r2 now contains predicted class. The starting offset of the
-     * cached value is 4 bytes into the chaining cell.
-     */
-    ArmLIR *getPredictedClass =
-         loadWordDisp(cUnit, rpc, offsetof(PredictedChainingCell, clazz), r2);
-    getPredictedClass->generic.target = (LIR *) predChainingCell;
-
-    /*
-     * r0 now contains predicted method. The starting offset of the
-     * cached value is 8 bytes into the chaining cell.
-     */
-    ArmLIR *getPredictedMethod =
-        loadWordDisp(cUnit, rpc, offsetof(PredictedChainingCell, method), r0);
-    getPredictedMethod->generic.target = (LIR *) predChainingCell;
-
-    /* Load the stats counter to see if it is time to unchain and refresh */
-    ArmLIR *getRechainingRequestCount =
-        loadWordDisp(cUnit, rpc, offsetof(PredictedChainingCell, counter), r7);
-    getRechainingRequestCount->generic.target =
-        (LIR *) predChainingCell;
-
-    /* r4PC = dalvikCallsite */
-    loadConstant(cUnit, r4PC,
-                 (int) (cUnit->method->insns + mir->offset));
-
-    /* r1 = &retChainingCell */
-    ArmLIR *addrRetChain = opRegRegImm(cUnit, kOpAdd, r1, rpc, 0);
-    addrRetChain->generic.target = (LIR *) retChainingCell;
-
-    /* Check if r2 (predicted class) == r3 (actual class) */
-    opRegReg(cUnit, kOpCmp, r2, r3);
-
-    return opCondBranch(cUnit, kArmCondEq);
-}
-#endif
 
 /* Geneate a branch to go back to the interpreter */
 static void genPuntToInterp(CompilationUnit *cUnit, unsigned int offset)
@@ -2942,6 +2882,7 @@ static bool handleFmt35c_3rc(CompilationUnit *cUnit, MIR *mir, BasicBlock *bb,
             loadWordDisp(cUnit, rGLUE, offsetof(InterpState,
                          jitToInterpEntries.dvmJitToPatchPredictedChain), r7);
 
+            genRegCopy(cUnit, r1, rGLUE);
             genRegCopy(cUnit, r2, r9);
             genRegCopy(cUnit, r3, r10);
 

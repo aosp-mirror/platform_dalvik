@@ -1310,6 +1310,8 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      * false positive is acceptible.
      */
     interpState.lastThreshFilter = 0;
+
+    interpState.icRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
 #endif
 
     /*

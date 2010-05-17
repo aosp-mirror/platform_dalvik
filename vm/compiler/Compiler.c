@@ -153,6 +153,8 @@ bool dvmCompilerSetupCodeCache(void)
         return false;
     }
 
+    gDvmJit.pageSizeMask = getpagesize() - 1;
+
     /* This can be found through "dalvik-jit-code-cache" in /proc/<pid>/maps */
     // LOGD("Code cache starts at %p", gDvmJit.codeCache);
 
@@ -177,6 +179,10 @@ bool dvmCompilerSetupCodeCache(void)
     /* Only flush the part in the code cache that is being used now */
     cacheflush((intptr_t) gDvmJit.codeCache,
                (intptr_t) gDvmJit.codeCache + templateSize, 0);
+
+    mprotect(gDvmJit.codeCache, gDvmJit.codeCacheSize,
+             PROTECT_CODE_CACHE_ATTRS);
+
     return true;
 }
 
@@ -261,6 +267,7 @@ static void resetCodeCache(void)
     /* Reset the JitEntry table contents to the initial unpopulated state */
     dvmJitResetTable();
 
+    UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
     /*
      * Wipe out the code cache content to force immediate crashes if
      * stale JIT'ed code is invoked.
@@ -270,6 +277,8 @@ static void resetCodeCache(void)
            gDvmJit.codeCacheByteUsed - gDvmJit.templateSize);
     cacheflush((intptr_t) gDvmJit.codeCache,
                (intptr_t) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed, 0);
+
+    PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
 
     /* Reset the current mark of used bytes to the end of template code */
     gDvmJit.codeCacheByteUsed = gDvmJit.templateSize;
@@ -646,6 +655,7 @@ bool dvmCompilerStartup(void)
 
     dvmInitMutex(&gDvmJit.compilerLock);
     dvmInitMutex(&gDvmJit.compilerICPatchLock);
+    dvmInitMutex(&gDvmJit.codeCacheProtectionLock);
     dvmLockMutex(&gDvmJit.compilerLock);
     pthread_cond_init(&gDvmJit.compilerQueueActivity, NULL);
     pthread_cond_init(&gDvmJit.compilerQueueEmpty, NULL);

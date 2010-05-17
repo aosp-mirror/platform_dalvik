@@ -29,9 +29,49 @@
 #define COMPILER_WORK_QUEUE_SIZE        100
 #define COMPILER_IC_PATCH_QUEUE_SIZE    64
 
+/* Architectural-independent parameters for predicted chains */
+#define PREDICTED_CHAIN_CLAZZ_INIT       0
+#define PREDICTED_CHAIN_METHOD_INIT      0
+#define PREDICTED_CHAIN_COUNTER_INIT     0
+/* A fake value which will avoid initialization and won't match any class */
+#define PREDICTED_CHAIN_FAKE_CLAZZ       0xdeadc001
+/* Has to be positive */
+#define PREDICTED_CHAIN_COUNTER_AVOID    0x7fffffff
+/* Rechain after this many misses - shared globally and has to be positive */
+#define PREDICTED_CHAIN_COUNTER_RECHAIN  8192
+
 #define COMPILER_TRACED(X)
 #define COMPILER_TRACEE(X)
 #define COMPILER_TRACE_CHAINING(X)
+
+/* Macro to change the permissions applied to a chunk of the code cache */
+#if !defined(WITH_JIT_TUNING)
+#define PROTECT_CODE_CACHE_ATTRS       (PROT_READ | PROT_EXEC)
+#define UNPROTECT_CODE_CACHE_ATTRS     (PROT_READ | PROT_EXEC | PROT_WRITE)
+#else
+/* When doing JIT profiling always grant the write permission */
+#define PROTECT_CODE_CACHE_ATTRS       (PROT_READ | PROT_EXEC |                \
+                                  (gDvmJit.profile ? PROT_WRITE : 0))
+#define UNPROTECT_CODE_CACHE_ATTRS     (PROT_READ | PROT_EXEC | PROT_WRITE)
+#endif
+
+/* Acquire the lock before removing PROT_WRITE from the specified mem region */
+#define UNPROTECT_CODE_CACHE(addr, size)                                       \
+    {                                                                          \
+        dvmLockMutex(&gDvmJit.codeCacheProtectionLock);                        \
+        mprotect((void *) (((intptr_t) (addr)) & ~gDvmJit.pageSizeMask),       \
+                 (size) + (((intptr_t) (addr)) & gDvmJit.pageSizeMask),        \
+                 (UNPROTECT_CODE_CACHE_ATTRS));                                \
+    }
+
+/* Add the PROT_WRITE to the specified memory region then release the lock */
+#define PROTECT_CODE_CACHE(addr, size)                                         \
+    {                                                                          \
+        mprotect((void *) (((intptr_t) (addr)) & ~gDvmJit.pageSizeMask),       \
+                 (size) + (((intptr_t) (addr)) & gDvmJit.pageSizeMask),        \
+                 (PROTECT_CODE_CACHE_ATTRS));                                  \
+        dvmUnlockMutex(&gDvmJit.codeCacheProtectionLock);                      \
+    }
 
 typedef enum JitInstructionSetType {
     DALVIK_JIT_NONE = 0,
@@ -68,9 +108,9 @@ typedef struct CompilerWorkOrder {
 /* Chain cell for predicted method invocation */
 typedef struct PredictedChainingCell {
     u4 branch;                  /* Branch to chained destination */
-    const ClassObject *clazz;   /* key #1 for prediction */
-    const Method *method;       /* key #2 to lookup native PC from dalvik PC */
-    u4 counter;                 /* counter to patch the chaining cell */
+    const ClassObject *clazz;   /* key for prediction */
+    const Method *method;       /* to lookup native PC from dalvik PC */
+    const ClassObject *stagedClazz;   /* possible next key for prediction */
 } PredictedChainingCell;
 
 /* Work order for inline cache patching */
