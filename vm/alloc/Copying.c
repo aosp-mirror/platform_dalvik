@@ -776,13 +776,13 @@ size_t dvmHeapSourceGetNumHeaps(void)
 
 bool dvmTrackExternalAllocation(size_t n)
 {
-    assert(!"implemented");
-    return false;
+    /* do nothing */
+    return true;
 }
 
 void dvmTrackExternalFree(size_t n)
 {
-    assert(!"implemented");
+    /* do nothing */
 }
 
 size_t dvmGetExternalBytesAllocated(void)
