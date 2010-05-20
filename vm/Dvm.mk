@@ -98,6 +98,7 @@ endif  # !dvm_make_debug_vm
 
 LOCAL_SRC_FILES := \
 	AllocTracker.c \
+	Atomic.c \
 	AtomicCache.c \
 	CheckJni.c \
 	Ddm.c \
