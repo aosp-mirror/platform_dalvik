@@ -79,7 +79,6 @@ static void verifyInstanceFields(const Object *obj)
  */
 static void verifyClassObject(const ClassObject *obj)
 {
-    ClassObject *clazz;
     int i;
 
     LOGV("Entering verifyClassObject(obj=%p)", obj);
@@ -138,9 +137,6 @@ static void verifyArrayObject(const ArrayObject *array)
  */
 static void verifyDataObject(const DataObject *obj)
 {
-    ClassObject *clazz;
-    int i;
-
     LOGV("Entering verifyDataObject(obj=%p)", obj);
     /* Verify the class object. */
     assert(obj->obj.clazz != NULL);

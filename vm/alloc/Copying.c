@@ -144,8 +144,6 @@
 static void enqueueBlock(HeapSource *heapSource, size_t block);
 static void scavengeReference(Object **obj);
 static void verifyReference(const void *obj);
-static void printHeapBitmap(const HeapBitmap *bitmap);
-static void printHeapBitmapSxS(const HeapBitmap *b1, const HeapBitmap *b2);
 static bool toSpaceContains(const void *addr);
 static bool fromSpaceContains(const void *addr);
 static size_t sumHeapBitmap(const HeapBitmap *bitmap);
@@ -821,7 +819,6 @@ void dvmHeapSourceFlip(void)
 static void room(size_t *alloc, size_t *avail, size_t *total)
 {
     HeapSource *heapSource;
-    size_t i;
 
     heapSource = gDvm.gcHeap->heapSource;
     *total = heapSource->totalBlocks*BLOCK_SIZE;
@@ -865,39 +862,8 @@ static void pinObject(const Object *obj)
     promoteBlockByAddr(gDvm.gcHeap->heapSource, obj);
 }
 
-static void printHeapBitmap(const HeapBitmap *bitmap)
-{
-    const char *cp;
-    size_t i, length;
-
-    length = bitmap->bitsLen >> 2;
-    fprintf(stderr, "%p", bitmap->bits);
-    for (i = 0; i < length; ++i) {
-        fprintf(stderr, " %lx", bitmap->bits[i]);
-        fputc('\n', stderr);
-    }
-}
-
-static void printHeapBitmapSxS(const HeapBitmap *b1, const HeapBitmap *b2)
-{
-    uintptr_t addr;
-    size_t i, length;
-
-    assert(b1->base == b2->base);
-    assert(b1->bitsLen == b2->bitsLen);
-    addr = b1->base;
-    length = b1->bitsLen >> 2;
-    for (i = 0; i < length; ++i) {
-        int diff = b1->bits[i] == b2->bits[i];
-        fprintf(stderr, "%08x %08lx %08lx %d\n",
-                addr, b1->bits[i], b2->bits[i], diff);
-        addr += sizeof(*b1->bits)*CHAR_BIT;
-    }
-}
-
 static size_t sumHeapBitmap(const HeapBitmap *bitmap)
 {
-    const char *cp;
     size_t i, sum;
 
     sum = 0;
@@ -1018,11 +984,6 @@ static int getReferenceFlags(const Object *obj)
             CLASS_ISWEAKREFERENCE |
             CLASS_ISPHANTOMREFERENCE;
     return GET_CLASS_FLAG_GROUP(obj->clazz, flags);
-}
-
-static int isReference(const Object *obj)
-{
-    return getReferenceFlags(obj) != 0;
 }
 
 static int isSoftReference(const Object *obj)
@@ -1437,7 +1398,6 @@ static void scavengeReference(Object **obj)
 {
     ClassObject *clazz;
     Object *fromObj, *toObj;
-    uintptr_t word;
 
     assert(obj);
 
@@ -1648,7 +1608,6 @@ static void pinInternedStrings(void)
 static void pinReferenceTable(const ReferenceTable *table)
 {
     Object **entry;
-    int i;
 
     assert(table != NULL);
     assert(table->table != NULL);
@@ -1663,7 +1622,6 @@ static void pinReferenceTable(const ReferenceTable *table)
 static void verifyReferenceTable(const ReferenceTable *table)
 {
     Object **entry;
-    int i;
 
     LOG_VER(">>> verifyReferenceTable(table=%p)", table);
     for (entry = table->table; entry < table->nextEntry; ++entry) {
@@ -1685,20 +1643,6 @@ static void scavengeLargeHeapRefTable(LargeHeapRefTable *table, bool stripLowBit
                 *ref = (Object *)((uintptr_t)obj | ((uintptr_t)*ref & 3));
             } else {
                 scavengeReference(ref);
-            }
-        }
-    }
-}
-
-static void verifyLargeHeapRefTable(LargeHeapRefTable *table, bool stripLowBits)
-{
-    for (; table != NULL; table = table->next) {
-        Object **ref = table->refs.table;
-        for (; ref < table->refs.nextEntry; ++ref) {
-            if (stripLowBits) {
-                dvmVerifyObject((Object *)((uintptr_t)*ref & ~3));
-            } else {
-                dvmVerifyObject(*ref);
             }
         }
     }
@@ -2438,7 +2382,6 @@ void describeHeap(void)
  */
 void dvmScavengeRoots(void)  /* Needs a new name badly */
 {
-    HeapRefTable *refs;
     GcHeap *gcHeap;
 
     {
