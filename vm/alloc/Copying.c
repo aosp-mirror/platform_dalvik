@@ -534,6 +534,8 @@ void dvmHeapSourceShutdown(GcHeap **gcHeap)
 {
     if (*gcHeap == NULL || (*gcHeap)->heapSource == NULL)
         return;
+    free((*gcHeap)->heapSource->blockQueue);
+    free((*gcHeap)->heapSource->blockSpace);
     virtualFree((*gcHeap)->heapSource->blockBase,
                 (*gcHeap)->heapSource->maximumSize);
     free((*gcHeap)->heapSource);
@@ -1797,8 +1799,6 @@ static void scavengeThreadStack(Thread *thread)
             Method* nonConstMethod = (Method*) method;  // quiet gcc
             pMap = dvmGetExpandedRegisterMap(nonConstMethod);
 
-            /* assert(pMap != NULL); */
-
             //LOG_SCAV("PGC: %s.%s\n", method->clazz->descriptor, method->name);
 
             if (pMap != NULL) {
@@ -1828,18 +1828,11 @@ static void scavengeThreadStack(Thread *thread)
                 }
                 regVector = NULL;
             }
-
-            /* assert(regVector != NULL); */
-
             if (regVector == NULL) {
-                /* conservative scan */
-                for (i = method->registersSize - 1; i >= 0; i--) {
-                    u4 rval = *framePtr++;
-                    if (rval != 0 && (rval & 0x3) == 0) {
-                        abort();
-                        /* dvmMarkIfObject((Object *)rval); */
-                    }
-                }
+                /*
+                 * There are no roots to scavenge.  Skip over the entire frame.
+                 */
+                framePtr += method->registersSize;
             } else {
                 /*
                  * Precise scan.  v0 is at the lowest address on the
@@ -1851,7 +1844,6 @@ static void scavengeThreadStack(Thread *thread)
                  */
                 u2 bits = 1 << 1;
                 for (i = method->registersSize - 1; i >= 0; i--) {
-                    /* u4 rval = *framePtr++; */
                     u4 rval = *framePtr;
 
                     bits >>= 1;
@@ -1951,57 +1943,27 @@ static void verifyThreadStack(const Thread *thread)
     framePtr = (const u4 *)thread->curFrame;
     while (framePtr != NULL) {
         const StackSaveArea *saveArea;
-        const Method *method;
+        Method *method;
 
         saveArea = SAVEAREA_FROM_FP(framePtr);
-        method = saveArea->method;
+        method = (Method *)saveArea->method;
         if (method != NULL && !dvmIsNativeMethod(method)) {
             const RegisterMap* pMap;
             const u1* regVector;
             int i;
 
-            Method* nonConstMethod = (Method*) method;  // quiet gcc
-            pMap = dvmGetExpandedRegisterMap(nonConstMethod);
-
-            /* assert(pMap != NULL); */
-
-            // LOG_VER("PGC: %s.%s\n", method->clazz->descriptor, method->name);
-
+            pMap = dvmGetExpandedRegisterMap(method);
+            regVector = NULL;
             if (pMap != NULL) {
                 /* found map, get registers for this address */
                 int addr = saveArea->xtra.currentPc - method->insns;
                 regVector = dvmRegisterMapGetLine(pMap, addr);
-                if (regVector == NULL) {
-                    LOG_VER("PGC: map but no entry for %s.%s addr=0x%04x\n",
-                               method->clazz->descriptor, method->name, addr);
-                } else {
-                    //LOG_VER("PGC: found map for %s.%s 0x%04x (t=%d)\n", method->clazz->descriptor, method->name, addr, thread->threadId);
-                }
-            } else {
-                /*
-                 * No map found.  If precise GC is disabled this is
-                 * expected -- we don't create pointers to the map data even
-                 * if it's present -- but if it's enabled it means we're
-                 * unexpectedly falling back on a conservative scan, so it's
-                 * worth yelling a little.
-                 */
-                if (gDvm.preciseGc) {
-                    LOG_VER("PGC: no map for %s.%s\n",
-                               method->clazz->descriptor, method->name);
-                }
-                regVector = NULL;
             }
-
-            /* assert(regVector != NULL); */
-
             if (regVector == NULL) {
                 /* conservative scan */
-                for (i = method->registersSize - 1; i >= 0; i--) {
-                    u4 rval = *framePtr++;
-                    if (rval != 0 && (rval & 0x3) == 0) {
-                        abort();
-                        /* dvmMarkIfObject((Object *)rval); */
-                    }
+                for (i = 0; i < method->registersSize; ++i) {
+                    Object *regValue = (Object *)framePtr[i];
+                    if (dvmIsValidObject(regValue)) dvmVerifyObject(regValue);
                 }
             } else {
                 /*
@@ -2013,32 +1975,24 @@ static void verifyThreadStack(const Thread *thread)
                  * A '1' bit indicates a live reference.
                  */
                 u2 bits = 1 << 1;
-                for (i = method->registersSize - 1; i >= 0; i--) {
-                    u4 rval = *framePtr;
-
+                for (i = 0; i < method->registersSize; ++i) {
+                    u4 regValue = framePtr[i];
                     bits >>= 1;
                     if (bits == 1) {
                         /* set bit 9 so we can tell when we're empty */
                         bits = *regVector++ | 0x0100;
-                        LOGVV("loaded bits: 0x%02x\n", bits & 0xff);
                     }
-
-                    if (rval != 0 && (bits & 0x01) != 0) {
+                    if (regValue != 0 && (bits & 0x1) != 0) {
                         /*
                          * Non-null, register marked as live reference.  This
                          * should always be a valid object.
                          */
-                        //LOG_VER("verify stack reference %p", (Object *)*framePtr);
-                        verifyReference((Object *)*framePtr);
-                    } else {
-                        /*
-                         * Null or non-reference, do nothing at all.
-                         */
+                        verifyReference((Object *)regValue);
                     }
-                    ++framePtr;
                 }
                 dvmReleaseRegisterMapLine(pMap, regVector);
             }
+            framePtr += method->registersSize;
         }
         /* else this is a break frame and there is nothing to gray, or
          * this is a native method and the registers are just the "ins",
@@ -2095,11 +2049,11 @@ static void verifyThreadList(void)
     dvmUnlockThreadList();
 }
 
-static void pinNativeMethodArguments(const Thread *thread)
+static void pinThreadStack(const Thread *thread)
 {
     const u4 *framePtr;
     const StackSaveArea *saveArea;
-    const Method *method;
+    Method *method;
     const char *shorty;
     Object *obj;
     int i;
@@ -2108,9 +2062,11 @@ static void pinNativeMethodArguments(const Thread *thread)
     framePtr = (const u4 *)thread->curFrame;
     for (; framePtr != NULL; framePtr = saveArea->prevFrame) {
         saveArea = SAVEAREA_FROM_FP(framePtr);
-        method = saveArea->method;
+        method = (Method *)saveArea->method;
         if (method != NULL && dvmIsNativeMethod(method)) {
             /*
+             * This is native method, pin its arguments.
+             *
              * For purposes of graying references, we don't need to do
              * anything here, because all of the native "ins" were copied
              * from registers in the caller's stack frame and won't be
@@ -2165,6 +2121,27 @@ static void pinNativeMethodArguments(const Thread *thread)
                     break;
                 }
             }
+        } else if (method != NULL && !dvmIsNativeMethod(method)) {
+            const RegisterMap* pMap = dvmGetExpandedRegisterMap(method);
+            const u1* regVector = NULL;
+
+            LOGI("conservative : %s.%s\n", method->clazz->descriptor, method->name);
+
+            if (pMap != NULL) {
+                int addr = saveArea->xtra.currentPc - method->insns;
+                regVector = dvmRegisterMapGetLine(pMap, addr);
+            }
+            if (regVector == NULL) {
+                /*
+                 * No register info for this frame, conservatively pin.
+                 */
+                for (i = 0; i < method->registersSize; ++i) {
+                    u4 regValue = framePtr[i];
+                    if (regValue != 0 && (regValue & 0x3) == 0 && dvmIsValidObject((Object *)regValue)) {
+                        pinObject((Object *)regValue);
+                    }
+                }
+            }
         }
         /*
          * Don't fall into an infinite loop if things get corrupted.
@@ -2183,7 +2160,7 @@ static void pinThread(const Thread *thread)
     LOG_PIN("pinThread(thread=%p)", thread);
 
     LOG_PIN("Pin native method arguments");
-    pinNativeMethodArguments(thread);
+    pinThreadStack(thread);
 
     LOG_PIN("Pin internalLocalRefTable");
     pinReferenceTable(&thread->internalLocalRefTable);
