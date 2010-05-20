@@ -250,6 +250,139 @@ static void verifyReferenceTable(const ReferenceTable *table)
 }
 
 /*
+ * Applies the verify routine to a heap worker reference operation.
+ */
+static void verifyReferenceOperation(const void *arg)
+{
+    assert(arg != NULL);
+    verifyReferenceUnmask(arg, 0x3);
+}
+
+/*
+ * Verifies a large heap reference table.  These objects are list
+ * heads.  As such, it is valid for table to be NULL.
+ */
+static void verifyLargeHeapRefTable(LargeHeapRefTable *table,
+                                    void (*callback)(const void *arg))
+{
+    Object **ref;
+
+    assert(callback != NULL);
+    for (; table != NULL; table = table->next) {
+        for (ref = table->refs.table; ref < table->refs.nextEntry; ++ref) {
+            assert(ref != NULL);
+            (*callback)(ref);
+        }
+    }
+}
+
+/*
+ * Verifies all stack slots. TODO: verify native methods.
+ */
+static void verifyThreadStack(const Thread *thread)
+{
+    const StackSaveArea *saveArea;
+    const u4 *framePtr;
+
+    assert(thread != NULL);
+    framePtr = (const u4 *)thread->curFrame;
+    for (; framePtr != NULL; framePtr = saveArea->prevFrame) {
+        Method *method;
+        saveArea = SAVEAREA_FROM_FP(framePtr);
+        method = (Method *)saveArea->method;
+        if (method != NULL && !dvmIsNativeMethod(method)) {
+            const RegisterMap* pMap = dvmGetExpandedRegisterMap(method);
+            const u1* regVector = NULL;
+            int i;
+
+            if (pMap != NULL) {
+                /* found map, get registers for this address */
+                int addr = saveArea->xtra.currentPc - method->insns;
+                regVector = dvmRegisterMapGetLine(pMap, addr);
+            }
+            if (regVector == NULL) {
+                /*
+                 * Either there was no register map or there is no
+                 * info for the current PC.  Perform a conservative
+                 * scan.
+                 */
+                for (i = 0; i < method->registersSize; ++i) {
+                    if (dvmIsValidObject((Object *)framePtr[i])) {
+                        verifyReference(&framePtr[i]);
+                    }
+                }
+            } else {
+                /*
+                 * Precise scan.  v0 is at the lowest address on the
+                 * interpreted stack, and is the first bit in the
+                 * register vector, so we can walk through the
+                 * register map and memory in the same direction.
+                 *
+                 * A '1' bit indicates a live reference.
+                 */
+                u2 bits = 1 << 1;
+                for (i = 0; i < method->registersSize; ++i) {
+                    bits >>= 1;
+                    if (bits == 1) {
+                        /* set bit 9 so we can tell when we're empty */
+                        bits = *regVector++ | 0x0100;
+                    }
+                    if ((bits & 0x1) != 0) {
+                        /*
+                         * Register is marked as live, it's a valid root.
+                         */
+                        verifyReference(&framePtr[i]);
+                    }
+                }
+                dvmReleaseRegisterMapLine(pMap, regVector);
+            }
+        }
+        /*
+         * Don't fall into an infinite loop if things get corrupted.
+         */
+        assert((uintptr_t)saveArea->prevFrame > (uintptr_t)framePtr ||
+               saveArea->prevFrame == NULL);
+    }
+}
+
+/*
+ * Verifies all roots associated with a thread.
+ */
+static void verifyThread(const Thread *thread)
+{
+    assert(thread != NULL);
+    assert(thread->status != THREAD_RUNNING ||
+           thread->isSuspended ||
+           thread == dvmThreadSelf());
+    LOGV("Entering verifyThread(thread=%p)", thread);
+    verifyReference(&thread->threadObj);
+    verifyReference(&thread->exception);
+    verifyReferenceTable(&thread->internalLocalRefTable);
+    verifyReferenceTable(&thread->jniLocalRefTable);
+    if (thread->jniMonitorRefTable.table) {
+        verifyReferenceTable(&thread->jniMonitorRefTable);
+    }
+    verifyThreadStack(thread);
+    LOGV("Exiting verifyThread(thread=%p)", thread);
+}
+
+/*
+ * Verifies all threads on the thread list.
+ */
+static void verifyThreads(void)
+{
+    Thread *thread;
+
+    dvmLockThreadList(dvmThreadSelf());
+    thread = gDvm.threadList;
+    while (thread) {
+        verifyThread(thread);
+        thread = thread->next;
+    }
+    dvmUnlockThreadList();
+}
+
+/*
  * Verifies roots.  TODO: verify all roots.
  */
 void dvmVerifyRoots(void)
@@ -260,7 +393,10 @@ void dvmVerifyRoots(void)
     verifyReferenceTable(&gDvm.jniGlobalRefTable);
     verifyReferenceTable(&gDvm.jniPinRefTable);
     verifyReferenceTable(&gDvm.gcHeap->nonCollectableRefs);
+    verifyLargeHeapRefTable(gDvm.gcHeap->referenceOperations,
+                            verifyReferenceOperation);
+    verifyLargeHeapRefTable(gDvm.gcHeap->pendingFinalizationRefs,
+                            verifyReference);
+    verifyThreads();
     /* TODO: verify cached global references. */
-    /* TODO: verify threads and stacks. */
-    /* TODO: verify finalizer and reference operation queues. */
 }

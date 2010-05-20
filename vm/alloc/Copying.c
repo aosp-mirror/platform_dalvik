@@ -143,7 +143,6 @@
 
 static void enqueueBlock(HeapSource *heapSource, size_t block);
 static void scavengeReference(Object **obj);
-static void verifyReference(const void *obj);
 static bool toSpaceContains(const void *addr);
 static bool fromSpaceContains(const void *addr);
 static size_t sumHeapBitmap(const HeapBitmap *bitmap);
@@ -1437,25 +1436,6 @@ static void scavengeReference(Object **obj)
     *obj = (Object *)toObj;
 }
 
-static void verifyReference(const void *obj)
-{
-    HeapSource *heapSource;
-    size_t block;
-    char space;
-
-    if (obj == NULL) {
-        LOG_VER("verifyReference(obj=%p)", obj);
-        return;
-    }
-    heapSource = gDvm.gcHeap->heapSource;
-    block = addressToBlock(heapSource, obj);
-    space = heapSource->blockSpace[block];
-    LOG_VER("verifyReference(obj=%p),block=%zu,space=%d", obj, block, space);
-    assert(!((uintptr_t)obj & 7));
-    assert(toSpaceContains(obj));
-    assert(dvmIsValidObject(obj));
-}
-
 /*
  * Generic object scavenging.
  */
@@ -1617,19 +1597,6 @@ static void pinReferenceTable(const ReferenceTable *table)
         assert(!isForward(*entry));
         pinObject(*entry);
     }
-}
-
-static void verifyReferenceTable(const ReferenceTable *table)
-{
-    Object **entry;
-
-    LOG_VER(">>> verifyReferenceTable(table=%p)", table);
-    for (entry = table->table; entry < table->nextEntry; ++entry) {
-        assert(entry != NULL);
-        assert(!isForward(*entry));
-        verifyReference(*entry);
-    }
-    LOG_VER("<<< verifyReferenceTable(table=%p)", table);
 }
 
 static void scavengeLargeHeapRefTable(LargeHeapRefTable *table, bool stripLowBits)
@@ -1874,120 +1841,6 @@ static void scavengeThreadList(void)
     thread = gDvm.threadList;
     while (thread) {
         scavengeThread(thread);
-        thread = thread->next;
-    }
-    dvmUnlockThreadList();
-}
-
-static void verifyThreadStack(const Thread *thread)
-{
-    const u4 *framePtr;
-
-    assert(thread != NULL);
-    framePtr = (const u4 *)thread->curFrame;
-    while (framePtr != NULL) {
-        const StackSaveArea *saveArea;
-        Method *method;
-
-        saveArea = SAVEAREA_FROM_FP(framePtr);
-        method = (Method *)saveArea->method;
-        if (method != NULL && !dvmIsNativeMethod(method)) {
-            const RegisterMap* pMap;
-            const u1* regVector;
-            int i;
-
-            pMap = dvmGetExpandedRegisterMap(method);
-            regVector = NULL;
-            if (pMap != NULL) {
-                /* found map, get registers for this address */
-                int addr = saveArea->xtra.currentPc - method->insns;
-                regVector = dvmRegisterMapGetLine(pMap, addr);
-            }
-            if (regVector == NULL) {
-                /* conservative scan */
-                for (i = 0; i < method->registersSize; ++i) {
-                    Object *regValue = (Object *)framePtr[i];
-                    if (dvmIsValidObject(regValue)) dvmVerifyObject(regValue);
-                }
-            } else {
-                /*
-                 * Precise scan.  v0 is at the lowest address on the
-                 * interpreted stack, and is the first bit in the register
-                 * vector, so we can walk through the register map and
-                 * memory in the same direction.
-                 *
-                 * A '1' bit indicates a live reference.
-                 */
-                u2 bits = 1 << 1;
-                for (i = 0; i < method->registersSize; ++i) {
-                    u4 regValue = framePtr[i];
-                    bits >>= 1;
-                    if (bits == 1) {
-                        /* set bit 9 so we can tell when we're empty */
-                        bits = *regVector++ | 0x0100;
-                    }
-                    if (regValue != 0 && (bits & 0x1) != 0) {
-                        /*
-                         * Non-null, register marked as live reference.  This
-                         * should always be a valid object.
-                         */
-                        verifyReference((Object *)regValue);
-                    }
-                }
-                dvmReleaseRegisterMapLine(pMap, regVector);
-            }
-            framePtr += method->registersSize;
-        }
-        /* else this is a break frame and there is nothing to gray, or
-         * this is a native method and the registers are just the "ins",
-         * copied from various registers in the caller's set.
-         */
-
-        /* Don't fall into an infinite loop if things get corrupted.
-         */
-        assert((uintptr_t)saveArea->prevFrame > (uintptr_t)framePtr ||
-               saveArea->prevFrame == NULL);
-        framePtr = saveArea->prevFrame;
-    }
-}
-
-static void verifyThread(const Thread *thread)
-{
-    assert(thread->status != THREAD_RUNNING ||
-           thread->isSuspended ||
-           thread == dvmThreadSelf());
-
-    LOG_VER("verifyThread(thread=%p)", thread);
-
-    LOG_VER("verify threadObj=%p", thread->threadObj);
-    verifyReference(thread->threadObj);
-
-    LOG_VER("verify exception=%p", thread->exception);
-    verifyReference(thread->exception);
-
-    LOG_VER("verify thread->internalLocalRefTable");
-    verifyReferenceTable(&thread->internalLocalRefTable);
-
-    LOG_VER("verify thread->jniLocalRefTable");
-    verifyReferenceTable(&thread->jniLocalRefTable);
-
-    /* Can the check be pushed into the promote routine? */
-    if (thread->jniMonitorRefTable.table) {
-        LOG_VER("verify thread->jniMonitorRefTable");
-        verifyReferenceTable(&thread->jniMonitorRefTable);
-    }
-
-    verifyThreadStack(thread);
-}
-
-static void verifyThreadList(void)
-{
-    Thread *thread;
-
-    dvmLockThreadList(dvmThreadSelf());
-    thread = gDvm.threadList;
-    while (thread) {
-        verifyThread(thread);
         thread = thread->next;
     }
     dvmUnlockThreadList();
@@ -2483,7 +2336,6 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
      * Verify the stack and heap.
      */
     dvmVerifyRoots();
-    verifyThreadList();
     verifyNewSpace();
 
     //describeBlocks(gcHeap->heapSource);
