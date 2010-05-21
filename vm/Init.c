@@ -192,6 +192,9 @@ static void dvmUsage(const char* progName)
 #if defined(WITH_SELF_VERIFICATION)
         " self_verification"
 #endif
+#if ANDROID_SMP != 0
+        " smp"
+#endif
     );
 #ifdef DVM_SHOW_EXCEPTION
     dvmFprintf(stderr, " show_exception=%d", DVM_SHOW_EXCEPTION);

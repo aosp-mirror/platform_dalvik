@@ -35,6 +35,12 @@ LOCAL_SHARED_LIBRARIES := \
 		libssl \
 		libdvm
 
+ifeq ($(TARGET_CPU_SMP),true)
+    LOCAL_CFLAGS += -DANDROID_SMP=1
+else
+    LOCAL_CFLAGS += -DANDROID_SMP=0
+endif
+
 LOCAL_MODULE := dexopt
 
 include $(BUILD_EXECUTABLE)
