@@ -36,6 +36,13 @@ ifeq ($(TARGET_ARCH_VARIANT),armv5te)
     WITH_JIT := false
 endif
 
+ifeq ($(TARGET_CPU_SMP),true)
+    target_smp_flag := -DANDROID_SMP=1
+else
+    target_smp_flag := -DANDROID_SMP=0
+endif
+host_smp_flag := -DANDROID_SMP=1
+
 # Build the installed version (libdvm.so) first
 include $(LOCAL_PATH)/ReconfigureDvm.mk
 
@@ -45,6 +52,7 @@ ifeq ($(TARGET_SIMULATOR),false)
 endif
 LOCAL_MODULE_TAGS := user
 LOCAL_MODULE := libdvm
+LOCAL_CFLAGS += $(target_smp_flag)
 include $(BUILD_SHARED_LIBRARY)
 
 # If WITH_JIT is configured, build multiple versions of libdvm.so to facilitate
@@ -57,7 +65,7 @@ ifeq ($(WITH_JIT),true)
 
     # Enable assertions and JIT-tuning
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
-				    -DWITH_JIT_TUNING
+                    -DWITH_JIT_TUNING $(target_smp_flag)
     LOCAL_MODULE := libdvm_assert
     include $(BUILD_SHARED_LIBRARY)
 
@@ -67,7 +75,7 @@ ifeq ($(WITH_JIT),true)
 
     # Enable assertions and JIT self-verification
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
-					-DWITH_SELF_VERIFICATION
+                    -DWITH_SELF_VERIFICATION $(target_smp_flag)
     LOCAL_MODULE := libdvm_sv
     include $(BUILD_SHARED_LIBRARY)
 
@@ -76,6 +84,7 @@ ifeq ($(WITH_JIT),true)
     WITH_JIT := false
     include $(LOCAL_PATH)/ReconfigureDvm.mk
 
+    LOCAL_CFLAGS += $(target_smp_flag)
     LOCAL_MODULE := libdvm_interp
     include $(BUILD_SHARED_LIBRARY)
 
@@ -118,6 +127,7 @@ ifeq ($(WITH_HOST_DALVIK),true)
             $(patsubst libffi, ,$(LOCAL_SHARED_LIBRARIES))
     endif
 
+    LOCAL_CFLAGS += $(host_smp_flag)
     LOCAL_MODULE := libdvm-host
 
     include $(BUILD_HOST_STATIC_LIBRARY)
