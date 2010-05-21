@@ -590,8 +590,7 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
 
 HeapBitmap *dvmHeapSourceGetLiveBits(void)
 {
-    assert(!"implemented");
-    return NULL;
+    return &gDvm.gcHeap->heapSource->allocBits;
 }
 
 /*
@@ -730,13 +729,12 @@ size_t dvmHeapSourceGetIdealFootprint(void)
 
 float dvmGetTargetHeapUtilization(void)
 {
-    assert(!"implemented");
-    return 0.0f;
+    return 0.5f;
 }
 
 void dvmSetTargetHeapUtilization(float newTarget)
 {
-    assert(!"implemented");
+    assert(newTarget > 0.0f && newTarget < 1.0f);
 }
 
 size_t dvmMinimumHeapSize(size_t size, bool set)
@@ -867,7 +865,7 @@ static size_t sumHeapBitmap(const HeapBitmap *bitmap)
 
     sum = 0;
     for (i = 0; i < bitmap->bitsLen >> 2; ++i) {
-        sum += dvmClzImpl(bitmap->bits[i]);
+        sum += CLZ(bitmap->bits[i]);
     }
     return sum;
 }
