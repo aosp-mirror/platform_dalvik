@@ -1131,6 +1131,7 @@ dalvik_inst:
     mov     r2, rINST, lsr #8           @ r2<- AA
     GET_VREG(r1, r2)                    @ r1<- vAA (exception object)
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
+    EXPORT_PC()                         @ exception handler can throw
     cmp     r1, #0                      @ null object?
     beq     common_errNullObject        @ yes, throw an NPE instead
     @ bypass dvmSetException, just store it
