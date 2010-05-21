@@ -225,7 +225,6 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
 static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
 {
     pid_t pid;
-    int err;
 
     if (!gDvm.zygote) {
         dvmThrowException("Ljava/lang/IllegalStateException;",

@@ -85,7 +85,6 @@ static void Dalvik_java_lang_VMClassLoader_findLoadedClass(const u4* args,
     ClassObject* clazz = NULL;
     char* name = NULL;
     char* descriptor = NULL;
-    char* cp;
 
     if (nameObj == NULL) {
         dvmThrowException("Ljava/lang/NullPointerException;", NULL);

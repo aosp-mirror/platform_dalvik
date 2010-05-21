@@ -835,7 +835,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             strncmp(argv[i], "-agentlib:jdwp=", 15) == 0)
         {
             const char* tail;
-            bool result = false;
 
             if (argv[i][1] == 'X')
                 tail = argv[i] + 10;

@@ -159,7 +159,6 @@ static int dumpMethodStats(void *compilerMethodStats, void *totalMethodStats)
         (CompilerMethodStats *) compilerMethodStats;
     CompilerMethodStats *totalStats =
         (CompilerMethodStats *) totalMethodStats;
-    const Method *method = methodStats->method;
 
     totalStats->dalvikSize += methodStats->dalvikSize;
     totalStats->compiledDalvikSize += methodStats->compiledDalvikSize;
@@ -172,7 +171,8 @@ static int dumpMethodStats(void *compilerMethodStats, void *totalMethodStats)
     /* If over 3/4 of the Dalvik code is compiled, print something */
     if (methodStats->compiledDalvikSize >= limit) {
         LOGD("Method stats: %s%s, %d/%d (compiled/total Dalvik), %d (native)",
-             method->clazz->descriptor, method->name,
+             methodStats->method->clazz->descriptor,
+             methodStats->method->name,
              methodStats->compiledDalvikSize,
              methodStats->dalvikSize,
              methodStats->nativeSize);

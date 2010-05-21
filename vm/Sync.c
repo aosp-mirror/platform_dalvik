@@ -374,7 +374,7 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
     u4 relativePc;
     char eventBuffer[132];
     const char *fileName;
-    char procName[33], *selfName, *ownerName;
+    char procName[33], *selfName;
     char *cp;
     size_t len;
     int fd;
@@ -430,7 +430,6 @@ static void logContentionEvent(Thread *self, u4 waitMs, u4 samplePercent)
  */
 static void lockMonitor(Thread* self, Monitor* mon)
 {
-    Thread *owner;
     ThreadStatus oldStatus;
     u4 waitThreshold, samplePercent;
     u8 waitStart, waitEnd, waitMs;

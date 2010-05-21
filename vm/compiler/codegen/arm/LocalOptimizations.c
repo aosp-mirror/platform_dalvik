@@ -78,8 +78,6 @@ static void applyLoadStoreElimination(CompilationUnit *cUnit,
             continue;
         }
         if (isDalvikStore(thisLIR)) {
-            int dRegId = DECODE_ALIAS_INFO_REG(thisLIR->aliasInfo);
-            int dRegIdHi = dRegId + DECODE_ALIAS_INFO_WIDE(thisLIR->aliasInfo);
             int nativeRegId = thisLIR->operands[0];
             ArmLIR *checkLIR;
             int sinkDistance = 0;
@@ -208,7 +206,6 @@ static void applyLoadHoisting(CompilationUnit *cUnit,
 
         if (isDalvikLoad(thisLIR)) {
             int dRegId = DECODE_ALIAS_INFO_REG(thisLIR->aliasInfo);
-            int dRegIdHi = dRegId + DECODE_ALIAS_INFO_WIDE(thisLIR->aliasInfo);
             int nativeRegId = thisLIR->operands[0];
             ArmLIR *checkLIR;
             int hoistDistance = 0;

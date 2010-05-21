@@ -1093,10 +1093,8 @@ DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
 bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
     JValue* pResult)
 {
-    JValue result;
     PrimitiveType typeIndex = returnType->primitiveType;
     PrimitiveType valueIndex;
-    //const u4* dataPtr;
 
     if (typeIndex == PRIM_NOT) {
         if (value != NULL && !dvmInstanceof(value->clazz, returnType)) {

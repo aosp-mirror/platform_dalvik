@@ -1168,8 +1168,6 @@ void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
         int dfAttributes =
             dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
 
-        int numUses = 0;
-
         DecodedInstruction *dInsn = &mir->dalvikInsn;
 
         if (!(dfAttributes & DF_HAS_DEFS)) continue;

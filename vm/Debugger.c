@@ -293,10 +293,12 @@ static RefTypeId classObjectToRefTypeId(ClassObject* clazz)
 {
     return (RefTypeId) registerObject((Object*) clazz, kRefTypeId, true);
 }
+#if 0
 static RefTypeId classObjectToRefTypeIdNoReg(ClassObject* clazz)
 {
     return (RefTypeId) registerObject((Object*) clazz, kRefTypeId, false);
 }
+#endif
 static ClassObject* refTypeIdToClassObject(RefTypeId id)
 {
     assert(objectIsRegistered(id, kRefTypeId) || !gDvm.debuggerConnected);
@@ -1340,7 +1342,6 @@ void dvmDbgOutputLineTable(RefTypeId refTypeId, MethodId methodId,
 {
     Method* method;
     u8 start, end;
-    int i;
     DebugCallbackContext context;
 
     memset (&context, 0, sizeof(DebugCallbackContext));

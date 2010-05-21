@@ -120,7 +120,7 @@ static bool verifyMethod(Method* meth, int verifyFlags)
     bool result = false;
     UninitInstanceMap* uninitMap = NULL;
     InsnFlags* insnFlags = NULL;
-    int i, newInstanceCount;
+    int newInstanceCount;
 
     /*
      * If there aren't any instructions, make sure that's expected, then
@@ -495,7 +495,6 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
         int width = dvmInsnGetWidth(insnFlags, i);
         OpCode opcode = *insns & 0xff;
         InstructionFlags opFlags = dexGetInstrFlags(gDvm.instrFlags, opcode);
-        int offset, absOffset;
 
         if ((opFlags & gcMask) != 0) {
             /*

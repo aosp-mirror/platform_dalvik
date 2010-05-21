@@ -429,8 +429,6 @@ static ClassObject* callPrep(Thread* self, const Method* method, Object* obj,
 void dvmCallMethod(Thread* self, const Method* method, Object* obj,
     JValue* pResult, ...)
 {
-    JValue result;
-
     va_list args;
     va_start(args, pResult);
     dvmCallMethodV(self, method, obj, false, pResult, args);
@@ -535,7 +533,9 @@ void dvmCallMethodV(Thread* self, const Method* method, Object* obj,
         dvmInterpret(self, method, pResult);
     }
 
+#ifndef NDEBUG
 bail:
+#endif
     dvmPopFrame(self);
 }
 
@@ -867,9 +867,9 @@ int dvmComputeExactFrameDepth(const void* fp)
 int dvmComputeVagueFrameDepth(Thread* thread, const void* fp)
 {
     const u1* interpStackStart = thread->interpStackStart;
-    const u1* interpStackBottom = interpStackStart - thread->interpStackSize;
 
-    assert((u1*) fp >= interpStackBottom && (u1*) fp < interpStackStart);
+    assert((u1*) fp >= interpStackStart - thread->interpStackSize);
+    assert((u1*) fp < interpStackStart);
     return interpStackStart - (u1*) fp;
 }
 

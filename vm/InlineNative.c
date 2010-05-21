@@ -225,7 +225,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     ArrayObject* compArray;
     const u2* thisChars;
     const u2* compChars;
-    int i, minCount, countDiff;
+    int minCount, countDiff;
 
     thisCount = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     compCount = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_COUNT);
@@ -251,6 +251,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      */
     int otherRes = __memcmp16(thisChars, compChars, minCount);
 # ifdef CHECK_MEMCMP16
+    int i;
     for (i = 0; i < minCount; i++) {
         if (thisChars[i] != compChars[i]) {
             pResult->i = (s4) thisChars[i] - (s4) compChars[i];
@@ -273,6 +274,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * the characters that overlap, and if they're all the same then return
      * the difference in lengths.
      */
+    int i;
     for (i = 0; i < minCount; i++) {
         if (thisChars[i] != compChars[i]) {
             pResult->i = (s4) thisChars[i] - (s4) compChars[i];
@@ -324,7 +326,6 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     ArrayObject* compArray;
     const u2* thisChars;
     const u2* compChars;
-    int i;
 
     /* quick length check */
     thisCount = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
@@ -363,6 +364,7 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * meaningful comparison when the strings don't match (could also test
      * with palindromes).
      */
+    int i;
     //for (i = 0; i < thisCount; i++)
     for (i = thisCount-1; i >= 0; --i)
     {

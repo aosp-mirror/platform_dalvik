@@ -41,6 +41,7 @@ static CompilerWorkOrder workDequeue(void)
     gDvmJit.compilerQueueLength--;
     if (gDvmJit.compilerQueueLength == 0) {
         int cc = pthread_cond_signal(&gDvmJit.compilerQueueEmpty);
+        assert(cc == 0);
     }
 
     /* Remember the high water mark of the queue length */
@@ -506,9 +507,6 @@ fail:
 
 static void *compilerThreadStart(void *arg)
 {
-    int ret;
-    struct timespec ts;
-
     dvmChangeStatus(NULL, THREAD_VMWAIT);
 
     /*

@@ -263,11 +263,9 @@ static void updateRangeCheckInfo(CompilationUnit *cUnit, int arrayReg,
 /* Returns true if the loop body cannot throw any exceptions */
 static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
 {
-    BasicBlock *entry = cUnit->blockList[0];
     BasicBlock *loopBody = cUnit->blockList[1];
     MIR *mir;
     bool loopBodyCanThrow = false;
-    int numDalvikRegs = cUnit->method->registersSize;
 
     for (mir = loopBody->firstMIRInsn; mir; mir = mir->next) {
         DecodedInstruction *dInsn = &mir->dalvikInsn;
@@ -321,7 +319,6 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
             int useIdx = refIdx + 1;
             int subNRegArray =
                 dvmConvertSSARegToDalvik(cUnit, mir->ssaRep->uses[refIdx]);
-            int arrayReg = DECODE_REG(subNRegArray);
             int arraySub = DECODE_SUB(subNRegArray);
 
             /*
@@ -352,7 +349,6 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
 
 static void dumpHoistedChecks(CompilationUnit *cUnit)
 {
-    ArrayAccessInfo *arrayAccessInfo;
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
     unsigned int i;
 
@@ -379,7 +375,6 @@ static void genHoistedChecks(CompilationUnit *cUnit)
     unsigned int i;
     BasicBlock *entry = cUnit->blockList[0];
     LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
-    ArrayAccessInfo *arrayAccessInfo;
     int globalMaxC = 0;
     int globalMinC = 0;
     /* Should be loop invariant */
@@ -461,7 +456,6 @@ static void genHoistedChecks(CompilationUnit *cUnit)
 /* Main entry point to do loop optimization */
 void dvmCompilerLoopOpt(CompilationUnit *cUnit)
 {
-    int numDalvikReg = cUnit->method->registersSize;
     LoopAnalysis *loopAnalysis = dvmCompilerNew(sizeof(LoopAnalysis), true);
 
     assert(cUnit->blockList[0]->blockType == kEntryBlock);

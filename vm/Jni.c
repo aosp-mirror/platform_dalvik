@@ -859,7 +859,6 @@ static jobject addGlobalReference(Object* obj)
     }
 #endif
 
-bail:
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
     return jobj;
 }
@@ -956,7 +955,7 @@ static jweak createWeakGlobalRef(JNIEnv* env, jobject jobj)
 
     JValue unused;
     dvmCallMethod(self, gDvm.methJavaLangRefPhantomReference_init, phantomObj,
-        &unused, jobj, NULL);
+        &unused, obj, NULL);
     dvmReleaseTrackedAlloc(phantomObj, self);
 
     if (dvmCheckException(self)) {
@@ -1248,8 +1247,6 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
 #else
     ReferenceTable* pRefTable = getLocalRefTable(env);
     Thread* self = dvmThreadSelf();
-    //Object** top;
-    Object** ptr;
 
     if (dvmIsWeakGlobalRef(jobj)) {
         return JNIWeakGlobalRefType;
@@ -1975,7 +1972,7 @@ static jobject ToReflectedField(JNIEnv* env, jclass jcls, jfieldID fieldID,
 {
     JNI_ENTER();
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jcls);
-    Object* obj = dvmCreateReflectObjForField(jcls, (Field*) fieldID);
+    Object* obj = dvmCreateReflectObjForField(clazz, (Field*) fieldID);
     dvmReleaseTrackedAlloc(obj, NULL);
     jobject jobj = addLocalReference(env, obj);
     JNI_EXIT();

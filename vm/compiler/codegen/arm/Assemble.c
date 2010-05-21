@@ -1420,6 +1420,7 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
  * Attempt to enqueue a work order to patch an inline cache for a predicted
  * chaining cell for virtual/interface calls.
  */
+#if !defined(WITH_SELF_VERIFICATION)
 static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
                                     PredictedChainingCell *newContent)
 {
@@ -1474,6 +1475,7 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
     return result;
 }
+#endif
 
 /*
  * This method is called from the invoke templates for virtual and interface
@@ -1641,8 +1643,6 @@ u4* dvmJitUnchain(void* codeAddr)
     int cellSize;
     u4* pChainCells;
     u4* pStart;
-    u4 thumb1;
-    u4 thumb2;
     u4 newInst;
     int i,j;
     PredictedChainingCell *predChainCell;
@@ -2246,7 +2246,6 @@ void dvmSelfVerificationMemOpDecode(int lr, int* sp)
         //LOGD("*** THUMB2 - Addr: 0x%x Insn: 0x%x", lr, insn);
 
         int opcode12 = (insn >> 20) & 0xFFF;
-        int opcode6 = (insn >> 6) & 0x3F;
         int opcode4 = (insn >> 8) & 0xF;
         int imm2 = (insn >> 4) & 0x3;
         int imm8 = insn & 0xFF;

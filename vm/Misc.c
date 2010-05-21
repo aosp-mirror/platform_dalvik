@@ -323,7 +323,7 @@ bool dvmIsBitSet(const BitVector* pBits, int num)
  */
 int dvmCountSetBits(const BitVector* pBits)
 {
-    int word, bit;
+    int word;
     int count = 0;
 
     for (word = 0; word < pBits->storageSize; word++) {

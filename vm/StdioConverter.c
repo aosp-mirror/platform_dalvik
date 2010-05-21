@@ -172,7 +172,6 @@ static void* stdioConverterThreadStart(void* arg)
      * Read until shutdown time.
      */
     while (!gDvm.haltStdioConverter) {
-        ssize_t actual;
         fd_set readfds;
         int maxFd, fdCount;
 

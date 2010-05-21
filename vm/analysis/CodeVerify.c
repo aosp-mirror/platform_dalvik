@@ -114,7 +114,9 @@ typedef struct RegisterTable {
 
 
 /* fwd */
+#ifndef NDEBUG
 static void checkMergeTab(void);
+#endif
 static bool isInitMethod(const Method* meth);
 static RegType getInvocationThis(const RegType* insnRegs,\
     const int insnRegCount, const DecodedInstruction* pDecInsn,
@@ -540,10 +542,12 @@ static bool isInitMethod(const Method* meth)
 /*
  * Is this method a class initializer?
  */
+#if 0
 static bool isClassInitMethod(const Method* meth)
 {
     return (*meth->name == '<' && strcmp(meth->name+1, "clinit>") == 0);
 }
+#endif
 
 /*
  * Look up a class reference given as a simple string descriptor.
@@ -1338,8 +1342,6 @@ static ClassObject* getFieldClass(const Method* meth, const Field* field)
 static inline RegType getRegisterType(const RegType* insnRegs,
     const int insnRegCount, u4 vsrc, VerifyError* pFailure)
 {
-    RegType type;
-
     if (vsrc >= (u4) insnRegCount) {
         *pFailure = VERIFY_ERROR_GENERIC;
         return kRegTypeUnknown;
@@ -3105,10 +3107,7 @@ bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
 {
     bool result = false;
     const int insnsSize = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns;
     const bool generateRegisterMap = gDvm.generateRegisterMaps;
-    int i, offset;
-    bool isConditional;
     RegisterTable regTable;
 
     memset(&regTable, 0, sizeof(regTable));
@@ -3258,11 +3257,10 @@ static bool doCodeVerification(Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, UninitInstanceMap* uninitMap)
 {
     const int insnsSize = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns;
     RegType workRegs[meth->registersSize + kExtraRegs];
     bool result = false;
     bool debugVerbose = false;
-    int insnIdx, startGuess, prevAddr;
+    int insnIdx, startGuess;
 
     /*
      * Begin by marking the first instruction as "changed".
@@ -3520,7 +3518,6 @@ static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
     const DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
     RegType entryRegs[meth->registersSize + kExtraRegs];
     ClassObject* resClass;
-    const char* className;
     int branchTarget = 0;
     const int insnRegCount = meth->registersSize;
     RegType tmpType;
@@ -4062,7 +4059,6 @@ static bool verifyInstruction(Method* meth, InsnFlags* insnFlags,
     case OP_IF_NE:
         {
             RegType type1, type2;
-            bool tmpResult;
 
             type1 = getRegisterType(workRegs, insnRegCount, decInsn.vA,
                         &failure);
@@ -4488,7 +4484,6 @@ aput_1nr_common:
         goto iget_1nr_common;
 iget_1nr_common:
         {
-            ClassObject* fieldClass;
             InstField* instField;
             RegType objType, fieldType;
 
@@ -4521,7 +4516,6 @@ iget_1nr_common:
     case OP_IGET_WIDE_VOLATILE:
         {
             RegType dstType;
-            ClassObject* fieldClass;
             InstField* instField;
             RegType objType;
 
@@ -4609,7 +4603,6 @@ iget_1nr_common:
 iput_1nr_common:
         {
             RegType srcType, fieldType, objType;
-            ClassObject* fieldClass;
             InstField* instField;
 
             srcType = getRegisterType(workRegs, insnRegCount, decInsn.vA,
@@ -4665,7 +4658,6 @@ iput_1nr_common:
             checkWidePair(tmpType, typeHi, &failure);
         }
         if (VERIFY_OK(failure)) {
-            ClassObject* fieldClass;
             InstField* instField;
             RegType objType;
 
@@ -5125,7 +5117,6 @@ sput_1nr_common:
                  * do this for all registers that have the same object
                  * instance in them, not just the "this" register.
                  */
-                int uidx = regTypeToUninitIndex(thisType);
                 markRefsAsInitialized(workRegs, insnRegCount, uninitMap,
                     thisType, &failure);
                 if (!VERIFY_OK(failure))
@@ -5683,7 +5674,6 @@ sput_1nr_common:
      */
     if ((nextFlags & kInstrCanThrow) != 0 && dvmInsnIsInTry(insnFlags, insnIdx))
     {
-        DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
         const DexCode* pCode = dvmGetMethodCode(meth);
         DexCatchIterator iterator;
 

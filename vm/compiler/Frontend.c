@@ -185,13 +185,13 @@ static inline bool isUnconditionalBranch(MIR *insn)
 /*
  * dvmHashTableLookup() callback
  */
+#if defined(WITH_JIT_TUNING)
 static int compareMethod(const CompilerMethodStats *m1,
                          const CompilerMethodStats *m2)
 {
     return (int) m1->method - (int) m2->method;
 }
 
-#if defined(WITH_JIT_TUNING)
 /*
  * Analyze each method whose traces are ever compiled. Collect a variety of
  * statistics like the ratio of exercised vs overall code and code bloat

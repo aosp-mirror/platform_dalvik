@@ -60,7 +60,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
      */
     const StepControl* pCtrl = &gDvm.stepControl;
     if (pCtrl->active && pCtrl->thread == self) {
-        int line, frameDepth;
+        int frameDepth;
         bool doStop = false;
         const char* msg = NULL;
 

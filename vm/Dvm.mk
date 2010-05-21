@@ -26,6 +26,7 @@
 #
 LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
 #LOCAL_CFLAGS += -DUSE_INDIRECT_REF
+LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 
 #
 # Optional features.  These may impact the size or performance of the VM.

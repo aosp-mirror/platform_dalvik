@@ -278,7 +278,7 @@ static int dumpMarkedMethods(void* vclazz, void* vfp)
     FILE* fp = (FILE*) vfp;
     Method* meth;
     char* name;
-    int i, lineNum;
+    int i;
 
     dexStringCacheInit(&stringCache);
 

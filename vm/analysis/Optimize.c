@@ -36,8 +36,6 @@ struct InlineSub {
 
 
 /* fwd */
-static void optimizeLoadedClasses(DexFile* pDexFile);
-static void optimizeClass(ClassObject* clazz);
 static bool optimizeMethod(Method* method);
 static void rewriteInstField(Method* method, u2* insns, OpCode newOpc);
 static bool rewriteVirtualInvoke(Method* method, u2* insns, OpCode newOpc);
@@ -562,7 +560,6 @@ static void rewriteInstField(Method* method, u2* insns, OpCode newOpc)
     ClassObject* clazz = method->clazz;
     u2 fieldIdx = insns[1];
     InstField* field;
-    int byteOffset;
 
     field = dvmOptResolveInstField(clazz, fieldIdx, NULL);
     if (field == NULL) {

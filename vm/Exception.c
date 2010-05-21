@@ -1109,7 +1109,7 @@ ArrayObject* dvmGetStackTrace(const Object* ostackData)
 {
     const ArrayObject* stackData = (const ArrayObject*) ostackData;
     const int* intVals;
-    int i, stackSize;
+    int stackSize;
 
     stackSize = stackData->length / 2;
     intVals = (const int*) stackData->contents;

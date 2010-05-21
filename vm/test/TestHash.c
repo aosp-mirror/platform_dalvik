@@ -61,7 +61,7 @@ static void dumpIterator(HashTable* pTab)
     for (dvmHashIterBegin(pTab, &iter); !dvmHashIterDone(&iter);
         dvmHashIterNext(&iter))
     {
-        const char* str = (const char*) dvmHashIterData(&iter);
+        //const char* str = (const char*) dvmHashIterData(&iter);
         //printf("  '%s'\n", str);
         // (should verify strings)
         count++;

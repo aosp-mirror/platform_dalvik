@@ -667,7 +667,6 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     optHdr.flags = headerFlags;
     optHdr.checksum = optChecksum;
 
-    ssize_t actual;
     lseek(fd, 0, SEEK_SET);
     if (sysWriteFully(fd, &optHdr, sizeof(optHdr), "DexOpt opt header") != 0)
         goto bail;
@@ -1239,11 +1238,10 @@ bail:
 static int writeDependencies(int fd, u4 modWhen, u4 crc)
 {
     u1* buf = NULL;
-    ssize_t actual;
     int result = -1;
     ssize_t bufLen;
     ClassPathEntry* cpe;
-    int i, numDeps;
+    int numDeps;
 
     /*
      * Count up the number of completed entries in the bootclasspath.
@@ -1307,7 +1305,6 @@ static int writeDependencies(int fd, u4 modWhen, u4 crc)
  */
 static bool writeChunk(int fd, u4 type, const void* data, size_t size)
 {
-    ssize_t actual;
     union {             /* save a syscall by grouping these together */
         char raw[8];
         struct {

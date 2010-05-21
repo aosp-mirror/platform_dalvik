@@ -113,7 +113,6 @@ bail:
 bool dvmSetTryFlags(const Method* meth, InsnFlags* insnFlags)
 {
     u4 insnsSize = dvmGetMethodInsnsSize(meth);
-    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
     const DexCode* pCode = dvmGetMethodCode(meth);
     u4 triesSize = pCode->triesSize;
     const DexTry* pTries;
@@ -311,7 +310,6 @@ bool dvmCheckBranchTarget(const Method* meth, InsnFlags* insnFlags,
     int curOffset, bool selfOkay)
 {
     const int insnCount = dvmGetMethodInsnsSize(meth);
-    const u2* insns = meth->insns + curOffset;
     int offset, absOffset;
     bool isConditional;
 
@@ -411,7 +409,6 @@ bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
     int curOffset, int* pOffset, bool* pConditional)
 {
     const u2* insns = meth->insns + curOffset;
-    int tmp;
 
     switch (*insns & 0xff) {
     case OP_GOTO:

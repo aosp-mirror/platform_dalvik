@@ -35,19 +35,20 @@
 /* verbose logging */
 #define REGISTER_MAP_VERBOSE    false
 
+//#define REGISTER_MAP_STATS
 
 // fwd
 static void outputTypeVector(const RegType* regs, int insnRegCount, u1* data);
 static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap);
 static int compareMaps(const RegisterMap* pMap1, const RegisterMap* pMap2);
 
+#ifdef REGISTER_MAP_STATS
 static void computeMapStats(RegisterMap* pMap, const Method* method);
+#endif
 static RegisterMap* compressMapDifferential(const RegisterMap* pMap,\
     const Method* meth);
 static RegisterMap* uncompressMapDifferential(const RegisterMap* pMap);
 
-
-//#define REGISTER_MAP_STATS
 #ifdef REGISTER_MAP_STATS
 /*
  * Generate some statistics on the register maps we create and use.
@@ -471,7 +472,6 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
     if (false) {
         const char* cd = "Landroid/net/http/Request;";
         const char* mn = "readResponse";
-        const char* sg = "(Landroid/net/http/AndroidHttpClientConnection;)V";
         if (strcmp(vdata->method->clazz->descriptor, cd) == 0 &&
             strcmp(vdata->method->name, mn) == 0)
         {
@@ -508,7 +508,6 @@ static bool verifyMap(VerifierData* vdata, const RegisterMap* pMap)
             dvmAbort();
         }
 
-        const u1* dataStart = rawMap;
         const RegType* regs = vdata->addrRegs[addr];
         if (regs == NULL) {
             LOGE("GLITCH: addr %d has no data\n", addr);
@@ -1243,9 +1242,9 @@ Compact8 encoding method.
 /*
  * Compute some stats on an uncompressed register map.
  */
+#ifdef REGISTER_MAP_STATS
 static void computeMapStats(RegisterMap* pMap, const Method* method)
 {
-#ifdef REGISTER_MAP_STATS
     MapStats* pStats = (MapStats*) gDvm.registerMapStats;
     const u1 format = dvmRegisterMapGetFormat(pMap);
     const u2 numEntries = dvmRegisterMapGetNumEntries(pMap);
@@ -1361,9 +1360,8 @@ static void computeMapStats(RegisterMap* pMap, const Method* method)
         prevAddr = addr;
         prevData = dataStart;
     }
-#endif
 }
-
+#endif
 
 /*
  * Compute the difference between two bit vectors.

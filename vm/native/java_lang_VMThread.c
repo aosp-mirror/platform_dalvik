@@ -213,7 +213,6 @@ static void Dalvik_java_lang_VMThread_setPriority(const u4* args,
  */
 static void Dalvik_java_lang_VMThread_sleep(const u4* args, JValue* pResult)
 {
-    Thread* self = dvmThreadSelf();
     dvmThreadSleep(GET_ARG_LONG(args,0), args[2]);
     RETURN_VOID();
 }

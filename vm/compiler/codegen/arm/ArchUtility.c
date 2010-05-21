@@ -239,7 +239,6 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
     char opName[256];
     int offset = lir->generic.offset;
     int dest = lir->operands[0];
-    u2 *cPtr = (u2*)baseAddr;
     const bool dumpNop = false;
 
     /* Handle pseudo-ops individually, and all regular insns as a group */

@@ -1723,7 +1723,6 @@ static void threadExitUncaughtException(Thread* self, Object* group)
 {
     Object* exception;
     Object* handlerObj;
-    ClassObject* throwable;
     Method* uncaughtHandler = NULL;
     InstField* threadHandler;
 
@@ -4104,6 +4103,7 @@ static void gcScanReferenceTable(ReferenceTable *refTable)
     }
 }
 
+#ifdef USE_INDIRECT_REF
 static void gcScanIndirectRefTable(IndirectRefTable* pRefTable)
 {
     Object** op = pRefTable->table;
@@ -4117,6 +4117,7 @@ static void gcScanIndirectRefTable(IndirectRefTable* pRefTable)
         op++;
     }
 }
+#endif
 
 /*
  * Scan a Thread and mark any objects it references.

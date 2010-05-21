@@ -366,10 +366,9 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
             LOGV("Flushing breakpoint at %p for %s\n",
                 pBreak->addr, clazz->descriptor);
             if (instructionIsMagicNop(pBreak->addr)) {
-                const Method* method = pBreak->method;
                 LOGV("Refusing to flush breakpoint on %04x at %s.%s + 0x%x\n",
-                    *pBreak->addr, method->clazz->descriptor,
-                    method->name, pBreak->addr - method->insns);
+                    *pBreak->addr, pBreak->method->clazz->descriptor,
+                    pBreak->method->name, pBreak->addr - pBreak->method->insns);
             } else {
                 dvmDexChangeDex1(clazz->pDvmDex, (u1*)pBreak->addr,
                     OP_BREAKPOINT);
@@ -815,7 +814,7 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
 s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
 {
     const int kInstrLen = 3;
-    u2 ident, size;
+    u2 size;
     const s4* keys;
     const s4* entries;
 

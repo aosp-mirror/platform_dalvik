@@ -428,7 +428,6 @@ bail:
 static int copyWithoutDuplicates(Method** allMethods, int allCount,
     Method** outMethods, ArrayObject* throwLists)
 {
-    Method* best;
     int outCount = 0;
     int i, j;
 
@@ -939,7 +938,6 @@ static void proxyInvoker(const u4* args, JValue* pResult,
     Object* handler;
     Method* invoke;
     ClassObject* returnType;
-    int hOffset;
     JValue invokeResult;
 
     /*

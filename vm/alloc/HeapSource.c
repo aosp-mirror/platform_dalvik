@@ -539,7 +539,6 @@ dvmHeapSourceShutdown(GcHeap **gcHeap)
 {
     if (*gcHeap != NULL && (*gcHeap)->heapSource != NULL) {
         HeapSource *hs;
-        size_t i;
 
         hs = (*gcHeap)->heapSource;
 
@@ -635,7 +634,7 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap liveBits[], HeapBitmap markBits[],
 {
     HeapSource *hs = gHs;
     uintptr_t base, max;
-    size_t i, offset;
+    size_t i;
 
     HS_BOILERPLATE();
 
@@ -670,7 +669,7 @@ void dvmHeapSourceSwapBitmaps(void)
 void dvmMarkImmuneObjects(const char *immuneLimit)
 {
     char *dst, *src;
-    size_t i, offset, index, length;
+    size_t i, index, length;
 
     /*
      * Copy the contents of the live bit vector for immune object

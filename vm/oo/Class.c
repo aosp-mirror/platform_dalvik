@@ -2187,9 +2187,7 @@ void dvmMakeCodeReadOnly(Method* meth)
 static int computeJniArgInfo(const DexProto* proto)
 {
     const char* sig = dexProtoGetShorty(proto);
-    int returnType, padFlags, jniArgInfo;
-    char sigByte;
-    int stackOffset, padMask;
+    int returnType, jniArgInfo;
     u4 hints;
 
     /* The first shorty character is the return type. */

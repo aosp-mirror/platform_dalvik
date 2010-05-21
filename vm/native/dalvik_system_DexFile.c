@@ -111,7 +111,6 @@ static void Dalvik_dalvik_system_DexFile_openDexFile(const u4* args,
 {
     StringObject* sourceNameObj = (StringObject*) args[0];
     StringObject* outputNameObj = (StringObject*) args[1];
-    int flags = args[2];
     DexOrJar* pDexOrJar = NULL;
     JarFile* pJarFile;
     RawDexFile* pRawDexFile;

@@ -621,7 +621,7 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
  */
 int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 {
-    int flags,i,len;
+    int flags, len;
     int switchInterp = false;
     bool debugOrProfile = dvmDebuggerOrProfilerActive();
 
@@ -630,8 +630,6 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
     interpState->lastPC = pc;
 
     switch (interpState->jitState) {
-        char* nopStr;
-        int target;
         int offset;
         DecodedInstruction decInsn;
         case kJitTSelect:
