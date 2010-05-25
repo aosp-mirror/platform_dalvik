@@ -2478,6 +2478,11 @@ bool dvmLinkClass(ClassObject* clazz, bool classesResolved)
             strcmp(clazz->descriptor, "Ljava/lang/Class;") == 0)
         {
             gDvm.classJavaLangClass = clazz;
+            if (clazz->ifieldCount > CLASS_FIELD_SLOTS) {
+                LOGE("java.lang.Class has %d slots (expected %d)",
+                     clazz->ifieldCount, CLASS_FIELD_SLOTS);
+                dvmAbort();
+            }
         } else {
             gDvm.classJavaLangClass =
                 dvmFindSystemClassNoInit("Ljava/lang/Class;");
