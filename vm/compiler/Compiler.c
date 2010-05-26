@@ -40,8 +40,7 @@ static CompilerWorkOrder workDequeue(void)
     }
     gDvmJit.compilerQueueLength--;
     if (gDvmJit.compilerQueueLength == 0) {
-        int cc = pthread_cond_signal(&gDvmJit.compilerQueueEmpty);
-        assert(cc == 0);
+        dvmSignalCond(&gDvmJit.compilerQueueEmpty);
     }
 
     /* Remember the high water mark of the queue length */

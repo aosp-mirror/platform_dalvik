@@ -33,8 +33,6 @@ bool dvmCheckAsmConstants(void)
 
     extern char dvmAsmInstructionStart[];
     extern char dvmAsmInstructionEnd[];
-    extern char dvmAsmSisterStart[];
-    extern char dvmAsmSisterEnd[];
 
 #define ASM_DEF_VERIFY
 #include "mterp/common/asm-constants.h"
@@ -55,9 +53,6 @@ bool dvmCheckAsmConstants(void)
         LOGE("(did an instruction handler exceed %d bytes?)\n", width);
         dvmAbort();
     }
-    int sisterSize = dvmAsmSisterEnd - dvmAsmSisterStart;
-    LOGV("mterp: interp is %d bytes, sisters are %d bytes\n",
-        interpSize, sisterSize);
 
 #endif // ndef DVM_NO_ASM_INTERP
 

@@ -379,8 +379,7 @@ INLINE void dvmInitMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmLockMutex(pthread_mutex_t* pMutex)
 {
-    int cc __attribute__ ((__unused__));
-    cc = pthread_mutex_lock(pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_mutex_lock(pMutex);
     assert(cc == 0);
 }
 
@@ -399,8 +398,7 @@ INLINE int dvmTryLockMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmUnlockMutex(pthread_mutex_t* pMutex)
 {
-    int cc __attribute__ ((__unused__));
-    cc = pthread_mutex_unlock(pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_mutex_unlock(pMutex);
     assert(cc == 0);
 }
 
@@ -409,8 +407,25 @@ INLINE void dvmUnlockMutex(pthread_mutex_t* pMutex)
  */
 INLINE void dvmDestroyMutex(pthread_mutex_t* pMutex)
 {
-    int cc __attribute__ ((__unused__));
-    cc  = pthread_mutex_destroy(pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_mutex_destroy(pMutex);
+    assert(cc == 0);
+}
+
+INLINE void dvmBroadcastCond(pthread_cond_t* pCond)
+{
+    int cc __attribute__ ((__unused__)) = pthread_cond_broadcast(pCond);
+    assert(cc == 0);
+}
+
+INLINE void dvmSignalCond(pthread_cond_t* pCond)
+{
+    int cc __attribute__ ((__unused__)) = pthread_cond_signal(pCond);
+    assert(cc == 0);
+}
+
+INLINE void dvmWaitCond(pthread_cond_t* pCond, pthread_mutex_t* pMutex)
+{
+    int cc __attribute__ ((__unused__)) = pthread_cond_wait(pCond, pMutex);
     assert(cc == 0);
 }
 

@@ -2286,10 +2286,8 @@ void dvmDetachCurrentThread(void)
         LOGI("threadid=%d: waiting for method trace to finish\n",
             self->threadId);
         while (traceState->traceEnabled) {
-            int cc;
-            cc = pthread_cond_wait(&traceState->threadExitCond,
-                    &traceState->startStopLock);
-            assert(cc == 0);
+            dvmWaitCond(&traceState->threadExitCond,
+                        &traceState->startStopLock);
         }
     }
     dvmUnlockMutex(&traceState->startStopLock);
@@ -2398,8 +2396,7 @@ void dvmResumeThread(Thread* thread)
         thread->threadId, thread->suspendCount);
 
     if (thread->suspendCount == 0) {
-        int cc = pthread_cond_broadcast(&gDvm.threadSuspendCountCond);
-        assert(cc == 0);
+        dvmBroadcastCond(&gDvm.threadSuspendCountCond);
     }
 
     unlockThreadSuspendCount();
@@ -2449,10 +2446,8 @@ void dvmSuspendSelf(bool jdwpActivity)
     }
 
     while (self->suspendCount != 0) {
-        int cc;
-        cc = pthread_cond_wait(&gDvm.threadSuspendCountCond,
-                &gDvm.threadSuspendCountLock);
-        assert(cc == 0);
+        dvmWaitCond(&gDvm.threadSuspendCountCond,
+                    &gDvm.threadSuspendCountLock);
         if (self->suspendCount != 0) {
             /*
              * The condition was signaled but we're still suspended.  This

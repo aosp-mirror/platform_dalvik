@@ -419,12 +419,11 @@ void* dvmLinearRealloc(Object* classLoader, void* mem, size_t newSize)
 #ifdef DISABLE_LINEAR_ALLOC
     return realloc(mem, newSize);
 #endif
-    LinearAllocHdr* pHdr = getHeader(classLoader);
-
     /* make sure we have the right region (and mem != NULL) */
     assert(mem != NULL);
-    assert(mem >= (void*) pHdr->mapAddr &&
-           mem < (void*) (pHdr->mapAddr + pHdr->curOffset));
+    assert(mem >= (void*) getHeader(classLoader)->mapAddr &&
+           mem < (void*) (getHeader(classLoader)->mapAddr +
+                          getHeader(classLoader)->curOffset));
 
     const u4* pLen = getBlockHeader(mem);
     LOGV("--- LinearRealloc(%d) old=%d\n", newSize, *pLen);
@@ -570,11 +569,10 @@ void dvmLinearFree(Object* classLoader, void* mem)
     if (mem == NULL)
         return;
 
-    LinearAllocHdr* pHdr = getHeader(classLoader);
-
     /* make sure we have the right region */
-    assert(mem >= (void*) pHdr->mapAddr &&
-           mem < (void*) (pHdr->mapAddr + pHdr->curOffset));
+    assert(mem >= (void*) getHeader(classLoader)->mapAddr &&
+           mem < (void*) (getHeader(classLoader)->mapAddr +
+                          getHeader(classLoader)->curOffset));
 
     if (ENFORCE_READ_ONLY)
         dvmLinearSetReadWrite(classLoader, mem);

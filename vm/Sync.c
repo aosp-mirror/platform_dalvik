@@ -470,6 +470,7 @@ static void lockMonitor(Thread* self, Monitor* mon)
  *
  * Returns "true" on success.
  */
+#ifdef WITH_COPYING_GC
 static bool tryLockMonitor(Thread* self, Monitor* mon)
 {
     if (mon->owner == self) {
@@ -485,7 +486,7 @@ static bool tryLockMonitor(Thread* self, Monitor* mon)
         }
     }
 }
-
+#endif
 
 /*
  * Unlock a monitor.
@@ -524,6 +525,7 @@ static bool unlockMonitor(Thread* self, Monitor* mon)
  * Checks the wait set for circular structure.  Returns 0 if the list
  * is not circular.  Otherwise, returns 1.  Used only by asserts.
  */
+#ifndef NDEBUG
 static int waitSetCheck(Monitor *mon)
 {
     Thread *fast, *slow;
@@ -541,6 +543,7 @@ static int waitSetCheck(Monitor *mon)
         slow = slow->waitNext;
     }
 }
+#endif
 
 /*
  * Links a thread into a monitor's wait set.  The monitor lock must be

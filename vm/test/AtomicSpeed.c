@@ -47,16 +47,16 @@ u8 dvmTestAtomicSpeedSub(int repeatCount)
         j += i; j += i; j += i; j += i; j += i;
 #else
         // succeed 10x (Dream: 155.9ns)
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
 
         // fail 10x (Dream: 158.5ns)
         /*

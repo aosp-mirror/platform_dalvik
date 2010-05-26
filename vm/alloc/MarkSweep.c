@@ -147,7 +147,7 @@ markObjectNonNull(const Object *obj, GcMarkContext *ctx,
     assert(obj != NULL);
     assert(dvmIsValidObject(obj));
 
-    if (obj < ctx->immuneLimit) {
+    if (obj < (Object *)ctx->immuneLimit) {
         assert(isMarked(obj, ctx));
         return;
     }

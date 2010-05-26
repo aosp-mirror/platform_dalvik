@@ -109,9 +109,7 @@ bool dvmStdioConverterStartup(void)
     /* new thread owns pipeStorage */
 
     while (!gDvm.stdioConverterReady) {
-        int cc = pthread_cond_wait(&gDvm.stdioConverterCond,
-                    &gDvm.stdioConverterLock);
-        assert(cc == 0);
+        dvmWaitCond(&gDvm.stdioConverterCond, &gDvm.stdioConverterLock);
     }
     dvmUnlockMutex(&gDvm.stdioConverterLock);
 
