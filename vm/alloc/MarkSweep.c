@@ -353,7 +353,6 @@ static void scanInstanceFields(const Object *obj, GcMarkContext *ctx)
  */
 static void scanClassObject(const ClassObject *obj, GcMarkContext *ctx)
 {
-    ClassObject *clazz;
     int i;
 
     assert(obj != NULL);
