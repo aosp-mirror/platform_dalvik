@@ -748,9 +748,15 @@ static ArmLIR *storeBaseIndexed(CompilationUnit *cUnit, int rBase,
 
     if (FPREG(rSrc)) {
         assert(SINGLEREG(rSrc));
-        assert((size == kWord) || (size == kSingle));
-        opCode = kThumb2Vstrs;
-        size = kSingle;
+        if ((size != kWord) && (size != kSingle)) {
+           /* Move float value into core register */
+           int tReg = dvmCompilerAllocTemp(cUnit);
+           dvmCompilerRegCopy(cUnit, tReg, rSrc);
+           rSrc = tReg;
+        } else {
+            opCode = kThumb2Vstrs;
+            size = kSingle;
+        }
     } else {
         if (size == kSingle)
             size = kWord;
