@@ -762,18 +762,6 @@ typedef struct ArmLIR {
 /* Init values when a predicted chain is initially assembled */
 /* E7FE is branch to self */
 #define PREDICTED_CHAIN_BX_PAIR_INIT     0xe7fe
-#define PREDICTED_CHAIN_CLAZZ_INIT       0
-#define PREDICTED_CHAIN_METHOD_INIT      0
-#define PREDICTED_CHAIN_COUNTER_INIT     0
-
-/* Used when the callee is not compiled yet */
-#define PREDICTED_CHAIN_COUNTER_DELAY    512
-
-/* Rechain after this many mis-predictions have happened */
-#define PREDICTED_CHAIN_COUNTER_RECHAIN  1024
-
-/* Used if the resolved callee is a native method */
-#define PREDICTED_CHAIN_COUNTER_AVOID    0x7fffffff
 
 /* Utility macros to traverse the LIR/ArmLIR list */
 #define NEXT_LIR(lir) ((ArmLIR *) lir->generic.next)

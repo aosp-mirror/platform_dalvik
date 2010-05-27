@@ -21,6 +21,7 @@
 #include "../../CompilerInternals.h"
 #include "ArmLIR.h"
 #include <unistd.h>             /* for cacheflush */
+#include <sys/mman.h>           /* for protection change */
 
 /*
  * opcode: ArmOpCode enum
@@ -1293,6 +1294,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     cUnit->baseAddr = (char *) gDvmJit.codeCache + gDvmJit.codeCacheByteUsed;
     gDvmJit.codeCacheByteUsed += offset;
 
+    UNPROTECT_CODE_CACHE(cUnit->baseAddr, offset);
+
     /* Install the code block */
     memcpy((char*)cUnit->baseAddr, cUnit->codeBuffer, chainCellOffset);
     gDvmJit.numCompilations++;
@@ -1319,6 +1322,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     cacheflush((long)cUnit->baseAddr,
                (long)((char *) cUnit->baseAddr + offset), 0);
     UPDATE_CODE_CACHE_PATCHES();
+
+    PROTECT_CODE_CACHE(cUnit->baseAddr, offset);
 
     /* Record code entry point and instruction set */
     info->codeAddress = (char*)cUnit->baseAddr + cUnit->headerSize;
@@ -1407,25 +1412,28 @@ void* dvmJitChain(void* tgtAddr, u4* branchAddr)
         assert( ((*branchAddr >> 16) == getSkeleton(kThumbOrr)) ||
                 ((*branchAddr >> 16) == (newInst >> 16)));
 
+        UNPROTECT_CODE_CACHE(branchAddr, sizeof(*branchAddr));
+
         *branchAddr = newInst;
         cacheflush((long)branchAddr, (long)branchAddr + 4, 0);
         UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(branchAddr, sizeof(*branchAddr));
+
         gDvmJit.hasNewChain = true;
     }
 
     return tgtAddr;
 }
 
+#if !defined(WITH_SELF_VERIFICATION)
 /*
  * Attempt to enqueue a work order to patch an inline cache for a predicted
  * chaining cell for virtual/interface calls.
  */
-#if !defined(WITH_SELF_VERIFICATION)
-static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
+static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
                                     PredictedChainingCell *newContent)
 {
-    bool result = true;
-
     /*
      * Make sure only one thread gets here since updating the cell (ie fast
      * path and queueing the request (ie the queued path) have to be done
@@ -1436,9 +1444,11 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
     /* Fast path for uninitialized chaining cell */
     if (cellAddr->clazz == NULL &&
         cellAddr->branch == PREDICTED_CHAIN_BX_PAIR_INIT) {
+
+        UNPROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
         cellAddr->method = newContent->method;
         cellAddr->branch = newContent->branch;
-        cellAddr->counter = newContent->counter;
         /*
          * The update order matters - make sure clazz is updated last since it
          * will bring the uninitialized chaining cell to life.
@@ -1447,33 +1457,60 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
         cellAddr->clazz = newContent->clazz;
         cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
         UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
 #if defined(WITH_JIT_TUNING)
-        gDvmJit.icPatchFast++;
+        gDvmJit.icPatchInit++;
 #endif
-    }
+    /* Check if this is a frequently missed clazz */
+    } else if (cellAddr->stagedClazz != newContent->clazz) {
+        /* Not proven to be frequent yet - build up the filter cache */
+        UNPROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+        cellAddr->stagedClazz = newContent->clazz;
+
+        UPDATE_CODE_CACHE_PATCHES();
+        PROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+#if defined(WITH_JIT_TUNING)
+        gDvmJit.icPatchRejected++;
+#endif
     /*
-     * Otherwise the patch request will be queued and handled in the next
-     * GC cycle. At that time all other mutator threads are suspended so
-     * there will be no partial update in the inline cache state.
+     * Different classes but same method implementation - it is safe to just
+     * patch the class value without the need to stop the world.
      */
-    else if (gDvmJit.compilerICPatchIndex < COMPILER_IC_PATCH_QUEUE_SIZE)  {
+    } else if (cellAddr->method == newContent->method) {
+        UNPROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+        cellAddr->clazz = newContent->clazz;
+        /* No need to flush the cache here since the branch is not patched */
+        UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(cellAddr, sizeof(*cellAddr));
+
+#if defined(WITH_JIT_TUNING)
+        gDvmJit.icPatchLockFree++;
+#endif
+    /*
+     * Cannot patch the chaining cell inline - queue it until the next safe
+     * point.
+     */
+    } else if (gDvmJit.compilerICPatchIndex < COMPILER_IC_PATCH_QUEUE_SIZE) {
         int index = gDvmJit.compilerICPatchIndex++;
         gDvmJit.compilerICPatchQueue[index].cellAddr = cellAddr;
         gDvmJit.compilerICPatchQueue[index].cellContent = *newContent;
 #if defined(WITH_JIT_TUNING)
         gDvmJit.icPatchQueued++;
 #endif
-    }
+    } else {
     /* Queue is full - just drop this patch request */
-    else {
-        result = false;
 #if defined(WITH_JIT_TUNING)
         gDvmJit.icPatchDropped++;
 #endif
     }
 
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
-    return result;
 }
 #endif
 
@@ -1496,24 +1533,27 @@ static bool inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
  *      but wrong chain to invoke a different method.
  */
 const Method *dvmJitToPatchPredictedChain(const Method *method,
-                                          void *unused,
+                                          InterpState *interpState,
                                           PredictedChainingCell *cell,
                                           const ClassObject *clazz)
 {
+    int newRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
 #if defined(WITH_SELF_VERIFICATION)
-    /* Disable chaining and prevent this from triggering again for a while */
-    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
-    cacheflush((long) cell, (long) (cell+1), 0);
+    newRechainCount = PREDICTED_CHAIN_COUNTER_AVOID;
     goto done;
 #else
-    /* Don't come back here for a long time if the method is native */
     if (dvmIsNativeMethod(method)) {
-        cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
-        cacheflush((long) cell, (long) (cell+1), 0);
+        UNPROTECT_CODE_CACHE(cell, sizeof(*cell));
+
+        /*
+         * Put a non-zero/bogus value in the clazz field so that it won't
+         * trigger immediate patching and will continue to fail to match with
+         * a real clazz pointer.
+         */
+        cell->clazz = (void *) PREDICTED_CHAIN_FAKE_CLAZZ;
+
         UPDATE_CODE_CACHE_PATCHES();
-        COMPILER_TRACE_CHAINING(
-            LOGD("Jit Runtime: predicted chain %p to native method %s ignored",
-                 cell, method->name));
+        PROTECT_CODE_CACHE(cell, sizeof(*cell));
         goto done;
     }
     int tgtAddr = (int) dvmJitGetCodeAddr(method->insns);
@@ -1524,13 +1564,6 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
      */
     if ((tgtAddr == 0) ||
         ((void*)tgtAddr == dvmCompilerGetInterpretTemplate())) {
-        /*
-         * Wait for a few invocations (currently set to be 16) before trying
-         * to setup the chain again.
-         */
-        cell->counter = PREDICTED_CHAIN_COUNTER_DELAY;
-        cacheflush((long) cell, (long) (cell+1), 0);
-        UPDATE_CODE_CACHE_PATCHES();
         COMPILER_TRACE_CHAINING(
             LOGD("Jit Runtime: predicted chain %p to method %s%s delayed",
                  cell, method->clazz->descriptor, method->name));
@@ -1539,8 +1572,9 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
 
     PredictedChainingCell newCell;
 
-    /* Avoid back-to-back orders to the same cell */
-    cell->counter = PREDICTED_CHAIN_COUNTER_AVOID;
+    if (cell->clazz == NULL) {
+        newRechainCount = interpState->icRechainCount;
+    }
 
     int baseAddr = (int) cell + 4;   // PC is cur_addr + 4
     int branchOffset = tgtAddr - baseAddr;
@@ -1548,7 +1582,6 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
     newCell.branch = assembleChainingBranch(branchOffset, true);
     newCell.clazz = clazz;
     newCell.method = method;
-    newCell.counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
 
     /*
      * Enter the work order to the queue and the chaining cell will be patched
@@ -1557,11 +1590,10 @@ const Method *dvmJitToPatchPredictedChain(const Method *method,
      * If the enqueuing fails reset the rechain count to a normal value so that
      * it won't get indefinitely delayed.
      */
-    if (!inlineCachePatchEnqueue(cell, &newCell)) {
-        cell->counter = PREDICTED_CHAIN_COUNTER_RECHAIN;
-    }
+    inlineCachePatchEnqueue(cell, &newCell);
 #endif
 done:
+    interpState->icRechainCount = newRechainCount;
     return method;
 }
 
@@ -1584,6 +1616,8 @@ void dvmCompilerPatchInlineCache(void)
      */
     dvmLockMutex(&gDvmJit.compilerICPatchLock);
 
+    UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+
     //LOGD("Number of IC patch work orders: %d", gDvmJit.compilerICPatchIndex);
 
     /* Initialize the min/max address range */
@@ -1597,21 +1631,13 @@ void dvmCompilerPatchInlineCache(void)
         PredictedChainingCell *cellContent =
             &gDvmJit.compilerICPatchQueue[i].cellContent;
 
-        if (cellAddr->clazz == NULL) {
-            COMPILER_TRACE_CHAINING(
-                LOGD("Jit Runtime: predicted chain %p to %s (%s) initialized",
-                     cellAddr,
-                     cellContent->clazz->descriptor,
-                     cellContent->method->name));
-        } else {
-            COMPILER_TRACE_CHAINING(
-                LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
-                     "patched",
-                     cellAddr,
-                     cellAddr->clazz->descriptor,
-                     cellContent->clazz->descriptor,
-                     cellContent->method->name));
-        }
+        COMPILER_TRACE_CHAINING(
+            LOGD("Jit Runtime: predicted chain %p from %s to %s (%s) "
+                 "patched",
+                 cellAddr,
+                 cellAddr->clazz->descriptor,
+                 cellContent->clazz->descriptor,
+                 cellContent->method->name));
 
         /* Patch the chaining cell */
         *cellAddr = *cellContent;
@@ -1622,6 +1648,8 @@ void dvmCompilerPatchInlineCache(void)
     /* Then synchronize the I/D cache */
     cacheflush((long) minAddr, (long) (maxAddr+1), 0);
     UPDATE_CODE_CACHE_PATCHES();
+
+    PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
 
     gDvmJit.compilerICPatchIndex = 0;
     dvmUnlockMutex(&gDvmJit.compilerICPatchLock);
@@ -1721,6 +1749,9 @@ void dvmJitUnchainAll()
     if (gDvmJit.pJitEntryTable != NULL) {
         COMPILER_TRACE_CHAINING(LOGD("Jit Runtime: unchaining all"));
         dvmLockMutex(&gDvmJit.tableLock);
+
+        UNPROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+
         for (i = 0; i < gDvmJit.jitTableSize; i++) {
             if (gDvmJit.pJitEntryTable[i].dPC &&
                    gDvmJit.pJitEntryTable[i].codeAddress &&
@@ -1738,6 +1769,9 @@ void dvmJitUnchainAll()
         }
         cacheflush((long)lowAddress, (long)highAddress, 0);
         UPDATE_CODE_CACHE_PATCHES();
+
+        PROTECT_CODE_CACHE(gDvmJit.codeCache, gDvmJit.codeCacheByteUsed);
+
         dvmUnlockMutex(&gDvmJit.tableLock);
         gDvmJit.translationChains = 0;
     }
@@ -1762,7 +1796,7 @@ static int addrToLineCb (void *cnxt, u4 bytecodeOffset, u4 lineNum)
     return 0;
 }
 
-char *getTraceBase(const JitEntry *p)
+static char *getTraceBase(const JitEntry *p)
 {
     return (char*)p->codeAddress -
         (6 + (p->u.info.instructionSet == DALVIK_JIT_ARM ? 0 : 1));
@@ -1864,8 +1898,10 @@ JitTraceDescription *dvmCopyTraceDescriptor(const u2 *pc,
 /* Handy function to retrieve the profile count */
 static inline int getProfileCount(const JitEntry *entry)
 {
-    if (entry->dPC == 0 || entry->codeAddress == 0)
+    if (entry->dPC == 0 || entry->codeAddress == 0 ||
+        entry->codeAddress == dvmCompilerGetInterpretTemplate())
         return 0;
+
     u4 *pExecutionCount = (u4 *) getTraceBase(entry);
 
     return *pExecutionCount;
@@ -1932,6 +1968,10 @@ void dvmCompilerSortAndPrintTraceProfiles()
     }
 
     for (i=0; i < gDvmJit.jitTableSize && i < 10; i++) {
+        /* Stip interpreter stubs */
+        if (sortedEntries[i].codeAddress == dvmCompilerGetInterpretTemplate()) {
+            continue;
+        }
         JitTraceDescription* desc =
             dvmCopyTraceDescriptor(NULL, &sortedEntries[i]);
         dvmCompilerWorkEnqueue(sortedEntries[i].dPC,

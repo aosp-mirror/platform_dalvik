@@ -162,6 +162,7 @@ typedef struct InterpState {
      * ppJitProfTable is used for that purpose.
      */
     unsigned char**    ppJitProfTable; // Used to refresh pJitProfTable
+    int                icRechainCount; // Count down to next rechain request
 #endif
 
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)

@@ -467,8 +467,10 @@ void dvmJitStats()
              gDvmJit.noChainExit[kCallsiteInterpreted],
              gDvmJit.noChainExit[kSwitchOverflow]);
 
-        LOGD("JIT: ICPatch: %d fast, %d queued; %d dropped",
-             gDvmJit.icPatchFast, gDvmJit.icPatchQueued,
+        LOGD("JIT: ICPatch: %d init, %d rejected, %d lock-free, %d queued, "
+             "%d dropped",
+             gDvmJit.icPatchInit, gDvmJit.icPatchRejected,
+             gDvmJit.icPatchLockFree, gDvmJit.icPatchQueued,
              gDvmJit.icPatchDropped);
 
         LOGD("JIT: Invoke: %d mono, %d poly, %d native, %d return",
