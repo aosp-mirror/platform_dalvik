@@ -165,11 +165,6 @@ markObjectNonNull(const Object *obj, GcMarkContext *ctx,
             hprofMarkRootObject(gDvm.gcHeap->hprofContext, obj, 0);
         }
 #endif
-#if DVM_TRACK_HEAP_MARKING
-        gDvm.gcHeap->markCount++;
-        gDvm.gcHeap->markSize += dvmHeapSourceChunkSize((void *)obj) +
-                HEAP_SOURCE_CHUNK_OVERHEAD;
-#endif
 
         /* obj->clazz can be NULL if we catch an object between
          * dvmMalloc() and DVM_OBJECT_INIT().  This is ok.

@@ -708,17 +708,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     size_t sizeFreed;
     GcMode gcMode;
 
-#if DVM_TRACK_HEAP_MARKING
-    /* Since weak and soft references are always cleared,
-     * they don't require any marking.
-     * (Soft are lumped into strong when they aren't cleared.)
-     */
-    size_t strongMarkCount = 0;
-    size_t strongMarkSize = 0;
-    size_t finalizeMarkCount = 0;
-    size_t finalizeMarkSize = 0;
-#endif
-
     /* The heap lock must be held.
      */
 
@@ -845,10 +834,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
         LOGD_HEAP("GC! (%d sec since last GC)\n",
                 (int)(timeSinceLastGc / 1000));
     }
-#if DVM_TRACK_HEAP_MARKING
-    gcHeap->markCount = 0;
-    gcHeap->markSize = 0;
-#endif
 
     /* Set up the marking context.
      */
@@ -875,12 +860,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      */
     LOGD_HEAP("Recursing...");
     dvmHeapScanMarkedObjects();
-#if DVM_TRACK_HEAP_MARKING
-    strongMarkCount = gcHeap->markCount;
-    strongMarkSize = gcHeap->markSize;
-    gcHeap->markCount = 0;
-    gcHeap->markSize = 0;
-#endif
 
     /* All strongly-reachable objects have now been marked.
      */
@@ -898,12 +877,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      */
     LOGD_HEAP("Finding finalizations...");
     dvmHeapScheduleFinalizations();
-#if DVM_TRACK_HEAP_MARKING
-    finalizeMarkCount = gcHeap->markCount;
-    finalizeMarkSize = gcHeap->markSize;
-    gcHeap->markCount = 0;
-    gcHeap->markSize = 0;
-#endif
 
     LOGD_HEAP("Handling f-reachable soft references...");
     dvmClearWhiteRefs(&gcHeap->softReferences);
@@ -917,11 +890,6 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
      */
     LOGD_HEAP("Handling phantom references...");
     dvmClearWhiteRefs(&gcHeap->phantomReferences);
-
-#if DVM_TRACK_HEAP_MARKING
-    LOGI_HEAP("Marked objects: %dB strong, %dB final\n",
-              strongMarkSize, finalizeMarkSize);
-#endif
 
 #ifdef WITH_DEADLOCK_PREDICTION
     dvmDumpMonitorInfo("before sweep");

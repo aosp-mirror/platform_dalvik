@@ -183,9 +183,6 @@ static void dvmUsage(const char* progName)
 #ifdef PROFILE_FIELD_ACCESS
         " profile_field_access"
 #endif
-#ifdef DVM_TRACK_HEAP_MARKING
-        " track_heap_marking"
-#endif
 #if DVM_RESOLVER_CACHE == DVM_RC_REDUCING
         " resolver_cache_reducing"
 #elif DVM_RESOLVER_CACHE == DVM_RC_EXPANDING

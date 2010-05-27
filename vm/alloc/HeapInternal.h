@@ -109,15 +109,6 @@ struct GcHeap {
      */
     bool            gcRunning;
 
-#if DVM_TRACK_HEAP_MARKING
-    /* Every time an unmarked object becomes marked, markCount
-     * is incremented and markSize increases by the size of
-     * that object.
-     */
-    size_t          markCount;
-    size_t          markSize;
-#endif
-
     /*
      * Debug control values
      */
