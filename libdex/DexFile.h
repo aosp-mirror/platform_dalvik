@@ -554,12 +554,23 @@ enum {
 };
 
 /*
- * Correct the byte ordering in a memory-mapped DEX file.  This is only
- * required for code that opens "raw" DEX files, such as the DEX optimizer.
+ * Fix the byte ordering of all fields in the DEX file, and do
+ * structural verification. This is only required for code that opens
+ * "raw" DEX files, such as the DEX optimizer.
  *
  * Return 0 on success.
  */
-int dexFixByteOrdering(u1* addr, int len);
+int dexSwapAndVerify(u1* addr, int len);
+
+/*
+ * Detect the file type of the given memory buffer via magic number.
+ * Call dexSwapAndVerify() on an unoptimized DEX file, do nothing
+ * but return successfully on an optimized DEX file, and report an
+ * error for all other cases.
+ *
+ * Return 0 on success.
+ */
+int dexSwapAndVerifyIfNecessary(u1* addr, int len);
 
 /*
  * Compute DEX checksum.
