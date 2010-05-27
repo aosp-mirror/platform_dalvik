@@ -505,7 +505,7 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
             int offset = -1;
             bool unused;
             if (dvmGetBranchTarget(meth, insnFlags, i, &offset, &unused)) {
-                if (offset < 0) {
+                if (offset <= 0) {
                     dvmInsnSetGcPoint(insnFlags, i, true);
                 }
             } else {
