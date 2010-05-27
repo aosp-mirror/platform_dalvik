@@ -701,7 +701,7 @@ static bool rewriteDex(u1* addr, int len, u4* pHeaderFlags,
     *pHeaderFlags = 0;
 
     /* if the DEX is in the wrong byte order, swap it now */
-    if (dexFixByteOrdering(addr, len) != 0)
+    if (dexSwapAndVerify(addr, len) != 0)
         goto bail;
 #if __BYTE_ORDER != __LITTLE_ENDIAN
     *pHeaderFlags |= DEX_OPT_FLAG_BIG;
