@@ -422,7 +422,8 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
 #define INTERP_TYPE INTERP_STD
 #define CHECK_DEBUG_AND_PROF() ((void)0)
 # define CHECK_TRACKED_REFS() ((void)0)
-#define CHECK_JIT() (0)
+#define CHECK_JIT_BOOL() (false)
+#define CHECK_JIT_VOID()
 #define ABORT_JIT_TSELECT() ((void)0)
 
 /*
@@ -1808,7 +1809,7 @@ GOTO_TARGET(returnFromMethod)
             LOGVV("+++ returned into break frame\n");
 #if defined(WITH_JIT)
             /* Let the Jit know the return is terminating normally */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
             GOTO_bail();
         }
@@ -2183,7 +2184,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
 
             /*

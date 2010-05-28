@@ -23,7 +23,6 @@
  */
 
 static int coreTemps[] = {r0, r1, r2, r3, r4PC, r7};
-static int corePreserved[] = {};
 
 static void storePair(CompilationUnit *cUnit, int base, int lowReg,
                       int highReg);
@@ -569,7 +568,6 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     ArmLIR *load2 = NULL;
     ArmOpCode opCode = kThumbBkpt;
     bool shortForm = false;
-    int shortMax = 128;
     int encodedDisp = displacement;
     bool pair = false;
 
@@ -700,7 +698,6 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     ArmLIR *store2 = NULL;
     ArmOpCode opCode = kThumbBkpt;
     bool shortForm = false;
-    int shortMax = 128;
     int encodedDisp = displacement;
     bool pair = false;
 

@@ -1214,6 +1214,8 @@ static void genInterpSingleStep(CompilationUnit *cUnit, MIR *mir)
     opReg(cUnit, kOpBlx, r2);
 }
 
+#if defined(WITH_DEADLOCK_PREDICTION) || defined(WITH_MONITOR_TRACKING) || \
+    defined(_ARMV5TE) || defined(_ARMV5TE_VFP)
 /*
  * To prevent a thread in a monitor wait from blocking the Jit from
  * resetting the code cache, heavyweight monitor lock will not
@@ -1259,6 +1261,7 @@ static void genMonitorPortable(CompilationUnit *cUnit, MIR *mir)
         dvmCompilerClobberCallRegs(cUnit);
     }
 }
+#endif
 
 /*
  * The following are the first-level codegen routines that analyze the format

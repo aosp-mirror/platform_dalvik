@@ -425,10 +425,12 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
 
 #if defined(WITH_JIT)
-#define CHECK_JIT() (dvmCheckJit(pc, self, interpState))
+#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, interpState))
+#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, interpState))
 #define ABORT_JIT_TSELECT() (dvmJitAbortTraceSelect(interpState))
 #else
-#define CHECK_JIT() (0)
+#define CHECK_JIT_BOOL() (false)
+#define CHECK_JIT_VOID()
 #define ABORT_JIT_TSELECT(x) ((void)0)
 #endif
 
@@ -465,7 +467,7 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
         inst = FETCH(0);                                                    \
         CHECK_DEBUG_AND_PROF();                                             \
         CHECK_TRACKED_REFS();                                               \
-        if (CHECK_JIT()) GOTO_bail_switch();                                \
+        if (CHECK_JIT_BOOL()) GOTO_bail_switch();                           \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 # define FINISH_BKPT(_opcode) {                                             \
@@ -1543,7 +1545,7 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
         /* just fall through to instruction loop or threaded kickstart */
         break;
     case kInterpEntryReturn:
-        CHECK_JIT();
+        CHECK_JIT_VOID();
         goto returnFromMethod;
     case kInterpEntryThrow:
         goto exceptionThrown;
@@ -3954,7 +3956,7 @@ GOTO_TARGET(returnFromMethod)
             LOGVV("+++ returned into break frame\n");
 #if defined(WITH_JIT)
             /* Let the Jit know the return is terminating normally */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
             GOTO_bail();
         }
@@ -4329,7 +4331,7 @@ GOTO_TARGET(invokeMethod, bool methodCallRange, const Method* _methodToCall,
 
 #if defined(WITH_JIT)
             /* Allow the Jit to end any pending trace building */
-            CHECK_JIT();
+            CHECK_JIT_VOID();
 #endif
 
             /*

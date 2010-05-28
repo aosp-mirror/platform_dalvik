@@ -30,7 +30,7 @@
         inst = FETCH(0);                                                    \
         CHECK_DEBUG_AND_PROF();                                             \
         CHECK_TRACKED_REFS();                                               \
-        if (CHECK_JIT()) GOTO_bail_switch();                                \
+        if (CHECK_JIT_BOOL()) GOTO_bail_switch();                           \
         goto *handlerTable[INST_INST(inst)];                                \
     }
 # define FINISH_BKPT(_opcode) {                                             \
