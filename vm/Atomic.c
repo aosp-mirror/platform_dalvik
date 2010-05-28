@@ -153,6 +153,10 @@ int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
  * these must be initialized before being used, and
  * then you have the problem of lazily initializing
  * a mutex without any other synchronization primitive.
+ *
+ * TODO: these currently use sched_yield(), which is not guaranteed to
+ * do anything at all.  We need to use dvmIterativeSleep or a wait /
+ * notify mechanism if the initial attempt fails.
  */
 
 /* global spinlock for all 64-bit quasiatomic operations */
@@ -162,7 +166,7 @@ int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
         volatile int64_t* addr) {
     int result;
 
-    while (android_atomic_cmpxchg(0, 1, &quasiatomic_spinlock)) {
+    while (android_atomic_acquire_cas(0, 1, &quasiatomic_spinlock)) {
 #ifdef HAVE_WIN32_THREADS
         Sleep(0);
 #else
@@ -177,7 +181,7 @@ int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
         result = 1;
     }
 
-    android_atomic_swap(0, &quasiatomic_spinlock);
+    android_atomic_release_store(0, &quasiatomic_spinlock);
 
     return result;
 }
@@ -185,7 +189,7 @@ int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
 int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
     int64_t result;
 
-    while (android_atomic_cmpxchg(0, 1, &quasiatomic_spinlock)) {
+    while (android_atomic_acquire_cas(0, 1, &quasiatomic_spinlock)) {
 #ifdef HAVE_WIN32_THREADS
         Sleep(0);
 #else
@@ -194,7 +198,7 @@ int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
     }
 
     result = *addr;
-    android_atomic_swap(0, &quasiatomic_spinlock);
+    android_atomic_release_store(0, &quasiatomic_spinlock);
 
     return result;
 }
@@ -202,7 +206,7 @@ int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
 int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
     int64_t result;
 
-    while (android_atomic_cmpxchg(0, 1, &quasiatomic_spinlock)) {
+    while (android_atomic_acquire_cas(0, 1, &quasiatomic_spinlock)) {
 #ifdef HAVE_WIN32_THREADS
         Sleep(0);
 #else
@@ -212,7 +216,7 @@ int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
 
     result = *addr;
     *addr = value;
-    android_atomic_swap(0, &quasiatomic_spinlock);
+    android_atomic_release_store(0, &quasiatomic_spinlock);
 
     return result;
 }
