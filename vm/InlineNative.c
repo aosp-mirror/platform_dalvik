@@ -58,6 +58,12 @@ extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
  * DO NOT replace "synchronized" methods.  We do not support method
  * synchronization here.
  *
+ * DO NOT perform any allocations or do anything that could cause a
+ * garbage collection.  The method arguments are not visible to the GC
+ * and will not be pinned or updated when memory blocks move.  You are
+ * allowed to allocate and throw an exception so long as you only do so
+ * immediately before returning.
+ *
  * Remember that these functions are executing while the thread is in
  * the "RUNNING" state, not the "NATIVE" state.  If you perform a blocking
  * operation you can stall the entire VM if the GC or debugger wants to
@@ -219,7 +225,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     ArrayObject* compArray;
     const u2* thisChars;
     const u2* compChars;
-    int i, minCount, countDiff;
+    int minCount, countDiff;
 
     thisCount = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
     compCount = dvmGetFieldInt((Object*) arg1, STRING_FIELDOFF_COUNT);
@@ -245,6 +251,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      */
     int otherRes = __memcmp16(thisChars, compChars, minCount);
 # ifdef CHECK_MEMCMP16
+    int i;
     for (i = 0; i < minCount; i++) {
         if (thisChars[i] != compChars[i]) {
             pResult->i = (s4) thisChars[i] - (s4) compChars[i];
@@ -267,6 +274,7 @@ static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * the characters that overlap, and if they're all the same then return
      * the difference in lengths.
      */
+    int i;
     for (i = 0; i < minCount; i++) {
         if (thisChars[i] != compChars[i]) {
             pResult->i = (s4) thisChars[i] - (s4) compChars[i];
@@ -318,7 +326,6 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     ArrayObject* compArray;
     const u2* thisChars;
     const u2* compChars;
-    int i;
 
     /* quick length check */
     thisCount = dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT);
@@ -357,6 +364,7 @@ static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
      * meaningful comparison when the strings don't match (could also test
      * with palindromes).
      */
+    int i;
     //for (i = 0; i < thisCount; i++)
     for (i = thisCount-1; i >= 0; --i)
     {
@@ -388,11 +396,27 @@ static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 }
 
 /*
+ * public boolean isEmpty()
+ */
+static bool javaLangString_isEmpty(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+    JValue* pResult)
+{
+    //LOGI("String.isEmpty this=0x%08x pResult=%p\n", arg0, pResult);
+
+    /* null reference check on "this" */
+    if (!dvmValidateObject((Object*) arg0))
+        return false;
+
+    pResult->i = (dvmGetFieldInt((Object*) arg0, STRING_FIELDOFF_COUNT) == 0);
+    return true;
+}
+
+/*
  * Determine the index of the first character matching "ch".  The string
  * to search is described by "chars", "offset", and "count".
  *
- * The "ch" parameter is allowed to be > 0xffff.  Our Java-language
- * implementation does not currently handle this, so neither do we.
+ * The character must be <= 0xffff. Supplementary characters are handled in
+ * Java.
  *
  * The "start" parameter must be clamped to [0..count].
  *
@@ -439,27 +463,13 @@ static inline int indexOfCommon(Object* strObj, int ch, int start)
 }
 
 /*
- * public int indexOf(int c)
- *
- * Scan forward through the string for a matching character.
- */
-static bool javaLangString_indexOf_I(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult)
-{
-    /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
-        return false;
-
-    pResult->i = indexOfCommon((Object*) arg0, arg1, 0);
-    return true;
-}
-
-/*
  * public int indexOf(int c, int start)
  *
  * Scan forward through the string for a matching character.
+ * The character must be <= 0xffff; this method does not handle supplementary
+ * characters.
  */
-static bool javaLangString_indexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
+static bool javaLangString_fastIndexOf_II(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     JValue* pResult)
 {
     /* null reference check on "this" */
@@ -650,10 +660,10 @@ const InlineOperation gDvmInlineOpsTable[] = {
         "Ljava/lang/String;", "compareTo", "(Ljava/lang/String;)I" },
     { javaLangString_equals,
         "Ljava/lang/String;", "equals", "(Ljava/lang/Object;)Z" },
-    { javaLangString_indexOf_I,
-        "Ljava/lang/String;", "indexOf", "(I)I" },
-    { javaLangString_indexOf_II,
-        "Ljava/lang/String;", "indexOf", "(II)I" },
+    { javaLangString_fastIndexOf_II,
+        "Ljava/lang/String;", "fastIndexOf", "(II)I" },
+    { javaLangString_isEmpty,
+        "Ljava/lang/String;", "isEmpty", "()Z" },
     { javaLangString_length,
         "Ljava/lang/String;", "length", "()I" },
 

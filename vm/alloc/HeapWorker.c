@@ -76,7 +76,8 @@ bool dvmHeapWorkerStartup(void)
      * so this should not get stuck.
      */
     while (!gDvm.heapWorkerReady) {
-        int cc = pthread_cond_wait(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
+        int cc __attribute__ ((__unused__));
+        cc = pthread_cond_wait(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
         assert(cc == 0);
     }
 
@@ -127,11 +128,6 @@ void dvmAssertHeapWorkerThreadRunning()
         u8 heapWorkerInterpStartTime = gDvm.gcHeap->heapWorkerInterpStartTime;
         u8 now = dvmGetRelativeTimeUsec();
         u8 delta = now - heapWorkerInterpStartTime;
-
-        u8 heapWorkerInterpCpuStartTime =
-            gDvm.gcHeap->heapWorkerInterpCpuStartTime;
-        u8 nowCpu = dvmGetOtherThreadCpuTimeUsec(gDvm.heapWorkerHandle);
-        u8 deltaCpu = nowCpu - heapWorkerInterpCpuStartTime;
 
         if (delta > HEAP_WORKER_WATCHDOG_TIMEOUT &&
             (gDvm.debuggerActive || gDvm.nativeDebuggerActive))
@@ -282,6 +278,10 @@ static void doHeapWork(Thread *self)
             callMethod(self, obj, method);
         } else {
             if (op & WORKER_ENQUEUE) {
+                assert(dvmGetFieldObject(
+                           obj, gDvm.offJavaLangRefReference_queue) != NULL);
+                assert(dvmGetFieldObject(
+                           obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
                 numReferencesEnqueued++;
                 callMethod(self, obj,
                         gDvm.methJavaLangRefReference_enqueueInternal);
@@ -495,12 +495,11 @@ void dvmScheduleHeapSourceTrim(size_t timeoutSec)
          * context switch.
          */
     } else {
-        struct timeval now;
-
 #ifdef HAVE_TIMEDWAIT_MONOTONIC
         clock_gettime(CLOCK_MONOTONIC, &timeout);
         timeout.tv_sec += timeoutSec;
 #else
+        struct timeval now;
         gettimeofday(&now, NULL);
         timeout.tv_sec = now.tv_sec + timeoutSec;
         timeout.tv_nsec = now.tv_usec * 1000;

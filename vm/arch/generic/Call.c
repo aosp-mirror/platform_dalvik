@@ -22,8 +22,6 @@
 #include "Dalvik.h"
 #include "ffi.h"
 
-#include <assert.h>
-
 /*
  * Convert a signature type character to an FFI type.
  */

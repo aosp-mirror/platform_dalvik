@@ -212,7 +212,7 @@ dvmCompiler_TEMPLATE_RETURN:
     str     r9, [r3, #offThread_inJitCodeCache] @ in code cache or not
     cmp     r9, #0                      @ chaining cell exists?
     blxne   r9                          @ jump to the chaining cell
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1                      @ callsite is interpreted
@@ -245,7 +245,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
     ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
-    bxlt    lr                          @ return to raise stack overflow excep.
+    bxlo    lr                          @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
     ldr     r10, [r0, #offMethod_accessFlags] @ r10<- methodToCall->accessFlags
@@ -278,7 +278,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NO_OPT:
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
 
     @ Start executing the callee
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kInlineCacheMiss
 #endif
     mov     pc, r10                         @ dvmJitToInterpTraceSelectNoChain
@@ -308,7 +308,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
     ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
-    bxlt    r12                         @ return to raise stack overflow excep.
+    bxlo    r12                         @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
@@ -368,12 +368,20 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN:
     ldr     r3, [r0, #offObject_clazz]  @ r3 <- this->class
     ldr     r8, [r2, #4]    @ r8 <- predictedChainCell->clazz
     ldr     r0, [r2, #8]    @ r0 <- predictedChainCell->method
-    ldr     r9, [r2, #12]   @ r9 <- predictedChainCell->counter
+    ldr     r9, [rGLUE, #offGlue_icRechainCount]   @ r1 <- shared rechainCount
     cmp     r3, r8          @ predicted class == actual class?
+#if defined(WITH_JIT_TUNING)
+    ldr     r7, .LdvmICHitCount
+    ldreq   r10, [r7, #0]
+    add     r10, r10, #1
+    streq   r10, [r7, #0]
+#endif
     beq     .LinvokeChain   @ predicted chain is valid
     ldr     r7, [r3, #offClassObject_vtable] @ r7 <- this->class->vtable
-    sub     r1, r9, #1      @ count--
-    str     r1, [r2, #12]   @ write back to PredictedChainingCell->counter
+    cmp     r8, #0          @ initialized class or not
+    moveq   r1, #0
+    subne   r1, r9, #1      @ count--
+    strne   r1, [rGLUE, #offGlue_icRechainCount]   @ write back to InterpState
     add     lr, lr, #4      @ return to fully-resolve landing pad
     /*
      * r1 <- count
@@ -399,7 +407,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     SAVEAREA_FROM_FP(r10, r1)           @ r10<- stack save area
     ldr     r8, [r8]                    @ r3<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
-    bxlt    lr                          @ return to raise stack overflow excep.
+    bxlo    lr                          @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     str     rPC, [rFP, #(offStackSaveArea_currentPc - sizeofStackSaveArea)]
     str     rPC, [r1, #(offStackSaveArea_savedPc - sizeofStackSaveArea)]
@@ -455,7 +463,7 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
     @ continue executing the next instruction through the interpreter
     ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1
@@ -1348,17 +1356,17 @@ dvmCompiler_TEMPLATE_INTERPRET:
      * any lookups.  It may be called either as part of a normal chaining
      * operation, or from the transition code in header.S.  We distinquish
      * the two cases by looking at the link register.  If called from a
-     * translation chain, it will point to the chaining Dalvik PC + 1.
+     * translation chain, it will point to the chaining Dalvik PC -3.
      * On entry:
      *    lr - if NULL:
      *        r1 - the Dalvik PC to begin interpretation.
      *    else
-     *        [lr, #-1] contains Dalvik PC to begin interpretation
+     *        [lr, #3] contains Dalvik PC to begin interpretation
      *    rGLUE - pointer to interpState
      *    rFP - Dalvik frame pointer
      */
     cmp     lr, #0
-    ldrne   r1,[lr, #-1]
+    ldrne   r1,[lr, #3]
     ldr     r2, .LinterpPunt
     mov     r0, r1                       @ set Dalvik PC
     bx      r2
@@ -1393,7 +1401,7 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER:
     ldr     r2, .LdvmJitToInterpNoChain
     str     r0, [rGLUE, #offGlue_pJitProfTable]
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kHeavyweightMonitor
 #endif
     bx      r2
@@ -1432,7 +1440,7 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     bx      r2
 1:
     @ Bail to interpreter - no chain [note - r4 still contains rPC]
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kHeavyweightMonitor
 #endif
     ldr     pc, .LdvmJitToInterpNoChain
@@ -1491,7 +1499,7 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     @ continue executing the next instruction through the interpreter
     ldr     r1, .LdvmJitToInterpTraceSelectNoChain @ defined in footer.S
     add     rPC, r0, #6                 @ reconstruct new rPC (advance 6 bytes)
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1
@@ -1527,6 +1535,10 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     .word   dvmMterpCommonExceptionThrown
 .LdvmLockObject:
     .word   dvmLockObject
+#if defined(WITH_JIT_TUNING)
+.LdvmICHitCount:
+    .word   gDvmICHitCount
+#endif
 #if defined(WITH_SELF_VERIFICATION)
 .LdvmSelfVerificationMemOpDecode:
     .word   dvmSelfVerificationMemOpDecode

@@ -40,8 +40,6 @@ static void* jdwpThreadStart(void* arg);
 JdwpState* dvmJdwpStartup(const JdwpStartupParams* pParams)
 {
     JdwpState* state = NULL;
-    int i, sleepIter;
-    u8 startWhen;
 
     /* comment this out when debugging JDWP itself */
     android_setMinPriority(LOG_TAG, ANDROID_LOG_DEBUG);
@@ -253,7 +251,6 @@ static void* jdwpThreadStart(void* arg)
      */
     while (state->run) {
         bool first;
-        int cc;
 
         if (state->params.server) {
             /*

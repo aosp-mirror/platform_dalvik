@@ -90,8 +90,8 @@ typedef struct DecodedInstruction {
 typedef signed char InstructionWidth;
 
 /*
- * Instruction flags, used by the verifier to determine where control
- * can flow to next.
+ * Instruction flags, used by the verifier and JIT to determine where
+ * control can flow to next.  Expected to fit in 8 bits.
  */
 typedef unsigned char InstructionFlags;
 enum InstructionFlags {
@@ -111,6 +111,7 @@ enum InstructionFlags {
  */
 InstructionWidth* dexCreateInstrWidthTable(void);
 
+#if 0       // no longer used
 /*
  * Returns the width of the specified instruction, or 0 if not defined.
  * Optimized instructions use negative values.
@@ -120,6 +121,7 @@ DEX_INLINE int dexGetInstrWidth(const InstructionWidth* widths, OpCode opCode)
    // assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
     return widths[opCode];
 }
+#endif
 
 /*
  * Return the width of the specified instruction, or 0 if not defined.
@@ -128,7 +130,7 @@ DEX_INLINE int dexGetInstrWidthAbs(const InstructionWidth* widths,OpCode opCode)
 {
     //assert(/*opCode >= 0 &&*/ opCode < kNumDalvikInstructions);
 
-    int val = dexGetInstrWidth(widths, opCode);
+    int val = widths[opCode];
     if (val < 0)
         val = -val;
     /* XXX - the no-compare trick may be a cycle slower on ARM */

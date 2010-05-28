@@ -290,8 +290,6 @@ static void linearAllocTests()
  */
 bool dvmClassStartup(void)
 {
-    ClassObject* unlinkedClass;
-
     /* make this a requirement -- don't currently support dirs in path */
     if (strcmp(gDvm.bootClassPathStr, ".") == 0) {
         LOGE("ERROR: must specify non-'.' bootclasspath\n");
@@ -328,18 +326,19 @@ bool dvmClassStartup(void)
      * loading/linking so those not in the know can still say
      * "obj->clazz->...".
      */
-    unlinkedClass = &gDvm.unlinkedJavaLangClassObject;
-
-    memset(unlinkedClass, 0, sizeof(*unlinkedClass));
+    gDvm.unlinkedJavaLangClass =
+        dvmMalloc(sizeof(ClassObject), ALLOC_DONT_TRACK);
+    if (gDvm.unlinkedJavaLangClass == NULL) {
+        LOGE("Unable to allocate gDvm.unlinkedJavaLangClass");
+        dvmAbort();
+    }
 
     /* Set obj->clazz to NULL so anyone who gets too interested
      * in the fake class will crash.
      */
-    DVM_OBJECT_INIT(&unlinkedClass->obj, NULL);
-    unlinkedClass->descriptor = "!unlinkedClass";
-    dvmSetClassSerialNumber(unlinkedClass);
-
-    gDvm.unlinkedJavaLangClass = unlinkedClass;
+    DVM_OBJECT_INIT(&gDvm.unlinkedJavaLangClass->obj, NULL);
+    gDvm.unlinkedJavaLangClass->descriptor = "!unlinkedClass";
+    dvmSetClassSerialNumber(gDvm.unlinkedJavaLangClass);
 
     /*
      * Process the bootstrap class path.  This means opening the specified
@@ -1675,7 +1674,9 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
      * Note that we assume that java.lang.Class does not override
      * finalize().
      */
-    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
+    newClass = (ClassObject*) dvmMalloc(sizeof(*newClass) +
+                 sizeof(StaticField) * pHeader->staticFieldsSize,
+                                        ALLOC_DEFAULT);
     if (newClass == NULL)
         return NULL;
 
@@ -1730,11 +1731,12 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
     /* load field definitions */
 
     /*
-     * TODO: consider over-allocating the class object and appending the
-     * static field info onto the end.  It's fixed-size and known at alloc
-     * time.  This would save a couple of native heap allocations, but it
-     * would also make heap compaction more difficult because we pass Field
-     * pointers around internally.
+     * Over-allocate the class object and append static field info
+     * onto the end.  It's fixed-size and known at alloc time.  This
+     * seems to increase zygote sharing.  Heap compaction will have to
+     * be careful if it ever tries to move ClassObject instances,
+     * because we pass Field pointers around internally. But at least
+     * now these Field pointers are in the object heap.
      */
 
     if (pHeader->staticFieldsSize != 0) {
@@ -1744,8 +1746,6 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         DexField field;
 
         newClass->sfieldCount = count;
-        newClass->sfields =
-            (StaticField*) calloc(count, sizeof(StaticField));
         for (i = 0; i < count; i++) {
             dexReadClassDataField(&pEncodedData, &field, &lastIndex);
             loadSFieldFromDex(newClass, &field, &newClass->sfields[i]);
@@ -2003,7 +2003,8 @@ void dvmFreeClassInnards(ClassObject* clazz)
     NULL_AND_LINEAR_FREE(clazz->ifviPool);
 
     clazz->sfieldCount = -1;
-    NULL_AND_FREE(clazz->sfields);
+    /* The sfields are attached to the ClassObject, and will be freed
+     * with it. */
 
     clazz->ifieldCount = -1;
     NULL_AND_LINEAR_FREE(clazz->ifields);
@@ -2186,9 +2187,7 @@ void dvmMakeCodeReadOnly(Method* meth)
 static int computeJniArgInfo(const DexProto* proto)
 {
     const char* sig = dexProtoGetShorty(proto);
-    int returnType, padFlags, jniArgInfo;
-    char sigByte;
-    int stackOffset, padMask;
+    int returnType, jniArgInfo;
     u4 hints;
 
     /* The first shorty character is the return type. */
@@ -2479,6 +2478,11 @@ bool dvmLinkClass(ClassObject* clazz, bool classesResolved)
             strcmp(clazz->descriptor, "Ljava/lang/Class;") == 0)
         {
             gDvm.classJavaLangClass = clazz;
+            if (clazz->ifieldCount > CLASS_FIELD_SLOTS) {
+                LOGE("java.lang.Class has %d slots (expected %d)",
+                     clazz->ifieldCount, CLASS_FIELD_SLOTS);
+                dvmAbort();
+            }
         } else {
             gDvm.classJavaLangClass =
                 dvmFindSystemClassNoInit("Ljava/lang/Class;");
@@ -4207,6 +4211,11 @@ bool dvmIsClassInitializing(const ClassObject* clazz)
  *
  * We will often be called recursively, e.g. when the <clinit> code resolves
  * one of its fields, the field resolution will try to initialize the class.
+ * In that case we will return "true" even though the class isn't actually
+ * ready to go.  The ambiguity can be resolved with dvmIsClassInitializing().
+ * (TODO: consider having this return an enum to avoid the extra call --
+ * return -1 on failure, 0 on success, 1 on still-initializing.  Looks like
+ * dvmIsClassInitializing() is always paired with *Initialized())
  *
  * This can get very interesting if a class has a static field initialized
  * to a new instance of itself.  <clinit> will end up calling <init> on
@@ -4401,10 +4410,12 @@ noverify:
         return false;
     }
 
+#ifdef WITH_PROFILER
     u8 startWhen = 0;
     if (gDvm.allocProf.enabled) {
         startWhen = dvmGetRelativeTimeNsec();
     }
+#endif
 
     /*
      * We're ready to go, and have exclusive access to the class.
@@ -4498,6 +4509,7 @@ noverify:
         clazz->status = CLASS_INITIALIZED;
         LOGVV("Initialized class: %s\n", clazz->descriptor);
 
+#ifdef WITH_PROFILER
         /*
          * Update alloc counters.  TODO: guard with mutex.
          */
@@ -4508,6 +4520,7 @@ noverify:
             gDvm.allocProf.classInitCount++;
             self->allocProf.classInitCount++;
         }
+#endif
     }
 
 bail_notify:
@@ -4871,6 +4884,9 @@ void dvmGcScanRootClassLoader()
 {
     /* dvmClassStartup() may not have been called before the first GC.
      */
+    if (gDvm.unlinkedJavaLangClass != NULL) {
+        dvmMarkObjectNonNull((Object *)gDvm.unlinkedJavaLangClass);
+    }
     if (gDvm.loadedClasses != NULL) {
         dvmHashTableLock(gDvm.loadedClasses);
         dvmHashForeach(gDvm.loadedClasses, markClassObject, NULL);
@@ -4954,4 +4970,14 @@ int dvmCompareNameDescriptorAndMethod(const char* name,
     }
 
     return dvmCompareDescriptorAndMethodProto(descriptor, method);
+}
+
+size_t dvmClassObjectSize(const ClassObject *clazz)
+{
+    size_t size;
+
+    assert(clazz != NULL);
+    size = offsetof(ClassObject, sfields);
+    size += sizeof(StaticField) * clazz->sfieldCount;
+    return size;
 }

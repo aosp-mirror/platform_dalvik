@@ -110,14 +110,12 @@ static void insertProcessName(long long *ep)
 
 void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
 {
-    const GcHeap *gcHeap = gDvm.gcHeap;
     size_t perHeapActualSize[HEAP_SOURCE_MAX_HEAP_COUNT],
            perHeapAllowedSize[HEAP_SOURCE_MAX_HEAP_COUNT],
            perHeapNumAllocated[HEAP_SOURCE_MAX_HEAP_COUNT],
            perHeapSizeAllocated[HEAP_SOURCE_MAX_HEAP_COUNT];
     unsigned char eventBuf[1 + (1 + sizeof(long long)) * 4];
     size_t actualSize, allowedSize, numAllocated, sizeAllocated;
-    size_t i;
     size_t softLimit = dvmHeapSourceGetIdealFootprint();
     size_t nHeaps = dvmHeapSourceGetNumHeaps();
 

@@ -21,6 +21,8 @@
 #ifndef _DALVIK_OO_OBJECT
 #define _DALVIK_OO_OBJECT
 
+#include <Atomic.h>
+
 #include <stddef.h>
 
 /* fwd decl */
@@ -320,6 +322,45 @@ struct InitiatingLoaderList {
 };
 
 /*
+ * Generic field header.  We pass this around when we want a generic Field
+ * pointer (e.g. for reflection stuff).  Testing the accessFlags for
+ * ACC_STATIC allows a proper up-cast.
+ */
+struct Field {
+    ClassObject*    clazz;          /* class in which the field is declared */
+    const char*     name;
+    const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
+    u4              accessFlags;
+#ifdef PROFILE_FIELD_ACCESS
+    u4              gets;
+    u4              puts;
+#endif
+};
+
+/*
+ * Static field.
+ */
+struct StaticField {
+    Field           field;          /* MUST be first item */
+    JValue          value;          /* initially set from DEX for primitives */
+};
+
+/*
+ * Instance field.
+ */
+struct InstField {
+    Field           field;          /* MUST be first item */
+
+    /*
+     * This field indicates the byte offset from the beginning of the
+     * (Object *) to the actual instance data; e.g., byteOffset==0 is
+     * the same as the object pointer (bug!), and byteOffset==4 is 4
+     * bytes farther.
+     */
+    int             byteOffset;
+};
+
+/*
  * This defines the amount of space we leave for field slots in the
  * java.lang.Class definition.  If we alter the class to have more than
  * this many fields, the VM will abort at startup.
@@ -443,10 +484,6 @@ struct ClassObject {
     int             ifviPoolCount;
     int*            ifviPool;
 
-    /* static fields */
-    int             sfieldCount;
-    StaticField*    sfields;
-
     /* instance fields
      *
      * These describe the layout of the contents of a DataObject-compatible
@@ -467,6 +504,10 @@ struct ClassObject {
 
     /* source file name, if known */
     const char*     sourceFile;
+
+    /* static fields */
+    int             sfieldCount;
+    StaticField     sfields[]; /* MUST be last item */
 };
 
 /*
@@ -553,45 +594,6 @@ struct Method {
 #ifdef WITH_PROFILER
     bool            inProfile;
 #endif
-};
-
-/*
- * Generic field header.  We pass this around when we want a generic Field
- * pointer (e.g. for reflection stuff).  Testing the accessFlags for
- * ACC_STATIC allows a proper up-cast.
- */
-struct Field {
-    ClassObject*    clazz;          /* class in which the field is declared */
-    const char*     name;
-    const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
-    u4              accessFlags;
-#ifdef PROFILE_FIELD_ACCESS
-    u4              gets;
-    u4              puts;
-#endif
-};
-
-/*
- * Static field.
- */
-struct StaticField {
-    Field           field;          /* MUST be first item */
-    JValue          value;          /* initially set from DEX for primitives */
-};
-
-/*
- * Instance field.
- */
-struct InstField {
-    Field           field;          /* MUST be first item */
-
-    /*
-     * This field indicates the byte offset from the beginning of the
-     * (Object *) to the actual instance data; e.g., byteOffset==0 is
-     * the same as the object pointer (bug!), and byteOffset==4 is 4
-     * bytes farther.
-     */
-    int             byteOffset;
 };
 
 
@@ -713,6 +715,10 @@ INLINE double dvmGetFieldDouble(const Object* obj, int offset) {
 INLINE Object* dvmGetFieldObject(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset))->l;
 }
+INLINE s8 dvmGetFieldLongVolatile(const Object* obj, int offset) {
+    const s8* addr = BYTE_OFFSET(obj, offset);
+    return android_quasiatomic_read_64((s8*)addr);
+}
 
 INLINE void dvmSetFieldBoolean(Object* obj, int offset, bool val) {
     ((JValue*)BYTE_OFFSET(obj, offset))->i = val;
@@ -740,6 +746,10 @@ INLINE void dvmSetFieldDouble(Object* obj, int offset, double val) {
 }
 INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
     ((JValue*)BYTE_OFFSET(obj, offset))->l = val;
+}
+INLINE void dvmSetFieldLongVolatile(Object* obj, int offset, s8 val) {
+    s8* addr = BYTE_OFFSET(obj, offset);
+    android_quasiatomic_swap_64(val, addr);
 }
 
 /*
@@ -776,6 +786,10 @@ INLINE double dvmGetStaticFieldDouble(const StaticField* sfield) {
 INLINE Object* dvmGetStaticFieldObject(const StaticField* sfield) {
     return sfield->value.l;
 }
+INLINE s8 dvmGetStaticFieldLongVolatile(const StaticField* sfield) {
+    const s8* addr = &sfield->value.j;
+    return android_quasiatomic_read_64((s8*)addr);
+}
 
 INLINE void dvmSetStaticFieldBoolean(StaticField* sfield, bool val) {
     sfield->value.i = val;
@@ -803,6 +817,10 @@ INLINE void dvmSetStaticFieldDouble(StaticField* sfield, double val) {
 }
 INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
     sfield->value.l = val;
+}
+INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
+    s8* addr = &sfield->value.j;
+    android_quasiatomic_swap_64(val, addr);
 }
 
 /*
@@ -858,6 +876,9 @@ INLINE bool dvmIsStaticField(const Field* field) {
 }
 INLINE bool dvmIsFinalField(const Field* field) {
     return (field->accessFlags & ACC_FINAL) != 0;
+}
+INLINE bool dvmIsVolatileField(const Field* field) {
+    return (field->accessFlags & ACC_VOLATILE) != 0;
 }
 
 INLINE bool dvmIsInterfaceClass(const ClassObject* clazz) {

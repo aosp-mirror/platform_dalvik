@@ -240,7 +240,6 @@ static JdwpError handleVM_ClassesBySignature(JdwpState* state,
     u4 numClasses;
     size_t strLen;
     RefTypeId refTypeId;
-    int i;
 
     classDescriptor = readNewUtf8String(&buf, &strLen);
     LOGV("  Req for class by signature '%s'\n", classDescriptor);
@@ -430,8 +429,6 @@ static JdwpError handleVM_CreateString(JdwpState* state,
 static JdwpError handleVM_Capabilities(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
-    int i;
-
     expandBufAdd1(pReply, false);   /* canWatchFieldModification */
     expandBufAdd1(pReply, false);   /* canWatchFieldAccess */
     expandBufAdd1(pReply, false);   /* canGetBytecodes */
@@ -745,7 +742,6 @@ static JdwpError handleRT_ClassLoader(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId;
-    ObjectId classLoaderId;
 
     refTypeId = dvmReadRefTypeId(&buf);
 
@@ -762,7 +758,6 @@ static JdwpError handleRT_FieldsWithGeneric(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId;
-    int i, numFields;
 
     refTypeId = dvmReadRefTypeId(&buf);
     LOGV("  Req for fields in refTypeId=0x%llx\n", refTypeId);
@@ -785,7 +780,6 @@ static JdwpError handleRT_MethodsWithGeneric(JdwpState* state,
     const u1* buf, int dataLen, ExpandBuf* pReply)
 {
     RefTypeId refTypeId;
-    int i;
 
     refTypeId = dvmReadRefTypeId(&buf);
 
@@ -887,7 +881,6 @@ static JdwpError handleCT_NewInstance(JdwpState* state,
     ObjectId threadId;
     MethodId methodId;
     ObjectId objectId;
-    u4 numArgs;
 
     classId = dvmReadRefTypeId(&buf);
     threadId = dvmReadObjectId(&buf);
@@ -997,7 +990,6 @@ static JdwpError handleOR_GetValues(JdwpState* state,
         u1 fieldTag;
         int width;
         u1* ptr;
-        const char* fieldName;
 
         fieldId = dvmReadFieldId(&buf);
 
@@ -1420,7 +1412,6 @@ static JdwpError handleTGR_Children(JdwpState* state,
 {
     ObjectId threadGroupId;
     u4 threadCount;
-    ObjectId threadId;
     ObjectId* pThreadIds;
     ObjectId* walker;
     int i;
@@ -1510,8 +1501,6 @@ static JdwpError handleAR_SetValues(JdwpState* state,
     ObjectId arrayId;
     u4 firstIndex;
     u4 values;
-    u1 tag;
-    int i;
 
     arrayId = dvmReadObjectId(&buf);
     firstIndex = read4BE(&buf);

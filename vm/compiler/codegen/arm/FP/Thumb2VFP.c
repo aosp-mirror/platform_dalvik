@@ -183,7 +183,6 @@ static bool genConversion(CompilationUnit *cUnit, MIR *mir)
 static bool genInlineSqrt(CompilationUnit *cUnit, MIR *mir)
 {
     ArmLIR *branch;
-    DecodedInstruction *dInsn = &mir->dalvikInsn;
     RegLocation rlSrc = dvmCompilerGetSrcWide(cUnit, mir, 0, 1);
     RegLocation rlDest = inlinedTargetWide(cUnit, mir, true);
     rlSrc = loadValueWide(cUnit, rlSrc, kFPReg);
@@ -212,7 +211,6 @@ static bool genCmpFP(CompilationUnit *cUnit, MIR *mir, RegLocation rlDest,
 {
     bool isDouble;
     int defaultResult;
-    bool ltNaNBias;
     RegLocation rlResult;
 
     switch(mir->dalvikInsn.opCode) {

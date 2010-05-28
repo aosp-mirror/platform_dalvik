@@ -47,7 +47,8 @@ bool dvmGcStartupAfterZygote(void)
     if (!dvmHeapWorkerStartup()) {
         return false;
     }
-    return dvmHeapStartupAfterZygote();
+    dvmHeapStartupAfterZygote();
+    return true;
 }
 
 /*
@@ -210,8 +211,11 @@ Object* dvmCloneObject(Object* obj)
     else
         flags = ALLOC_DEFAULT;
 
-//TODO: use clazz->objectSize for non-arrays
-    size = dvmObjectSizeInHeap(obj);
+    if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
+        size = dvmArrayObjectSize((ArrayObject *)obj);
+    } else {
+        size = obj->clazz->objectSize;
+    }
 
     copy = dvmMalloc(size, flags);
     if (copy == NULL)

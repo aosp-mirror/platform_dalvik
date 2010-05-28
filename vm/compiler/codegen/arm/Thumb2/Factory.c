@@ -23,10 +23,8 @@
  */
 
 static int coreTemps[] = {r0, r1, r2, r3, r4PC, r7, r8, r9, r10, r11, r12};
-static int corePreserved[] = {};
 static int fpTemps[] = {fr16, fr17, fr18, fr19, fr20, fr21, fr22, fr23,
                         fr24, fr25, fr26, fr27, fr28, fr29, fr30, fr31};
-static int fpPreserved[] = {};
 
 static int encodeImmSingle(int value)
 {
@@ -579,7 +577,6 @@ static ArmLIR *opRegRegImm(CompilationUnit *cUnit, OpKind op, int rDest,
 static ArmLIR *opRegImm(CompilationUnit *cUnit, OpKind op, int rDestSrc1,
                         int value)
 {
-    ArmLIR *res;
     bool neg = (value < 0);
     int absValue = (neg) ? -value : value;
     bool shortForm = (((absValue & 0xff) == absValue) && LOWREG(rDestSrc1));
@@ -819,7 +816,6 @@ static ArmLIR *loadBaseDispBody(CompilationUnit *cUnit, MIR *mir, int rBase,
     ArmOpCode opCode = kThumbBkpt;
     bool shortForm = false;
     bool thumb2Form = (displacement < 4092 && displacement >= 0);
-    int shortMax = 128;
     bool allLowRegs = (LOWREG(rBase) && LOWREG(rDest));
     int encodedDisp = displacement;
 
@@ -954,7 +950,6 @@ static ArmLIR *storeBaseDispBody(CompilationUnit *cUnit, int rBase,
     ArmOpCode opCode = kThumbBkpt;
     bool shortForm = false;
     bool thumb2Form = (displacement < 4092 && displacement >= 0);
-    int shortMax = 128;
     bool allLowRegs = (LOWREG(rBase) && LOWREG(rSrc));
     int encodedDisp = displacement;
 

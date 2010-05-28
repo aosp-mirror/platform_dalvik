@@ -65,7 +65,7 @@ ifeq ($(WITH_JIT),true)
 
     # Enable assertions and JIT-tuning
     LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1 -DLOG_NDEBUG=1 -DWITH_DALVIK_ASSERT \
-                    -DWITH_JIT_TUNING -DJIT_STATS $(target_smp_flag)
+                    -DWITH_JIT_TUNING $(target_smp_flag)
     LOCAL_MODULE := libdvm_assert
     include $(BUILD_SHARED_LIBRARY)
 
@@ -101,7 +101,8 @@ ifeq ($(WITH_HOST_DALVIK),true)
     # Variables used in the included Dvm.mk.
     dvm_os := $(HOST_OS)
     dvm_arch := $(HOST_ARCH)
-    dvm_arch_variant := $(HOST_ARCH_VARIANT)
+    # Note: HOST_ARCH_VARIANT isn't defined.
+    dvm_arch_variant := $(HOST_ARCH)
     dvm_simulator := false
 
     include $(LOCAL_PATH)/Dvm.mk

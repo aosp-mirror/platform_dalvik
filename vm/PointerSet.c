@@ -30,6 +30,7 @@ struct PointerSet {
 /*
  * Verify that the set is in sorted order.
  */
+#ifndef NDEBUG
 static bool verifySorted(PointerSet* pSet)
 {
     const void* last = NULL;
@@ -44,7 +45,7 @@ static bool verifySorted(PointerSet* pSet)
 
     return true;
 }
-
+#endif
 
 /*
  * Allocate a new PointerSet.
@@ -181,7 +182,7 @@ bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
  */
 bool dvmPointerSetRemoveEntry(PointerSet* pSet, const void* ptr)
 {
-    int i, where;
+    int where;
 
     if (!dvmPointerSetHas(pSet, ptr, &where))
         return false;

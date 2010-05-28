@@ -112,7 +112,6 @@ static void loadValueDirectWideFixed(CompilationUnit *cUnit, RegLocation rlSrc,
 static RegLocation loadValue(CompilationUnit *cUnit, RegLocation rlSrc,
                              RegisterClass opKind)
 {
-    RegisterInfo *pReg;
     rlSrc = dvmCompilerEvalLoc(cUnit, rlSrc, opKind, false);
     if (rlSrc.location == kLocDalvikFrame) {
         loadValueDirect(cUnit, rlSrc, rlSrc.lowReg);
@@ -129,7 +128,6 @@ static RegLocation loadValue(CompilationUnit *cUnit, RegLocation rlSrc,
 static void storeValue(CompilationUnit *cUnit, RegLocation rlDest,
                        RegLocation rlSrc)
 {
-    RegisterInfo *pRegLo;
     LIR *defStart;
     LIR *defEnd;
     assert(!rlDest.wide);
@@ -179,8 +177,6 @@ static void storeValue(CompilationUnit *cUnit, RegLocation rlDest,
 static RegLocation loadValueWide(CompilationUnit *cUnit, RegLocation rlSrc,
                                  RegisterClass opKind)
 {
-    RegisterInfo *pRegLo;
-    RegisterInfo *pRegHi;
     assert(rlSrc.wide);
     rlSrc = dvmCompilerEvalLoc(cUnit, rlSrc, opKind, false);
     if (rlSrc.location == kLocDalvikFrame) {
@@ -202,11 +198,8 @@ static RegLocation loadValueWide(CompilationUnit *cUnit, RegLocation rlSrc,
 static void storeValueWide(CompilationUnit *cUnit, RegLocation rlDest,
                        RegLocation rlSrc)
 {
-    RegisterInfo *pRegLo;
-    RegisterInfo *pRegHi;
     LIR *defStart;
     LIR *defEnd;
-    bool srcFP = FPREG(rlSrc.lowReg) && FPREG(rlSrc.highReg);
     assert(FPREG(rlSrc.lowReg)==FPREG(rlSrc.highReg));
     assert(rlDest.wide);
     assert(rlSrc.wide);

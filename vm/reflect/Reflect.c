@@ -306,7 +306,7 @@ static int fieldToSlot(const Field* field, const ClassObject* clazz)
     int slot;
 
     if (dvmIsStaticField(field)) {
-        slot = (StaticField*)field - clazz->sfields;
+        slot = (StaticField*)field - &clazz->sfields[0];
         assert(slot >= 0 && slot < clazz->sfieldCount);
         slot = -(slot+1);
     } else {
@@ -1093,10 +1093,8 @@ DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
 bool dvmUnwrapPrimitive(Object* value, ClassObject* returnType,
     JValue* pResult)
 {
-    JValue result;
     PrimitiveType typeIndex = returnType->primitiveType;
     PrimitiveType valueIndex;
-    //const u4* dataPtr;
 
     if (typeIndex == PRIM_NOT) {
         if (value != NULL && !dvmInstanceof(value->clazz, returnType)) {
@@ -1255,4 +1253,3 @@ Object* dvmCreateReflectObjForMethod(const ClassObject* clazz, Method* method)
         return dvmCreateReflectMethodObject(method);
     }
 }
-

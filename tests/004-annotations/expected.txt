@@ -4,6 +4,8 @@ java.lang.String android.test.anno.TestAnnotations.thing2: @android.test.anno.An
 mapping is class [Landroid.test.anno.IntToString;
   0='@android.test.anno.IntToString(from=0, to=NORMAL_FOCUS)'
   1='@android.test.anno.IntToString(from=2, to=WEAK_FOCUS)'
+present(getFocusType, ExportedProperty): true
+present(getFocusType, AnnoSimpleType): false
 
 AnnoSimpleField true, SimplyNoted false
 annotations on TYPE class android.test.anno.SimplyNoted(2):

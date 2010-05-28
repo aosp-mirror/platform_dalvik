@@ -616,9 +616,6 @@ ClassObject* dvmFindPrimitiveClass(char type)
 /*
  * Synthesize a primitive class.
  *
- * The spec for java.lang.Class.isPrimitive describes the names to
- * be used for these classes.
- *
  * Just creates the class and returns it (does not add it to the class list).
  */
 static ClassObject* createPrimitiveClass(int idx)
@@ -762,6 +759,41 @@ bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     }
 
     return true;
+}
+
+static size_t arrayElementWidth(const ArrayObject *array)
+{
+    const char *descriptor;
+
+    if (dvmIsObjectArray(array)) {
+        return sizeof(Object *);
+    } else {
+        descriptor = array->obj.clazz->descriptor;
+        switch (descriptor[1]) {
+        case 'B': return 1;  /* byte */
+        case 'C': return 2;  /* char */
+        case 'D': return 8;  /* double */
+        case 'F': return 4;  /* float */
+        case 'I': return 4;  /* int */
+        case 'J': return 8;  /* long */
+        case 'S': return 2;  /* short */
+        case 'Z': return 1;  /* boolean */
+        }
+    }
+    LOGE("object %p has an unhandled descriptor '%s'", array, descriptor);
+    dvmDumpThread(dvmThreadSelf(), false);
+    dvmAbort();
+    return 0;  /* Quiet the compiler. */
+}
+
+size_t dvmArrayObjectSize(const ArrayObject *array)
+{
+    size_t size;
+
+    assert(array != NULL);
+    size = offsetof(ArrayObject, contents);
+    size += array->length * arrayElementWidth(array);
+    return size;
 }
 
 /*

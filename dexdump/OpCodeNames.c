@@ -292,10 +292,10 @@ static const char* gOpNames[256] = {
     "UNUSED",
     "UNUSED",
     "UNUSED",
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
-    "UNUSED",
+    "+iget-wide-volatile",
+    "+iput-wide-volatile",
+    "+sget-wide-volatile",
+    "+sput-wide-volatile",
     "^breakpoint",                  // does not appear in DEX files
     "^throw-verification-error",    // does not appear in DEX files
     "+execute-inline",

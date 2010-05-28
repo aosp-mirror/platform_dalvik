@@ -15,7 +15,7 @@
     sub     r10, r10, r2, lsl #2        @ r10<- bottom (newsave - outsSize)
     ldr     r8, [r8]                    @ r8<- suspendCount (int)
     cmp     r10, r9                     @ bottom < interpStackEnd?
-    bxlt    lr                          @ return to raise stack overflow excep.
+    bxlo    lr                          @ return to raise stack overflow excep.
     @ r1 = newFP, r0 = methodToCall, r3 = returnCell, rPC = dalvikCallsite
     ldr     r9, [r0, #offMethod_clazz]      @ r9<- method->clazz
     ldr     r10, [r0, #offMethod_accessFlags] @ r10<- methodToCall->accessFlags
@@ -48,7 +48,7 @@
     str     rFP, [r2, #offThread_curFrame]  @ self->curFrame = newFp
 
     @ Start executing the callee
-#if defined(JIT_STATS)
+#if defined(WITH_JIT_TUNING)
     mov     r0, #kInlineCacheMiss
 #endif
     mov     pc, r10                         @ dvmJitToInterpTraceSelectNoChain

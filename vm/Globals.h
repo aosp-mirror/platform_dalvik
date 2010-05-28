@@ -37,6 +37,7 @@
 /* private structures */
 typedef struct GcHeap GcHeap;
 typedef struct BreakpointSet BreakpointSet;
+typedef struct InlineSub InlineSub;
 
 /*
  * One of these for each -ea/-da/-esa/-dsa on the command line.
@@ -112,7 +113,14 @@ struct DvmGlobals {
 
     DexOptimizerMode    dexOptMode;
     DexClassVerifyMode  classVerifyMode;
+
+    /*
+     * GC option flags.
+     */
     bool        preciseGc;
+    bool        overwriteFree;
+    bool        preVerify;
+    bool        postVerify;
     bool        generateRegisterMaps;
 
     int         assertionCtrlCount;
@@ -172,7 +180,7 @@ struct DvmGlobals {
     /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* unlinkedJavaLangClass;    // see unlinkedJavaLangClassObject
+    ClassObject* unlinkedJavaLangClass;
     ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
     ClassObject* classJavaLangError;
@@ -319,12 +327,6 @@ struct DvmGlobals {
     ClassObject* volatile primitiveClass[PRIM_MAX];
 
     /*
-     * A placeholder ClassObject used during ClassObject
-     * construction.
-     */
-    ClassObject  unlinkedJavaLangClassObject;
-
-    /*
      * Thread list.  This always has at least one element in it (main),
      * and main is always the first entry.
      *
@@ -432,9 +434,6 @@ struct DvmGlobals {
     ReferenceTable  jniPinRefTable;
     pthread_mutex_t jniPinRefLock;
 
-    /* special ReferenceQueue for JNI weak globals */
-    Object*     jniWeakGlobalRefQueue;
-
     /*
      * Native shared library table.
      */
@@ -487,6 +486,9 @@ struct DvmGlobals {
     InstructionFlags*   instrFlags;
     /* instruction format table, used for verification */
     InstructionFormat*  instrFormat;
+
+    /* inline substitution table, used during optimization */
+    InlineSub*          inlineSubs;
 
     /*
      * Bootstrap class loader linear allocator.
@@ -730,20 +732,7 @@ struct DvmJitGlobals {
 
     /* JIT internal stats */
     int                compilerMaxQueued;
-    int                addrLookupsFound;
-    int                addrLookupsNotFound;
-    int                noChainExit[kNoChainExitLast];
-    int                normalExit;
-    int                puntExit;
     int                translationChains;
-    int                invokeMonomorphic;
-    int                invokePolymorphic;
-    int                invokeNative;
-    int                returnOp;
-    int                icPatchFast;
-    int                icPatchQueued;
-    int                icPatchDropped;
-    u8                 jitTime;
 
     /* Compiled code cache */
     void* codeCache;
@@ -759,6 +748,12 @@ struct DvmJitGlobals {
 
     /* Flag to indicate that the code cache is full */
     bool codeCacheFull;
+
+    /* Page size  - 1 */
+    unsigned int pageSizeMask;
+
+    /* Lock to change the protection type of the code cache */
+    pthread_mutex_t    codeCacheProtectionLock;
 
     /* Number of times that the code cache has been reset */
     int numCodeCacheReset;
@@ -786,9 +781,6 @@ struct DvmJitGlobals {
 
     /* Vector to disable selected optimizations */
     int disableOpt;
-
-    /* Code address of special interpret-only pseudo-translation */
-    void *interpretTemplate;
 
     /* Table to track the overall and trace statistics of hot methods */
     HashTable*  methodStatsTable;
@@ -819,6 +811,26 @@ struct DvmJitGlobals {
     u4 *signatureBreakpoint;            // Signature content
 #endif
 
+#if defined(WITH_JIT_TUNING)
+    /* Performance tuning counters */
+    int                addrLookupsFound;
+    int                addrLookupsNotFound;
+    int                noChainExit[kNoChainExitLast];
+    int                normalExit;
+    int                puntExit;
+    int                invokeMonomorphic;
+    int                invokePolymorphic;
+    int                invokeNative;
+    int                returnOp;
+    int                icPatchInit;
+    int                icPatchLockFree;
+    int                icPatchQueued;
+    int                icPatchRejected;
+    int                icPatchDropped;
+    u8                 jitTime;
+    int                codeCachePatches;
+#endif
+
     /* Place arrays at the end to ease the display in gdb sessions */
 
     /* Work order queue for compilations */
@@ -829,6 +841,10 @@ struct DvmJitGlobals {
 };
 
 extern struct DvmJitGlobals gDvmJit;
+
+#if defined(WITH_JIT_TUNING)
+extern int gDvmICHitCount;
+#endif
 
 #endif
 

@@ -1,3 +1,4 @@
+%default {"volatile":"0"}
 %verify "executed"
 %verify "null object"
 %verify "field already resolved"
@@ -35,7 +36,12 @@
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldmia   r2, {r0-r1}                 @ r0/r1<- fp[A]
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if $volatile
+    add     r2, r9, r3                  @ r2<- target address
+    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
 

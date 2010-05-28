@@ -38,10 +38,7 @@ void dvmHeapHeapTableFree(void *ptr)
 }
 
 #define heapRefTableIsFull(refs) \
-    ({ \
-        const HeapRefTable *HRTIF_refs = (refs); \
-        dvmIsReferenceTableFull(refs); \
-    })
+    dvmIsReferenceTableFull(refs)
 
 bool dvmHeapInitHeapRefTable(HeapRefTable *refs, size_t nelems)
 {
@@ -173,7 +170,6 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable)
     obj = NULL;
     table = *pTable;
     if (table != NULL) {
-        GcHeap *gcHeap = gDvm.gcHeap;
         HeapRefTable *refs = &table->refs;
 
         /* We should never have an empty table node in the list.
@@ -206,10 +202,8 @@ void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table, bool stripLowBits)
         lastRef = table->refs.nextEntry;
         if (stripLowBits) {
             /* This case is used for marking reference objects that
-             * are still waiting for the heap worker thread to get to
-             * them.  The referents pointed to by the references are
-             * marked when a SCHEDULED_REFERENCE_MAGIC is encountered
-             * during scanning.
+             * are still waiting for the heap worker thread to push
+             * them onto their reference queue.
              */
             while (ref < lastRef) {
                 dvmMarkObjectNonNull((Object *)((uintptr_t)*ref++ & ~3));

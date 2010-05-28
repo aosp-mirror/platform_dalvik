@@ -41,10 +41,7 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable);
             dvmAddToReferenceTable((refs), (ptr))
 
 #define dvmHeapNumHeapRefTableEntries(refs) \
-    ({ \
-        const HeapRefTable *NHRTE_refs = (refs); \
-        dvmReferenceTableEntries(refs); \
-    })
+            dvmReferenceTableEntries(refs)
 
 #define dvmHeapRemoveFromHeapRefTable(refs, ptr) \
             dvmRemoveFromReferenceTable((refs), (refs)->table, (ptr))

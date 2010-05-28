@@ -85,7 +85,7 @@ InstField* dvmFindInstanceFieldHier(const ClassObject* clazz,
 StaticField* dvmFindStaticField(const ClassObject* clazz,
     const char* fieldName, const char* signature)
 {
-    StaticField* pField;
+    const StaticField* pField;
     int i;
 
     assert(clazz != NULL);
@@ -95,12 +95,12 @@ StaticField* dvmFindStaticField(const ClassObject* clazz,
      * fields, the VM allows you to have two fields with the same name so
      * long as they have different types.
      */
-    pField = clazz->sfields;
+    pField = &clazz->sfields[0];
     for (i = 0; i < clazz->sfieldCount; i++, pField++) {
         if (strcmp(fieldName, pField->field.name) == 0 &&
             strcmp(signature, pField->field.signature) == 0)
         {
-            return pField;
+            return (StaticField*) pField;
         }
     }
 
@@ -739,4 +739,3 @@ void dvmDumpObject(const Object* obj)
         clazz = clazz->super;
     }
 }
-

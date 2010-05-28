@@ -2,9 +2,13 @@ Items requiring attention:
 
 (hi) Correct stack overflow handling (dvmCleanupStackOverflow takes an
      additional argument now)
+(hi) "debugger active" test in common_periodicChecks must handle
+     the case where glue->pDebuggerActive is a NULL pointer (used to
+     skip a memory load when debugger support is completely disabled)
 
 (md) Correct OP_MONITOR_EXIT (need to adjust PC before throw)
 
 (lo) Implement OP_BREAKPOINT
 (lo) Implement OP_EXECUTE_INLINE_RANGE
+(lo) Implement OP_*_WIDE_VOLATILE
 

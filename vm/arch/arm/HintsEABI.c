@@ -59,7 +59,7 @@ u4 dvmPlatformInvokeHints(const DexProto* proto)
     const char* sig = dexProtoGetShorty(proto);
     int padFlags, jniHints;
     char sigByte;
-    int stackOffset, padMask, hints;
+    int stackOffset, padMask;
 
     stackOffset = padFlags = 0;
     padMask = 0x00000001;

@@ -30,6 +30,15 @@
 #define OBJECTS_PER_SEGMENT     ((size_t)128)
 #define BYTES_PER_SEGMENT       ((size_t)4096)
 
+/* The static field-name for the synthetic object generated to account
+ * for class Static overhead.
+ */
+#define STATIC_OVERHEAD_NAME    "$staticOverhead"
+/* The ID for the synthetic object generated to account for class
+ * Static overhead.
+ */
+#define CLASS_STATICS_ID(clazz) ((hprof_object_id)(((u4)(clazz)) | 1))
+
 int
 hprofStartHeapDump(hprof_context_t *ctx)
 {
@@ -146,7 +155,6 @@ hprofMarkRootObject(hprof_context_t *ctx, const Object *obj, jobject jniObj)
     case HPROF_ROOT_DEBUGGER:
     case HPROF_ROOT_REFERENCE_CLEANUP:
     case HPROF_ROOT_VM_INTERNAL:
-    case HPROF_UNREACHABLE:
         hprofAddU1ToRecord(rec, heapTag);
         hprofAddIdToRecord(rec, (hprof_object_id)obj);
         break;
@@ -224,7 +232,7 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
     HprofHeapId desiredHeap;
 
     desiredHeap = 
-            dvmHeapSourceGetPtrFlag(ptr2chunk(obj), HS_ALLOCATED_IN_ZYGOTE) ?
+            dvmHeapSourceGetPtrFlag(obj, HS_ALLOCATED_IN_ZYGOTE) ?
             HPROF_HEAP_ZYGOTE : HPROF_HEAP_APP;
     
     if (ctx->objectsInSegment >= OBJECTS_PER_SEGMENT ||
@@ -268,16 +276,11 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
     clazz = obj->clazz;
 
     if (clazz == NULL) {
-        /* This object was probably just allocated and hasn't been
-         * initialized yet.  Add an instance entry to make a note of
-         * it;  there's not much else that we can do.
+        /* This object will bother HprofReader, because it has a NULL
+         * class, so just don't dump it. It could be
+         * gDvm.unlinkedJavaLangClass or it could be an object just
+         * allocated which hasn't been initialized yet.
          */
-        hprofAddU1ToRecord(rec, HPROF_INSTANCE_DUMP);
-
-        hprofAddIdToRecord(rec, (hprof_object_id)obj);
-        hprofAddU4ToRecord(rec, stackTraceSerialNumber(obj));
-        hprofAddIdToRecord(rec, (hprof_class_object_id)clazz);  // NULL
-        hprofAddIdToRecord(rec, 0);    // no instance data
     } else if (clazz == gDvm.unlinkedJavaLangClass) {
         /* obj is a ClassObject that hasn't been linked yet.
          */
@@ -303,11 +306,26 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
 
         if (clazz == gDvm.classJavaLangClass) {
             const ClassObject *thisClass = (const ClassObject *)obj;
-            int i, n;
+            int i, sFieldCount, iFieldCount;
             /* obj is a ClassObject.
              */
-            hprofAddU1ToRecord(rec, HPROF_CLASS_DUMP);
+            sFieldCount = thisClass->sfieldCount;
+            if (sFieldCount != 0) {
+                int byteLength = sFieldCount*sizeof(StaticField);
+                /* Create a byte array to reflect the allocation of the
+                 * StaticField array at the end of this class.
+                 */
+                hprofAddU1ToRecord(rec, HPROF_PRIMITIVE_ARRAY_DUMP);
+                hprofAddIdToRecord(rec, CLASS_STATICS_ID(obj));
+                hprofAddU4ToRecord(rec, stackTraceSerialNumber(obj));
+                hprofAddU4ToRecord(rec, byteLength);
+                hprofAddU1ToRecord(rec, hprof_basic_byte);
+                for (i = 0; i < byteLength; i++) {
+                    hprofAddU1ToRecord(rec, 0);
+                }
+            }
 
+            hprofAddU1ToRecord(rec, HPROF_CLASS_DUMP);
             hprofAddIdToRecord(rec, hprofLookupClassId(thisClass));
             hprofAddU4ToRecord(rec, stackTraceSerialNumber(thisClass));
             hprofAddIdToRecord(rec, hprofLookupClassId(thisClass->super));
@@ -317,6 +335,9 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
             hprofAddIdToRecord(rec, (hprof_id)0);           // reserved
             hprofAddIdToRecord(rec, (hprof_id)0);           // reserved
             if (obj == (Object *)gDvm.classJavaLangClass) {
+                // ClassObjects have their static fields appended, so
+                // aren't all the same size. But they're at least this
+                // size.
                 hprofAddU4ToRecord(rec, sizeof(ClassObject)); // instance size
             } else {
                 hprofAddU4ToRecord(rec, thisClass->objectSize); // instance size
@@ -326,34 +347,41 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
 
             /* Static fields
              */
-            n = thisClass->sfieldCount;
-            hprofAddU2ToRecord(rec, (u2)n);
-            for (i = 0; i < n; i++) {
-                const StaticField *f = &thisClass->sfields[i];
-                hprof_basic_type t;
-                size_t size;
+            if (sFieldCount == 0) {
+                hprofAddU2ToRecord(rec, (u2)0);
+            } else {
+                hprofAddU2ToRecord(rec, (u2)(sFieldCount+1));
+                hprofAddIdToRecord(rec,
+                                   hprofLookupStringId(STATIC_OVERHEAD_NAME));
+                hprofAddU1ToRecord(rec, hprof_basic_object);
+                hprofAddIdToRecord(rec, CLASS_STATICS_ID(obj));
+                for (i = 0; i < sFieldCount; i++) {
+                    hprof_basic_type t;
+                    size_t size;
+                    const StaticField *f = &thisClass->sfields[i];
 
-                t = signatureToBasicTypeAndSize(f->field.signature, &size);
-                hprofAddIdToRecord(rec, hprofLookupStringId(f->field.name));
-                hprofAddU1ToRecord(rec, t);
-                if (size == 1) {
-                    hprofAddU1ToRecord(rec, (u1)f->value.b);
-                } else if (size == 2) {
-                    hprofAddU2ToRecord(rec, (u2)f->value.c);
-                } else if (size == 4) {
-                    hprofAddU4ToRecord(rec, (u4)f->value.i);
-                } else if (size == 8) {
-                    hprofAddU8ToRecord(rec, (u8)f->value.j);
-                } else {
-                    assert(false);
+                    t = signatureToBasicTypeAndSize(f->field.signature, &size);
+                    hprofAddIdToRecord(rec, hprofLookupStringId(f->field.name));
+                    hprofAddU1ToRecord(rec, t);
+                    if (size == 1) {
+                        hprofAddU1ToRecord(rec, (u1)f->value.b);
+                    } else if (size == 2) {
+                        hprofAddU2ToRecord(rec, (u2)f->value.c);
+                    } else if (size == 4) {
+                        hprofAddU4ToRecord(rec, (u4)f->value.i);
+                    } else if (size == 8) {
+                        hprofAddU8ToRecord(rec, (u8)f->value.j);
+                    } else {
+                        assert(false);
+                    }
                 }
             }
 
             /* Instance fields for this class (no superclass fields)
              */
-            n = thisClass->ifieldCount;
-            hprofAddU2ToRecord(rec, (u2)n);
-            for (i = 0; i < n; i++) {
+            iFieldCount = thisClass->ifieldCount;
+            hprofAddU2ToRecord(rec, (u2)iFieldCount);
+            for (i = 0; i < iFieldCount; i++) {
                 const InstField *f = &thisClass->ifields[i];
                 hprof_basic_type t;
 

@@ -31,7 +31,7 @@ bool dvmHeapStartup(void);
  * This needs to be called before the first allocation or GC that
  * happens after forking.
  */
-bool dvmHeapStartupAfterZygote(void);
+void dvmHeapStartupAfterZygote(void);
 
 /*
  * Tear down the GC heap.
@@ -52,7 +52,14 @@ void dvmHeapShutdown(void);
 size_t dvmObjectSizeInHeap(const Object *obj);
 #endif
 
-enum GcReason {
+typedef enum {
+    /* GC all heaps. */
+    GC_FULL,
+    /* GC just the first heap. */
+    GC_PARTIAL
+} GcMode;
+
+typedef enum {
     /* Not enough space for an "ordinary" Object to be allocated. */
     GC_FOR_MALLOC,
     /* Explicit GC via Runtime.gc(), VMRuntime.gc(), or SIGUSR1. */
@@ -61,12 +68,17 @@ enum GcReason {
     GC_EXTERNAL_ALLOC,
     /* GC to dump heap contents to a file, only used under WITH_HPROF */
     GC_HPROF_DUMP_HEAP
-};
+} GcReason;
+
+/*
+ * Suspend the VM as for a GC, and assert-fail if any object has any
+ * corrupt references.
+ */
+void dvmHeapSuspendAndVerify();
 
 /*
  * Run the garbage collector without doing any locking.
  */
-void dvmCollectGarbageInternal(bool collectSoftReferences,
-                               enum GcReason reason);
+void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
 
 #endif  // _DALVIK_ALLOC_HEAP

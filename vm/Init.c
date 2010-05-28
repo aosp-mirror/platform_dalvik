@@ -36,8 +36,6 @@
 
 /*
  * Register VM-agnostic native methods for system classes.
- *
- * Currently defined in ../include/nativehelper/AndroidSystemNatives.h
  */
 extern int jniRegisterSystemMethods(JNIEnv* env);
 
@@ -53,6 +51,15 @@ struct DvmGlobals gDvm;
 /* JIT-specific global state */
 #if defined(WITH_JIT)
 struct DvmJitGlobals gDvmJit;
+
+#if defined(WITH_JIT_TUNING)
+/*
+ * Track the number of hits in the inline cache for predicted chaining.
+ * Use an ugly global variable here since it is accessed in assembly code.
+ */
+int gDvmICHitCount;
+#endif
+
 #endif
 
 /*
@@ -107,6 +114,9 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<filename>\n");
     dvmFprintf(stderr, "  -Xgc:[no]precise\n");
+    dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
+    dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
+    dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -142,9 +152,6 @@ static void dvmUsage(const char* progName)
 #endif
 #ifdef WITH_HPROF_STACK
         " hprof_stack"
-#endif
-#ifdef WITH_HPROF_STACK_UNREACHABLE
-        " hprof_stack_unreachable"
 #endif
 #ifdef WITH_ALLOC_LIMITS
         " alloc_limits"
@@ -828,7 +835,6 @@ static int dvmProcessOptions(int argc, const char* const argv[],
             strncmp(argv[i], "-agentlib:jdwp=", 15) == 0)
         {
             const char* tail;
-            bool result = false;
 
             if (argv[i][1] == 'X')
                 tail = argv[i] + 10;
@@ -900,7 +906,8 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                     /* keep going */
                 }
             } else {
-                /* disable JIT -- nothing to do here for now */
+                /* disable JIT if it was enabled by default */
+                gDvm.executionMode = kExecutionModeInterpFast;
             }
 
         } else if (strncmp(argv[i], "-Xlockprofthreshold:", 20) == 0) {
@@ -967,6 +974,18 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.preciseGc = true;
             else if (strcmp(argv[i] + 5, "noprecise") == 0)
                 gDvm.preciseGc = false;
+            else if (strcmp(argv[i] + 5, "overwritefree") == 0)
+                gDvm.overwriteFree = true;
+            else if (strcmp(argv[i] + 5, "nooverwritefree") == 0)
+                gDvm.overwriteFree = false;
+            else if (strcmp(argv[i] + 5, "preverify") == 0)
+                gDvm.preVerify = true;
+            else if (strcmp(argv[i] + 5, "nopreverify") == 0)
+                gDvm.preVerify = false;
+            else if (strcmp(argv[i] + 5, "postverify") == 0)
+                gDvm.postVerify = true;
+            else if (strcmp(argv[i] + 5, "nopostverify") == 0)
+                gDvm.postVerify = false;
             else {
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;

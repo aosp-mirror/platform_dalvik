@@ -129,7 +129,7 @@ static inline void updateSlotAdd(IndirectRefTable* pRef, Object* obj, int slot)
 static inline void updateSlotRemove(IndirectRefTable* pRef, int slot)
 {
     if (pRef->slotData != NULL) {
-        IndirectRefSlot* pSlot = &pRef->slotData[slot];
+        //IndirectRefSlot* pSlot = &pRef->slotData[slot];
         //LOGI("+++ remove [%d] slot %d, serial now %d\n",
         //    pRef->kind, slot, pSlot->serial);
     }
@@ -144,7 +144,6 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
     IRTSegmentState prevState;
     prevState.all = cookie;
     int topIndex = pRef->segmentState.parts.topIndex;
-    int bottomIndex = prevState.parts.topIndex;
 
     assert(obj != NULL);
     assert(dvmIsValidObject(obj));
@@ -195,7 +194,7 @@ IndirectRef dvmAddToIndirectRefTable(IndirectRefTable* pRef, u4 cookie,
         Object** pScan = &pRef->table[topIndex - 1];
         assert(*pScan != NULL);
         while (*--pScan != NULL) {
-            assert(pScan >= pRef->table + bottomIndex);
+            assert(pScan >= pRef->table + prevState.parts.topIndex);
         }
         updateSlotAdd(pRef, obj, pScan - pRef->table);
         result = dvmObjectToIndirectRef(pRef, obj, pScan - pRef->table,

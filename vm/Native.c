@@ -213,7 +213,6 @@ static SharedLib* findSharedLibEntry(const char* pathName)
 static SharedLib* addSharedLibEntry(SharedLib* pLib)
 {
     u4 hash = dvmComputeUtf8Hash(pLib->pathName);
-    void* ent;
 
     /*
      * Do the lookup with the "add" flag set.  If we add it, we will get

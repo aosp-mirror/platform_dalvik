@@ -5765,36 +5765,60 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E8: /* 0xe8 */
-/* File: x86/OP_UNUSED_E8.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IGET_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E9: /* 0xe9 */
-/* File: x86/OP_UNUSED_E9.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IPUT_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EA: /* 0xea */
-/* File: x86/OP_UNUSED_EA.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_WIDE_VOLATILE: /* 0xea */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SGET_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EB: /* 0xeb */
-/* File: x86/OP_UNUSED_EB.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SPUT_WIDE_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_BREAKPOINT: /* 0xec */
@@ -8785,6 +8809,9 @@ common_invokeOld:
  * TUNING: Might be worthwhile to inline this.
  * TODO: Basic-block style Jit will need a hook here as well.  Fold it into
  *       the suspendCount check so we can get both in 1 shot.
+ * TODO: to match the other intepreters, this should handle suspension
+ *       and then check for debugger/profiling after dvmCheckSuspendPending
+ *       returns.
  */
 common_periodicChecks:
     movl    offGlue_pSelfSuspendCount(%ecx),%eax    # eax <- &suspendCount
@@ -8799,9 +8826,11 @@ common_periodicChecks:
     movl   offGlue_pActiveProfilers(%ecx),%ecx     # ecx <- &ActiveProfilers
 #endif
 #if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
+    # TODO: check for NULL before load
     movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
     orl    (%ecx),%eax             # eax <- debuggerActive || activeProfilers
 #elif defined(WITH_DEBUGGER)
+    # TODO: check for NULL before load
     movzbl (%eax),%eax             # eax <- debuggerActive (boolean)
 #elif defined(WITH_PROFILER)
     movl   (%ecx),%eax             # eax <= activeProfilers

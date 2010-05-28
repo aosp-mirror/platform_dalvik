@@ -35,6 +35,10 @@ import c/opcommon.c
 op-start x86
     # stub -- need native impl
     op OP_EXECUTE_INLINE_RANGE c
+    op OP_IGET_WIDE_VOLATILE c
+    op OP_IPUT_WIDE_VOLATILE c
+    op OP_SGET_WIDE_VOLATILE c
+    op OP_SPUT_WIDE_VOLATILE c
 op-end
 
 # arch-specific entry point to interpreter

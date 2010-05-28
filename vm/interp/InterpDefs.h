@@ -124,12 +124,16 @@ typedef struct InterpState {
      * These are available globally, from gDvm, or from another glue field
      * (self/method).  They're copied in here for speed.
      */
+    /* copy of self->interpStackEnd */
     const u1*       interpStackEnd;
+    /* points at self->suspendCount */
     volatile int*   pSelfSuspendCount;
 #if defined(WITH_DEBUGGER)
+    /* points at gDvm.debuggerActive, or NULL if debugger not enabled */
     volatile u1*    pDebuggerActive;
 #endif
 #if defined(WITH_PROFILER)
+    /* points at gDvm.activeProfilers */
     volatile int*   pActiveProfilers;
 #endif
     /* ----------------------------------------------------------------------
@@ -158,6 +162,7 @@ typedef struct InterpState {
      * ppJitProfTable is used for that purpose.
      */
     unsigned char**    ppJitProfTable; // Used to refresh pJitProfTable
+    int                icRechainCount; // Count down to next rechain request
 #endif
 
 #if defined(WITH_PROFILER) || defined(WITH_DEBUGGER)

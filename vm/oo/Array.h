@@ -152,4 +152,9 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
 bool dvmUnboxObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     ClassObject* dstElemClass);
 
+/*
+ * Returns the size of the given array object in bytes.
+ */
+size_t dvmArrayObjectSize(const ArrayObject *array);
+
 #endif /*_DALVIK_OO_ARRAY*/

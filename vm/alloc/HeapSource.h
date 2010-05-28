@@ -16,6 +16,7 @@
 #ifndef _DALVIK_HEAP_SOURCE
 #define _DALVIK_HEAP_SOURCE
 
+#include "alloc/Heap.h"
 #include "alloc/HeapInternal.h" // for GcHeap
 
 /* dlmalloc uses one size_t per allocated chunk.
@@ -25,21 +26,13 @@
 
 /* The largest number of separate heaps we can handle.
  */
-#define HEAP_SOURCE_MAX_HEAP_COUNT 3
+#define HEAP_SOURCE_MAX_HEAP_COUNT 2
 
 /*
  * Initializes the heap source; must be called before any other
  * dvmHeapSource*() functions.
  */
 GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize);
-
-/*
- * If the HeapSource was created while in zygote mode, this
- * will create a new heap for post-zygote allocations.
- * Having a separate heap should maximize the number of pages
- * that a given app_process shares with the zygote process.
- */
-bool dvmHeapSourceStartupAfterZygote(void);
 
 /*
  * If the HeapSource was created while in zygote mode, this
@@ -52,26 +45,19 @@ bool dvmHeapSourceStartupBeforeFork(void);
 /*
  * Tears down the heap source and frees any resources associated with it.
  */
-void dvmHeapSourceShutdown(GcHeap *gcHeap);
+void dvmHeapSourceShutdown(GcHeap **gcHeap);
 
 /*
- * Writes shallow copies of the currently-used bitmaps into outBitmaps,
- * returning the number of bitmaps written.  Returns 0 if the array was
- * not long enough or if there are no heaps, either of which is an error.
+ * Initializes a vector of object and mark bits to the object and mark
+ * bits of each heap.
  */
-size_t dvmHeapSourceGetObjectBitmaps(HeapBitmap outBitmaps[],
-        size_t maxBitmaps);
+void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
+                                   size_t numHeaps);
 
 /*
- * Replaces the object location HeapBitmaps with the elements of
- * <objectBitmaps>.  The elements of <objectBitmaps> are overwritten
- * with shallow copies of the old bitmaps.
- *
- * Returns false if the number of bitmaps doesn't match the number
- * of heaps.
+ * Get the bitmap representing all live objects.
  */
-bool dvmHeapSourceReplaceObjectBitmaps(HeapBitmap objectBitmaps[],
-        size_t nBitmaps);
+HeapBitmap *dvmHeapSourceGetLiveBits();
 
 /*
  * Returns the requested value. If the per-heap stats are requested, fill
@@ -169,5 +155,24 @@ void dvmHeapSourceWalk(void(*callback)(const void *chunkptr, size_t chunklen,
  * Gets the number of heaps available in the heap source.
  */
 size_t dvmHeapSourceGetNumHeaps(void);
+
+/*
+ * Exchanges the mark and object bitmaps and zeros the mark bitmap.
+ */
+void dvmHeapSourceSwapBitmaps(void);
+
+/*
+ * Marks all objects inside the immune region of the heap. Addresses
+ * at or above this pointer are threatened, addresses below this
+ * pointer are immune.
+ */
+void dvmMarkImmuneObjects(const char *immuneLimit);
+
+/*
+ * Returns a pointer that demarcates the threatened region of the
+ * heap.  Addresses at or above this pointer are threatened, addresses
+ * below this pointer are immune.
+ */
+void *dvmHeapSourceGetImmuneLimit(GcMode mode);
 
 #endif  // _DALVIK_HEAP_SOURCE

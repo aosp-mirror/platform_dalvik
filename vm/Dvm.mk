@@ -26,6 +26,7 @@
 #
 LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
 #LOCAL_CFLAGS += -DUSE_INDIRECT_REF
+LOCAL_CFLAGS += -Wall -Wextra -Wno-unused-parameter
 
 #
 # Optional features.  These may impact the size or performance of the VM.
@@ -131,15 +132,15 @@ LOCAL_SRC_FILES := \
 	alloc/Alloc.c \
 	alloc/HeapBitmap.c.arm \
 	alloc/HeapDebug.c \
-	alloc/HeapSource.c \
 	alloc/HeapTable.c \
 	alloc/HeapWorker.c \
 	alloc/Heap.c.arm \
-	alloc/MarkSweep.c.arm \
 	alloc/DdmHeap.c \
+	alloc/Verify.c \
 	analysis/CodeVerify.c \
-	analysis/DexOptimize.c \
+	analysis/DexPrepare.c \
 	analysis/DexVerify.c \
+	analysis/Optimize.c \
 	analysis/ReduceConstants.c \
 	analysis/RegisterMap.c \
 	analysis/VerifySubs.c \
@@ -197,6 +198,18 @@ LOCAL_SRC_FILES := \
 	test/TestHash.c \
 	test/TestIndirectRefTable.c
 
+WITH_COPYING_GC := $(strip $(WITH_COPYING_GC))
+
+ifeq ($(WITH_COPYING_GC),true)
+  LOCAL_CFLAGS += -DWITH_COPYING_GC
+  LOCAL_SRC_FILES += \
+	alloc/Copying.c.arm
+else
+  LOCAL_SRC_FILES += \
+	alloc/HeapSource.c \
+	alloc/MarkSweep.c.arm
+endif
+
 WITH_JIT := $(strip $(WITH_JIT))
 
 ifeq ($(WITH_JIT),true)
@@ -225,10 +238,6 @@ ifeq ($(WITH_HPROF),true)
 	hprof/HprofOutput.c \
 	hprof/HprofString.c
   LOCAL_CFLAGS += -DWITH_HPROF=1
-
-  ifeq ($(strip $(WITH_HPROF_UNREACHABLE)),true)
-    LOCAL_CFLAGS += -DWITH_HPROF_UNREACHABLE=1
-  endif
 
   ifeq ($(strip $(WITH_HPROF_STACK)),true)
     LOCAL_SRC_FILES += \

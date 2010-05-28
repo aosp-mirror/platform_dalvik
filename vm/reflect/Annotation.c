@@ -295,7 +295,6 @@ static Method* resolveAmbiguousMethod(const ClassObject* referrer, u4 methodIdx)
     Method* resMethod;
     const DexMethodId* pMethodId;
     const char* name;
-    const char* signature;
 
     /* if we've already resolved this method, return it */
     resMethod = dvmDexGetResolvedMethod(referrer->pDvmDex, methodIdx);
@@ -804,7 +803,6 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
     const u1** pPtr)
 {
     Thread* self = dvmThreadSelf();
-    const DexFile* pDexFile = clazz->pDvmDex->pDexFile;
     Object* newAnno = NULL;
     ArrayObject* elementArray = NULL;
     const ClassObject* annoClass;
@@ -1023,7 +1021,6 @@ static bool skipAnnotationValue(const ClassObject* clazz, const u1** pPtr)
  */
 static bool skipEncodedAnnotation(const ClassObject* clazz, const u1** pPtr)
 {
-    const DexFile* pDexFile = clazz->pDvmDex->pDexFile;
     const u1* ptr;
     u4 size;
 
@@ -1148,7 +1145,6 @@ static Object* getAnnotationValue(const ClassObject* clazz,
     int expectedType, const char* debugAnnoName)
 {
     const u1* ptr;
-    Object* obj;
     AnnotationValue avalue;
 
     /* find the annotation */
@@ -1894,7 +1890,6 @@ static const DexAnnotationSetItem* findAnnotationSetForField(const Field* field)
     DexFile* pDexFile = clazz->pDvmDex->pDexFile;
     const DexAnnotationsDirectoryItem* pAnnoDir;
     const DexFieldAnnotationsItem* pFieldList;
-    const DexAnnotationSetItem* pAnnoSet = NULL;
 
     pAnnoDir = getAnnoDirectory(pDexFile, clazz);
     if (pAnnoDir == NULL)
@@ -1941,8 +1936,6 @@ ArrayObject* dvmGetFieldAnnotations(const Field* field)
 {
     ClassObject* clazz = field->clazz;
     ArrayObject* annoArray = NULL;
-    DexFile* pDexFile = clazz->pDvmDex->pDexFile;
-    const DexAnnotationsDirectoryItem* pAnnoDir;
     const DexAnnotationSetItem* pAnnoSet = NULL;
 
     pAnnoSet = findAnnotationSetForField(field);

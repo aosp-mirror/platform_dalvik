@@ -278,7 +278,7 @@ static int dumpMarkedMethods(void* vclazz, void* vfp)
     FILE* fp = (FILE*) vfp;
     Method* meth;
     char* name;
-    int i, lineNum;
+    int i;
 
     dexStringCacheInit(&stringCache);
 
@@ -654,8 +654,7 @@ void dvmMethodTraceStop(void)
     state->traceFile = NULL;
 
     /* wake any threads that were waiting for profiling to complete */
-    int cc = pthread_cond_broadcast(&state->threadExitCond);
-    assert(cc == 0);
+    dvmBroadcastCond(&state->threadExitCond);
     dvmUnlockMutex(&state->startStopLock);
 }
 

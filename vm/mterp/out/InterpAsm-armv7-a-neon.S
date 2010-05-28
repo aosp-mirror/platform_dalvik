@@ -2861,11 +2861,16 @@ dalvik_inst:
     cmp     r0, #0                      @ is resolved entry null?
     beq     .LOP_SGET_WIDE_resolve         @ yes, do resolve
 .LOP_SGET_WIDE_finish:
-    mov     r1, rINST, lsr #8           @ r1<- AA
-    ldrd    r2, [r0, #offStaticField_value] @ r2/r3<- field value (aligned)
-    add     r1, rFP, r1, lsl #2         @ r1<- &fp[AA]
+    mov     r9, rINST, lsr #8           @ r9<- AA
+    .if 0
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
+    ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    .endif
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    stmia   r1, {r2-r3}                 @ vAA/vAA+1<- r2/r3
+    stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3031,20 +3036,25 @@ dalvik_inst:
      * 64-bit SPUT handler.
      */
     /* sput-wide vAA, field@BBBB */
-    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    ldr     r0, [rGLUE, #offGlue_methodClassDex]  @ r0<- DvmDex
     FETCH(r1, 1)                        @ r1<- field ref BBBB
-    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
     mov     r9, rINST, lsr #8           @ r9<- AA
-    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    ldr     r2, [r0, r1, lsl #2]        @ r2<- resolved StaticField ptr
     add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
-    cmp     r0, #0                      @ is resolved entry null?
+    cmp     r2, #0                      @ is resolved entry null?
     beq     .LOP_SPUT_WIDE_resolve         @ yes, do resolve
-.LOP_SPUT_WIDE_finish: @ field ptr in r0, AA in r9
+.LOP_SPUT_WIDE_finish: @ field ptr in r2, AA in r9
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    ldmia   r9, {r2-r3}                 @ r2/r3<- vAA/vAA+1
-    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    strd    r2, [r0, #offStaticField_value] @ field<- vAA/vAA+1
-    GOTO_OPCODE(ip)                     @ jump to next instruction
+    ldmia   r9, {r0-r1}                 @ r0/r1<- vAA/vAA+1
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 0
+    add     r2, r2, #offStaticField_value @ r2<- pointer to data
+    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
 
 /* ------------------------------ */
     .balign 64
@@ -7197,38 +7207,111 @@ dalvik_inst:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E8: /* 0xe8 */
-/* File: armv5te/OP_UNUSED_E8.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
+/* File: armv5te/OP_IGET_WIDE_VOLATILE.S */
+/* File: armv5te/OP_IGET_WIDE.S */
+    /*
+     * Wide 32-bit instance field get.
+     */
+    /* iget-wide vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_WIDE_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0
+    bne     .LOP_IGET_WIDE_VOLATILE_finish
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E9: /* 0xe9 */
-/* File: armv5te/OP_UNUSED_E9.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
+/* File: armv5te/OP_IPUT_WIDE_VOLATILE.S */
+/* File: armv5te/OP_IPUT_WIDE.S */
+    /* iput-wide vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_WIDE_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method] @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_IPUT_WIDE_VOLATILE_finish          @ yes, finish up
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EA: /* 0xea */
-/* File: armv5te/OP_UNUSED_EA.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_SGET_WIDE_VOLATILE: /* 0xea */
+/* File: armv5te/OP_SGET_WIDE_VOLATILE.S */
+/* File: armv5te/OP_SGET_WIDE.S */
+    /*
+     * 64-bit SGET handler.
+     */
+    /* sget-wide vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_WIDE_VOLATILE_resolve         @ yes, do resolve
+.LOP_SGET_WIDE_VOLATILE_finish:
+    mov     r9, rINST, lsr #8           @ r9<- AA
+    .if 1
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
+    ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
+    .endif
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EB: /* 0xeb */
-/* File: armv5te/OP_UNUSED_EB.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
-
+.L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
+/* File: armv5te/OP_SPUT_WIDE_VOLATILE.S */
+/* File: armv5te/OP_SPUT_WIDE.S */
+    /*
+     * 64-bit SPUT handler.
+     */
+    /* sput-wide vAA, field@BBBB */
+    ldr     r0, [rGLUE, #offGlue_methodClassDex]  @ r0<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r0, [r0, #offDvmDex_pResFields] @ r0<- dvmDex->pResFields
+    mov     r9, rINST, lsr #8           @ r9<- AA
+    ldr     r2, [r0, r1, lsl #2]        @ r2<- resolved StaticField ptr
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
+    cmp     r2, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_WIDE_VOLATILE_resolve         @ yes, do resolve
+.LOP_SPUT_WIDE_VOLATILE_finish: @ field ptr in r2, AA in r9
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    ldmia   r9, {r0-r1}                 @ r0/r1<- vAA/vAA+1
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 1
+    add     r2, r2, #offStaticField_value @ r2<- pointer to data
+    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
 
 
 /* ------------------------------ */
@@ -8423,6 +8506,8 @@ dvmAsmSisterStart:
     /*
      * Continuation if the field has not yet been resolved.
      *  r1: BBBB field ref
+     *
+     * Returns StaticField pointer in r0.
      */
 .LOP_SGET_WIDE_resolve:
     ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
@@ -8536,6 +8621,8 @@ dvmAsmSisterStart:
      * Continuation if the field has not yet been resolved.
      *  r1: BBBB field ref
      *  r9: &fp[AA]
+     *
+     * Returns StaticField pointer in r2.
      */
 .LOP_SPUT_WIDE_resolve:
     ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
@@ -8543,6 +8630,7 @@ dvmAsmSisterStart:
     ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
     bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
     cmp     r0, #0                      @ success?
+    mov     r2, r0                      @ copy to r2
     bne     .LOP_SPUT_WIDE_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
 
@@ -8917,6 +9005,96 @@ d2l_doconv:
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
+/* continuation for OP_IGET_WIDE_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_WIDE_VOLATILE_finish:
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    .if 1
+    add     r0, r9, r3                  @ r0<- address of field
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
+    ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
+    .endif
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    and     r2, r2, #15                 @ r2<- A
+    add     r3, rFP, r2, lsl #2         @ r3<- &fp[A]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    stmia   r3, {r0-r1}                 @ fp[A]<- r0/r1
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+
+/* continuation for OP_IPUT_WIDE_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_WIDE_VOLATILE_finish:
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    cmp     r9, #0                      @ check object for null
+    and     r2, r2, #15                 @ r2<- A
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    add     r2, rFP, r2, lsl #2         @ r3<- &fp[A]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    ldmia   r2, {r0-r1}                 @ r0/r1<- fp[A]
+    GET_INST_OPCODE(r10)                @ extract opcode from rINST
+    .if 1
+    add     r2, r9, r3                  @ r2<- target address
+    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    .else
+    strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
+    .endif
+    GOTO_OPCODE(r10)                    @ jump to next instruction
+
+
+/* continuation for OP_SGET_WIDE_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     *
+     * Returns StaticField pointer in r0.
+     */
+.LOP_SGET_WIDE_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_WIDE_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+
+/* continuation for OP_SPUT_WIDE_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     *  r9: &fp[AA]
+     *
+     * Returns StaticField pointer in r2.
+     */
+.LOP_SPUT_WIDE_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    mov     r2, r0                      @ copy to r2
+    bne     .LOP_SPUT_WIDE_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+
 /* continuation for OP_EXECUTE_INLINE */
 
     /*
@@ -9073,7 +9251,7 @@ dvmJitToInterpNoChain:
 dvmJitToInterpPunt:
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     mov    rPC, r0
-#ifdef JIT_STATS
+#if defined(WITH_JIT_TUNING)
     mov    r0,lr
     bl     dvmBumpPunt;
 #endif
@@ -9114,7 +9292,7 @@ dvmJitToInterpSingleStep:
  */
     .global dvmJitToInterpTraceSelectNoChain
 dvmJitToInterpTraceSelectNoChain:
-#ifdef JIT_STATS
+#if defined(WITH_JIT_TUNING)
     bl     dvmBumpNoChain
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
@@ -9137,6 +9315,7 @@ dvmJitToInterpTraceSelect:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
+    add    rINST, #-4              @  .. which is 9 bytes back
     mov    r0,rPC
     bl     dvmJitGetCodeAddr       @ Is there a translation?
     str    r0, [r10, #offThread_inJitCodeCache] @ set the inJitCodeCache flag
@@ -9180,7 +9359,8 @@ dvmJitToInterpNormal:
     ldr    rPC,[lr, #-1]           @ get our target PC
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
     add    rINST,lr,#-5            @ save start of chain branch
-#ifdef JIT_STATS
+    add    rINST,#-4               @ .. which is 9 bytes back
+#if defined(WITH_JIT_TUNING)
     bl     dvmBumpNormal
 #endif
     mov    r0,rPC
@@ -9202,7 +9382,7 @@ dvmJitToInterpNormal:
  */
     .global dvmJitToInterpNoChain
 dvmJitToInterpNoChain:
-#ifdef JIT_STATS
+#if defined(WITH_JIT_TUNING)
     bl     dvmBumpNoChain
 #endif
     ldr    r10, [rGLUE, #offGlue_self]  @ callee saved r10 <- glue->self
@@ -9347,6 +9527,11 @@ jitSVShadowRunEnd:
 /*
  * Common code when a backward branch is taken.
  *
+ * TODO: we could avoid a branch by just setting r0 and falling through
+ * into the common_periodicChecks code, and having a test on r0 at the
+ * end determine if we should return to the caller or update & branch to
+ * the next instr.
+ *
  * On entry:
  *  r9 is PC adjustment *in bytes*
  */
@@ -9369,22 +9554,24 @@ common_backwardBranch:
 
 /*
  * Need to see if the thread needs to be suspended or debugger/profiler
- * activity has begun.
+ * activity has begun.  If so, we suspend the thread or side-exit to
+ * the debug interpreter as appropriate.
  *
- * TODO: if JDWP isn't running, zero out pDebuggerActive pointer so we don't
- * have to do the second ldr.
+ * The common case is no activity on any of these, so we want to figure
+ * that out quickly.  If something is up, we can then sort out what.
+ *
+ * We want to be fast if the VM was built without debugger or profiler
+ * support, but we also need to recognize that the system is usually
+ * shipped with both of these enabled.
  *
  * TODO: reduce this so we're just checking a single location.
  *
  * On entry:
- *  r0 is reentry type, e.g. kInterpEntryInstr
+ *  r0 is reentry type, e.g. kInterpEntryInstr (for debugger/profiling)
  *  r9 is trampoline PC adjustment *in bytes*
  */
 common_periodicChecks:
     ldr     r3, [rGLUE, #offGlue_pSelfSuspendCount] @ r3<- &suspendCount
-
-    @ speculatively store r0 before it is clobbered by dvmCheckSuspendPending
-    str     r0, [rGLUE, #offGlue_entryPoint]
 
 #if defined(WITH_DEBUGGER)
     ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
@@ -9393,33 +9580,42 @@ common_periodicChecks:
     ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
 #endif
 
-    ldr     r3, [r3]                    @ r3<- suspendCount (int)
+    ldr     ip, [r3]                    @ ip<- suspendCount (int)
 
-#if defined(WITH_DEBUGGER)
-    ldrb    r1, [r1]                    @ r1<- debuggerActive (boolean)
-#endif
-#if defined (WITH_PROFILER)
+#if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
+    cmp     r1, #0                      @ debugger enabled?
+    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
     ldr     r2, [r2]                    @ r2<- activeProfilers (int)
+    orrne   ip, ip, r1                  @ ip<- suspendCount | debuggerActive
+    orrs    ip, ip, r2                  @ ip<- suspend|debugger|profiler; set Z
+#elif defined(WITH_DEBUGGER)
+    cmp     r1, #0                      @ debugger enabled?
+    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+    orrsne  ip, ip, r1                  @ yes, ip<- suspend | debugger; set Z
+    @ (if not enabled, Z was set by test for r1==0, which is what we want)
+#elif defined (WITH_PROFILER)
+    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
+    orrs    ip, ip, r2                  @ ip<- suspendCount | activeProfilers
+#else
+    cmp     ip, #0                      @ not ORing anything in; set Z
 #endif
 
-    cmp     r3, #0                      @ suspend pending?
-    bne     2f                          @ yes, do full suspension check
+    bxeq    lr                          @ all zero, return
 
+    /*
+     * One or more interesting events have happened.  Figure out what.
+     *
+     * If debugging or profiling are compiled in, we need to disambiguate.
+     *
+     * r0 still holds the reentry type.
+     */
 #if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
-# if defined(WITH_DEBUGGER) && defined(WITH_PROFILER)
-    orrs    r1, r1, r2                  @ r1<- r1 | r2
-    cmp     r1, #0                      @ debugger attached or profiler started?
-# elif defined(WITH_DEBUGGER)
-    cmp     r1, #0                      @ debugger attached?
-# elif defined(WITH_PROFILER)
-    cmp     r2, #0                      @ profiler started?
-# endif
-    bne     3f                          @ debugger/profiler, switch interp
+    ldr     ip, [r3]                    @ ip<- suspendCount (int)
+    cmp     ip, #0                      @ want suspend?
+    beq     1f                          @ no, must be debugger/profiler
 #endif
 
-    bx      lr                          @ nothing to do, return
-
-2:  @ check suspend
+    stmfd   sp!, {r0, lr}               @ preserve r0 and lr
 #if defined(WITH_JIT)
     /*
      * Refresh the Jit's cached copy of profile table pointer.  This pointer
@@ -9434,12 +9630,45 @@ common_periodicChecks:
     ldr     r0, [rGLUE, #offGlue_self]  @ r0<- glue->self
     EXPORT_PC()                         @ need for precise GC
 #endif
-    b       dvmCheckSuspendPending      @ suspend if necessary, then return
+    bl      dvmCheckSuspendPending      @ do full check, suspend if necessary
+    ldmfd   sp!, {r0, lr}               @ restore r0 and lr
 
-3:  @ debugger/profiler enabled, bail out
+#if defined(WITH_DEBUGGER) || defined(WITH_PROFILER)
+
+    /*
+     * Reload the debugger/profiler enable flags.  We're checking to see
+     * if either of these got set while we were suspended.
+     *
+     * We can't really avoid the #ifdefs here, because the fields don't
+     * exist when the feature is disabled.
+     */
+#if defined(WITH_DEBUGGER)
+    ldr     r1, [rGLUE, #offGlue_pDebuggerActive]   @ r1<- &debuggerActive
+    cmp     r1, #0                      @ debugger enabled?
+    ldrneb  r1, [r1]                    @ yes, r1<- debuggerActive (boolean)
+#else
+    mov     r1, #0
+#endif
+#if defined(WITH_PROFILER)
+    ldr     r2, [rGLUE, #offGlue_pActiveProfilers]  @ r2<- &activeProfilers
+    ldr     r2, [r2]                    @ r2<- activeProfilers (int)
+#else
+    mov     r2, #0
+#endif
+
+    orrs    r1, r1, r2
+    beq     2f
+
+1:  @ debugger/profiler enabled, bail out; glue->entryPoint was set above
+    str     r0, [rGLUE, #offGlue_entryPoint]    @ store r0, need for debug/prof
     add     rPC, rPC, r9                @ update rPC
     mov     r1, #1                      @ "want switch" = true
-    b       common_gotoBail
+    b       common_gotoBail             @ side exit
+
+#endif /*WITH_DEBUGGER || WITH_PROFILER*/
+
+2:
+    bx      lr                          @ nothing to do, return
 
 
 /*
@@ -9543,7 +9772,7 @@ common_invokeMethodNoRange:
     sub     r3, r10, r3, lsl #2         @ r3<- bottom (newsave - outsSize)
     cmp     r3, r9                      @ bottom < interpStackEnd?
     ldr     r3, [r0, #offMethod_accessFlags] @ r3<- methodToCall->accessFlags
-    blt     .LstackOverflow             @ yes, this frame will overflow stack
+    blo     .LstackOverflow             @ yes, this frame will overflow stack
 
     @ set up newSaveArea
 #ifdef EASY_GDB

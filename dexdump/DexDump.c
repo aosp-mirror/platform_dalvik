@@ -351,14 +351,73 @@ static char* createAccessFlagStr(u4 flags, AccessFor forWhat)
 
 
 /*
+ * Copy character data from "data" to "out", converting non-ASCII values
+ * to printf format chars or an ASCII filler ('.' or '?').
+ *
+ * The output buffer must be able to hold (2*len)+1 bytes.  The result is
+ * NUL-terminated.
+ */
+static void asciify(char* out, const unsigned char* data, size_t len)
+{
+    while (len--) {
+        if (*data < 0x20) {
+            /* could do more here, but we don't need them yet */
+            switch (*data) {
+            case '\0':
+                *out++ = '\\';
+                *out++ = '0';
+                break;
+            case '\n':
+                *out++ = '\\';
+                *out++ = 'n';
+                break;
+            default:
+                *out++ = '.';
+                break;
+            }
+        } else if (*data >= 0x80) {
+            *out++ = '?';
+        } else {
+            *out++ = *data;
+        }
+        data++;
+    }
+    *out = '\0';
+}
+
+/*
  * Dump the file header.
  */
 void dumpFileHeader(const DexFile* pDexFile)
 {
+    const DexOptHeader* pOptHeader = pDexFile->pOptHeader;
     const DexHeader* pHeader = pDexFile->pHeader;
+    char sanitized[sizeof(pHeader->magic)*2 +1];
+
+    assert(sizeof(pHeader->magic) == sizeof(pOptHeader->magic));
+
+    if (pOptHeader != NULL) {
+        printf("Optimized DEX file header:\n");
+
+        asciify(sanitized, pOptHeader->magic, sizeof(pOptHeader->magic));
+        printf("magic               : '%s'\n", sanitized);
+        printf("dex_offset          : %d (0x%06x)\n",
+            pOptHeader->dexOffset, pOptHeader->dexOffset);
+        printf("dex_length          : %d\n", pOptHeader->dexLength);
+        printf("deps_offset         : %d (0x%06x)\n",
+            pOptHeader->depsOffset, pOptHeader->depsOffset);
+        printf("deps_length         : %d\n", pOptHeader->depsLength);
+        printf("aux_offset          : %d (0x%06x)\n",
+            pOptHeader->auxOffset, pOptHeader->auxOffset);
+        printf("aux_length          : %d\n", pOptHeader->auxLength);
+        printf("flags               : %08x\n", pOptHeader->flags);
+        printf("checksum            : %08x\n", pOptHeader->checksum);
+        printf("\n");
+    }
 
     printf("DEX file header:\n");
-    printf("magic               : '%.8s'\n", pHeader->magic);
+    asciify(sanitized, pHeader->magic, sizeof(pHeader->magic));
+    printf("magic               : '%s'\n", sanitized);
     printf("checksum            : %08x\n", pHeader->checksum);
     printf("signature           : %02x%02x...%02x%02x\n",
         pHeader->signature[0], pHeader->signature[1],
@@ -387,6 +446,61 @@ void dumpFileHeader(const DexFile* pDexFile)
     printf("data_size           : %d\n", pHeader->dataSize);
     printf("data_off            : %d (0x%06x)\n",
         pHeader->dataOff, pHeader->dataOff);
+    printf("\n");
+}
+
+/*
+ * Dump the "table of contents" for the aux area.
+ */
+void dumpAuxDirectory(const DexFile* pDexFile)
+{
+    const DexOptHeader* pOptHeader = pDexFile->pOptHeader;
+    if (pOptHeader == NULL)
+        return;
+
+    printf("AUX section contents:\n");
+
+    const u4* pAux = (const u4*) ((u1*) pOptHeader + pOptHeader->auxOffset);
+
+    if (*pAux == 0) {
+        printf("(1.0 format, only class lookup table is present)\n\n");
+        return;
+    }
+
+    /*
+     * The "aux" section is in "chunk" format: a 32-bit identifier, a 32-bit
+     * length, then the data.  Chunks start on 64-bit boundaries.
+     */
+    while (*pAux != kDexChunkEnd) {
+        const char* verboseStr;
+
+        u4 size = *(pAux+1);
+
+        switch (*pAux) {
+        case kDexChunkClassLookup:
+            verboseStr = "class lookup hash table";
+            break;
+        case kDexChunkRegisterMaps:
+            verboseStr = "register maps";
+            break;
+        case kDexChunkReducingIndexMap:
+            verboseStr = "'reducing' index map";
+            break;
+        case kDexChunkExpandingIndexMap:
+            verboseStr = "'expanding' index map";
+            break;
+        default:
+            verboseStr = "(unknown chunk type)";
+            break;
+        }
+
+        printf("Chunk %08x (%c%c%c%c) - %s (%d bytes)\n", *pAux,
+            *pAux >> 24, (char)(*pAux >> 16), (char)(*pAux >> 8), (char)*pAux,
+            verboseStr, size);
+
+        size = (size + 8 + 7) & ~7;
+        pAux += size / sizeof(u4);
+    }
     printf("\n");
 }
 
@@ -1603,8 +1717,10 @@ void processDexFile(const char* fileName, DexFile* pDexFile)
         return;
     }
 
-    if (gOptions.showFileHeaders)
+    if (gOptions.showFileHeaders) {
         dumpFileHeader(pDexFile);
+        dumpAuxDirectory(pDexFile);
+    }
 
     if (gOptions.outputFormat == OUTPUT_XML)
         printf("<api>\n");

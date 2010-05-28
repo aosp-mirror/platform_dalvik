@@ -14638,8 +14638,7 @@ OP_IF_LEZ_2f:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E8: /* 0xe8 */
-/* File: x86-atom/OP_UNUSED_E8.S */
+.L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14656,47 +14655,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E8.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IGET_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E9: /* 0xe9 */
-/* File: x86-atom/OP_UNUSED_E9.S */
+.L_OP_IPUT_WIDE_VOLATILE: /* 0xe9 */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14713,47 +14683,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_E9.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_IPUT_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EA: /* 0xea */
-/* File: x86-atom/OP_UNUSED_EA.S */
+.L_OP_SGET_WIDE_VOLATILE: /* 0xea */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14770,47 +14711,18 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_EA.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SGET_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_EB: /* 0xeb */
-/* File: x86-atom/OP_UNUSED_EB.S */
+.L_OP_SPUT_WIDE_VOLATILE: /* 0xeb */
    /* Copyright (C) 2008 The Android Open Source Project
     *
     * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14827,43 +14739,15 @@ OP_IF_LEZ_2f:
     */
 
    /*
-    * File: OP_UNUSED_EB.S
+    * File: stub.S
     */
 
-/* File: x86-atom/unused.S */
-   /* Copyright (C) 2008 The Android Open Source Project
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
-
-   /*
-    * File: unused.S
-    *
-    * Code: Common code for unused bytecodes. Uses no subtitutions.
-    *
-    * For: all unused bytecodes
-    *
-    * Description: aborts if executed.
-    *
-    * Format: ØØ|op (10x)
-    *
-    * Syntax: op
-    */
-
-    call        common_abort
-
-
-
+    SAVE_PC_FP_TO_GLUE %edx             # save program counter and frame pointer
+    pushl       rGLUE                   # push parameter glue
+    call        dvmMterp_OP_SPUT_WIDE_VOLATILE      # call c-based implementation
+    lea         4(%esp), %esp
+    LOAD_PC_FP_FROM_GLUE                # restore program counter and frame pointer
+    FINISH_A                            # jump to next instruction
 /* ------------------------------ */
     .balign 64
 .L_OP_BREAKPOINT: /* 0xec */
@@ -14926,16 +14810,16 @@ OP_IF_LEZ_2f:
     * Syntax: op vAA, ref@BBBB
     */
 
-    movl        rGLUE, %edx            		# %edx<- pMterpGlue
-    movl        offGlue_method(%edx), %ecx 	# %ecx<- glue->method
-    EXPORT_PC                          	  	# in case an exception is thrown
-    FETCH       1, %eax                 	# %eax<- BBBB
-    movl        %eax, -4(%esp)          	# push parameter BBBB; ref
-    movl        rINST, -8(%esp)          	# push parameter AA
-    movl        %ecx, -12(%esp)          	# push parameter glue->method
+    movl        rGLUE, %edx                 # %edx<- pMterpGlue
+    movl        offGlue_method(%edx), %ecx  # %ecx<- glue->method
+    EXPORT_PC                               # in case an exception is thrown
+    FETCH       1, %eax                     # %eax<- BBBB
+    movl        %eax, -4(%esp)              # push parameter BBBB; ref
+    movl        rINST, -8(%esp)             # push parameter AA
+    movl        %ecx, -12(%esp)             # push parameter glue->method
     lea         -12(%esp), %esp
-    call        dvmThrowVerificationError	# call: (const Method* method, int kind, int ref)
-    jmp 	common_exceptionThrown  	# failed; handle exception
+    call        dvmThrowVerificationError   # call: (const Method* method, int kind, int ref)
+    jmp     common_exceptionThrown      # failed; handle exception
 
 /* ------------------------------ */
     .balign 64
@@ -18327,14 +18211,14 @@ dvmAsmInstructionJmpTable = .LdvmAsmInstructionJmpTable
 .long .L_OP_UNUSED_E5
 .long .L_OP_UNUSED_E6
 .long .L_OP_UNUSED_E7
-.long .L_OP_UNUSED_E8
-.long .L_OP_UNUSED_E9
-.long .L_OP_UNUSED_EA
-.long .L_OP_UNUSED_EB
-.long .L_OP_UNUSED_EC
+.long .L_OP_IGET_WIDE_VOLATILE
+.long .L_OP_IPUT_WIDE_VOLATILE
+.long .L_OP_SGET_WIDE_VOLATILE
+.long .L_OP_SPUT_WIDE_VOLATILE
+.long .L_OP_BREAKPOINT
 .long .L_OP_THROW_VERIFICATION_ERROR
 .long .L_OP_EXECUTE_INLINE
-.long .L_OP_UNUSED_EF
+.long .L_OP_EXECUTE_INLINE_RANGE
 .long .L_OP_INVOKE_DIRECT_EMPTY
 .long .L_OP_UNUSED_F1
 .long .L_OP_IGET_QUICK

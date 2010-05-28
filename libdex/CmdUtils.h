@@ -43,8 +43,12 @@ typedef enum UnzipToFileResult {
 } UnzipToFileResult;
 
 /*
- * Map the specified DEX file, possibly after expanding it into a temp file
- * from a Jar.  Pass in a MemMapping struct to hold the info.
+ * Map the specified DEX file read-only (possibly after expanding it into a
+ * temp file from a Jar).  Pass in a MemMapping struct to hold the info.
+ * If the file is an unoptimized DEX file, then byte-swapping and structural
+ * verification are performed on it before the memory is made read-only.
+ *
+ * The temp file is deleted after the map succeeds.
  *
  * This is intended for use by tools (e.g. dexdump) that need to get a
  * read-only copy of a DEX file that could be in a number of different states.
@@ -52,7 +56,9 @@ typedef enum UnzipToFileResult {
  * If "tempFileName" is NULL, a default value is used.  The temp file is
  * deleted after the map succeeds.
  *
- * Returns 0 on success.
+ * If "quiet" is set, don't report common errors.
+ *
+ * Returns 0 (kUTFRSuccess) on success.
  */
 UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
     MemMapping* pMap, bool quiet);

@@ -725,16 +725,16 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     // E7 OP_UNUSED_E7
     DF_NOP,
 
-    // E8 OP_UNUSED_E8
+    // E8 OP_IGET_WIDE_VOLATILE
     DF_NOP,
 
-    // E9 OP_UNUSED_E9
+    // E9 OP_IPUT_WIDE_VOLATILE
     DF_NOP,
 
-    // EA OP_UNUSED_EA
+    // EA OP_SGET_WIDE_VOLATILE
     DF_NOP,
 
-    // EB OP_UNUSED_EB
+    // EB OP_SPUT_WIDE_VOLATILE
     DF_NOP,
 
     // EC OP_BREAKPOINT
@@ -1167,8 +1167,6 @@ void dvmCompilerDoConstantPropagation(CompilationUnit *cUnit, BasicBlock *bb)
     for (mir = bb->firstMIRInsn; mir; mir = mir->next) {
         int dfAttributes =
             dvmCompilerDataFlowAttributes[mir->dalvikInsn.opCode];
-
-        int numUses = 0;
 
         DecodedInstruction *dInsn = &mir->dalvikInsn;
 

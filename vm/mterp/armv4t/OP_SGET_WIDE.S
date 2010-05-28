@@ -1,3 +1,4 @@
+%default {"volatile":"0"}
 %verify "executed"
 %verify "field already resolved"
 %verify "field not yet resolved"
@@ -13,12 +14,16 @@
     cmp     r0, #0                      @ is resolved entry null?
     beq     .L${opcode}_resolve         @ yes, do resolve
 .L${opcode}_finish:
-    mov     r1, rINST, lsr #8           @ r1<- AA
-    add     r0, r0, #offStaticField_value
-    ldmia   r0, {r2-r3}                 @ r2/r3<- field value (aligned)
-    add     r1, rFP, r1, lsl #2         @ r1<- &fp[AA]
+    mov     r9, rINST, lsr #8           @ r9<- AA
+    add     r0, r0, #offStaticField_value @ r0<- pointer to data
+    .if $volatile
+    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    .else
+    ldmia   r0, {r0-r1}                 @ r0/r1<- field value (aligned)
+    .endif
+    add     r9, rFP, r9, lsl #2         @ r9<- &fp[AA]
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
-    stmia   r1, {r2-r3}                 @ vAA/vAA+1<- r2/r3
+    stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
 %break
@@ -26,6 +31,8 @@
     /*
      * Continuation if the field has not yet been resolved.
      *  r1: BBBB field ref
+     *
+     * Returns StaticField pointer in r0.
      */
 .L${opcode}_resolve:
     ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method

@@ -137,17 +137,17 @@ void dvmDbgInitCond(pthread_cond_t* pCond)
 }
 void dvmDbgCondWait(pthread_cond_t* pCond, pthread_mutex_t* pMutex)
 {
-    int cc = pthread_cond_wait(pCond, pMutex);
+    int cc __attribute__ ((__unused__)) = pthread_cond_wait(pCond, pMutex);
     assert(cc == 0);
 }
 void dvmDbgCondSignal(pthread_cond_t* pCond)
 {
-    int cc = pthread_cond_signal(pCond);
+    int cc __attribute__ ((__unused__)) = pthread_cond_signal(pCond);
     assert(cc == 0);
 }
 void dvmDbgCondBroadcast(pthread_cond_t* pCond)
 {
-    int cc = pthread_cond_broadcast(pCond);
+    int cc __attribute__ ((__unused__)) = pthread_cond_broadcast(pCond);
     assert(cc == 0);
 }
 
@@ -183,6 +183,7 @@ static int registryCompare(const void* obj1, const void* obj2)
  *
  * Lock the registry before calling here.
  */
+#ifndef NDEBUG
 static bool lookupId(ObjectId id)
 {
     void* found;
@@ -194,6 +195,7 @@ static bool lookupId(ObjectId id)
     assert(found == (void*)(u4) id);
     return true;
 }
+#endif
 
 /*
  * Register an object, if it hasn't already been.
@@ -271,6 +273,7 @@ void dvmGcMarkDebuggerRefs()
  *
  * Note this actually takes both ObjectId and RefTypeId.
  */
+#ifndef NDEBUG
 static bool objectIsRegistered(ObjectId id, RegistryType type)
 {
     UNUSED_PARAMETER(type);
@@ -283,6 +286,7 @@ static bool objectIsRegistered(ObjectId id, RegistryType type)
     dvmHashTableUnlock(gDvm.dbgRegistry);
     return result;
 }
+#endif
 
 /*
  * Convert to/from a RefTypeId.
@@ -293,10 +297,12 @@ static RefTypeId classObjectToRefTypeId(ClassObject* clazz)
 {
     return (RefTypeId) registerObject((Object*) clazz, kRefTypeId, true);
 }
+#if 0
 static RefTypeId classObjectToRefTypeIdNoReg(ClassObject* clazz)
 {
     return (RefTypeId) registerObject((Object*) clazz, kRefTypeId, false);
 }
+#endif
 static ClassObject* refTypeIdToClassObject(RefTypeId id)
 {
     assert(objectIsRegistered(id, kRefTypeId) || !gDvm.debuggerConnected);
@@ -1340,7 +1346,6 @@ void dvmDbgOutputLineTable(RefTypeId refTypeId, MethodId methodId,
 {
     Method* method;
     u8 start, end;
-    int i;
     DebugCallbackContext context;
 
     memset (&context, 0, sizeof(DebugCallbackContext));

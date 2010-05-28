@@ -261,10 +261,9 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
          * but since we don't execute unverified code we don't need to
          * alter the bytecode yet.
          *
-         * The class init code will "flush" all relevant breakpoints when
-         * verification completes.
+         * The class init code will "flush" all pending opcode writes
+         * before verification completes.
          */
-        MEM_BARRIER();
         assert(*(u1*)addr != OP_BREAKPOINT);
         if (dvmIsClassVerified(method->clazz)) {
             LOGV("Class %s verified, adding breakpoint at %p\n",
@@ -274,6 +273,7 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
                     *addr, method->clazz->descriptor, method->name,
                     instrOffset);
             } else {
+                MEM_BARRIER();
                 dvmDexChangeDex1(method->clazz->pDvmDex, (u1*)addr,
                     OP_BREAKPOINT);
             }
@@ -282,14 +282,11 @@ static bool dvmBreakpointSetAdd(BreakpointSet* pSet, Method* method,
                 method->clazz->descriptor, addr);
         }
     } else {
+        /*
+         * Breakpoint already exists, just increase the count.
+         */
         pBreak = &pSet->breakpoints[idx];
         pBreak->setCount++;
-
-        /*
-         * Instruction stream may not have breakpoint opcode yet -- flush
-         * may be pending during verification of class.
-         */
-        //assert(*(u1*)addr == OP_BREAKPOINT);
     }
 
     return true;
@@ -369,10 +366,9 @@ static void dvmBreakpointSetFlush(BreakpointSet* pSet, ClassObject* clazz)
             LOGV("Flushing breakpoint at %p for %s\n",
                 pBreak->addr, clazz->descriptor);
             if (instructionIsMagicNop(pBreak->addr)) {
-                const Method* method = pBreak->method;
                 LOGV("Refusing to flush breakpoint on %04x at %s.%s + 0x%x\n",
-                    *pBreak->addr, method->clazz->descriptor,
-                    method->name, pBreak->addr - method->insns);
+                    *pBreak->addr, pBreak->method->clazz->descriptor,
+                    pBreak->method->name, pBreak->addr - pBreak->method->insns);
             } else {
                 dvmDexChangeDex1(clazz->pDvmDex, (u1*)pBreak->addr,
                     OP_BREAKPOINT);
@@ -818,7 +814,7 @@ s4 dvmInterpHandlePackedSwitch(const u2* switchData, s4 testVal)
 s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
 {
     const int kInstrLen = 3;
-    u2 ident, size;
+    u2 size;
     const s4* keys;
     const s4* entries;
 
@@ -950,6 +946,8 @@ bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
         dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
     }
+    assert (!IS_CLASS_FLAG_SET(((Object *)arrayObj)->clazz,
+                               CLASS_ISOBJECTARRAY));
 
     /*
      * Array data table format:
@@ -1312,6 +1310,8 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
      * false positive is acceptible.
      */
     interpState.lastThreshFilter = 0;
+
+    interpState.icRechainCount = PREDICTED_CHAIN_COUNTER_RECHAIN;
 #endif
 
     /*

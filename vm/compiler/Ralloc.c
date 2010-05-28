@@ -124,7 +124,6 @@ void dvmCompilerRegAlloc(CompilationUnit *cUnit)
     int seqNum = 0;
     LiveRange *ranges;
     RegLocation *loc;
-    int *ssaToDalvikMap = (int *) cUnit->ssaToDalvikMap->elemList;
 
     /* Allocate the location map */
     loc = (RegLocation*)dvmCompilerNew(cUnit->numSSARegs * sizeof(*loc), true);

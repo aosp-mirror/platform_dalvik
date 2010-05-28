@@ -449,8 +449,7 @@ static inline void lockThreadSuspendCount(void)
      * This lock is always held for very brief periods, so as long as
      * mutex ordering is respected we shouldn't stall.
      */
-    int cc = pthread_mutex_lock(&gDvm.threadSuspendCountLock);
-    assert(cc == 0);
+    dvmLockMutex(&gDvm.threadSuspendCountLock);
 }
 
 /*
@@ -494,8 +493,7 @@ void dvmLockThreadList(Thread* self)
         oldStatus = -1;         // shut up gcc
     }
 
-    int cc = pthread_mutex_lock(&gDvm.threadListLock);
-    assert(cc == 0);
+    dvmLockMutex(&gDvm.threadListLock);
 
     if (self != NULL)
         self->status = oldStatus;
@@ -506,8 +504,7 @@ void dvmLockThreadList(Thread* self)
  */
 void dvmUnlockThreadList(void)
 {
-    int cc = pthread_mutex_unlock(&gDvm.threadListLock);
-    assert(cc == 0);
+    dvmUnlockMutex(&gDvm.threadListLock);
 }
 
 /*
@@ -521,6 +518,7 @@ static const char* getSuspendCauseStr(SuspendCause why)
     case SUSPEND_FOR_DEBUG:         return "debug";
     case SUSPEND_FOR_DEBUG_EVENT:   return "debug-event";
     case SUSPEND_FOR_STACK_DUMP:    return "stack-dump";
+    case SUSPEND_FOR_VERIFY:        return "verify";
 #if defined(WITH_JIT)
     case SUSPEND_FOR_TBL_RESIZE:    return "table-resize";
     case SUSPEND_FOR_IC_PATCH:      return "inline-cache-patch";
@@ -547,9 +545,11 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
     int cc;
 
     do {
-        cc = pthread_mutex_trylock(&gDvm._threadSuspendLock);
+        cc = dvmTryLockMutex(&gDvm._threadSuspendLock);
         if (cc != 0) {
-            if (!dvmCheckSuspendPending(NULL)) {
+            Thread* self = dvmThreadSelf();
+
+            if (!dvmCheckSuspendPending(self)) {
                 /*
                  * Could be that a resume-all is in progress, and something
                  * grabbed the CPU when the wakeup was broadcast.  The thread
@@ -571,7 +571,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
                  */
                 LOGI("threadid=%d ODD: want thread-suspend lock (%s:%s),"
                      " it's held, no suspend pending\n",
-                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
+                    self->threadId, who, getSuspendCauseStr(why));
             } else {
                 /* we suspended; reset timeout */
                 sleepIter = 0;
@@ -583,7 +583,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
             if (!dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
                 LOGE("threadid=%d: couldn't get thread-suspend lock (%s:%s),"
                      " bailing\n",
-                    dvmThreadSelf()->threadId, who, getSuspendCauseStr(why));
+                    self->threadId, who, getSuspendCauseStr(why));
                 /* threads are not suspended, thread dump could crash */
                 dvmDumpAllThreads(false);
                 dvmAbort();
@@ -598,8 +598,7 @@ static void lockThreadSuspend(const char* who, SuspendCause why)
  */
 static inline void unlockThreadSuspend(void)
 {
-    int cc = pthread_mutex_unlock(&gDvm._threadSuspendLock);
-    assert(cc == 0);
+    dvmUnlockMutex(&gDvm._threadSuspendLock);
 }
 
 
@@ -990,7 +989,7 @@ pid_t dvmGetSysThreadId(void)
  * This must be called while executing in the new thread, but before the
  * thread is added to the thread list.
  *
- * *** NOTE: The threadListLock must be held by the caller (needed for
+ * NOTE: The threadListLock must be held by the caller (needed for
  * assignThreadId()).
  */
 static bool prepareThread(Thread* thread)
@@ -1001,6 +1000,10 @@ static bool prepareThread(Thread* thread)
 
     //LOGI("SYSTEM TID IS %d (pid is %d)\n", (int) thread->systemTid,
     //    (int) getpid());
+    /*
+     * If we were called by dvmAttachCurrentThread, the self value is
+     * already correctly established as "thread".
+     */
     setThreadSelf(thread);
 
     LOGV("threadid=%d: interp stack at %p\n",
@@ -1195,8 +1198,7 @@ static void threadExitCheck(void* arg)
  *
  * We reserve zero for use as an invalid ID.
  *
- * This must be called with threadListLock held (unless we're still
- * initializing the system).
+ * This must be called with threadListLock held.
  */
 static void assignThreadId(Thread* thread)
 {
@@ -1278,7 +1280,17 @@ static bool createFakeEntryFrame(Thread* thread)
         gDvm.methFakeNativeEntry = mainMeth;
     }
 
-    return dvmPushJNIFrame(thread, gDvm.methFakeNativeEntry);
+    if (!dvmPushJNIFrame(thread, gDvm.methFakeNativeEntry))
+        return false;
+
+    /*
+     * Null out the "String[] args" argument.
+     */
+    assert(gDvm.methFakeNativeEntry->registersSize == 1);
+    u4* framePtr = (u4*) thread->curFrame;
+    framePtr[0] = 0;
+
+    return true;
 }
 
 
@@ -1292,8 +1304,13 @@ static bool createFakeRunFrame(Thread* thread)
     ClassObject* nativeStart;
     Method* runMeth;
 
-    nativeStart =
-        dvmFindSystemClassNoInit("Ldalvik/system/NativeStart;");
+    /*
+     * TODO: cache this result so we don't have to dig for it every time
+     * somebody attaches a thread to the VM.  Also consider changing this
+     * to a static method so we don't have a null "this" pointer in the
+     * "ins" on the stack.  (Does it really need to look like a Runnable?)
+     */
+    nativeStart = dvmFindSystemClassNoInit("Ldalvik/system/NativeStart;");
     if (nativeStart == NULL) {
         LOGE("Unable to find dalvik.system.NativeStart class\n");
         return false;
@@ -1305,7 +1322,20 @@ static bool createFakeRunFrame(Thread* thread)
         return false;
     }
 
-    return dvmPushJNIFrame(thread, runMeth);
+    if (!dvmPushJNIFrame(thread, runMeth))
+        return false;
+
+    /*
+     * Provide a NULL 'this' argument.  The method we've put at the top of
+     * the stack looks like a virtual call to run() in a Runnable class.
+     * (If we declared the method static, it wouldn't take any arguments
+     * and we wouldn't have to do this.)
+     */
+    assert(runMeth->registersSize == 1);
+    u4* framePtr = (u4*) thread->curFrame;
+    framePtr[0] = 0;
+
+    return true;
 }
 
 /*
@@ -1596,6 +1626,7 @@ static void* interpThreadStart(void* arg)
     /*
      * Finish initializing the Thread struct.
      */
+    dvmLockThreadList(self);
     prepareThread(self);
 
     LOG_THREAD("threadid=%d: created from interp\n", self->threadId);
@@ -1604,7 +1635,6 @@ static void* interpThreadStart(void* arg)
      * Change our status and wake our parent, who will add us to the
      * thread list and advance our state to VMWAIT.
      */
-    dvmLockThreadList(self);
     self->status = THREAD_STARTING;
     pthread_cond_broadcast(&gDvm.threadStartCond);
 
@@ -1693,7 +1723,6 @@ static void threadExitUncaughtException(Thread* self, Object* group)
 {
     Object* exception;
     Object* handlerObj;
-    ClassObject* throwable;
     Method* uncaughtHandler = NULL;
     InstField* threadHandler;
 
@@ -2257,10 +2286,8 @@ void dvmDetachCurrentThread(void)
         LOGI("threadid=%d: waiting for method trace to finish\n",
             self->threadId);
         while (traceState->traceEnabled) {
-            int cc;
-            cc = pthread_cond_wait(&traceState->threadExitCond,
-                    &traceState->startStopLock);
-            assert(cc == 0);
+            dvmWaitCond(&traceState->threadExitCond,
+                        &traceState->startStopLock);
         }
     }
     dvmUnlockMutex(&traceState->startStopLock);
@@ -2369,8 +2396,7 @@ void dvmResumeThread(Thread* thread)
         thread->threadId, thread->suspendCount);
 
     if (thread->suspendCount == 0) {
-        int cc = pthread_cond_broadcast(&gDvm.threadSuspendCountCond);
-        assert(cc == 0);
+        dvmBroadcastCond(&gDvm.threadSuspendCountCond);
     }
 
     unlockThreadSuspendCount();
@@ -2420,10 +2446,8 @@ void dvmSuspendSelf(bool jdwpActivity)
     }
 
     while (self->suspendCount != 0) {
-        int cc;
-        cc = pthread_cond_wait(&gDvm.threadSuspendCountCond,
-                &gDvm.threadSuspendCountLock);
-        assert(cc == 0);
+        dvmWaitCond(&gDvm.threadSuspendCountCond,
+                    &gDvm.threadSuspendCountLock);
         if (self->suspendCount != 0) {
             /*
              * The condition was signaled but we're still suspended.  This
@@ -3010,25 +3034,24 @@ void dvmWaitForSuspend(Thread* thread)
  * Check to see if we need to suspend ourselves.  If so, go to sleep on
  * a condition variable.
  *
- * Takes "self" as an argument as an optimization.  Pass in NULL to have
- * it do the lookup.
+ * If "newStatus" is not THREAD_UNDEFINED, we change to that state before
+ * we release the thread suspend count lock.
  *
  * Returns "true" if we suspended ourselves.
  */
-bool dvmCheckSuspendPending(Thread* self)
+static bool checkSuspendAndChangeStatus(Thread* self, ThreadStatus newStatus)
 {
     bool didSuspend;
 
-    if (self == NULL)
-        self = dvmThreadSelf();
+    assert(self != NULL);
+    assert(self->suspendCount >= 0);
 
-    /* fast path: if count is zero, bail immediately */
-    if (self->suspendCount == 0)
+    /* fast path: if count is zero and no state change, bail immediately */
+    if (self->suspendCount == 0 && newStatus == THREAD_UNDEFINED) {
         return false;
+    }
 
     lockThreadSuspendCount();   /* grab gDvm.threadSuspendCountLock */
-
-    assert(self->suspendCount >= 0);        /* XXX: valid? useful? */
 
     didSuspend = (self->suspendCount != 0);
     self->isSuspended = true;
@@ -3045,9 +3068,28 @@ bool dvmCheckSuspendPending(Thread* self)
     LOG_THREAD("threadid=%d: self-reviving, status=%d\n",
         self->threadId, self->status);
 
+    /*
+     * The status change needs to happen while the suspend count lock is
+     * held.  Otherwise we could switch to RUNNING after another thread
+     * increases our suspend count, which isn't a "bad" state for us
+     * (we'll suspend on the next check) but could be a problem for the
+     * other thread (which thinks we're safely in VMWAIT or NATIVE with
+     * a nonzero suspend count, and proceeds to initate GC).
+     */
+    if (newStatus != THREAD_UNDEFINED)
+        self->status = newStatus;
+
     unlockThreadSuspendCount();
 
     return didSuspend;
+}
+
+/*
+ * One-argument wrapper for checkSuspendAndChangeStatus().
+ */
+bool dvmCheckSuspendPending(Thread* self)
+{
+    return checkSuspendAndChangeStatus(self, THREAD_UNDEFINED);
 }
 
 /*
@@ -3073,22 +3115,21 @@ ThreadStatus dvmChangeStatus(Thread* self, ThreadStatus newStatus)
         /*
          * Change our status to THREAD_RUNNING.  The transition requires
          * that we check for pending suspension, because the VM considers
-         * us to be "asleep" in all other states.
+         * us to be "asleep" in all other states, and another thread could
+         * be performing a GC now.
          *
-         * We need to do the "suspend pending" check FIRST, because it grabs
-         * a lock that could be held by something that wants us to suspend.
-         * If we're in RUNNING it will wait for us, and we'll be waiting
-         * for the lock it holds.
+         * The check for suspension requires holding the thread suspend
+         * count lock, which the suspend-all code also grabs.  We want to
+         * check our suspension status and change to RUNNING atomically
+         * to avoid a situation where suspend-all thinks we're safe
+         * (e.g. VMWAIT or NATIVE with suspendCount=1) but we've actually
+         * switched to RUNNING and are executing code.
          */
         assert(self->status != THREAD_RUNNING);
-
-        dvmCheckSuspendPending(self);
-        self->status = THREAD_RUNNING;
+        checkSuspendAndChangeStatus(self, newStatus);
     } else {
         /*
-         * Change from one state to another, neither of which is
-         * THREAD_RUNNING.  This is most common during system or thread
-         * initialization.
+         * Not changing to THREAD_RUNNING.  No additional work required.
          */
         self->status = newStatus;
     }
@@ -3563,6 +3604,17 @@ void dvmDumpAllThreadsEx(const DebugOutputTarget* target, bool grabLock)
 
     dvmPrintDebugMessage(target, "DALVIK THREADS:\n");
 
+#ifdef HAVE_ANDROID_OS
+    dvmPrintDebugMessage(target,
+        "(mutexes: tll=%x tsl=%x tscl=%x ghl=%x hwl=%x hwll=%x)\n",
+        gDvm.threadListLock.value,
+        gDvm._threadSuspendLock.value,
+        gDvm.threadSuspendCountLock.value,
+        gDvm.gcHeapLock.value,
+        gDvm.heapWorkerLock.value,
+        gDvm.heapWorkerListLock.value);
+#endif
+
     if (grabLock)
         dvmLockThreadList(dvmThreadSelf());
 
@@ -3778,7 +3830,7 @@ static void gcScanInterpStackReferences(Thread *thread)
 
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = saveArea->method;
-        if (method != NULL && !dvmIsNativeMethod(method)) {
+        if (method != NULL) {
 #ifdef COUNT_PRECISE_METHODS
             /* the GC is running, so no lock required */
             if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
@@ -3945,10 +3997,6 @@ static void gcScanInterpStackReferences(Thread *thread)
                 dvmReleaseRegisterMapLine(pMap, regVector);
             }
         }
-        /* else this is a break frame and there is nothing to mark, or
-         * this is a native method and the registers are just the "ins",
-         * copied from various registers in the caller's set.
-         */
 
 #if WITH_EXTRA_GC_CHECKS > 1
         first = false;
@@ -3979,6 +4027,7 @@ static void gcScanReferenceTable(ReferenceTable *refTable)
     }
 }
 
+#ifdef USE_INDIRECT_REF
 static void gcScanIndirectRefTable(IndirectRefTable* pRefTable)
 {
     Object** op = pRefTable->table;
@@ -3992,6 +4041,7 @@ static void gcScanIndirectRefTable(IndirectRefTable* pRefTable)
         op++;
     }
 }
+#endif
 
 /*
  * Scan a Thread and mark any objects it references.

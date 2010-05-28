@@ -859,7 +859,6 @@ static jobject addGlobalReference(Object* obj)
     }
 #endif
 
-bail:
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
     return jobj;
 }
@@ -918,53 +917,6 @@ bail:
     dvmUnlockMutex(&gDvm.jniGlobalRefLock);
 }
 
-
-/*
- * Get the "magic" JNI weak global ReferenceQueue.  It's allocated on
- * first use.
- *
- * Returns NULL with an exception raised if allocation fails.
- */
-static Object* getWeakGlobalRefQueue(void)
-{
-    /* use an indirect variable to avoid "type-punned pointer" complaints */
-    Object** pGlobalQ = &gDvm.jniWeakGlobalRefQueue;
-
-    if (*pGlobalQ != NULL)
-        return *pGlobalQ;
-
-    ClassObject* clazz = dvmFindSystemClass("Ljava/lang/ref/ReferenceQueue;");
-    if (clazz == NULL) {
-        LOGE("Unable to find java.lang.ref.ReferenceQueue");
-        dvmAbort();
-    }
-
-    /*
-     * Create an instance of ReferenceQueue.  The object is never actually
-     * used for anything, so we don't need to call a constructor.  (We could
-     * get away with using an instance of Object, but this is cleaner.)
-     */
-    Object* queue = dvmAllocObject(clazz, ALLOC_DEFAULT);
-    if (queue == NULL) {
-        LOGW("Failed allocating weak global ref queue\n");
-        assert(dvmCheckException(dvmThreadSelf()));
-        return NULL;
-    }
-    dvmReleaseTrackedAlloc(queue, NULL);
-
-    /*
-     * Save it, using atomic ops to ensure we don't double-up.  The gDvm
-     * field is known to the GC.
-     */
-    if (!ATOMIC_CMP_SWAP((int*) pGlobalQ, 0, (int) queue)) {
-        LOGD("WOW: lost race to create weak global ref queue\n");
-        queue = *pGlobalQ;
-    }
-
-    return queue;
-}
-
-
 /*
  * We create a PhantomReference that references the object, add a
  * global reference to it, and then flip some bits before returning it.
@@ -980,7 +932,6 @@ static jweak createWeakGlobalRef(JNIEnv* env, jobject jobj)
 
     Thread* self = ((JNIEnvExt*)env)->self;
     Object* obj = dvmDecodeIndirectRef(env, jobj);
-    Object* weakGlobalQueue = getWeakGlobalRefQueue();
     Object* phantomObj;
     jobject phantomRef;
 
@@ -1004,7 +955,7 @@ static jweak createWeakGlobalRef(JNIEnv* env, jobject jobj)
 
     JValue unused;
     dvmCallMethod(self, gDvm.methJavaLangRefPhantomReference_init, phantomObj,
-        &unused, jobj, weakGlobalQueue);
+        &unused, obj, NULL);
     dvmReleaseTrackedAlloc(phantomObj, self);
 
     if (dvmCheckException(self)) {
@@ -1296,8 +1247,6 @@ jobjectRefType dvmGetJNIRefType(JNIEnv* env, jobject jobj)
 #else
     ReferenceTable* pRefTable = getLocalRefTable(env);
     Thread* self = dvmThreadSelf();
-    //Object** top;
-    Object** ptr;
 
     if (dvmIsWeakGlobalRef(jobj)) {
         return JNIWeakGlobalRefType;
@@ -2023,7 +1972,7 @@ static jobject ToReflectedField(JNIEnv* env, jclass jcls, jfieldID fieldID,
 {
     JNI_ENTER();
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jcls);
-    Object* obj = dvmCreateReflectObjForField(jcls, (Field*) fieldID);
+    Object* obj = dvmCreateReflectObjForField(clazz, (Field*) fieldID);
     dvmReleaseTrackedAlloc(obj, NULL);
     jobject jobj = addLocalReference(env, obj);
     JNI_EXIT();

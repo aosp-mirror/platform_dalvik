@@ -804,7 +804,7 @@ static void checkSig(JNIEnv* env, jmethodID methodID, char expectedSigByte,
 static void checkStaticFieldID(JNIEnv* env, jclass jclazz, jfieldID fieldID)
 {
     ClassObject* clazz = (ClassObject*) dvmDecodeIndirectRef(env, jclazz);
-    StaticField* base = clazz->sfields;
+    StaticField* base = &clazz->sfields[0];
     int fieldCount = clazz->sfieldCount;
 
     if ((StaticField*) fieldID < base ||
@@ -878,7 +878,6 @@ static void checkMethodArgsV(JNIEnv* env, jmethodID methodID, va_list args,
 
     const Method* meth = (const Method*) methodID;
     const char* desc = meth->shorty;
-    ClassObject* clazz;
 
     LOGV("V-checking %s.%s:%s...\n", meth->clazz->descriptor, meth->name, desc);
 
@@ -901,7 +900,6 @@ static void checkMethodArgsV(JNIEnv* env, jmethodID methodID, va_list args,
         }
     }
 
-bail:
     JNI_EXIT();
 #endif
 }
@@ -918,7 +916,6 @@ static void checkMethodArgsA(JNIEnv* env, jmethodID methodID, jvalue* args,
 
     const Method* meth = (const Method*) methodID;
     const char* desc = meth->shorty;
-    ClassObject* clazz;
     int idx = 0;
 
     LOGV("A-checking %s.%s:%s...\n", meth->clazz->descriptor, meth->name, desc);
@@ -932,7 +929,6 @@ static void checkMethodArgsA(JNIEnv* env, jmethodID methodID, jvalue* args,
         idx++;
     }
 
-bail:
     JNI_EXIT();
 #endif
 }
@@ -1174,8 +1170,6 @@ static void* releaseGuardedPACopy(JNIEnv* env, jarray jarr, void* dataBuf,
     int mode)
 {
     ArrayObject* arrObj = (ArrayObject*) dvmDecodeIndirectRef(env, jarr);
-    PrimitiveType primType = arrObj->obj.clazz->elementClass->primitiveType;
-    //int len = array->length * dvmPrimitiveTypeWidth(primType);
     bool release, copyBack;
     u1* result;
 

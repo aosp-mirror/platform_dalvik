@@ -59,7 +59,10 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
     }
     /* make sure it's an array */
     if (!dvmIsArray(srcArray) || !dvmIsArray(dstArray)) {
-        dvmThrowException("Ljava/lang/ArrayStoreException;", NULL);
+        dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
+            "source and destination must be arrays, but were %s and %s",
+            ((Object*)srcArray)->clazz->descriptor,
+            ((Object*)dstArray)->clazz->descriptor);
         RETURN_VOID();
     }
 
@@ -87,7 +90,9 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
         int width;
 
         if (srcPrim != dstPrim || srcType != dstType) {
-            dvmThrowException("Ljava/lang/ArrayStoreException;", NULL);
+            dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
+                "source and destination arrays are incompatible: %s and %s",
+                srcClass->descriptor, dstClass->descriptor);
             RETURN_VOID();
         }
 
@@ -191,7 +196,10 @@ static void Dalvik_java_lang_System_arraycopy(const u4* args, JValue* pResult)
                     copyCount * width);
 
             if (copyCount != length) {
-                dvmThrowException("Ljava/lang/ArrayStoreException;", NULL);
+                dvmThrowExceptionFmt("Ljava/lang/ArrayStoreException;",
+                    "source[%d] of type %s cannot be stored in destination array of type %s",
+                    copyCount, srcObj[copyCount]->clazz->descriptor,
+                    dstClass->descriptor);
                 RETURN_VOID();
             }
         }
