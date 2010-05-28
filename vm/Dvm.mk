@@ -247,10 +247,6 @@ ifeq ($(WITH_HPROF),true)
   endif # WITH_HPROF_STACK
 endif   # WITH_HPROF
 
-ifeq ($(strip $(DVM_TRACK_HEAP_MARKING)),true)
-  LOCAL_CFLAGS += -DDVM_TRACK_HEAP_MARKING=1
-endif
-
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE) \
 	dalvik \
