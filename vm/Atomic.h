@@ -26,19 +26,22 @@
 /*
  * Full memory barrier.  Ensures compiler ordering and SMP behavior.
  */
-#define MEM_BARRIER()   android_membar_full()
+#define MEM_BARRIER()   ANDROID_MEMBAR_FULL()
 
 /*
  * 32-bit atomic compare-and-swap macro.  Performs a memory barrier
  * before the swap (store-release).
  *
- * If *_addr equals "_old", replace it with "_new" and return nonzero.
+ * If *_addr equals "_old", replace it with "_new" and return nonzero
+ * (i.e. returns "false" if the operation fails).
  *
  * Underlying function is currently declared:
- * int android_atomic_cmpxchg(int32_t old, int32_t new, volatile int32_t* addr)
+ *   int release_cas(int32_t old, int32_t new, volatile int32_t* addr)
+ *
+ * TODO: rename macro to ATOMIC_RELEASE_CAS
  */
 #define ATOMIC_CMP_SWAP(_addr, _old, _new) \
-            (android_atomic_cmpxchg((_old), (_new), (_addr)) == 0)
+            (android_atomic_release_cas((_old), (_new), (_addr)) == 0)
 
 
 /*
