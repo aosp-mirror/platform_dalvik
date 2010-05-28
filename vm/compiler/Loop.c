@@ -86,6 +86,8 @@ static void fillPhiNodeContents(CompilationUnit *cUnit)
 
 }
 
+#if 0
+/* Debugging routines */
 static void dumpConstants(CompilationUnit *cUnit)
 {
     int i;
@@ -125,6 +127,31 @@ static void dumpIVList(CompilationUnit *cUnit)
         }
     }
 }
+
+static void dumpHoistedChecks(CompilationUnit *cUnit)
+{
+    LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
+    unsigned int i;
+
+    for (i = 0; i < loopAnalysis->arrayAccessInfo->numUsed; i++) {
+        ArrayAccessInfo *arrayAccessInfo =
+            GET_ELEM_N(loopAnalysis->arrayAccessInfo,
+                       ArrayAccessInfo*, i);
+        int arrayReg = DECODE_REG(
+            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->arrayReg));
+        int idxReg = DECODE_REG(
+            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->ivReg));
+        LOGE("Array access %d", i);
+        LOGE("  arrayReg %d", arrayReg);
+        LOGE("  idxReg %d", idxReg);
+        LOGE("  endReg %d", loopAnalysis->endConditionReg);
+        LOGE("  maxC %d", arrayAccessInfo->maxC);
+        LOGE("  minC %d", arrayAccessInfo->minC);
+        LOGE("  opcode %d", loopAnalysis->loopBranchOpcode);
+    }
+}
+
+#endif
 
 /*
  * A loop is considered optimizable if:
@@ -345,29 +372,6 @@ static bool doLoopBodyCodeMotion(CompilationUnit *cUnit)
     }
 
     return !loopBodyCanThrow;
-}
-
-static void dumpHoistedChecks(CompilationUnit *cUnit)
-{
-    LoopAnalysis *loopAnalysis = cUnit->loopAnalysis;
-    unsigned int i;
-
-    for (i = 0; i < loopAnalysis->arrayAccessInfo->numUsed; i++) {
-        ArrayAccessInfo *arrayAccessInfo =
-            GET_ELEM_N(loopAnalysis->arrayAccessInfo,
-                       ArrayAccessInfo*, i);
-        int arrayReg = DECODE_REG(
-            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->arrayReg));
-        int idxReg = DECODE_REG(
-            dvmConvertSSARegToDalvik(cUnit, arrayAccessInfo->ivReg));
-        LOGE("Array access %d", i);
-        LOGE("  arrayReg %d", arrayReg);
-        LOGE("  idxReg %d", idxReg);
-        LOGE("  endReg %d", loopAnalysis->endConditionReg);
-        LOGE("  maxC %d", arrayAccessInfo->maxC);
-        LOGE("  minC %d", arrayAccessInfo->minC);
-        LOGE("  opcode %d", loopAnalysis->loopBranchOpcode);
-    }
 }
 
 static void genHoistedChecks(CompilationUnit *cUnit)

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define _CODEGEN_C
+#define _ARMV5TE
 
 #include "Dalvik.h"
 #include "interp/InterpDefs.h"

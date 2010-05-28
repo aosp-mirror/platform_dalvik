@@ -80,9 +80,12 @@ ArrayObject* dvmAllocArrayByClass(ClassObject* arrayClass, // OP_NEW_ARRAY
 bool dvmInterpHandleFillArrayData(ArrayObject* arrayObject,// OP_FILL_ARRAY_DATA
                                   const u2* arrayData);
 
-/* Switch dispatch offset calculation for OP_PACKED_SWITCH & OP_SPARSE_SWITCH */
-static s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc);
-static s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc);
+/*
+ * Switch dispatch offset calculation for OP_PACKED_SWITCH & OP_SPARSE_SWITCH
+ * Used in CodegenDriver.c
+ * static s8 findPackedSwitchIndex(const u2* switchData, int testVal, int pc);
+ * static s8 findSparseSwitchIndex(const u2* switchData, int testVal, int pc);
+ */
 
 /*
  * Resolve interface callsites - OP_INVOKE_INTERFACE & OP_INVOKE_INTERFACE_RANGE

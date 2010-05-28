@@ -50,6 +50,8 @@ static inline bool isDalvikRegisterClobbered(ArmLIR *lir1, ArmLIR *lir2)
   return (reg1Lo == reg2Lo) || (reg1Lo == reg2Hi) || (reg1Hi == reg2Lo);
 }
 
+#if 0
+/* Debugging utility routine */
 static void dumpDependentInsnPair(ArmLIR *thisLIR, ArmLIR *checkLIR,
                                   const char *optimization)
 {
@@ -57,6 +59,7 @@ static void dumpDependentInsnPair(ArmLIR *thisLIR, ArmLIR *checkLIR,
     dvmDumpLIRInsn((LIR *) thisLIR, 0);
     dvmDumpLIRInsn((LIR *) checkLIR, 0);
 }
+#endif
 
 /*
  * Perform a pass of top-down walk to
