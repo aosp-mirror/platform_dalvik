@@ -606,6 +606,37 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
 }
 
 /*
+ * Check if the next instruction following the invoke is a move-result and if
+ * so add it to the trace.
+ *
+ * lastPC, len, offset are all from the preceding invoke instruction
+ */
+static void insertMoveResult(const u2 *lastPC, int len, int offset,
+                             InterpState *interpState)
+{
+    DecodedInstruction nextDecInsn;
+    const u2 *moveResultPC = lastPC + len;
+
+    dexDecodeInstruction(gDvm.instrFormat, moveResultPC, &nextDecInsn);
+    if ((nextDecInsn.opCode != OP_MOVE_RESULT) &&
+        (nextDecInsn.opCode != OP_MOVE_RESULT_WIDE) &&
+        (nextDecInsn.opCode != OP_MOVE_RESULT_OBJECT))
+        return;
+
+    /* We need to start a new trace run */
+    int currTraceRun = ++interpState->currTraceRun;
+    interpState->currRunHead = moveResultPC;
+    interpState->trace[currTraceRun].frag.startOffset = offset + len;
+    interpState->trace[currTraceRun].frag.numInsts = 1;
+    interpState->trace[currTraceRun].frag.runEnd = false;
+    interpState->trace[currTraceRun].frag.hint = kJitHintNone;
+    interpState->totalTraceLen++;
+
+    interpState->currRunLen = dexGetInstrOrTableWidthAbs(gDvm.instrWidth,
+                                                         moveResultPC);
+}
+
+/*
  * Adds to the current trace request one instruction at a time, just
  * before that instruction is interpreted.  This is the primary trace
  * selection function.  NOTE: return instruction are handled a little
@@ -676,8 +707,15 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
             interpState->totalTraceLen++;
             interpState->currRunLen += len;
 
+            /*
+             * If the last instruction is an invoke, we will try to sneak in
+             * the move-result* (if existent) into a separate trace run.
+             */
+            int needReservedRun = (flags & kInstrInvoke) ? 1 : 0;
+
             /* Will probably never hit this with the current trace buildier */
-            if (interpState->currTraceRun == (MAX_JIT_RUN_LEN - 1)) {
+            if (interpState->currTraceRun ==
+                (MAX_JIT_RUN_LEN - 1 - needReservedRun)) {
                 interpState->jitState = kJitTSelectEnd;
             }
 
@@ -690,9 +728,17 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                              kInstrInvoke)) != 0)) {
                     interpState->jitState = kJitTSelectEnd;
 #if defined(SHOW_TRACE)
-            LOGD("TraceGen: ending on %s, basic block end",
-                 getOpcodeName(decInsn.opCode));
+                LOGD("TraceGen: ending on %s, basic block end",
+                     getOpcodeName(decInsn.opCode));
 #endif
+
+                /*
+                 * If the next instruction is a variant of move-result, insert
+                 * it to the trace as well.
+                 */
+                if (flags & kInstrInvoke) {
+                    insertMoveResult(lastPC, len, offset, interpState);
+                }
             }
             /* Break on throw or self-loop */
             if ((decInsn.opCode == OP_THROW) || (lastPC == pc)){

@@ -3646,6 +3646,16 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
         labelList[i].operands[0] = blockList[i]->startOffset;
 
         if (blockList[i]->blockType >= kChainingCellGap) {
+            if (blockList[i]->firstMIRInsn != NULL &&
+                ((blockList[i]->firstMIRInsn->dalvikInsn.opCode ==
+                  OP_MOVE_RESULT) ||
+                 (blockList[i]->firstMIRInsn->dalvikInsn.opCode ==
+                  OP_MOVE_RESULT_WIDE) ||
+                 (blockList[i]->firstMIRInsn->dalvikInsn.opCode ==
+                  OP_MOVE_RESULT_OBJECT))) {
+                /* Align this block first since it is a return chaining cell */
+                newLIR0(cUnit, kArmPseudoPseudoAlign4);
+            }
             /*
              * Append the label pseudo LIR first. Chaining cells will be handled
              * separately afterwards.
