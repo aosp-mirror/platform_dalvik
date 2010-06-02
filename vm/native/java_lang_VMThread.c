@@ -33,6 +33,7 @@ static void Dalvik_java_lang_VMThread_create(const u4* args, JValue* pResult)
     Object* threadObj = (Object*) args[0];
     s8 stackSize = GET_ARG_LONG(args, 1);
 
+    /* copying collector will pin threadObj for us since it was an argument */
     dvmCreateInterpThread(threadObj, (int) stackSize);
     RETURN_VOID();
 }

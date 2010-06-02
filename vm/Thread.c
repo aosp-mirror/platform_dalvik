@@ -629,7 +629,6 @@ void dvmSlayDaemons(void)
     int threadId = 0;
     bool doWait = false;
 
-    //dvmEnterCritical(self);
     dvmLockThreadList(self);
 
     if (self != NULL)
@@ -899,12 +898,7 @@ bool dvmPrepMainThread(void)
 /*
  * Alloc and initialize a Thread struct.
  *
- * "threadObj" is the java.lang.Thread object.  It will be NULL for the
- * main VM thread, but non-NULL for everything else.
- *
- * Does not create any objects, just stuff on the system (malloc) heap.  (If
- * this changes, we need to use ALLOC_NO_GC.  And also verify that we're
- * ready to load classes at the time this is called.)
+ * Does not create any objects, just stuff on the system (malloc) heap.
  */
 static Thread* allocThread(int interpStackSize)
 {
@@ -1376,6 +1370,9 @@ static void setThreadName(const char *threadName)
  * objects.  We also need to create one of our internal Thread objects.
  *
  * Pass in a stack size of 0 to get the default.
+ *
+ * The "threadObj" reference must be pinned by the caller to prevent the GC
+ * from moving it around (e.g. added to the tracked allocation list).
  */
 bool dvmCreateInterpThread(Object* threadObj, int reqStackSize)
 {
@@ -1938,56 +1935,16 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
     Method* init;
     bool ok, ret;
 
-    /* establish a basic sense of self */
+    /* allocate thread struct, and establish a basic sense of self */
     self = allocThread(gDvm.stackSize);
     if (self == NULL)
         goto fail;
     setThreadSelf(self);
 
     /*
-     * Create Thread and VMThread objects.  We have to use ALLOC_NO_GC
-     * because this thread is not yet visible to the VM.  We could also
-     * just grab the GC lock earlier, but that leaves us executing
-     * interpreted code with the lock held, which is not prudent.
-     *
-     * The alloc calls will block if a GC is in progress, so we don't need
-     * to check for global suspension here.
-     *
-     * It's also possible for the allocation calls to *cause* a GC.
-     */
-    //BUG: deadlock if a GC happens here during HeapWorker creation
-    threadObj = dvmAllocObject(gDvm.classJavaLangThread, ALLOC_NO_GC);
-    if (threadObj == NULL)
-        goto fail;
-    vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_NO_GC);
-    if (vmThreadObj == NULL)
-        goto fail;
-
-    self->threadObj = threadObj;
-    dvmSetFieldInt(vmThreadObj, gDvm.offJavaLangVMThread_vmData, (u4)self);
-
-    /*
-     * Do some java.lang.Thread constructor prep before we lock stuff down.
-     */
-    if (pArgs->name != NULL) {
-        threadNameStr = dvmCreateStringFromCstr(pArgs->name, ALLOC_NO_GC);
-        if (threadNameStr == NULL) {
-            assert(dvmCheckException(dvmThreadSelf()));
-            goto fail;
-        }
-    }
-
-    init = dvmFindDirectMethodByDescriptor(gDvm.classJavaLangThread, "<init>",
-            "(Ljava/lang/ThreadGroup;Ljava/lang/String;IZ)V");
-    if (init == NULL) {
-        assert(dvmCheckException(dvmThreadSelf()));
-        goto fail;
-    }
-
-    /*
-     * Finish our thread prep.  We need to do this before invoking any
-     * interpreted code.  prepareThread() requires that we hold the thread
-     * list lock.
+     * Finish our thread prep.  We need to do this before adding ourselves
+     * to the thread list or invoking any interpreted code.  prepareThread()
+     * requires that we hold the thread list lock.
      */
     dvmLockThreadList(self);
     ok = prepareThread(self);
@@ -2009,20 +1966,11 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
         goto fail;
 
     /*
-     * The native side of the thread is ready;  add it to the list.
+     * The native side of the thread is ready; add it to the list.  Once
+     * it's on the list the thread is visible to the JDWP code and the GC.
      */
     LOG_THREAD("threadid=%d: adding to list (attached)\n", self->threadId);
 
-    /* Start off in VMWAIT, because we may be about to block
-     * on the heap lock, and we don't want any suspensions
-     * to wait for us.
-     */
-    self->status = THREAD_VMWAIT;
-
-    /*
-     * Add ourselves to the thread list.  Once we finish here we are
-     * visible to the debugger and the GC.
-     */
     dvmLockThreadList(self);
 
     self->next = gDvm.threadList->next;
@@ -2036,20 +1984,57 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
     dvmUnlockThreadList();
 
     /*
-     * It's possible that a GC is currently running.  Our thread
-     * wasn't in the list when the GC started, so it's not properly
-     * suspended in that case.  Synchronize on the heap lock (held
-     * when a GC is happening) to guarantee that any GCs from here
-     * on will see this thread in the list.
+     * Switch state from initializing to running.
+     *
+     * It's possible that a GC began right before we added ourselves
+     * to the thread list, and is still going.  That means our thread
+     * suspend count won't reflect the fact that we should be suspended.
+     * To deal with this, we transition to VMWAIT, pulse the heap lock,
+     * and then advance to RUNNING.  That will ensure that we stall until
+     * the GC completes.
+     *
+     * Once we're in RUNNING, we're like any other thread in the VM (except
+     * for the lack of an initialized threadObj).  We're then free to
+     * allocate and initialize objects.
      */
+    assert(self->status == THREAD_INITIALIZING);
+    dvmChangeStatus(self, THREAD_VMWAIT);
     dvmLockMutex(&gDvm.gcHeapLock);
     dvmUnlockMutex(&gDvm.gcHeapLock);
+    dvmChangeStatus(self, THREAD_RUNNING);
 
     /*
-     * Switch to the running state now that we're ready for
-     * suspensions.  This call may suspend.
+     * Create Thread and VMThread objects.
      */
-    dvmChangeStatus(self, THREAD_RUNNING);
+    threadObj = dvmAllocObject(gDvm.classJavaLangThread, ALLOC_DEFAULT);
+    vmThreadObj = dvmAllocObject(gDvm.classJavaLangVMThread, ALLOC_DEFAULT);
+    if (threadObj == NULL || vmThreadObj == NULL)
+        goto fail_unlink;
+
+    /*
+     * This makes threadObj visible to the GC.  We still have it in the
+     * tracked allocation table, so it can't move around on us.
+     */
+    self->threadObj = threadObj;
+    dvmSetFieldInt(vmThreadObj, gDvm.offJavaLangVMThread_vmData, (u4)self);
+
+    /*
+     * Create a string for the thread name.
+     */
+    if (pArgs->name != NULL) {
+        threadNameStr = dvmCreateStringFromCstr(pArgs->name, ALLOC_DEFAULT);
+        if (threadNameStr == NULL) {
+            assert(dvmCheckException(dvmThreadSelf()));
+            goto fail_unlink;
+        }
+    }
+
+    init = dvmFindDirectMethodByDescriptor(gDvm.classJavaLangThread, "<init>",
+            "(Ljava/lang/ThreadGroup;Ljava/lang/String;IZ)V");
+    if (init == NULL) {
+        assert(dvmCheckException(self));
+        goto fail_unlink;
+    }
 
     /*
      * Now we're ready to run some interpreted code.
@@ -2069,8 +2054,6 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
         LOGE("exception thrown while constructing attached thread object\n");
         goto fail_unlink;
     }
-    //if (isDaemon)
-    //    dvmSetFieldBoolean(threadObj, gDvm.offJavaLangThread_daemon, true);
 
     /*
      * Set the VMThread field, which tells interpreted code that we're alive.
@@ -2080,8 +2063,14 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      * trying to start threads against anything it sees, which would
      * generally cause problems for all thread creation.  However, for
      * correctness we test "vmThread" before setting it.
+     *
+     * TODO: this still has a race, it's just smaller.  Not sure this is
+     * worth putting effort into fixing.  Need to hold a lock while
+     * fiddling with the field, or maybe initialize the Thread object in a
+     * way that ensures another thread can't call start() on it.
      */
     if (dvmGetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread) != NULL) {
+        LOGW("WOW: thread start hijack\n");
         dvmThrowException("Ljava/lang/IllegalThreadStateException;",
             "thread has already been started");
         /* We don't want to free anything associated with the thread
@@ -2097,18 +2086,15 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
          * already present seems like a bad idea.  TODO: figure this out. ]
          */
         ret = false;
-    } else
+    } else {
         ret = true;
+    }
     dvmSetFieldObject(threadObj, gDvm.offJavaLangThread_vmThread, vmThreadObj);
 
-    /* These are now reachable from the thread groups. */
-    dvmClearAllocFlags(threadObj, ALLOC_NO_GC);
-    dvmClearAllocFlags(vmThreadObj, ALLOC_NO_GC);
-
-    /*
-     * The thread is ready to go;  let the debugger see it.
-     */
-    self->threadObj = threadObj;
+    /* we can now safely un-pin these */
+    dvmReleaseTrackedAlloc(threadObj, self);
+    dvmReleaseTrackedAlloc(vmThreadObj, self);
+    dvmReleaseTrackedAlloc((Object*)threadNameStr, self);
 
     LOG_THREAD("threadid=%d: attached from native, name=%s\n",
         self->threadId, pArgs->name);
@@ -2127,8 +2113,9 @@ fail_unlink:
     dvmUnlockThreadList();
     /* fall through to "fail" */
 fail:
-    dvmClearAllocFlags(threadObj, ALLOC_NO_GC);
-    dvmClearAllocFlags(vmThreadObj, ALLOC_NO_GC);
+    dvmReleaseTrackedAlloc(threadObj, self);
+    dvmReleaseTrackedAlloc(vmThreadObj, self);
+    dvmReleaseTrackedAlloc((Object*)threadNameStr, self);
     if (self != NULL) {
         if (self->jniEnv != NULL) {
             dvmDestroyJNIEnv(self->jniEnv);
@@ -3466,11 +3453,24 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     char schedstatBuf[64];      // contents of /proc/[pid]/task/[tid]/schedstat
     int schedstatFd;
 
+    /*
+     * Get the java.lang.Thread object.  This function gets called from
+     * some weird debug contexts, so it's possible that there's a GC in
+     * progress on some other thread.  To decrease the chances of the
+     * thread object being moved out from under us, we add the reference
+     * to the tracked allocation list, which pins it in place.
+     *
+     * If threadObj is NULL, the thread is still in the process of being
+     * attached to the VM, and there's really nothing interesting to
+     * say about it yet.
+     */
     threadObj = thread->threadObj;
     if (threadObj == NULL) {
-        LOGW("Can't dump thread %d: threadObj not set\n", thread->threadId);
+        LOGI("Can't dump thread %d: threadObj not set\n", thread->threadId);
         return;
     }
+    dvmAddTrackedAlloc(threadObj, NULL);
+
     nameStr = (StringObject*) dvmGetFieldObject(threadObj,
                 gDvm.offJavaLangThread_name);
     threadName = dvmCreateCstrFromString(nameStr);
@@ -3567,9 +3567,9 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     else
         dvmDumpThreadStack(target, thread);
 
+    dvmReleaseTrackedAlloc(threadObj, NULL);
     free(threadName);
     free(groupName);
-
 }
 
 /*
