@@ -40,11 +40,15 @@ int jniRegisterNativeMethods(JNIEnv* env, const char* className,
         LOGE("Native registration unable to find class '%s'\n", className);
         return -1;
     }
+
+    int result = 0;
     if ((*env)->RegisterNatives(env, clazz, gMethods, numMethods) < 0) {
         LOGE("RegisterNatives failed for '%s'\n", className);
-        return -1;
+        result = -1;
     }
-    return 0;
+
+    (*env)->DeleteLocalRef(env, clazz);
+    return result;
 }
 
 /*
@@ -52,45 +56,113 @@ int jniRegisterNativeMethods(JNIEnv* env, const char* className,
  * be populated with the "binary" class name and, if present, the
  * exception message.
  */
-static void getExceptionSummary(JNIEnv* env, jthrowable excep, char* buf,
-    size_t bufLen)
+static void getExceptionSummary(JNIEnv* env, jthrowable exception, char* buf, size_t bufLen)
 {
-    if (excep == NULL)
-        return;
+    int success = 0;
 
-    /* get the name of the exception's class; none of these should fail */
-    jclass clazz = (*env)->GetObjectClass(env, excep); // exception's class
-    jclass jlc = (*env)->GetObjectClass(env, clazz);   // java.lang.Class
-    jmethodID getNameMethod =
-        (*env)->GetMethodID(env, jlc, "getName", "()Ljava/lang/String;");
-    jstring className = (*env)->CallObjectMethod(env, clazz, getNameMethod);
+    /* get the name of the exception's class */
+    jclass exceptionClazz = (*env)->GetObjectClass(env, exception); // can't fail
+    jclass classClazz = (*env)->GetObjectClass(env, exceptionClazz); // java.lang.Class, can't fail
+    jmethodID classGetNameMethod = (*env)->GetMethodID(
+            env, classClazz, "getName", "()Ljava/lang/String;");
+    jstring classNameStr = (*env)->CallObjectMethod(env, exceptionClazz, classGetNameMethod);
+    if (classNameStr != NULL) {
+        /* get printable string */
+        const char* classNameChars = (*env)->GetStringUTFChars(env, classNameStr, NULL);
+        if (classNameChars != NULL) {
+            /* if the exception has a message string, get that */
+            jmethodID throwableGetMessageMethod = (*env)->GetMethodID(
+                    env, exceptionClazz, "getMessage", "()Ljava/lang/String;");
+            jstring messageStr = (*env)->CallObjectMethod(
+                    env, exception, throwableGetMessageMethod);
 
-    /* get printable string */
-    const char* nameStr = (*env)->GetStringUTFChars(env, className, NULL);
-    if (nameStr == NULL) {
-        snprintf(buf, bufLen, "%s", "out of memory generating summary");
-        (*env)->ExceptionClear(env);            // clear OOM
-        return;
+            if (messageStr != NULL) {
+                const char* messageChars = (*env)->GetStringUTFChars(env, messageStr, NULL);
+                if (messageChars != NULL) {
+                    snprintf(buf, bufLen, "%s: %s", classNameChars, messageChars);
+                    (*env)->ReleaseStringUTFChars(env, messageStr, messageChars);
+                } else {
+                    (*env)->ExceptionClear(env); // clear OOM
+                    snprintf(buf, bufLen, "%s: <error getting message>", classNameChars);
+                }
+                (*env)->DeleteLocalRef(env, messageStr);
+            } else {
+                strncpy(buf, classNameChars, bufLen);
+                buf[bufLen - 1] = '\0';
+            }
+
+            (*env)->ReleaseStringUTFChars(env, classNameStr, classNameChars);
+            success = 1;
+        }
+        (*env)->DeleteLocalRef(env, classNameStr);
+    }
+    (*env)->DeleteLocalRef(env, classClazz);
+    (*env)->DeleteLocalRef(env, exceptionClazz);
+
+    if (! success) {
+        (*env)->ExceptionClear(env);
+        snprintf(buf, bufLen, "%s", "<error getting class name>");
+    }
+}
+
+/*
+ * Formats an exception as a string with its stack trace.
+ */
+static void printStackTrace(JNIEnv* env, jthrowable exception, char* buf, size_t bufLen)
+{
+    int success = 0;
+
+    jclass stringWriterClazz = (*env)->FindClass(env, "java/io/StringWriter");
+    if (stringWriterClazz != NULL) {
+        jmethodID stringWriterCtor = (*env)->GetMethodID(env, stringWriterClazz,
+                "<init>", "()V");
+        jmethodID stringWriterToStringMethod = (*env)->GetMethodID(env, stringWriterClazz,
+                "toString", "()Ljava/lang/String;");
+
+        jclass printWriterClazz = (*env)->FindClass(env, "java/io/PrintWriter");
+        if (printWriterClazz != NULL) {
+            jmethodID printWriterCtor = (*env)->GetMethodID(env, printWriterClazz,
+                    "<init>", "(Ljava/io/Writer;)V");
+
+            jobject stringWriterObj = (*env)->NewObject(env, stringWriterClazz, stringWriterCtor);
+            if (stringWriterObj != NULL) {
+                jobject printWriterObj = (*env)->NewObject(env, printWriterClazz, printWriterCtor,
+                        stringWriterObj);
+                if (printWriterObj != NULL) {
+                    jclass exceptionClazz = (*env)->GetObjectClass(env, exception); // can't fail
+                    jmethodID printStackTraceMethod = (*env)->GetMethodID(
+                            env, exceptionClazz, "printStackTrace", "(Ljava/io/PrintWriter;)V");
+
+                    (*env)->CallVoidMethod(
+                            env, exception, printStackTraceMethod, printWriterObj);
+                    if (! (*env)->ExceptionCheck(env)) {
+                        jstring messageStr = (*env)->CallObjectMethod(
+                                env, stringWriterObj, stringWriterToStringMethod);
+                        if (messageStr != NULL) {
+                            jsize messageStrLength = (*env)->GetStringLength(env, messageStr);
+                            if (messageStrLength >= (jsize) bufLen) {
+                                messageStrLength = bufLen - 1;
+                            }
+                            (*env)->GetStringUTFRegion(env, messageStr, 0, messageStrLength, buf);
+                            (*env)->DeleteLocalRef(env, messageStr);
+                            buf[messageStrLength] = '\0';
+                            success = 1;
+                        }
+                    }
+                    (*env)->DeleteLocalRef(env, exceptionClazz);
+                    (*env)->DeleteLocalRef(env, printWriterObj);
+                }
+                (*env)->DeleteLocalRef(env, stringWriterObj);
+            }
+            (*env)->DeleteLocalRef(env, printWriterClazz);
+        }
+        (*env)->DeleteLocalRef(env, stringWriterClazz);
     }
 
-    /* if the exception has a message string, get that */
-    jmethodID getThrowableMessage =
-        (*env)->GetMethodID(env, clazz, "getMessage", "()Ljava/lang/String;");
-    jstring message = (*env)->CallObjectMethod(env, excep, getThrowableMessage);
-
-    if (message != NULL) {
-        const char* messageStr = (*env)->GetStringUTFChars(env, message, NULL);
-        snprintf(buf, bufLen, "%s: %s", nameStr, messageStr);
-        if (messageStr != NULL)
-            (*env)->ReleaseStringUTFChars(env, message, messageStr);
-        else
-            (*env)->ExceptionClear(env);        // clear OOM
-    } else {
-        strncpy(buf, nameStr, bufLen);
-        buf[bufLen-1] = '\0';
+    if (! success) {
+        (*env)->ExceptionClear(env);
+        getExceptionSummary(env, exception, buf, bufLen);
     }
-
-    (*env)->ReleaseStringUTFChars(env, className, nameStr);
 }
 
 /*
@@ -110,11 +182,14 @@ int jniThrowException(JNIEnv* env, const char* className, const char* msg)
         /* TODO: consider creating the new exception with this as "cause" */
         char buf[256];
 
-        jthrowable excep = (*env)->ExceptionOccurred(env);
+        jthrowable exception = (*env)->ExceptionOccurred(env);
         (*env)->ExceptionClear(env);
-        getExceptionSummary(env, excep, buf, sizeof(buf));
-        LOGW("Discarding pending exception (%s) to throw %s\n",
-            buf, className);
+
+        if (exception != NULL) {
+            getExceptionSummary(env, exception, buf, sizeof(buf));
+            LOGW("Discarding pending exception (%s) to throw %s\n", buf, className);
+            (*env)->DeleteLocalRef(env, exception);
+        }
     }
 
     exceptionClass = (*env)->FindClass(env, className);
@@ -124,12 +199,15 @@ int jniThrowException(JNIEnv* env, const char* className, const char* msg)
         return -1;
     }
 
+    int result = 0;
     if ((*env)->ThrowNew(env, exceptionClass, msg) != JNI_OK) {
         LOGE("Failed throwing '%s' '%s'\n", className, msg);
         /* an exception, most likely OOM, will now be pending */
-        return -1;
+        result = -1;
     }
-    return 0;
+
+    (*env)->DeleteLocalRef(env, exceptionClass);
+    return result;
 }
 
 /*
@@ -156,6 +234,33 @@ int jniThrowIOException(JNIEnv* env, int errnum)
     char buffer[80];
     const char* message = jniStrError(errnum, buffer, sizeof(buffer));
     return jniThrowException(env, "java/io/IOException", message);
+}
+
+/*
+ * Log an exception.
+ * If exception is NULL, logs the current exception in the JNI environment, if any.
+ */
+void jniLogException(JNIEnv* env, int priority, const char* tag, jthrowable exception)
+{
+    int currentException = 0;
+    if (exception == NULL) {
+        exception = (*env)->ExceptionOccurred(env);
+        if (exception == NULL) {
+            return;
+        }
+
+        (*env)->ExceptionClear(env);
+        currentException = 1;
+    }
+
+    char buffer[1024];
+    printStackTrace(env, exception, buffer, sizeof(buffer));
+    __android_log_write(priority, tag, buffer);
+
+    if (currentException) {
+        (*env)->Throw(env, exception); // rethrow
+        (*env)->DeleteLocalRef(env, exception);
+    }
 }
 
 const char* jniStrError(int errnum, char* buf, size_t buflen)
