@@ -180,8 +180,13 @@ bool dvmCompilerSetupCodeCache(void)
     cacheflush((intptr_t) gDvmJit.codeCache,
                (intptr_t) gDvmJit.codeCache + templateSize, 0);
 
-    mprotect(gDvmJit.codeCache, gDvmJit.codeCacheSize,
-             PROTECT_CODE_CACHE_ATTRS);
+    int result = mprotect(gDvmJit.codeCache, gDvmJit.codeCacheSize,
+                          PROTECT_CODE_CACHE_ATTRS);
+
+    if (result == -1) {
+        LOGE("Failed to remove the write permission for the code cache");
+        dvmAbort();
+    }
 
     return true;
 }
