@@ -3463,6 +3463,8 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
     int priority;               // java.lang.Thread priority
     int policy;                 // pthread policy
     struct sched_param sp;      // pthread scheduling parameters
+    char schedstatBuf[64];      // contents of /proc/[pid]/task/[tid]/schedstat
+    int schedstatFd;
 
     threadObj = thread->threadObj;
     if (threadObj == NULL) {
@@ -3523,6 +3525,19 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         "  | sysTid=%d nice=%d sched=%d/%d cgrp=%s handle=%d\n",
         thread->systemTid, getpriority(PRIO_PROCESS, thread->systemTid),
         policy, sp.sched_priority, schedulerGroupBuf, (int)thread->handle);
+
+    snprintf(schedstatBuf, sizeof(schedstatBuf), "/proc/%d/task/%d/schedstat",
+             getpid(), thread->systemTid);
+    schedstatFd = open(schedstatBuf, O_RDONLY);
+    if (schedstatFd >= 0) {
+        int bytes;
+        bytes = read(schedstatFd, schedstatBuf, sizeof(schedstatBuf) - 1);
+        close(schedstatFd);
+        if (bytes > 1) {
+            schedstatBuf[bytes-1] = 0;  // trailing newline
+            dvmPrintDebugMessage(target, "  | schedstat=( %s )\n", schedstatBuf);
+        }
+    }
 
 #ifdef WITH_MONITOR_TRACKING
     if (!isRunning) {
