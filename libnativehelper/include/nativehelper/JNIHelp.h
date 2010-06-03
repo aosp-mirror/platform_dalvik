@@ -91,6 +91,12 @@ int jniGetFDFromFileDescriptor(C_JNIEnv* env, jobject fileDescriptor);
  */
 void jniSetFileDescriptorOfFD(C_JNIEnv* env, jobject fileDescriptor, int value);
 
+/*
+ * Log a message and an exception.
+ * If exception is NULL, logs the current exception in the JNI environment.
+ */
+void jniLogException(C_JNIEnv* env, int priority, const char* tag, jthrowable exception);
+
 #ifdef __cplusplus
 }
 #endif
@@ -135,9 +141,27 @@ inline int jniGetFDFromFileDescriptor(JNIEnv* env, jobject fileDescriptor)
 inline void jniSetFileDescriptorOfFD(JNIEnv* env, jobject fileDescriptor,
     int value)
 {
-    return jniSetFileDescriptorOfFD(&env->functions, fileDescriptor, value);
+    jniSetFileDescriptorOfFD(&env->functions, fileDescriptor, value);
+}
+inline void jniLogException(JNIEnv* env, int priority, const char* tag,
+        jthrowable exception = NULL)
+{
+    jniLogException(&env->functions, priority, tag, exception);
 }
 #endif
+
+/* Logging macros.
+ *
+ * Logs an exception.  If the exception is omitted or NULL, logs the current exception
+ * from the JNI environment, if any.
+ */
+#define LOG_EX(env, priority, tag, ...) \
+    IF_LOG(priority, tag) jniLogException(env, ANDROID_##priority, tag, ##__VA_ARGS__)
+#define LOGV_EX(env, ...) LOG_EX(env, LOG_VERBOSE, LOG_TAG, ##__VA_ARGS__)
+#define LOGD_EX(env, ...) LOG_EX(env, LOG_DEBUG, LOG_TAG, ##__VA_ARGS__)
+#define LOGI_EX(env, ...) LOG_EX(env, LOG_INFO, LOG_TAG, ##__VA_ARGS__)
+#define LOGW_EX(env, ...) LOG_EX(env, LOG_WARN, LOG_TAG, ##__VA_ARGS__)
+#define LOGE_EX(env, ...) LOG_EX(env, LOG_ERROR, LOG_TAG, ##__VA_ARGS__)
 
 /*
  * TEMP_FAILURE_RETRY is defined by some, but not all, versions of
