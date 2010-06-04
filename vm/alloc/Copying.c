@@ -1461,27 +1461,6 @@ static void scavengeObject(Object *obj)
  * External root scavenging routines.
  */
 
-static void scavengeHashTable(HashTable *table)
-{
-    HashEntry *entry;
-    void *obj;
-    int i;
-
-    if (table == NULL) {
-        return;
-    }
-    dvmHashTableLock(table);
-    for (i = 0; i < table->tableSize; ++i) {
-        entry = &table->pEntries[i];
-        obj = entry->data;
-        if (obj == NULL || obj == HASH_TOMBSTONE) {
-            continue;
-        }
-        scavengeReference((Object **)(void *)&entry->data);
-    }
-    dvmHashTableUnlock(table);
-}
-
 static void pinHashTableEntries(HashTable *table)
 {
     HashEntry *entry;
@@ -2254,6 +2233,7 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     pinReferenceTable(&gDvm.jniPinRefTable);
     pinReferenceTable(&gcHeap->nonCollectableRefs);
     pinHashTableEntries(gDvm.loadedClasses);
+    pinHashTableEntries(gDvm.dbgRegistry);
     pinPrimitiveClasses();
     pinInternedStrings();
 
@@ -2291,9 +2271,6 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     scavengeReference(&gDvm.outOfMemoryObj);
     scavengeReference(&gDvm.internalErrorObj);
     scavengeReference(&gDvm.noClassDefFoundErrorObj);
-
-    LOG_SCAV("Scavenging gDvm.dbgRegistry");
-    scavengeHashTable(gDvm.dbgRegistry);
 
     // LOG_SCAV("Scavenging gDvm.internedString");
     scavengeInternedStrings();
