@@ -171,6 +171,10 @@ typedef struct Thread {
      *             matter)
      */
     void*       inJitCodeCache;
+#if defined(WITH_SELF_VERIFICATION)
+    /* Buffer for register state during self verification */
+    struct ShadowSpace* shadowSpace;
+#endif
 #endif
 
     /* JNI local reference tracking */
@@ -246,11 +250,6 @@ typedef struct Thread {
 #if WITH_EXTRA_GC_CHECKS > 1
     /* PC, saved on every instruction; redundant with StackSaveArea */
     const u2*   currentPc2;
-#endif
-
-#if defined(WITH_SELF_VERIFICATION)
-    /* Buffer for register state during self verification */
-    struct ShadowSpace* shadowSpace;
 #endif
 
     /* system thread state */

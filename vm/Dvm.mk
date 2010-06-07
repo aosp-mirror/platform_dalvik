@@ -220,6 +220,7 @@ ifeq ($(WITH_JIT),true)
 	compiler/Compiler.c \
 	compiler/Frontend.c \
 	compiler/Utility.c \
+	compiler/InlineTransformation.c \
 	compiler/IntermediateRep.c \
 	compiler/Dataflow.c \
 	compiler/Loop.c \

@@ -1285,7 +1285,13 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 #endif
     };
 
-    assert(self->inJitCodeCache == NULL);
+    /*
+     * If the previous VM left the code cache through single-stepping the
+     * inJitCodeCache flag will be set when the VM is re-entered (for example,
+     * in self-verification mode we single-step NEW_INSTANCE which may re-enter
+     * the VM through findClassFromLoaderNoInit). Because of that, we cannot
+     * assert that self->inJitCodeCache is NULL here.
+     */
 #endif
 
 

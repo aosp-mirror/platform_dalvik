@@ -54,9 +54,11 @@ typedef enum BBType {
     kChainingCellGap,
     /* Don't insert new fields between Gap and Last */
     kChainingCellLast = kChainingCellGap + 1,
-    kEntryBlock,
+    kMethodEntryBlock,
+    kTraceEntryBlock,
     kDalvikByteCode,
-    kExitBlock,
+    kTraceExitBlock,
+    kMethodExitBlock,
     kPCReconstruction,
     kExceptionHandling,
 } BBType;
@@ -82,6 +84,7 @@ enum ExtendedMIROpcode {
     kMirOpNullNRangeDownCheck,
     kMirOpLowerBound,
     kMirOpPunt,
+    kMirOpCheckInlinePrediction,        // Gen checks for predicted inlining
     kMirOpLast,
 };
 
@@ -92,12 +95,24 @@ typedef enum {
     kMIRNullCheckOnly,
     kMIRIgnoreRangeCheck,
     kMIRRangeCheckOnly,
+    kMIRInlined,                        // Invoke is inlined (ie dead)
+    kMIRInlinedPred,                    // Invoke is inlined via prediction
+    kMIRCallee,                         // Instruction is inlined from callee
 } MIROptimizationFlagPositons;
 
 #define MIR_IGNORE_NULL_CHECK           (1 << kMIRIgnoreNullCheck)
 #define MIR_NULL_CHECK_ONLY             (1 << kMIRNullCheckOnly)
 #define MIR_IGNORE_RANGE_CHECK          (1 << kMIRIgnoreRangeCheck)
 #define MIR_RANGE_CHECK_ONLY            (1 << kMIRRangeCheckOnly)
+#define MIR_INLINED                     (1 << kMIRInlined)
+#define MIR_INLINED_PRED                (1 << kMIRInlinedPred)
+#define MIR_CALLEE                      (1 << kMIRCallee)
+
+typedef struct CallsiteInfo {
+    const ClassObject *clazz;
+    const Method *method;
+    LIR *misPredBranchOver;
+} CallsiteInfo;
 
 typedef struct MIR {
     DecodedInstruction dalvikInsn;
@@ -108,6 +123,12 @@ typedef struct MIR {
     struct SSARepresentation *ssaRep;
     int OptimizationFlags;
     int seqNum;
+    union {
+        // Used by the inlined insn from the callee to find the mother method
+        const Method *calleeMethod;
+        // Used by the inlined invoke to find the class and method pointers
+        CallsiteInfo *callsiteInfo;
+    } meta;
 } MIR;
 
 struct BasicBlockDataFlow;
@@ -119,6 +140,7 @@ typedef struct BasicBlock {
     const Method *containingMethod;     // For blocks from the callee
     BBType blockType;
     bool needFallThroughBranch;         // For blocks ended due to length limit
+    bool isFallThroughFromInvoke;       // True means the block needs alignment
     MIR *firstMIRInsn;
     MIR *lastMIRInsn;
     struct BasicBlock *fallThrough;
@@ -150,8 +172,10 @@ typedef struct CompilationUnit {
     bool allSingleStep;
     bool halveInstCount;
     bool executionCount;                // Add code to count trace executions
-    bool hasLoop;
+    bool hasLoop;                       // Contains a loop
+    bool hasInvoke;                     // Contains an invoke instruction
     bool heapMemOp;                     // Mark mem ops for self verification
+    bool wholeMethod;
     int numChainingCells[kChainingCellGap];
     LIR *firstChainingLIR[kChainingCellGap];
     LIR *chainingCellBottom;
@@ -195,6 +219,8 @@ BasicBlock *dvmCompilerNewBB(BBType blockType);
 void dvmCompilerAppendMIR(BasicBlock *bb, MIR *mir);
 
 void dvmCompilerPrependMIR(BasicBlock *bb, MIR *mir);
+
+void dvmCompilerInsertMIRAfter(BasicBlock *bb, MIR *currentMIR, MIR *newMIR);
 
 void dvmCompilerAppendLIR(CompilationUnit *cUnit, LIR *lir);
 

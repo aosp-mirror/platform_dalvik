@@ -26,6 +26,7 @@
 bool dvmCompilerHeapInit(void);
 
 typedef struct ArenaMemBlock {
+    size_t blockSize;
     size_t bytesAllocated;
     struct ArenaMemBlock *next;
     char ptr[0];

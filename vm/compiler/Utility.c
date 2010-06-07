@@ -30,6 +30,7 @@ bool dvmCompilerHeapInit(void)
         LOGE("No memory left to create compiler heap memory\n");
         return false;
     }
+    arenaHead->blockSize = ARENA_DEFAULT_SIZE;
     currentArena = arenaHead;
     currentArena->bytesAllocated = 0;
     currentArena->next = NULL;
@@ -44,7 +45,7 @@ void * dvmCompilerNew(size_t size, bool zero)
     size = (size + 3) & ~3;
 retry:
     /* Normal case - space is available in the current page */
-    if (size + currentArena->bytesAllocated <= ARENA_DEFAULT_SIZE) {
+    if (size + currentArena->bytesAllocated <= currentArena->blockSize) {
         void *ptr;
         ptr = &currentArena->ptr[currentArena->bytesAllocated];
         currentArena->bytesAllocated += size;
@@ -61,15 +62,17 @@ retry:
             currentArena = currentArena->next;
             goto retry;
         }
-        /*
-         * If we allocate really large variable-sized data structures that
-         * could go above the limit we need to enhance the allocation
-         * mechanism.
-         */
-        assert(size <= ARENA_DEFAULT_SIZE);
+
+        size_t blockSize = (size < ARENA_DEFAULT_SIZE) ?
+                          ARENA_DEFAULT_SIZE : size;
         /* Time to allocate a new arena */
         ArenaMemBlock *newArena = (ArenaMemBlock *)
-            malloc(sizeof(ArenaMemBlock) + ARENA_DEFAULT_SIZE);
+            malloc(sizeof(ArenaMemBlock) + blockSize);
+        if (newArena == NULL) {
+            LOGE("Arena allocation failure");
+            dvmAbort();
+        }
+        newArena->blockSize = blockSize;
         newArena->bytesAllocated = 0;
         newArena->next = NULL;
         currentArena->next = newArena;
@@ -120,6 +123,7 @@ static void expandGrowableList(GrowableList *gList)
 /* Insert a new element into the growable list */
 void dvmInsertGrowableList(GrowableList *gList, void *elem)
 {
+    assert(gList->numAllocated != 0);
     if (gList->numUsed == gList->numAllocated) {
         expandGrowableList(gList);
     }
@@ -131,12 +135,34 @@ void dvmCompilerDumpCompilationUnit(CompilationUnit *cUnit)
 {
     int i;
     BasicBlock *bb;
-    LOGD("%d blocks in total\n", cUnit->numBlocks);
+    char *blockTypeNames[] = {
+        "Normal Chaining Cell",
+        "Hot Chaining Cell",
+        "Singleton Chaining Cell",
+        "Predicted Chaining Cell",
+        "Backward Branch",
+        "Chaining Cell Gap",
+        "N/A",
+        "Method Entry Block",
+        "Trace Entry Block",
+        "Code Block",
+        "Trace Exit Block",
+        "Method Exit Block",
+        "PC Reconstruction",
+        "Exception Handling",
+    };
+
+    LOGD("Compiling %s %s", cUnit->method->clazz->descriptor,
+         cUnit->method->name);
+    LOGD("%d insns", dvmGetMethodInsnsSize(cUnit->method));
+    LOGD("%d blocks in total", cUnit->numBlocks);
 
     for (i = 0; i < cUnit->numBlocks; i++) {
         bb = cUnit->blockList[i];
-        LOGD("Block %d (insn %04x - %04x%s)\n",
-             bb->id, bb->startOffset,
+        LOGD("Block %d (%s) (insn %04x - %04x%s)\n",
+             bb->id,
+             blockTypeNames[bb->blockType],
+             bb->startOffset,
              bb->lastMIRInsn ? bb->lastMIRInsn->offset : bb->startOffset,
              bb->lastMIRInsn ? "" : " empty");
         if (bb->taken) {

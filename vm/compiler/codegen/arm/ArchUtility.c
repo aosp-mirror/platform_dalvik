@@ -277,7 +277,8 @@ void dvmDumpLIRInsn(LIR *arg, unsigned char *baseAddr)
             LOGD("-------- BARRIER");
             break;
         case kArmPseudoExtended:
-            /* intentional fallthrough */
+            LOGD("-------- %s\n", (char *) dest);
+            break;
         case kArmPseudoSSARep:
             DUMP_SSA_REP(LOGD("-------- %s\n", (char *) dest));
             break;

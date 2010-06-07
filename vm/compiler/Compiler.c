@@ -95,6 +95,7 @@ bool dvmCompilerWorkEnqueue(const u2 *pc, WorkOrderKind kind, void* info)
     newOrder->pc = pc;
     newOrder->kind = kind;
     newOrder->info = info;
+    newOrder->result.methodCompilationAborted = NULL;
     newOrder->result.codeAddress = NULL;
     newOrder->result.discardResult =
         (kind == kWorkOrderTraceDebug) ? true : false;
@@ -351,9 +352,10 @@ bool compilerThreadStartup(void)
 
     dvmLockMutex(&gDvmJit.compilerLock);
 
-#if defined(WITH_JIT_TUNING)
     /* Track method-level compilation statistics */
     gDvmJit.methodStatsTable =  dvmHashTableCreate(32, NULL);
+
+#if defined(WITH_JIT_TUNING)
     gDvm.verboseShutdown = true;
 #endif
 
@@ -626,8 +628,10 @@ static void *compilerThreadStart(void *arg)
                     }
                     if (aborted || !compileOK) {
                         dvmCompilerArenaReset();
-                        work.result.codeAddress = dvmCompilerGetInterpretTemplate();
-                    } else if (!work.result.discardResult) {
+                    } else if (!work.result.discardResult &&
+                               work.result.codeAddress) {
+                        /* Make sure that proper code addr is installed */
+                        assert(work.result.codeAddress != NULL);
                         dvmJitSetCodeAddr(work.pc, work.result.codeAddress,
                                           work.result.instructionSet);
                     }

@@ -462,9 +462,9 @@ void dvmCompilerLoopOpt(CompilationUnit *cUnit)
 {
     LoopAnalysis *loopAnalysis = dvmCompilerNew(sizeof(LoopAnalysis), true);
 
-    assert(cUnit->blockList[0]->blockType == kEntryBlock);
+    assert(cUnit->blockList[0]->blockType == kTraceEntryBlock);
     assert(cUnit->blockList[2]->blockType == kDalvikByteCode);
-    assert(cUnit->blockList[3]->blockType == kExitBlock);
+    assert(cUnit->blockList[3]->blockType == kTraceExitBlock);
 
     cUnit->loopAnalysis = loopAnalysis;
     /*

@@ -425,8 +425,10 @@ static inline bool checkForNullExportPC(Object* obj, u4* fp, const u2* pc)
     checkDebugAndProf(pc, fp, self, curMethod, &debugIsMethodEntry)
 
 #if defined(WITH_JIT)
-#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, interpState))
-#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, interpState))
+#define CHECK_JIT_BOOL() (dvmCheckJit(pc, self, interpState, callsiteClass,\
+                          methodToCall))
+#define CHECK_JIT_VOID() (dvmCheckJit(pc, self, interpState, callsiteClass,\
+                          methodToCall))
 #define ABORT_JIT_TSELECT() (dvmJitAbortTraceSelect(interpState))
 #else
 #define CHECK_JIT_BOOL() (false)
@@ -1493,6 +1495,14 @@ bool INTERP_FUNC_NAME(Thread* self, InterpState* interpState)
          interpState->method->name);
 #endif
 #if INTERP_TYPE == INTERP_DBG
+    const ClassObject* callsiteClass = NULL;
+
+#if defined(WITH_SELF_VERIFICATION)
+    if (interpState->jitState != kJitSelfVerification) {
+        interpState->self->shadowSpace->jitExitState = kSVSIdle;
+    }
+#endif
+
     /* Check to see if we've got a trace selection request. */
     if (
          /*
@@ -3572,6 +3582,10 @@ GOTO_TARGET(invokeVirtual, bool methodCallRange)
         assert(baseMethod->methodIndex < thisPtr->clazz->vtableCount);
         methodToCall = thisPtr->clazz->vtable[baseMethod->methodIndex];
 
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
+
 #if 0
         if (dvmIsAbstractMethod(methodToCall)) {
             /*
@@ -3723,6 +3737,10 @@ GOTO_TARGET(invokeInterface, bool methodCallRange)
 
         thisClass = thisPtr->clazz;
 
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisClass;
+#endif
+
         /*
          * Given a class and a method index, find the Method* with the
          * actual code we want to execute.
@@ -3836,6 +3854,10 @@ GOTO_TARGET(invokeVirtualQuick, bool methodCallRange)
 
         if (!checkForNull(thisPtr))
             GOTO_exceptionThrown();
+
+#if defined(WITH_JIT) && (INTERP_TYPE == INTERP_DBG)
+        callsiteClass = thisPtr->clazz;
+#endif
 
         /*
          * Combine the object we found with the vtable offset in the

@@ -184,12 +184,13 @@ MTERP_SIZEOF(sizeofStackSaveArea,       StackSaveArea, 20)
 
   /* ShadowSpace fields */
 #if defined(WITH_JIT) && defined(WITH_SELF_VERIFICATION)
-MTERP_OFFSET(offShadowSpace_startPC, ShadowSpace, startPC, 0)
-MTERP_OFFSET(offShadowSpace_fp, ShadowSpace, fp, 4)
-MTERP_OFFSET(offShadowSpace_glue, ShadowSpace, glue, 8)
-MTERP_OFFSET(offShadowSpace_svState, ShadowSpace, selfVerificationState, 12)
-MTERP_OFFSET(offShadowSpace_shadowFP, ShadowSpace, shadowFP, 20)
-MTERP_OFFSET(offShadowSpace_interpState, ShadowSpace, interpState, 24)
+MTERP_OFFSET(offShadowSpace_startPC,     ShadowSpace, startPC, 0)
+MTERP_OFFSET(offShadowSpace_fp,          ShadowSpace, fp, 4)
+MTERP_OFFSET(offShadowSpace_glue,        ShadowSpace, glue, 8)
+MTERP_OFFSET(offShadowSpace_jitExitState,ShadowSpace, jitExitState, 12)
+MTERP_OFFSET(offShadowSpace_svState,     ShadowSpace, selfVerificationState, 16)
+MTERP_OFFSET(offShadowSpace_shadowFP,    ShadowSpace, shadowFP, 24)
+MTERP_OFFSET(offShadowSpace_interpState, ShadowSpace, interpState, 32)
 #endif
 
 /* InstField fields */
@@ -226,12 +227,23 @@ MTERP_OFFSET(offThread_exception,       Thread, exception, 48)
 
 #if defined(WITH_JIT)
 MTERP_OFFSET(offThread_inJitCodeCache,  Thread, inJitCodeCache, 76)
+#if defined(WITH_SELF_VERIFICATION)
+MTERP_OFFSET(offThread_shadowSpace,     Thread, shadowSpace, 80)
+#ifdef USE_INDIRECT_REF
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.segmentState.all, 84)
+#else
+MTERP_OFFSET(offThread_jniLocal_topCookie, \
+                                Thread, jniLocalRefTable.nextEntry, 84)
+#endif
+#else
 #ifdef USE_INDIRECT_REF
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.segmentState.all, 80)
 #else
 MTERP_OFFSET(offThread_jniLocal_topCookie, \
                                 Thread, jniLocalRefTable.nextEntry, 80)
+#endif
 #endif
 #else
 #ifdef USE_INDIRECT_REF
@@ -313,7 +325,7 @@ MTERP_CONSTANT(kSVSIdle, 0)
 MTERP_CONSTANT(kSVSStart, 1)
 MTERP_CONSTANT(kSVSPunt, 2)
 MTERP_CONSTANT(kSVSSingleStep, 3)
-MTERP_CONSTANT(kSVSTraceSelectNoChain, 4)
+MTERP_CONSTANT(kSVSNoProfile, 4)
 MTERP_CONSTANT(kSVSTraceSelect, 5)
 MTERP_CONSTANT(kSVSNormal, 6)
 MTERP_CONSTANT(kSVSNoChain, 7)

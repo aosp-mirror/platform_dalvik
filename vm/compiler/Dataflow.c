@@ -234,130 +234,130 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     DF_NOP,
 
     // 44 OP_AGET vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0 | DF_IS_GETTER,
 
     // 45 OP_AGET_WIDE vAA, vBB, vCC
-    DF_DA_WIDE | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+    DF_DA_WIDE | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0 | DF_IS_GETTER,
 
     // 46 OP_AGET_OBJECT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0 | DF_IS_GETTER,
 
     // 47 OP_AGET_BOOLEAN vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0 | DF_IS_GETTER,
 
     // 48 OP_AGET_BYTE vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0 | DF_IS_GETTER,
 
     // 49 OP_AGET_CHAR vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0 | DF_IS_GETTER,
 
     // 4A OP_AGET_SHORT vAA, vBB, vCC
-    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0,
+    DF_DA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_0 | DF_IS_GETTER,
 
     // 4B OP_APUT vAA, vBB, vCC
-    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1 | DF_IS_SETTER,
 
     // 4C OP_APUT_WIDE vAA, vBB, vCC
-    DF_UA_WIDE | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_2,
+    DF_UA_WIDE | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_2 | DF_IS_SETTER,
 
     // 4D OP_APUT_OBJECT vAA, vBB, vCC
-    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1 | DF_IS_SETTER,
 
     // 4E OP_APUT_BOOLEAN vAA, vBB, vCC
-    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1 | DF_IS_SETTER,
 
     // 4F OP_APUT_BYTE vAA, vBB, vCC
-    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1 | DF_IS_SETTER,
 
     // 50 OP_APUT_CHAR vAA, vBB, vCC
-    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1 | DF_IS_SETTER,
 
     // 51 OP_APUT_SHORT vAA, vBB, vCC
-    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1,
+    DF_UA | DF_UB | DF_UC | DF_NULL_N_RANGE_CHECK_1 | DF_IS_SETTER,
 
     // 52 OP_IGET vA, vB, field@CCCC
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // 53 OP_IGET_WIDE vA, vB, field@CCCC
-    DF_DA_WIDE | DF_UB,
+    DF_DA_WIDE | DF_UB | DF_IS_GETTER,
 
     // 54 OP_IGET_OBJECT vA, vB, field@CCCC
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // 55 OP_IGET_BOOLEAN vA, vB, field@CCCC
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // 56 OP_IGET_BYTE vA, vB, field@CCCC
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // 57 OP_IGET_CHAR vA, vB, field@CCCC
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // 58 OP_IGET_SHORT vA, vB, field@CCCC
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // 59 OP_IPUT vA, vB, field@CCCC
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // 5A OP_IPUT_WIDE vA, vB, field@CCCC
-    DF_UA_WIDE | DF_UB,
+    DF_UA_WIDE | DF_UB | DF_IS_SETTER,
 
     // 5B OP_IPUT_OBJECT vA, vB, field@CCCC
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // 5C OP_IPUT_BOOLEAN vA, vB, field@CCCC
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // 5D OP_IPUT_BYTE vA, vB, field@CCCC
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // 5E OP_IPUT_CHAR vA, vB, field@CCCC
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // 5F OP_IPUT_SHORT vA, vB, field@CCCC
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // 60 OP_SGET vAA, field@BBBB
-    DF_DA,
+    DF_DA | DF_IS_GETTER,
 
     // 61 OP_SGET_WIDE vAA, field@BBBB
-    DF_DA_WIDE,
+    DF_DA_WIDE | DF_IS_GETTER,
 
     // 62 OP_SGET_OBJECT vAA, field@BBBB
-    DF_DA,
+    DF_DA | DF_IS_GETTER,
 
     // 63 OP_SGET_BOOLEAN vAA, field@BBBB
-    DF_DA,
+    DF_DA | DF_IS_GETTER,
 
     // 64 OP_SGET_BYTE vAA, field@BBBB
-    DF_DA,
+    DF_DA | DF_IS_GETTER,
 
     // 65 OP_SGET_CHAR vAA, field@BBBB
-    DF_DA,
+    DF_DA | DF_IS_GETTER,
 
     // 66 OP_SGET_SHORT vAA, field@BBBB
-    DF_DA,
+    DF_DA | DF_IS_GETTER,
 
     // 67 OP_SPUT vAA, field@BBBB
-    DF_UA,
+    DF_UA | DF_IS_SETTER,
 
     // 68 OP_SPUT_WIDE vAA, field@BBBB
-    DF_UA_WIDE,
+    DF_UA_WIDE | DF_IS_SETTER,
 
     // 69 OP_SPUT_OBJECT vAA, field@BBBB
-    DF_UA,
+    DF_UA | DF_IS_SETTER,
 
     // 6A OP_SPUT_BOOLEAN vAA, field@BBBB
-    DF_UA,
+    DF_UA | DF_IS_SETTER,
 
     // 6B OP_SPUT_BYTE vAA, field@BBBB
-    DF_UA,
+    DF_UA | DF_IS_SETTER,
 
     // 6C OP_SPUT_CHAR vAA, field@BBBB
-    DF_UA,
+    DF_UA | DF_IS_SETTER,
 
     // 6D OP_SPUT_SHORT vAA, field@BBBB
-    DF_UA,
+    DF_UA | DF_IS_SETTER,
 
     // 6E OP_INVOKE_VIRTUAL {vD, vE, vF, vG, vA}
     DF_FORMAT_35C,
@@ -756,22 +756,22 @@ int dvmCompilerDataFlowAttributes[kMirOpLast] = {
     DF_NOP,
 
     // F2 OP_IGET_QUICK
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // F3 OP_IGET_WIDE_QUICK
-    DF_DA_WIDE | DF_UB,
+    DF_DA_WIDE | DF_UB | DF_IS_GETTER,
 
     // F4 OP_IGET_OBJECT_QUICK
-    DF_DA | DF_UB,
+    DF_DA | DF_UB | DF_IS_GETTER,
 
     // F5 OP_IPUT_QUICK
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // F6 OP_IPUT_WIDE_QUICK
-    DF_UA_WIDE | DF_UB,
+    DF_UA_WIDE | DF_UB | DF_IS_SETTER,
 
     // F7 OP_IPUT_OBJECT_QUICK
-    DF_UA | DF_UB,
+    DF_UA | DF_UB | DF_IS_SETTER,
 
     // F8 OP_INVOKE_VIRTUAL_QUICK
     DF_FORMAT_35C,
@@ -818,7 +818,8 @@ int dvmConvertSSARegToDalvik(CompilationUnit *cUnit, int ssaReg)
  * and subscript pair. Each SSA register can be used to index the
  * ssaToDalvikMap list to get the subscript[31..16]/dalvik_reg[15..0] mapping.
  */
-char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn)
+char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn,
+                                      char *note)
 {
     char buffer[256];
     int opcode = insn->opCode;
@@ -828,36 +829,35 @@ char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn)
     buffer[0] = 0;
     strcpy(buffer, dexGetOpcodeName(opcode));
 
+    if (note)
+        strcat(buffer, note);
+
     if (dfAttributes & DF_FORMAT_35C) {
         unsigned int i;
         for (i = 0; i < insn->vA; i++) {
             if (i != 0) strcat(buffer, ",");
-            sprintf(buffer + strlen(buffer), " v%d", insn->arg[i]);
+            snprintf(buffer + strlen(buffer), 256, " v%d", insn->arg[i]);
         }
     }
     else if (dfAttributes & DF_FORMAT_3RC) {
-        sprintf(buffer + strlen(buffer),
-                " v%d..v%d", insn->vC, insn->vC + insn->vA - 1);
+        snprintf(buffer + strlen(buffer), 256,
+                 " v%d..v%d", insn->vC, insn->vC + insn->vA - 1);
     }
     else {
         if (dfAttributes & DF_A_IS_REG) {
-            sprintf(buffer + strlen(buffer), " v%d", insn->vA);
+            snprintf(buffer + strlen(buffer), 256, " v%d", insn->vA);
         }
         if (dfAttributes & DF_B_IS_REG) {
-            sprintf(buffer + strlen(buffer),
-                    ", v%d", insn->vB);
+            snprintf(buffer + strlen(buffer), 256, ", v%d", insn->vB);
         }
         else {
-            sprintf(buffer + strlen(buffer),
-                    ", (#%d)", insn->vB);
+            snprintf(buffer + strlen(buffer), 256, ", (#%d)", insn->vB);
         }
         if (dfAttributes & DF_C_IS_REG) {
-            sprintf(buffer + strlen(buffer),
-                    ", v%d", insn->vC);
+            snprintf(buffer + strlen(buffer), 256, ", v%d", insn->vC);
         }
         else {
-            sprintf(buffer + strlen(buffer),
-                    ", (#%d)", insn->vC);
+            snprintf(buffer + strlen(buffer), 256, ", (#%d)", insn->vC);
         }
     }
     int length = strlen(buffer) + 1;
@@ -934,7 +934,7 @@ void dvmCompilerFindLiveIn(CompilationUnit *cUnit, BasicBlock *bb)
     BitVector *useV, *defV, *liveInV;
 
     if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kEntryBlock) {
+        bb->blockType != kTraceEntryBlock) {
         return;
     }
 
@@ -1041,7 +1041,7 @@ void dvmCompilerDoSSAConversion(CompilationUnit *cUnit, BasicBlock *bb)
 {
     MIR *mir;
 
-    if (bb->blockType != kDalvikByteCode && bb->blockType != kEntryBlock) {
+    if (bb->blockType != kDalvikByteCode && bb->blockType != kTraceEntryBlock) {
         return;
     }
 
@@ -1240,7 +1240,7 @@ void dvmCompilerFindInductionVariables(struct CompilationUnit *cUnit,
     MIR *mir;
 
     if (bb->blockType != kDalvikByteCode &&
-        bb->blockType != kEntryBlock) {
+        bb->blockType != kTraceEntryBlock) {
         return;
     }
 
@@ -1436,7 +1436,7 @@ void dvmInitializeSSAConversion(CompilationUnit *cUnit)
     for (i = 0; i < cUnit->numBlocks; i++) {
         BasicBlock *bb = cUnit->blockList[i];
         if (bb->blockType == kDalvikByteCode ||
-            bb->blockType == kEntryBlock) {
+            bb->blockType == kTraceEntryBlock) {
             bb->dataFlowInfo = dvmCompilerNew(sizeof(BasicBlockDataFlow), true);
         }
     }

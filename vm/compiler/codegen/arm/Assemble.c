@@ -905,11 +905,13 @@ static void installDataContent(CompilationUnit *cUnit)
 static int jitTraceDescriptionSize(const JitTraceDescription *desc)
 {
     int runCount;
+    /* Trace end is always of non-meta type (ie isCode == true) */
     for (runCount = 0; ; runCount++) {
-        if (desc->trace[runCount].frag.runEnd)
+        if (desc->trace[runCount].frag.isCode &&
+            desc->trace[runCount].frag.runEnd)
            break;
     }
-    return sizeof(JitCodeDesc) + ((runCount+1) * sizeof(JitTraceRun));
+    return sizeof(JitTraceDescription) + ((runCount+1) * sizeof(JitTraceRun));
 }
 
 /* Return TRUE if error happens */
@@ -1195,7 +1197,8 @@ void dvmCompilerAssembleLIR(CompilationUnit *cUnit, JitTranslationInfo *info)
     int offset = 0;
     int i;
     ChainCellCounts chainCellCounts;
-    int descSize = jitTraceDescriptionSize(cUnit->traceDesc);
+    int descSize =
+        cUnit->wholeMethod ? 0 : jitTraceDescriptionSize(cUnit->traceDesc);
     int chainingCellGap;
 
     info->instructionSet = cUnit->instructionSet;

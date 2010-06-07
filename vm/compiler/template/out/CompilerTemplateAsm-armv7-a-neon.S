@@ -101,7 +101,6 @@ unspecified registers or condition codes.
  */
 #include "../../../mterp/common/asm-constants.h"
 
-
 /* File: armv5te-vfp/platform.S */
 /*
  * ===========================================================================
@@ -166,7 +165,6 @@ dvmCompiler_TEMPLATE_CMP_LONG:
     mov     r0, #1                      @ r0<- 1
     bx      lr
 
-
 /* ------------------------------ */
     .balign 4
     .global dvmCompiler_TEMPLATE_RETURN
@@ -197,7 +195,7 @@ dvmCompiler_TEMPLATE_RETURN:
 #else
     blxeq   lr                          @ punt to interpreter and compare state
 #endif
-    ldr     r1, .LdvmJitToInterpNoChain @ defined in footer.S
+    ldr     r1, .LdvmJitToInterpNoChainNoProfile @ defined in footer.S
     mov     rFP, r10                    @ publish new FP
     ldrne   r10, [r2, #offMethod_clazz] @ r10<- method->clazz
     ldr     r8, [r8]                    @ r8<- suspendCount
@@ -334,8 +332,6 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_CHAIN:
 
     bx      lr                              @ return to the callee-chaining cell
 
-
-
 /* ------------------------------ */
     .balign 4
     .global dvmCompiler_TEMPLATE_INVOKE_METHOD_PREDICTED_CHAIN
@@ -468,9 +464,6 @@ dvmCompiler_TEMPLATE_INVOKE_METHOD_NATIVE:
 #endif
     mov     pc, r1
 
-
-
-
 /* ------------------------------ */
     .balign 4
     .global dvmCompiler_TEMPLATE_MUL_LONG
@@ -547,7 +540,6 @@ dvmCompiler_TEMPLATE_SHR_LONG:
     mov     r1, r1, asr r2              @  r1<- r1 >> r2
     bx      lr
 
-
 /* ------------------------------ */
     .balign 4
     .global dvmCompiler_TEMPLATE_USHR_LONG
@@ -568,7 +560,6 @@ dvmCompiler_TEMPLATE_USHR_LONG:
     movpl   r0, r1, lsr ip              @  if r2 >= 32, r0<-r1 >>> (r2-32)
     mov     r1, r1, lsr r2              @  r1<- r1 >>> r2
     bx      lr
-
 
 /* ------------------------------ */
     .balign 4
@@ -919,7 +910,6 @@ dvmCompiler_TEMPLATE_CMPG_DOUBLE_VFP:
     moveq   r0, #0                      @ (equal) r0<- 0
     bx      lr
 
-
 /* ------------------------------ */
     .balign 4
     .global dvmCompiler_TEMPLATE_CMPL_DOUBLE_VFP
@@ -1226,7 +1216,6 @@ do_memcmp16:
 .Lmemcmp16:
     .word __memcmp16
 
-
 /* ------------------------------ */
     .balign 4
     .global dvmCompiler_TEMPLATE_STRING_INDEXOF
@@ -1345,7 +1334,6 @@ match_3:
     asr   r0, r0, #1
     bx    lr
 
-
 /* ------------------------------ */
     .balign 4
     .global dvmCompiler_TEMPLATE_INTERPRET
@@ -1405,7 +1393,6 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER:
     mov     r0, #kHeavyweightMonitor
 #endif
     bx      r2
-
 
 /* ------------------------------ */
     .balign 4
@@ -1525,6 +1512,8 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
     .align  2
 .LdvmAsmInstructionStart:
     .word   dvmAsmInstructionStart
+.LdvmJitToInterpNoChainNoProfile:
+    .word   dvmJitToInterpNoChainNoProfile
 .LdvmJitToInterpTraceSelectNoChain:
     .word   dvmJitToInterpTraceSelectNoChain
 .LdvmJitToInterpNoChain:
@@ -1552,3 +1541,4 @@ dvmCompiler_TEMPLATE_MONITOR_ENTER_DEBUG:
 dmvCompilerTemplateEnd:
 
 #endif /* WITH_JIT */
+
