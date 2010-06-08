@@ -209,11 +209,7 @@ dvmMarkObjectNonNull(const Object *obj)
  */
 void dvmHeapMarkRootSet()
 {
-    HeapRefTable *refs;
-    GcHeap *gcHeap;
-    Object **op;
-
-    gcHeap = gDvm.gcHeap;
+    GcHeap *gcHeap = gDvm.gcHeap;
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_STICKY_CLASS, 0);
 
@@ -259,15 +255,6 @@ void dvmHeapMarkRootSet()
     dvmGcMarkDebuggerRefs();
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_VM_INTERNAL, 0);
-
-    /* Mark all ALLOC_NO_GC objects.
-     */
-    LOG_SCAN("ALLOC_NO_GC objects\n");
-    refs = &gcHeap->nonCollectableRefs;
-    op = refs->table;
-    while ((uintptr_t)op < (uintptr_t)refs->nextEntry) {
-        dvmMarkObjectNonNull(*(op++));
-    }
 
     /* Mark any special objects we have sitting around.
      */
@@ -745,7 +732,7 @@ void dvmHeapScheduleFinalizations()
     /* Create a table that the new pending refs will
      * be added to.
      */
-    if (!dvmHeapInitHeapRefTable(&newPendingRefs, 128)) {
+    if (!dvmHeapInitHeapRefTable(&newPendingRefs)) {
         //TODO: mark all finalizable refs and hope that
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space

@@ -273,7 +273,6 @@ void dvmVerifyRoots(void)
     verifyHashTable(gDvm.internedStrings, verifyStringReference);
     verifyReferenceTable(&gDvm.jniGlobalRefTable);
     verifyReferenceTable(&gDvm.jniPinRefTable);
-    verifyReferenceTable(&gDvm.gcHeap->nonCollectableRefs);
     verifyLargeHeapRefTable(gDvm.gcHeap->referenceOperations,
                             verifyReferenceOperation);
     verifyLargeHeapRefTable(gDvm.gcHeap->pendingFinalizationRefs,

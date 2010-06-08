@@ -27,11 +27,6 @@
 struct GcHeap {
     HeapSource      *heapSource;
 
-    /* List of heap objects that the GC should never collect.
-     * These should be included in the root set of objects.
-     */
-    HeapRefTable    nonCollectableRefs;
-
     /* List of heap objects that will require finalization when
      * collected.  I.e., instance objects
      *
