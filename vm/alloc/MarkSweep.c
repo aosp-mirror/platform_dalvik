@@ -505,16 +505,18 @@ static void scanDataObject(const DataObject *obj, GcMarkContext *ctx)
  */
 static void scanObject(const Object *obj, GcMarkContext *ctx)
 {
-    ClassObject *clazz;
-
     assert(obj != NULL);
     assert(ctx != NULL);
     assert(obj->clazz != NULL);
-    clazz = obj->clazz;
+#if WITH_HPROF
+    if (gDvm.gcHeap->hprofContext != NULL) {
+        hprofDumpHeapObject(gDvm.gcHeap->hprofContext, obj);
+    }
+#endif
     /* Dispatch a type-specific scan routine. */
-    if (clazz == gDvm.classJavaLangClass) {
+    if (obj->clazz == gDvm.classJavaLangClass) {
         scanClassObject((ClassObject *)obj, ctx);
-    } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
+    } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
         scanArrayObject((ArrayObject *)obj, ctx);
     } else {
         scanDataObject((DataObject *)obj, ctx);
