@@ -25,8 +25,6 @@
 #include <cutils/ashmem.h>
 #include <errno.h>
 
-#define VERBOSE_GC          0
-
 #define GC_LOG_TAG      LOG_TAG "-gc"
 
 #if LOG_NDEBUG
@@ -37,25 +35,11 @@
 #define LOGD_GC(...)    LOG(LOG_DEBUG, GC_LOG_TAG, __VA_ARGS__)
 #endif
 
-#if VERBOSE_GC
-#define LOGVV_GC(...)   LOGV_GC(__VA_ARGS__)
-#else
-#define LOGVV_GC(...)   ((void)0)
-#endif
-
 #define LOGI_GC(...)    LOG(LOG_INFO, GC_LOG_TAG, __VA_ARGS__)
 #define LOGW_GC(...)    LOG(LOG_WARN, GC_LOG_TAG, __VA_ARGS__)
 #define LOGE_GC(...)    LOG(LOG_ERROR, GC_LOG_TAG, __VA_ARGS__)
 
 #define LOG_SCAN(...)   LOGV_GC("SCAN: " __VA_ARGS__)
-#define LOG_MARK(...)   LOGV_GC("MARK: " __VA_ARGS__)
-#define LOG_SWEEP(...)  LOGV_GC("SWEEP: " __VA_ARGS__)
-#define LOG_REF(...)    LOGV_GC("REF: " __VA_ARGS__)
-
-#define LOGV_SCAN(...)  LOGVV_GC("SCAN: " __VA_ARGS__)
-#define LOGV_MARK(...)  LOGVV_GC("MARK: " __VA_ARGS__)
-#define LOGV_SWEEP(...) LOGVV_GC("SWEEP: " __VA_ARGS__)
-#define LOGV_REF(...)   LOGVV_GC("REF: " __VA_ARGS__)
 
 #define ALIGN_UP_TO_PAGE_SIZE(p) \
     (((size_t)(p) + (SYSTEM_PAGE_SIZE - 1)) & ~(SYSTEM_PAGE_SIZE - 1))
@@ -165,12 +149,6 @@ markObjectNonNull(const Object *obj, GcMarkContext *ctx,
             hprofMarkRootObject(gDvm.gcHeap->hprofContext, obj, 0);
         }
 #endif
-
-        /* obj->clazz can be NULL if we catch an object between
-         * dvmMalloc() and DVM_OBJECT_INIT().  This is ok.
-         */
-        LOGV_MARK("0x%08x %s\n", (uint)obj,
-                obj->clazz == NULL ? "<null class>" : obj->clazz->name);
     }
 }
 
@@ -890,13 +868,6 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
 
         obj = (Object *)*ptrs++;
 
-        /* NOTE: Dereferencing clazz is dangerous.  If obj was the last
-         * one to reference its class object, the class object could be
-         * on the sweep list, and could already have been swept, leaving
-         * us with a stale pointer.
-         */
-        LOGV_SWEEP("FREE: 0x%08x %s\n", (uint)obj, obj->clazz->name);
-
         /* This assumes that java.lang.Class will never go away.
          * If it can, and we were the last reference to it, it
          * could have already been swept.  However, even in that case,
@@ -904,7 +875,6 @@ sweepBitmapCallback(size_t numPtrs, void **ptrs, const void *finger, void *arg)
          * value.
          */
         if (obj->clazz == classJavaLangClass) {
-            LOGV_SWEEP("---------------> %s\n", ((ClassObject *)obj)->name);
             /* dvmFreeClassInnards() may have already been called,
              * but it's safe to call on the same ClassObject twice.
              */
