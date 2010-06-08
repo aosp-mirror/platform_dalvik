@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     /**
      * This method requires the edge-splitter to add a node
      * to get to the finally block, since there are
      * two exception sources.
-     * 
+     *
      */
     public int edgeSplitPredTest(int x) {
         int y = 1;
@@ -45,7 +45,7 @@ public class Blort
      * a unique predecessor
      */
     void edgeSplitMoveException() {
-        try { 
+        try {
             hashCode();
             hashCode();
         } catch (Throwable tr) {
@@ -60,7 +60,7 @@ public class Blort
      */
     int edgeSplitSuccessor(int x) {
         int y = 0;
-        
+
         switch(x) {
             case 1: y++;
             break;

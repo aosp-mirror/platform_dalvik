@@ -33,20 +33,20 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * {@code non-null;} full list of successors that this block may
-     * branch to 
+     * branch to
      */
     private final IntList successors;
 
     /**
      * {@code >= -1;} the primary / standard-flow / "default" successor, or
      * {@code -1} if this block has no successors (that is, it
-     * exits the function/method) 
+     * exits the function/method)
      */
     private final int primarySuccessor;
 
     /**
      * Constructs an instance. The predecessor set is set to {@code null}.
-     * 
+     *
      * @param label {@code >= 0;} target label for this block
      * @param insns {@code non-null;} list of instructions in this block
      * @param successors {@code non-null;} full list of successors that this
@@ -114,7 +114,7 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * Instances of this class compare by identity. That is,
      * {@code x.equals(y)} is only true if {@code x == y}.
      */
@@ -125,7 +125,7 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * Return the identity hashcode of this instance. This is proper,
      * since instances of this class compare by identity (see {@link #equals}).
      */
@@ -136,7 +136,7 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * Gets the target label of this block.
-     * 
+     *
      * @return {@code >= 0;} the label
      */
     public int getLabel() {
@@ -145,7 +145,7 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * Gets the list of instructions inside this block.
-     * 
+     *
      * @return {@code non-null;} the instruction list
      */
     public InsnList getInsns() {
@@ -154,7 +154,7 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * Gets the list of successors that this block may branch to.
-     * 
+     *
      * @return {@code non-null;} the successors list
      */
     public IntList getSuccessors() {
@@ -163,7 +163,7 @@ public final class BasicBlock implements LabeledItem {
 
     /**
      * Gets the primary successor of this block.
-     * 
+     *
      * @return {@code >= -1;} the primary successor, or {@code -1} if this
      * block has no successors at all
      */
@@ -174,7 +174,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Gets the secondary successor of this block. It is only valid to call
      * this method on blocks that have exactly two successors.
-     * 
+     *
      * @return {@code >= 0;} the secondary successor
      */
     public int getSecondarySuccessor() {
@@ -194,7 +194,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Gets the first instruction of this block. This is just a
      * convenient shorthand for {@code getInsns().get(0)}.
-     * 
+     *
      * @return {@code non-null;} the first instruction
      */
     public Insn getFirstInsn() {
@@ -204,7 +204,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Gets the last instruction of this block. This is just a
      * convenient shorthand for {@code getInsns().getLast()}.
-     * 
+     *
      * @return {@code non-null;} the last instruction
      */
     public Insn getLastInsn() {
@@ -214,7 +214,7 @@ public final class BasicBlock implements LabeledItem {
     /**
      * Returns whether this block might throw an exception. This is
      * just a convenient shorthand for {@code getLastInsn().canThrow()}.
-     * 
+     *
      * @return {@code true} iff this block might throw an
      * exception
      */
@@ -227,7 +227,7 @@ public final class BasicBlock implements LabeledItem {
      * This is just a shorthand for inspecting the last instruction in
      * the block to see if it could throw, and if so, whether it in fact
      * has any associated handlers.
-     * 
+     *
      * @return {@code true} iff this block has any associated
      * exception handlers
      */
@@ -255,7 +255,7 @@ public final class BasicBlock implements LabeledItem {
      * Returns an instance that is identical to this one, except that
      * the registers in each instruction are offset by the given
      * amount.
-     * 
+     *
      * @param delta the amount to offset register numbers by
      * @return {@code non-null;} an appropriately-constructed instance
      */

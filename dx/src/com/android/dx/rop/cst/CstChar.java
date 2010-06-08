@@ -30,7 +30,7 @@ public final class CstChar
     /**
      * Makes an instance for the given value. This may (but does not
      * necessarily) return an already-allocated instance.
-     * 
+     *
      * @param value the {@code char} value
      */
     public static CstChar make(char value) {
@@ -41,7 +41,7 @@ public final class CstChar
      * Makes an instance for the given {@code int} value. This
      * may (but does not necessarily) return an already-allocated
      * instance.
-     * 
+     *
      * @param value the value, which must be in range for a {@code char}
      * @return {@code non-null;} the appropriate instance
      */
@@ -49,7 +49,7 @@ public final class CstChar
         char cast = (char) value;
 
         if (cast != value) {
-            throw new IllegalArgumentException("bogus char value: " + 
+            throw new IllegalArgumentException("bogus char value: " +
                     value);
         }
 
@@ -58,7 +58,7 @@ public final class CstChar
 
     /**
      * Constructs an instance. This constructor is private; use {@link #make}.
-     * 
+     *
      * @param value the {@code char} value
      */
     private CstChar(char value) {
@@ -90,7 +90,7 @@ public final class CstChar
 
     /**
      * Gets the {@code char} value.
-     * 
+     *
      * @return the value
      */
     public char getValue() {

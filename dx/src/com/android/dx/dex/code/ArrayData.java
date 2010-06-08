@@ -25,12 +25,12 @@ import com.android.dx.rop.type.Type;
 import java.util.ArrayList;
 
 /**
- * Pseudo-instruction which holds fill array data. 
+ * Pseudo-instruction which holds fill array data.
  */
 public final class ArrayData extends VariableSizeInsn {
     /**
      * {@code non-null;} address representing the instruction that uses this
-     * instance 
+     * instance
      */
     private final CodeAddress user;
 
@@ -49,7 +49,7 @@ public final class ArrayData extends VariableSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      * @param user {@code non-null;} address representing the instruction that
      * uses this instance

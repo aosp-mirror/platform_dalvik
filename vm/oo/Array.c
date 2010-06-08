@@ -222,7 +222,7 @@ ArrayObject* dvmAllocPrimitiveArray(char type, size_t length, int allocFlags)
  * The dimension we're creating is in dimensions[0], so when we recurse
  * we advance the pointer.
  */
-ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim, 
+ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
     const int* dimensions)
 {
     ArrayObject* newArray;

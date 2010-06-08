@@ -34,7 +34,7 @@ public abstract class MemberIdItem extends IdItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param cst {@code non-null;} the constant for the member
      */
     public MemberIdItem(CstMemberRef cst) {
@@ -74,7 +74,7 @@ public abstract class MemberIdItem extends IdItem {
             out.annotate(2, String.format("  %-10s %s", getTypoidName() + ':',
                             Hex.u2(typoidIdx)));
             out.annotate(4, "  name_idx:  " + Hex.u4(nameIdx));
-        }            
+        }
 
         out.writeShort(classIdx);
         out.writeShort(typoidIdx);
@@ -85,24 +85,24 @@ public abstract class MemberIdItem extends IdItem {
      * Returns the index of the type-like thing associated with
      * this item, in order that it may be written out. Subclasses must
      * override this to get whatever it is they need to store.
-     * 
+     *
      * @param file {@code non-null;} the file being written
      * @return the index in question
      */
     protected abstract int getTypoidIdx(DexFile file);
-        
+
     /**
      * Returns the field name of the type-like thing associated with
      * this item, for listing-generating purposes. Subclasses must override
      * this.
-     * 
+     *
      * @return {@code non-null;} the name in question
      */
     protected abstract String getTypoidName();
 
     /**
      * Gets the member constant.
-     * 
+     *
      * @return {@code non-null;} the constant
      */
     public final CstMemberRef getRef() {

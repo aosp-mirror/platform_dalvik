@@ -101,13 +101,13 @@ adbStateAlloc(void)
     netState->controlAddrLen =
             sizeof(netState->controlAddr.controlAddrUn.sun_family) +
             kJdwpControlNameLen;
-                               
-    memcpy(netState->controlAddr.controlAddrUn.sun_path, 
+
+    memcpy(netState->controlAddr.controlAddrUn.sun_path,
            kJdwpControlName, kJdwpControlNameLen);
- 
+
     netState->wakeFds[0] = -1;
     netState->wakeFds[1] = -1;
-    
+
     return netState;
 }
 
@@ -122,7 +122,7 @@ static bool startup(struct JdwpState* state, const JdwpStartupParams* pParams)
     JdwpNetState*  netState;
 
     LOGV("ADB transport startup\n");
-    
+
     state->netState = netState = adbStateAlloc();
     if (netState == NULL)
         return false;
@@ -158,13 +158,13 @@ static int  receiveClientFd(JdwpNetState*  netState)
     msg.msg_flags      = 0;
     msg.msg_control    = cm_un.buffer;
     msg.msg_controllen = sizeof(cm_un.buffer);
-    
+
     cmsg = CMSG_FIRSTHDR(&msg);
     cmsg->cmsg_len   = msg.msg_controllen;
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type  = SCM_RIGHTS;
     ((int*)CMSG_DATA(cmsg))[0] = -1;
-    
+
     do {
         ret = recvmsg(netState->controlSock, &msg, 0);
     } while (ret < 0 && errno == EINTR);
@@ -197,7 +197,7 @@ static bool acceptConnection(struct JdwpState* state)
     int retryCount = 0;
 
     /* first, ensure that we get a connection to the ADB daemon */
-    
+
 retry:
     if (netState->shuttingDown)
         return false;
@@ -340,7 +340,7 @@ static void adbStateShutdown(struct JdwpNetState* netState)
         shutdown(controlSock, SHUT_RDWR);
         netState->controlSock = -1;
     }
-    
+
     if (netState->wakeFds[1] >= 0) {
         LOGV("+++ writing to wakePipe\n");
         (void) write(netState->wakeFds[1], "", 1);

@@ -1069,7 +1069,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         pDec->vB = INST_B(inst);
         break;
     case kFmt11n:       // op vA, #+B
-        pDec->vA = INST_A(inst); 
+        pDec->vA = INST_A(inst);
         pDec->vB = (s4) (INST_B(inst) << 28) >> 28; // sign extend 4-bit value
         break;
     case kFmt11x:       // op vAA

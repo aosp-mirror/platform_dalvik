@@ -32,7 +32,7 @@ public class Main {
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
-        
+
         System.out.print("Thread starter returning\n");
     }
 

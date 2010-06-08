@@ -30,7 +30,7 @@ public final class TargetInsn extends FixedSizeInsn {
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}), and the target is initially
      * {@code null}.
-     * 
+     *
      * @param opcode the opcode; one of the constants from {@link Dops}
      * @param position {@code non-null;} source position
      * @param registers {@code non-null;} register list, including a
@@ -67,7 +67,7 @@ public final class TargetInsn extends FixedSizeInsn {
      * {@code lt} test becomes a {@code ge}), and its branch
      * target is replaced by the one given, and all set-once values
      * associated with the class (such as its address) are reset.
-     * 
+     *
      * @param target {@code non-null;} the new branch target
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -79,7 +79,7 @@ public final class TargetInsn extends FixedSizeInsn {
 
     /**
      * Gets the unique branch target of this instruction.
-     * 
+     *
      * @return {@code non-null;} the branch target
      */
     public CodeAddress getTarget() {
@@ -91,7 +91,7 @@ public final class TargetInsn extends FixedSizeInsn {
      * to call if the target instruction has been assigned an address,
      * and it is merely a convenient shorthand for
      * {@code getTarget().getAddress()}.
-     * 
+     *
      * @return {@code >= 0;} the target address
      */
     public int getTargetAddress() {
@@ -103,7 +103,7 @@ public final class TargetInsn extends FixedSizeInsn {
      * call if both this and the target instruction each has been assigned
      * an address, and it is merely a convenient shorthand for
      * {@code getTargetAddress() - getAddress()}.
-     * 
+     *
      * @return the branch offset
      */
     public int getTargetOffset() {
@@ -112,7 +112,7 @@ public final class TargetInsn extends FixedSizeInsn {
 
     /**
      * Returns whether the target offset is known.
-     * 
+     *
      * @return {@code true} if the target offset is known or
      * {@code false} if not
      */

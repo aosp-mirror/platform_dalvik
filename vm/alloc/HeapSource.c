@@ -1166,7 +1166,7 @@ void dvmSetTargetHeapUtilization(float newTarget)
 
     hs->targetUtilization =
             (size_t)(newTarget * (float)HEAP_UTILIZATION_MAX);
-    LOGV("Set heap target utilization to %zd/%d (%f)\n", 
+    LOGV("Set heap target utilization to %zd/%d (%f)\n",
             hs->targetUtilization, HEAP_UTILIZATION_MAX, newTarget);
 }
 
@@ -1373,7 +1373,7 @@ dvmHeapSourceTrim(size_t bytesTrimmed[], size_t arrayLen)
         /* Return any whole free pages to the system.
          */
         bytesTrimmed[i] = 0;
-        mspace_walk_free_pages(heap->msp, releasePagesInRange, 
+        mspace_walk_free_pages(heap->msp, releasePagesInRange,
                                &bytesTrimmed[i]);
         heapBytes += bytesTrimmed[i];
     }
@@ -1474,7 +1474,7 @@ externalAllocPossible(const HeapSource *hs, size_t n)
  * Tries to update the internal count of externally-allocated memory.
  * If there's enough room for that memory, returns true.  If not, returns
  * false and does not update the count.
- * 
+ *
  * The caller must ensure externalAllocPossible(hs, n) == true.
  */
 static bool

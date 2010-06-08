@@ -46,7 +46,7 @@ public final class BytecodeArray {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param bytes {@code non-null;} underlying bytes
      * @param pool {@code non-null;} constant pool to use when resolving constant
      * pool indices
@@ -66,7 +66,7 @@ public final class BytecodeArray {
 
     /**
      * Gets the underlying byte array.
-     * 
+     *
      * @return {@code non-null;} the byte array
      */
     public ByteArray getBytes() {
@@ -75,7 +75,7 @@ public final class BytecodeArray {
 
     /**
      * Gets the size of the bytecode array, per se.
-     * 
+     *
      * @return {@code >= 0;} the length of the bytecode array
      */
     public int size() {
@@ -86,7 +86,7 @@ public final class BytecodeArray {
      * Gets the total length of this structure in bytes, when included in
      * a {@code Code} attribute. The returned value includes the
      * array size plus four bytes for {@code code_length}.
-     * 
+     *
      * @return {@code >= 4;} the total length, in bytes
      */
     public int byteLength() {
@@ -95,7 +95,7 @@ public final class BytecodeArray {
 
     /**
      * Parses each instruction in the array, in order.
-     * 
+     *
      * @param visitor {@code null-ok;} visitor to call back to for each instruction
      */
     public void forEach(Visitor visitor) {
@@ -114,7 +114,7 @@ public final class BytecodeArray {
     /**
      * Finds the offset to each instruction in the bytecode array. The
      * result is a bit set with the offset of each opcode-per-se flipped on.
-     * 
+     *
      * @see Bits
      * @return {@code non-null;} appropriately constructed bit set
      */
@@ -138,7 +138,7 @@ public final class BytecodeArray {
      * the indicated offset (that is, the bit index), repeating until the
      * work set is empty. It is expected that the visitor will regularly
      * set new bits in the work set during the process.
-     * 
+     *
      * @param workSet {@code non-null;} the work set to process
      * @param visitor {@code non-null;} visitor to call back to for each instruction
      */
@@ -162,16 +162,16 @@ public final class BytecodeArray {
      * Parses the instruction at the indicated offset. Indicate the
      * result by calling the visitor if supplied and by returning the
      * number of bytes consumed by the instruction.
-     * 
+     *
      * <p>In order to simplify further processing, the opcodes passed
      * to the visitor are canonicalized, altering the opcode to a more
      * universal one and making formerly implicit arguments
      * explicit. In particular:</p>
-     * 
+     *
      * <ul>
      * <li>The opcodes to push literal constants of primitive types all become
      *   {@code ldc}.
-     *   E.g., {@code fconst_0}, {@code sipush}, and 
+     *   E.g., {@code fconst_0}, {@code sipush}, and
      *   {@code lconst_0} qualify for this treatment.</li>
      * <li>{@code aconst_null} becomes {@code ldc} of a
      *   "known null."</li>
@@ -202,7 +202,7 @@ public final class BytecodeArray {
      *   their pushed type. E.g., {@code arraylength} gets type
      *   {@code Type.INT}.</li>
      * </ul>
-     * 
+     *
      * @param offset {@code >= 0, < bytes.size();} offset to the start of the
      * instruction
      * @param visitor {@code null-ok;} visitor to call back to
@@ -313,7 +313,7 @@ public final class BytecodeArray {
                 case ByteOps.LDC: {
                     int idx = bytes.getUnsignedByte(offset + 1);
                     Constant cst = pool.get(idx);
-                    int value = (cst instanceof CstInteger) ? 
+                    int value = (cst instanceof CstInteger) ?
                         ((CstInteger) cst).getValue() : 0;
                     visitor.visitConstant(ByteOps.LDC, offset, 2, cst, value);
                     return 2;
@@ -321,7 +321,7 @@ public final class BytecodeArray {
                 case ByteOps.LDC_W: {
                     int idx = bytes.getUnsignedShort(offset + 1);
                     Constant cst = pool.get(idx);
-                    int value = (cst instanceof CstInteger) ? 
+                    int value = (cst instanceof CstInteger) ?
                         ((CstInteger) cst).getValue() : 0;
                     visitor.visitConstant(ByteOps.LDC, offset, 3, cst, value);
                     return 3;
@@ -798,7 +798,7 @@ public final class BytecodeArray {
 
     /**
      * Helper to deal with {@code tableswitch}.
-     * 
+     *
      * @param offset the offset to the {@code tableswitch} opcode itself
      * @param visitor {@code non-null;} visitor to use
      * @return instruction length, in bytes
@@ -841,7 +841,7 @@ public final class BytecodeArray {
 
     /**
      * Helper to deal with {@code lookupswitch}.
-     * 
+     *
      * @param offset the offset to the {@code lookupswitch} opcode itself
      * @param visitor {@code non-null;} visitor to use
      * @return instruction length, in bytes
@@ -1059,10 +1059,10 @@ public final class BytecodeArray {
         }
      }
 
-    
+
     /**
      * Helper to deal with {@code wide}.
-     * 
+     *
      * @param offset the offset to the {@code wide} opcode itself
      * @param visitor {@code non-null;} visitor to use
      * @return instruction length, in bytes
@@ -1145,7 +1145,7 @@ public final class BytecodeArray {
     public interface Visitor {
         /**
          * Visits an invalid instruction.
-         * 
+         *
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
@@ -1155,7 +1155,7 @@ public final class BytecodeArray {
         /**
          * Visits an instruction which has no inline arguments
          * (implicit or explicit).
-         * 
+         *
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
@@ -1166,7 +1166,7 @@ public final class BytecodeArray {
 
         /**
          * Visits an instruction which has a local variable index argument.
-         * 
+         *
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
@@ -1188,13 +1188,13 @@ public final class BytecodeArray {
          * should-be-zero value left-shifted by 8. In the case of entries
          * of type {@code int}, the {@code value} field always
          * holds the raw value (for convenience of clients).
-         * 
+         *
          * <p><b>Note:</b> In order to avoid giving it a barely-useful
          * visitor all its own, {@code newarray} also uses this
          * form, passing {@code value} as the array type code and
          * {@code cst} as a {@link CstType} instance
          * corresponding to the array type.</p>
-         * 
+         *
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
@@ -1207,7 +1207,7 @@ public final class BytecodeArray {
 
         /**
          * Visits an instruction which has a branch target argument.
-         * 
+         *
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
@@ -1218,7 +1218,7 @@ public final class BytecodeArray {
 
         /**
          * Visits a switch instruction.
-         * 
+         *
          * @param opcode the opcode
          * @param offset offset to the instruction
          * @param length length of the instruction, in bytes
@@ -1318,7 +1318,7 @@ public final class BytecodeArray {
             return previousOffset;
         }
     }
-    
+
     /**
      * Base implementation of {@link Visitor}, which has empty method
      * bodies for all methods.

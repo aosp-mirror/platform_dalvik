@@ -71,7 +71,7 @@ enum HeapSourceValueSpec {
     HS_EXTERNAL_BYTES_ALLOCATED,
     HS_EXTERNAL_LIMIT
 };
-size_t dvmHeapSourceGetValue(enum HeapSourceValueSpec spec, 
+size_t dvmHeapSourceGetValue(enum HeapSourceValueSpec spec,
                              size_t perHeapStats[], size_t arrayLen);
 
 /*

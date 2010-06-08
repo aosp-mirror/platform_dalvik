@@ -892,8 +892,8 @@ INLINE bool dvmIsFinalClass(const ClassObject* clazz) {
 INLINE bool dvmIsAbstractClass(const ClassObject* clazz) {
     return (clazz->accessFlags & ACC_ABSTRACT) != 0;
 }
-INLINE bool dvmIsAnnotationClass(const ClassObject* clazz) { 
-    return (clazz->accessFlags & ACC_ANNOTATION) != 0; 
+INLINE bool dvmIsAnnotationClass(const ClassObject* clazz) {
+    return (clazz->accessFlags & ACC_ANNOTATION) != 0;
 }
 INLINE bool dvmIsPrimitiveClass(const ClassObject* clazz) {
     return clazz->primitiveType != PRIM_NOT;

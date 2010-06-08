@@ -1294,7 +1294,7 @@ static void updateDebugger(const Method* method, const u2* pc, const u4* fp,
                 if (pCtrl->size == SS_MIN) {
                     doStop = true;
                     msg = "new instruction";
-                } else if (!dvmAddressSetGet(pCtrl->pAddressSet, 
+                } else if (!dvmAddressSetGet(pCtrl->pAddressSet,
                             pc - method->insns)) {
                     doStop = true;
                     msg = "new line";
@@ -2158,7 +2158,7 @@ HANDLE_OPCODE(OP_FILL_ARRAY_DATA)   /*vAA, +BBBBBBBB*/
             arrayData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
         {
             /* should have been caught in verifier */
-            dvmThrowException("Ljava/lang/InternalError;", 
+            dvmThrowException("Ljava/lang/InternalError;",
                               "bad fill array data");
             GOTO_exceptionThrown();
         }

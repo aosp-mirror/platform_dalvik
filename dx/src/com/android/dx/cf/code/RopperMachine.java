@@ -53,7 +53,7 @@ import java.util.ArrayList;
 
     /**
      * {@code non-null;} method constant for use in converting
-     * {@code multianewarray} instructions 
+     * {@code multianewarray} instructions
      */
     private static final CstMethodRef MULTIANEWARRAY_METHOD =
         new CstMethodRef(ARRAY_REFLECT_TYPE,
@@ -106,19 +106,19 @@ import java.util.ArrayList;
 
     /**
      * {@code null-ok;} the appropriate {@code return} op or {@code null}
-     * if it is not yet known 
+     * if it is not yet known
      */
     private Rop returnOp;
 
     /**
      * {@code null-ok;} the source position for the return block or {@code null}
-     * if it is not yet known 
+     * if it is not yet known
      */
     private SourcePosition returnPosition;
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param ropper {@code non-null;} ropper controlling this instance
      * @param method {@code non-null;} method being converted
      * @param advice {@code non-null;} translation advice to use
@@ -126,7 +126,7 @@ import java.util.ArrayList;
     public RopperMachine(Ropper ropper, ConcreteMethod method,
             TranslationAdvice advice) {
         super(method.getEffectiveDescriptor());
-        
+
         if (ropper == null) {
             throw new NullPointerException("ropper == null");
         }
@@ -153,7 +153,7 @@ import java.util.ArrayList;
     /**
      * Gets the instructions array. It is shared and gets modified by
      * subsequent calls to this instance.
-     * 
+     *
      * @return {@code non-null;} the instructions array
      */
     public ArrayList<Insn> getInsns() {
@@ -162,7 +162,7 @@ import java.util.ArrayList;
 
     /**
      * Gets the return opcode encountered, if any.
-     * 
+     *
      * @return {@code null-ok;} the return opcode
      */
     public Rop getReturnOp() {
@@ -171,7 +171,7 @@ import java.util.ArrayList;
 
     /**
      * Gets the return position, if known.
-     * 
+     *
      * @return {@code null-ok;} the return position
      */
     public SourcePosition getReturnPosition() {
@@ -200,7 +200,7 @@ import java.util.ArrayList;
     /**
      * Gets whether {@link #catches} was used. This indicates that the
      * last instruction in the block is one of the ones that can throw.
-     * 
+     *
      * @return whether {@code catches} has been used
      */
     public boolean wereCatchesUsed() {
@@ -210,7 +210,7 @@ import java.util.ArrayList;
     /**
      * Gets whether the block just processed ended with a
      * {@code return}.
-     * 
+     *
      * @return whether the block returns
      */
     public boolean returns() {
@@ -224,7 +224,7 @@ import java.util.ArrayList;
      * successor. This may return something other than
      * {@code -1} in the case of an instruction with no
      * successors at all (primary or otherwise).
-     * 
+     *
      * @return {@code >= -1;} the primary successor index
      */
     public int getPrimarySuccessorIndex() {
@@ -235,7 +235,7 @@ import java.util.ArrayList;
      * Gets how many extra blocks will be needed to represent the
      * block currently being translated. Each extra block should consist
      * of one instruction from the end of the original block.
-     * 
+     *
      * @return {@code >= 0;} the number of extra blocks needed
      */
     public int getExtraBlockCount() {
@@ -318,7 +318,7 @@ import java.util.ArrayList;
              * the "temporary stack" area defined for the method, and
              * then move stuff back down onto the main "stack" in the
              * arrangement specified by the stack op pattern.
-             * 
+             *
              * Note: This code ends up emitting a lot of what will
              * turn out to be superfluous moves (e.g., moving back and
              * forth to the same local when doing a dup); however,
@@ -350,7 +350,7 @@ import java.util.ArrayList;
                 stackPointer += type.getType().getCategory();
             }
             return;
-        }                
+        }
 
         TypeBearer destType = (dest != null) ? dest : Type.VOID;
         Constant cst = getAuxCst();
@@ -369,7 +369,7 @@ import java.util.ArrayList;
              * Add an array constructor for the int[] containing all the
              * dimensions.
              */
-            RegisterSpec dimsReg = 
+            RegisterSpec dimsReg =
                 RegisterSpec.make(dest.getNextReg(), Type.INT_ARRAY);
             rop = Rops.opFilledNewArray(Type.INT_ARRAY, sourceCount);
             insn = new ThrowingCstInsn(rop, pos, sources, catches,
@@ -383,7 +383,7 @@ import java.util.ArrayList;
 
             /*
              * Add a const-class instruction for the specified array
-             * class. 
+             * class.
              */
 
             /*
@@ -438,7 +438,7 @@ import java.util.ArrayList;
 
             RegisterSpec objectReg =
                 RegisterSpec.make(dest.getReg(), Type.OBJECT);
-            
+
             insn = new ThrowingCstInsn(
                     Rops.opInvokeStatic(MULTIANEWARRAY_METHOD.getPrototype()),
                     pos, RegisterSpecList.make(classReg, dimsReg),
@@ -609,7 +609,7 @@ import java.util.ArrayList;
          * action we take here is to convert these initialization
          * bytecodes into a single fill-array-data ROP which lays out
          * all the constant values in a table.
-         */ 
+         */
         if (initValues != null) {
             extraBlockCount++;
             insn = new FillArrayDataInsn(Rops.FILL_ARRAY_DATA, pos,
@@ -622,7 +622,7 @@ import java.util.ArrayList;
     /**
      * Helper for {@link #run}, which gets the list of sources for the.
      * instruction.
-     * 
+     *
      * @param opcode the opcode being translated
      * @param stackPointer {@code >= 0;} the stack pointer after the
      * instruction's arguments have been popped
@@ -634,7 +634,7 @@ import java.util.ArrayList;
         if (count == 0) {
             // We get an easy out if there aren't any sources.
             return RegisterSpecList.EMPTY;
-        } 
+        }
 
         int localIndex = getLocalIndex();
         RegisterSpecList sources;
@@ -696,7 +696,7 @@ import java.util.ArrayList;
 
     /**
      * Sets or updates the information about the return block.
-     * 
+     *
      * @param op {@code non-null;} the opcode to use
      * @param pos {@code non-null;} the position to use
      */
@@ -727,7 +727,7 @@ import java.util.ArrayList;
 
     /**
      * Gets the register opcode for the given Java opcode.
-     * 
+     *
      * @param jop {@code >= 0;} the Java opcode
      * @param cst {@code null-ok;} the constant argument, if any
      * @return {@code >= 0;} the corresponding register opcode
@@ -756,7 +756,7 @@ import java.util.ArrayList;
             case ByteOps.LDC2_W: {
                 return RegOps.CONST;
             }
-            case ByteOps.ILOAD: 
+            case ByteOps.ILOAD:
             case ByteOps.ISTORE: {
                 return RegOps.MOVE;
             }

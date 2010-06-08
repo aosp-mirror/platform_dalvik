@@ -29,7 +29,7 @@
  * (This defines InstructionFormat as an unsigned char to reduce the size
  * of the table.  This isn't necessary with some compilers, which use an
  * integer width appropriate for the number of enum values.)
- * 
+ *
  * If you add or delete a format, you have to change some or all of:
  *  - this enum
  *  - the switch inside dexDecodeInstruction() in InstrUtils.c

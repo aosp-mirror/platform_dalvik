@@ -30,7 +30,7 @@ public final class AttSourceFile extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param sourceFile {@code non-null;} the name of the source file
      */
     public AttSourceFile(CstUtf8 sourceFile) {
@@ -50,7 +50,7 @@ public final class AttSourceFile extends BaseAttribute {
 
     /**
      * Gets the source file name of this instance.
-     * 
+     *
      * @return {@code non-null;} the source file
      */
     public CstUtf8 getSourceFile() {

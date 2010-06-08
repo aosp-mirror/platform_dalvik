@@ -88,14 +88,14 @@ static void sigchldHandler(int s)
 #endif /* ifdef WCOREDUMP */
         }
 
-        /* 
+        /*
          * If the just-crashed process is the system_server, bring down zygote
          * so that it is restarted by init and system server will be restarted
          * from there.
          */
         if (pid == gDvm.systemServerPid) {
             LOG(LOG_INFO, ZYGOTE_LOG_TAG,
-                "Exit zygote because system server (%d) has terminated\n", 
+                "Exit zygote because system server (%d) has terminated\n",
                 (int) pid);
             kill(getpid(), SIGKILL);
         }
@@ -116,7 +116,7 @@ static void sigchldHandler(int s)
  * This ends up being called repeatedly before each fork(), but there's
  * no real harm in that.
  */
-static void setSignalHandler() 
+static void setSignalHandler()
 {
     int err;
     struct sigaction sa;
@@ -126,7 +126,7 @@ static void setSignalHandler()
     sa.sa_handler = sigchldHandler;
 
     err = sigaction (SIGCHLD, &sa, NULL);
-    
+
     if (err < 0) {
         LOGW("Error setting SIGCHLD handler errno: %d", errno);
     }
@@ -145,13 +145,13 @@ static void unsetSignalHandler()
     sa.sa_handler = SIG_DFL;
 
     err = sigaction (SIGCHLD, &sa, NULL);
-    
+
     if (err < 0) {
         LOGW("Error unsetting SIGCHLD handler errno: %d", errno);
     }
 }
 
-/* 
+/*
  * Calls POSIX setgroups() using the int[] object as an argument.
  * A NULL argument is tolerated.
  */
@@ -217,7 +217,7 @@ static int setrlimitsFromArray(ArrayObject* rlimits)
             return -1;
         }
     }
-    
+
     return 0;
 }
 
@@ -238,7 +238,7 @@ static void Dalvik_dalvik_system_Zygote_fork(const u4* args, JValue* pResult)
         dvmAbort();
     }
 
-    setSignalHandler();      
+    setSignalHandler();
 
     dvmDumpLoaderStats("zygote");
     pid = fork();
@@ -323,7 +323,7 @@ static void enableDebugFeatures(u4 debugFlags)
 #endif
 }
 
-/* 
+/*
  * Utility routine to fork zygote and specialize the child process.
  */
 static pid_t forkAndSpecializeCommon(const u4* args)
@@ -348,7 +348,7 @@ static pid_t forkAndSpecializeCommon(const u4* args)
         dvmAbort();
     }
 
-    setSignalHandler();      
+    setSignalHandler();
 
     dvmDumpLoaderStats("zygote");
     pid = fork();
@@ -403,7 +403,7 @@ static pid_t forkAndSpecializeCommon(const u4* args)
         /* configure additional debug options */
         enableDebugFeatures(debugFlags);
 
-        unsetSignalHandler();      
+        unsetSignalHandler();
         gDvm.zygote = false;
         if (!dvmInitAfterZygote()) {
             LOGE("error in post-zygote initialization\n");
@@ -416,8 +416,8 @@ static pid_t forkAndSpecializeCommon(const u4* args)
     return pid;
 }
 
-/* native public static int forkAndSpecialize(int uid, int gid, 
- *     int[] gids, int debugFlags); 
+/* native public static int forkAndSpecialize(int uid, int gid,
+ *     int[] gids, int debugFlags);
  */
 static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
     JValue* pResult)
@@ -429,8 +429,8 @@ static void Dalvik_dalvik_system_Zygote_forkAndSpecialize(const u4* args,
     RETURN_INT(pid);
 }
 
-/* native public static int forkSystemServer(int uid, int gid, 
- *     int[] gids, int debugFlags); 
+/* native public static int forkSystemServer(int uid, int gid,
+ *     int[] gids, int debugFlags);
  */
 static void Dalvik_dalvik_system_Zygote_forkSystemServer(
         const u4* args, JValue* pResult)

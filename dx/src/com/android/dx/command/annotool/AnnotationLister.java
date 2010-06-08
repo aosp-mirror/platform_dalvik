@@ -202,7 +202,7 @@ class AnnotationLister {
                 case CLASS:
                 case INNERCLASS:
                 case METHOD:
-                    matchPackages.add(packageName);                    
+                    matchPackages.add(packageName);
                     break;
                 case PACKAGE:
                     System.out.println(packageName.replace('/','.'));

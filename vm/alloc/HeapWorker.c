@@ -343,7 +343,7 @@ static void* heapWorkerThreadStart(void* arg)
 #endif
 
             if (trimtime.tv_sec < now.tv_sec ||
-                (trimtime.tv_sec == now.tv_sec && 
+                (trimtime.tv_sec == now.tv_sec &&
                  trimtime.tv_nsec <= now.tv_nsec))
             {
                 size_t madvisedSizes[HEAP_SOURCE_MAX_HEAP_COUNT];

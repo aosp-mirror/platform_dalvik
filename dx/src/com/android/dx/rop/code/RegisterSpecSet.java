@@ -31,7 +31,7 @@ public final class RegisterSpecSet
     /**
      * {@code non-null;} array of register specs, where each element is
      * {@code null} or is an instance whose {@code reg}
-     * matches the array index 
+     * matches the array index
      */
     private final RegisterSpec[] specs;
 
@@ -40,7 +40,7 @@ public final class RegisterSpecSet
 
     /**
      * Constructs an instance. The instance is initially empty.
-     * 
+     *
      * @param maxSize {@code >= 0;} the maximum register number (exclusive) that
      * may be represented in this instance
      */
@@ -120,13 +120,13 @@ public final class RegisterSpecSet
 
         sb.append('}');
         return sb.toString();
-    }       
+    }
 
     /**
      * Gets the maximum number of registers that may be in this instance, which
      * is also the maximum-plus-one of register numbers that may be
      * represented.
-     * 
+     *
      * @return {@code >= 0;} the maximum size
      */
     public int getMaxSize() {
@@ -135,7 +135,7 @@ public final class RegisterSpecSet
 
     /**
      * Gets the current size of this instance.
-     * 
+     *
      * @return {@code >= 0;} the size
      */
     public int size() {
@@ -159,7 +159,7 @@ public final class RegisterSpecSet
 
     /**
      * Gets the element with the given register number, if any.
-     * 
+     *
      * @param reg {@code >= 0;} the desired register number
      * @return {@code null-ok;} the element with the given register number or
      * {@code null} if there is none
@@ -177,7 +177,7 @@ public final class RegisterSpecSet
      * Gets the element with the same register number as the given
      * spec, if any. This is just a convenient shorthand for
      * {@code get(spec.getReg())}.
-     * 
+     *
      * @param spec {@code non-null;} spec with the desired register number
      * @return {@code null-ok;} the element with the matching register number or
      * {@code null} if there is none
@@ -191,13 +191,13 @@ public final class RegisterSpecSet
      * given local (type, name, and signature), or {@code null} if there is
      * none. This ignores the register number of the given spec but
      * matches on everything else.
-     * 
+     *
      * @param spec {@code non-null;} local to look for
      * @return {@code null-ok;} first register found that matches, if any
      */
     public RegisterSpec findMatchingLocal(RegisterSpec spec) {
         int length = specs.length;
-        
+
         for (int reg = 0; reg < length; reg++) {
             RegisterSpec s = specs[reg];
 
@@ -222,10 +222,10 @@ public final class RegisterSpecSet
      */
     public RegisterSpec localItemToSpec(LocalItem local) {
         int length = specs.length;
-        
+
         for (int reg = 0; reg < length; reg++) {
             RegisterSpec spec = specs[reg];
-            
+
             if ((spec != null) && local.equals(spec.getLocalItem())) {
                 return spec;
             }
@@ -257,7 +257,7 @@ public final class RegisterSpecSet
      * previous element is nullified. Finally, if the given spec is for
      * a category-2 register, then the immediately subsequent element
      * is nullified.
-     * 
+     *
      * @param spec {@code non-null;} the register spec to put in the instance
      */
     public void put(RegisterSpec spec) {
@@ -292,7 +292,7 @@ public final class RegisterSpecSet
 
     /**
      * Put the entire contents of the given set into this one.
-     * 
+     *
      * @param set {@code non-null;} the set to put into this instance
      */
     public void putAll(RegisterSpecSet set) {
@@ -311,7 +311,7 @@ public final class RegisterSpecSet
      * instance. The intersection consists of the pairwise
      * {@link RegisterSpec#intersect} of corresponding elements from
      * this instance and the given one where both are non-null.
-     * 
+     *
      * @param other {@code non-null;} set to intersect with
      * @param localPrimary whether local variables are primary to
      * the intersection; if {@code true}, then the only non-null
@@ -350,7 +350,7 @@ public final class RegisterSpecSet
      * Returns an instance that is identical to this one, except that
      * all register numbers are offset by the given amount. Mutability
      * of the result is inherited from the original.
-     * 
+     *
      * @param delta the amount to offset the register numbers by
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -376,7 +376,7 @@ public final class RegisterSpecSet
 
     /**
      * Makes and return a mutable copy of this instance.
-     * 
+     *
      * @return {@code non-null;} the mutable copy
      */
     public RegisterSpecSet mutableCopy() {

@@ -171,7 +171,7 @@ hprofDumpStacks(hprof_context_t *ctx)
         int i;
 
         hprofStartNewRecord(ctx, HPROF_TAG_STACK_TRACE, HPROF_TIME);
-        
+
         stackTraceEntry = (const StackTraceEntry *) dvmHashIterData(&iter);
         assert(stackTraceEntry != NULL);
 
@@ -184,7 +184,7 @@ hprofDumpStacks(hprof_context_t *ctx)
          */
         hprofAddU4ToRecord(rec, stackTraceEntry->trace.serialNumber);
         hprofAddU4ToRecord(rec, stackTraceEntry->trace.threadSerialNumber);
-        
+
         count = 0;
         while ((count < STACK_DEPTH) &&
                (stackTraceEntry->trace.frameIds[count] != 0)) {
@@ -210,7 +210,7 @@ hprofFillInStackTrace(void *objectPtr)
     Thread* self;
     void* fp;
     int i;
-    
+
     if (objectPtr == NULL) {
         return;
     }

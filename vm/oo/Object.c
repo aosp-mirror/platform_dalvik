@@ -216,7 +216,7 @@ static inline int compareMethodHelper(Method* method, const char* methodName,
     }
 
     proto = &method->prototype;
-        
+
     if (strcmp(returnType, dexProtoGetReturnType(proto)) != 0) {
         return 1;
     }
@@ -256,7 +256,7 @@ static inline int compareMethodHelper(Method* method, const char* methodName,
  * and also find a pointer to the return type.
  */
 static inline size_t countArgsAndFindReturnType(const char* descriptor,
-    const char** pReturnType) 
+    const char** pReturnType)
 {
     size_t count = 0;
     bool bogus = false;
@@ -264,7 +264,7 @@ static inline size_t countArgsAndFindReturnType(const char* descriptor,
 
     assert(*descriptor == '(');
     descriptor++;
-    
+
     while (!done) {
         switch (*descriptor) {
             case 'B': case 'C': case 'D': case 'F':
@@ -297,7 +297,7 @@ static inline size_t countArgsAndFindReturnType(const char* descriptor,
                 break;
             }
             case ')': {
-                /* 
+                /*
                  * Note: The loop will exit after incrementing descriptor
                  * one more time, so it then points at the return type.
                  */
@@ -336,7 +336,7 @@ static inline void copyTypes(char* buffer, const char** argTypes,
 
     /* Skip the '('. */
     descriptor++;
-    
+
     for (i = 0; i < argCount; i++) {
         argTypes[i] = buffer;
 
@@ -353,9 +353,9 @@ static inline void copyTypes(char* buffer, const char** argTypes,
                 *(buffer++) = c;
             } while (c != ';');
         }
-        
+
         *(buffer++) = '\0';
-    }        
+    }
 }
 
 /*
@@ -395,7 +395,7 @@ static Method* findMethodInListByDescriptor(const ClassObject* clazz,
             methods = clazz->directMethods;
             methodCount = clazz->directMethodCount;
         }
-        
+
         for (i = 0; i < methodCount; i++) {
             Method* method = &methods[i];
             if (compareMethodHelper(method, name, returnType, argCount,
@@ -424,7 +424,7 @@ static Method* findMethodInListByDescriptor(const ClassObject* clazz,
  */
 static Method* findMethodInListByProto(const ClassObject* clazz,
     MethodType wantedType, bool isHier, const char* name, const DexProto* proto)
-{    
+{
     while (clazz != NULL) {
         int i;
 

@@ -25,12 +25,12 @@ public interface TypeList {
      * {@code TypeList} interface itself doesn't provide any
      * means of mutation, but that doesn't mean that there isn't an
      * extra-interface way of mutating an instance.
-     * 
+     *
      * @return {@code true} if this instance is mutable or
      * {@code false} if it is immutable
      */
     public boolean isMutable();
-    
+
     /**
      * Gets the size of this list.
      *
@@ -52,7 +52,7 @@ public interface TypeList {
      * Gets the number of 32-bit words required to hold instances of
      * all the elements of this list. This is a sum of the widths (categories)
      * of all the elements.
-     * 
+     *
      * @return {@code >= 0;} the required number of words
      */
     public int getWordCount();
@@ -61,7 +61,7 @@ public interface TypeList {
      * Returns a new instance which is identical to this one, except that
      * the given item is appended to the end and it is guaranteed to be
      * immutable.
-     * 
+     *
      * @param type {@code non-null;} item to append
      * @return {@code non-null;} an appropriately-constructed instance
      */

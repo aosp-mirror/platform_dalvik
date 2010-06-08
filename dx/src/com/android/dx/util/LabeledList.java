@@ -156,6 +156,6 @@ public class LabeledList extends FixedSizeList {
 
         if (item != null) {
             addLabelIndex(item.getLabel(), n);
-        }        
+        }
     }
 }

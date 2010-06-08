@@ -32,7 +32,7 @@ public class CfOptions {
 
     /** whether strict file-name-vs-class-name checking should be done */
     public boolean strictNameCheck = true;
-    
+
     /** whether to do SSA/register optimization */
     public boolean optimize = false;
 

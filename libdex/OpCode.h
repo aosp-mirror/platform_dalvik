@@ -45,16 +45,16 @@
  *      and running int:fast as above
  *  - repeat for other platforms (x86, ...)
  *  (see notes in mterp/ReadMe.txt for rebuilding instructions)
- * 
+ *
  * Verifier / optimizer:
  *  - update some stuff in analysis/DexOptimize.c, analysis/DexVerify.c,
  *    and/or analysis/CodeVerify.c as needed
  *    - verify by running with verifier enabled (it's on by default)
- * 
+ *
  * Tools:
  *  - update the OpCodeNames table in dexdump/OpCodeNames.c
  *  - update dexdump/DexDump.c if an instruction format has changed
- *  
+ *
  * Note: The Dalvik VM tests (in the tests subdirectory) provide a convenient
  * way to test most of the above without doing any rebuilds.  In particular,
  * test 003-omnibus-opcodes will exercise most of the opcodes.
@@ -108,18 +108,18 @@ typedef enum OpCode {
 
     OP_NEW_INSTANCE                 = 0x22,
     OP_NEW_ARRAY                    = 0x23,
-    
+
     OP_FILLED_NEW_ARRAY             = 0x24,
     OP_FILLED_NEW_ARRAY_RANGE       = 0x25,
     OP_FILL_ARRAY_DATA              = 0x26,
-    
+
     OP_THROW                        = 0x27,
     OP_GOTO                         = 0x28,
     OP_GOTO_16                      = 0x29,
     OP_GOTO_32                      = 0x2a,
     OP_PACKED_SWITCH                = 0x2b,
     OP_SPARSE_SWITCH                = 0x2c,
-    
+
     OP_CMPL_FLOAT                   = 0x2d,
     OP_CMPG_FLOAT                   = 0x2e,
     OP_CMPL_DOUBLE                  = 0x2f,
@@ -145,7 +145,7 @@ typedef enum OpCode {
     OP_UNUSED_41                    = 0x41,
     OP_UNUSED_42                    = 0x42,
     OP_UNUSED_43                    = 0x43,
-    
+
     OP_AGET                         = 0x44,
     OP_AGET_WIDE                    = 0x45,
     OP_AGET_OBJECT                  = 0x46,
@@ -198,7 +198,7 @@ typedef enum OpCode {
     OP_INVOKE_INTERFACE             = 0x72,
 
     OP_UNUSED_73                    = 0x73,
-    
+
     OP_INVOKE_VIRTUAL_RANGE         = 0x74,
     OP_INVOKE_SUPER_RANGE           = 0x75,
     OP_INVOKE_DIRECT_RANGE          = 0x76,

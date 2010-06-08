@@ -15,7 +15,7 @@
 
 <p>
 Move the given literal value (sign-extended to 32 bits, if necessary) into the
-specified register. 
+specified register.
 </p>
 
 <h2>Details</h2>
@@ -72,7 +72,7 @@ specified register.
     <ul>
       <li>
         If we are executing the /high16 variant, then B is left-shifted by 16
-        bits, that is, B'=B << 0x10 
+        bits, that is, B'=B << 0x10
       <li>
         Otherwise, if B is a 4 bit or 16 bit constant, it is sign-extended to 32
         bits, that is, B'=sign-extended(B).
@@ -91,7 +91,7 @@ specified register.
     If v(A+1) is the upper half of a register pair, v(A+1)' becomes undefined.
   </li>
 </ul>
-     
+
 <h2>Exceptions</h2>
 
 <p>

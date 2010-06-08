@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static long test1(int w, long x, int y, long z) {
         return w + x + y + z;

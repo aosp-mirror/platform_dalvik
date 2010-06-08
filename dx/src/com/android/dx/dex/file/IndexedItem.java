@@ -33,7 +33,7 @@ public abstract class IndexedItem extends Item {
 
     /**
      * Gets whether or not this instance has been assigned an index.
-     * 
+     *
      * @return {@code true} iff this instance has been assigned an index
      */
     public final boolean hasIndex() {
@@ -72,7 +72,7 @@ public abstract class IndexedItem extends Item {
     /**
      * Gets the index of this item as a string, suitable for including in
      * annotations.
-     * 
+     *
      * @return {@code non-null;} the index string
      */
     public final String indexString() {

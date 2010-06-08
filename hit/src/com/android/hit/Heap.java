@@ -21,16 +21,16 @@ import java.util.HashMap;
 
 public class Heap {
     String mName;
-    
+
     //  List of individual stack frames
     HashMap<Long, StackFrame> mFrames = new HashMap<Long, StackFrame>();
-    
+
     //  List stack traces, which are lists of stack frames
     HashMap<Integer, StackTrace> mTraces = new HashMap<Integer, StackTrace>();
-    
+
     //  Root objects such as interned strings, jni locals, etc
     ArrayList<RootObj> mRoots = new ArrayList<RootObj>();
-    
+
     //  List of threads
     HashMap<Integer, ThreadObj> mThreads = new HashMap<Integer, ThreadObj>();
 
@@ -47,7 +47,7 @@ public class Heap {
     public Heap(String name) {
         mName = name;
     }
-    
+
     public final void addStackFrame(StackFrame theFrame) {
         mFrames.put(theFrame.mId, theFrame);
     }
@@ -64,14 +64,14 @@ public class Heap {
         return mTraces.get(traceSerialNumber);
     }
 
-    public final StackTrace getStackTraceAtDepth(int traceSerialNumber, 
+    public final StackTrace getStackTraceAtDepth(int traceSerialNumber,
             int depth) {
         StackTrace trace = mTraces.get(traceSerialNumber);
-        
+
         if (trace != null) {
             trace = trace.fromDepth(depth);
         }
-        
+
         return trace;
     }
 
@@ -83,7 +83,7 @@ public class Heap {
     public final void addThread(ThreadObj thread, int serialNumber) {
         mThreads.put(serialNumber, thread);
     }
-    
+
     public final ThreadObj getThread(int serialNumber) {
         return mThreads.get(serialNumber);
     }
@@ -91,7 +91,7 @@ public class Heap {
     public final void addInstance(long id, Instance instance) {
         mInstances.put(id, instance);
     }
-    
+
     public final Instance getInstance(long id) {
         return mInstances.get(id);
     }
@@ -100,7 +100,7 @@ public class Heap {
         mClassesById.put(id, theClass);
         mClassesByName.put(theClass.mClassName, theClass);
     }
-    
+
     public final ClassObj getClass(long id) {
         return mClassesById.get(id);
     }
@@ -112,7 +112,7 @@ public class Heap {
     public final void dumpInstanceCounts() {
         for (ClassObj theClass: mClassesById.values()) {
             int count = theClass.mInstances.size();
-            
+
             if (count > 0) {
                 System.out.println(theClass + ": " + count);
             }
@@ -122,18 +122,18 @@ public class Heap {
     public final void dumpSubclasses() {
         for (ClassObj theClass: mClassesById.values()) {
             int count = theClass.mSubclasses.size();
-            
+
             if (count > 0) {
                 System.out.println(theClass);
                 theClass.dumpSubclasses();
             }
         }
     }
-    
+
     public final void dumpSizes() {
         for (ClassObj theClass: mClassesById.values()) {
             int size = 0;
-            
+
             for (Instance instance: theClass.mInstances) {
                 size += instance.getCompositeSize();
             }
@@ -144,7 +144,7 @@ public class Heap {
             }
         }
     }
-    
+
     /*
      * Spin through all of the class instances and link them to their
      * parent class definition objects.  Then have each instance resolve
@@ -161,11 +161,11 @@ public class Heap {
             String name = theClass.mClassName;
             String superclassName = "none";
             ClassObj superClass = mClassesById.get(theClass.mSuperclassId);
-            
+
             if (superClass != null) {
                 superclassName = superClass.mClassName;
             }
-            
+
             theClass.addInstance(instance);
             instance.resolveReferences(state);
         }

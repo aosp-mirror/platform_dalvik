@@ -745,7 +745,7 @@ bool dvmJdwpPostVMStart(JdwpState* state, bool suspend)
 {
     enum JdwpSuspendPolicy suspendPolicy;
     ObjectId threadId = dvmDbgGetThreadSelfId();
-    
+
     if (suspend)
         suspendPolicy = SP_ALL;
     else

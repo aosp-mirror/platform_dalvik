@@ -40,7 +40,7 @@ public final class IntList extends MutabilityControl {
 
     /**
      * Constructs a new immutable instance with the given element.
-     * 
+     *
      * @param value the sole value in the list
      */
     public static IntList makeImmutable(int value) {
@@ -54,7 +54,7 @@ public final class IntList extends MutabilityControl {
 
     /**
      * Constructs a new immutable instance with the given elements.
-     * 
+     *
      * @param value0 the first value in the list
      * @param value1 the second value in the list
      */
@@ -77,7 +77,7 @@ public final class IntList extends MutabilityControl {
 
     /**
      * Constructs an empty instance.
-     * 
+     *
      * @param initialCapacity {@code >= 0;} initial capacity of the list
      */
     public IntList(int initialCapacity) {
@@ -164,7 +164,7 @@ public final class IntList extends MutabilityControl {
 
     /**
      * Gets the indicated value.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @return the indicated element's value
      */
@@ -183,7 +183,7 @@ public final class IntList extends MutabilityControl {
 
     /**
      * Sets the value at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param value value to store
      */
@@ -208,7 +208,7 @@ public final class IntList extends MutabilityControl {
     /**
      * Adds an element to the end of the list. This will increase the
      * list's capacity if necessary.
-     * 
+     *
      * @param value the value to add
      */
     public void add(int value) {
@@ -301,7 +301,7 @@ public final class IntList extends MutabilityControl {
         result = get(size-1);
         size--;
 
-        return result;    
+        return result;
     }
 
     /**
@@ -318,7 +318,7 @@ public final class IntList extends MutabilityControl {
 
     /**
      * Shrinks the size of the list.
-     * 
+     *
      * @param newSize {@code >= 0;} the new size
      */
     public void shrink(int newSize) {
@@ -337,7 +337,7 @@ public final class IntList extends MutabilityControl {
 
     /**
      * Makes and returns a mutable copy of the list.
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed instance
      */
     public IntList mutableCopy() {
@@ -440,9 +440,9 @@ public final class IntList extends MutabilityControl {
      * Returns whether or not the given value appears in the list.
      * This will do a binary search if the list is sorted or a linear
      * search if not.
-     * 
+     *
      * @see #sort
-     * 
+     *
      * @param value value to look for
      * @return whether the list contains the given value
      */

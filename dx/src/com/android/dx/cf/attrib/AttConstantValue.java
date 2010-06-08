@@ -35,7 +35,7 @@ public final class AttConstantValue extends BaseAttribute {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param constantValue {@code non-null;} the constant value, which must
      * be an instance of one of: {@code CstString},
      * {@code CstInteger}, {@code CstLong},
@@ -68,7 +68,7 @@ public final class AttConstantValue extends BaseAttribute {
      * is an instance of one of: {@code CstString},
      * {@code CstInteger}, {@code CstLong},
      * {@code CstFloat}, or {@code CstDouble}.
-     * 
+     *
      * @return {@code non-null;} the constant value
      */
     public TypedConstant getConstantValue() {

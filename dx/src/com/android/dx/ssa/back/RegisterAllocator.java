@@ -66,7 +66,7 @@ public abstract class RegisterAllocator {
 
     /**
      * Runs the algorithm.
-     * 
+     *
      * @return a register mapper to apply to the {@code SsaMethod}
      */
     public abstract RegisterMapper allocateRegisters();
@@ -105,7 +105,7 @@ public abstract class RegisterAllocator {
     /**
      * Returns true if the definition site of this register is a
      * move-param (ie, this is a method parameter).
-     * 
+     *
      * @param reg register in question
      * @return {@code true} if this is a method parameter
      */

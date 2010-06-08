@@ -112,7 +112,7 @@ public final class Form35c extends InsnFormat {
         int r4 = (sz > 4) ? regs.get(4).getReg() : 0;
 
         write(out,
-              opcodeUnit(insn, 
+              opcodeUnit(insn,
                          makeByte(r4, sz)), // encode the fifth operand here
               (short) cpi,
               codeUnit(r0, r1, r2, r3));
@@ -123,9 +123,9 @@ public final class Form35c extends InsnFormat {
      * category-2 values count as two words. Return {@code -1} if the
      * list requires more than five words or contains registers that need
      * more than a nibble to identify them.
-     * 
+     *
      * @param regs {@code non-null;} the register list in question
-     * @return {@code >= -1;} the number of words required, or {@code -1} 
+     * @return {@code >= -1;} the number of words required, or {@code -1}
      * if the list couldn't possibly fit in this format
      */
     private static int wordCount(RegisterSpecList regs) {
@@ -160,7 +160,7 @@ public final class Form35c extends InsnFormat {
      * except that it splits category-2 registers into two explicit
      * entries. This returns the original list if no modification is
      * required
-     * 
+     *
      * @param orig {@code non-null;} the original list
      * @return {@code non-null;} the list with the described transformation
      */

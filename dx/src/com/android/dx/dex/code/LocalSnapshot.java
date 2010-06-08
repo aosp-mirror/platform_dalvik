@@ -33,7 +33,7 @@ public final class LocalSnapshot extends ZeroSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      * @param locals {@code non-null;} associated local variable state
      */
@@ -61,7 +61,7 @@ public final class LocalSnapshot extends ZeroSizeInsn {
 
     /**
      * Gets the local state associated with this instance.
-     * 
+     *
      * @return {@code non-null;} the state
      */
     public RegisterSpecSet getLocals() {

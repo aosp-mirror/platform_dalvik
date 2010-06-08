@@ -28,7 +28,7 @@ public abstract class CstInsn
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param result {@code null-ok;} spec for the result, if any
@@ -54,7 +54,7 @@ public abstract class CstInsn
 
     /**
      * Gets the constant.
-     * 
+     *
      * @return {@code non-null;} the constant
      */
     public Constant getConstant() {

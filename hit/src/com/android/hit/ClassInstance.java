@@ -29,7 +29,7 @@ public class ClassInstance extends Instance {
         mStack = stack;
         mClassId = classId;
     }
-    
+
     public final void loadFieldData(DataInputStream in, int numBytes)
             throws IOException {
         mFieldValues = new byte[numBytes];
@@ -44,7 +44,7 @@ public class ClassInstance extends Instance {
         resolve(state, isa, isa.mFieldTypes, mFieldValues);
     }
 
-    private void resolve(State state, ClassObj isa, int[] types, 
+    private void resolve(State state, ClassObj isa, int[] types,
             byte[] values) {
         ByteArrayInputStream bais = new ByteArrayInputStream(values);
         DataInputStream dis = new DataInputStream(bais);
@@ -61,15 +61,15 @@ public class ClassInstance extends Instance {
 
                     if (type == Types.OBJECT) {
                         long id;
-                        
+
                         if (size == 4) {
                             id = dis.readInt();
                         } else {
                             id = dis.readLong();
                         }
-                        
+
                         Instance instance = state.findReference(id);
-                        
+
                         if (instance != null) {
                             instance.addParent(this);
                         }
@@ -85,7 +85,7 @@ public class ClassInstance extends Instance {
     @Override
     public final int getSize() {
         ClassObj isa = mHeap.mState.findClass(mClassId);
-        
+
         return isa.getSize();
     }
 
@@ -94,7 +94,7 @@ public class ClassInstance extends Instance {
         if (resultSet.contains(this)) {
             return;
         }
-        
+
         if (filter != null) {
             if (filter.accept(this)) {
                 resultSet.add(this);
@@ -109,7 +109,7 @@ public class ClassInstance extends Instance {
         ByteArrayInputStream bais = new ByteArrayInputStream(mFieldValues);
         DataInputStream dis = new DataInputStream(bais);
         final int N = types.length;
-        
+
         /*
          * Spin through the list of fields, find all object references,
          * and list ourselves as a reference holder.
@@ -118,18 +118,18 @@ public class ClassInstance extends Instance {
             for (int i = 0; i < N; i++) {
                 int type = types[i];
                 int size = Types.getTypeSize(type);
-                
+
                 if (type == Types.OBJECT) {
                     long id;
-                    
+
                     if (size == 4) {
                         id = dis.readInt();
                     } else {
                         id = dis.readLong();
                     }
-                    
+
                     Instance instance = state.findReference(id);
-                    
+
                     if (instance != null) {
                         instance.visit(resultSet, filter);
                     }
@@ -145,7 +145,7 @@ public class ClassInstance extends Instance {
     @Override
     public final String getTypeName() {
         ClassObj theClass = mHeap.mState.findClass(mClassId);
-        
+
         return theClass.mClassName;
     }
 
@@ -163,7 +163,7 @@ public class ClassInstance extends Instance {
         final int N = types.length;
         StringBuilder result = new StringBuilder("Referenced in field(s):");
         int numReferences = 0;
-        
+
         /*
          * Spin through the list of fields, add info about the field
          * references to the output text.
@@ -172,16 +172,16 @@ public class ClassInstance extends Instance {
             for (int i = 0; i < N; i++) {
                 int type = types[i];
                 int size = Types.getTypeSize(type);
-                
+
                 if (type == Types.OBJECT) {
                     long id;
-                    
+
                     if (size == 4) {
                         id = dis.readInt();
                     } else {
                         id = dis.readLong();
                     }
-                    
+
                     if (id == referent) {
                         numReferences++;
                         result.append("\n    ");
@@ -202,7 +202,7 @@ public class ClassInstance extends Instance {
         if (numReferences == 0) {
             return super.describeReferenceTo(referent);
         }
-        
+
         return result.toString();
     }
 }

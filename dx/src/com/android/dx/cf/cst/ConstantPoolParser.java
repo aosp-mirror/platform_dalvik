@@ -53,7 +53,7 @@ public final class ConstantPoolParser {
     /**
      * -1 || &gt;= 10; the end offset of this constant pool in the
      * {@code byte[]} which it came from or {@code -1} if not
-     * yet parsed 
+     * yet parsed
      */
     private int endOffset;
 
@@ -62,7 +62,7 @@ public final class ConstantPoolParser {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param bytes {@code non-null;} the bytes of the file
      */
     public ConstantPoolParser(ByteArray bytes) {
@@ -76,7 +76,7 @@ public final class ConstantPoolParser {
 
     /**
      * Sets the parse observer for this instance.
-     * 
+     *
      * @param observer {@code null-ok;} the observer
      */
     public void setObserver(ParseObserver observer) {
@@ -86,7 +86,7 @@ public final class ConstantPoolParser {
     /**
      * Gets the end offset of this constant pool in the {@code byte[]}
      * which it came from.
-     * 
+     *
      * @return {@code >= 10;} the end offset
      */
     public int getEndOffset() {
@@ -96,7 +96,7 @@ public final class ConstantPoolParser {
 
     /**
      * Gets the actual constant pool.
-     * 
+     *
      * @return {@code non-null;} the constant pool
      */
     public StdConstantPool getPool() {
@@ -213,7 +213,7 @@ public final class ConstantPoolParser {
      * parsed, also storing it in the constant pool. This will also
      * have the side effect of parsing any entries the indicated one
      * depends on.
-     * 
+     *
      * @param idx which constant
      * @return {@code non-null;} the parsed constant
      */
@@ -314,7 +314,7 @@ public final class ConstantPoolParser {
 
     /**
      * Parses a utf8 constant.
-     * 
+     *
      * @param at offset to the start of the constant (where the tag byte is)
      * @return {@code non-null;} the parsed value
      */

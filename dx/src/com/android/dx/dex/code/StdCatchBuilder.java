@@ -34,7 +34,7 @@ import java.util.HashSet;
 public final class StdCatchBuilder implements CatchBuilder {
     /** the maximum range of a single catch handler, in code units */
     private static final int MAX_CATCH_RANGE = 65535;
-    
+
     /** {@code non-null;} method to build the list for */
     private final RopMethod method;
 
@@ -43,11 +43,11 @@ public final class StdCatchBuilder implements CatchBuilder {
 
     /** {@code non-null;} address objects for each block */
     private final BlockAddresses addresses;
-    
+
     /**
      * Constructs an instance. It merely holds onto its parameters for
      * a subsequent call to {@link #build}.
-     * 
+     *
      * @param method {@code non-null;} method to build the list for
      * @param order {@code non-null;} block output order
      * @param addresses {@code non-null;} address objects for each block
@@ -80,7 +80,7 @@ public final class StdCatchBuilder implements CatchBuilder {
     public boolean hasAnyCatches() {
         BasicBlockList blocks = method.getBlocks();
         int size = blocks.size();
-        
+
         for (int i = 0; i < size; i++) {
             BasicBlock block = blocks.get(i);
             TypeList catches = block.getLastInsn().getCatches();
@@ -91,13 +91,13 @@ public final class StdCatchBuilder implements CatchBuilder {
 
         return false;
     }
-    
+
     /** {@inheritDoc} */
     public HashSet<Type> getCatchTypes() {
         HashSet<Type> result = new HashSet<Type>(20);
         BasicBlockList blocks = method.getBlocks();
         int size = blocks.size();
-        
+
         for (int i = 0; i < size; i++) {
             BasicBlock block = blocks.get(i);
             TypeList catches = block.getLastInsn().getCatches();
@@ -113,7 +113,7 @@ public final class StdCatchBuilder implements CatchBuilder {
 
     /**
      * Builds and returns the catch table for a given method.
-     * 
+     *
      * @param method {@code non-null;} method to build the list for
      * @param order {@code non-null;} block output order
      * @param addresses {@code non-null;} address objects for each block
@@ -128,7 +128,7 @@ public final class StdCatchBuilder implements CatchBuilder {
         CatchHandlerList currentHandlers = CatchHandlerList.EMPTY;
         BasicBlock currentStartBlock = null;
         BasicBlock currentEndBlock = null;
-        
+
         for (int i = 0; i < len; i++) {
             BasicBlock block = blocks.labelToBlock(order[i]);
 
@@ -187,11 +187,11 @@ public final class StdCatchBuilder implements CatchBuilder {
                         currentHandlers, addresses);
             resultList.add(entry);
         }
-        
+
         // Construct the final result.
 
         int resultSz = resultList.size();
-        
+
         if (resultSz == 0) {
             return CatchTable.EMPTY;
         }
@@ -208,7 +208,7 @@ public final class StdCatchBuilder implements CatchBuilder {
 
     /**
      * Makes the {@link CatchHandlerList} for the given basic block.
-     * 
+     *
      * @param block {@code non-null;} block to get entries for
      * @param addresses {@code non-null;} address objects for each block
      * @return {@code non-null;} array of entries
@@ -249,7 +249,7 @@ public final class StdCatchBuilder implements CatchBuilder {
                 break;
             }
         }
-        
+
         CatchHandlerList result = new CatchHandlerList(catchSize);
 
         for (int i = 0; i < catchSize; i++) {
@@ -291,7 +291,7 @@ public final class StdCatchBuilder implements CatchBuilder {
      * Gets whether the address range for the given two blocks is valid
      * for a catch handler. This is true as long as the covered range is
      * under 65536 code units.
-     * 
+     *
      * @param start {@code non-null;} the start block for the range (inclusive)
      * @param end {@code non-null;} the start block for the range (also inclusive)
      * @param addresses {@code non-null;} address objects for each block
@@ -306,7 +306,7 @@ public final class StdCatchBuilder implements CatchBuilder {
         if (end == null) {
             throw new NullPointerException("end == null");
         }
-        
+
         // See above about selection of instructions.
         int startAddress = addresses.getLast(start).getAddress();
         int endAddress = addresses.getEnd(end).getAddress();

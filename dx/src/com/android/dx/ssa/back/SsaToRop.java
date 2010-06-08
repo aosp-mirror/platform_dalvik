@@ -65,7 +65,7 @@ public class SsaToRop {
 
     /**
      * Converts a method in SSA form to ROP form.
-     * 
+     *
      * @param ssaMeth {@code non-null;} method to process
      * @param minimizeRegisters {@code true} if the converter should
      * attempt to minimize the rop-form register count
@@ -78,7 +78,7 @@ public class SsaToRop {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param ssaMeth {@code non-null;} method to process
      * @param minimizeRegisters {@code true} if the converter should
      * attempt to minimize the rop-form register count
@@ -92,7 +92,7 @@ public class SsaToRop {
 
     /**
      * Performs the conversion.
-     * 
+     *
      * @return {@code non-null;} rop-form output
      */
     private RopMethod convert() {
@@ -113,7 +113,7 @@ public class SsaToRop {
         if (DEBUG) {
             System.out.println("Printing reg map");
             System.out.println(((BasicRegisterMapper)mapper).toHuman());
-        }        
+        }
 
         ssaMeth.setBackMode();
 
@@ -135,7 +135,7 @@ public class SsaToRop {
     }
 
     /**
-     * Removes all blocks containing only GOTOs from the control flow. 
+     * Removes all blocks containing only GOTOs from the control flow.
      * Although much of this work will be done later when converting
      * from rop to dex, not all simplification cases can be handled
      * there. Furthermore, any no-op block between the exit block and
@@ -171,7 +171,7 @@ public class SsaToRop {
      */
     private void removePhiFunctions() {
         ArrayList<SsaBasicBlock> blocks = ssaMeth.getBlocks();
-        
+
         for (SsaBasicBlock block : blocks) {
             // Add moves in all the pred blocks for each phi insn.
             block.forEachPhiInsn(new PhiVisitor(blocks));
@@ -335,7 +335,7 @@ public class SsaToRop {
 
     /**
      * Converts an insn list to rop form.
-     * 
+     *
      * @param ssaInsns {@code non-null;} old instructions
      * @return {@code non-null;} immutable instruction list
      */
@@ -354,7 +354,7 @@ public class SsaToRop {
 
     /**
      * <b>Note:</b> This method is not presently used.
-     * 
+     *
      * @return a list of registers ordered by most-frequently-used to
      * least-frequently-used. Each register is listed once and only
      * once.
@@ -381,5 +381,5 @@ public class SsaToRop {
         }
 
         return result;
-    }    
+    }
 }

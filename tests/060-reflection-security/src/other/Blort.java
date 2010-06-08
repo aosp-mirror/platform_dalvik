@@ -5,7 +5,7 @@ public class Blort {
     /*package*/ int packageField;
     protected int protectedField;
     public int publicField;
-    
+
     private void privateMethod() {
         // This space intentionally left blank.
     }

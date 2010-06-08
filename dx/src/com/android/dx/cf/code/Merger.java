@@ -34,7 +34,7 @@ public final class Merger {
     /**
      * Merges two locals arrays. If the merged result is the same as the first
      * argument, then return the first argument (not a copy).
-     * 
+     *
      * @param locals1 {@code non-null;} a locals array
      * @param locals2 {@code non-null;} another locals array
      * @return {@code non-null;} the result of merging the two locals arrays
@@ -86,7 +86,7 @@ public final class Merger {
     /**
      * Merges two stacks. If the merged result is the same as the first
      * argument, then return the first argument (not a copy).
-     * 
+     *
      * @param stack1 {@code non-null;} a stack
      * @param stack2 {@code non-null;} another stack
      * @return {@code non-null;} the result of merging the two stacks
@@ -143,7 +143,7 @@ public final class Merger {
 
     /**
      * Merges two frame types.
-     * 
+     *
      * @param ft1 {@code non-null;} a frame type
      * @param ft2 {@code non-null;} another frame type
      * @return {@code non-null;} the result of merging the two types
@@ -212,7 +212,7 @@ public final class Merger {
      * type {@code Object} is the supertype of all reference
      * types and all arrays are assignable to
      * {@code Serializable} and {@code Cloneable}.
-     * 
+     *
      * @param supertypeBearer {@code non-null;} the supertype
      * @param subtypeBearer {@code non-null;} the subtype
      */

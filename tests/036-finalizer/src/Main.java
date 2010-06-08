@@ -40,7 +40,7 @@ public class Main {
         } catch (InterruptedException ie) {
             throw new RuntimeException(ie);
         }
-                
+
         return wimp[0];
     }
 
@@ -80,7 +80,7 @@ public class Main {
         /* this will try to collect and finalize ft */
         System.out.println("gc");
         System.gc();
-        
+
         System.out.println("wimp: " + wimpString(wimp));
         System.out.println("finalize");
         System.runFinalization();

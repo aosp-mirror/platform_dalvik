@@ -25,13 +25,13 @@ public final class AnnotationsList
         extends FixedSizeList {
     /** {@code non-null;} immutable empty instance */
     public static final AnnotationsList EMPTY = new AnnotationsList(0);
-    
+
     /**
      * Constructs an immutable instance which is the combination of
      * the two given instances. The two instances must each have the
      * same number of elements, and each pair of elements must contain
      * disjoint sets of types.
-     * 
+     *
      * @param list1 {@code non-null;} an instance
      * @param list2 {@code non-null;} the other instance
      * @return {@code non-null;} the combination
@@ -58,7 +58,7 @@ public final class AnnotationsList
 
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public AnnotationsList(int size) {
@@ -69,7 +69,7 @@ public final class AnnotationsList
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
      * do that, this will throw {@code NullPointerException}.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @return {@code non-null;} element at that index
      */
@@ -80,7 +80,7 @@ public final class AnnotationsList
     /**
      * Sets the element at the given index. The given element must be
      * immutable.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @param a {@code null-ok;} the element to set at {@code n}
      */

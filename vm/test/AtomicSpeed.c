@@ -30,7 +30,7 @@ u8 dvmTestAtomicSpeedSub(int repeatCount)
     int* valuePtr = &value;
     u8 start, end;
     int i;
-    
+
 #ifdef TRIVIAL_COMPARE
     /* init to arg value so compiler can't pre-determine result */
     int j = repeatCount;

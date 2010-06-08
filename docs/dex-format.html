@@ -1305,7 +1305,7 @@ may appear in a <code>.dex</code> file.
 <tr>
   <td>data_off</td>
   <td>uint</td>
-  <td>offset from the start of the file to the start of the 
+  <td>offset from the start of the file to the start of the
    <code>data</code> section.
   </td>
 </tr>
@@ -1559,7 +1559,7 @@ be ordered by initial offset and must not overlap.</p>
   <td>data</td>
   <td>ubyte[]</td>
   <td>a series of MUTF-8 code units (a.k.a. octets, a.k.a. bytes)
-    followed by a byte of value <code>0</code>. See 
+    followed by a byte of value <code>0</code>. See
     "MUTF-8 (Modified UTF-8) Encoding" above for details and
     discussion about the data format.
     <p><b>Note:</b> It is acceptable to have a string which includes
@@ -1892,7 +1892,7 @@ be ordered by initial offset and must not overlap.</p>
 </tbody>
 </table>
 
-<p><b>Note:</b> All elements' <code>field_id</code>s and 
+<p><b>Note:</b> All elements' <code>field_id</code>s and
 <code>method_id</code>s must refer to the same defining class.</p>
 
 <h3><code>encoded_field</code> Format</h3>
@@ -2055,10 +2055,10 @@ be ordered by initial offset and must not overlap.</p>
 <tr>
   <td>debug_info_off</td>
   <td>uint</td>
-  <td>offset from the start of the file to the debug info (line numbers + 
-    local variable info) sequence for this code, or <code>0</code> if 
-    there simply is no information. The offset, if non-zero, should be 
-    to a location in the <code>data</code> section. The format of 
+  <td>offset from the start of the file to the debug info (line numbers +
+    local variable info) sequence for this code, or <code>0</code> if
+    there simply is no information. The offset, if non-zero, should be
+    to a location in the <code>data</code> section. The format of
     the data is specified by "<code>debug_info_item</code>" below.
   </td>
 </tr>
@@ -2258,7 +2258,7 @@ The <code>line</code> register represents what source line number
 should be associated with the next positions table entry emitted by
 the state machine. It is initialized in the sequence header, and may
 change in positive or negative directions but must never be less than
-<code>1</code>. The <code>source_file</code> register represents the 
+<code>1</code>. The <code>source_file</code> register represents the
 source file that the line number entries refer to. It is initialized to
 the value of <code>source_file_idx</code> in <code>class_def_item</code>.
 The other two variables, <code>prologue_end</code> and
@@ -2282,7 +2282,7 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
 <tr>
  <td>line_start</td>
  <td>uleb128</td>
- <td>the initial value for the state machine's <code>line</code> register. 
+ <td>the initial value for the state machine's <code>line</code> register.
     Does not represent an actual positions entry.
  </td>
 </tr>
@@ -2351,7 +2351,7 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
     <code>name_idx</code>: string index of the name<br/>
     <code>type_idx</code>: type index of the type
   </td>
-  <td>introduces a local variable at the current address. Either 
+  <td>introduces a local variable at the current address. Either
     <code>name_idx</code> or <code>type_idx</code> may be
     <code>NO_INDEX</code> to indicate that that value is unknown.
   </td>
@@ -2363,7 +2363,7 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
     uleb128p1&nbsp;name_idx<br/>
     uleb128p1&nbsp;type_idx<br/>
     uleb128p1&nbsp;sig_idx
-  </td> 
+  </td>
   <td><code>register_num</code>: register that will contain local<br/>
     <code>name_idx</code>: string index of the name<br/>
     <code>type_idx</code>: type index of the type<br/>
@@ -2385,7 +2385,7 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
   <td>0x05</td>
   <td>uleb128&nbsp;register_num</td>
   <td><code>register_num</code>: register that contained local</td>
-  <td>marks a currently-live local variable as out of scope at the current 
+  <td>marks a currently-live local variable as out of scope at the current
     address
   </td>
 </tr>
@@ -2404,9 +2404,9 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
   <td>0x07</td>
   <td></td>
   <td><i>(none)</i></td>
-  <td>sets the <code>prologue_end</code> state machine register, 
-    indicating that the next position entry that is added should be 
-    considered the end of a method prologue (an appropriate place for 
+  <td>sets the <code>prologue_end</code> state machine register,
+    indicating that the next position entry that is added should be
+    considered the end of a method prologue (an appropriate place for
     a method breakpoint). The <code>prologue_end</code> register is
     cleared by any special (<code>&gt;= 0x0a</code>) opcode.
   </td>
@@ -2416,9 +2416,9 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
   <td>0x08</td>
   <td></td>
   <td><i>(none)</i></td>
-  <td>sets the <code>epilogue_begin</code> state machine register, 
-    indicating that the next position entry that is added should be 
-    considered the beginning of a method epilogue (an appropriate place 
+  <td>sets the <code>epilogue_begin</code> state machine register,
+    indicating that the next position entry that is added should be
+    considered the beginning of a method epilogue (an appropriate place
     to suspend execution before method exit).
     The <code>epilogue_begin</code> register is cleared by any special
     (<code>&gt;= 0x0a</code>) opcode.
@@ -2427,7 +2427,7 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
 <tr>
   <td>DBG_SET_FILE</td>
   <td>0x09</td>
-  <td>uleb128p1&nbsp;name_idx</td> 
+  <td>uleb128p1&nbsp;name_idx</td>
   <td><code>name_idx</code>: string index of source file name;
     <code>NO_INDEX</code> if unknown
   </td>
@@ -2438,7 +2438,7 @@ each register for the <code>DBG_RESTART_LOCAL</code> code.</p>
 </tr>
 <tr>
   <td><i>Special Opcodes</i></td>
-  <!-- When updating the range below, make sure to search for other 
+  <!-- When updating the range below, make sure to search for other
   instances of 0x0a in this section. -->
   <td>0x0a&hellip;0xff</td>
   <td></td>
@@ -2532,7 +2532,7 @@ address += (adjusted_opcode / DBG_LINE_RANGE)
 </tbody>
 </table>
 
-<p><b>Note:</b> All elements' <code>field_id</code>s and 
+<p><b>Note:</b> All elements' <code>field_id</code>s and
 <code>method_id</code>s must refer to the same defining class.</p>
 
 <h3><code>field_annotation</code> Format</h3>

@@ -33,11 +33,11 @@ public interface Machine {
      * Gets the effective prototype of the method that this instance is
      * being used for. The <i>effective</i> prototype includes an initial
      * {@code this} argument for instance methods.
-     * 
+     *
      * @return {@code non-null;} the method prototype
      */
     public Prototype getPrototype();
-    
+
     /**
      * Clears the regular and auxiliary arguments area.
      */

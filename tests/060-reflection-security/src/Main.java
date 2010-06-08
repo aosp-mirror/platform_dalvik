@@ -2,14 +2,14 @@ import other.Blort;
 
 public class Main {
     static public boolean VERBOSE = false;
-    
+
     static public void main(String[] args) {
         if (args.length > 0) {
             if (args[0].equals("--verbose")) {
                 VERBOSE = true;
             }
         }
-        
+
         System.out.println("Setting SecurityManager.");
         System.setSecurityManager(Enforcer.THE_ONE);
         System.out.println("Running tests.");

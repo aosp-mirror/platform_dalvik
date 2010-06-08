@@ -80,20 +80,20 @@ typedef struct FieldMethodInfo {
 } FieldMethodInfo;
 
 /*
- * Get 2 little-endian bytes. 
- */ 
+ * Get 2 little-endian bytes.
+ */
 static inline u2 get2LE(unsigned char const* pSrc)
 {
     return pSrc[0] | (pSrc[1] << 8);
-}   
+}
 
 /*
- * Get 4 little-endian bytes. 
- */ 
+ * Get 4 little-endian bytes.
+ */
 static inline u4 get4LE(unsigned char const* pSrc)
 {
     return pSrc[0] | (pSrc[1] << 8) | (pSrc[2] << 16) | (pSrc[3] << 24);
-}   
+}
 
 /*
  * Converts a single-character primitive type into its human-readable
@@ -255,7 +255,7 @@ static char* createAccessFlagStr(u4 flags, AccessFor forWhat)
 {
 #define NUM_FLAGS   18
     static const char* kAccessStrings[kAccessForMAX][NUM_FLAGS] = {
-        {   
+        {
             /* class, inner class */
             "PUBLIC",           /* 0x0001 */
             "PRIVATE",          /* 0x0002 */
@@ -573,7 +573,7 @@ void dumpCatches(DexFile* pDexFile, const DexCode* pCode)
     if (triesSize == 0) {
         printf("      catches       : (none)\n");
         return;
-    } 
+    }
 
     printf("      catches       : %d\n", triesSize);
 
@@ -585,7 +585,7 @@ void dumpCatches(DexFile* pDexFile, const DexCode* pCode)
         u4 start = pTry->startAddr;
         u4 end = start + pTry->insnCount;
         DexCatchIterator iterator;
-        
+
         printf("        0x%04x - 0x%04x\n", start, end);
 
         dexCatchIteratorInit(&iterator, pCode, pTry->handlerOff);
@@ -593,14 +593,14 @@ void dumpCatches(DexFile* pDexFile, const DexCode* pCode)
         for (;;) {
             DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
             const char* descriptor;
-            
+
             if (handler == NULL) {
                 break;
             }
-            
-            descriptor = (handler->typeIdx == kDexNoIndex) ? "<any>" : 
+
+            descriptor = (handler->typeIdx == kDexNoIndex) ? "<any>" :
                 dexStringByTypeIdx(pDexFile, handler->typeIdx);
-            
+
             printf("          %s -> 0x%04x\n", descriptor,
                     handler->address);
         }
@@ -616,11 +616,11 @@ static int dumpPositionsCb(void *cnxt, u4 address, u4 lineNum)
 /*
  * Dump the positions list.
  */
-void dumpPositions(DexFile* pDexFile, const DexCode* pCode, 
+void dumpPositions(DexFile* pDexFile, const DexCode* pCode,
         const DexMethod *pDexMethod)
 {
     printf("      positions     : \n");
-    const DexMethodId *pMethodId 
+    const DexMethodId *pMethodId
             = dexGetMethodId(pDexFile, pDexMethod->methodIdx);
     const char *classDescriptor
             = dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
@@ -634,7 +634,7 @@ static void dumpLocalsCb(void *cnxt, u2 reg, u4 startAddress,
         const char *signature)
 {
     printf("        0x%04x - 0x%04x reg=%d %s %s %s\n",
-            startAddress, endAddress, reg, name, descriptor, 
+            startAddress, endAddress, reg, name, descriptor,
             signature);
 }
 
@@ -646,9 +646,9 @@ void dumpLocals(DexFile* pDexFile, const DexCode* pCode,
 {
     printf("      locals        : \n");
 
-    const DexMethodId *pMethodId 
+    const DexMethodId *pMethodId
             = dexGetMethodId(pDexFile, pDexMethod->methodIdx);
-    const char *classDescriptor 
+    const char *classDescriptor
             = dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
 
     dexDecodeDebugInfo(pDexFile, pCode, classDescriptor, pMethodId->protoIdx,
@@ -669,7 +669,7 @@ bool getMethodInfo(DexFile* pDexFile, u4 methodIdx, FieldMethodInfo* pMethInfo)
     pMethInfo->name = dexStringById(pDexFile, pMethodId->nameIdx);
     pMethInfo->signature = dexCopyDescriptorFromMethodId(pDexFile, pMethodId);
 
-    pMethInfo->classDescriptor = 
+    pMethInfo->classDescriptor =
             dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
     return true;
 }
@@ -1067,9 +1067,9 @@ void dumpBytecodes(DexFile* pDexFile, const DexMethod* pDexMethod)
             insnWidth = 2 + get2LE((const u1*)(insns+1)) * 4;
         } else if (instr == kArrayDataSignature) {
             int width = get2LE((const u1*)(insns+1));
-            int size = get2LE((const u1*)(insns+2)) | 
+            int size = get2LE((const u1*)(insns+2)) |
                        (get2LE((const u1*)(insns+3))<<16);
-            // The plus 1 is to round up for odd size and width 
+            // The plus 1 is to round up for odd size and width
             insnWidth = 4 + ((size * width) + 1) / 2;
         } else {
             opCode = instr & 0xff;
@@ -1355,7 +1355,7 @@ void dumpClass(DexFile* pDexFile, int idx, char** pLastPackage)
         printf("Trouble reading class data (#%d)\n", idx);
         goto bail;
     }
-    
+
     classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
 
     /*

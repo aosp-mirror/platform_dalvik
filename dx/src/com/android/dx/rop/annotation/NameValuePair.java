@@ -29,10 +29,10 @@ public final class NameValuePair implements Comparable<NameValuePair> {
 
     /** {@code non-null;} the value */
     private final Constant value;
-    
+
     /**
      * Construct an instance.
-     * 
+     *
      * @param name {@code non-null;} the name
      * @param value {@code non-null;} the value
      */
@@ -49,7 +49,7 @@ public final class NameValuePair implements Comparable<NameValuePair> {
         if (value instanceof CstUtf8) {
             throw new IllegalArgumentException("bad value: " + value);
         }
-        
+
         this.name = name;
         this.value = value;
     }
@@ -63,7 +63,7 @@ public final class NameValuePair implements Comparable<NameValuePair> {
     public int hashCode() {
         return name.hashCode() * 31 + value.hashCode();
     }
-    
+
     /** {@inheritDoc} */
     public boolean equals(Object other) {
         if (! (other instanceof NameValuePair)) {
@@ -78,7 +78,7 @@ public final class NameValuePair implements Comparable<NameValuePair> {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * <p>Instances of this class compare in name-major and value-minor
      * order.</p>
      */
@@ -90,20 +90,20 @@ public final class NameValuePair implements Comparable<NameValuePair> {
         }
 
         return value.compareTo(other.value);
-    }    
+    }
 
     /**
      * Gets the name.
-     * 
+     *
      * @return {@code non-null;} the name
      */
     public CstUtf8 getName() {
         return name;
     }
-    
+
     /**
      * Gets the value.
-     * 
+     *
      * @return {@code non-null;} the value
      */
     public Constant getValue() {

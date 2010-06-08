@@ -9,7 +9,7 @@ def SplitSections(buffer):
     When found, the name of the section is extracted.  The entire contents
     of that section is added to a result hashmap with the section name
     as the key"""
-    
+
     # Match lines like
     #              |section_name:
     # capturing section_name
@@ -19,11 +19,11 @@ def SplitSections(buffer):
     start = 0
     anchor = -1
     sectionName = ''
-    
+
     while True:
         # Look for a section header
         result = headerPattern.search(buffer, start)
-        
+
         # If there are no more, add a section from the last header to EOF
         if result is None:
             if anchor is not -1:
@@ -34,17 +34,17 @@ def SplitSections(buffer):
         # map indexed by the section name
         if anchor is not -1:
             sections[sectionName] = buffer[anchor:result.start()]
-            
+
         sectionName = result.group(1)
         start = result.end()
         anchor = start
-        
+
     return sections
 
 def FindMethods(section):
     """Spin through the 'method code index' section and extract all
     method signatures.  When found, they are added to a result list."""
-    
+
     # Match lines like:
     #             |[abcd] com/example/app/Class.method:(args)return
     # capturing the method signature
@@ -56,7 +56,7 @@ def FindMethods(section):
     while True:
         # Look for a method name
         result = methodPattern.search(section, start)
-        
+
         if result is None:
             return methods
 
@@ -68,16 +68,16 @@ def CallsMethod(codes, method):
     """Spin through all the input method signatures.  For each one, return
     whether or not there is method invokation line in the codes section that
     lists the method as the target."""
-    
+
     start = 0
-    
+
     while True:
         # Find the next reference to the method signature
         match = codes.find(method, start)
-        
+
         if match is -1:
             break;
-        
+
         # Find the beginning of the line the method reference is on
         startOfLine = codes.rfind("\n", 0, match) + 1
 
@@ -86,9 +86,9 @@ def CallsMethod(codes, method):
         # than the beginning of the code section for that method.
         if codes.find("invoke", startOfLine, match) is not -1:
             return True
-            
+
         start = match + len(method)
-        
+
     return False
 
 
@@ -120,7 +120,7 @@ def main():
         if not CallsMethod(codes, method):
             print "\t", method
             count += 1
-        
+
     if count is 0:
         print "\tNone"
 

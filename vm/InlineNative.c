@@ -754,7 +754,7 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
     Method* method = gDvm.inlinedMethods[opIndex];
     if (method == NULL) {
         ClassObject* clazz;
-        
+
         clazz = dvmFindClassNoInit(
                 gDvmInlineOpsTable[opIndex].classDescriptor, NULL);
         if (clazz == NULL) {

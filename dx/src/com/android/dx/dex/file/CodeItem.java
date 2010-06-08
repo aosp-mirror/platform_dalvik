@@ -62,7 +62,7 @@ public final class CodeItem extends OffsettedItem {
 
     /**
      * {@code non-null;} list of possibly-thrown exceptions; just used in
-     * generating debugging output (listings) 
+     * generating debugging output (listings)
      */
     private final TypeList throwsList;
 
@@ -74,7 +74,7 @@ public final class CodeItem extends OffsettedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param ref {@code non-null;} method that this code implements
      * @param code {@code non-null;} the underlying code
      * @param isStatic whether this instance is for a {@code static}
@@ -148,7 +148,7 @@ public final class CodeItem extends OffsettedItem {
 
     /**
      * Gets the reference to the method this instance implements.
-     * 
+     *
      * @return {@code non-null;} the method reference
      */
     public CstMethodRef getRef() {
@@ -157,7 +157,7 @@ public final class CodeItem extends OffsettedItem {
 
     /**
      * Does a human-friendly dump of this instance.
-     * 
+     *
      * @param out {@code non-null;} where to dump
      * @param prefix {@code non-null;} per-line prefix to use
      * @param verbose whether to be verbose with the output
@@ -192,7 +192,7 @@ public final class CodeItem extends OffsettedItem {
     protected void place0(Section addedTo, int offset) {
         final DexFile file = addedTo.getFile();
         int catchesSize;
-        
+
         /*
          * In order to get the catches and insns, all the code's
          * constants need to be assigned indices.
@@ -307,7 +307,7 @@ public final class CodeItem extends OffsettedItem {
 
     /**
      * Get the in registers count.
-     * 
+     *
      * @return the count
      */
     private int getInsSize() {
@@ -316,7 +316,7 @@ public final class CodeItem extends OffsettedItem {
 
     /**
      * Get the out registers count.
-     * 
+     *
      * @return the count
      */
     private int getOutsSize() {
@@ -325,7 +325,7 @@ public final class CodeItem extends OffsettedItem {
 
     /**
      * Get the total registers count.
-     * 
+     *
      * @return the count
      */
     private int getRegistersSize() {

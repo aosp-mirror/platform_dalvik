@@ -55,7 +55,7 @@ public class BlockDumper
 
     /**
      * {@code null-ok;} the class file object being constructed;
-     * becomes non-null during {@link #dump} 
+     * becomes non-null during {@link #dump}
      */
     protected DirectClassFile classFile;
 
@@ -71,7 +71,7 @@ public class BlockDumper
     /**
      * Dumps the given array, interpreting it as a class file and dumping
      * methods with indications of block-level stuff.
-     * 
+     *
      * @param bytes {@code non-null;} bytes of the (alleged) class file
      * @param out {@code non-null;} where to dump to
      * @param filePath the file path for the class, excluding any base
@@ -189,7 +189,7 @@ public class BlockDumper
         if (!shouldDumpMethod(name)) {
             return;
         }
-        
+
         ConcreteMethod meth = new ConcreteMethod((Method) member, classFile,
                                                  true, true);
 
@@ -202,7 +202,7 @@ public class BlockDumper
 
     /**
      * Does a regular basic block dump.
-     * 
+     *
      * @param meth {@code non-null;} method data to dump
      */
     private void regularDump(ConcreteMethod meth) {
@@ -257,7 +257,7 @@ public class BlockDumper
                 CstType exceptionClass = one.getExceptionClass();
                 parsed(bytes, end, 0,
                        "catch " +
-                       ((exceptionClass == CstType.OBJECT) ? "<any>" : 
+                       ((exceptionClass == CstType.OBJECT) ? "<any>" :
                         exceptionClass.toHuman()) + " -> " +
                        Hex.u2(one.getHandlerPc()));
             }
@@ -277,7 +277,7 @@ public class BlockDumper
 
     /**
      * Does a registerizing dump.
-     * 
+     *
      * @param meth {@code non-null;} method data to dump
      */
     private void ropDump(ConcreteMethod meth) {

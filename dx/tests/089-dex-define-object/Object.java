@@ -17,15 +17,15 @@
 package java.lang;
 
 public class Object {
-    public Object() { 
+    public Object() {
         // This space intentionally left blank.
     }
 
     public boolean equals(Object o) {
-        return true; 
+        return true;
     }
 
-    protected void finalize() { 
+    protected void finalize() {
         // This space intentionally left blank.
     }
 
@@ -35,7 +35,7 @@ public class Object {
     public final native void notifyAll();
 
     public String toString() {
-        return "blort"; 
+        return "blort";
     }
 
     public final void wait() {

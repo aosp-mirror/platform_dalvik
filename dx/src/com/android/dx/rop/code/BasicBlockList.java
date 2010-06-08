@@ -28,14 +28,14 @@ import com.android.dx.util.LabeledList;
 public final class BasicBlockList extends LabeledList {
     /**
      * {@code >= -1;} the count of registers required by this method or
-     * {@code -1} if not yet calculated 
+     * {@code -1} if not yet calculated
      */
     private int regCount;
 
     /**
      * Constructs an instance. All indices initially contain {@code null},
      * and the first-block label is initially {@code -1}.
-     * 
+     *
      * @param size the size of the list
      */
     public BasicBlockList(int size) {
@@ -46,7 +46,7 @@ public final class BasicBlockList extends LabeledList {
 
     /**
      * Constructs a mutable copy for {@code getMutableCopy()}.
-     * 
+     *
      * @param old block to copy
      */
     private BasicBlockList (BasicBlockList old) {
@@ -59,7 +59,7 @@ public final class BasicBlockList extends LabeledList {
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
      * do that, this will throw {@code NullPointerException}.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @return {@code non-null;} element at that index
      */
@@ -69,13 +69,13 @@ public final class BasicBlockList extends LabeledList {
 
     /**
      * Sets the basic block at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @param bb {@code null-ok;} the element to set at {@code n}
      */
     public void set(int n, BasicBlock bb) {
         super.set(n, bb);
-        
+
         // Reset regCount, since it will need to be recalculated.
         regCount = -1;
     }
@@ -85,7 +85,7 @@ public final class BasicBlockList extends LabeledList {
      * the maximum of register-number-plus-category referred to by this
      * instance's instructions (indirectly through {@link BasicBlock}
      * instances).
-     * 
+     *
      * @return {@code >= 0;} the register count
      */
     public int getRegCount() {
@@ -101,7 +101,7 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Gets the total instruction count for this instance. This is the
      * sum of the instruction counts of each block.
-     * 
+     *
      * @return {@code >= 0;} the total instruction count
      */
     public int getInstructionCount() {
@@ -168,7 +168,7 @@ public final class BasicBlockList extends LabeledList {
 
     /**
      * Visits each instruction of each block in the list, in order.
-     * 
+     *
      * @param visitor {@code non-null;} visitor to use
      */
     public void forEachInsn(Insn.Visitor visitor) {
@@ -186,7 +186,7 @@ public final class BasicBlockList extends LabeledList {
      * the registers in each instruction are offset by the given
      * amount. Mutability of the result is inherited from the
      * original.
-     * 
+     *
      * @param delta the amount to offset register numbers by
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -223,7 +223,7 @@ public final class BasicBlockList extends LabeledList {
      * Otherwise, if the block has a primay successor, then that is
      * the preferred successor. If the block has no successors, then
      * this returns {@code null}.
-     * 
+     *
      * @param block {@code non-null;} the block in question
      * @return {@code null-ok;} the preferred successor, if any
      */
@@ -251,7 +251,7 @@ public final class BasicBlockList extends LabeledList {
     /**
      * Compares the catches of two blocks for equality. This includes
      * both the catch types and target labels.
-     * 
+     *
      * @param block1 {@code non-null;} one block to compare
      * @param block2 {@code non-null;} the other block to compare
      * @return {@code true} if the two blocks' non-primary successors
@@ -283,7 +283,7 @@ public final class BasicBlockList extends LabeledList {
              */
             return false;
         }
-            
+
         for (int i = 0; i < size; i++) {
             int label1 = succ1.get(i);
             int label2 = succ2.get(i);
@@ -325,7 +325,7 @@ public final class BasicBlockList extends LabeledList {
 
         /**
          * Gets the register count.
-         * 
+         *
          * @return {@code >= 0;} the count
          */
         public int getRegCount() {
@@ -364,7 +364,7 @@ public final class BasicBlockList extends LabeledList {
 
         /**
          * Helper for all the {@code visit*} methods.
-         * 
+         *
          * @param insn {@code non-null;} instruction being visited
          */
         private void visit(Insn insn) {
@@ -384,7 +384,7 @@ public final class BasicBlockList extends LabeledList {
 
         /**
          * Processes the given register spec.
-         * 
+         *
          * @param spec {@code non-null;} the register spec
          */
         private void processReg(RegisterSpec spec) {
@@ -394,5 +394,5 @@ public final class BasicBlockList extends LabeledList {
                 regCount = reg;
             }
         }
-    }    
+    }
 }

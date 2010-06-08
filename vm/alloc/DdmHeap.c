@@ -36,12 +36,12 @@ enum HpifWhen {
 
 /*
  * Chunk HPIF (client --> server)
- * 
+ *
  * Heap Info. General information about the heap,
  * suitable for a summary display.
- * 
+ *
  *   [u4]: number of heaps
- * 
+ *
  *   For each heap:
  *     [u4]: heap ID
  *     [u8]: timestamp in ms since Unix epoch
@@ -274,7 +274,7 @@ heap_chunk_callback(const void *chunkptr, size_t chunklen,
         state = HPSG_STATE(SOLIDITY_FREE, 0);
     } else {
         const Object *obj = userptr;
-        /* If we're looking at the native heap, we'll just return 
+        /* If we're looking at the native heap, we'll just return
          * (SOLIDITY_HARD, KIND_NATIVE) for all allocated chunks
          */
         bool native = ctx->type == CHUNK_TYPE("NHSG");
@@ -363,7 +363,7 @@ static void
 walkHeap(bool merge, bool native)
 {
     HeapChunkContext ctx;
-    
+
     memset(&ctx, 0, sizeof(ctx));
     ctx.bufLen = HPSx_CHUNK_SIZE;
     ctx.buf = (u1 *)malloc(ctx.bufLen);

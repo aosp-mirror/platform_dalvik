@@ -32,19 +32,19 @@ public final class RopMethod {
 
     /**
      * {@code null-ok;} array of predecessors for each block, indexed by block
-     * label 
+     * label
      */
     private IntList[] predecessors;
 
     /**
      * {@code null-ok;} the predecessors for the implicit "exit" block, that is
-     * the labels for the blocks that return, if calculated 
+     * the labels for the blocks that return, if calculated
      */
     private IntList exitPredecessors;
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param blocks {@code non-null;} basic block list of the method
      * @param firstLabel {@code >= 0;} the label of the first block to execute
      */
@@ -66,7 +66,7 @@ public final class RopMethod {
 
     /**
      * Gets the basic block list for this method.
-     * 
+     *
      * @return {@code non-null;} the list
      */
     public BasicBlockList getBlocks() {
@@ -76,7 +76,7 @@ public final class RopMethod {
     /**
      * Gets the label for the first block in the method that this list
      * represents.
-     * 
+     *
      * @return {@code >= 0;} the first-block label
      */
     public int getFirstLabel() {
@@ -86,7 +86,7 @@ public final class RopMethod {
     /**
      * Gets the predecessors associated with the given block. This throws
      * an exception if there is no block with the given label.
-     * 
+     *
      * @param label {@code >= 0;} the label of the block in question
      * @return {@code non-null;} the predecessors of that block
      */
@@ -106,7 +106,7 @@ public final class RopMethod {
 
     /**
      * Gets the exit predecessors for this instance.
-     * 
+     *
      * @return {@code non-null;} the exit predecessors
      */
     public IntList getExitPredecessors() {
@@ -122,7 +122,7 @@ public final class RopMethod {
      * Returns an instance that is identical to this one, except that
      * the registers in each instruction are offset by the given
      * amount.
-     * 
+     *
      * @param delta the amount to offset register numbers by
      * @return {@code non-null;} an appropriately-constructed instance
      */

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     public static boolean zorch() {
         return true;
     }
-    
+
     public static void test1() {
         for (;;) {
             // This space intentionally left blank.
@@ -43,7 +43,7 @@ public class Blort
             if (zorch()) {
                 break;
             }
-            
+
             while (zorch()) {
                 zorch();
             }

@@ -224,7 +224,7 @@ static void showVersion(void)
 {
     dvmFprintf(stdout, "DalvikVM version %d.%d.%d\n",
         DALVIK_MAJOR_VERSION, DALVIK_MINOR_VERSION, DALVIK_BUG_VERSION);
-    dvmFprintf(stdout, 
+    dvmFprintf(stdout,
         "Copyright (C) 2007 The Android Open Source Project\n\n"
         "This software is built from source code licensed under the "
         "Apache License,\n"
@@ -634,7 +634,7 @@ static void processXjitmethod(const char *opt)
     gDvmJit.methodTable = dvmHashTableCreate(8, NULL);
 
     start = buf;
-    /* 
+    /*
      * Break comma-separated method signatures and enter them into the hash
      * table individually.
      */
@@ -1371,7 +1371,7 @@ bool dvmInitAfterZygote(void)
 {
     u8 startHeap, startQuit, startJdwp;
     u8 endHeap, endQuit, endJdwp;
-    
+
     startHeap = dvmGetRelativeTimeUsec();
 
     /*

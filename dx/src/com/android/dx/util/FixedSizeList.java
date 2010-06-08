@@ -28,7 +28,7 @@ public class FixedSizeList
 
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public FixedSizeList(int size) {
@@ -78,7 +78,7 @@ public class FixedSizeList
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * This method will only work if every element of the list
      * implements {@link ToHuman}.
      */
@@ -93,7 +93,7 @@ public class FixedSizeList
 
     /**
      * Gets a customized string form for this instance.
-     * 
+     *
      * @param prefix {@code null-ok;} prefix for the start of the result
      * @param separator {@code null-ok;} separator to insert between each item
      * @param suffix {@code null-ok;} suffix for the end of the result
@@ -107,7 +107,7 @@ public class FixedSizeList
      * Gets a customized human string for this instance. This method will
      * only work if every element of the list implements {@link
      * ToHuman}.
-     * 
+     *
      * @param prefix {@code null-ok;} prefix for the start of the result
      * @param separator {@code null-ok;} separator to insert between each item
      * @param suffix {@code null-ok;} suffix for the end of the result
@@ -168,7 +168,7 @@ public class FixedSizeList
      * will throw {@code NullPointerException}. This method is
      * protected so that subclasses may offer a safe type-checked
      * public interface to their clients.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @return {@code non-null;} the indicated element
      */
@@ -192,7 +192,7 @@ public class FixedSizeList
      * returned. This method is protected so that subclasses may
      * (optionally) offer a safe type-checked public interface to
      * their clients.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @return {@code null-ok;} the indicated element
      */
@@ -205,7 +205,7 @@ public class FixedSizeList
      * checks on the element. This method is protected so that
      * subclasses may offer a safe type-checked public interface to
      * their clients.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param obj {@code null-ok;} the value to store
      */
@@ -222,7 +222,7 @@ public class FixedSizeList
 
     /**
      * Throws the appropriate exception for the given index value.
-     * 
+     *
      * @param n the index value
      * @return never
      * @throws IndexOutOfBoundsException always thrown
@@ -238,11 +238,11 @@ public class FixedSizeList
     /**
      * Helper for {@link #toString} and {@link #toHuman}, which both of
      * those call to pretty much do everything.
-     * 
+     *
      * @param prefix {@code null-ok;} prefix for the start of the result
      * @param separator {@code null-ok;} separator to insert between each item
      * @param suffix {@code null-ok;} suffix for the end of the result
-     * @param human whether the output is to be human 
+     * @param human whether the output is to be human
      * @return {@code non-null;} the custom string
      */
     private String toString0(String prefix, String separator, String suffix,

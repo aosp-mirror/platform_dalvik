@@ -185,7 +185,7 @@ public class FancyLoader extends ClassLoader {
         throws ClassNotFoundException
     {
         Class res;
-        
+
         /*
          * 1. Invoke findLoadedClass(String) to check if the class has
          * already been loaded.

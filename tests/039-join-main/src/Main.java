@@ -6,7 +6,7 @@
 public class Main {
     public static void main(String[] args) {
         Thread t;
-        
+
         t = new Thread(new JoinMainSub(Thread.currentThread()), "Joiner");
         System.out.print("Starting thread '" + t.getName() + "'\n");
         t.start();

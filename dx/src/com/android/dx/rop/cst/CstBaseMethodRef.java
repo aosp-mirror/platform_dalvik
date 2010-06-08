@@ -99,7 +99,7 @@ public abstract class CstBaseMethodRef
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * In this case, this method returns the <i>return type</i> of this method.
      *
      * @return {@code non-null;} the method's return type
@@ -117,7 +117,7 @@ public abstract class CstBaseMethodRef
      * {@code getPrototype().getParameterTypes().getWordCount()},
      * plus {@code 1} if the method is to be treated as an
      * instance method.
-     * 
+     *
      * @param isStatic whether the method should be considered static
      * @return {@code >= 0;} the argument word count
      */

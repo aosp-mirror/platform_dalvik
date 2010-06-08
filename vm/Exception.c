@@ -528,7 +528,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
             excepClass->descriptor, msg, initKind);
         assert(strcmp(excepClass->descriptor,
                       "Ljava/lang/RuntimeException;") != 0);
-        dvmThrowChainedException("Ljava/lang/RuntimeException;", 
+        dvmThrowChainedException("Ljava/lang/RuntimeException;",
             "re-throw on exception class missing constructor", NULL);
         goto bail;
     }
@@ -781,7 +781,7 @@ static int findCatchInMethod(Thread* self, const Method* method, int relPc,
             if (handler == NULL) {
                 break;
             }
-                
+
             if (handler->typeIdx == kDexNoIndex) {
                 /* catch-all */
                 LOGV("Match on catch-all block at 0x%02x in %s.%s for %s\n",
@@ -1075,7 +1075,7 @@ void* dvmFillInStackTraceInternal(Thread* thread, bool wantObject, int* pCount)
                 *intPtr++ = 0;      /* no saved PC for native methods */
             } else {
                 assert(saveArea->xtra.currentPc >= method->insns &&
-                        saveArea->xtra.currentPc < 
+                        saveArea->xtra.currentPc <
                         method->insns + dvmGetMethodInsnsSize(method));
                 *intPtr++ = (int) (saveArea->xtra.currentPc - method->insns);
             }

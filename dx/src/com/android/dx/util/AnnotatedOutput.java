@@ -24,7 +24,7 @@ public interface AnnotatedOutput
         extends Output {
     /**
      * Get whether this instance will actually keep annotations.
-     * 
+     *
      * @return {@code true} iff annotations are being kept
      */
     public boolean annotates();
@@ -33,7 +33,7 @@ public interface AnnotatedOutput
      * Get whether this instance is intended to keep verbose annotations.
      * Annotators may use the result of calling this method to inform their
      * annotation activity.
-     * 
+     *
      * @return {@code true} iff annotations are to be verbose
      */
     public boolean isVerbose();
@@ -43,7 +43,7 @@ public interface AnnotatedOutput
      * open annotation will be closed by this call, and the new
      * annotation marks all subsequent output until another annotation
      * call.
-     * 
+     *
      * @param msg {@code non-null;} the annotation message
      */
     public void annotate(String msg);
@@ -54,7 +54,7 @@ public interface AnnotatedOutput
      * call. If there is already pending annotation from one or more
      * previous calls to this method, the new call "consumes" output
      * after all the output covered by the previous calls.
-     * 
+     *
      * @param amt {@code >= 0;} the amount of output for this annotation to
      * cover
      * @param msg {@code non-null;} the annotation message
@@ -72,7 +72,7 @@ public interface AnnotatedOutput
      * Implementations of this interface are encouraged to deal with too-wide
      * output, but annotaters are encouraged to attempt to avoid exceeding
      * the indicated width.
-     * 
+     *
      * @return {@code >= 1;} the maximum width
      */
     public int getAnnotationWidth();

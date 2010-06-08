@@ -39,7 +39,7 @@ public abstract class StdMember implements Member {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param definingClass {@code non-null;} the defining class
      * @param accessFlags access flags
      * @param nat {@code non-null;} member name and type (descriptor)

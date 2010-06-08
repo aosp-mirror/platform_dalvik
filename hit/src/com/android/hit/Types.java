@@ -45,7 +45,7 @@ public class Types {
             case 'S':      return 2;       //  short
             case 'I':      return 4;       //  int
             case 'J':      return 8;       //  long
-                
+
             case OBJECT:   return mIdSize;
             case BOOLEAN:  return 1;
             case CHAR:     return 2;
@@ -56,10 +56,10 @@ public class Types {
             case INT:      return 4;
             case LONG:     return 8;
         }
-        
+
         throw new IllegalArgumentException("Illegal type signature: " + type);
     }
-    
+
     public static final String getTypeName(int type) {
         switch (type) {
             case '[':      return "array";
@@ -72,7 +72,7 @@ public class Types {
             case 'S':      return "short";
             case 'I':      return "int";
             case 'J':      return "long";
-                
+
             case OBJECT:   return "object";
             case BOOLEAN:  return "boolean";
             case CHAR:     return "char";
@@ -83,7 +83,7 @@ public class Types {
             case INT:      return "int";
             case LONG:     return "long";
         }
-        
+
         throw new IllegalArgumentException("Illegal type signature: " + type);
     }
 }

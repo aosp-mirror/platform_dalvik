@@ -12,7 +12,7 @@ foreach (@traces)
 
     print("dmtracedump -h -p $input > $output\n");
     system("dmtracedump -h -p '$input' > '$output'");
-    
+
 }
 
 closedir DIR;

@@ -14798,7 +14798,7 @@ OP_IF_LEZ_2f:
    /*
     * File: OP_THROW_VERIFICATION_ERROR.S
     *
-    * Code: 
+    * Code:
     *
     * For: throw-verification-error
     *

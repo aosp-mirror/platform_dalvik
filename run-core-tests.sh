@@ -66,7 +66,7 @@ done
 # (1) The IO tests create lots of files in the current directory, so we change
 #     to /tmp first.
 # (2) Some of the core tests need a hell of a lot of memory, so we use a
-#     large value for both heap and stack. 
+#     large value for both heap and stack.
 
 rm -rf ${datadir}/xml_source
 mkdir -p ${datadir}/xml_source

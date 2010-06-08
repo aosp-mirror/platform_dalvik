@@ -122,17 +122,17 @@ void dvmLogGcStats(size_t numFreed, size_t sizeFreed, size_t gcTimeMs)
     /* Enough to quiet down gcc for unitialized variable check */
     perHeapActualSize[0] = perHeapAllowedSize[0] = perHeapNumAllocated[0] =
                            perHeapSizeAllocated[0] = 0;
-    actualSize = dvmHeapSourceGetValue(HS_FOOTPRINT, perHeapActualSize, 
+    actualSize = dvmHeapSourceGetValue(HS_FOOTPRINT, perHeapActualSize,
                                        HEAP_SOURCE_MAX_HEAP_COUNT);
-    allowedSize = dvmHeapSourceGetValue(HS_ALLOWED_FOOTPRINT, 
+    allowedSize = dvmHeapSourceGetValue(HS_ALLOWED_FOOTPRINT,
                       perHeapAllowedSize, HEAP_SOURCE_MAX_HEAP_COUNT);
     numAllocated = dvmHeapSourceGetValue(HS_OBJECTS_ALLOCATED,
                       perHeapNumAllocated, HEAP_SOURCE_MAX_HEAP_COUNT);
     sizeAllocated = dvmHeapSourceGetValue(HS_BYTES_ALLOCATED,
                       perHeapSizeAllocated, HEAP_SOURCE_MAX_HEAP_COUNT);
 
-    /* 
-     * Construct the the first 64-bit value to write to the log. 
+    /*
+     * Construct the the first 64-bit value to write to the log.
      * Global information:
      *
      * [63   ] Must be zero

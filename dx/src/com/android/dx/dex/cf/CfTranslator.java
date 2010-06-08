@@ -126,7 +126,7 @@ public class CfTranslator {
         if (classAnnotations.size() != 0) {
             out.setClassAnnotations(classAnnotations);
         }
-        
+
         processFields(cf, out);
         processMethods(cf, args, out);
 
@@ -162,7 +162,7 @@ public class CfTranslator {
                     out.addInstanceField(fi);
                 }
 
-                Annotations annotations = 
+                Annotations annotations =
                     AttributeTranslator.getAnnotations(one.getAttributes());
                 if (annotations.size() != 0) {
                     out.addFieldAnnotations(field, annotations);
@@ -178,7 +178,7 @@ public class CfTranslator {
     /**
      * Helper for {@link #processFields}, which translates constants into
      * more specific types if necessary.
-     * 
+     *
      * @param constant {@code non-null;} the constant in question
      * @param type {@code non-null;} the desired type
      */
@@ -254,8 +254,8 @@ public class CfTranslator {
                     int paramSize;
 
                     paramSize = meth.getParameterWordCount(isStatic);
-    
-                    String canonicalName 
+
+                    String canonicalName
                             = thisClass.getClassType().getDescriptor()
                                 + "." + one.getName().getString();
 
@@ -307,7 +307,7 @@ public class CfTranslator {
                         accessFlags &= ~AccessFlags.ACC_SYNCHRONIZED;
                     }
                 }
-                
+
                 if (isConstructor) {
                     accessFlags |= AccessFlags.ACC_CONSTRUCTOR;
                 }
@@ -323,13 +323,13 @@ public class CfTranslator {
                     out.addVirtualMethod(mi);
                 }
 
-                Annotations annotations = 
+                Annotations annotations =
                     AttributeTranslator.getMethodAnnotations(one);
                 if (annotations.size() != 0) {
                     out.addMethodAnnotations(meth, annotations);
                 }
 
-                AnnotationsList list = 
+                AnnotationsList list =
                     AttributeTranslator.getParameterAnnotations(one);
                 if (list.size() != 0) {
                     out.addParameterAnnotations(meth, list);
@@ -366,7 +366,7 @@ public class CfTranslator {
          * for the current purpose.
          */
 
-        DalvCode.AssignIndicesCallback callback = 
+        DalvCode.AssignIndicesCallback callback =
             new DalvCode.AssignIndicesCallback() {
                 public int getIndex(Constant cst) {
                     // Everything is at index 0!

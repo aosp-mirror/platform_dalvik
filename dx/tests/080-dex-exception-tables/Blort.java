@@ -30,7 +30,7 @@ public class Blort
             return 10;
         } catch (RuntimeException ex) {
             return 11;
-        } 
+        }
 
         call3();
         return 12;
@@ -141,13 +141,13 @@ public class Blort
             call1();
         } catch (RuntimeException ex) {
             return 10;
-        } 
+        }
 
         try {
             call2();
         } catch (RuntimeException ex) {
             return 11;
-        } 
+        }
 
         return 12;
     }
@@ -158,14 +158,14 @@ public class Blort
             call2();
         } catch (RuntimeException ex) {
             return 10;
-        } 
+        }
 
         try {
             call3();
             call4();
         } catch (RuntimeException ex) {
             return 11;
-        } 
+        }
 
         return 12;
     }
@@ -195,5 +195,5 @@ public class Blort
 
         return 14;
     }
-    
+
 }

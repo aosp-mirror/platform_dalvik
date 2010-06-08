@@ -83,7 +83,7 @@ public final class Form22c extends InsnFormat {
         if (! unsignedFitsInShort(cpi)) {
             return false;
         }
-        
+
         Constant cst = ci.getConstant();
         return (cst instanceof CstType) ||
             (cst instanceof CstFieldRef);

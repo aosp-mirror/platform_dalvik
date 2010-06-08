@@ -5,7 +5,7 @@ public class Main {
         if (args.length != 0) {
             millis = Integer.parseInt(args[0]);
         }
-        
+
         System.out.println("Sleeping " + millis + " msec...");
 
         long start = System.currentTimeMillis();

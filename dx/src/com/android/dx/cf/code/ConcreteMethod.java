@@ -43,13 +43,13 @@ public final class ConcreteMethod implements Method {
 
     /**
      * {@code null-ok;} the class's {@code SourceFile} attribute value,
-     * if any 
+     * if any
      */
     private final CstUtf8 sourceFile;
 
     /**
      * whether the class that this method is part of is defined with
-     * {@code ACC_SUPER} 
+     * {@code ACC_SUPER}
      */
     private final boolean accSuper;
 
@@ -64,7 +64,7 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param method {@code non-null;} the method to be based on
      * @param cf {@code non-null;} the class file that contains this method
      * @param keepLines whether to keep the line number information
@@ -179,7 +179,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Gets whether the class that this method is part of is defined with
      * {@code ACC_SUPER}.
-     * 
+     *
      * @return the {@code ACC_SUPER} value
      */
     public boolean getAccSuper() {
@@ -188,7 +188,7 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Gets the maximum stack size.
-     * 
+     *
      * @return {@code >= 0;} the maximum stack size
      */
     public int getMaxStack() {
@@ -197,7 +197,7 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Gets the number of locals.
-     * 
+     *
      * @return {@code >= 0;} the number of locals
      */
     public int getMaxLocals() {
@@ -206,7 +206,7 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Gets the bytecode array.
-     * 
+     *
      * @return {@code non-null;} the bytecode array
      */
     public BytecodeArray getCode() {
@@ -215,7 +215,7 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Gets the exception table.
-     * 
+     *
      * @return {@code non-null;} the exception table
      */
     public ByteCatchList getCatches() {
@@ -224,7 +224,7 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Gets the line number list.
-     * 
+     *
      * @return {@code non-null;} the line number list
      */
     public LineNumberList getLineNumbers() {
@@ -233,7 +233,7 @@ public final class ConcreteMethod implements Method {
 
     /**
      * Gets the local variable list.
-     * 
+     *
      * @return {@code non-null;} the local variable list
      */
     public LocalVariableList getLocalVariables() {
@@ -243,7 +243,7 @@ public final class ConcreteMethod implements Method {
     /**
      * Returns a {@link SourcePosition} instance corresponding to the
      * given bytecode offset.
-     * 
+     *
      * @param offset {@code >= 0;} the bytecode offset
      * @return {@code non-null;} an appropriate instance
      */

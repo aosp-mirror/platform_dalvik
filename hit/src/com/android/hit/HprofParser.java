@@ -53,7 +53,7 @@ public class HprofParser
     private static final int ROOT_INSTANCE_DUMP         =   0x21;
     private static final int ROOT_OBJECT_ARRAY_DUMP     =   0x22;
     private static final int ROOT_PRIMITIVE_ARRAY_DUMP  =   0x23;
-    
+
     /**
      * Android format addition
      *
@@ -63,7 +63,7 @@ public class HprofParser
      * associated with the specified heap.  The HEAP_DUMP_INFO data is reset
      * at the end of the HEAP_DUMP[_SEGMENT].  Multiple HEAP_DUMP_INFO entries
      * may appear in a single HEAP_DUMP[_SEGMENT].
-     * 
+     *
      * Format:
      *     u1: Tag value (0xFE)
      *     u4: heap ID
@@ -103,12 +103,12 @@ public class HprofParser
         try {
             String  s = readNullTerminatedString();
             DataInputStream in = mInput;
-            
+
             mIdSize = in.readInt();
             Types.setIdSize(mIdSize);
-            
+
             in.readLong();  //  Timestamp, ignored for now
-            
+
             while (true) {
                 int tag = in.readUnsignedByte();
                 int timestamp = in.readInt();
@@ -118,7 +118,7 @@ public class HprofParser
                     case STRING_IN_UTF8:
                         loadString(length - 4);
                         break;
-                    
+
                     case LOAD_CLASS:
                         loadClass();
                         break;
@@ -135,7 +135,7 @@ public class HprofParser
                         loadHeapDump(length);
                         mState.setToDefaultHeap();
                         break;
-                        
+
                     case HEAP_DUMP_SEGMENT:
                         loadHeapDump(length);
                         mState.setToDefaultHeap();
@@ -153,7 +153,7 @@ public class HprofParser
         }
 
         mState.resolveReferences();
-        
+
         return state;
     }
 
@@ -164,7 +164,7 @@ public class HprofParser
         for (int c = in.read(); c != 0; c = in.read()) {
             s.append((char) c);
         }
-        
+
         return s.toString();
     }
 
@@ -175,13 +175,13 @@ public class HprofParser
             case 4: return ((long) mInput.readInt()) & 0x00000000ffffffffL;
             case 8: return mInput.readLong();
         }
-        
+
         throw new IllegalArgumentException("ID Length must be 1, 2, 4, or 8");
     }
 
     private String readUTF8(int length) throws IOException {
         byte[] b = new byte[length];
-        
+
         mInput.read(b);
 
         return new String(b, "utf-8");
@@ -190,7 +190,7 @@ public class HprofParser
     private void loadString(int length) throws IOException {
         long id = readId();
         String string = readUTF8(length);
-        
+
         mStrings.put(id, string);
     }
 
@@ -200,7 +200,7 @@ public class HprofParser
         long id = readId();
         int stackTrace = in.readInt();              //  unused
         String name = mStrings.get(readId());
-        
+
         mClassNames.put(id, name);
     }
 
@@ -211,8 +211,8 @@ public class HprofParser
         String sourceFile = mStrings.get(readId());
         int serial = mInput.readInt();
         int lineNumber = mInput.readInt();
-        
-        StackFrame frame = new StackFrame(id, methodName, methodSignature, 
+
+        StackFrame frame = new StackFrame(id, methodName, methodSignature,
             sourceFile, serial, lineNumber);
 
         mState.addStackFrame(frame);
@@ -223,12 +223,12 @@ public class HprofParser
         int threadSerialNumber = mInput.readInt();
         final int numFrames = mInput.readInt();
         StackFrame[] frames = new StackFrame[numFrames];
-        
+
         for (int i = 0; i < numFrames; i++) {
             frames[i] = mState.getStackFrame(readId());
         }
-        
-        StackTrace trace = new StackTrace(serialNumber, threadSerialNumber, 
+
+        StackTrace trace = new StackTrace(serialNumber, threadSerialNumber,
             frames);
 
         mState.addStackTrace(trace);
@@ -236,62 +236,62 @@ public class HprofParser
 
     private void loadHeapDump(int length) throws IOException {
         DataInputStream in = mInput;
-        
+
         while (length > 0) {
             int tag = in.readUnsignedByte();
             length--;
-            
+
             switch (tag) {
                 case ROOT_UNKNOWN:
                     length -= loadBasicObj(RootType.UNKNOWN);
                     break;
-                    
+
                 case ROOT_JNI_GLOBAL:
                     length -= loadBasicObj(RootType.NATIVE_STATIC);
                     readId();   //  ignored
                     length -= mIdSize;
                     break;
-                    
+
                 case ROOT_JNI_LOCAL:
                     length -= loadJniLocal();
                     break;
-                    
+
                 case ROOT_JAVA_FRAME:
                     length -= loadJavaFrame();
                     break;
-                    
+
                 case ROOT_NATIVE_STACK:
                     length -= loadNativeStack();
                     break;
-                    
+
                 case ROOT_STICKY_CLASS:
                     length -= loadBasicObj(RootType.SYSTEM_CLASS);
                     break;
-                    
+
                 case ROOT_THREAD_BLOCK:
                     length -= loadThreadBlock();
                     break;
-                    
+
                 case ROOT_MONITOR_USED:
                     length -= loadBasicObj(RootType.BUSY_MONITOR);
                     break;
-                    
+
                 case ROOT_THREAD_OBJECT:
                     length -= loadThreadObject();
                     break;
-                    
+
                 case ROOT_CLASS_DUMP:
                     length -= loadClassDump();
                     break;
-                    
+
                 case ROOT_INSTANCE_DUMP:
                     length -= loadInstanceDump();
                     break;
-                    
+
                 case ROOT_OBJECT_ARRAY_DUMP:
                     length -= loadObjectArrayDump();
                     break;
-                    
+
                 case ROOT_PRIMITIVE_ARRAY_DUMP:
                     length -= loadPrimitiveArrayDump();
                     break;
@@ -302,66 +302,66 @@ public class HprofParser
 
                     throw new IllegalArgumentException(
                         "Don't know how to load a nodata array");
-                
+
                 case ROOT_HEAP_DUMP_INFO:
                     int heapId = mInput.readInt();
                     long heapNameId = readId();
                     String heapName = mStrings.get(heapNameId);
-                    
+
                     mState.setHeapTo(heapId, heapName);
                     length -= 4 + mIdSize;
                     break;
-                
+
                 case ROOT_INTERNED_STRING:
                     length -= loadBasicObj(RootType.INTERNED_STRING);
                     break;
-                    
+
                 case ROOT_FINALIZING:
                     length -= loadBasicObj(RootType.FINALIZING);
                     break;
-                    
+
                 case ROOT_DEBUGGER:
                     length -= loadBasicObj(RootType.DEBUGGER);
                     break;
-                    
+
                 case ROOT_REFERENCE_CLEANUP:
                     length -= loadBasicObj(RootType.REFERENCE_CLEANUP);
                     break;
-                    
+
                 case ROOT_VM_INTERNAL:
                     length -= loadBasicObj(RootType.VM_INTERNAL);
                     break;
-                    
+
                 case ROOT_JNI_MONITOR:
                     length -= loadJniMonitor();
                     break;
-                    
+
                 case ROOT_UNREACHABLE:
                     length -= loadBasicObj(RootType.UNREACHABLE);
                     break;
-                    
+
                 default:
                     throw new IllegalArgumentException(
-                        "loadHeapDump loop with unknown tag " + tag 
-                        + " with " + mInput.available() 
+                        "loadHeapDump loop with unknown tag " + tag
+                        + " with " + mInput.available()
                         + " bytes possibly remaining");
             }
         }
     }
-    
+
     private int loadJniLocal() throws IOException {
         long id = readId();
         int threadSerialNumber = mInput.readInt();
         int stackFrameNumber = mInput.readInt();
         ThreadObj thread = mState.getThread(threadSerialNumber);
-        StackTrace trace = mState.getStackTraceAtDepth(thread.mStackTrace, 
+        StackTrace trace = mState.getStackTraceAtDepth(thread.mStackTrace,
             stackFrameNumber);
-        RootObj root = new RootObj(RootType.NATIVE_LOCAL, id, 
+        RootObj root = new RootObj(RootType.NATIVE_LOCAL, id,
             threadSerialNumber, trace);
-        
+
         root.setHeap(mState.mCurrentHeap);
         mState.addRoot(root);
-        
+
         return mIdSize + 4 + 4;
     }
 
@@ -370,38 +370,38 @@ public class HprofParser
         int threadSerialNumber = mInput.readInt();
         int stackFrameNumber = mInput.readInt();
         ThreadObj thread = mState.getThread(threadSerialNumber);
-        StackTrace trace = mState.getStackTraceAtDepth(thread.mStackTrace, 
+        StackTrace trace = mState.getStackTraceAtDepth(thread.mStackTrace,
             stackFrameNumber);
-        RootObj root = new RootObj(RootType.JAVA_LOCAL, id, threadSerialNumber, 
+        RootObj root = new RootObj(RootType.JAVA_LOCAL, id, threadSerialNumber,
             trace);
-        
+
         root.setHeap(mState.mCurrentHeap);
         mState.addRoot(root);
-        
+
         return mIdSize + 4 + 4;
     }
-    
+
     private int loadNativeStack() throws IOException {
         long id = readId();
         int threadSerialNumber = mInput.readInt();
         ThreadObj thread = mState.getThread(threadSerialNumber);
         StackTrace trace = mState.getStackTrace(thread.mStackTrace);
-        RootObj root = new RootObj(RootType.NATIVE_STACK, id, 
+        RootObj root = new RootObj(RootType.NATIVE_STACK, id,
             threadSerialNumber, trace);
-        
+
         root.setHeap(mState.mCurrentHeap);
         mState.addRoot(root);
-        
+
         return mIdSize + 4;
     }
 
     private int loadBasicObj(RootType type) throws IOException {
         long id = readId();
         RootObj root = new RootObj(type, id);
-        
+
         root.setHeap(mState.mCurrentHeap);
         mState.addRoot(root);
-        
+
         return mIdSize;
     }
 
@@ -410,12 +410,12 @@ public class HprofParser
         int threadSerialNumber = mInput.readInt();
         ThreadObj thread = mState.getThread(threadSerialNumber);
         StackTrace stack = mState.getStackTrace(thread.mStackTrace);
-        RootObj root = new RootObj(RootType.THREAD_BLOCK, id, 
+        RootObj root = new RootObj(RootType.THREAD_BLOCK, id,
             threadSerialNumber, stack);
-        
+
         root.setHeap(mState.mCurrentHeap);
         mState.addRoot(root);
-        
+
         return mIdSize + 4;
     }
 
@@ -424,9 +424,9 @@ public class HprofParser
         int threadSerialNumber = mInput.readInt();
         int stackSerialNumber = mInput.readInt();
         ThreadObj thread = new ThreadObj(id, stackSerialNumber);
-        
+
         mState.addThread(thread, threadSerialNumber);
-        
+
         return mIdSize + 4 + 4;
     }
 
@@ -449,7 +449,7 @@ public class HprofParser
         //  Skip over the constant pool
         int numEntries = in.readUnsignedShort();
         bytesRead += 2;
-        
+
         for (int i = 0; i < numEntries; i++) {
             in.readUnsignedShort();
             bytesRead += 2 + skipValue();
@@ -463,7 +463,7 @@ public class HprofParser
         int[] staticFieldTypes = new int[numEntries];
         ByteArrayOutputStream staticFieldValues = new ByteArrayOutputStream();
         byte[] buffer = mFieldBuffer;
-        
+
         for (int i = 0; i < numEntries; i++) {
             staticFieldNames[i] = mStrings.get(readId());
 
@@ -476,14 +476,14 @@ public class HprofParser
 
             bytesRead += mIdSize + 1 + fieldSize;
         }
-        
+
         //  Instance fields
         numEntries = in.readUnsignedShort();
         bytesRead += 2;
-        
+
         String[] names = new String[numEntries];
         int[] types = new int[numEntries];
-        
+
         for (int i = 0; i < numEntries; i++) {
             long fieldName = readId();
             int type = in.readUnsignedByte();
@@ -493,7 +493,7 @@ public class HprofParser
 
             bytesRead += mIdSize + 1;
         }
-        
+
         ClassObj theClass = new ClassObj(id, stack, mClassNames.get(id));
 
         theClass.setStaticFieldNames(staticFieldNames);
@@ -504,11 +504,11 @@ public class HprofParser
         theClass.setFieldNames(names);
         theClass.setFieldTypes(types);
         theClass.setSize(instanceSize);
-        
+
         theClass.setHeap(mState.mCurrentHeap);
 
         mState.addClass(id, theClass);
-        
+
         return bytesRead;
     }
 
@@ -523,7 +523,7 @@ public class HprofParser
         instance.loadFieldData(mInput, remaining);
         instance.setHeap(mState.mCurrentHeap);
         mState.addInstance(id, instance);
-        
+
         return mIdSize + 4 + mIdSize + 4 + remaining;
     }
 
@@ -536,19 +536,19 @@ public class HprofParser
         int totalBytes = numElements * mIdSize;
         byte[] data = new byte[totalBytes];
         String className = mClassNames.get(classId);
-        
+
         mInput.readFully(data);
 
-        ArrayInstance array = new ArrayInstance(id, stack, Types.OBJECT, 
+        ArrayInstance array = new ArrayInstance(id, stack, Types.OBJECT,
             numElements, data);
-        
+
         array.mClassId = classId;
         array.setHeap(mState.mCurrentHeap);
         mState.addInstance(id, array);
 
         return mIdSize + 4 + 4 + mIdSize + totalBytes;
     }
-    
+
     private int loadPrimitiveArrayDump() throws IOException {
         long id = readId();
         int stackId = mInput.readInt();
@@ -558,15 +558,15 @@ public class HprofParser
         int size = Types.getTypeSize(type);
         int totalBytes = numElements * size;
         byte[] data = new byte[totalBytes];
-        
+
         mInput.readFully(data);
 
-        ArrayInstance array = new ArrayInstance(id, stack, type, numElements, 
+        ArrayInstance array = new ArrayInstance(id, stack, type, numElements,
             data);
-        
+
         array.setHeap(mState.mCurrentHeap);
         mState.addInstance(id, array);
-        
+
         return mIdSize + 4 + 4 + 1 + totalBytes;
     }
 
@@ -575,21 +575,21 @@ public class HprofParser
         int threadSerialNumber = mInput.readInt();
         int stackDepth = mInput.readInt();
         ThreadObj thread = mState.getThread(threadSerialNumber);
-        StackTrace trace = mState.getStackTraceAtDepth(thread.mStackTrace, 
+        StackTrace trace = mState.getStackTraceAtDepth(thread.mStackTrace,
             stackDepth);
-        RootObj root = new RootObj(RootType.NATIVE_MONITOR, id, 
+        RootObj root = new RootObj(RootType.NATIVE_MONITOR, id,
             threadSerialNumber, trace);
-        
+
         root.setHeap(mState.mCurrentHeap);
         mState.addRoot(root);
-        
+
         return mIdSize + 4 + 4;
     }
 
     private int skipValue() throws IOException {
         int type = mInput.readUnsignedByte();
         int size = Types.getTypeSize(type);
-        
+
         skipFully(size);
 
         return size + 1;
@@ -604,7 +604,7 @@ public class HprofParser
     private void skipFully(long numBytes) throws IOException {
         while (numBytes > 0) {
             long skipped = mInput.skip(numBytes);
-            
+
             numBytes -= skipped;
         }
     }

@@ -16,7 +16,7 @@ By Steve Reid <steve@edmweb.com>
 100% Public Domain
 
 -----------------
-Modified 7/98 
+Modified 7/98
 By James H. Brown <jbrown@burgoyne.com>
 Still 100% Public Domain
 

@@ -45,7 +45,7 @@ public class Enforcer extends SecurityManager {
             case Member.PUBLIC:   member = "PUBLIC";   break;
             default:              member = "<" + which + ">?"; break;
         }
-        
+
         System.out.println("checkMemberAccess: " + c.getName() + ", " +
                 member);
         denyIfAppropriate();

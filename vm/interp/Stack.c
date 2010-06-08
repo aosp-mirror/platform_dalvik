@@ -790,7 +790,7 @@ static int lineNumForPcCb(void *cnxt, u4 address, u4 lineNum)
 {
     LineNumFromPcContext *pContext = (LineNumFromPcContext *)cnxt;
 
-    // We know that this callback will be called in 
+    // We know that this callback will be called in
     // ascending address order, so keep going until we find
     // a match or we've just gone past it.
 
@@ -834,7 +834,7 @@ int dvmLineNumFromPC(const Method* method, u4 relPc)
             method->prototype.protoIdx,
             method->accessFlags,
             lineNumForPcCb, NULL, &context);
-    
+
     return context.lineNum;
 }
 
@@ -966,7 +966,7 @@ ClassObject* dvmGetCaller3Class(const void* curFrame)
         if (caller == NULL)
             return NULL;
     }
-    
+
     return SAVEAREA_FROM_FP(caller)->method->clazz;
 }
 

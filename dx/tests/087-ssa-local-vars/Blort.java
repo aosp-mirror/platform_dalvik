@@ -24,7 +24,7 @@ class Blort {
         System.out.println("object -> string (modified)");
         objectArray[4] = new Object();
         try {
-            System.arraycopy(objectArray, 0, stringArray, 0,stringArray.length);        
+            System.arraycopy(objectArray, 0, stringArray, 0,stringArray.length);
         } catch (ArrayStoreException ase) {
             // "ase" is an unused local which still must be preserved
             System.out.println("caught ArrayStoreException (expected)");
@@ -40,7 +40,7 @@ class Blort {
         System.err.println(foo);
     }
     /**
-     * Stolen from 
+     * Stolen from
      * java/android/org/apache/http/impl/io/AbstractMessageParser.java
      * Simplified.
      *
@@ -76,7 +76,7 @@ class Blort {
                     }
                     i++;
                 }
-                if (maxLineLen > 0 
+                if (maxLineLen > 0
                         && previous.length() + 1 + current.length() - i > maxLineLen) {
                     throw new IOException("Maximum line length limit exceeded");
                 }

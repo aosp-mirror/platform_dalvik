@@ -239,7 +239,7 @@ void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap);
  * different class is already associated with the address (shouldn't
  * happen either).
  */
-//int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr, 
+//int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr,
 //    ClassObject* clazz);
 
 /*

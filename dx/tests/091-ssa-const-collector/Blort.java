@@ -4,7 +4,7 @@ class Blort {
     enum Foo {
         ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT
     }
-    
+
     /** all uses of 10 should be combined except the local assignment */
     void testNumeric() {
         int foo = 10;

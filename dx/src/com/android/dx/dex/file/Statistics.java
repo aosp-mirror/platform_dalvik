@@ -38,7 +38,7 @@ public final class Statistics {
 
     /**
      * Adds the given item to the statistics.
-     * 
+     *
      * @param item {@code non-null;} the item to add
      */
     public void add(Item item) {
@@ -54,7 +54,7 @@ public final class Statistics {
 
     /**
      * Adds the given list of items to the statistics.
-     * 
+     *
      * @param list {@code non-null;} the list of items to add
      */
     public void addAll(Section list) {
@@ -66,7 +66,7 @@ public final class Statistics {
 
     /**
      * Writes the statistics as an annotation.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      */
     public final void writeAnnotation(AnnotatedOutput out) {
@@ -126,7 +126,7 @@ public final class Statistics {
 
         /**
          * Constructs an instance for the given item.
-         * 
+         *
          * @param item {@code non-null;} item in question
          * @param name {@code non-null;} type name to use
          */
@@ -142,7 +142,7 @@ public final class Statistics {
 
         /**
          * Incorporates a new item. This assumes the type name matches.
-         * 
+         *
          * @param item {@code non-null;} item to incorporate
          */
         public void add(Item item) {
@@ -162,7 +162,7 @@ public final class Statistics {
 
         /**
          * Writes this instance as an annotation.
-         * 
+         *
          * @param out {@code non-null;} where to write to
          */
         public void writeAnnotation(AnnotatedOutput out) {

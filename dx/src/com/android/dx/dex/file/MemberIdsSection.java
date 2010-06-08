@@ -22,7 +22,7 @@ package com.android.dx.dex.file;
 public abstract class MemberIdsSection extends UniformItemSection {
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param name {@code null-ok;} the name of this instance, for annotation
      * purposes
      * @param file {@code non-null;} file that this instance is part of

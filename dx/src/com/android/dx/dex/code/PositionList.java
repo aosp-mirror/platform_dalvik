@@ -29,27 +29,27 @@ public final class PositionList extends FixedSizeList {
 
     /**
      * constant for {@link #make} to indicate that no actual position
-     * information should be returned 
+     * information should be returned
      */
     public static final int NONE = 1;
 
     /**
      * constant for {@link #make} to indicate that only line number
-     * transitions should be returned 
+     * transitions should be returned
      */
     public static final int LINES = 2;
 
     /**
      * constant for {@link #make} to indicate that only "important" position
      * information should be returned. This includes block starts and
-     * instructions that might throw. 
+     * instructions that might throw.
      */
     public static final int IMPORTANT = 3;
 
     /**
      * Extracts and returns the source position information out of an
      * instruction list.
-     * 
+     *
      * @param insns {@code non-null;} instructions to convert
      * @param howMuch how much information should be included; one of the
      * static constants defined by this class
@@ -113,7 +113,7 @@ public final class PositionList extends FixedSizeList {
 
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size {@code >= 0;} the size of the list
      */
     public PositionList(int size) {
@@ -124,7 +124,7 @@ public final class PositionList extends FixedSizeList {
      * Gets the element at the given index. It is an error to call
      * this with the index for an element which was never set; if you
      * do that, this will throw {@code NullPointerException}.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @return {@code non-null;} element at that index
      */
@@ -134,7 +134,7 @@ public final class PositionList extends FixedSizeList {
 
     /**
      * Sets the entry at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which index
      * @param entry {@code non-null;} the entry to set at {@code n}
      */
@@ -154,7 +154,7 @@ public final class PositionList extends FixedSizeList {
 
         /**
          * Constructs an instance.
-         * 
+         *
          * @param address {@code >= 0;} address of this entry
          * @param position {@code non-null;} corresponding source position information
          */
@@ -173,7 +173,7 @@ public final class PositionList extends FixedSizeList {
 
         /**
          * Gets the address.
-         * 
+         *
          * @return {@code >= 0;} the address
          */
         public int getAddress() {
@@ -182,7 +182,7 @@ public final class PositionList extends FixedSizeList {
 
         /**
          * Gets the source position information.
-         * 
+         *
          * @return {@code non-null;} the position information
          */
         public SourcePosition getPosition() {

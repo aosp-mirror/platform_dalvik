@@ -31,7 +31,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param result {@code null-ok;} initial result register. May be changed.
      * @param block {@code non-null;} block containing this insn. Can
      * never change.
@@ -68,7 +68,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
     /**
      * Like {@link com.android.dx.rop.code.Insn getResult()}.
-     * 
+     *
      * @return result register
      */
     public RegisterSpec getResult() {
@@ -77,7 +77,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
     /**
      * Set the result register.
-     * 
+     *
      * @param result {@code non-null;} the new result register
      */
     protected void setResult(RegisterSpec result) {
@@ -90,7 +90,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
     /**
      * Like {@link com.android.dx.rop.code.Insn getSources()}.
-     * 
+     *
      * @return {@code non-null;} sources list
      */
     abstract public RegisterSpecList getSources();
@@ -106,7 +106,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
     /**
      * Returns whether or not the specified reg is the result reg.
-     * 
+     *
      * @param reg register to test
      * @return true if there is a result and it is stored in the specified
      * register
@@ -119,7 +119,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     /**
      * Changes the result register if this insn has a result. This is used
      * during renaming.
-     * 
+     *
      * @param reg new result register
      */
     public void changeResultReg(int reg) {
@@ -154,7 +154,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
         result = mapper.map(result);
         block.getParent().updateOneDefinition(this, oldResult);
-        mapSourceRegisters(mapper);        
+        mapSourceRegisters(mapper);
     }
 
     /**
@@ -176,7 +176,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     /**
      * Returns the original Rop insn for this insn, or null if this is
      * a phi insn.
-     * 
+     *
      * TODO: Move this up into NormalSsaInsn.
      *
      * @return {@code null-ok;} Rop insn if there is one.
@@ -189,8 +189,8 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
      * may be the result register, or for {@code mark-local} insns
      * it may be the source.
      *
-     * @see com.android.dx.rop.code.Insn#getLocalAssignment() 
-     * 
+     * @see com.android.dx.rop.code.Insn#getLocalAssignment()
+     *
      * @return {@code null-ok;} a local-associated register spec or null
      */
     public RegisterSpec getLocalAssignment() {
@@ -204,7 +204,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     /**
      * Indicates whether the specified register is amongst the registers
      * used as sources for this instruction.
-     * 
+     *
      * @param reg the register in question
      * @return true if the reg is a source
      */
@@ -230,7 +230,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
     /**
      * Returns true if this insn is considered to have a side effect beyond
      * that of assigning to the result reg.
-     * 
+     *
      * @return true if this insn is considered to have a side effect beyond
      * that of assigning to the result reg.
      */
@@ -259,7 +259,7 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
 
     /**
      * Accepts a visitor.
-     * 
+     *
      * @param v {@code non-null} the visitor
      */
     public abstract void accept(Visitor v);

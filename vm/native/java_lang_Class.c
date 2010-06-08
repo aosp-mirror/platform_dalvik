@@ -385,7 +385,7 @@ static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
         const DexFile* pDexFile = clazz->pDexFile;
         const DexClassDef* pClassDef;
         const DexClassId* pClassId;
-        
+
         pDexFile = clazz->pDexFile;
         pClassDef = dvmDexFindClass(pDexFile, clazz->descriptor);
         pClassId = dvmDexGetClassId(pDexFile, pClassDef->classIdx);
@@ -717,7 +717,7 @@ static void Dalvik_java_lang_Class_getDeclaredAnnotations(const u4* args,
 /*
  * public String getInnerClassName()
  *
- * Returns the simple name of a member class or local class, or null otherwise. 
+ * Returns the simple name of a member class or local class, or null otherwise.
  */
 static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
     JValue* pResult)
@@ -725,7 +725,7 @@ static void Dalvik_java_lang_Class_getInnerClassName(const u4* args,
     ClassObject* clazz = (ClassObject*) args[0];
     StringObject* nameObj;
     int flags;
-    
+
     if (dvmGetInnerClass(clazz, &nameObj, &flags)) {
         dvmReleaseTrackedAlloc((Object*) nameObj, NULL);
         RETURN_PTR(nameObj);

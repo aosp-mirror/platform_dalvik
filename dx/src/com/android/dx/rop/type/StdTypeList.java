@@ -163,7 +163,7 @@ public final class StdTypeList
 
     /**
      * Makes a single-element instance.
-     * 
+     *
      * @param type {@code non-null;} the element
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -175,7 +175,7 @@ public final class StdTypeList
 
     /**
      * Makes a two-element instance.
-     * 
+     *
      * @param type0 {@code non-null;} the first element
      * @param type1 {@code non-null;} the second element
      * @return {@code non-null;} an appropriately-constructed instance
@@ -189,7 +189,7 @@ public final class StdTypeList
 
     /**
      * Makes a three-element instance.
-     * 
+     *
      * @param type0 {@code non-null;} the first element
      * @param type1 {@code non-null;} the second element
      * @param type2 {@code non-null;} the third element
@@ -205,7 +205,7 @@ public final class StdTypeList
 
     /**
      * Makes a four-element instance.
-     * 
+     *
      * @param type0 {@code non-null;} the first element
      * @param type1 {@code non-null;} the second element
      * @param type2 {@code non-null;} the third element
@@ -226,7 +226,7 @@ public final class StdTypeList
      * Returns the given list as a comma-separated list of human forms. This
      * is a static method so as to work on arbitrary {@link TypeList}
      * instances.
-     * 
+     *
      * @param list {@code non-null;} the list to convert
      * @return {@code non-null;} the human form
      */
@@ -236,7 +236,7 @@ public final class StdTypeList
         if (size == 0) {
             return "<empty>";
         }
-        
+
         StringBuffer sb = new StringBuffer(100);
 
         for (int i = 0; i < size; i++) {
@@ -253,7 +253,7 @@ public final class StdTypeList
      * Returns a hashcode of the contents of the given list. This
      * is a static method so as to work on arbitrary {@link TypeList}
      * instances.
-     * 
+     *
      * @param list {@code non-null;} the list to inspect
      * @return {@code non-null;} the hash code
      */
@@ -267,12 +267,12 @@ public final class StdTypeList
 
         return hash;
     }
-    
+
     /**
      * Compares the contents of the given two instances for equality. This
      * is a static method so as to work on arbitrary {@link TypeList}
      * instances.
-     * 
+     *
      * @param list1 {@code non-null;} one list to compare
      * @param list2 {@code non-null;} another list to compare
      * @return whether the two lists contain corresponding equal elements
@@ -297,7 +297,7 @@ public final class StdTypeList
      * Compares the contents of the given two instances for ordering. This
      * is a static method so as to work on arbitrary {@link TypeList}
      * instances.
-     * 
+     *
      * @param list1 {@code non-null;} one list to compare
      * @param list2 {@code non-null;} another list to compare
      * @return the order of the two lists
@@ -322,10 +322,10 @@ public final class StdTypeList
             return 1;
         }
     }
-    
+
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public StdTypeList(int size) {
@@ -367,7 +367,7 @@ public final class StdTypeList
      * Gets the indicated element. It is an error to call this with the
      * index for an element which was never set; if you do that, this
      * will throw {@code NullPointerException}.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @return {@code non-null;} the indicated element
      */
@@ -377,7 +377,7 @@ public final class StdTypeList
 
     /**
      * Sets the type at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which element
      * @param type {@code non-null;} the type to store
      */
@@ -389,7 +389,7 @@ public final class StdTypeList
      * Returns a new instance, which is the same as this instance,
      * except that it has an additional type prepended to the
      * original.
-     * 
+     *
      * @param type {@code non-null;} the new first element
      * @return {@code non-null;} an appropriately-constructed instance
      */

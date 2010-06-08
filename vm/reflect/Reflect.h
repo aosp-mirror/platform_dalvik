@@ -208,7 +208,7 @@ typedef struct {
 
 /**
  * Initializes an encoded array iterator.
- * 
+ *
  * @param iterator iterator to initialize
  * @param encodedArray encoded array to iterate over
  * @param clazz class to use when resolving strings and types
@@ -226,9 +226,9 @@ bool dvmEncodedArrayIteratorHasNext(const EncodedArrayIterator* iterator);
  * cursor. This returns primitive values in their corresponding union
  * slots, and returns everything else (including nulls) as object
  * references in the "l" union slot.
- * 
+ *
  * The caller must call dvmReleaseTrackedAlloc() on any returned reference.
- * 
+ *
  * @param value pointer to store decoded value into
  * @returns true if a value was decoded and the cursor advanced; false if
  * the last value had already been decoded or if there was a problem decoding

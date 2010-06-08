@@ -128,7 +128,7 @@ static void Dalvik_sun_misc_Unsafe_compareAndSwapObject(const u4* args,
     // Note: android_atomic_cmpxchg() returns 0 on success, not failure.
     int result = android_atomic_cmpxchg((int32_t) expectedValue,
             (int32_t) newValue, address);
-    
+
     RETURN_BOOLEAN(result == 0);
 }
 
@@ -222,7 +222,7 @@ static void Dalvik_sun_misc_Unsafe_putObjectVolatile(const u4* args,
     *address = value;
     RETURN_VOID();
 }
-            
+
 /*
  * public native int getInt(Object obj, long offset);
  */

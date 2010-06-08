@@ -37,7 +37,7 @@ public class MoveParamCombiner {
 
     /**
      * Processes a method with this optimization step.
-     * 
+     *
      * @param ssaMethod method to process
      */
     public static void process(SsaMethod ssaMethod) {
@@ -45,7 +45,7 @@ public class MoveParamCombiner {
     }
 
     private MoveParamCombiner(SsaMethod ssaMeth) {
-        this.ssaMeth = ssaMeth;        
+        this.ssaMeth = ssaMeth;
     }
 
     /**
@@ -126,7 +126,7 @@ public class MoveParamCombiner {
 
                     // Use list is modified by mapSourceRegisters
                     for (int i = uses.size() - 1; i >= 0; i--) {
-                        SsaInsn use = uses.get(i);                                
+                        SsaInsn use = uses.get(i);
                         use.mapSourceRegisters(mapper);
                     }
 

@@ -36,7 +36,7 @@ public final class StringIdItem
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param value {@code non-null;} the string value
      */
     public StringIdItem(CstUtf8 value) {
@@ -109,7 +109,7 @@ public final class StringIdItem
 
     /**
      * Gets the string value.
-     * 
+     *
      * @return {@code non-null;} the value
      */
     public CstUtf8 getValue() {
@@ -118,7 +118,7 @@ public final class StringIdItem
 
     /**
      * Gets the associated data object for this instance, if known.
-     * 
+     *
      * @return {@code null-ok;} the associated data object or {@code null}
      * if not yet known
      */

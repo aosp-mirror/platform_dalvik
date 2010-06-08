@@ -120,8 +120,8 @@ bool dvmReflectAnnotationStartup(void)
  */
 static u4 readUleb128(const u1** pBuf)
 {
-    u4 result = 0; 
-    int shift = 0; 
+    u4 result = 0;
+    int shift = 0;
     const u1* buf = *pBuf;
     u1 val;
 
@@ -174,7 +174,7 @@ static ArrayObject* emptyAnnoArray(void)
 }
 
 /*
- * Return an array of empty arrays of Annotation objects.  
+ * Return an array of empty arrays of Annotation objects.
  *
  * Caller must call dvmReleaseTrackedAlloc().
  */
@@ -183,7 +183,7 @@ static ArrayObject* emptyAnnoArrayArray(int numElements)
     Thread* self = dvmThreadSelf();
     ArrayObject* arr;
     int i;
-    
+
     arr = dvmAllocArrayByClass(gDvm.classJavaLangAnnotationAnnotationArrayArray,
             numElements, ALLOC_DEFAULT);
     if (arr != NULL) {
@@ -2127,7 +2127,7 @@ ArrayObject* dvmGetParameterAnnotations(const Method* method)
 
 /**
  * Initializes an encoded array iterator.
- * 
+ *
  * @param iterator iterator to initialize
  * @param encodedArray encoded array to iterate over
  * @param clazz class to use when resolving strings and types
@@ -2153,9 +2153,9 @@ bool dvmEncodedArrayIteratorHasNext(const EncodedArrayIterator* iterator) {
  * cursor. This returns primitive values in their corresponding union
  * slots, and returns everything else (including nulls) as object
  * references in the "l" union slot.
- * 
+ *
  * The caller must call dvmReleaseTrackedAlloc() on any returned reference.
- * 
+ *
  * @param value pointer to store decoded value into
  * @returns true if a value was decoded and the cursor advanced; false if
  * the last value had already been decoded or if there was a problem decoding

@@ -254,7 +254,7 @@ static bool checkArrayData(const Method* meth, int curOffset)
         LOG_VFY_METH(meth,
             "VFY: invalid array data end: at %d, data offset %d, end %d, "
             "count %d\n",
-            curOffset, offsetToArrayData, 
+            curOffset, offsetToArrayData,
             curOffset + offsetToArrayData + tableSize,
             insnCount);
         return false;

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 /**
  * Implementation of {@link AnnotatedOutput} which stores the written data
  * into a {@code byte[]}.
- * 
+ *
  * <p><b>Note:</b> As per the {@link Output} interface, multi-byte
  * writes all use little-endian order.</p>
  */
@@ -31,7 +31,7 @@ public final class ByteArrayAnnotatedOutput
         implements AnnotatedOutput {
     /** default size for stretchy instances */
     private static final int DEFAULT_SIZE = 1000;
-    
+
     /**
      * whether the instance is stretchy, that is, whether its array
      * may be resized to increase capacity
@@ -49,7 +49,7 @@ public final class ByteArrayAnnotatedOutput
 
     /**
      * {@code null-ok;} list of annotations, or {@code null} if this instance
-     * isn't keeping them 
+     * isn't keeping them
      */
     private ArrayList<Annotation> annotations;
 
@@ -58,7 +58,7 @@ public final class ByteArrayAnnotatedOutput
 
     /**
      * {@code >= 8 (if used);} the number of bytes of hex output to use
-     * in annotations 
+     * in annotations
      */
     private int hexCols;
 
@@ -68,7 +68,7 @@ public final class ByteArrayAnnotatedOutput
      * particular, no reallocation will occur in order to expand the
      * capacity of the resulting instance. Also, the constructed
      * instance does not keep annotations by default.
-     * 
+     *
      * @param data {@code non-null;} data array to use for output
      */
     public ByteArrayAnnotatedOutput(byte[] data) {
@@ -86,7 +86,7 @@ public final class ByteArrayAnnotatedOutput
 
     /**
      * Internal constructor.
-     * 
+     *
      * @param data {@code non-null;} data array to use for output
      * @param stretchy whether the instance is to be stretchy
      */
@@ -107,9 +107,9 @@ public final class ByteArrayAnnotatedOutput
     /**
      * Gets the underlying {@code byte[]} of this instance, which
      * may be larger than the number of bytes written
-     * 
+     *
      * @see #toByteArray
-     * 
+     *
      * @return {@code non-null;} the {@code byte[]}
      */
     public byte[] getArray() {
@@ -120,9 +120,9 @@ public final class ByteArrayAnnotatedOutput
      * Constructs and returns a new {@code byte[]} that contains
      * the written contents exactly (that is, with no extra unwritten
      * bytes at the end).
-     * 
+     *
      * @see #getArray
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed array
      */
     public byte[] toByteArray() {
@@ -258,7 +258,7 @@ public final class ByteArrayAnnotatedOutput
 
         return count;
     }
-    
+
     /** {@inheritDoc} */
     public void write(ByteArray bytes) {
         int blen = bytes.size();
@@ -285,7 +285,7 @@ public final class ByteArrayAnnotatedOutput
         // twos-complement math trick: ((x < 0) || (y < 0)) <=> ((x|y) < 0)
         if (((offset | length | end) < 0) || (bytesEnd > bytes.length)) {
             throw new IndexOutOfBoundsException("bytes.length " +
-                                                bytes.length + "; " + 
+                                                bytes.length + "; " +
                                                 offset + "..!" + end);
         }
 
@@ -418,7 +418,7 @@ public final class ByteArrayAnnotatedOutput
      * Indicates that this instance should keep annotations. This method may
      * be called only once per instance, and only before any data has been
      * written to the it.
-     * 
+     *
      * @param annotationWidth {@code >= 40;} the desired maximum annotation width
      * @param verbose whether or not to indicate verbose annotations
      */
@@ -473,7 +473,7 @@ public final class ByteArrayAnnotatedOutput
 
     /**
      * Writes the annotated content of this instance to the given writer.
-     * 
+     *
      * @param out {@code non-null;} where to write to
      */
     public void writeAnnotationsTo(Writer out) throws IOException {
@@ -537,7 +537,7 @@ public final class ByteArrayAnnotatedOutput
     /**
      * Reallocates the underlying array if necessary. Calls to this method
      * should be guarded by a test of {@link #stretchy}.
-     * 
+     *
      * @param desiredSize {@code >= 0;} the desired minimum total size of the array
      */
     private void ensureCapacity(int desiredSize) {
@@ -557,7 +557,7 @@ public final class ByteArrayAnnotatedOutput
 
         /**
          * {@code >= 0;} end of annotated range (exclusive);
-         * {@code Integer.MAX_VALUE} if unclosed 
+         * {@code Integer.MAX_VALUE} if unclosed
          */
         private int end;
 
@@ -566,7 +566,7 @@ public final class ByteArrayAnnotatedOutput
 
         /**
          * Constructs an instance.
-         * 
+         *
          * @param start {@code >= 0;} start of annotated range
          * @param end {@code >= start;} end of annotated range (exclusive) or
          * {@code Integer.MAX_VALUE} if unclosed
@@ -580,7 +580,7 @@ public final class ByteArrayAnnotatedOutput
 
         /**
          * Constructs an instance. It is initally unclosed.
-         * 
+         *
          * @param start {@code >= 0;} start of annotated range
          * @param text {@code non-null;} annotation text
          */
@@ -591,7 +591,7 @@ public final class ByteArrayAnnotatedOutput
         /**
          * Sets the end as given, but only if the instance is unclosed;
          * otherwise, do nothing.
-         * 
+         *
          * @param end {@code >= start;} the end
          */
         public void setEndIfUnset(int end) {
@@ -602,7 +602,7 @@ public final class ByteArrayAnnotatedOutput
 
         /**
          * Sets the end as given.
-         * 
+         *
          * @param end {@code >= start;} the end
          */
         public void setEnd(int end) {
@@ -611,7 +611,7 @@ public final class ByteArrayAnnotatedOutput
 
         /**
          * Gets the start.
-         * 
+         *
          * @return the start
          */
         public int getStart() {
@@ -620,7 +620,7 @@ public final class ByteArrayAnnotatedOutput
 
         /**
          * Gets the end.
-         * 
+         *
          * @return the end
          */
         public int getEnd() {
@@ -629,7 +629,7 @@ public final class ByteArrayAnnotatedOutput
 
         /**
          * Gets the text.
-         * 
+         *
          * @return {@code non-null;} the text
          */
         public String getText() {

@@ -71,9 +71,9 @@ bool dvmReflectStartup(void)
         return false;
     }
 
-    gDvm.classJavaLangClassArray = 
+    gDvm.classJavaLangClassArray =
         dvmFindArrayClass("[Ljava/lang/Class;", NULL);
-    gDvm.classJavaLangObjectArray = 
+    gDvm.classJavaLangObjectArray =
         dvmFindArrayClass("[Ljava/lang/Object;", NULL);
     if (gDvm.classJavaLangClassArray == NULL ||
         gDvm.classJavaLangObjectArray == NULL)
@@ -1029,7 +1029,7 @@ int dvmConvertArgument(DataObject* arg, ClassObject* type, s4* destPtr)
 DataObject* dvmWrapPrimitive(JValue value, ClassObject* returnType)
 {
     static const char* boxTypes[] = {       // order from enum PrimitiveType
-        "Ljava/lang/Boolean;", 
+        "Ljava/lang/Boolean;",
         "Ljava/lang/Character;",
         "Ljava/lang/Float;",
         "Ljava/lang/Double;",

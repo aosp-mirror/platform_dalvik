@@ -68,7 +68,7 @@ static void Dalvik_java_lang_VMThread_getStatus(const u4* args, JValue* pResult)
     else
         result = THREAD_ZOMBIE;     // assume it used to exist and is now gone
     dvmUnlockThreadList();
-    
+
     RETURN_INT(result);
 }
 
@@ -198,7 +198,7 @@ static void Dalvik_java_lang_VMThread_setPriority(const u4* args,
     Object* thisPtr = (Object*) args[0];
     int newPriority = args[1];
     Thread* thread;
-    
+
     dvmLockThreadList(NULL);
     thread = dvmGetThreadFromThreadObject(thisPtr);
     if (thread != NULL)

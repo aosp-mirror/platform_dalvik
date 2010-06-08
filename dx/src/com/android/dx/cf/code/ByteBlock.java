@@ -40,8 +40,8 @@ public final class ByteBlock implements LabeledItem {
     private final ByteCatchList catches;
 
     /**
-     * Constructs an instance. 
-     * 
+     * Constructs an instance.
+     *
      * @param label {@code >= 0;} target label for this block
      * @param start {@code >= 0;} bytecode offset (inclusive) of the start
      * of the block
@@ -99,7 +99,7 @@ public final class ByteBlock implements LabeledItem {
 
     /**
      * Gets the label of this block.
-     * 
+     *
      * @return {@code >= 0;} the label
      */
     public int getLabel() {
@@ -108,7 +108,7 @@ public final class ByteBlock implements LabeledItem {
 
     /**
      * Gets the bytecode offset (inclusive) of the start of this block.
-     * 
+     *
      * @return {@code >= 0;} the start offset
      */
     public int getStart() {
@@ -117,7 +117,7 @@ public final class ByteBlock implements LabeledItem {
 
     /**
      * Gets the bytecode offset (exclusive) of the end of this block.
-     * 
+     *
      * @return {@code > getStart();} the end offset
      */
     public int getEnd() {
@@ -125,9 +125,9 @@ public final class ByteBlock implements LabeledItem {
     }
 
     /**
-     * Gets the list of successors that this block may branch to 
+     * Gets the list of successors that this block may branch to
      * non-exceptionally.
-     * 
+     *
      * @return {@code non-null;} the successor list
      */
     public IntList getSuccessors() {
@@ -136,7 +136,7 @@ public final class ByteBlock implements LabeledItem {
 
     /**
      * Gets the list of exceptions caught and their handler targets.
-     * 
+     *
      * @return {@code non-null;} the catch list
      */
     public ByteCatchList getCatches() {

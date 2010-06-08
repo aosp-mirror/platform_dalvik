@@ -51,9 +51,9 @@ public final class Dops {
     private static final Dop[] DOPS;
 
     /**
-     * pseudo-opcode used for nonstandard formatted "instructions" 
+     * pseudo-opcode used for nonstandard formatted "instructions"
      * (which are mostly not actually instructions, though they do
-     * appear in instruction lists) 
+     * appear in instruction lists)
      */
     public static final Dop SPECIAL_FORMAT =
         new Dop(DalvOps.SPECIAL_FORMAT, DalvOps.SPECIAL_FORMAT,
@@ -1171,7 +1171,7 @@ public final class Dops {
 
     /**
      * Gets the {@link Dop} for the given opcode value.
-     * 
+     *
      * @param opcode {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode value
      * @return {@code non-null;} the associated opcode instance
      */
@@ -1193,7 +1193,7 @@ public final class Dops {
     /**
      * Gets the {@link Dop} with the given family/format combination, if
      * any.
-     * 
+     *
      * @param family {@code DalvOps.MIN_VALUE..DalvOps.MAX_VALUE;} the opcode family
      * @param format {@code non-null;} the opcode's instruction format
      * @return {@code null-ok;} the corresponding opcode, or {@code null} if
@@ -1221,7 +1221,7 @@ public final class Dops {
 
     /**
      * Puts the given opcode into the table of all ops.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      */
     private static void set(Dop opcode) {

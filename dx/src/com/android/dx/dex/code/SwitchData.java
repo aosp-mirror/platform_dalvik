@@ -30,7 +30,7 @@ import com.android.dx.util.IntList;
 public final class SwitchData extends VariableSizeInsn {
     /**
      * {@code non-null;} address representing the instruction that uses this
-     * instance 
+     * instance
      */
     private final CodeAddress user;
 
@@ -39,7 +39,7 @@ public final class SwitchData extends VariableSizeInsn {
 
     /**
      * {@code non-null;} corresponding list of code addresses; the branch
-     * target for each case 
+     * target for each case
      */
     private final CodeAddress[] targets;
 
@@ -49,7 +49,7 @@ public final class SwitchData extends VariableSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      * @param user {@code non-null;} address representing the instruction that
      * uses this instance
@@ -150,7 +150,7 @@ public final class SwitchData extends VariableSizeInsn {
 
     /**
      * Returns whether or not this instance's data will be output as packed.
-     * 
+     *
      * @return {@code true} iff the data is to be packed
      */
     public boolean isPacked() {
@@ -201,7 +201,7 @@ public final class SwitchData extends VariableSizeInsn {
     /**
      * Gets the size of a packed table for the given cases, in 16-bit code
      * units.
-     * 
+     *
      * @param cases {@code non-null;} sorted list of cases
      * @return {@code >= -1;} the packed table size or {@code -1} if the
      * cases couldn't possibly be represented as a packed table
@@ -218,7 +218,7 @@ public final class SwitchData extends VariableSizeInsn {
     /**
      * Gets the size of a sparse table for the given cases, in 16-bit code
      * units.
-     * 
+     *
      * @param cases {@code non-null;} sorted list of cases
      * @return {@code > 0;} the sparse table size
      */
@@ -230,7 +230,7 @@ public final class SwitchData extends VariableSizeInsn {
 
     /**
      * Determines whether the given list of cases warrant being packed.
-     * 
+     *
      * @param cases {@code non-null;} sorted list of cases
      * @return {@code true} iff the table encoding the cases
      * should be packed

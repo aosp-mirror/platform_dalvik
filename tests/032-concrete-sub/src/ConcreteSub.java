@@ -24,7 +24,7 @@ public class ConcreteSub extends AbstractBase {
         System.out.println("calling abs.doStuff()");
         abs.doStuff();
     }
-    
+
     public static void main() {
         ConcreteSub sub = new ConcreteSub();
 

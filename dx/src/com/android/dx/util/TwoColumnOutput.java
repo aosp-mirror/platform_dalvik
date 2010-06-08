@@ -49,7 +49,7 @@ public final class TwoColumnOutput {
     /**
      * Turns the given two strings (with widths) and spacer into a formatted
      * two-column string.
-     * 
+     *
      * @param s1 {@code non-null;} first string
      * @param width1 {@code > 0;} width of the first column
      * @param spacer {@code non-null;} spacer string
@@ -79,7 +79,7 @@ public final class TwoColumnOutput {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param out {@code non-null;} writer to send final output to
      * @param leftWidth {@code > 0;} width of the left column, in characters
      * @param rightWidth {@code > 0;} width of the right column, in characters
@@ -117,7 +117,7 @@ public final class TwoColumnOutput {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param out {@code non-null;} stream to send final output to
      * @param leftWidth {@code >= 1;} width of the left column, in characters
      * @param rightWidth {@code >= 1;} width of the right column, in characters
@@ -130,7 +130,7 @@ public final class TwoColumnOutput {
 
     /**
      * Gets the writer to use to write to the left column.
-     * 
+     *
      * @return {@code non-null;} the left column writer
      */
     public Writer getLeft() {
@@ -139,7 +139,7 @@ public final class TwoColumnOutput {
 
     /**
      * Gets the writer to use to write to the right column.
-     * 
+     *
      * @return {@code non-null;} the right column writer
      */
     public Writer getRight() {
@@ -225,12 +225,12 @@ public final class TwoColumnOutput {
     /**
      * Appends a newline to the given buffer via the given writer, but
      * only if it isn't empty and doesn't already end with one.
-     * 
+     *
      * @param buf {@code non-null;} the buffer in question
      * @param out {@code non-null;} the writer to use
      */
     private static void appendNewlineIfNecessary(StringBuffer buf,
-                                                 Writer out) 
+                                                 Writer out)
             throws IOException {
         int len = buf.length();
 
@@ -241,7 +241,7 @@ public final class TwoColumnOutput {
 
     /**
      * Writes the given number of spaces to the given writer.
-     * 
+     *
      * @param out {@code non-null;} where to write
      * @param amt {@code >= 0;} the number of spaces to write
      */

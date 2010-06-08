@@ -152,7 +152,7 @@ public class ManyInterfaces
 {
     /** whether to report timing information */
     private static boolean timing = false;
-    
+
     /**
      * Report on a section.
      */
@@ -168,7 +168,7 @@ public class ManyInterfaces
 
     /**
      * Run tests.
-     * 
+     *
      * @param timing whether to print out timing info
      */
     public static void run(boolean timing) {
@@ -233,7 +233,7 @@ public class ManyInterfaces
         end = System.nanoTime();
         report("testInst099", start, end, iter, rept);
     }
-    
+
     public int func001() { return 1; }
     public int func003() { return 3; }
     public int func005() { return 5; }

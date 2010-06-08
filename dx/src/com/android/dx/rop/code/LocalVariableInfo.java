@@ -33,14 +33,14 @@ public final class LocalVariableInfo
     /**
      * {@code non-null;} {@link RegisterSpecSet} to use when indicating a block
      * that has no locals; it is empty and immutable but has an appropriate
-     * max size for the method 
+     * max size for the method
      */
     private final RegisterSpecSet emptySet;
 
     /**
      * {@code non-null;} array consisting of register sets representing the
      * sets of variables already assigned upon entry to each block,
-     * where array indices correspond to block labels 
+     * where array indices correspond to block labels
      */
     private final RegisterSpecSet[] blockStarts;
 
@@ -49,7 +49,7 @@ public final class LocalVariableInfo
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param method {@code non-null;} the method being represented by this instance
      */
     public LocalVariableInfo(RopMethod method) {
@@ -72,7 +72,7 @@ public final class LocalVariableInfo
     /**
      * Sets the register set associated with the start of the block with
      * the given label.
-     * 
+     *
      * @param label {@code >= 0;} the block label
      * @param specs {@code non-null;} the register set to associate with the block
      */
@@ -97,7 +97,7 @@ public final class LocalVariableInfo
      * is the same as calling {@link #setStarts}. Otherwise, this will
      * merge the two sets and call {@link #setStarts} on the result of the
      * merge.
-     * 
+     *
      * @param label {@code >= 0;} the block label
      * @param specs {@code non-null;} the register set to merge into the start set
      * for the block
@@ -131,7 +131,7 @@ public final class LocalVariableInfo
      * Gets the register set associated with the start of the block
      * with the given label. This returns an empty set with the appropriate
      * max size if no set was associated with the block in question.
-     * 
+     *
      * @param label {@code >= 0;} the block label
      * @return {@code non-null;} the associated register set
      */
@@ -145,7 +145,7 @@ public final class LocalVariableInfo
      * Gets the register set associated with the start of the given
      * block. This is just convenient shorthand for
      * {@code getStarts(block.getLabel())}.
-     * 
+     *
      * @param block {@code non-null;} the block in question
      * @return {@code non-null;} the associated register set
      */
@@ -158,7 +158,7 @@ public final class LocalVariableInfo
      * start of the block with the given label. This returns a
      * newly-allocated empty {@link RegisterSpecSet} of appropriate
      * max size if there is not yet any set associated with the block.
-     * 
+     *
      * @param label {@code >= 0;} the block label
      * @return {@code non-null;} the associated register set
      */
@@ -173,13 +173,13 @@ public final class LocalVariableInfo
      * Adds an assignment association for the given instruction and
      * register spec. This throws an exception if the instruction
      * doesn't actually perform a named variable assignment.
-     * 
+     *
      * <b>Note:</b> Although the instruction contains its own spec for
      * the result, it still needs to be passed in explicitly to this
      * method, since the spec that is stored here should always have a
      * simple type and the one in the instruction can be an arbitrary
      * {@link TypeBearer} (such as a constant value).
-     * 
+     *
      * @param insn {@code non-null;} the instruction in question
      * @param spec {@code non-null;} the associated register spec
      */
@@ -200,7 +200,7 @@ public final class LocalVariableInfo
     /**
      * Gets the named register being assigned by the given instruction, if
      * previously stored in this instance.
-     * 
+     *
      * @param insn {@code non-null;} instruction in question
      * @return {@code null-ok;} the named register being assigned, if any
      */
@@ -210,7 +210,7 @@ public final class LocalVariableInfo
 
     /**
      * Gets the number of assignments recorded by this instance.
-     * 
+     *
      * @return {@code >= 0;} the number of assignments
      */
     public int getAssignmentCount() {
@@ -234,7 +234,7 @@ public final class LocalVariableInfo
     /**
      * Helper method, to get the starts for a label, throwing the
      * right exception for range problems.
-     * 
+     *
      * @param label {@code >= 0;} the block label
      * @return {@code null-ok;} associated register set or {@code null} if there
      * is none

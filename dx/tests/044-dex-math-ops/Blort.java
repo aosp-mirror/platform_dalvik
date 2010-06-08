@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-public class Blort 
+public class Blort
 {
     private volatile int i;
     private volatile long l;
     private volatile float f;
     private volatile double d;
-    
+
     public void blort(int i1, int i2) {
         i = -i1;
         i = ~i1;
@@ -69,5 +69,5 @@ public class Blort
         d = d1 * d2;
         d = d1 / d2;
         d = d1 % d2;
-    }    
+    }
 }

@@ -197,7 +197,7 @@ public final class Frame {
         } catch (NullPointerException ex) {
             throw new NullPointerException("can't return from non-subroutine");
         }
-       
+
         return (subLocals == null) ? null
                 : new Frame(subLocals, stack, newSubroutines);
     }
@@ -234,7 +234,7 @@ public final class Frame {
      * Merges this frame's subroutine lists with another. The result
      * is the deepest common nesting (effectively, the common prefix of the
      * two lists).
-     * 
+     *
      * @param otherSubroutines label list of subroutine start blocks, from
      * least-nested to most-nested.
      * @return {@code non-null;} merged subroutine nest list as described above
@@ -359,7 +359,7 @@ public final class Frame {
                             RuntimeException("Incompatible merged subroutines");
                 }
             }
-            
+
         }
 
         return new Frame(resultLocals, resultStack, resultSubroutines);

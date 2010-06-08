@@ -16,7 +16,7 @@
    /*
     * File: OP_THROW_VERIFICATION_ERROR.S
     *
-    * Code: 
+    * Code:
     *
     * For: throw-verification-error
     *

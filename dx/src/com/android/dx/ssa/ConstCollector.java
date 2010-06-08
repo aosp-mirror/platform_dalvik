@@ -71,7 +71,7 @@ public class ConstCollector {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param ssaMethod {@code non-null;} method to process
      */
     private ConstCollector(SsaMethod ssaMethod) {
@@ -86,7 +86,7 @@ public class ConstCollector {
 
         ArrayList<TypedConstant> constantList
                 = getConstsSortedByCountUse();
-    
+
         int toCollect = Math.min(constantList.size(), MAX_COLLECTED_CONSTANTS);
 
         SsaBasicBlock start = ssaMeth.getEntryBlock();
@@ -126,7 +126,7 @@ public class ConstCollector {
 
                 SsaBasicBlock resultBlock
                         = constBlock.insertNewSuccessor(successorBlock);
-                PlainInsn insn 
+                PlainInsn insn
                     = new PlainInsn(
                             Rops.opMoveResultPseudo(result.getTypeBearer()),
                             SourcePosition.NO_INFO,
@@ -184,7 +184,7 @@ public class ConstCollector {
                 }
                 /*
                  * We can't move any throwable const whose throw will be
-                 * caught, so don't count them.                 
+                 * caught, so don't count them.
                  */
                 if (insn.getBlock().getSuccessors().cardinality() > 1) {
                     continue;
@@ -255,7 +255,7 @@ public class ConstCollector {
      * variable, then insert a mark-local for {@code newReg} just below
      * it. We expect the definition of  {@code origReg} to ultimately
      * be removed by the dead code eliminator
-     * 
+     *
      * @param origReg {@code non-null;} original register
      * @param newReg {@code non-null;} new register that will replace
      * {@code origReg}
@@ -338,7 +338,7 @@ public class ConstCollector {
 
             if (ssaMeth.isRegALocal(origReg)) {
                 if (!COLLECT_ONE_LOCAL) {
-                    continue;                    
+                    continue;
                 } else {
                     /*
                      * TODO: If the same local gets the same cst

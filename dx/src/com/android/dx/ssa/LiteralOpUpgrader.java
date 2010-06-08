@@ -48,7 +48,7 @@ public class LiteralOpUpgrader {
         LiteralOpUpgrader dc;
 
         dc = new LiteralOpUpgrader(ssaMethod);
-            
+
         dc.run();
     }
 

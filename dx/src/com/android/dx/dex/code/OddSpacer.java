@@ -30,7 +30,7 @@ public final class OddSpacer extends VariableSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      */
     public OddSpacer(SourcePosition position) {

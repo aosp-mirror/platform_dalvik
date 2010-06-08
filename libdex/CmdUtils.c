@@ -115,7 +115,7 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
 
     if (len < 5) {
         if (!quiet) {
-            fprintf(stderr, 
+            fprintf(stderr,
                 "ERROR: filename must end in .dex, .zip, .jar, or .apk\n");
         }
         result = kUTFRBadArgs;
@@ -138,7 +138,7 @@ UnzipToFileResult dexOpenAndMap(const char* fileName, const char* tempFileName,
         }
 
         result = dexUnzipToFile(fileName, tempFileName, quiet);
-        
+
         if (result == kUTFRSuccess) {
             //printf("+++ Good unzip to '%s'\n", tempFileName);
             fileName = tempFileName;

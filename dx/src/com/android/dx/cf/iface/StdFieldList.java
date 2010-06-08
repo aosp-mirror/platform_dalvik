@@ -25,7 +25,7 @@ import com.android.dx.util.FixedSizeList;
 public final class StdFieldList extends FixedSizeList implements FieldList {
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public StdFieldList(int size) {
@@ -39,7 +39,7 @@ public final class StdFieldList extends FixedSizeList implements FieldList {
 
     /**
      * Sets the field at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which field
      * @param field {@code null-ok;} the field object
      */

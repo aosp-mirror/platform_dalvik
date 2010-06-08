@@ -26,7 +26,7 @@ code around lr:
 
 
 Step 2
- 
+
 Push $OUT/EXECUTABLES/gdbjithelper_intermediates/LINKED/gdbjithelper to
 /system/bin on the device or emulator
 

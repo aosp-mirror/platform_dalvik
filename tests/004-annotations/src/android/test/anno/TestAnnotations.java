@@ -14,7 +14,7 @@ public class TestAnnotations {
     static private void printAnnotationArray(String prefix, Annotation[] arr) {
         TreeMap<String, Annotation> sorted =
             new TreeMap<String, Annotation>();
-        
+
         for (Annotation a : arr) {
             sorted.put(a.annotationType().getName(), a);
         }
@@ -24,7 +24,7 @@ public class TestAnnotations {
             System.out.println(prefix + "    " + a.annotationType());
         }
     }
-    
+
     static void printAnnotations(Class clazz) {
         Annotation[] annos;
         Annotation[][] parAnnos;
@@ -120,7 +120,7 @@ public class TestAnnotations {
         Method meth;
         ExportedProperty property;
         final IntToString[] mapping;
-        
+
         try {
             meth = TestAnnotations.class.getMethod("getFocusType",
                     (Class[])null);

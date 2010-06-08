@@ -31,7 +31,7 @@ public final class StringDataItem extends OffsettedItem {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param value {@code non-null;} the string value
      */
     public StringDataItem(CstUtf8 value) {
@@ -42,13 +42,13 @@ public final class StringDataItem extends OffsettedItem {
 
     /**
      * Gets the write size for a given value.
-     * 
+     *
      * @param value {@code non-null;} the string value
      * @return {@code >= 2}; the write size, in bytes
      */
     private static int writeSize(CstUtf8 value) {
         int utf16Size = value.getUtf16Size();
-        
+
         // The +1 is for the '\0' termination byte.
         return Leb128Utils.unsignedLeb128Size(utf16Size)
             + value.getUtf8Size() + 1;
@@ -73,7 +73,7 @@ public final class StringDataItem extends OffsettedItem {
         int utf16Size = value.getUtf16Size();
 
         if (out.annotates()) {
-            out.annotate(Leb128Utils.unsignedLeb128Size(utf16Size), 
+            out.annotate(Leb128Utils.unsignedLeb128Size(utf16Size),
                     "utf16_size: " + Hex.u4(utf16Size));
             out.annotate(bytes.size() + 1, value.toQuoted());
         }

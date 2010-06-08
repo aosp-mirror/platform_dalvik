@@ -458,8 +458,8 @@ static bool getThreadStats(pid_t pid, pid_t tid, unsigned long* pUtime,
  *  (4b) threadId
  *  (1b) thread status
  *  (4b) tid
- *  (4b) utime 
- *  (4b) stime 
+ *  (4b) utime
+ *  (4b) stime
  *  (1b) is daemon?
  *
  * The length fields exist in anticipation of adding additional fields

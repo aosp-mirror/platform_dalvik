@@ -38,7 +38,7 @@ public final class LocalVariableExtractor {
 
     /**
      * Extracts out all the local variable information from the given method.
-     * 
+     *
      * @param method {@code non-null;} the method to extract from
      * @return {@code non-null;} the extracted information
      */
@@ -49,7 +49,7 @@ public final class LocalVariableExtractor {
 
     /**
      * Constructs an instance. This method is private. Use {@link #extract}.
-     * 
+     *
      * @param method {@code non-null;} the method to extract from
      */
     private LocalVariableExtractor(RopMethod method) {
@@ -68,7 +68,7 @@ public final class LocalVariableExtractor {
 
     /**
      * Does the extraction.
-     * 
+     *
      * @return {@code non-null;} the extracted information
      */
     private LocalVariableInfo doit() {
@@ -78,14 +78,14 @@ public final class LocalVariableExtractor {
             Bits.clear(workSet, label);
             processBlock(label);
         }
-        
+
         resultInfo.setImmutable();
         return resultInfo;
     }
 
     /**
      * Processes a single block.
-     * 
+     *
      * @param label {@code >= 0;} label of the block to process
      */
     private void processBlock(int label) {
@@ -158,7 +158,7 @@ public final class LocalVariableExtractor {
                 if (previous != null
                         && (previous.getReg() != result.getReg())) {
 
-                    primaryState.remove(previous);                    
+                    primaryState.remove(previous);
                 }
 
                 resultInfo.addAssignment(insn, result);

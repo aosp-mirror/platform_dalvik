@@ -44,7 +44,7 @@ public abstract class Insn implements ToHuman {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param opcode {@code non-null;} the opcode
      * @param position {@code non-null;} source position
      * @param result {@code null-ok;} spec for the result, if any
@@ -72,7 +72,7 @@ public abstract class Insn implements ToHuman {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * Instances of this class compare by identity. That is,
      * {@code x.equals(y)} is only true if {@code x == y}.
      */
@@ -83,7 +83,7 @@ public abstract class Insn implements ToHuman {
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * This implementation returns the identity hashcode of this
      * instance. This is proper, since instances of this class compare
      * by identity (see {@link #equals}).
@@ -101,7 +101,7 @@ public abstract class Insn implements ToHuman {
 
     /**
      * Gets a human-oriented (and slightly lossy) string for this instance.
-     * 
+     *
      * @return {@code non-null;} the human string form
      */
     public String toHuman() {
@@ -111,7 +111,7 @@ public abstract class Insn implements ToHuman {
     /**
      * Gets an "inline" string portion for toHuman(), if available. This
      * is the portion that appears after the Rop opcode
-     * 
+     *
      * @return {@code null-ok;} if non-null, the inline text for toHuman()
      */
     public String getInlineString() {
@@ -120,7 +120,7 @@ public abstract class Insn implements ToHuman {
 
     /**
      * Gets the opcode.
-     * 
+     *
      * @return {@code non-null;} the opcode
      */
     public final Rop getOpcode() {
@@ -129,7 +129,7 @@ public abstract class Insn implements ToHuman {
 
     /**
      * Gets the source position.
-     * 
+     *
      * @return {@code non-null;} the source position
      */
     public final SourcePosition getPosition() {
@@ -139,7 +139,7 @@ public abstract class Insn implements ToHuman {
     /**
      * Gets the result spec, if any. A return value of {@code null}
      * means this instruction returns nothing.
-     * 
+     *
      * @return {@code null-ok;} the result spec, if any
      */
     public final RegisterSpec getResult() {
@@ -151,7 +151,7 @@ public abstract class Insn implements ToHuman {
      * instruction, or null if no local variable assignment occurs. This
      * may be the result register, or for {@code mark-local} insns
      * it may be the source.
-     * 
+     *
      * @return {@code null-ok;} a named register spec or null
      */
     public final RegisterSpec getLocalAssignment() {
@@ -177,7 +177,7 @@ public abstract class Insn implements ToHuman {
 
     /**
      * Gets the source specs.
-     * 
+     *
      * @return {@code non-null;} the source specs
      */
     public final RegisterSpecList getSources() {
@@ -187,7 +187,7 @@ public abstract class Insn implements ToHuman {
     /**
      * Gets whether this instruction can possibly throw an exception. This
      * is just a convenient wrapper for {@code getOpcode().canThrow()}.
-     * 
+     *
      * @return {@code true} iff this instruction can possibly throw
      */
     public final boolean canThrow() {
@@ -201,7 +201,7 @@ public abstract class Insn implements ToHuman {
      * throw or if it merely doesn't handle any of its possible
      * exceptions. To determine whether this instruction can throw,
      * use {@link #canThrow}.
-     * 
+     *
      * @return {@code non-null;} the catches list
      */
     public abstract TypeList getCatches();
@@ -209,7 +209,7 @@ public abstract class Insn implements ToHuman {
     /**
      * Calls the appropriate method on the given visitor, depending on the
      * class of this instance. Subclasses must override this.
-     * 
+     *
      * @param visitor {@code non-null;} the visitor to call on
      */
     public abstract void accept(Visitor visitor);
@@ -220,7 +220,7 @@ public abstract class Insn implements ToHuman {
      * method throws an exception if this instance can't possibly
      * throw. To determine whether this instruction can throw, use
      * {@link #canThrow}.
-     * 
+     *
      * @param type {@code non-null;} type to append to the catch list
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -229,7 +229,7 @@ public abstract class Insn implements ToHuman {
     /**
      * Returns an instance that is just like this one, except that all
      * register references have been offset by the given delta.
-     * 
+     *
      * @param delta the amount to offset register references by
      * @return {@code non-null;} an appropriately-constructed instance
      */
@@ -241,7 +241,7 @@ public abstract class Insn implements ToHuman {
      * source (if it is a constant) is represented directly rather than
      * as a register reference. {@code this} is returned in cases where
      * the translation is not possible.
-     * 
+     *
      * @return {@code non-null;} an appropriately-constructed instance
      */
     public Insn withLastSourceLiteral() {
@@ -274,7 +274,7 @@ public abstract class Insn implements ToHuman {
      * to be an identity compare. Insn's are {@code contentEquals()}
      * if they have the same opcode, registers, source position, and other
      * metadata.
-     * 
+     *
      * @return true in the case described above
      */
     public boolean contentEquals(Insn b) {
@@ -300,7 +300,7 @@ public abstract class Insn implements ToHuman {
     /**
      * Returns the string form of this instance, with the given bit added in
      * the standard location for an inline argument.
-     * 
+     *
      * @param extra {@code null-ok;} the inline argument string
      * @return {@code non-null;} the string form
      */
@@ -333,7 +333,7 @@ public abstract class Insn implements ToHuman {
     /**
      * Returns the human string form of this instance, with the given
      * bit added in the standard location for an inline argument.
-     * 
+     *
      * @param extra {@code null-ok;} the inline argument string
      * @return {@code non-null;} the human string form
      */
@@ -379,35 +379,35 @@ public abstract class Insn implements ToHuman {
     public static interface Visitor {
         /**
          * Visits a {@link PlainInsn}.
-         * 
+         *
          * @param insn {@code non-null;} the instruction to visit
          */
         public void visitPlainInsn(PlainInsn insn);
 
         /**
          * Visits a {@link PlainCstInsn}.
-         * 
+         *
          * @param insn {@code non-null;} the instruction to visit
          */
         public void visitPlainCstInsn(PlainCstInsn insn);
 
         /**
          * Visits a {@link SwitchInsn}.
-         * 
+         *
          * @param insn {@code non-null;} the instruction to visit
          */
         public void visitSwitchInsn(SwitchInsn insn);
 
         /**
          * Visits a {@link ThrowingCstInsn}.
-         * 
+         *
          * @param insn {@code non-null;} the instruction to visit
          */
         public void visitThrowingCstInsn(ThrowingCstInsn insn);
 
         /**
          * Visits a {@link ThrowingInsn}.
-         * 
+         *
          * @param insn {@code non-null;} the instruction to visit
          */
         public void visitThrowingInsn(ThrowingInsn insn);

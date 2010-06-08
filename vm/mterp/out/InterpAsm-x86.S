@@ -3114,8 +3114,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
-    
+
+
     negl %eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
@@ -3137,8 +3137,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
-    
+
+
     notl %eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
@@ -3256,7 +3256,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
+
     fstps  (rFP,%ecx,4)             # vA<- %st0
     GOTO_NEXT
 
@@ -3276,7 +3276,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
+
     fstpl  (rFP,%ecx,4)             # vA<- %st0
     GOTO_NEXT
 
@@ -3314,7 +3314,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
+
     fstps  (rFP,%ecx,4)             # vA<- %st0
     GOTO_NEXT
 
@@ -3334,7 +3334,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
+
     fstpl  (rFP,%ecx,4)             # vA<- %st0
     GOTO_NEXT
 
@@ -3428,7 +3428,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
+
     fstpl  (rFP,%ecx,4)             # vA<- %st0
     GOTO_NEXT
 
@@ -3522,7 +3522,7 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
+
     fstps  (rFP,%ecx,4)             # vA<- %st0
     GOTO_NEXT
 
@@ -3543,8 +3543,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
-    
+
+
     movsbl %al,%eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
@@ -3566,8 +3566,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
-    
+
+
     movzwl %ax,%eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
@@ -3589,8 +3589,8 @@ dvmAsmInstructionStart = .L_OP_NOP
     andb     $0xf,%cl               # ecx<- A
     FETCH_INST_WORD(1)
     ADVANCE_PC(1)
-    
-    
+
+
     movswl %ax,%eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT

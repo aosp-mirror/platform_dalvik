@@ -199,7 +199,7 @@ void dvmCreateDefaultProperties(Object* propObj)
     setProperty(propObj, put, "file.separator", "/");
     setProperty(propObj, put, "line.separator", "\n");
     setProperty(propObj, put, "path.separator", ":");
-    
+
     /*
      * These show up elsewhere, so do them here too.
      */

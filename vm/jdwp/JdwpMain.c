@@ -209,7 +209,7 @@ void dvmJdwpShutdown(JdwpState* state)
 
 /*
  * Are we talking to a debugger?
- */ 
+ */
 bool dvmJdwpIsActive(JdwpState* state)
 {
     return dvmJdwpIsConnected(state);

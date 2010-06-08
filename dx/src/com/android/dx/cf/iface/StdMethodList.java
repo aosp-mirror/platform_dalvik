@@ -25,7 +25,7 @@ import com.android.dx.util.FixedSizeList;
 public final class StdMethodList extends FixedSizeList implements MethodList {
     /**
      * Constructs an instance. All indices initially contain {@code null}.
-     * 
+     *
      * @param size the size of the list
      */
     public StdMethodList(int size) {
@@ -39,7 +39,7 @@ public final class StdMethodList extends FixedSizeList implements MethodList {
 
     /**
      * Sets the method at the given index.
-     * 
+     *
      * @param n {@code >= 0, < size();} which method
      * @param method {@code null-ok;} the method object
      */

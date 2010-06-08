@@ -33,19 +33,19 @@ public final class SourcePosition {
 
     /**
      * {@code >= -1;} the bytecode address, or {@code -1} if that
-     * information is unknown 
+     * information is unknown
      */
     private final int address;
 
     /**
      * {@code >= -1;} the line number, or {@code -1} if that
-     * information is unknown 
+     * information is unknown
      */
     private final int line;
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param sourceFile {@code null-ok;} name of the file of origin or
      * {@code null} if unknown
      * @param address {@code >= -1;} original bytecode address or {@code -1}
@@ -117,7 +117,7 @@ public final class SourcePosition {
     /**
      * Returns whether the lines match between this instance and
      * the one given.
-     * 
+     *
      * @param other {@code non-null;} the instance to compare to
      * @return {@code true} iff the lines match
      */
@@ -128,7 +128,7 @@ public final class SourcePosition {
     /**
      * Returns whether the lines and files match between this instance and
      * the one given.
-     * 
+     *
      * @param other {@code non-null;} the instance to compare to
      * @return {@code true} iff the lines and files match
      */
@@ -140,7 +140,7 @@ public final class SourcePosition {
 
     /**
      * Gets the source file, if known.
-     * 
+     *
      * @return {@code null-ok;} the source file or {@code null} if unknown
      */
     public CstUtf8 getSourceFile() {
@@ -149,7 +149,7 @@ public final class SourcePosition {
 
     /**
      * Gets the original bytecode address.
-     * 
+     *
      * @return {@code >= -1;} the address or {@code -1} if unknown
      */
     public int getAddress() {
@@ -158,7 +158,7 @@ public final class SourcePosition {
 
     /**
      * Gets the original line number.
-     * 
+     *
      * @return {@code >= -1;} the original line number or {@code -1} if
      * unknown
      */

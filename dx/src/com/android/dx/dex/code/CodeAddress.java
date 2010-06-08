@@ -30,7 +30,7 @@ public final class CodeAddress extends ZeroSizeInsn {
     /**
      * Constructs an instance. The output address of this instance is initially
      * unknown ({@code -1}).
-     * 
+     *
      * @param position {@code non-null;} source position
      */
     public CodeAddress(SourcePosition position) {

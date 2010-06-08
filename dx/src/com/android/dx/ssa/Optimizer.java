@@ -71,14 +71,14 @@ public class Optimizer {
             boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice) {
 
-        return optimize(rmeth, paramWidth, isStatic, inPreserveLocals, inAdvice, 
+        return optimize(rmeth, paramWidth, isStatic, inPreserveLocals, inAdvice,
                 EnumSet.allOf(OptionalStep.class));
     }
 
     /**
      * Runs optimization algorthims over this method, and returns a new
      * instance of RopMethod with the changes.
-     * 
+     *
      * @param rmeth method to process
      * @param paramWidth the total width, in register-units, of this method's
      * parameters
@@ -241,6 +241,6 @@ public class Optimizer {
 
         LivenessAnalyzer.constructInterferenceGraph(ssaMeth);
 
-        return ssaMeth;        
+        return ssaMeth;
     }
 }

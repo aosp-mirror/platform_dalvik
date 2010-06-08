@@ -37,7 +37,7 @@ public class DomFront {
     private final SsaMethod meth;
 
     private final ArrayList<SsaBasicBlock> nodes;
-    
+
     private final DomInfo[] domInfos;
 
     /**
@@ -55,8 +55,8 @@ public class DomFront {
     }
 
     /**
-     * Constructs instance. Call {@link DomFront#run} to process. 
-     * 
+     * Constructs instance. Call {@link DomFront#run} to process.
+     *
      * @param meth {@code non-null;} method to process
      */
     public DomFront(SsaMethod meth) {
@@ -98,7 +98,7 @@ public class DomFront {
         }
 
         buildDomTree();
-        
+
         if (DEBUG) {
             debugPrintDomChildren();
         }

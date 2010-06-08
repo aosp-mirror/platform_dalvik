@@ -131,7 +131,7 @@ abstract /*package*/ class MemberListParser {
     /**
      * Gets the human-oriented name for what this instance is parsing.
      * Subclasses must override this method.
-     * 
+     *
      * @return {@code non-null;} the human oriented name
      */
     protected abstract String humanName();
@@ -148,7 +148,7 @@ abstract /*package*/ class MemberListParser {
     /**
      * Gets the {@code CTX_*} constant to use when parsing attributes.
      * Subclasses must override this method.
-     * 
+     *
      * @return {@code non-null;} the human oriented name
      */
     protected abstract int getAttributeContext();

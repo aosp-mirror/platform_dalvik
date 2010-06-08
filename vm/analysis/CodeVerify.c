@@ -3179,7 +3179,7 @@ bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
         vd.insnRegCount = meth->registersSize;
         vd.insnFlags = insnFlags;
         vd.addrRegs = regTable.addrRegs;
-        
+
         pMap = dvmGenerateRegisterMapV(&vd);
         if (pMap != NULL) {
             /*

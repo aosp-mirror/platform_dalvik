@@ -31,7 +31,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * {@code non-null;} list of targets corresponding to the test values; there
      * is always one extra element in the target list, to hold the
-     * default target 
+     * default target
      */
     private final IntList targets;
 
@@ -40,7 +40,7 @@ public final class SwitchList extends MutabilityControl {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param size {@code >= 0;} the number of elements to be in the table
      */
     public SwitchList(int size) {
@@ -60,7 +60,7 @@ public final class SwitchList extends MutabilityControl {
 
     /**
      * Gets the size of the list.
-     * 
+     *
      * @return {@code >= 0;} the list size
      */
     public int size() {
@@ -69,9 +69,9 @@ public final class SwitchList extends MutabilityControl {
 
     /**
      * Gets the indicated test value.
-     * 
+     *
      * @param n {@code >= 0;}, &lt; size(); which index
-     * @return the test value 
+     * @return the test value
      */
     public int getValue(int n) {
         return values.get(n);
@@ -80,7 +80,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Gets the indicated target. Asking for the target at {@code size()}
      * returns the default target.
-     * 
+     *
      * @param n {@code >= 0, <= size();} which index
      * @return {@code >= 0;} the target
      */
@@ -91,7 +91,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Gets the default target. This is just a shorthand for
      * {@code getTarget(size())}.
-     * 
+     *
      * @return {@code >= 0;} the default target
      */
     public int getDefaultTarget() {
@@ -101,7 +101,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Gets the list of all targets. This includes one extra element at the
      * end of the list, which holds the default target.
-     * 
+     *
      * @return {@code non-null;} the target list
      */
     public IntList getTargets() {
@@ -110,7 +110,7 @@ public final class SwitchList extends MutabilityControl {
 
     /**
      * Gets the list of all case values.
-     * 
+     *
      * @return {@code non-null;} the case value list
      */
     public IntList getValues() {
@@ -120,7 +120,7 @@ public final class SwitchList extends MutabilityControl {
     /**
      * Sets the default target. It is only valid to call this method
      * when all the non-default elements have been set.
-     * 
+     *
      * @param target {@code >= 0;} the absolute (not relative) default target
      * address
      */
@@ -140,7 +140,7 @@ public final class SwitchList extends MutabilityControl {
 
     /**
      * Adds the given item.
-     * 
+     *
      * @param value the test value
      * @param target {@code >= 0;} the absolute (not relative) target address
      */

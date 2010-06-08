@@ -136,7 +136,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     ArrayObject* throws = NULL;
     ClassObject* newClass = NULL;
     int i;
-    
+
     nameStr = dvmCreateCstrFromString(str);
     if (nameStr == NULL) {
         dvmThrowException("Ljava/lang/IllegalArgumentException;",
@@ -797,7 +797,7 @@ static void createConstructor(ClassObject* clazz, Method* meth)
     meth->name = "<init>";
     meth->prototype =
         gDvm.methJavaLangReflectProxy_constructorPrototype->prototype;
-    meth->shorty = 
+    meth->shorty =
         gDvm.methJavaLangReflectProxy_constructorPrototype->shorty;
     // no pDexCode or pDexMethod
 
@@ -862,7 +862,7 @@ static ArrayObject* boxMethodArgs(const Method* method, const u4* args)
      */
 
     int srcIndex = 0;
-    
+
     argCount = 0;
     while (*desc != '\0') {
         char descChar = *(desc++);

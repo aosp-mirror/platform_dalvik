@@ -15,7 +15,7 @@
  */
 /*
  * Dalvik opcode names.
- */ 
+ */
 #ifndef _DEXDUMP_OPCODENAMES
 #define _DEXDUMP_OPCODENAMES
 

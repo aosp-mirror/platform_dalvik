@@ -29,7 +29,7 @@ import java.util.Collection;
 public abstract class UniformItemSection extends Section {
     /**
      * Constructs an instance. The file offset is initially unknown.
-     * 
+     *
      * @param name {@code null-ok;} the name of this instance, for annotation
      * purposes
      * @param file {@code non-null;} file that this instance is part of
@@ -59,7 +59,7 @@ public abstract class UniformItemSection extends Section {
      * will throw an exception if the constant is not found, including
      * if this instance isn't the sort that maps constants to {@link
      * IndexedItem} instances.
-     * 
+     *
      * @param cst {@code non-null;} constant to look for
      * @return {@code non-null;} the corresponding item found in this instance
      */

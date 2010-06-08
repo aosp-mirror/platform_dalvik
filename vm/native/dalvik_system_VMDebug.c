@@ -359,7 +359,7 @@ static void Dalvik_dalvik_system_VMDebug_startMethodTracingNative(const u4* args
             RETURN_VOID();
         }
     }
-    
+
     dvmMethodTraceStart(traceFileName != NULL ? traceFileName : "[DDMS]",
         fd, bufferSize, flags, (traceFileName == NULL && fd == -1));
     free(traceFileName);

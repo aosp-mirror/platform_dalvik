@@ -41,7 +41,7 @@ public class IdenticalBlockCombiner {
 
     /**
      * Constructs instance. Call {@code process()} to run.
-     * 
+     *
      * @param rm {@code non-null;} instance to process
      */
     public IdenticalBlockCombiner(RopMethod rm) {
@@ -120,7 +120,7 @@ public class IdenticalBlockCombiner {
 
     /**
      * Helper method to compare the contents of two blocks.
-     * 
+     *
      * @param a {@code non-null;} a block to compare
      * @param b {@code non-null;} another block to compare
      * @return {@code true} iff the two blocks' instructions are the same

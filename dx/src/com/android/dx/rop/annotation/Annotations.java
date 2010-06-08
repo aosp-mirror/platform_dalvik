@@ -27,7 +27,7 @@ import java.util.TreeMap;
 /**
  * List of {@link Annotation} instances.
  */
-public final class Annotations extends MutabilityControl 
+public final class Annotations extends MutabilityControl
         implements Comparable<Annotations> {
     /** {@code non-null;} immutable empty instance */
     public static final Annotations EMPTY = new Annotations();
@@ -35,7 +35,7 @@ public final class Annotations extends MutabilityControl
     static {
         EMPTY.setImmutable();
     }
-    
+
     /** {@code non-null;} map from types to annotations */
     private final TreeMap<CstType, Annotation> annotations;
 
@@ -43,7 +43,7 @@ public final class Annotations extends MutabilityControl
      * Constructs an immutable instance which is the combination of the
      * two given instances. The two instances must contain disjoint sets
      * of types.
-     * 
+     *
      * @param a1 {@code non-null;} an instance
      * @param a2 {@code non-null;} the other instance
      * @return {@code non-null;} the combination
@@ -58,12 +58,12 @@ public final class Annotations extends MutabilityControl
 
         return result;
     }
-            
+
     /**
      * Constructs an immutable instance which is the combination of the
      * given instance with the given additional annotation. The latter's
      * type must not already appear in the former.
-     * 
+     *
      * @param annotations {@code non-null;} the instance to augment
      * @param annotation {@code non-null;} the additional annotation
      * @return {@code non-null;} the combination
@@ -79,7 +79,7 @@ public final class Annotations extends MutabilityControl
 
         return result;
     }
-            
+
     /**
      * Constructs an empty instance.
      */
@@ -148,10 +148,10 @@ public final class Annotations extends MutabilityControl
         sb.append("}");
         return sb.toString();
     }
-    
+
     /**
      * Gets the number of elements in this instance.
-     * 
+     *
      * @return {@code >= 0;} the size
      */
     public int size() {
@@ -161,7 +161,7 @@ public final class Annotations extends MutabilityControl
     /**
      * Adds an element to this instance. There must not already be an
      * element of the same type.
-     * 
+     *
      * @param annotation {@code non-null;} the element to add
      * @throws IllegalArgumentException thrown if there is a duplicate type
      */
@@ -173,7 +173,7 @@ public final class Annotations extends MutabilityControl
         }
 
         CstType type = annotation.getType();
-        
+
         if (annotations.containsKey(type)) {
             throw new IllegalArgumentException("duplicate type: " +
                     type.toHuman());
@@ -185,7 +185,7 @@ public final class Annotations extends MutabilityControl
     /**
      * Adds all of the elements of the given instance to this one. The
      * instances must not have any duplicate types.
-     * 
+     *
      * @param toAdd {@code non-null;} the annotations to add
      * @throws IllegalArgumentException thrown if there is a duplicate type
      */
@@ -204,7 +204,7 @@ public final class Annotations extends MutabilityControl
     /**
      * Gets the set of annotations contained in this instance. The
      * result is always unmodifiable.
-     * 
+     *
      * @return {@code non-null;} the set of annotations
      */
     public Collection<Annotation> getAnnotations() {

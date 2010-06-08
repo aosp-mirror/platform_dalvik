@@ -27,7 +27,7 @@ public final class AttLocalVariableTypeTable extends BaseLocalVariables {
 
     /**
      * Constructs an instance.
-     * 
+     *
      * @param localVariables {@code non-null;} list of local variable entries
      */
     public AttLocalVariableTypeTable(LocalVariableList localVariables) {

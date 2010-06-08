@@ -231,10 +231,10 @@ hprofDumpHeapObject(hprof_context_t *ctx, const Object *obj)
     hprof_record_t *rec = &ctx->curRec;
     HprofHeapId desiredHeap;
 
-    desiredHeap = 
+    desiredHeap =
             dvmHeapSourceGetPtrFlag(obj, HS_ALLOCATED_IN_ZYGOTE) ?
             HPROF_HEAP_ZYGOTE : HPROF_HEAP_APP;
-    
+
     if (ctx->objectsInSegment >= OBJECTS_PER_SEGMENT ||
         rec->length >= BYTES_PER_SEGMENT)
     {

@@ -189,7 +189,7 @@ Further implementation thoughts:
 */
 /*
 Output Formats
- 
+
 There are two possible output formats, from which we choose based on how
 we plan to take advantage of the remapped constants.  At most one of these
 will appear in the DEX.
