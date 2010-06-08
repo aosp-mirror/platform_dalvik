@@ -156,16 +156,14 @@ void dvmVisitObject(Visitor *visitor, Object *obj)
 {
     assert(visitor != NULL);
     assert(obj != NULL);
+    assert(obj->clazz != NULL);
     LOGV("Entering dvmVisitObject(visitor=%p,obj=%p)", visitor, obj);
     if (obj->clazz == gDvm.classJavaLangClass) {
         visitClassObject(visitor, (ClassObject *)obj);
+    } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
+        visitArrayObject(visitor, obj);
     } else {
-        assert(obj->clazz != NULL);
-        if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
-            visitArrayObject(visitor, obj);
-        } else {
-            visitDataObject(visitor, obj);
-        }
+        visitDataObject(visitor, obj);
     }
     LOGV("Exiting dvmVisitObject(visitor=%p,obj=%p)", visitor, obj);
 }

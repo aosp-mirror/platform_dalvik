@@ -509,23 +509,15 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
 
     assert(obj != NULL);
     assert(ctx != NULL);
-    /* Check that the object is aligned. */
-    assert(((uintptr_t)obj & 7) == 0);
+    assert(obj->clazz != NULL);
     clazz = obj->clazz;
-    /* Check that the class object is aligned. */
-    assert(((uintptr_t)clazz & 7) == 0);
     /* Dispatch a type-specific scan routine. */
     if (clazz == gDvm.classJavaLangClass) {
         scanClassObject((ClassObject *)obj, ctx);
-    } else if (clazz == NULL) {
-        return;
+    } else if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
+        scanArrayObject((ArrayObject *)obj, ctx);
     } else {
-        assert(clazz != NULL);
-        if (IS_CLASS_FLAG_SET(clazz, CLASS_ISARRAY)) {
-            scanArrayObject((ArrayObject *)obj, ctx);
-        } else {
-            scanDataObject((DataObject *)obj, ctx);
-        }
+        scanDataObject((DataObject *)obj, ctx);
     }
 }
 
