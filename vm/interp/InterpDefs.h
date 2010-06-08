@@ -91,8 +91,8 @@ struct JitToInterpEntries {
 
 /* Number of entries in the 2nd level JIT profiler filter cache */
 #define JIT_TRACE_THRESH_FILTER_SIZE 32
-/* Granularity of coverage (power of 2) by each cached entry */
-#define JIT_TRACE_THRESH_FILTER_GRAN_LOG2 6
+/* Number of low dalvik pc address bits to include in 2nd level filter key */
+#define JIT_TRACE_THRESH_FILTER_PC_BITS 4
 #endif
 
 /*
