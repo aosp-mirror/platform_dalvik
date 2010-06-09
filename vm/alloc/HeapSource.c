@@ -427,7 +427,7 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
      * among the heaps managed by the garbage collector.
      */
     length = ALIGN_UP_TO_PAGE_SIZE(absoluteMaxSize);
-    fd = ashmem_create_region("the-java-heap", length);
+    fd = ashmem_create_region("dalvik-heap", length);
     if (fd == -1) {
         return NULL;
     }
