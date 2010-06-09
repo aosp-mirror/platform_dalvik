@@ -76,9 +76,7 @@ bool dvmHeapWorkerStartup(void)
      * so this should not get stuck.
      */
     while (!gDvm.heapWorkerReady) {
-        int cc __attribute__ ((__unused__));
-        cc = pthread_cond_wait(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
-        assert(cc == 0);
+        dvmWaitCond(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
     }
 
     dvmUnlockMutex(&gDvm.heapWorkerLock);
@@ -303,7 +301,6 @@ static void doHeapWork(Thread *self)
 static void* heapWorkerThreadStart(void* arg)
 {
     Thread *self = dvmThreadSelf();
-    int cc;
 
     UNUSED_PARAMETER(arg);
 
@@ -312,8 +309,7 @@ static void* heapWorkerThreadStart(void* arg)
     /* tell the main thread that we're ready */
     dvmLockMutex(&gDvm.heapWorkerLock);
     gDvm.heapWorkerReady = true;
-    cc = pthread_cond_signal(&gDvm.heapWorkerCond);
-    assert(cc == 0);
+    dvmSignalCond(&gDvm.heapWorkerCond);
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 
     dvmLockMutex(&gDvm.heapWorkerLock);
@@ -325,8 +321,7 @@ static void* heapWorkerThreadStart(void* arg)
         dvmChangeStatus(NULL, THREAD_VMWAIT);
 
         /* Signal anyone who wants to know when we're done. */
-        cc = pthread_cond_broadcast(&gDvm.heapWorkerIdleCond);
-        assert(cc == 0);
+        dvmBroadcastCond(&gDvm.heapWorkerIdleCond);
 
         /* Trim the heap if we were asked to. */
         trimtime = gDvm.gcHeap->heapWorkerNextTrim;
@@ -374,6 +369,7 @@ static void* heapWorkerThreadStart(void* arg)
 
         /* sleep until signaled */
         if (timedwait) {
+            int cc __attribute__ ((__unused__));
 #ifdef HAVE_TIMEDWAIT_MONOTONIC
             cc = pthread_cond_timedwait_monotonic(&gDvm.heapWorkerCond,
                     &gDvm.heapWorkerLock, &trimtime);
@@ -381,10 +377,9 @@ static void* heapWorkerThreadStart(void* arg)
             cc = pthread_cond_timedwait(&gDvm.heapWorkerCond,
                     &gDvm.heapWorkerLock, &trimtime);
 #endif
-            assert(cc == 0 || cc == ETIMEDOUT || cc == EINTR);
+            assert(cc == 0 || cc == ETIMEDOUT);
         } else {
-            cc = pthread_cond_wait(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
-            assert(cc == 0);
+            dvmWaitCond(&gDvm.heapWorkerCond, &gDvm.heapWorkerLock);
         }
 
         /* dvmChangeStatus() may block;  don't hold heapWorkerLock.
@@ -410,14 +405,11 @@ static void* heapWorkerThreadStart(void* arg)
  */
 void dvmSignalHeapWorker(bool shouldLock)
 {
-    int cc;
-
     if (shouldLock) {
         dvmLockMutex(&gDvm.heapWorkerLock);
     }
 
-    cc = pthread_cond_signal(&gDvm.heapWorkerCond);
-    assert(cc == 0);
+    dvmSignalCond(&gDvm.heapWorkerCond);
 
     if (shouldLock) {
         dvmUnlockMutex(&gDvm.heapWorkerLock);
@@ -429,8 +421,6 @@ void dvmSignalHeapWorker(bool shouldLock)
  */
 void dvmWaitForHeapWorkerIdle()
 {
-    int cc;
-
     assert(gDvm.heapWorkerReady);
 
     dvmChangeStatus(NULL, THREAD_VMWAIT);
@@ -443,8 +433,7 @@ void dvmWaitForHeapWorkerIdle()
     //     need to detect when this is called from the HeapWorker
     //     context and just give up.
     dvmSignalHeapWorker(false);
-    cc = pthread_cond_wait(&gDvm.heapWorkerIdleCond, &gDvm.heapWorkerLock);
-    assert(cc == 0);
+    dvmWaitCond(&gDvm.heapWorkerIdleCond, &gDvm.heapWorkerLock);
 
     dvmUnlockMutex(&gDvm.heapWorkerLock);
 
