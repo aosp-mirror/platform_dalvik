@@ -998,10 +998,11 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
      * alignment for method pointers, and half-word alignment of the Dalvik pc.
      * for method pointers and half-word alignment for dalvik pc.
      */
-    intptr_t filterKey = (intptr_t)((u4)interpState->method << (
-                          JIT_TRACE_THRESH_FILTER_PC_BITS - 2) |
-                          (((u4)interpState->pc >> 1) &
-                          (1 << JIT_TRACE_THRESH_FILTER_PC_BITS) - 1));
+    u4 methodKey = (u4)interpState->method <<
+                   (JIT_TRACE_THRESH_FILTER_PC_BITS - 2);
+    u4 pcKey = ((u4)interpState->pc >> 1) &
+               ((1 << JIT_TRACE_THRESH_FILTER_PC_BITS) - 1);
+    intptr_t filterKey = (intptr_t)(methodKey | pcKey);
     bool debugOrProfile = dvmDebuggerOrProfilerActive();
 
     /* Check if the JIT request can be handled now */
