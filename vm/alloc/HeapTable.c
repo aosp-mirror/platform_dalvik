@@ -20,17 +20,8 @@
 
 #include <limits.h> // for INT_MAX
 
-static void *heapTableRealloc(void *oldPtr, size_t newSize)
-{
-    /* Don't just call realloc(), in case the native system
-     * doesn't malloc() on realloc(NULL).
-     */
-    if (oldPtr != NULL) {
-        return realloc(oldPtr, newSize);
-    } else {
-        return malloc(newSize);
-    }
-}
+static const int kLargeHeapRefTableNElems = 1024;
+static const int  kFinalizableRefDefault = 128;
 
 void dvmHeapHeapTableFree(void *ptr)
 {
@@ -40,10 +31,10 @@ void dvmHeapHeapTableFree(void *ptr)
 #define heapRefTableIsFull(refs) \
     dvmIsReferenceTableFull(refs)
 
-bool dvmHeapInitHeapRefTable(HeapRefTable *refs, size_t nelems)
+bool dvmHeapInitHeapRefTable(HeapRefTable *refs)
 {
     memset(refs, 0, sizeof(*refs));
-    return dvmInitReferenceTable(refs, nelems, INT_MAX);
+    return dvmInitReferenceTable(refs, kFinalizableRefDefault, INT_MAX);
 }
 
 /* Frees the array inside the HeapRefTable, not the HeapRefTable itself.
@@ -57,7 +48,6 @@ void dvmHeapFreeHeapRefTable(HeapRefTable *refs)
  * Large, non-contiguous reference tables
  */
 
-#define kLargeHeapRefTableNElems 1024
 bool dvmHeapAddRefToLargeTable(LargeHeapRefTable **tableP, Object *ref)
 {
     LargeHeapRefTable *table;
@@ -98,13 +88,14 @@ bool dvmHeapAddRefToLargeTable(LargeHeapRefTable **tableP, Object *ref)
 
     /* Allocate a new table.
      */
-    table = (LargeHeapRefTable *)heapTableRealloc(NULL,
-            sizeof(LargeHeapRefTable));
+    table = calloc(1, sizeof(LargeHeapRefTable));
     if (table == NULL) {
         LOGE_HEAP("Can't allocate a new large ref table\n");
         return false;
     }
-    if (!dvmHeapInitHeapRefTable(&table->refs, kLargeHeapRefTableNElems)) {
+    if (!dvmInitReferenceTable(&table->refs,
+                               kLargeHeapRefTableNElems,
+                               INT_MAX)) {
         LOGE_HEAP("Can't initialize a new large ref table\n");
         dvmHeapHeapTableFree(table);
         return false;
@@ -132,8 +123,7 @@ bool dvmHeapAddTableToLargeTable(LargeHeapRefTable **tableP, HeapRefTable *refs)
 
     /* Allocate a node.
      */
-    table = (LargeHeapRefTable *)heapTableRealloc(NULL,
-            sizeof(LargeHeapRefTable));
+    table = calloc(1, sizeof(LargeHeapRefTable));
     if (table == NULL) {
         LOGE_HEAP("Can't allocate a new large ref table\n");
         return false;

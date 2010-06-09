@@ -2219,7 +2219,6 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     pinThreadList();
     pinReferenceTable(&gDvm.jniGlobalRefTable);
     pinReferenceTable(&gDvm.jniPinRefTable);
-    pinReferenceTable(&gcHeap->nonCollectableRefs);
     pinHashTableEntries(gDvm.loadedClasses);
     pinHashTableEntries(gDvm.dbgRegistry);
     pinPrimitiveClasses();

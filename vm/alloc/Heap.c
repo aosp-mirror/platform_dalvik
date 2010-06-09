@@ -36,9 +36,6 @@
 #include <limits.h>
 #include <errno.h>
 
-#define kNonCollectableRefDefault   16
-#define kFinalizableRefDefault      128
-
 static const char* GcReasonStr[] = {
     [GC_FOR_MALLOC] = "GC_FOR_MALLOC",
     [GC_EXPLICIT] = "GC_EXPLICIT",
@@ -76,19 +73,7 @@ bool dvmHeapStartup()
     gcHeap->hprofDumpOnGc = false;
     gcHeap->hprofContext = NULL;
 #endif
-
-    /* This needs to be set before we call dvmHeapInitHeapRefTable().
-     */
     gDvm.gcHeap = gcHeap;
-
-    /* Set up the table we'll use for ALLOC_NO_GC.
-     */
-    if (!dvmHeapInitHeapRefTable(&gcHeap->nonCollectableRefs,
-                           kNonCollectableRefDefault))
-    {
-        LOGE_HEAP("Can't allocate GC_NO_ALLOC table\n");
-        goto fail;
-    }
 
     /* Set up the lists and lock we'll use for finalizable
      * and reference objects.
@@ -104,10 +89,6 @@ bool dvmHeapStartup()
     dvmInitializeHeapWorkerState();
 
     return true;
-
-fail:
-    dvmHeapSourceShutdown(&gcHeap);
-    return false;
 }
 
 void dvmHeapStartupAfterZygote()
@@ -127,8 +108,6 @@ void dvmHeapShutdown()
          * The process may stick around, so we don't
          * want to leak any native memory.
          */
-        dvmHeapFreeHeapRefTable(&gDvm.gcHeap->nonCollectableRefs);
-
         dvmHeapFreeLargeTable(gDvm.gcHeap->finalizableRefs);
         gDvm.gcHeap->finalizableRefs = NULL;
 
@@ -436,10 +415,6 @@ static void throwOOME()
  * In rare circumstances (JNI AttachCurrentThread) we can be called
  * from a non-VM thread.
  *
- * We implement ALLOC_NO_GC by maintaining an internal list of objects
- * that should not be collected.  This requires no actual flag storage in
- * the object itself, which is good, but makes flag queries expensive.
- *
  * Use ALLOC_DONT_TRACK when we either don't want to track an allocation
  * (because it's being done for the interpreter "new" operation and will
  * be part of the root set immediately) or we can't (because this allocation
@@ -512,36 +487,12 @@ void* dvmMalloc(size_t size, int flags)
         if ((flags & ALLOC_FINALIZABLE) != 0) {
             /* This object is an instance of a class that
              * overrides finalize().  Add it to the finalizable list.
-             *
-             * Note that until DVM_OBJECT_INIT() is called on this
-             * object, its clazz will be NULL.  Since the object is
-             * in this table, it will be scanned as part of the root
-             * set.  scanObject() explicitly deals with the NULL clazz.
              */
             if (!dvmHeapAddRefToLargeTable(&gcHeap->finalizableRefs,
                                     (Object *)ptr))
             {
                 LOGE_HEAP("dvmMalloc(): no room for any more "
                         "finalizable objects\n");
-                dvmAbort();
-            }
-        }
-
-        /* The caller may not want us to collect this object.
-         * If not, throw it in the nonCollectableRefs table, which
-         * will be added to the root set when we GC.
-         *
-         * Note that until DVM_OBJECT_INIT() is called on this
-         * object, its clazz will be NULL.  Since the object is
-         * in this table, it will be scanned as part of the root
-         * set.  scanObject() explicitly deals with the NULL clazz.
-         */
-        if ((flags & ALLOC_NO_GC) != 0) {
-            if (!dvmHeapAddToHeapRefTable(&gcHeap->nonCollectableRefs, ptr)) {
-                LOGE_HEAP("dvmMalloc(): no room for any more "
-                        "ALLOC_NO_GC objects: %zd\n",
-                        dvmHeapNumHeapRefTableEntries(
-                                &gcHeap->nonCollectableRefs));
                 dvmAbort();
             }
         }
@@ -578,13 +529,10 @@ void* dvmMalloc(size_t size, int flags)
 
     if (ptr != NULL) {
         /*
-         * If this block is immediately GCable, and they haven't asked us not
-         * to track it, add it to the internal tracking list.
-         *
-         * If there's no "self" yet, we can't track it.  Calls made before
-         * the Thread exists should use ALLOC_NO_GC.
+         * If caller hasn't asked us not to track it, add it to the
+         * internal tracking list.
          */
-        if ((flags & (ALLOC_DONT_TRACK | ALLOC_NO_GC)) == 0) {
+        if ((flags & ALLOC_DONT_TRACK) == 0) {
             dvmAddTrackedAlloc(ptr, NULL);
         }
     } else {
@@ -621,32 +569,6 @@ bool dvmIsValidObject(const Object* obj)
         return dvmHeapSourceContains(obj);
     }
     return false;
-}
-
-/*
- * Clear flags that were passed into dvmMalloc() et al.
- * e.g., ALLOC_NO_GC, ALLOC_DONT_TRACK.
- */
-void dvmClearAllocFlags(Object *obj, int mask)
-{
-    if ((mask & ALLOC_NO_GC) != 0) {
-        dvmLockHeap();
-        if (dvmIsValidObject(obj)) {
-            if (!dvmHeapRemoveFromHeapRefTable(&gDvm.gcHeap->nonCollectableRefs,
-                                               obj))
-            {
-                LOGE_HEAP("dvmMalloc(): failed to remove ALLOC_NO_GC bit from "
-                        "object 0x%08x\n", (uintptr_t)obj);
-                dvmAbort();
-            }
-//TODO: shrink if the table is very empty
-        }
-        dvmUnlockHeap();
-    }
-
-    if ((mask & ALLOC_DONT_TRACK) != 0) {
-        dvmReleaseTrackedAlloc(obj, NULL);
-    }
 }
 
 size_t dvmObjectSizeInHeap(const Object *obj)

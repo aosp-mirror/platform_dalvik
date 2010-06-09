@@ -38,7 +38,7 @@ bool dvmGcPreZygoteFork(void);
  * Basic allocation function.
  *
  * The new object will be added to the "tracked alloc" table unless
- * flags is ALLOC_DONT_TRACK or ALLOC_NO_GC.
+ * flags is ALLOC_DONT_TRACK.
  *
  * Returns NULL and throws an exception on failure.
  */
@@ -48,25 +48,17 @@ void* dvmMalloc(size_t size, int flags);
  * Allocate a new object.
  *
  * The new object will be added to the "tracked alloc" table unless
- * flags is ALLOC_DONT_TRACK or ALLOC_NO_GC.
+ * flags is ALLOC_DONT_TRACK.
  *
  * Returns NULL and throws an exception on failure.
  */
 Object* dvmAllocObject(ClassObject* clazz, int flags);
 
-/*
- * Clear flags set by dvmMalloc.  Pass in a bit mask of the flags that
- * should be cleared.
- */
-void dvmClearAllocFlags(Object* obj, int mask);
-
 /* flags for dvmMalloc */
 enum {
     ALLOC_DEFAULT       = 0x00,
-    ALLOC_NO_GC         = 0x01,     /* do not garbage collect this object */
-    ALLOC_DONT_TRACK    = 0x02,     /* don't add to internal tracking list */
-    ALLOC_FINALIZABLE   = 0x04,     /* call finalize() before freeing */
-    // ALLOC_NO_MOVE?
+    ALLOC_DONT_TRACK    = 0x01,     /* don't add to internal tracking list */
+    ALLOC_FINALIZABLE   = 0x02,     /* call finalize() before freeing */
 };
 
 /*
@@ -99,7 +91,7 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
  */
 INLINE void dvmReleaseTrackedAllocIFN(Object* obj, Thread* self, int allocFlags)
 {
-    if ((allocFlags & (ALLOC_NO_GC|ALLOC_DONT_TRACK)) == 0)
+    if ((allocFlags & ALLOC_DONT_TRACK) == 0)
         dvmReleaseTrackedAlloc(obj, self);
 }
 

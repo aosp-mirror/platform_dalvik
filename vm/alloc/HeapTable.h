@@ -27,7 +27,7 @@ struct LargeHeapRefTable {
     HeapRefTable refs;
 };
 
-bool dvmHeapInitHeapRefTable(HeapRefTable *refs, size_t nelems);
+bool dvmHeapInitHeapRefTable(HeapRefTable *refs);
 void dvmHeapFreeHeapRefTable(HeapRefTable *refs);
 void dvmHeapFreeLargeTable(LargeHeapRefTable *table);
 void dvmHeapHeapTableFree(void *ptr);
