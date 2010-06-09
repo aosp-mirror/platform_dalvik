@@ -950,8 +950,58 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
 {
     bool switchInterp = false;         /* Assume success */
     int i;
-    intptr_t filterKey = ((intptr_t) interpState->pc) >>
-                         JIT_TRACE_THRESH_FILTER_GRAN_LOG2;
+    /*
+     * A note on trace "hotness" filtering:
+     *
+     * Our first level trigger is intentionally loose - we need it to
+     * fire easily not just to identify potential traces to compile, but
+     * also to allow re-entry into the code cache.
+     *
+     * The 2nd level filter (done here) exists to be selective about
+     * what we actually compile.  It works by requiring the same
+     * trace head "key" (defined as filterKey below) to appear twice in
+     * a relatively short period of time.   The difficulty is defining the
+     * shape of the filterKey.  Unfortunately, there is no "one size fits
+     * all" approach.
+     *
+     * For spiky execution profiles dominated by a smallish
+     * number of very hot loops, we would want the second-level filter
+     * to be very selective.  A good selective filter is requiring an
+     * exact match of the Dalvik PC.  In other words, defining filterKey as:
+     *     intptr_t filterKey = (intptr_t)interpState->pc
+     *
+     * However, for flat execution profiles we do best when aggressively
+     * translating.  A heuristically decent proxy for this is to use
+     * the value of the method pointer containing the trace as the filterKey.
+     * Intuitively, this is saying that once any trace in a method appears hot,
+     * immediately translate any other trace from that same method that
+     * survives the first-level filter.  Here, filterKey would be defined as:
+     *     intptr_t filterKey = (intptr_t)interpState->method
+     *
+     * The problem is that we can't easily detect whether we're dealing
+     * with a spiky or flat profile.  If we go with the "pc" match approach,
+     * flat profiles perform poorly.  If we go with the loose "method" match,
+     * we end up generating a lot of useless translations.  Probably the
+     * best approach in the future will be to retain profile information
+     * across runs of each application in order to determine it's profile,
+     * and then choose once we have enough history.
+     *
+     * However, for now we've decided to chose a compromise filter scheme that
+     * includes elements of both.  The high order bits of the filter key
+     * are drawn from the enclosing method, and are combined with a slice
+     * of the low-order bits of the Dalvik pc of the trace head.  The
+     * looseness of the filter can be adjusted by changing with width of
+     * the Dalvik pc slice (JIT_TRACE_THRESH_FILTER_PC_BITS).  The wider
+     * the slice, the tighter the filter.
+     *
+     * Note: the fixed shifts in the function below reflect assumed word
+     * alignment for method pointers, and half-word alignment of the Dalvik pc.
+     * for method pointers and half-word alignment for dalvik pc.
+     */
+    intptr_t filterKey = (intptr_t)((u4)interpState->method << (
+                          JIT_TRACE_THRESH_FILTER_PC_BITS - 2) |
+                          (((u4)interpState->pc >> 1) &
+                          (1 << JIT_TRACE_THRESH_FILTER_PC_BITS) - 1));
     bool debugOrProfile = dvmDebuggerOrProfilerActive();
 
     /* Check if the JIT request can be handled now */
@@ -962,6 +1012,7 @@ bool dvmJitCheckTraceRequest(Thread* self, InterpState* interpState)
             /* Two-level filtering scheme */
             for (i=0; i< JIT_TRACE_THRESH_FILTER_SIZE; i++) {
                 if (filterKey == interpState->threshFilter[i]) {
+                    interpState->threshFilter[i] = 0; // Reset filter entry
                     break;
                 }
             }
