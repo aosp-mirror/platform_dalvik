@@ -216,5 +216,3 @@ void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table, bool stripLowBits)
         table = table->next;
     }
 }
-
-

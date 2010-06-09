@@ -3270,4 +3270,3 @@ static void updateRegisters(WorkState* pState, int nextInsn,
 }
 
 #endif /*#if 0*/
-

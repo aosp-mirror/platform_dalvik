@@ -8,4 +8,3 @@
     ADVANCE_PC(2)
     SET_VREG (%ecx,%eax)              # fp[AA]<- ecx]
     GOTO_NEXT
-

@@ -16,4 +16,3 @@ class Privvy implements PrivilegedAction<Integer> {
         return mValue;
     }
 }
-

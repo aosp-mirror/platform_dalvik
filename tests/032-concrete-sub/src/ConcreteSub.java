@@ -51,4 +51,3 @@ public class ConcreteSub extends AbstractBase {
         System.out.println("meth modifiers=" + meth.getModifiers());
     }
 }
-

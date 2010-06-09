@@ -22,4 +22,3 @@
     cmp     r0, #0                      @ got null?
     bne     common_invokeMethod${routine} @ no, continue
     b       common_exceptionThrown      @ yes, handle exception
-

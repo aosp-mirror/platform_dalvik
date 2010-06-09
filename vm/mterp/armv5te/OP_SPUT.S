@@ -35,4 +35,3 @@
     cmp     r0, #0                      @ success?
     bne     .L${opcode}_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-

@@ -25,4 +25,3 @@
     cmp     r0, #0                      @ failed?
     beq     common_exceptionThrown      @ yes, handle exception
     b       common_invokeMethod${routine} @ jump to common handler
-

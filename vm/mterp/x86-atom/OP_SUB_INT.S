@@ -18,4 +18,3 @@
     */
 
 %include "x86-atom/binop.S" {"instr":"subl     (rFP, %edx, 4), %ecx"}
-

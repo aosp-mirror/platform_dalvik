@@ -53,4 +53,3 @@
 
 .L${opcode}_table:
     .word   gDvmInlineOpsTable
-

@@ -41,4 +41,3 @@
     lea         8(%esp), %esp
     fstps       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      2                       # jump to next instruction
-

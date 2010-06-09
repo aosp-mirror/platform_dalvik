@@ -32,4 +32,3 @@
     GET_VREG    rINST                   # rINST<- vAA
     movl        rINST, offGlue_retval(%edx) # glue->retval<- vAA
     jmp         common_returnFromMethod # jump to common return code
-

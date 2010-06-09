@@ -1290,4 +1290,3 @@ void dvmJdwpDdmSendChunkV(JdwpState* state, int type, const struct iovec* iov,
 
     dvmJdwpSendBufferedRequest(state, wrapiov, iovcnt+1);
 }
-

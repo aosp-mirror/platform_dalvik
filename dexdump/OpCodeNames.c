@@ -327,4 +327,3 @@ const char* getOpcodeName(OpCode op)
 {
     return gOpNames[op];
 }
-

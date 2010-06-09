@@ -64,4 +64,3 @@
     sall      $$4,%eax      # index *= sizeof(table entry)
     jmp       *gDvmInlineOpsTable(%eax)
     # will return to caller of .L${opcode}_continue
-

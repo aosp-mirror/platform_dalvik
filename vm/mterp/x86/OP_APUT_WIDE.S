@@ -25,4 +25,3 @@
     movl      %ecx,(%eax)
     ADVANCE_PC(2)
     GOTO_NEXT
-

@@ -24,4 +24,3 @@ public class ConcreteSub2 extends AbstractBase {
         abstractOrNot();
     }
 }
-

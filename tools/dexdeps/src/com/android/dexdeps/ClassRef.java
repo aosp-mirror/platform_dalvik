@@ -67,4 +67,3 @@ public class ClassRef {
         return mClassName;
     }
 }
-

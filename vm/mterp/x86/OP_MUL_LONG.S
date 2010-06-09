@@ -41,4 +41,3 @@
     movl      %eax,(rFP,%ecx,4)   # v[B]<- %eax
     ADVANCE_PC(2)
     GOTO_NEXT
-

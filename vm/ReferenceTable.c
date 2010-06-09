@@ -291,4 +291,3 @@ void dvmDumpReferenceTable(const ReferenceTable* pRef, const char* descr)
     LOGW("Memory held directly by tracked refs is %d bytes\n", total);
     free(tableCopy);
 }
-

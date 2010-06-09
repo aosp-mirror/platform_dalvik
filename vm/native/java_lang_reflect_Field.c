@@ -445,4 +445,3 @@ const DalvikNativeMethod dvm_java_lang_reflect_Field[] = {
         Dalvik_java_lang_reflect_Field_getSignatureAnnotation },
     { NULL, NULL, NULL },
 };
-

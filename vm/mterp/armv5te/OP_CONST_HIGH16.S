@@ -7,4 +7,3 @@
     SET_VREG(r0, r3)                    @ vAA<- r0
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

@@ -58,4 +58,3 @@
 .L${opcode}_nsm:
     ldr     r1, [r0, #offMethod_name]   @ r1<- method name
     b       common_errNoSuchMethod
-

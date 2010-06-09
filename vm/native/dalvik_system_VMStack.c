@@ -235,4 +235,3 @@ const DalvikNativeMethod dvm_dalvik_system_VMStack[] = {
         Dalvik_dalvik_system_VMStack_getThreadStackTrace },
     { NULL, NULL, NULL },
 };
-

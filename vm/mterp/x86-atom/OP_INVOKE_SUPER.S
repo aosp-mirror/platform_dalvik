@@ -103,4 +103,3 @@
 .L${opcode}_nsm:
     movl        offMethod_name(%ecx), %edx # %edx<- method name
     jmp         common_errNoSuchMethod
-

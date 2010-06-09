@@ -83,4 +83,3 @@
     GET_VREG(r0, r3)                    @ r0<- vB (object)
     ldr     r0, [r0, #offObject_clazz]  @ r0<- obj->clazz
     b       .L${opcode}_resolved        @ pick up where we left off
-

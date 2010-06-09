@@ -5,4 +5,3 @@ public interface INoted {
     @AnnoSimpleMethod
     public int bar();
 }
-

@@ -260,4 +260,3 @@ const DalvikNativeMethod dvm_java_lang_VMThread[] = {
         Dalvik_java_lang_VMThread_yield },
     { NULL, NULL, NULL },
 };
-

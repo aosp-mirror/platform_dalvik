@@ -66,4 +66,3 @@
     movl        $$0, (rFP, rINST, 4)    # vAA<- 0
     .endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
-

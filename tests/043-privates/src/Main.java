@@ -43,4 +43,3 @@ class PrivatePackageSub extends PrivatePackage {
         return "PrivatePackageSub!";
     }
 }
-

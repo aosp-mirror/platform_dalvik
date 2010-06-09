@@ -1057,4 +1057,3 @@ IndexMapSet* dvmRewriteConstants(DvmDex* pDvmDex)
 
     return pIndexMapSet;
 }
-

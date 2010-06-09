@@ -7,4 +7,3 @@ class MirandaClass2 extends MirandaAbstract {
         return 28;
     }
 }
-

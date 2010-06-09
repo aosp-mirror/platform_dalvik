@@ -1441,4 +1441,3 @@ static void updateChecksum(u1* addr, int len, DexHeader* pHeader)
     adler = adler32(adler, addr + nonSum, len - nonSum);
     pHeader->checksum = adler;
 }
-

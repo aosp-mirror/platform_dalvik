@@ -32,4 +32,3 @@
     stmia   r9, {$result0,$result1}     @ vAA/vAA+1<- $result0/$result1
     GOTO_OPCODE(ip)                     @ jump to next instruction
     /* 12-15 instructions */
-

@@ -681,4 +681,3 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
 
     return true;
 }
-

@@ -368,4 +368,3 @@ void dvmJarFileFree(JarFile* pJarFile)
     free(pJarFile->cacheFileName);
     free(pJarFile);
 }
-

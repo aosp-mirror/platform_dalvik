@@ -50,11 +50,3 @@
     lea         20(%esp), %esp
     fstpl       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      1                       # jump to next instruction
-
-
-
-
-
-
-
-

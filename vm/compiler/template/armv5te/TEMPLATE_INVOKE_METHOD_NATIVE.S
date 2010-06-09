@@ -68,6 +68,3 @@
     mov     r0, #kCallsiteInterpreted
 #endif
     mov     pc, r1
-
-
-

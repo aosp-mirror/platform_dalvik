@@ -13,4 +13,3 @@
     @ bypass dvmSetException, just store it
     str     r1, [r0, #offThread_exception]  @ thread->exception<- obj
     b       common_exceptionThrown
-

@@ -18,4 +18,3 @@
     */
 
 %include "x86-atom/unopWide.S" {"preinstr":"xorps %xmm1, %xmm1", "instr":"psubq %xmm0, %xmm1", "result":"%xmm1"}
-

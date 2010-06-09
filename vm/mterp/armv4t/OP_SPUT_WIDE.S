@@ -44,4 +44,3 @@
     mov     r2, r0                      @ copy to r2
     bne     .L${opcode}_finish          @ yes, finish
     b       common_exceptionThrown      @ no, handle exception
-

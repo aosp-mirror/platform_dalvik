@@ -36,4 +36,3 @@ const DalvikNativeMethod dvm_java_util_concurrent_atomic_AtomicLong[] = {
         Dalvik_java_util_concurrent_atomic_AtomicLong_VMSupportsCS8 },
     { NULL, NULL, NULL },
 };
-

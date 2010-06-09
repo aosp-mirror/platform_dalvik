@@ -810,4 +810,3 @@ const DalvikNativeMethod dvm_java_lang_Class[] = {
         Dalvik_java_lang_Class_setAccessibleNoCheck },
     { NULL, NULL, NULL },
 };
-

@@ -16,5 +16,3 @@ foreach (@traces)
 }
 
 closedir DIR;
-
-

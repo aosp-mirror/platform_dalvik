@@ -1254,4 +1254,3 @@ invalid_stream:
         free(methodDescriptor);
     }
 }
-

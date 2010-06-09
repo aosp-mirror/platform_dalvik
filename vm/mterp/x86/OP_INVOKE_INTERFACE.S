@@ -36,4 +36,3 @@
     testl      %eax,%eax
     je         common_exceptionThrown
     jmp        common_invokeMethod${routine}
-

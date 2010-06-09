@@ -35,4 +35,3 @@ class MagicClass implements IMagic {
         return this.MAGIC_INT;
     }
 }
-

@@ -286,4 +286,3 @@ static bool readAndLog(int fd, BufferedData* data, const char* tag)
 
     return true;
 }
-

@@ -10,4 +10,3 @@
     ldmia   r2, {r0-r1}                 @ r0/r1 <- vAA/vAA+1
     stmia   r3, {r0-r1}                 @ retval<- r0/r1
     b       common_returnFromMethod
-

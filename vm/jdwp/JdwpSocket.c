@@ -922,4 +922,3 @@ const JdwpTransport* dvmJdwpSocketTransport(void)
 {
     return &socketTransport;
 }
-

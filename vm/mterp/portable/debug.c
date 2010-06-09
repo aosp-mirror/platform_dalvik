@@ -250,4 +250,3 @@ static void checkDebugAndProf(const u2* pc, const u4* fp, Thread* self,
     }
 #endif
 }
-

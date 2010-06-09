@@ -52,4 +52,3 @@ int main()
 
     return (result != 0);
 }
-

@@ -297,4 +297,3 @@ const DalvikNativeMethod dvm_java_lang_System[] = {
         Dalvik_java_lang_System_mapLibraryName },
     { NULL, NULL, NULL },
 };
-

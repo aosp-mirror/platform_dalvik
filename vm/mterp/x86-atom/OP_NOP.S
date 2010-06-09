@@ -39,4 +39,3 @@
 dalvik_inst:
     MTERP_ENTRY
 #endif
-

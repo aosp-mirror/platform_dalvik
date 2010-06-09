@@ -8,4 +8,3 @@ import java.lang.annotation.*;
 public @interface AnnoFancyParameter {
     double factor();
 }
-

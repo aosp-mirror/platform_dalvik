@@ -528,7 +528,6 @@ dalvik_inst:
     MTERP_ENTRY
 #endif
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MOVE: /* 0x01 */
@@ -731,7 +730,6 @@ dalvik_inst:
     movq        (rFP, %edx, 4), %xmm0   # %xmm0<- vB
     movq        %xmm0, (rFP, rINST, 4)  # vA<- vB
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* ------------------------------ */
     .balign 64
@@ -1153,7 +1151,6 @@ dalvik_inst:
     SET_VREG    %edx, rINST             # vAA<- glue->self->exception
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_RETURN_VOID: /* 0x0e */
@@ -1178,7 +1175,6 @@ dalvik_inst:
     */
 
     jmp         common_returnFromMethod
-
 
 /* ------------------------------ */
     .balign 64
@@ -1238,8 +1234,6 @@ dalvik_inst:
     GET_VREG    rINST                   # rINST<- vAA
     movl        rINST, offGlue_retval(%edx) # glue->retval<- vAA
     jmp         common_returnFromMethod # jump to common return code
-
-
 
 
 /* ------------------------------ */
@@ -1339,7 +1333,6 @@ dalvik_inst:
     GET_VREG    rINST                   # rINST<- vAA
     movl        rINST, offGlue_retval(%edx) # glue->retval<- vAA
     jmp         common_returnFromMethod # jump to common return code
-
 
 
 /* ------------------------------ */
@@ -1875,7 +1868,6 @@ dalvik_inst:
 #endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MONITOR_EXIT: /* 0x1e */
@@ -1926,7 +1918,6 @@ dalvik_inst:
     lea         8(%esp), %esp
     je          common_exceptionThrown  # handle exception
     FINISH_JMP  %edx                    # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -2419,7 +2410,6 @@ dalvik_inst:
     movl        rINST, offThread_exception(%ecx) # thread->exception<- object
     jmp         common_exceptionThrown  # handle exception
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_GOTO: /* 0x28 */
@@ -2460,7 +2450,6 @@ LOP_GOTO.S:
     shl         $1, %edx               # %edx is shifted for byte offset
     js          common_periodicChecks2  # do check on backwards branch
     FINISH_RB   %edx, %ecx              # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -2542,7 +2531,6 @@ LOP_GOTO.S:
     shl         $1, %edx               # %edx is doubled to get the byte offset
     jc          common_periodicChecks2  # do check on backwards branch
     FINISH_RB   %edx, %ecx              # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -3975,7 +3963,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_3F: /* 0x3f */
@@ -4030,7 +4017,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -4089,7 +4075,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_41: /* 0x41 */
@@ -4144,7 +4129,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -4203,7 +4187,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_43: /* 0x43 */
@@ -4258,7 +4241,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -5876,8 +5858,6 @@ OP_IF_LEZ_2f:
     jmp         .LOP_IPUT_OBJECT_finish
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_BOOLEAN: /* 0x5c */
@@ -6328,8 +6308,6 @@ OP_IF_LEZ_2f:
     jmp         .LOP_SGET_OBJECT_finish
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SGET_BOOLEAN: /* 0x63 */
@@ -6393,7 +6371,6 @@ OP_IF_LEZ_2f:
     movl        (%ecx, %eax, 4), %ecx   # %ecx<- resolved StaticField ptr
     je          .LOP_SGET_BOOLEAN_resolve
     jmp         .LOP_SGET_BOOLEAN_finish
-
 
 
 /* ------------------------------ */
@@ -7377,7 +7354,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_VIRTUAL_RANGE: /* 0x74 */
@@ -7851,7 +7827,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_7A: /* 0x7a */
@@ -7906,7 +7881,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -8111,9 +8085,6 @@ OP_IF_LEZ_2f:
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_NOT_LONG: /* 0x7e */
@@ -8180,8 +8151,6 @@ OP_IF_LEZ_2f:
     pandn  0xFFFFFFFF, %xmm0                              # do operation part 2
     movq        %xmm0, (rFP, %ecx, 4) # vA<- result
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
-
-
 
 
 /* ------------------------------ */
@@ -8319,9 +8288,6 @@ OP_IF_LEZ_2f:
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INT_TO_LONG: /* 0x81 */
@@ -8407,7 +8373,6 @@ OP_IF_LEZ_2f:
     cvtsi2ss    (rFP,%eax,4), %xmm0     # %xmm0<- vB
     movss       %xmm0, (rFP, rINST, 4)  # vA<- %xmm0
     FINISH      1                       # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -8597,7 +8562,6 @@ OP_IF_LEZ_2f:
     fildll      (rFP, rINST, 4)         # FPU<- vB
     fstpl       (rFP, %ecx, 4)          # vA<- FPU; (double) vB
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
-
 
 /* ------------------------------ */
     .balign 64
@@ -9066,7 +9030,6 @@ OP_IF_LEZ_2f:
     SET_VREG    %ecx, rINST             # vA<- result
     FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_INT: /* 0x90 */
@@ -9135,8 +9098,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT: /* 0x91 */
@@ -9203,9 +9164,6 @@ OP_IF_LEZ_2f:
     subl     (rFP, %edx, 4), %ecx                              # %ecx<- vBB op vCC
     SET_VREG    %ecx, rINST             # vAA<- %ecx; result
     OLD_JMP_4   %eax
-
-
-
 
 
 /* ------------------------------ */
@@ -9328,7 +9286,6 @@ OP_IF_LEZ_2f:
     SET_VREG %edx rINST  # vAA<- %edx (remainder)
     FGETOP_JMP  2 %eax
     .endif
-
 
 
 /* ------------------------------ */
@@ -9480,9 +9437,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_OR_INT: /* 0x96 */
@@ -9551,8 +9505,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT: /* 0x97 */
@@ -9619,8 +9571,6 @@ OP_IF_LEZ_2f:
     xor     (rFP, %edx, 4), %ecx                              # %ecx<- vBB op vCC
     SET_VREG    %ecx, rINST             # vAA<- %ecx; result
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -10468,7 +10418,6 @@ OP_IF_LEZ_2f:
     movsd       %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      2                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_FLOAT: /* 0xa6 */
@@ -10751,7 +10700,6 @@ OP_IF_LEZ_2f:
     fstps       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      2                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE: /* 0xab */
@@ -10989,7 +10937,6 @@ OP_IF_LEZ_2f:
     FFETCH_ADV  2, %eax                 # %eax<- next instruction hi; fetch, advance
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_DOUBLE: /* 0xaf */
@@ -11108,8 +11055,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SUB_INT_2ADDR: /* 0xb1 */
@@ -11178,8 +11123,6 @@ OP_IF_LEZ_2f:
     subl     %edx, (rFP, rINST, 4)    # %ecx<- vA op vB
     #FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -11300,7 +11243,6 @@ OP_IF_LEZ_2f:
 
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_REM_INT_2ADDR: /* 0xb4 */
@@ -11385,7 +11327,6 @@ OP_IF_LEZ_2f:
 
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_AND_INT_2ADDR: /* 0xb5 */
@@ -11454,8 +11395,6 @@ OP_IF_LEZ_2f:
     andl     %edx, (rFP, rINST, 4)    # %ecx<- vA op vB
     #FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -11528,8 +11467,6 @@ OP_IF_LEZ_2f:
     OLD_JMP_4   %eax
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_XOR_INT_2ADDR: /* 0xb7 */
@@ -11598,8 +11535,6 @@ OP_IF_LEZ_2f:
     xor     %edx, (rFP, rINST, 4)    # %ecx<- vA op vB
     #FGETOP_JMP  1, %eax                 # jump to next instruction; getop, jmp
     OLD_JMP_4   %eax
-
-
 
 
 /* ------------------------------ */
@@ -12385,7 +12320,6 @@ OP_IF_LEZ_2f:
     movq        %xmm1, (rFP, rINST, 4)  # vA<- shifted vA
     FINISH      1                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_SHR_LONG_2ADDR: /* 0xc4 */
@@ -12478,7 +12412,6 @@ OP_IF_LEZ_2f:
     psrlq       %xmm0, %xmm1            # %xmm1<- shifted vA
     movq        %xmm1, (rFP, rINST, 4)  # vA<- shifted vA
     FINISH      1                       # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -12769,9 +12702,6 @@ OP_IF_LEZ_2f:
     fstps       (rFP, rINST, 4)
     FINISH      1                       # jump to next instruction
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_ADD_DOUBLE_2ADDR: /* 0xcb */
@@ -13017,7 +12947,6 @@ OP_IF_LEZ_2f:
     fdivl       (rFP, rINST, 4)         # divide double; vA/vB
     fstpl       (rFP, %edx, 4)          # vAA<- result
     FINISH      1                       # jump to next instruction
-
 
 /* ------------------------------ */
     .balign 64
@@ -13729,7 +13658,6 @@ OP_IF_LEZ_2f:
     SET_VREG    %edx, rINST             # vAA<- %edx; result
     FINISH      2                       # jump to next instruction
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_MUL_INT_LIT8: /* 0xda */
@@ -14407,7 +14335,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_E4: /* 0xe4 */
@@ -14462,7 +14389,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -14521,7 +14447,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_E6: /* 0xe6 */
@@ -14578,7 +14503,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_E7: /* 0xe7 */
@@ -14633,7 +14557,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -14978,7 +14901,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_QUICK: /* 0xf2 */
@@ -15064,8 +14986,6 @@ OP_IF_LEZ_2f:
     movq        (%ecx, %edx), %xmm0     # %xmm0<- object field
     movq        %xmm0, (rFP, rINST, 4)  # fp[A]<- %xmm0
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
-
 
 /* ------------------------------ */
     .balign 64
@@ -15173,8 +15093,6 @@ OP_IF_LEZ_2f:
     movl        rINST, (%eax, %ecx)     # object field<- vA
     FGETOP_JMP  2, %edx                 # jump to next instruction; getop, jmp
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_IPUT_WIDE_QUICK: /* 0xf6 */
@@ -15217,7 +15135,6 @@ OP_IF_LEZ_2f:
     movq        (rFP, rINST, 4), %xmm0  # %xmm0<- fp[A]
     movq        %xmm0, (%edx, %ecx)     # object field<- %xmm0; fp[A]
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* ------------------------------ */
     .balign 64
@@ -15282,8 +15199,6 @@ OP_IF_LEZ_2f:
     FGETOP_JMP  2, %edx                 # jump to next instruction; getop, jmp
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_VIRTUAL_QUICK: /* 0xf8 */
@@ -15325,8 +15240,6 @@ OP_IF_LEZ_2f:
     movl        offClassObject_vtable(%edx), %edx # %edx<- thisPtr->clazz->vtable
     movl        (%edx, %ecx, 4), %ecx   # %ecx<- vtable[methodIndex]
     jmp         common_invokeMethodNoRange # invoke method common code
-
-
 
 /* ------------------------------ */
     .balign 64
@@ -15391,8 +15304,6 @@ OP_IF_LEZ_2f:
     jmp         common_invokeMethodRange # invoke method common code
 
 
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_INVOKE_SUPER_QUICK: /* 0xfa */
@@ -15436,9 +15347,6 @@ OP_IF_LEZ_2f:
     movl        (%eax, %ecx, 4), %ecx   # %ecx<- vtable[methodIndex]
     je          common_errNullObject    # handle null object
     jmp         common_invokeMethodNoRange # invoke method common code
-
-
-
 
 /* ------------------------------ */
     .balign 64
@@ -15505,9 +15413,6 @@ OP_IF_LEZ_2f:
     jmp         common_invokeMethodRange # invoke method common code
 
 
-
-
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_FC: /* 0xfc */
@@ -15562,7 +15467,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 /* ------------------------------ */
@@ -15621,7 +15525,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_FE: /* 0xfe */
@@ -15678,7 +15581,6 @@ OP_IF_LEZ_2f:
     call        common_abort
 
 
-
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_FF: /* 0xff */
@@ -15733,7 +15635,6 @@ OP_IF_LEZ_2f:
     */
 
     call        common_abort
-
 
 
 
@@ -16112,7 +16013,6 @@ dvmAsmSisterStart:
     SET_VREG    %eax, rINST             # vA<- pArray
     FINISH      2                       # jump to next instruction
 
-
 /* continuation for OP_FILLED_NEW_ARRAY */
 
 .LOP_FILLED_NEW_ARRAY_break:
@@ -16325,11 +16225,9 @@ dvmAsmSisterStart:
 .LOP_PACKED_SWITCH_finish:
     FINISH_RB   %edx, %ecx              # jump to next instruction
 
-
 /* continuation for OP_SPARSE_SWITCH */
 .LOP_SPARSE_SWITCH_finish:
     FINISH_RB   %edx, %ecx              # jump to next instruction
-
 
 /* continuation for OP_CMPL_FLOAT */
 .LOP_CMPL_FLOAT_greater:
@@ -16396,8 +16294,6 @@ dvmAsmSisterStart:
 .LOP_CMP_LONG_greater:
     movl        $0x1, (rFP, rINST, 4)  # vAA<- greater than
     FINISH      2                       # jump to next instruction
-
-
 
 /* continuation for OP_APUT_OBJECT */
 
@@ -16477,8 +16373,6 @@ dvmAsmSisterStart:
     movq        (%ecx, %edx), %xmm0     # %xmm0<- object field
     movq        %xmm0, (rFP, rINST, 4)  # vA<- %xmm0; object field
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
-
 
 /* continuation for OP_IGET_OBJECT */
 
@@ -16644,7 +16538,6 @@ dvmAsmSisterStart:
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_IPUT_WIDE */
 
 .LOP_IPUT_WIDE_finish2:
@@ -16675,8 +16568,6 @@ dvmAsmSisterStart:
     movq        %xmm0, (%ecx, %edx)     # object field<- %xmm0; vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
-
 /* continuation for OP_IPUT_OBJECT */
 
 .LOP_IPUT_OBJECT_finish:
@@ -16705,7 +16596,6 @@ dvmAsmSisterStart:
     GET_VREG    rINST                   # rINST<- vA
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_IPUT_BOOLEAN */
 
@@ -16736,7 +16626,6 @@ dvmAsmSisterStart:
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_IPUT_BYTE */
 
 .LOP_IPUT_BYTE_finish:
@@ -16765,7 +16654,6 @@ dvmAsmSisterStart:
     GET_VREG    rINST                   # rINST<- vA
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_IPUT_CHAR */
 
@@ -16796,7 +16684,6 @@ dvmAsmSisterStart:
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_IPUT_SHORT */
 
 .LOP_IPUT_SHORT_finish:
@@ -16825,7 +16712,6 @@ dvmAsmSisterStart:
     GET_VREG    rINST                   # rINST<- vA
     movl     rINST, (%edx, %ecx)     # object field<- vA
     FGETOP_JMP  2, %eax                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_SGET */
 
@@ -17171,7 +17057,6 @@ dvmAsmSisterStart:
     movl        (%edx, %eax, 4), %ecx   # %ecx<- vtable[methodIndex]
     jmp         common_invokeMethodNoRange # invoke method common code
 
-
 /* continuation for OP_INVOKE_SUPER */
 
 .LOP_INVOKE_SUPER_continue2:
@@ -17222,7 +17107,6 @@ dvmAsmSisterStart:
     movl        offMethod_name(%ecx), %edx # %edx<- method name
     jmp         common_errNoSuchMethod
 
-
 /* continuation for OP_INVOKE_DIRECT */
 
    /*
@@ -17267,8 +17151,6 @@ dvmAsmSisterStart:
     je          common_exceptionThrown
     movl        %eax, %ecx              # %ecx<- method
     jmp         common_invokeMethodNoRange # invoke method common code
-
-
 
 /* continuation for OP_INVOKE_INTERFACE */
 .LOP_INVOKE_INTERFACE_break:
@@ -17323,7 +17205,6 @@ dvmAsmSisterStart:
     movl        (%edx, %eax, 4), %ecx   # %ecx<- vtable[methodIndex]
     jmp         common_invokeMethodRange # invoke method common code
 
-
 /* continuation for OP_INVOKE_SUPER_RANGE */
 
 .LOP_INVOKE_SUPER_RANGE_continue2:
@@ -17374,7 +17255,6 @@ dvmAsmSisterStart:
     movl        offMethod_name(%ecx), %edx # %edx<- method name
     jmp         common_errNoSuchMethod
 
-
 /* continuation for OP_INVOKE_DIRECT_RANGE */
 
    /*
@@ -17419,8 +17299,6 @@ dvmAsmSisterStart:
     je          common_exceptionThrown
     movl        %eax, %ecx              # %ecx<- method
     jmp         common_invokeMethodRange # invoke method common code
-
-
 
 /* continuation for OP_INVOKE_INTERFACE_RANGE */
 .LOP_INVOKE_INTERFACE_RANGE_break:
@@ -17498,8 +17376,6 @@ dvmAsmSisterStart:
     movq        %xmm0, (rFP, %edx, 4)   # vA<- %xmm0; negInf
     FINISH      1                       # jump to next instruction
 
-
-
 /* continuation for OP_DOUBLE_TO_INT */
 
 .LOP_DOUBLE_TO_INT_break:
@@ -17527,7 +17403,6 @@ dvmAsmSisterStart:
     fstps       (rFP, %edx, 4)
     movl        $0x80000000,  (rFP, %edx, 4) # vA<- negInf
     FINISH      1                       # jump to next instruction
-
 
 /* continuation for OP_DOUBLE_TO_LONG */
 
@@ -17559,7 +17434,6 @@ dvmAsmSisterStart:
     fstpl       (rFP, %edx, 4)          # move converted int
     movq        %xmm0, (rFP, %edx, 4)   # vA<- %xmm0; negInf
     FINISH      1                       # jump to next instruction
-
 
 /* continuation for OP_DIV_INT */
 .LOP_DIV_INT_break:
@@ -17602,7 +17476,6 @@ dvmAsmSisterStart:
     movl        %eax, (rFP, rINST, 4)   # vAA<- results lo
     FINISH      2                       # jump to next instruction
 
-
 /* continuation for OP_DIV_LONG */
 .LOP_DIV_LONG_finish:
     movq        %xmm0, -16(%esp)        # push arg vBB,vBB+1
@@ -17636,7 +17509,6 @@ dvmAsmSisterStart:
     movq        %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      2                       # jump to next instruction
 
-
 /* continuation for OP_REM_DOUBLE */
 
 .LOP_REM_DOUBLE_break:
@@ -17645,7 +17517,6 @@ dvmAsmSisterStart:
     lea         16(%esp), %esp
     fstpl       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      2                       # jump to next instruction
-
 
 /* continuation for OP_DIV_INT_2ADDR */
 .LOP_DIV_INT_2ADDR_break:
@@ -17657,7 +17528,6 @@ dvmAsmSisterStart:
     .endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
 
-
 /* continuation for OP_REM_INT_2ADDR */
 .LOP_REM_INT_2ADDR_break:
     FFETCH_ADV  1, %edx                 # %ecx<- next instruction hi; fetch, advance
@@ -17667,7 +17537,6 @@ dvmAsmSisterStart:
     movl        $0, (rFP, rINST, 4)    # vAA<- 0
     .endif
     FGETOP_JMP  1, %edx                 # jump to next instruction; getop, jmp
-
 
 /* continuation for OP_MUL_LONG_2ADDR */
 
@@ -17691,7 +17560,6 @@ dvmAsmSisterStart:
     movl        %ecx, 4(rFP, %edx, 4)   # vA+1<- results hi
     movl        %eax, (rFP, %edx, 4)    # vA<- results lo
     FINISH      1                       # jump to next instruction
-
 
 /* continuation for OP_DIV_LONG_2ADDR */
 .LOP_DIV_LONG_2ADDR_break:
@@ -17726,8 +17594,6 @@ dvmAsmSisterStart:
     movq        %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      1                       # jump to next instruction
 
-
-
 /* continuation for OP_REM_DOUBLE_2ADDR */
 
 .LOP_REM_DOUBLE_2ADDR_break:
@@ -17736,14 +17602,6 @@ dvmAsmSisterStart:
     lea         20(%esp), %esp
     fstpl       (rFP, rINST, 4)         # vAA<- remainder; return of fmod
     FINISH      1                       # jump to next instruction
-
-
-
-
-
-
-
-
 
 /* continuation for OP_DIV_INT_LIT16 */
 .LOP_DIV_INT_LIT16_break:
@@ -17756,7 +17614,6 @@ dvmAsmSisterStart:
     movzbl      1(rPC), rINST
     jmp         *dvmAsmInstructionJmpTable(, %edx, 4)
 
-
 /* continuation for OP_REM_INT_LIT16 */
 .LOP_REM_INT_LIT16_break:
     movzbl      (rPC), %edx
@@ -17767,7 +17624,6 @@ dvmAsmSisterStart:
     .endif
     movzbl      1(rPC), rINST
     jmp         *dvmAsmInstructionJmpTable(, %edx, 4)
-
 
 /* continuation for OP_DIV_INT_LIT8 */
 .LOP_DIV_INT_LIT8_break:

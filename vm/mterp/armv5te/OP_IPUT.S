@@ -44,4 +44,3 @@
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
     $store  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

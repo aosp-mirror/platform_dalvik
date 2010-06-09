@@ -19,4 +19,3 @@ public class GetNonexistent {
         Object obj = Holder.mObject;
     }
 }
-

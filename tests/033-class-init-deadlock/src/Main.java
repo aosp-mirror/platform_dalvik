@@ -49,4 +49,3 @@ class B {
         Main.bInitialized = true;
     }
 }
-

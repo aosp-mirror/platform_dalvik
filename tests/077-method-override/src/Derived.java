@@ -57,4 +57,3 @@ public class Derived extends Base {
         System.out.println("overrideStaticWithVirtual: Derived");
     }
 }
-

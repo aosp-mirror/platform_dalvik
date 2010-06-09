@@ -1868,7 +1868,6 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
     FINISH(2);
 OP_END
 
-
 /* File: c/OP_FILLED_NEW_ARRAY.c */
 HANDLE_OPCODE(OP_FILLED_NEW_ARRAY /*vB, {vD, vE, vF, vG, vA}, class@CCCC*/)
     GOTO_invoke(filledNewArray, false);
@@ -4174,5 +4173,4 @@ bail_switch:
         pc - curMethod->insns, fp);
     return true;
 }
-
 

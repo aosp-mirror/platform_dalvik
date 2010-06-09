@@ -62,4 +62,3 @@ const DalvikNativeMethod dvm_java_lang_SystemProperties[] = {
         Dalvik_java_lang_SystemProperties_postInit },
     { NULL, NULL, NULL },
 };
-

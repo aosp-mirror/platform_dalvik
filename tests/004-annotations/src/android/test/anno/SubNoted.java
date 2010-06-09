@@ -10,4 +10,3 @@ public class SubNoted extends SimplyNoted implements INoted {
         return 0;
     }
 }
-

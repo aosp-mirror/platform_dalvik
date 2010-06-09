@@ -206,4 +206,3 @@ Notes:
  * to expand the macros into assembler assignment statements.
  */
 #include "../common/asm-constants.h"
-

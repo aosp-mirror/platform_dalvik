@@ -5832,4 +5832,3 @@ static void dumpRegTypes(const Method* meth, const InsnFlags* insnFlags,
                 NULL, logLocalsCb, &addr);
     }
 }
-

@@ -411,4 +411,3 @@ public class ManyInterfaces
         }
     }
 }
-

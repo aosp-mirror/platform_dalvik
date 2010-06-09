@@ -109,4 +109,3 @@ const DalvikNativeMethod dvm_java_lang_Object[] = {
         Dalvik_java_lang_Object_getClass },
     { NULL, NULL, NULL },
 };
-

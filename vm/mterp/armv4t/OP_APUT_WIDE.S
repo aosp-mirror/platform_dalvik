@@ -29,4 +29,3 @@
     add     r0, #offArrayObject_contents
     stmia   r0, {r2-r3}                 @ vBB[vCC] <- r2/r3
     GOTO_OPCODE(ip)                     @ jump to next instruction
-

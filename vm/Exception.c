@@ -1304,4 +1304,3 @@ void dvmLogExceptionStackTrace(void)
         exception = cause;
     }
 }
-

@@ -105,4 +105,3 @@ public class Main {
         System.out.println("wimp: " + wimpString(wimp));
     }
 }
-

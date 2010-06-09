@@ -112,4 +112,3 @@ bool dvmTestAtomicSpeed(void)
 
     return true;
 }
-

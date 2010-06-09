@@ -34,4 +34,3 @@ public class DoubledExtendOkay extends BaseOkay {
         return "DoubledExtendOkay 2";
     }
 }
-

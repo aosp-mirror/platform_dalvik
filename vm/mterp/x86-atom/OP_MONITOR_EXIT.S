@@ -44,4 +44,3 @@
     lea         8(%esp), %esp
     je          common_exceptionThrown  # handle exception
     FINISH_JMP  %edx                    # jump to next instruction
-

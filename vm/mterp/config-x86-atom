@@ -302,5 +302,3 @@ import cstubs/enddefs.c
 
 # common subroutines for asm
 import x86-atom/footer.S
-
-

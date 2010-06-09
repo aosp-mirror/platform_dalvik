@@ -5,4 +5,3 @@ dumping it.
 The salient bit of parsing tested here is that the class has a single
 method with a simple Code attribute, which itself has a syntactically
 valid LocalVariableTable attribute.
-

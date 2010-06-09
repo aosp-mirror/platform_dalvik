@@ -68,5 +68,3 @@
     je          common_exceptionThrown
     movl        %eax, %ecx              # %ecx<- method
     jmp         common_invokeMethod${routine} # invoke method common code
-
-

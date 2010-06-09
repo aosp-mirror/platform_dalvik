@@ -2182,4 +2182,3 @@ bool dvmEncodedArrayIteratorGetNext(EncodedArrayIterator* iterator,
     iterator->elementsLeft--;
     return true;
 }
-

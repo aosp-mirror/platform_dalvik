@@ -21,4 +21,3 @@ package other;
 
     public static int blah = 5;
 }
-

@@ -595,4 +595,3 @@ ArrayObject* dvmDdmGetRecentAllocations(void)
         memcpy(arrayObj->contents, data, len);
     return arrayObj;
 }
-

@@ -90,4 +90,3 @@
     je          common_exceptionThrown  # handle exception
     SET_VREG    %eax, rINST             # vA<- pArray
     FINISH      2                       # jump to next instruction
-

@@ -95,4 +95,3 @@ public class Main {
         int1.position (0);
     }
 }
-

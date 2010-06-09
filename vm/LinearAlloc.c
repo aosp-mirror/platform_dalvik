@@ -702,4 +702,3 @@ bool dvmLinearAllocContains(const void* start, size_t length)
     return (char*) start >= pHdr->mapAddr &&
            ((char*)start + length) <= (pHdr->mapAddr + pHdr->curOffset);
 }
-

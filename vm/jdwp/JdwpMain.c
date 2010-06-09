@@ -439,4 +439,3 @@ s8 dvmJdwpLastDebuggerActivity(JdwpState* state)
     //LOGI("+++ interval=%lld\n", now - last);
     return now - last;
 }
-

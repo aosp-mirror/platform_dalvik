@@ -759,4 +759,3 @@ const JdwpTransport* dvmJdwpAndroidAdbTransport(void)
 {
     return &socketTransport;
 }
-

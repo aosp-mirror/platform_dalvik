@@ -40,5 +40,3 @@
     $instr                              # %ecx<- vBB op vCC
     SET_VREG    %ecx, rINST             # vAA<- %ecx; result
     OLD_JMP_4   %eax
-
-

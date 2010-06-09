@@ -148,4 +148,3 @@ dvmMterpStdBail:
  */
 strBadEntryPoint:
     .word   .LstrBadEntryPoint
-

@@ -5,4 +5,3 @@ public class Base implements Defs {
         System.out.println("whee");
     }
 };
-

@@ -127,4 +127,3 @@
     call    dvmThrowException
     UNSPILL(rPC)
     jmp     common_exceptionThrown
-

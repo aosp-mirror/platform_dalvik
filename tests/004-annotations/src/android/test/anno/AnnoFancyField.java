@@ -10,4 +10,3 @@ import java.lang.annotation.*;
 public @interface AnnoFancyField {
     public String nombre() default "no se";
 }
-

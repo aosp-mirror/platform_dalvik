@@ -33,4 +33,3 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
     }
     FINISH(2);
 OP_END
-

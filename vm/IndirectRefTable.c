@@ -499,4 +499,3 @@ void dvmDumpIndirectRefTable(const IndirectRefTable* pRef, const char* descr)
     LOGW("Memory held directly by native code is %d bytes\n", total);
     free(tableCopy);
 }
-

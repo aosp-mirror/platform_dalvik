@@ -63,4 +63,3 @@ x /20i (char *) &codePC+1
 
 Issue the following command to see code around LR
 x /20i (char *) &codeLR+1
-

@@ -531,4 +531,3 @@ const char* dexParameterIteratorNextDescriptor(
 
     return dexStringByTypeIdx(pIterator->proto->dexFile, idx);
 }
-

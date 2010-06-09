@@ -20,4 +20,3 @@
 public interface ICommon2 {
     public DoubledImplement2 getDoubledInstance2();
 }
-

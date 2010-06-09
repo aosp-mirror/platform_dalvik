@@ -716,4 +716,3 @@ int main(int argc, char** argv)
         fclose(out);
     return (cc != 0);
 }
-

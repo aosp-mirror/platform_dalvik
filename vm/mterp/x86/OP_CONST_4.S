@@ -8,4 +8,3 @@
     sarl    $$4,%eax
     SET_VREG(%eax,%ecx)
     GOTO_NEXT
-

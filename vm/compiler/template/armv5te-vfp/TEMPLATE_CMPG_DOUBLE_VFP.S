@@ -31,4 +31,3 @@
     mvnmi   r0, #0                      @ (less than) r0<- -1
     moveq   r0, #0                      @ (equal) r0<- 0
     bx      lr
-

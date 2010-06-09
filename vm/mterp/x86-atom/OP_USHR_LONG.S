@@ -37,4 +37,3 @@
     psrlq       %xmm0, %xmm1            # %xmm1<- shifted vBB
     movsd       %xmm1, (rFP, rINST, 4)  # vAA<- shifted vBB
     FINISH      2                       # jump to next instruction
-

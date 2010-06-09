@@ -38,6 +38,3 @@
     movl        (%eax, %ecx, 4), %ecx   # %ecx<- vtable[methodIndex]
     je          common_errNullObject    # handle null object
     jmp         common_invokeMethod${routine} # invoke method common code
-
-
-

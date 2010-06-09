@@ -50,4 +50,3 @@
 %break
 .L${opcode}_finish:
     FINISH_RB   %edx, %ecx              # jump to next instruction
-

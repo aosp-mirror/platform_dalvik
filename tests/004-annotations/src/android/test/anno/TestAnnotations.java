@@ -175,4 +175,3 @@ public class TestAnnotations {
         System.out.println("SubNoted.get(AnnoSimpleType) = " + anno);
     }
 }
-

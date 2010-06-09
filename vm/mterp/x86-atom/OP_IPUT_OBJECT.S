@@ -18,5 +18,3 @@
     */
 
 %include "x86-atom/OP_IPUT.S"
-
-

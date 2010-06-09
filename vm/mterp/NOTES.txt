@@ -69,4 +69,3 @@ Any solution must work correctly when returning into or returning from native
 code.  JNI handles returns from interp->native by adding the value to the
 local references table, but returns from native->interp are simply stored
 in the usual "retval".
-

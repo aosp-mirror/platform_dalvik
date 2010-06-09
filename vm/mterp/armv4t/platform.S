@@ -36,4 +36,3 @@
     ldmfd   sp!, {\regs,lr}
     bx      lr
 .endm
-

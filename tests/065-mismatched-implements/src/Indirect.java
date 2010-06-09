@@ -25,4 +25,3 @@ public class Indirect {
         Base base = new Base();
     }
 }
-

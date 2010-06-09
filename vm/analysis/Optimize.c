@@ -976,4 +976,3 @@ static bool rewriteExecuteInlineRange(Method* method, u2* insns,
 
     return false;
 }
-

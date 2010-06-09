@@ -226,4 +226,3 @@ public class FancyLoader extends ClassLoader {
         return res;
     }
 }
-

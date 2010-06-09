@@ -1380,4 +1380,3 @@ void dvmDumpRunningThreadStack(const DebugOutputTarget* target, Thread* thread)
     dumpFrames(target, stackCopy + fpOffset, thread);
     free(stackCopy);
 }
-

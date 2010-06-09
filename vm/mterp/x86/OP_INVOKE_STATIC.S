@@ -34,4 +34,3 @@
     testl     %eax,%eax                 # got null?
     jne       common_invokeMethod${routine}
     jmp       common_exceptionThrown
-

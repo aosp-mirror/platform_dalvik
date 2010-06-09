@@ -5,4 +5,3 @@
 public class Holder {
     public Runnable mValue;
 }
-

@@ -291,4 +291,3 @@ int main(int argc, char* const argv[])
     free(gParms.argCopy);
     return result;
 }
-

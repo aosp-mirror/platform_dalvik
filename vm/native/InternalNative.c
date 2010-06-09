@@ -346,4 +346,3 @@ bool dvmIsPrivilegedMethod(const Method* method)
     }
     return false;
 }
-

@@ -11,4 +11,3 @@ public interface Iface1 {
 
     public String mWahoo = new String("wahoo");
 }
-

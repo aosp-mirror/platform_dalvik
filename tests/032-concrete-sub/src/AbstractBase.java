@@ -24,4 +24,3 @@ public abstract class AbstractBase {
 
     public void abstractOrNot() {}
 }
-

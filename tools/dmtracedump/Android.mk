@@ -20,5 +20,3 @@ LOCAL_CFLAGS += -O0 -g
 LOCAL_C_INCLUDES += dalvik/vm
 LOCAL_MODULE := create_test_dmtrace
 include $(BUILD_HOST_EXECUTABLE)
-
-

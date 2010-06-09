@@ -224,4 +224,3 @@ hprofFreeContext(hprof_context_t *ctx)
     free(ctx->fileDataPtr);
     free(ctx);
 }
-

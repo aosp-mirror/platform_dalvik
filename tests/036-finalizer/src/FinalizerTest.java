@@ -21,4 +21,3 @@ public class FinalizerTest {
         mReborn = this;
     }
 }
-

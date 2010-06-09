@@ -471,4 +471,3 @@ char dvmDetermineCat1Const(s4 value)
     else
         return kRegTypeInteger;
 }
-

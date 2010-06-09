@@ -140,4 +140,3 @@ int dexOptCreateEmptyHeader(int fd)
 
     return 0;
 }
-

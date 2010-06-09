@@ -347,4 +347,3 @@ const DalvikNativeMethod dvm_sun_misc_Unsafe[] = {
       Dalvik_sun_misc_Unsafe_putObject },
     { NULL, NULL, NULL },
 };
-

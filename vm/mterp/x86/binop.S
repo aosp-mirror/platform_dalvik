@@ -18,4 +18,3 @@
     ADVANCE_PC(2)
     SET_VREG($result,%ecx)
     GOTO_NEXT
-

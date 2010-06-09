@@ -343,4 +343,3 @@ class SubOther extends OtherPackage {
     }
 
 }
-

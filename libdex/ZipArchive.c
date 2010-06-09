@@ -745,4 +745,3 @@ int dexZipExtractEntryToFile(const ZipArchive* pArchive,
 bail:
     return result;
 }
-

@@ -8,4 +8,3 @@ import java.lang.annotation.*;
 public @interface AnnoFancyConstructor {
     public int numArgs() default 0;
 }
-

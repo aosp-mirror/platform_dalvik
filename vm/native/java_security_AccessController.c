@@ -137,4 +137,3 @@ const DalvikNativeMethod dvm_java_security_AccessController[] = {
         Dalvik_java_security_AccessController_getStackDomains },
     { NULL, NULL, NULL },
 };
-

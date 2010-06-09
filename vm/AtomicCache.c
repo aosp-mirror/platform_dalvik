@@ -170,4 +170,3 @@ void dvmDumpAtomicCacheStats(const AtomicCache* pCache)
                 (pCache->fail + pCache->hits + pCache->misses + pCache->fills),
         pCache->numEntries);
 }
-

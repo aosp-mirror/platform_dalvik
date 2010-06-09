@@ -521,4 +521,3 @@ int dvmHashcmpStrings(const void* vstrObj1, const void* vstrObj2)
                   (const u2*) chars2->contents + offset2,
                   len1 * sizeof(u2));
 }
-

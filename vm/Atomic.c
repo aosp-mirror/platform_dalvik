@@ -222,4 +222,3 @@ int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
 }
 
 #endif
-

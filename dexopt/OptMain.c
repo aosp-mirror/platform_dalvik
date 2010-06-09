@@ -485,4 +485,3 @@ int main(int argc, char* const argv[])
     fprintf(stderr, "Usage: don't use this\n");
     return 1;
 }
-

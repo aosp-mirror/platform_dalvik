@@ -9,4 +9,3 @@ do
     G=$2/`echo $F | sed "s/.*\\///g"`.html
     dmtracedump -h -p $F > $G
 done
-

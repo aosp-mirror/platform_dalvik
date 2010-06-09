@@ -44,4 +44,3 @@
     stmia   r2, {r0-r1}                 @ obj.field (64 bits, aligned)<- r0/r1
     .endif
     GOTO_OPCODE(r10)                    @ jump to next instruction
-

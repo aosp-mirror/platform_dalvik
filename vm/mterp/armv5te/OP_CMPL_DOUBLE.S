@@ -46,4 +46,3 @@
     bcc     .L${opcode}_finish
     $naninst                            @ r1<- 1 or -1 for NaN
     b       .L${opcode}_finish
-

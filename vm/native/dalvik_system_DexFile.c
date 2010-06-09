@@ -447,4 +447,3 @@ const DalvikNativeMethod dvm_dalvik_system_DexFile[] = {
         Dalvik_dalvik_system_DexFile_isDexOptNeeded },
     { NULL, NULL, NULL },
 };
-

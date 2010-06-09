@@ -31,4 +31,3 @@
 .L${opcode}_greater:
     mov     r0, #1                      @ r0<- 1
     bx      lr
-

@@ -2203,4 +2203,3 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
     /* tell the VM that GC is okay again */
     dvmDbgThreadWaiting();
 }
-

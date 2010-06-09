@@ -16,4 +16,3 @@ class DoubledImplement implements ICommon {
         System.out.println("DoubledImplement one");
     }
 }
-
