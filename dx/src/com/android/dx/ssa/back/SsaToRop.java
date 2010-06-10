@@ -251,6 +251,7 @@ public class SsaToRop {
         // Exit block may be null.
         SsaBasicBlock exitBlock = ssaMeth.getExitBlock();
 
+        ssaMeth.computeReachability();
         int ropBlockCount = ssaMeth.getCountReachableBlocks();
 
         // Don't count the exit block, if it exists.

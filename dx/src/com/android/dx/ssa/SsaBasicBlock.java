@@ -18,20 +18,18 @@ package com.android.dx.ssa;
 
 import com.android.dx.rop.code.BasicBlock;
 import com.android.dx.rop.code.BasicBlockList;
+import com.android.dx.rop.code.Insn;
 import com.android.dx.rop.code.InsnList;
 import com.android.dx.rop.code.PlainInsn;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
+import com.android.dx.rop.code.Rop;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.SourcePosition;
-import com.android.dx.rop.code.Insn;
-import com.android.dx.rop.code.Rop;
-import com.android.dx.util.IntList;
 import com.android.dx.util.Hex;
+import com.android.dx.util.IntList;
 import com.android.dx.util.IntSet;
-import com.android.dx.util.BitIntSet;
-import com.android.dx.util.ListIntSet;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -94,6 +92,12 @@ public final class SsaBasicBlock {
      * phi-removal process. Retained for subsequent move scheduling.
      */
     private int movesFromPhisAtBeginning = 0;
+
+    /**
+     * contains last computed value of reachability of this block, or -1
+     * if reachability hasn't been calculated yet
+     */
+    private int reachable = -1;
 
     /**
      * {@code null-ok;} indexed by reg: the regs that are live-in at
@@ -514,6 +518,26 @@ public final class SsaBasicBlock {
         parent.getBlocks().get(oldIndex).predecessors.clear(index);
     }
 
+    /**
+     * Removes a successor from this block's successor list.
+     *
+     * @param oldIndex index of successor block to remove
+     */
+    public void removeSuccessor(int oldIndex) {
+        int removeIndex = 0;
+
+        for (int i = successorList.size() - 1; i >= 0; i--) {
+            if (successorList.get(i) == oldIndex) {
+                removeIndex = i;
+            } else {
+                primarySuccessor = successorList.get(i);
+            }
+        }
+
+        successorList.removeIndex(removeIndex);
+        successors.clear(oldIndex);
+        parent.getBlocks().get(oldIndex).predecessors.clear(index);
+    }
 
     /**
      * Attaches block to an exit block if necessary. If this block
@@ -820,16 +844,25 @@ public final class SsaBasicBlock {
     }
 
     /**
-     * Returns true if this block is reachable (that is, it hasn't been
-     * unlinked from the control flow of this method). This currently tests
-     * that it's either the start block or it has predecessors, which suffices
-     * for all current control flow transformations.
+     * Returns true if this block was last calculated to be reachable.
+     * Recalculates reachability if value has never been computed.
      *
      * @return {@code true} if reachable
      */
     public boolean isReachable() {
-        return index == parent.getEntryBlockIndex()
-                || predecessors.cardinality() > 0;
+        if (reachable == -1) {
+            parent.computeReachability();
+        }
+        return (reachable == 1);
+    }
+
+    /**
+     * Sets reachability of block to specified value
+     *
+     * @param reach new value of reachability for block
+     */
+    public void setReachable(int reach) {
+        reachable = reach;
     }
 
     /**
@@ -959,6 +992,7 @@ public final class SsaBasicBlock {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String toString() {
         return "{" + index + ":" + Hex.u2(ropLabel) + '}';
     }

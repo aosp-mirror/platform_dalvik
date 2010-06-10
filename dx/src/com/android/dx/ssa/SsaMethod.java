@@ -17,23 +17,23 @@
 package com.android.dx.ssa;
 
 import com.android.dx.rop.code.BasicBlockList;
+import com.android.dx.rop.code.Insn;
 import com.android.dx.rop.code.PlainInsn;
+import com.android.dx.rop.code.RegOps;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
+import com.android.dx.rop.code.Rop;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.code.Rops;
 import com.android.dx.rop.code.SourcePosition;
-import com.android.dx.rop.code.Insn;
-import com.android.dx.rop.code.RegOps;
-import com.android.dx.rop.code.Rop;
 import com.android.dx.util.IntList;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
-import java.util.Stack;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * A method in SSA form.
@@ -356,6 +356,32 @@ public final class SsaMethod {
         }
 
         return ret;
+    }
+
+    /**
+     * Computes reachability for all blocks in the method. First clears old
+     * values from all blocks, then starts with the entry block and walks down
+     * the control flow graph, marking all blocks it finds as reachable.
+     */
+    public void computeReachability() {
+        for (SsaBasicBlock block : blocks) {
+            block.setReachable(0);
+        }
+
+        ArrayList<SsaBasicBlock> blockList = new ArrayList<SsaBasicBlock>();
+        blockList.add(this.getEntryBlock());
+
+        while (!blockList.isEmpty()) {
+            SsaBasicBlock block = blockList.remove(0);
+            if (block.isReachable()) continue;
+
+            block.setReachable(1);
+            BitSet succs = block.getSuccessors();
+            for (int i = succs.nextSetBit(0); i >= 0;
+                     i = succs.nextSetBit(i + 1)) {
+                blockList.add(blocks.get(i));
+            }
+        }
     }
 
     /**
@@ -821,6 +847,15 @@ public final class SsaMethod {
                 Insn gotoInsn = new PlainInsn(Rops.GOTO,
                         SourcePosition.NO_INFO, null, RegisterSpecList.EMPTY);
                 insns.add(SsaInsn.makeFromRop(gotoInsn, block));
+
+                // Remove secondary successors from this block
+                BitSet succs = block.getSuccessors();
+                for (int i = succs.nextSetBit(0); i >= 0;
+                         i = succs.nextSetBit(i + 1)) {
+                    if (i != block.getPrimarySuccessorIndex()) {
+                        block.removeSuccessor(i);
+                    }
+                }
             }
         }
     }
