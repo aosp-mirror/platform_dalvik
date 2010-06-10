@@ -1029,24 +1029,10 @@ static bool isReferenceEnqueuable(const Object *ref)
  */
 static void enqueueReference(const Object *ref)
 {
-    LargeHeapRefTable **table;
-    Object *op;
-
-    assert(((uintptr_t)ref & 3) == 0);
-    assert((WORKER_ENQUEUE & ~3) == 0);
+    assert(ref != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext) == NULL);
-    /*
-     * Set the enqueue bit in the bottom of the pointer.  Assumes that
-     * objects are 8-byte aligned.
-     *
-     * Note that we are adding the *Reference* (which is by definition
-     * already black at this point) to this list; we're not adding the
-     * referent (which has already been cleared).
-     */
-    table = &gDvm.gcHeap->referenceOperations;
-    op = (Object *)((uintptr_t)ref | WORKER_ENQUEUE);
-    if (!dvmHeapAddRefToLargeTable(table, op)) {
+    if (!dvmHeapAddRefToLargeTable(&gDvm.gcHeap->referenceOperations, ref)) {
         LOGE("no room for any more reference operations");
         dvmAbort();
     }
@@ -1571,18 +1557,12 @@ static void pinReferenceTable(const ReferenceTable *table)
     }
 }
 
-static void scavengeLargeHeapRefTable(LargeHeapRefTable *table, bool stripLowBits)
+static void scavengeLargeHeapRefTable(LargeHeapRefTable *table)
 {
     for (; table != NULL; table = table->next) {
         Object **ref = table->refs.table;
         for (; ref < table->refs.nextEntry; ++ref) {
-            if (stripLowBits) {
-                Object *obj = (Object *)((uintptr_t)*ref & ~3);
-                scavengeReference(&obj);
-                *ref = (Object *)((uintptr_t)obj | ((uintptr_t)*ref & 3));
-            } else {
-                scavengeReference(ref);
-            }
+            scavengeReference(ref);
         }
     }
 }
@@ -2249,10 +2229,10 @@ void dvmScavengeRoots(void)  /* Needs a new name badly */
     scavengeThreadList();
 
     LOG_SCAV("Scavenging gDvm.gcHeap->referenceOperations");
-    scavengeLargeHeapRefTable(gcHeap->referenceOperations, true);
+    scavengeLargeHeapRefTable(gcHeap->referenceOperations);
 
     LOG_SCAV("Scavenging gDvm.gcHeap->pendingFinalizationRefs");
-    scavengeLargeHeapRefTable(gcHeap->pendingFinalizationRefs, false);
+    scavengeLargeHeapRefTable(gcHeap->pendingFinalizationRefs);
 
     LOG_SCAV("Scavenging random global stuff");
     scavengeReference(&gDvm.outOfMemoryObj);

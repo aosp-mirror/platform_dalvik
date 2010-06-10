@@ -275,15 +275,14 @@ static void doHeapWork(Thread *self)
             assert(method->clazz != gDvm.classJavaLangObject);
             callMethod(self, obj, method);
         } else {
-            if (op & WORKER_ENQUEUE) {
-                assert(dvmGetFieldObject(
-                           obj, gDvm.offJavaLangRefReference_queue) != NULL);
-                assert(dvmGetFieldObject(
-                           obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
-                numReferencesEnqueued++;
-                callMethod(self, obj,
-                        gDvm.methJavaLangRefReference_enqueueInternal);
-            }
+            assert(op == WORKER_ENQUEUE);
+            assert(dvmGetFieldObject(
+                       obj, gDvm.offJavaLangRefReference_queue) != NULL);
+            assert(dvmGetFieldObject(
+                       obj, gDvm.offJavaLangRefReference_queueNext) == NULL);
+            numReferencesEnqueued++;
+            callMethod(self, obj,
+                       gDvm.methJavaLangRefReference_enqueueInternal);
         }
 
         /* Let the GC collect the object.
