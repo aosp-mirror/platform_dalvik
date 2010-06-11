@@ -3093,7 +3093,7 @@ static void SetObjectArrayElement(JNIEnv* env, jobjectArray jarr,
     //LOGV("JNI: set element %d in array %p to %p\n", index, array, value);
 
     Object* obj = dvmDecodeIndirectRef(env, jobj);
-    ((Object**) arrayObj->contents)[index] = obj;
+    dvmSetObjectArrayElement(arrayObj, index, obj);
 
 bail:
     JNI_EXIT();

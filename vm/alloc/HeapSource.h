@@ -104,6 +104,11 @@ void dvmHeapSourceFreeList(size_t numPtrs, void **ptrs);
 bool dvmHeapSourceContains(const void *ptr);
 
 /*
+ * Returns true iff <ptr> is within the address space managed by heap source.
+ */
+bool dvmHeapSourceContainsAddress(const void *ptr);
+
+/*
  * Returns the value of the requested flag.
  */
 enum HeapSourcePtrFlag {

@@ -255,8 +255,12 @@ typedef struct Object {
  * Properly initialize an Object.
  * void DVM_OBJECT_INIT(Object *obj, ClassObject *clazz_)
  */
-#define DVM_OBJECT_INIT(obj, clazz_) \
-    do { (obj)->clazz = (clazz_); DVM_LOCK_INIT(&(obj)->lock); } while (0)
+#define DVM_OBJECT_INIT(obj, clazz_)                                    \
+    do {                                                                \
+        dvmSetFieldObject((Object *)obj, offsetof(Object, clazz),       \
+                          (Object *)clazz_);                            \
+        DVM_LOCK_INIT(&(obj)->lock);                                    \
+    } while (0)
 
 /*
  * Data objects have an Object header followed by their instance data.
@@ -673,6 +677,26 @@ INLINE int dvmFindFieldOffset(const ClassObject* clazz,
 }
 
 /*
+ * Note writes to the heap.
+ */
+INLINE void dvmWriteBarrierField(Object *obj, void *addr) {
+}
+INLINE void dvmWriteBarrierObject(Object *obj) {
+}
+INLINE void dvmWriteBarrierArray(const ArrayObject* obj,
+                                 size_t start, size_t end) {
+}
+/*
+ * Store a single value in the array, and note in the write barrier.
+ */
+INLINE void dvmSetObjectArrayElement(const ArrayObject* obj, int index,
+                                     Object* val) {
+    ((Object **)(obj)->contents)[index] = val;
+    dvmWriteBarrierArray(obj, index, index+1);
+}
+
+
+/*
  * Field access functions.  Pass in the word offset from Field->byteOffset.
  *
  * We guarantee that long/double field data is 64-bit aligned, so it's safe
@@ -754,7 +778,9 @@ INLINE void dvmSetFieldDouble(Object* obj, int offset, double val) {
     ((JValue*)BYTE_OFFSET(obj, offset))->d = val;
 }
 INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
-    ((JValue*)BYTE_OFFSET(obj, offset))->l = val;
+    JValue* lhs = BYTE_OFFSET(obj, offset);
+    lhs->l = val;
+    dvmWriteBarrierField(obj, &lhs->l);
 }
 INLINE void dvmSetFieldIntVolatile(Object* obj, int offset, s4 val) {
     s4* ptr = &((JValue*)BYTE_OFFSET(obj, offset))->i;
@@ -763,6 +789,7 @@ INLINE void dvmSetFieldIntVolatile(Object* obj, int offset, s4 val) {
 INLINE void dvmSetFieldObjectVolatile(Object* obj, int offset, Object* val) {
     void** ptr = &((JValue*)BYTE_OFFSET(obj, offset))->l;
     android_atomic_release_store((int32_t)val, (int32_t*)ptr);
+    dvmWriteBarrierField(obj, ptr);
 }
 INLINE void dvmSetFieldLongVolatile(Object* obj, int offset, s8 val) {
     s8* addr = BYTE_OFFSET(obj, offset);
@@ -845,6 +872,7 @@ INLINE void dvmSetStaticFieldDouble(StaticField* sfield, double val) {
 }
 INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
     sfield->value.l = val;
+    dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
 }
 INLINE void dvmSetStaticFieldIntVolatile(StaticField* sfield, s4 val) {
     s4* ptr = &(sfield->value.i);
@@ -853,6 +881,7 @@ INLINE void dvmSetStaticFieldIntVolatile(StaticField* sfield, s4 val) {
 INLINE void dvmSetStaticFieldObjectVolatile(StaticField* sfield, Object* val) {
     void** ptr = &(sfield->value.l);
     android_atomic_release_store((int32_t)val, (int32_t*)ptr);
+    dvmWriteBarrierField((Object *)sfield->field.clazz, &sfield->value.l);
 }
 INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
     s8* addr = &sfield->value.j;

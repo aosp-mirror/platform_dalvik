@@ -30,6 +30,8 @@
  */
 static ArrayObject* convertStringArray(char** strings, size_t count)
 {
+    Thread* self = dvmThreadSelf();
+
     /*
      * Allocate an array to hold the String objects.
      */
@@ -46,27 +48,26 @@ static ArrayObject* convertStringArray(char** strings, size_t count)
     if (stringArray == NULL) {
         /* probably OOM */
         LOGD("Failed allocating array of %d strings\n", count);
+        assert(dvmCheckException(self));
         return NULL;
     }
-
-    Thread* self = dvmThreadSelf();
 
     /*
      * Create the individual String objects and add them to the array.
      */
-    StringObject** contents = (StringObject**) stringArray->contents;
     size_t i;
     for (i = 0; i < count; i++) {
-        contents[i] = dvmCreateStringFromCstr(strings[i]);
-        if (contents[i] == NULL) {
+        Object *str =
+            (Object *)dvmCreateStringFromCstr(strings[i]);
+        if (str == NULL) {
             /* probably OOM; drop out now */
             assert(dvmCheckException(self));
             dvmReleaseTrackedAlloc((Object*)stringArray, self);
             return NULL;
         }
-
+        dvmSetObjectArrayElement(stringArray, i, str);
         /* stored in tracked array, okay to release */
-        dvmReleaseTrackedAlloc((Object*)contents[i], self);
+        dvmReleaseTrackedAlloc(str, self);
     }
 
     dvmReleaseTrackedAlloc((Object*)stringArray, self);

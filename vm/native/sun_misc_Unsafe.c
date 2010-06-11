@@ -128,7 +128,7 @@ static void Dalvik_sun_misc_Unsafe_compareAndSwapObject(const u4* args,
     // Note: android_atomic_cmpxchg() returns 0 on success, not failure.
     int result = android_atomic_release_cas((int32_t) expectedValue,
             (int32_t) newValue, address);
-
+    dvmWriteBarrierField(obj, address);
     RETURN_BOOLEAN(result == 0);
 }
 
@@ -221,6 +221,7 @@ static void Dalvik_sun_misc_Unsafe_putObjectVolatile(const u4* args,
     volatile int32_t* address = (volatile int32_t*) (((u1*) obj) + offset);
 
     android_atomic_release_store((int32_t)value, address);
+    dvmWriteBarrierField(obj, (void *)address);
     RETURN_VOID();
 }
 
@@ -305,6 +306,7 @@ static void Dalvik_sun_misc_Unsafe_putObject(const u4* args, JValue* pResult)
     Object** address = (Object**) (((u1*) obj) + offset);
 
     *address = value;
+    dvmWriteBarrierField(obj, address);
     RETURN_VOID();
 }
 

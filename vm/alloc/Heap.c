@@ -541,6 +541,20 @@ bool dvmIsValidObject(const Object* obj)
     return false;
 }
 
+/*
+ * Returns true iff <obj> points to a word-aligned address within Heap
+ * address space.
+ */
+bool dvmIsValidObjectAddress(const void* ptr)
+{
+    /* Don't bother if it's not 4-byte aligned.
+     */
+    if (((uintptr_t)ptr & (4-1)) == 0) {
+        return dvmHeapSourceContainsAddress(ptr);
+    }
+    return false;
+}
+
 size_t dvmObjectSizeInHeap(const Object *obj)
 {
     return dvmHeapSourceChunkSize(obj);

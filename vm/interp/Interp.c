@@ -1377,6 +1377,8 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
         }
     }
 
+    /* Never on the heap, so no write barrier needed. */
+    assert(!dvmIsValidObjectAddress(pResult));
     *pResult = interpState.retval;
 #if defined(WITH_JIT)
     dvmJitCalleeRestore(interpState.calleeSave);

@@ -188,9 +188,13 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
     newClass->accessFlags = ACC_PUBLIC | ACC_FINAL;
-    newClass->super = gDvm.classJavaLangReflectProxy;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, super),
+                      (Object *)gDvm.classJavaLangReflectProxy);
     newClass->primitiveType = PRIM_NOT;
-    newClass->classLoader = loader;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, classLoader),
+                      (Object *)loader);
 #if WITH_HPROF && WITH_HPROF_STACK
     hprofFillInStackTrace(newClass);
 #endif

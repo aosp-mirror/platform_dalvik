@@ -2205,8 +2205,9 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
             }
         }
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));
-        ((u4*) arrayObj->contents)[GET_REGISTER(vsrc2)] =
-            GET_REGISTER(vdst);
+        dvmSetObjectArrayElement(arrayObj,
+                                 GET_REGISTER(vsrc2),
+                                 (Object *)GET_REGISTER(vdst));
     }
     FINISH(2);
 OP_END
@@ -3249,6 +3250,9 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
                 contents[i] = GET_REGISTER(vdst & 0x0f);
                 vdst >>= 4;
             }
+        }
+        if (typeCh == 'L' || typeCh == '[') {
+            dvmWriteBarrierArray(newArray, 0, newArray->length);
         }
 
         retval.l = newArray;

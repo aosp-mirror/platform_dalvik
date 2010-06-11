@@ -1695,7 +1695,9 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
     newClass->descriptor = descriptor;
     assert(newClass->descriptorAlloc == NULL);
     newClass->accessFlags = pClassDef->accessFlags;
-    newClass->classLoader = classLoader;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, classLoader),
+                      (Object *)classLoader);
     newClass->pDvmDex = pDvmDex;
     newClass->primitiveType = PRIM_NOT;
     newClass->status = CLASS_IDX;
@@ -2506,8 +2508,8 @@ bool dvmLinkClass(ClassObject* clazz)
         clazz->status = CLASS_LOADED;
 
         if (superclassIdx != kDexNoIndex) {
-            clazz->super = dvmResolveClass(clazz, superclassIdx, false);
-            if (clazz->super == NULL) {
+            ClassObject* super = dvmResolveClass(clazz, superclassIdx, false);
+            if (super == NULL) {
                 assert(dvmCheckException(dvmThreadSelf()));
                 if (gDvm.optimizing) {
                     /* happens with "external" libs */
@@ -2519,6 +2521,9 @@ bool dvmLinkClass(ClassObject* clazz)
                 }
                 goto bail;
             }
+            dvmSetFieldObject((Object *)clazz,
+                              offsetof(ClassObject, super),
+                              (Object *)super);
         }
 
         if (clazz->interfaceCount > 0) {
@@ -3825,7 +3830,7 @@ static void initSFields(ClassObject* clazz)
         bool parsed = dvmEncodedArrayIteratorGetNext(&iterator, &value);
         StaticField* sfield = &clazz->sfields[i];
         const char* descriptor = sfield->field.signature;
-        bool needRelease = false;
+        bool isObj = false;
 
         if (! parsed) {
             /*
@@ -3859,13 +3864,13 @@ static void initSFields(ClassObject* clazz)
                     case kDexAnnotationString: {
                         parsed =
                             (strcmp(descriptor, "Ljava/lang/String;") == 0);
-                        needRelease = true;
+                        isObj = true;
                         break;
                     }
                     case kDexAnnotationType: {
                         parsed =
                             (strcmp(descriptor, "Ljava/lang/Class;") == 0);
-                        needRelease = true;
+                        isObj = true;
                         break;
                     }
                     default: {
@@ -3883,13 +3888,18 @@ static void initSFields(ClassObject* clazz)
 
         if (parsed) {
             /*
-             * All's well, so store the value. Note: This always
-             * stores the full width of a JValue, even though most of
-             * the time only the first word is needed.
+             * All's well, so store the value.
              */
-            sfield->value = value.value;
-            if (needRelease) {
+            if (isObj) {
+                dvmSetStaticFieldObject(sfield, value.value.l);
                 dvmReleaseTrackedAlloc(value.value.l, self);
+            } else {
+                /*
+                 * Note: This always stores the full width of a
+                 * JValue, even though most of the time only the first
+                 * word is needed.
+                 */
+                sfield->value = value.value;
             }
         } else {
             /*
@@ -4279,7 +4289,9 @@ bool dvmInitClass(ClassObject* clazz)
 verify_failed:
             dvmThrowExceptionWithClassMessage("Ljava/lang/VerifyError;",
                 clazz->descriptor);
-            clazz->verifyErrorClass = dvmGetException(self)->clazz;
+            dvmSetFieldObject((Object *)clazz,
+                              offsetof(ClassObject, verifyErrorClass),
+                              (Object *)dvmGetException(self)->clazz);
             clazz->status = CLASS_ERROR;
             goto bail_unlock;
         }

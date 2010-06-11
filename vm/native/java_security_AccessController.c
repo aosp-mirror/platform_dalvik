@@ -121,9 +121,8 @@ static void Dalvik_java_security_AccessController_getStackDomains(
     }
 
     /* copy the ProtectionDomain objects out */
-    Object** objects = (Object**) domains->contents;
-    for (idx = 0; idx < subIdx; idx++)
-        *objects++ = subSet[idx];
+    memcpy(domains->contents, subSet, subIdx * sizeof(Object *));
+    dvmWriteBarrierArray(domains, 0, subIdx);
 
 bail:
     free(subSet);

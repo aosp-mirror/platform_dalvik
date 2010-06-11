@@ -544,8 +544,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
             return false;
         } else {
             ArrayObject* newArray;
-            Object** pObj;
-            u4 size;
+            u4 size, count;
 
             size = readUleb128(&ptr);
             LOGVV("--- annotation array, size is %u at %p\n", size, ptr);
@@ -555,18 +554,17 @@ static bool processAnnotationValue(const ClassObject* clazz,
                 LOGE("annotation element array alloc failed (%d)\n", size);
                 return false;
             }
-            pObj = (Object**)newArray->contents;
 
             AnnotationValue avalue;
-            while (size--) {
+            for (count = 0; count < size; count++) {
                 if (!processAnnotationValue(clazz, &ptr, &avalue,
                                 kAllObjects)) {
                     dvmReleaseTrackedAlloc((Object*)newArray, self);
                     return false;
                 }
                 Object* obj = avalue.value.l;
+                dvmSetObjectArrayElement(newArray, count, obj);
                 dvmReleaseTrackedAlloc(obj, self);
-                *pObj++ = obj;
             }
 
             elemObj = (Object*) newArray;
@@ -807,7 +805,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
     ArrayObject* elementArray = NULL;
     const ClassObject* annoClass;
     const u1* ptr;
-    u4 typeIdx, size;
+    u4 typeIdx, size, count;
 
     ptr = *pPtr;
     typeIdx = readUleb128(&ptr);
@@ -836,7 +834,6 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
      * default values get merged in later.
      */
     JValue result;
-    Object** pElement = NULL;
 
     if (size > 0) {
         elementArray = dvmAllocArrayByClass(
@@ -847,20 +844,19 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
                 size);
             goto bail;
         }
-        pElement = (Object**) elementArray->contents;
     }
 
     /*
      * "ptr" points to a byte stream with "size" occurrences of
      * annotation_element.
      */
-    while (size--) {
+    for (count = 0; count < size; count++) {
         Object* newMember = createAnnotationMember(clazz, annoClass, &ptr);
         if (newMember == NULL)
             goto bail;
 
         /* add it to the array */
-        *pElement++ = newMember;
+        dvmSetObjectArrayElement(elementArray, count, newMember);
     }
 
     dvmCallMethod(self,
@@ -898,8 +894,8 @@ static ArrayObject* processAnnotationSet(const ClassObject* clazz,
     DexFile* pDexFile = clazz->pDvmDex->pDexFile;
     const DexAnnotationItem* pAnnoItem;
     ArrayObject* annoArray;
-    Object** pContents;
     int i, count;
+    u4 dstIndex;
 
     /* we need these later; make sure they're initialized */
     if (!dvmIsClassInitialized(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationFactory))
@@ -914,27 +910,29 @@ static ArrayObject* processAnnotationSet(const ClassObject* clazz,
             count++;
     }
 
-    annoArray =dvmAllocArrayByClass(gDvm.classJavaLangAnnotationAnnotationArray,
-        count, ALLOC_DEFAULT);
+    annoArray =
+        dvmAllocArrayByClass(gDvm.classJavaLangAnnotationAnnotationArray,
+                             count, ALLOC_DEFAULT);
     if (annoArray == NULL)
         return NULL;
-    pContents = (Object**) annoArray->contents;
 
     /*
      * Generate Annotation objects.  We must put them into the array
      * immediately (or add them to the tracked ref table).
      */
+    dstIndex = 0;
     for (i = 0; i < (int) pAnnoSet->size; i++) {
         pAnnoItem = dexGetAnnotationItem(pDexFile, pAnnoSet, i);
         if (pAnnoItem->visibility != visibility)
             continue;
         const u1* ptr = pAnnoItem->annotation;
-        *pContents = processEncodedAnnotation(clazz, &ptr);
-        if (*pContents == NULL) {
+        Object *anno = processEncodedAnnotation(clazz, &ptr);
+        if (anno == NULL) {
             dvmReleaseTrackedAlloc((Object*) annoArray, NULL);
             return NULL;
         }
-        pContents++;
+        dvmSetObjectArrayElement(annoArray, dstIndex, anno);
+        ++dstIndex;
     }
 
     return annoArray;
@@ -1987,7 +1985,6 @@ static ArrayObject* processAnnotationSetRefList(const ClassObject* clazz,
 {
     DexFile* pDexFile = clazz->pDvmDex->pDexFile;
     ArrayObject* annoArrayArray = NULL;
-    ArrayObject** pContents;
     u4 idx;
 
     /* allocate an array of Annotation arrays to hold results */
@@ -1998,24 +1995,24 @@ static ArrayObject* processAnnotationSetRefList(const ClassObject* clazz,
         goto bail;
     }
 
-    pContents = (ArrayObject**) annoArrayArray->contents;
-
     for (idx = 0; idx < count; idx++) {
         Thread* self = dvmThreadSelf();
         const DexAnnotationSetRefItem* pItem;
         const DexAnnotationSetItem* pAnnoSet;
+        Object *annoSet;
 
         pItem = dexGetParameterAnnotationSetRef(pAnnoSetList, idx);
         pAnnoSet = dexGetSetRefItemItem(pDexFile, pItem);
-        *pContents = processAnnotationSet(clazz, pAnnoSet,
-                        kDexVisibilityRuntime);
-        if (*pContents == NULL) {
+        annoSet = (Object *)processAnnotationSet(clazz,
+                                                 pAnnoSet,
+                                                 kDexVisibilityRuntime);
+        if (annoSet == NULL) {
             LOGW("processAnnotationSet failed\n");
             annoArrayArray = NULL;
             goto bail;
         }
-        dvmReleaseTrackedAlloc((Object*) *pContents, self);
-        pContents++;
+        dvmSetObjectArrayElement(annoArrayArray, idx, annoSet);
+        dvmReleaseTrackedAlloc((Object*) annoSet, self);
     }
 
 bail:

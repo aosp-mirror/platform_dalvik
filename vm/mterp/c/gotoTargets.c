@@ -94,6 +94,9 @@ GOTO_TARGET(filledNewArray, bool methodCallRange)
                 vdst >>= 4;
             }
         }
+        if (typeCh == 'L' || typeCh == '[') {
+            dvmWriteBarrierArray(newArray, 0, newArray->length);
+        }
 
         retval.l = newArray;
     }

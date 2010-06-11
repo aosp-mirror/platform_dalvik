@@ -335,6 +335,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
     DvmDex* pDvmDex;
     DexFile* pDexFile;
     ArrayObject* stringArray;
+    Thread* self = dvmThreadSelf();
 
     if (!validateCookie(cookie))
         RETURN_VOID();
@@ -349,10 +350,13 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
     int count = pDexFile->pHeader->classDefsSize;
     stringArray = dvmAllocObjectArray(gDvm.classJavaLangString, count,
                     ALLOC_DEFAULT);
-    if (stringArray == NULL)
-        RETURN_VOID();          // should be an OOM pending
+    if (stringArray == NULL) {
+        /* probably OOM */
+        LOGD("Failed allocating array of %d strings\n", count);
+        assert(dvmCheckException(self));
+        RETURN_VOID();
+    }
 
-    StringObject** contents = (StringObject**) stringArray->contents;
     int i;
     for (i = 0; i < count; i++) {
         const DexClassDef* pClassDef = dexGetClassDef(pDexFile, i);
@@ -360,12 +364,13 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
             dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
 
         char* className = dvmDescriptorToDot(descriptor);
-        contents[i] = dvmCreateStringFromCstr(className);
-        dvmReleaseTrackedAlloc((Object*) contents[i], NULL);
+        StringObject* str = dvmCreateStringFromCstr(className);
+        dvmSetObjectArrayElement(stringArray, i, (Object *)str);
+        dvmReleaseTrackedAlloc((Object *)str, self);
         free(className);
     }
 
-    dvmReleaseTrackedAlloc((Object*)stringArray, NULL);
+    dvmReleaseTrackedAlloc((Object*)stringArray, self);
     RETURN_PTR(stringArray);
 }
 

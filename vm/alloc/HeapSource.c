@@ -924,6 +924,17 @@ dvmHeapSourceFreeList(size_t numPtrs, void **ptrs)
 }
 
 /*
+ * Returns true iff <ptr> is in the heap source.
+ */
+bool
+dvmHeapSourceContainsAddress(const void *ptr)
+{
+    HS_BOILERPLATE();
+
+    return (dvmHeapBitmapCoversAddress(&gHs->liveBits, ptr));
+}
+
+/*
  * Returns true iff <ptr> was allocated from the heap source.
  */
 bool
@@ -931,7 +942,7 @@ dvmHeapSourceContains(const void *ptr)
 {
     HS_BOILERPLATE();
 
-    if (dvmHeapBitmapCoversAddress(&gHs->liveBits, ptr)) {
+    if (dvmHeapSourceContainsAddress(ptr)) {
         return dvmHeapBitmapIsObjectBitSet(&gHs->liveBits, ptr) != 0;
     }
     return false;

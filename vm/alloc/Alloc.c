@@ -227,6 +227,7 @@ Object* dvmCloneObject(Object* obj)
 
     memcpy(copy, obj, size);
     DVM_LOCK_INIT(&copy->lock);
+    dvmWriteBarrierObject(copy);
 
     return copy;
 }

@@ -246,7 +246,6 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
         }
     } else {
         ClassObject* subArrayClass;
-        Object** contents;
         int i;
 
         /* if we have X[][], find X[] */
@@ -269,19 +268,16 @@ ArrayObject* dvmAllocMultiArray(ClassObject* arrayClass, int curDim,
         /*
          * Create a new sub-array in every element of the array.
          */
-        contents = (Object**) newArray->contents;
         for (i = 0; i < *dimensions; i++) {
-            ArrayObject* newSubArray;
-
-            newSubArray = dvmAllocMultiArray(subArrayClass, curDim-1,
-                            dimensions+1);
+          ArrayObject* newSubArray;
+          newSubArray = dvmAllocMultiArray(subArrayClass, curDim-1,
+                          dimensions+1);
             if (newSubArray == NULL) {
                 dvmReleaseTrackedAlloc((Object*) newArray, NULL);
                 assert(dvmCheckException(dvmThreadSelf()));
                 return NULL;
             }
-
-            *contents++ = (Object*) newSubArray;
+            dvmSetObjectArrayElement(newArray, i, (Object *)newSubArray);
             dvmReleaseTrackedAlloc((Object*) newSubArray, NULL);
         }
     }
@@ -427,12 +423,18 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
     dvmSetClassSerialNumber(newClass);
     newClass->descriptorAlloc = strdup(descriptor);
     newClass->descriptor = newClass->descriptorAlloc;
-    newClass->super = gDvm.classJavaLangObject;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, super),
+                      (Object *)gDvm.classJavaLangObject);
     newClass->vtableCount = gDvm.classJavaLangObject->vtableCount;
     newClass->vtable = gDvm.classJavaLangObject->vtable;
     newClass->primitiveType = PRIM_NOT;
-    newClass->elementClass = elementClass;
-    newClass->classLoader = elementClass->classLoader;
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, elementClass),
+                      (Object *)elementClass);
+    dvmSetFieldObject((Object *)newClass,
+                      offsetof(ClassObject, classLoader),
+                      (Object *)elementClass->classLoader);
     newClass->arrayDim = arrayDim;
     newClass->status = CLASS_INITIALIZED;
 #if WITH_HPROF && WITH_HPROF_STACK
@@ -530,9 +532,6 @@ static ClassObject* createArrayClass(const char* descriptor, Object* loader)
         assert(newClass != NULL);
         return newClass;
     }
-
-    /* make it available to the GC */
-    newClass->obj.clazz = gDvm.classJavaLangClass;
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
 
     LOGV("Created array class '%s' %p (access=0x%04x.%04x)\n",
@@ -664,21 +663,21 @@ bool dvmCopyObjectArray(ArrayObject* dstArray, const ArrayObject* srcArray,
     ClassObject* dstElemClass)
 {
     Object** src = (Object**)srcArray->contents;
-    Object** dst = (Object**)dstArray->contents;
-    u4 count = dstArray->length;
+    u4 length, count;
 
     assert(srcArray->length == dstArray->length);
     assert(dstArray->obj.clazz->elementClass == dstElemClass ||
         (dstArray->obj.clazz->elementClass == dstElemClass->elementClass &&
          dstArray->obj.clazz->arrayDim == dstElemClass->arrayDim+1));
 
-    while (count--) {
-        if (!dvmInstanceof((*src)->clazz, dstElemClass)) {
+    length = dstArray->length;
+    for (count = 0; count < length; count++) {
+        if (!dvmInstanceof(src[count]->clazz, dstElemClass)) {
             LOGW("dvmCopyObjectArray: can't store %s in %s\n",
-                (*src)->clazz->descriptor, dstElemClass->descriptor);
+                src[count]->clazz->descriptor, dstElemClass->descriptor);
             return false;
         }
-        *dst++ = *src++;
+        dvmSetObjectArrayElement(dstArray, count, src[count]);
     }
 
     return true;

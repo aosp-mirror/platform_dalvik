@@ -191,12 +191,13 @@ static void Dalvik_java_lang_Class_getDeclaredClasses(const u4* args,
                         0, ALLOC_DEFAULT);
         }
     } else if (publicOnly) {
-        int i, newIdx, publicCount = 0;
+        u4 count, newIdx, publicCount = 0;
         ClassObject** pSource = (ClassObject**) classes->contents;
+        u4 length = classes->length;
 
         /* count up public classes */
-        for (i = 0; i < (int)classes->length; i++) {
-            if (dvmIsPublicClass(pSource[i]))
+        for (count = 0; count < length; count++) {
+            if (dvmIsPublicClass(pSource[count]))
                 publicCount++;
         }
 
@@ -206,12 +207,13 @@ static void Dalvik_java_lang_Class_getDeclaredClasses(const u4* args,
                         publicCount, ALLOC_DEFAULT);
 
         /* copy them over */
-        ClassObject** pDest = (ClassObject**) newClasses->contents;
-        for (i = newIdx = 0; i < (int)classes->length; i++) {
-            if (dvmIsPublicClass(pSource[i]))
-                pDest[newIdx++] = pSource[i];
+        for (count = newIdx = 0; count < length; count++) {
+            if (dvmIsPublicClass(pSource[count])) {
+                dvmSetObjectArrayElement(newClasses, newIdx,
+                                         (Object *)pSource[count]);
+                newIdx++;
+            }
         }
-
         assert(newIdx == publicCount);
         dvmReleaseTrackedAlloc((Object*) classes, NULL);
         classes = newClasses;

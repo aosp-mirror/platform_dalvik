@@ -1127,7 +1127,6 @@ ArrayObject* dvmGetStackTrace(const Object* ostackData)
 ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
 {
     ArrayObject* steArray = NULL;
-    Object** stePtr;
     int i;
 
     /* init this if we haven't yet */
@@ -1139,7 +1138,6 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
                     stackDepth, kObjectArrayRefWidth, ALLOC_DEFAULT);
     if (steArray == NULL)
         goto bail;
-    stePtr = (Object**) steArray->contents;
 
     /*
      * Allocate and initialize a StackTraceElement for each stack frame.
@@ -1196,7 +1194,7 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
         if (dvmCheckException(dvmThreadSelf()))
             goto bail;
 
-        *stePtr++ = ste;
+        dvmSetObjectArrayElement(steArray, i, ste);
     }
 
 bail:
