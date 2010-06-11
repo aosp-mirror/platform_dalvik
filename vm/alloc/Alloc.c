@@ -228,12 +228,6 @@ Object* dvmCloneObject(Object* obj)
     memcpy(copy, obj, size);
     DVM_LOCK_INIT(&copy->lock);
 
-    //LOGV("CloneObject: %p->%p %s (%d)\n", obj, copy, obj->clazz->name, size);
-
-    // TODO: deal with reference classes
-
-    /* don't call dvmReleaseTrackedAlloc -- the caller must do that */
-
     return copy;
 }
 
@@ -252,8 +246,6 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self)
 {
     if (self == NULL)
         self = dvmThreadSelf();
-
-    //LOGI("TRACK ADD %p\n", obj);
 
     assert(self != NULL);
     if (!dvmAddToReferenceTable(&self->internalLocalRefTable, obj)) {
@@ -278,9 +270,6 @@ void dvmReleaseTrackedAlloc(Object* obj, Thread* self)
     if (self == NULL)
         self = dvmThreadSelf();
     assert(self != NULL);
-
-    //LOGI("TRACK REM %p (%s)\n", obj,
-    //    (obj->clazz != NULL) ? obj->clazz->name : "");
 
     if (!dvmRemoveFromReferenceTable(&self->internalLocalRefTable,
             self->internalLocalRefTable.table, obj))
