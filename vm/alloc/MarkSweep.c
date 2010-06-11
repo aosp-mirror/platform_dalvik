@@ -242,12 +242,12 @@ void dvmHeapMarkRootSet()
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_REFERENCE_CLEANUP, 0);
 
     LOG_SCAN("pending reference operations\n");
-    dvmHeapMarkLargeTableRefs(gcHeap->referenceOperations, true);
+    dvmHeapMarkLargeTableRefs(gcHeap->referenceOperations);
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_FINALIZING, 0);
 
     LOG_SCAN("pending finalizations\n");
-    dvmHeapMarkLargeTableRefs(gcHeap->pendingFinalizationRefs, false);
+    dvmHeapMarkLargeTableRefs(gcHeap->pendingFinalizationRefs);
 
     HPROF_SET_GC_SCAN_STATE(HPROF_ROOT_DEBUGGER, 0);
 
@@ -597,24 +597,10 @@ static bool isEnqueuable(const Object *reference)
  */
 static void enqueueReference(Object *ref)
 {
-    LargeHeapRefTable **table;
-    Object *op;
-
-    assert(((uintptr_t)ref & 3) == 0);
-    assert((WORKER_ENQUEUE & ~3) == 0);
+    assert(ref != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queueNext) == NULL);
-    /* Stuff the enqueue bit in the bottom of the pointer.
-     * Assumes that objects are 8-byte aligned.
-     *
-     * Note that we are adding the *Reference* (which
-     * is by definition already marked at this point) to
-     * this list; we're not adding the referent (which
-     * has already been cleared).
-     */
-    table = &gDvm.gcHeap->referenceOperations;
-    op = (Object *)((uintptr_t)ref | WORKER_ENQUEUE);
-    if (!dvmHeapAddRefToLargeTable(table, op)) {
+    if (!dvmHeapAddRefToLargeTable(&gDvm.gcHeap->referenceOperations, ref)) {
         LOGE_HEAP("enqueueReference(): no room for any more "
                   "reference operations\n");
         dvmAbort();

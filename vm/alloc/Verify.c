@@ -23,7 +23,7 @@
 /*
  * Helper routine for verifyRefernce that masks low-tag bits before
  * applying verification checks.  TODO: eliminate the use of low-tag
- * bits and move this code into verfiyReference.
+ * bits and move this code into verifyReference.
  */
 static void verifyReferenceUnmask(const void *addr, uintptr_t mask)
 {
@@ -131,29 +131,13 @@ static void verifyReferenceTable(const ReferenceTable *table)
 }
 
 /*
- * Applies the verify routine to a heap worker reference operation.
- */
-static void verifyReferenceOperation(const void *arg)
-{
-    assert(arg != NULL);
-    verifyReferenceUnmask(arg, 0x3);
-}
-
-/*
  * Verifies a large heap reference table.  These objects are list
  * heads.  As such, it is valid for table to be NULL.
  */
-static void verifyLargeHeapRefTable(LargeHeapRefTable *table,
-                                    void (*callback)(const void *arg))
+static void verifyLargeHeapRefTable(const LargeHeapRefTable *table)
 {
-    Object **ref;
-
-    assert(callback != NULL);
     for (; table != NULL; table = table->next) {
-        for (ref = table->refs.table; ref < table->refs.nextEntry; ++ref) {
-            assert(ref != NULL);
-            (*callback)(ref);
-        }
+        verifyReferenceTable(&table->refs);
     }
 }
 
@@ -273,10 +257,8 @@ void dvmVerifyRoots(void)
     verifyHashTable(gDvm.internedStrings, verifyStringReference);
     verifyReferenceTable(&gDvm.jniGlobalRefTable);
     verifyReferenceTable(&gDvm.jniPinRefTable);
-    verifyLargeHeapRefTable(gDvm.gcHeap->referenceOperations,
-                            verifyReferenceOperation);
-    verifyLargeHeapRefTable(gDvm.gcHeap->pendingFinalizationRefs,
-                            verifyReference);
+    verifyLargeHeapRefTable(gDvm.gcHeap->referenceOperations);
+    verifyLargeHeapRefTable(gDvm.gcHeap->pendingFinalizationRefs);
     verifyThreads();
     /* TODO: verify cached global references. */
 }

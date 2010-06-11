@@ -190,30 +190,11 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
 
     assert(op != NULL);
 
-    obj = NULL;
-
     dvmLockMutex(&gDvm.heapWorkerListLock);
 
-    /* We must handle reference operations before finalizations.
-     * If:
-     *     a) Someone subclasses WeakReference and overrides clear()
-     *     b) A reference of this type is the last reference to
-     *        a finalizable object
-     * then we need to guarantee that the overridden clear() is called
-     * on the reference before finalize() is called on the referent.
-     * Both of these operations will always be scheduled at the same
-     * time, so handling reference operations first will guarantee
-     * the required order.
-     */
     obj = dvmHeapGetNextObjectFromLargeTable(&gcHeap->referenceOperations);
     if (obj != NULL) {
-        uintptr_t workBits;
-
-        workBits = (uintptr_t)obj & WORKER_ENQUEUE;
-        assert(workBits != 0);
-        obj = (Object *)((uintptr_t)obj & ~WORKER_ENQUEUE);
-
-        *op = workBits;
+        *op = WORKER_ENQUEUE;
     } else {
         obj = dvmHeapGetNextObjectFromLargeTable(
                 &gcHeap->pendingFinalizationRefs);
@@ -225,9 +206,6 @@ Object *dvmGetNextHeapWorkerObject(HeapWorkerOperation *op)
     if (obj != NULL) {
         /* Don't let the GC collect the object until the
          * worker thread is done with it.
-         *
-         * This call is safe;  it uses thread-local storage
-         * and doesn't acquire any locks.
          */
         dvmAddTrackedAlloc(obj, NULL);
     }

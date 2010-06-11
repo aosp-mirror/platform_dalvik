@@ -183,25 +183,15 @@ Object *dvmHeapGetNextObjectFromLargeTable(LargeHeapRefTable **pTable)
     return obj;
 }
 
-void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table, bool stripLowBits)
+void dvmHeapMarkLargeTableRefs(LargeHeapRefTable *table)
 {
     while (table != NULL) {
         Object **ref, **lastRef;
 
         ref = table->refs.table;
         lastRef = table->refs.nextEntry;
-        if (stripLowBits) {
-            /* This case is used for marking reference objects that
-             * are still waiting for the heap worker thread to push
-             * them onto their reference queue.
-             */
-            while (ref < lastRef) {
-                dvmMarkObjectNonNull((Object *)((uintptr_t)*ref++ & ~3));
-            }
-        } else {
-            while (ref < lastRef) {
-                dvmMarkObjectNonNull(*ref++);
-            }
+        while (ref < lastRef) {
+            dvmMarkObjectNonNull(*ref++);
         }
         table = table->next;
     }
