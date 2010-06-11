@@ -332,8 +332,8 @@ createMspace(void *base, size_t startSize, size_t absoluteMaxSize)
         /* There's no guarantee that errno has meaning when the call
          * fails, but it often does.
          */
-        LOGE_HEAP("Can't create VM heap of size (%u,%u) (errno=%d)\n",
-            startSize/2, absoluteMaxSize, errno);
+        LOGE_HEAP("Can't create VM heap of size (%u,%u): %s\n",
+            startSize/2, absoluteMaxSize, strerror(errno));
     }
 
     return msp;

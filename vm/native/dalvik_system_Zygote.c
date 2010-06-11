@@ -103,7 +103,7 @@ static void sigchldHandler(int s)
 
     if (pid < 0) {
         LOG(LOG_WARN, ZYGOTE_LOG_TAG,
-            "Zygote SIGCHLD error (%d) in waitpid\n",errno);
+            "Zygote SIGCHLD error in waitpid: %s\n",strerror(errno));
     }
 }
 
@@ -128,7 +128,7 @@ static void setSignalHandler()
     err = sigaction (SIGCHLD, &sa, NULL);
 
     if (err < 0) {
-        LOGW("Error setting SIGCHLD handler errno: %d", errno);
+        LOGW("Error setting SIGCHLD handler: %s", strerror(errno));
     }
 }
 
@@ -147,7 +147,7 @@ static void unsetSignalHandler()
     err = sigaction (SIGCHLD, &sa, NULL);
 
     if (err < 0) {
-        LOGW("Error unsetting SIGCHLD handler errno: %d", errno);
+        LOGW("Error unsetting SIGCHLD handler: %s", strerror(errno));
     }
 }
 
@@ -308,15 +308,15 @@ static void enableDebugFeatures(u4 debugFlags)
          * to disable that
          */
         if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) < 0) {
-            LOGE("could not set dumpable bit flag for pid %d, errno=%d",
-                 getpid(), errno);
+            LOGE("could not set dumpable bit flag for pid %d: %s",
+                 getpid(), strerror(errno));
         } else {
             struct rlimit rl;
             rl.rlim_cur = 0;
             rl.rlim_max = RLIM_INFINITY;
             if (setrlimit(RLIMIT_CORE, &rl) < 0) {
-                LOGE("could not disable core file generation "
-                     "for pid %d, errno=%d", getpid(), errno);
+                LOGE("could not disable core file generation for pid %d: %s",
+                    getpid(), strerror(errno));
             }
         }
     }
@@ -366,7 +366,7 @@ static pid_t forkAndSpecializeCommon(const u4* args)
             err = prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
 
             if (err < 0) {
-                LOGW("cannot PR_SET_KEEPCAPS errno: %d", errno);
+                LOGW("cannot PR_SET_KEEPCAPS: %s", strerror(errno));
             }
         }
 
@@ -375,23 +375,23 @@ static pid_t forkAndSpecializeCommon(const u4* args)
         err = setgroupsIntarray(gids);
 
         if (err < 0) {
-            LOGW("cannot setgroups() errno: %d", errno);
+            LOGW("cannot setgroups(): %s", strerror(errno));
         }
 
         err = setrlimitsFromArray(rlimits);
 
         if (err < 0) {
-            LOGW("cannot setrlimit() errno: %d", errno);
+            LOGW("cannot setrlimit(): %s", strerror(errno));
         }
 
         err = setgid(gid);
         if (err < 0) {
-            LOGW("cannot setgid(%d) errno: %d", gid, errno);
+            LOGW("cannot setgid(%d): %s", gid, strerror(errno));
         }
 
         err = setuid(uid);
         if (err < 0) {
-            LOGW("cannot setuid(%d) errno: %d", uid, errno);
+            LOGW("cannot setuid(%d): %s", uid, strerror(errno));
         }
 
         /*

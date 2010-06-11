@@ -411,7 +411,8 @@ static bool getThreadStats(pid_t pid, pid_t tid, unsigned long* pUtime,
     int cc;
     cc = read(fd, lineBuf, sizeof(lineBuf)-1);
     if (cc <= 0) {
-        LOGI("Unable to read '%s': got %d (errno=%d)\n", nameBuf, cc, errno);
+        const char* msg = (cc == 0) ? "unexpected EOF" : strerror(errno);
+        LOGI("Unable to read '%s': %s\n", nameBuf, msg);
         close(fd);
         return false;
     }

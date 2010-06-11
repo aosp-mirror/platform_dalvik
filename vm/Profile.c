@@ -641,7 +641,8 @@ void dvmMethodTraceStop(void)
         /* append the profiling data */
         if (fwrite(state->buf, finalCurOffset, 1, state->traceFile) != 1) {
             int err = errno;
-            LOGE("trace fwrite(%d) failed, errno=%d\n", finalCurOffset, err);
+            LOGE("trace fwrite(%d) failed: %s\n",
+                finalCurOffset, strerror(err));
             dvmThrowExceptionFmt("Ljava/lang/RuntimeException;",
                 "Trace data write failed: %s", strerror(err));
         }
