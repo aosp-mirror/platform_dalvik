@@ -407,14 +407,6 @@ void* dvmMalloc(size_t size, int flags)
     GcHeap *gcHeap = gDvm.gcHeap;
     void *ptr;
 
-#if 0
-    /* handy for spotting large allocations */
-    if (size >= 100000) {
-        LOGI("dvmMalloc(%d):\n", size);
-        dvmDumpThread(dvmThreadSelf(), false);
-    }
-#endif
-
 #if defined(WITH_ALLOC_LIMITS)
     /*
      * See if they've exceeded the allocation limit for this thread.
