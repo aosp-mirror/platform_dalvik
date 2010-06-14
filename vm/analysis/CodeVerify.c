@@ -3137,7 +3137,7 @@ bool dvmVerifyCodeFlow(Method* meth, InsnFlags* insnFlags,
         gDvm.classJavaLangObject =
             dvmFindSystemClassNoInit("Ljava/lang/Object;");
 
-    if (meth->registersSize * insnsSize > 2*1024*1024) {
+    if (meth->registersSize * insnsSize > 4*1024*1024) {
         /* should probably base this on actual memory requirements */
         LOG_VFY_METH(meth,
             "VFY: arbitrarily rejecting large method (regs=%d count=%d)\n",
