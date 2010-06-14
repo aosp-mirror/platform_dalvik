@@ -598,8 +598,8 @@ ClassObject* dvmFindPrimitiveClass(char type)
         ClassObject* primClass = createPrimitiveClass(idx);
         dvmReleaseTrackedAlloc((Object*) primClass, NULL);
 
-        if (!ATOMIC_CMP_SWAP((int*) &gDvm.primitiveClass[idx],
-            0, (int) primClass))
+        if (android_atomic_release_cas(0, (int) primClass,
+                (int*) &gDvm.primitiveClass[idx]) != 0)
         {
             /*
              * Looks like somebody beat us to it.  Free up the one we

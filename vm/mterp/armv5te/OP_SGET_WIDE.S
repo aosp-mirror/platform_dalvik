@@ -17,7 +17,7 @@
     mov     r9, rINST, lsr #8           @ r9<- AA
     .if $volatile
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
     .endif

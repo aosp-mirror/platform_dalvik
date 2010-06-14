@@ -47,29 +47,29 @@ u8 dvmTestAtomicSpeedSub(int repeatCount)
         j += i; j += i; j += i; j += i; j += i;
 #else
         // succeed 10x (Dream: 155.9ns)
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
-        (void)ATOMIC_CMP_SWAP(valuePtr, 7, 7);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
+        (void)android_atomic_release_cas(7, 7, valuePtr);
 
         // fail 10x (Dream: 158.5ns)
         /*
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
-        ATOMIC_CMP_SWAP(valuePtr, 6, 7);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
+        (void)android_atomic_release_cas(6, 7, valuePtr);
         */
 #endif
     }

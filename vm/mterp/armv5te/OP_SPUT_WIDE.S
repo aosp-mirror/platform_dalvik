@@ -21,7 +21,7 @@
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if $volatile
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
     .endif

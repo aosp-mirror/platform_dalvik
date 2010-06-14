@@ -24,6 +24,8 @@
  * TODO: unify ARM/x86/sh implementations using the to-be-written
  * spin lock implementation.  We don't want to rely on mutex innards,
  * and it would be great if all platforms were running the same code.
+ *
+ * TODO: provide ARMv7-A-specific implementation using LDREXD/STREXD.
  */
 
 #if defined(HAVE_MACOSX_IPC)
@@ -40,13 +42,15 @@
 #define NEED_QUASIATOMICS 1
 #else
 
-int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
-        volatile int64_t* addr) {
+int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
+    volatile int64_t* addr)
+{
     return OSAtomicCompareAndSwap64Barrier(oldvalue, newvalue,
             (int64_t*)addr) == 0;
 }
 
-int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
+int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
+{
     int64_t oldValue;
     do {
         oldValue = *addr;
@@ -54,7 +58,8 @@ int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
     return oldValue;
 }
 
-int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
+int64_t dvmQuasiAtomicRead64(volatile int64_t* addr)
+{
     return OSAtomicAdd64Barrier(0, addr);
 }
 #endif
@@ -89,7 +94,8 @@ static pthread_mutex_t  _swap_locks[SWAP_LOCK_COUNT];
    &_swap_locks[((unsigned)(void*)(addr) >> 3U) % SWAP_LOCK_COUNT]
 
 
-int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
+int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
+{
     int64_t oldValue;
     pthread_mutex_t*  lock = SWAP_LOCK(addr);
 
@@ -102,8 +108,9 @@ int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
     return oldValue;
 }
 
-int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
-        volatile int64_t* addr) {
+int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
+    volatile int64_t* addr)
+{
     int result;
     pthread_mutex_t*  lock = SWAP_LOCK(addr);
 
@@ -119,7 +126,8 @@ int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
     return result;
 }
 
-int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
+int64_t dvmQuasiAtomicRead64(volatile int64_t* addr)
+{
     int64_t result;
     pthread_mutex_t*  lock = SWAP_LOCK(addr);
 
@@ -162,8 +170,9 @@ int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
 /* global spinlock for all 64-bit quasiatomic operations */
 static int32_t quasiatomic_spinlock = 0;
 
-int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
-        volatile int64_t* addr) {
+int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
+    volatile int64_t* addr)
+{
     int result;
 
     while (android_atomic_acquire_cas(0, 1, &quasiatomic_spinlock)) {
@@ -186,7 +195,8 @@ int android_quasiatomic_cmpxchg_64(int64_t oldvalue, int64_t newvalue,
     return result;
 }
 
-int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
+int64_t dvmQuasiAtomicRead64(volatile int64_t* addr)
+{
     int64_t result;
 
     while (android_atomic_acquire_cas(0, 1, &quasiatomic_spinlock)) {
@@ -203,7 +213,8 @@ int64_t android_quasiatomic_read_64(volatile int64_t* addr) {
     return result;
 }
 
-int64_t android_quasiatomic_swap_64(int64_t value, volatile int64_t* addr) {
+int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
+{
     int64_t result;
 
     while (android_atomic_acquire_cas(0, 1, &quasiatomic_spinlock)) {

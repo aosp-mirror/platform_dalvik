@@ -106,7 +106,7 @@ static void Dalvik_sun_misc_Unsafe_compareAndSwapLong(const u4* args,
 
     // Note: android_atomic_cmpxchg() returns 0 on success, not failure.
     int result =
-        android_quasiatomic_cmpxchg_64(expectedValue, newValue, address);
+        dvmQuasiAtomicCas64(expectedValue, newValue, address);
 
     RETURN_BOOLEAN(result == 0);
 }
@@ -173,7 +173,7 @@ static void Dalvik_sun_misc_Unsafe_getLongVolatile(const u4* args,
     s8 offset = GET_ARG_LONG(args, 2);
     volatile s8* address = (volatile s8*) (((u1*) obj) + offset);
 
-    RETURN_LONG(android_quasiatomic_read_64(address));
+    RETURN_LONG(dvmQuasiAtomicRead64(address));
 }
 
 /*
@@ -188,7 +188,7 @@ static void Dalvik_sun_misc_Unsafe_putLongVolatile(const u4* args,
     s8 value = GET_ARG_LONG(args, 4);
     volatile s8* address = (volatile s8*) (((u1*) obj) + offset);
 
-    android_quasiatomic_swap_64(value, address);
+    dvmQuasiAtomicSwap64(value, address);
     RETURN_VOID();
 }
 

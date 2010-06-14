@@ -36,7 +36,7 @@
     beq     common_errNullObject        @ object was null
     .if $volatile
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
     .endif

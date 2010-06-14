@@ -2114,7 +2114,7 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
         dvmDbgActive();
 
         state->lastActivitySec = 0;
-        MEM_BARRIER();
+        ANDROID_MEMBAR_FULL();
     }
 
     /*
@@ -2196,7 +2196,7 @@ void dvmJdwpProcessRequest(JdwpState* state, const JdwpReqHeader* pHeader,
 
         dvmJdwpGetNowMsec(&lastSec, &lastMsec);
         state->lastActivityMsec = lastMsec;
-        MEM_BARRIER();      // updating a 64-bit value
+        ANDROID_MEMBAR_FULL();      // updating a 64-bit value
         state->lastActivitySec = lastSec;
     }
 

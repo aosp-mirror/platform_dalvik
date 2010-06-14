@@ -716,7 +716,7 @@ INLINE Object* dvmGetFieldObject(const Object* obj, int offset) {
 }
 INLINE s8 dvmGetFieldLongVolatile(const Object* obj, int offset) {
     const s8* addr = BYTE_OFFSET(obj, offset);
-    return android_quasiatomic_read_64((s8*)addr);
+    return dvmQuasiAtomicRead64((s8*)addr);
 }
 
 INLINE void dvmSetFieldBoolean(Object* obj, int offset, bool val) {
@@ -748,7 +748,7 @@ INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
 }
 INLINE void dvmSetFieldLongVolatile(Object* obj, int offset, s8 val) {
     s8* addr = BYTE_OFFSET(obj, offset);
-    android_quasiatomic_swap_64(val, addr);
+    dvmQuasiAtomicSwap64(val, addr);
 }
 
 /*
@@ -787,7 +787,7 @@ INLINE Object* dvmGetStaticFieldObject(const StaticField* sfield) {
 }
 INLINE s8 dvmGetStaticFieldLongVolatile(const StaticField* sfield) {
     const s8* addr = &sfield->value.j;
-    return android_quasiatomic_read_64((s8*)addr);
+    return dvmQuasiAtomicRead64((s8*)addr);
 }
 
 INLINE void dvmSetStaticFieldBoolean(StaticField* sfield, bool val) {
@@ -819,7 +819,7 @@ INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
 }
 INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
     s8* addr = &sfield->value.j;
-    android_quasiatomic_swap_64(val, addr);
+    dvmQuasiAtomicSwap64(val, addr);
 }
 
 /*

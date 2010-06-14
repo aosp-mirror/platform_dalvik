@@ -39,7 +39,7 @@
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     add     r2, r9, r3                  @ r2<- object + byte offset
     .if $volatile
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     stmia   r2, {r0-r1}                 @ obj.field (64 bits, aligned)<- r0/r1
     .endif

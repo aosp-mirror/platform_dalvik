@@ -105,8 +105,9 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
      * the version counter (at 2^31).  Probably not a real concern.
      */
     if ((firstVersion & ATOMIC_LOCK_FLAG) != 0 ||
-        !ATOMIC_CMP_SWAP((volatile s4*) &pEntry->version,
-            firstVersion, firstVersion | ATOMIC_LOCK_FLAG))
+        android_atomic_release_cas(
+                firstVersion, firstVersion | ATOMIC_LOCK_FLAG,
+                (volatile s4*) &pEntry->version) != 0)
     {
         /*
          * We couldn't get the write lock.  Return without updating the table.
@@ -130,7 +131,7 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
 
     /* volatile incr */
     pEntry->version++;
-    MEM_BARRIER();
+    ANDROID_MEMBAR_FULL();
 
     pEntry->key1 = key1;
     pEntry->key2 = key2;
@@ -138,15 +139,16 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
 
     /* volatile incr */
     pEntry->version++;
-    MEM_BARRIER();
+    ANDROID_MEMBAR_FULL();
 
     /*
      * Clear the lock flag.  Nobody else should have been able to modify
      * pEntry->version, so if this fails the world is broken.
      */
     firstVersion += 2;
-    if (!ATOMIC_CMP_SWAP((volatile s4*) &pEntry->version,
-            firstVersion | ATOMIC_LOCK_FLAG, firstVersion))
+    if (android_atomic_release_cas(
+            firstVersion | ATOMIC_LOCK_FLAG, firstVersion,
+            (volatile s4*) &pEntry->version) != 0)
     {
         //LOGE("unable to reset the instanceof cache ownership\n");
         dvmAbort();

@@ -231,7 +231,7 @@ static void* jdwpThreadStart(void* arg)
      */
     state->debugThreadHandle = dvmThreadSelf()->handle;
     state->run = true;
-    MEM_BARRIER();
+    ANDROID_MEMBAR_FULL();
     state->debugThreadStarted = true;       // touch this last
 
     dvmDbgLockMutex(&state->threadStartLock);

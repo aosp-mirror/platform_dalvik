@@ -1453,7 +1453,7 @@ static void inlineCachePatchEnqueue(PredictedChainingCell *cellAddr,
          * The update order matters - make sure clazz is updated last since it
          * will bring the uninitialized chaining cell to life.
          */
-        MEM_BARRIER();
+        ANDROID_MEMBAR_FULL();
         cellAddr->clazz = newContent->clazz;
         cacheflush((intptr_t) cellAddr, (intptr_t) (cellAddr+1), 0);
         UPDATE_CODE_CACHE_PATCHES();

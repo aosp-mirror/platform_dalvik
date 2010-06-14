@@ -2811,7 +2811,7 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- AA
     .if 0
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
     .endif
@@ -2997,7 +2997,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 0
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
     .endif
@@ -7188,7 +7188,7 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- AA
     .if 1
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r0, #offStaticField_value] @ r0/r1<- field value (aligned)
     .endif
@@ -7222,7 +7222,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 1
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r2, #offStaticField_value] @ field<- vAA/vAA+1
     .endif
@@ -8115,7 +8115,7 @@ dvmAsmSisterStart:
     beq     common_errNullObject        @ object was null
     .if 0
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
     .endif
@@ -8266,7 +8266,7 @@ dvmAsmSisterStart:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 0
     add     r2, r9, r3                  @ r2<- target address
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
     .endif
@@ -8876,7 +8876,7 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     .if 1
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldrd    r0, [r9, r3]                @ r0/r1<- obj.field (64-bit align ok)
     .endif
@@ -8907,7 +8907,7 @@ d2l_doconv:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     .if 1
     add     r2, r9, r3                  @ r2<- target address
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     strd    r0, [r9, r3]                @ obj.field (64 bits, aligned)<- r0/r1
     .endif

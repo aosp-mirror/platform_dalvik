@@ -499,8 +499,8 @@ void setTraceConstruction(JitEntry *slot, bool value)
         oldValue = slot->u;
         newValue = oldValue;
         newValue.info.traceConstruction = value;
-    } while (!ATOMIC_CMP_SWAP( &slot->u.infoWord,
-             oldValue.infoWord, newValue.infoWord));
+    } while (android_atomic_release_cas(oldValue.infoWord, newValue.infoWord,
+            &slot->u.infoWord) != 0);
 }
 
 void resetTracehead(InterpState* interpState, JitEntry *slot)
@@ -546,7 +546,7 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
          * (the simple, and common case).  Otherwise we're going
          * to have to find a free slot and chain it.
          */
-        MEM_BARRIER(); /* Make sure we reload [].dPC after lock */
+        ANDROID_MEMBAR_FULL(); /* Make sure we reload [].dPC after lock */
         if (gDvmJit.pJitEntryTable[idx].dPC != NULL) {
             u4 prev;
             while (gDvmJit.pJitEntryTable[idx].u.info.chain != chainEndMarker) {
@@ -583,9 +583,9 @@ static JitEntry *lookupAndAdd(const u2* dPC, bool callerLocked)
                     oldValue = gDvmJit.pJitEntryTable[prev].u;
                     newValue = oldValue;
                     newValue.info.chain = idx;
-                } while (!ATOMIC_CMP_SWAP(
-                         &gDvmJit.pJitEntryTable[prev].u.infoWord,
-                         oldValue.infoWord, newValue.infoWord));
+                } while (android_atomic_release_cas(oldValue.infoWord,
+                        newValue.infoWord,
+                        &gDvmJit.pJitEntryTable[prev].u.infoWord) != 0);
             }
         }
         if (gDvmJit.pJitEntryTable[idx].dPC == NULL) {
@@ -935,9 +935,9 @@ void dvmJitSetCodeAddr(const u2* dPC, void *nPC, JitInstructionSetType set) {
         oldValue = jitEntry->u;
         newValue = oldValue;
         newValue.info.instructionSet = set;
-    } while (!ATOMIC_CMP_SWAP(
-             &jitEntry->u.infoWord,
-             oldValue.infoWord, newValue.infoWord));
+    } while (android_atomic_release_cas(
+             oldValue.infoWord, newValue.infoWord,
+             &jitEntry->u.infoWord) != 0);
     jitEntry->codeAddress = nPC;
 }
 

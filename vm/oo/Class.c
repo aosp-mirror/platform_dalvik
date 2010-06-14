@@ -1129,7 +1129,8 @@ void dvmSetClassSerialNumber(ClassObject* clazz)
     do {
         oldValue = gDvm.classSerialNumber;
         newValue = oldValue + 1;
-    } while (!ATOMIC_CMP_SWAP(&gDvm.classSerialNumber, oldValue, newValue));
+    } while (android_atomic_release_cas(oldValue, newValue,
+            &gDvm.classSerialNumber) != 0);
 
     clazz->serialNumber = (u4) oldValue;
 }

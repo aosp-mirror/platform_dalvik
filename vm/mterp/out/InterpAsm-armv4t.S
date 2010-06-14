@@ -2831,7 +2831,7 @@ dalvik_inst:
     mov     r9, rINST, lsr #8           @ r9<- AA
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
     .if 0
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldmia   r0, {r0-r1}                 @ r0/r1<- field value (aligned)
     .endif
@@ -3017,7 +3017,7 @@ dalvik_inst:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
     .if 0
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     stmia   r2, {r0-r1}                 @ field<- vAA/vAA+1
     .endif
@@ -7508,7 +7508,7 @@ d2i_doconv:
     mov     r9, rINST, lsr #8           @ r9<- AA
     add     r0, r0, #offStaticField_value @ r0<- pointer to data
     .if 1
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     ldmia   r0, {r0-r1}                 @ r0/r1<- field value (aligned)
     .endif
@@ -7542,7 +7542,7 @@ d2i_doconv:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     add     r2, r2, #offStaticField_value @ r2<- pointer to data
     .if 1
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     stmia   r2, {r0-r1}                 @ field<- vAA/vAA+1
     .endif
@@ -8575,7 +8575,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     .if 0
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     add     r9, r9, r3                  @ r9<- obj + field offset
     ldmia   r9, {r0-r1}                 @ r0/r1<- obj.field (64-bit align ok)
@@ -8727,7 +8727,7 @@ OP_CMPG_FLOAT_nan:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     add     r2, r9, r3                  @ r2<- object + byte offset
     .if 0
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     stmia   r2, {r0-r1}                 @ obj.field (64 bits, aligned)<- r0/r1
     .endif
@@ -9337,7 +9337,7 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     .if 1
     add     r0, r9, r3                  @ r0<- address of field
-    bl      android_quasiatomic_read_64 @ r0/r1<- contents of field
+    bl      dvmQuasiAtomicRead64        @ r0/r1<- contents of field
     .else
     add     r9, r9, r3                  @ r9<- obj + field offset
     ldmia   r9, {r0-r1}                 @ r0/r1<- obj.field (64-bit align ok)
@@ -9369,7 +9369,7 @@ d2l_doconv:
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
     add     r2, r9, r3                  @ r2<- object + byte offset
     .if 1
-    bl      android_quasiatomic_swap_64 @ stores r0/r1 into addr r2
+    bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else
     stmia   r2, {r0-r1}                 @ obj.field (64 bits, aligned)<- r0/r1
     .endif
