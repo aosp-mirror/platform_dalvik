@@ -21,7 +21,7 @@ public class Main {
         System.gc();
         System.runFinalization();
 
-        new Timer().schedule(new TimerTask() {
+        new Timer(true).schedule(new TimerTask() {
                 public void run() {
                     System.out.println("Timed out, exiting");
                     System.exit(1);
