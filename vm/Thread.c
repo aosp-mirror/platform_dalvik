@@ -819,7 +819,7 @@ bool dvmPrepMainThread(void)
     }
     dvmReleaseTrackedAlloc(threadObj, NULL);
 
-    threadNameStr = dvmCreateStringFromCstr("main", ALLOC_DEFAULT);
+    threadNameStr = dvmCreateStringFromCstr("main");
     if (threadNameStr == NULL)
         return false;
     dvmReleaseTrackedAlloc((Object*)threadNameStr, NULL);
@@ -2022,7 +2022,7 @@ bool dvmAttachCurrentThread(const JavaVMAttachArgs* pArgs, bool isDaemon)
      * Create a string for the thread name.
      */
     if (pArgs->name != NULL) {
-        threadNameStr = dvmCreateStringFromCstr(pArgs->name, ALLOC_DEFAULT);
+        threadNameStr = dvmCreateStringFromCstr(pArgs->name);
         if (threadNameStr == NULL) {
             assert(dvmCheckException(dvmThreadSelf()));
             goto fail_unlink;

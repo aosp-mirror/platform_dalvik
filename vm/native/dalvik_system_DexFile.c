@@ -360,7 +360,7 @@ static void Dalvik_dalvik_system_DexFile_getClassNameList(const u4* args,
             dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
 
         char* className = dvmDescriptorToDot(descriptor);
-        contents[i] = dvmCreateStringFromCstr(className, ALLOC_DEFAULT);
+        contents[i] = dvmCreateStringFromCstr(className);
         dvmReleaseTrackedAlloc((Object*) contents[i], NULL);
         free(className);
     }

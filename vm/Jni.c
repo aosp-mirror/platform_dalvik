@@ -2910,7 +2910,7 @@ static jstring NewStringUTF(JNIEnv* env, const char* bytes)
         result = NULL;
     } else {
         /* note newStr could come back NULL on OOM */
-        StringObject* newStr = dvmCreateStringFromCstr(bytes, ALLOC_DEFAULT);
+        StringObject* newStr = dvmCreateStringFromCstr(bytes);
         result = addLocalReference(env, (Object*) newStr);
         dvmReleaseTrackedAlloc((Object*)newStr, NULL);
     }

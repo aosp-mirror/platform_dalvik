@@ -57,10 +57,10 @@ static ArrayObject* convertStringArray(char** strings, size_t count)
     StringObject** contents = (StringObject**) stringArray->contents;
     size_t i;
     for (i = 0; i < count; i++) {
-        contents[i] = dvmCreateStringFromCstr(strings[i], ALLOC_DEFAULT);
+        contents[i] = dvmCreateStringFromCstr(strings[i]);
         if (contents[i] == NULL) {
             /* probably OOM; drop out now */
-            assert(dvmCheckException(dvmThreadSelf()));
+            assert(dvmCheckException(self));
             dvmReleaseTrackedAlloc((Object*)stringArray, self);
             return NULL;
         }

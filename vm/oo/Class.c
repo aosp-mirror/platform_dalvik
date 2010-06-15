@@ -801,7 +801,7 @@ StringObject* dvmGetBootPathResource(const char* name, int idx)
     }
 
     LOGV("+++ using URL='%s'\n", urlBuf);
-    urlObj = dvmCreateStringFromCstr(urlBuf, ALLOC_DEFAULT);
+    urlObj = dvmCreateStringFromCstr(urlBuf);
 
 bail:
     return urlObj;
@@ -1245,7 +1245,7 @@ static ClassObject* findClassFromLoaderNoInit(const char* descriptor,
         dvmThrowException("Ljava/lang/OutOfMemoryError;", NULL);
         goto bail;
     }
-    nameObj = dvmCreateStringFromCstr(dotName, ALLOC_DEFAULT);
+    nameObj = dvmCreateStringFromCstr(dotName);
     if (nameObj == NULL) {
         assert(dvmCheckException(self));
         goto bail;

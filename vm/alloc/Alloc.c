@@ -100,7 +100,7 @@ static Object* createStockException(const char* descriptor, const char* msg)
     if (msg == NULL) {
         msgStr = NULL;
     } else {
-        msgStr = dvmCreateStringFromCstr(msg, ALLOC_DEFAULT);
+        msgStr = dvmCreateStringFromCstr(msg);
         if (msgStr == NULL) {
             LOGW("Could not allocate message string \"%s\"\n", msg);
             dvmReleaseTrackedAlloc(obj, self);

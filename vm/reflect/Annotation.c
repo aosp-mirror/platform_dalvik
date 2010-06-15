@@ -734,7 +734,7 @@ static Object* createAnnotationMember(const ClassObject* clazz,
         dvmAllocObject(gDvm.classOrgApacheHarmonyLangAnnotationAnnotationMember,
         ALLOC_DEFAULT);
     name = dexStringById(pDexFile, elementNameIdx);
-    nameObj = dvmCreateStringFromCstr(name, ALLOC_DEFAULT);
+    nameObj = dvmCreateStringFromCstr(name);
 
     /* find the method in the annotation class, given only the name */
     if (name != NULL) {

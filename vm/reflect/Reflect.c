@@ -362,7 +362,7 @@ static Object* createFieldObject(Field* field, const ClassObject* clazz)
     if (type == NULL)
         goto bail;
 
-    nameObj = dvmCreateStringFromCstr(field->name, ALLOC_DEFAULT);
+    nameObj = dvmCreateStringFromCstr(field->name);
     if (nameObj == NULL)
         goto bail;
 
@@ -700,7 +700,7 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
         goto bail;
 
     /* method name */
-    nameObj = dvmCreateStringFromCstr(meth->name, ALLOC_DEFAULT);
+    nameObj = dvmCreateStringFromCstr(meth->name);
     if (nameObj == NULL)
         goto bail;
 

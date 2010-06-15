@@ -424,7 +424,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
     if (msg == NULL)
         msgStr = NULL;
     else {
-        msgStr = dvmCreateStringFromCstr(msg, ALLOC_DEFAULT);
+        msgStr = dvmCreateStringFromCstr(msg);
         if (msgStr == NULL) {
             LOGW("Could not allocate message string \"%s\" while "
                     "throwing internal exception (%s)\n",
@@ -1168,13 +1168,13 @@ ArrayObject* dvmGetStackTraceRaw(const int* intVals, int stackDepth)
             lineNumber = dvmLineNumFromPC(meth, pc);
 
         dotName = dvmDescriptorToDot(meth->clazz->descriptor);
-        className = dvmCreateStringFromCstr(dotName, ALLOC_DEFAULT);
+        className = dvmCreateStringFromCstr(dotName);
         free(dotName);
 
-        methodName = dvmCreateStringFromCstr(meth->name, ALLOC_DEFAULT);
+        methodName = dvmCreateStringFromCstr(meth->name);
         sourceFile = dvmGetMethodSourceFile(meth);
         if (sourceFile != NULL)
-            fileName = dvmCreateStringFromCstr(sourceFile, ALLOC_DEFAULT);
+            fileName = dvmCreateStringFromCstr(sourceFile);
         else
             fileName = NULL;
 

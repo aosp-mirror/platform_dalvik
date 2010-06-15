@@ -257,39 +257,32 @@ u4 dvmComputeStringHash(StringObject* strObj) {
 /*
  * Create a new java/lang/String object, using the string data in "utf8Str".
  *
- * Note that "allocFlags" affects both of the allocations here.  If you
- * use ALLOC_DONT_TRACK in a context where a GC could happen between the
- * two allocations, you could lose the array reference.
+ * The caller must call dvmReleaseTrackedAlloc() on the return value.
  *
  * Returns NULL and throws an exception on failure.
  */
-StringObject* dvmCreateStringFromCstr(const char* utf8Str, int allocFlags)
+StringObject* dvmCreateStringFromCstr(const char* utf8Str)
 {
     assert(utf8Str != NULL);
-
-    return dvmCreateStringFromCstrAndLength(utf8Str, dvmUtf8Len(utf8Str),
-            allocFlags);
+    return dvmCreateStringFromCstrAndLength(utf8Str, dvmUtf8Len(utf8Str));
 }
 
 /*
  * Create a java/lang/String from a C string, given its UTF-16 length
  * (number of UTF-16 code points).
  *
- * The caller must call dvmReleaseTrackedAlloc() on the return value or
- * use a non-default value for "allocFlags".  It is never appropriate
- * to use ALLOC_DONT_TRACK with this function.
+ * The caller must call dvmReleaseTrackedAlloc() on the return value.
  *
  * Returns NULL and throws an exception on failure.
  */
 StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
-    u4 utf16Length, int allocFlags)
+    u4 utf16Length)
 {
     StringObject* newObj;
     ArrayObject* chars;
     u4 hashCode = 0;
 
     //LOGV("Creating String from '%s'\n", utf8Str);
-    assert(allocFlags != ALLOC_DONT_TRACK);     /* don't currently need */
     assert(utf8Str != NULL);
 
     if (gDvm.javaLangStringReady <= 0) {
@@ -305,13 +298,13 @@ StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
     }
 
     newObj = (StringObject*) dvmAllocObject(gDvm.classJavaLangString,
-                allocFlags);
+                ALLOC_DEFAULT);
     if (newObj == NULL)
         return NULL;
 
-    chars = dvmAllocPrimitiveArray('C', utf16Length, allocFlags);
+    chars = dvmAllocPrimitiveArray('C', utf16Length, ALLOC_DEFAULT);
     if (chars == NULL) {
-        dvmReleaseTrackedAllocIFN((Object*) newObj, NULL, allocFlags);
+        dvmReleaseTrackedAlloc((Object*) newObj, NULL);
         return NULL;
     }
     dvmConvertUtf8ToUtf16((u2*)chars->contents, utf8Str);
@@ -319,7 +312,7 @@ StringObject* dvmCreateStringFromCstrAndLength(const char* utf8Str,
 
     dvmSetFieldObject((Object*)newObj, STRING_FIELDOFF_VALUE,
         (Object*)chars);
-    dvmReleaseTrackedAllocIFN((Object*) chars, NULL, allocFlags);
+    dvmReleaseTrackedAlloc((Object*) chars, NULL);
     dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_COUNT, utf16Length);
     dvmSetFieldInt((Object*)newObj, STRING_FIELDOFF_HASHCODE, hashCode);
     /* leave offset set to zero */

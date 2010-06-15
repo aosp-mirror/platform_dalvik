@@ -351,7 +351,7 @@ static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
             }
         }
 
-        nameObj = dvmCreateStringFromCstr(name, ALLOC_DEFAULT);
+        nameObj = dvmCreateStringFromCstr(name);
     } else {
         /*
          * Convert the UTF-8 name to a java.lang.String. The
@@ -363,7 +363,7 @@ static void Dalvik_java_lang_Class_getName(const u4* args, JValue* pResult)
          * say, 128 bytes).
          */
         char* dotName = dvmDescriptorToDot(clazz->descriptor);
-        nameObj = dvmCreateStringFromCstr(dotName, ALLOC_DEFAULT);
+        nameObj = dvmCreateStringFromCstr(dotName);
         free(dotName);
     }
 

@@ -275,7 +275,7 @@ static void Dalvik_java_lang_System_mapLibraryName(const u4* args,
     name = dvmCreateCstrFromString(nameObj);
     mappedName = dvmCreateSystemLibraryName(name);
     if (mappedName != NULL) {
-        result = dvmCreateStringFromCstr(mappedName, ALLOC_DEFAULT);
+        result = dvmCreateStringFromCstr(mappedName);
         dvmReleaseTrackedAlloc((Object*) result, NULL);
     }
 

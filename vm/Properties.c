@@ -111,8 +111,8 @@ static void setProperty(Object* propObj, Method* put, const char* key,
         value = "";
     }
 
-    keyStr = dvmCreateStringFromCstr(key, ALLOC_DEFAULT);
-    valueStr = dvmCreateStringFromCstr(value, ALLOC_DEFAULT);
+    keyStr = dvmCreateStringFromCstr(key);
+    valueStr = dvmCreateStringFromCstr(value);
     if (keyStr == NULL || valueStr == NULL) {
         LOGW("setProperty string creation failed\n");
         goto bail;
@@ -265,7 +265,7 @@ char* dvmGetProperty(const char* key)
         goto bail;
     }
 
-    keyObj = dvmCreateStringFromCstr(key, ALLOC_DEFAULT);
+    keyObj = dvmCreateStringFromCstr(key);
     if (keyObj == NULL)
         goto bail;
 

@@ -86,16 +86,6 @@ void dvmAddTrackedAlloc(Object* obj, Thread* self);
 void dvmReleaseTrackedAlloc(Object* obj, Thread* self);
 
 /*
- * Like dvmReleaseTrackedAlloc, but only does the release if "allocFlags"
- * indicates that it's necessary to do so.
- */
-INLINE void dvmReleaseTrackedAllocIFN(Object* obj, Thread* self, int allocFlags)
-{
-    if ((allocFlags & ALLOC_DONT_TRACK) == 0)
-        dvmReleaseTrackedAlloc(obj, self);
-}
-
-/*
  * Returns true iff <obj> points to a valid allocated object.
  */
 bool dvmIsValidObject(const Object* obj);

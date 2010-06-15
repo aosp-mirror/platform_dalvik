@@ -1150,7 +1150,7 @@ ObjectId dvmDbgCreateString(const char* str)
 {
     StringObject* strObj;
 
-    strObj = dvmCreateStringFromCstr(str, ALLOC_DEFAULT);
+    strObj = dvmCreateStringFromCstr(str);
     dvmReleaseTrackedAlloc((Object*) strObj, NULL);
     return objectToObjectId((Object*) strObj);
 }
