@@ -52,6 +52,11 @@ static void verifyReference(const void *addr)
     verifyReferenceUnmask(addr, 0);
 }
 
+static void visitorCallback(void *addr, void *arg)
+{
+    verifyReference(addr);
+}
+
 /*
  * Verifies an object reference.  Determines the type of the reference
  * and dispatches to a specialized verification routine.
@@ -59,7 +64,7 @@ static void verifyReference(const void *addr)
 void dvmVerifyObject(const Object *obj)
 {
     LOGV("Entering dvmVerifyObject(obj=%p)", obj);
-    dvmVisitObject((Visitor *)verifyReference, (Object *)obj);
+    dvmVisitObject(visitorCallback, (Object *)obj, NULL);
     LOGV("Exiting dvmVerifyObject(obj=%p)", obj);
 }
 
