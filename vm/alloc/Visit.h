@@ -19,8 +19,8 @@
 
 #include "Dalvik.h"
 
-typedef void Visitor(void *obj);
+typedef void Visitor(void *obj, void *arg);
 
-void dvmVisitObject(Visitor *visitor, Object *obj);
+void dvmVisitObject(Visitor *visitor, Object *obj, void *arg);
 
 #endif /* _DALVIK_ALLOC_VISIT */

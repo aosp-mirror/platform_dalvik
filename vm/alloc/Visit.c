@@ -21,7 +21,7 @@
 /*
  * Visits the instance fields of a class or data object.
  */
-static void visitInstanceFields(Visitor *visitor, Object *obj)
+static void visitInstanceFields(Visitor *visitor, Object *obj, void *arg)
 {
     assert(visitor != NULL);
     assert(obj != NULL);
@@ -33,7 +33,7 @@ static void visitInstanceFields(Visitor *visitor, Object *obj)
             size_t rshift = CLZ(refOffsets);
             size_t offset = CLASS_OFFSET_FROM_CLZ(rshift);
             Object **ref = BYTE_OFFSET(obj, offset);
-            (*visitor)(ref);
+            (*visitor)(ref, arg);
             refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
         }
     } else {
@@ -44,7 +44,7 @@ static void visitInstanceFields(Visitor *visitor, Object *obj)
             for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
                 size_t offset = field->byteOffset;
                 Object **ref = BYTE_OFFSET(obj, offset);
-                (*visitor)(ref);
+                (*visitor)(ref, arg);
             }
         }
     }
@@ -54,7 +54,7 @@ static void visitInstanceFields(Visitor *visitor, Object *obj)
 /*
  * Visits the static fields of a class object.
  */
-static void visitStaticFields(Visitor *visitor, ClassObject *clazz)
+static void visitStaticFields(Visitor *visitor, ClassObject *clazz, void *arg)
 {
     int i;
 
@@ -63,7 +63,7 @@ static void visitStaticFields(Visitor *visitor, ClassObject *clazz)
     for (i = 0; i < clazz->sfieldCount; ++i) {
         char ch = clazz->sfields[i].field.signature[0];
         if (ch == '[' || ch == 'L') {
-            (*visitor)(&clazz->sfields[i].value.l);
+            (*visitor)(&clazz->sfields[i].value.l, arg);
         }
     }
 }
@@ -71,38 +71,38 @@ static void visitStaticFields(Visitor *visitor, ClassObject *clazz)
 /*
  * Visit the interfaces of a class object.
  */
-static void visitInterfaces(Visitor *visitor, ClassObject *clazz)
+static void visitInterfaces(Visitor *visitor, ClassObject *clazz, void *arg)
 {
     int i;
 
     assert(visitor != NULL);
     assert(clazz != NULL);
     for (i = 0; i < clazz->interfaceCount; ++i) {
-        (*visitor)(&clazz->interfaces[i]);
+        (*visitor)(&clazz->interfaces[i], arg);
     }
 }
 
 /*
  * Visits all the references stored in a class object instance.
  */
-static void visitClassObject(Visitor *visitor, ClassObject *obj)
+static void visitClassObject(Visitor *visitor, ClassObject *obj, void *arg)
 {
     assert(visitor != NULL);
     assert(obj != NULL);
     LOGV("Entering visitClassObject(visitor=%p,obj=%p)", visitor, obj);
     assert(!strcmp(obj->obj.clazz->descriptor, "Ljava/lang/Class;"));
-    (*visitor)(&obj->obj.clazz);
+    (*visitor)(&obj->obj.clazz, arg);
     if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
-        (*visitor)(&obj->elementClass);
+        (*visitor)(&obj->elementClass, arg);
     }
     if (obj->status > CLASS_IDX) {
-        (*visitor)(&obj->super);
+        (*visitor)(&obj->super, arg);
     }
-    (*visitor)(&obj->classLoader);
-    visitInstanceFields(visitor, (Object *)obj);
-    visitStaticFields(visitor, obj);
+    (*visitor)(&obj->classLoader, arg);
+    visitInstanceFields(visitor, (Object *)obj, arg);
+    visitStaticFields(visitor, obj, arg);
     if (obj->status > CLASS_IDX) {
-        visitInterfaces(visitor, obj);
+        visitInterfaces(visitor, obj, arg);
     }
     LOGV("Exiting visitClassObject(visitor=%p,obj=%p)", visitor, obj);
 }
@@ -111,19 +111,19 @@ static void visitClassObject(Visitor *visitor, ClassObject *obj)
  * Visits the class object and, if the array is typed as an object
  * array, all of the array elements.
  */
-static void visitArrayObject(Visitor *visitor, Object *obj)
+static void visitArrayObject(Visitor *visitor, Object *obj, void *arg)
 {
     assert(visitor != NULL);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     LOGV("Entering visitArrayObject(visitor=%p,obj=%p)", visitor, obj);
-    (*visitor)(&obj->clazz);
+    (*visitor)(&obj->clazz, arg);
     if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISOBJECTARRAY)) {
         ArrayObject *array = (ArrayObject *)obj;
         Object **contents = (Object **)array->contents;
         size_t i;
         for (i = 0; i < array->length; ++i) {
-            (*visitor)(&contents[i]);
+            (*visitor)(&contents[i], arg);
         }
     }
     LOGV("Exiting visitArrayObject(visitor=%p,obj=%p)", visitor, obj);
@@ -133,18 +133,18 @@ static void visitArrayObject(Visitor *visitor, Object *obj)
  * Visits the class object and reference typed instance fields of a
  * data object.
  */
-static void visitDataObject(Visitor *visitor, Object *obj)
+static void visitDataObject(Visitor *visitor, Object *obj, void *arg)
 {
     assert(visitor != NULL);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     LOGV("Entering visitDataObject(visitor=%p,obj=%p)", visitor, obj);
-    (*visitor)(&obj->clazz);
-    visitInstanceFields(visitor, obj);
+    (*visitor)(&obj->clazz, arg);
+    visitInstanceFields(visitor, obj, arg);
     if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISREFERENCE)) {
         size_t offset = gDvm.offJavaLangRefReference_referent;
         Object **ref = BYTE_OFFSET(obj, offset);
-        (*visitor)(ref);
+        (*visitor)(ref, arg);
     }
     LOGV("Exiting visitDataObject(visitor=%p,obj=%p)", visitor, obj);
 }
@@ -152,18 +152,18 @@ static void visitDataObject(Visitor *visitor, Object *obj)
 /*
  * Visits all of the reference stored in an object.
  */
-void dvmVisitObject(Visitor *visitor, Object *obj)
+void dvmVisitObject(Visitor *visitor, Object *obj, void *arg)
 {
     assert(visitor != NULL);
     assert(obj != NULL);
     assert(obj->clazz != NULL);
     LOGV("Entering dvmVisitObject(visitor=%p,obj=%p)", visitor, obj);
     if (obj->clazz == gDvm.classJavaLangClass) {
-        visitClassObject(visitor, (ClassObject *)obj);
+        visitClassObject(visitor, (ClassObject *)obj, arg);
     } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
-        visitArrayObject(visitor, obj);
+        visitArrayObject(visitor, obj, arg);
     } else {
-        visitDataObject(visitor, obj);
+        visitDataObject(visitor, obj, arg);
     }
     LOGV("Exiting dvmVisitObject(visitor=%p,obj=%p)", visitor, obj);
 }
