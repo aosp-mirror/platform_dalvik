@@ -2,6 +2,8 @@
 #
 LOCAL_PATH := $(call my-dir)
 
+# This tool is prebuilt if we're doing an app-only build.
+ifeq ($(TARGET_BUILD_APPS),)
 
 # dx java library
 # ============================================================
@@ -16,6 +18,8 @@ include $(BUILD_HOST_JAVA_LIBRARY)
 
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
 
+endif # TARGET_BUILD_APPS
+
 # the documentation
 # ============================================================
 include $(CLEAR_VARS)
@@ -28,4 +32,3 @@ LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_IS_HOST_MODULE := true
 
 include $(BUILD_DROIDDOC)
-
