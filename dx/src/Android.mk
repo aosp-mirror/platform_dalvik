@@ -2,6 +2,8 @@
 #
 LOCAL_PATH := $(call my-dir)
 
+# This tool is prebuilt if we're doing an app-only build.
+ifeq ($(TARGET_BUILD_APPS),)
 
 # dx java library
 # ============================================================
@@ -15,6 +17,8 @@ LOCAL_MODULE:= dx
 include $(BUILD_HOST_JAVA_LIBRARY)
 
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
+
+endif # TARGET_BUILD_APPS
 
 # the documentation
 # ============================================================

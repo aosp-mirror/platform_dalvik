@@ -6,6 +6,9 @@ LOCAL_PATH := $(call my-dir)
 # script files' timestamps are at least as new as the
 # .jar files they wrap.
 
+# This tool is prebuilt if we're doing an app-only build.
+ifeq ($(TARGET_BUILD_APPS),)
+
 # the dx script
 # ============================================================
 include $(CLEAR_VARS)
@@ -22,6 +25,8 @@ $(LOCAL_BUILT_MODULE): $(LOCAL_PATH)/etc/dx | $(ACP)
 	$(hide) chmod 755 $@
 
 INTERNAL_DALVIK_MODULES += $(LOCAL_INSTALLED_MODULE)
+
+endif # TARGET_BUILD_APPS
 
 # the jasmin script
 # ============================================================
