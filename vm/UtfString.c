@@ -36,6 +36,10 @@
  * String implements java/lang/CharSequence, but CharSequence doesn't exist)
  * we can try to create an exception string internally before anything has
  * really tried to use String.  In that case we basically self-destruct.
+ *
+ * We're expecting to be essentially single-threaded at this point.
+ * We employ atomics to ensure everything is observed correctly, and also
+ * to guarantee that we do detect a problem if our assumption is wrong.
  */
 static bool stringStartup()
 {
@@ -44,9 +48,12 @@ static bool stringStartup()
         assert(false);
         return false;
     }
-    assert(gDvm.javaLangStringReady == 0);
 
-    gDvm.javaLangStringReady = -1;
+    if (android_atomic_acquire_cas(0, -1, &gDvm.javaLangStringReady) != 0) {
+        LOGE("ERROR: initial string-ready state not 0 (%d)\n",
+            gDvm.javaLangStringReady);
+        return false;
+    }
 
     if (gDvm.classJavaLangString == NULL)
         gDvm.classJavaLangString =
@@ -94,7 +101,7 @@ static bool stringStartup()
     if (badValue)
         return false;
 
-    gDvm.javaLangStringReady = 1;
+    android_atomic_release_store(1, &gDvm.javaLangStringReady);
 
     return true;
 }

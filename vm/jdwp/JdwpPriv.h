@@ -91,9 +91,8 @@ struct JdwpState {
     pthread_mutex_t attachLock;
     pthread_cond_t  attachCond;
 
-    /* time of last debugger activity; "sec" zeroed while processing */
-    volatile long   lastActivitySec;
-    volatile long   lastActivityMsec;
+    /* time of last debugger activity, in milliseconds */
+    s8              lastActivityWhen;
 
     /* global counters and a mutex to protect them */
     u4              requestSerial;
@@ -130,7 +129,7 @@ u4 dvmJdwpNextRequestSerial(JdwpState* state);
 u4 dvmJdwpNextEventSerial(JdwpState* state);
 
 /* get current time, in msec */
-void dvmJdwpGetNowMsec(long* pSec, long* pMsec);
+s8 dvmJdwpGetNowMsec(void);
 
 
 /*
