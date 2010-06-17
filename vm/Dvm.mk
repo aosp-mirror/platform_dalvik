@@ -99,7 +99,7 @@ endif  # !dvm_make_debug_vm
 
 LOCAL_SRC_FILES := \
 	AllocTracker.c \
-	Atomic.c.arm \
+	Atomic.c \
 	AtomicCache.c \
 	CheckJni.c \
 	Ddm.c \
@@ -195,7 +195,7 @@ LOCAL_SRC_FILES := \
 	reflect/Annotation.c \
 	reflect/Proxy.c \
 	reflect/Reflect.c \
-	test/AtomicTest.c.arm \
+	test/AtomicSpeed.c \
 	test/TestHash.c \
 	test/TestIndirectRefTable.c
 
