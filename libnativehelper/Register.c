@@ -17,11 +17,13 @@
 #include "jni.h"
 
 extern int registerCoreLibrariesJni(JNIEnv* env);
+extern int registerJniHelp(JNIEnv* env);
 
 /*
  * Register all methods for system classes.
  */
 int jniRegisterSystemMethods(JNIEnv* env)
 {
-    return registerCoreLibrariesJni(env);
+    // We initialize JNIHelp.c first so that the core libraries can safely rely on it.
+    return registerJniHelp(env) != -1 && registerCoreLibrariesJni(env) != -1;
 }

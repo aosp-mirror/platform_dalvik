@@ -285,3 +285,55 @@ const char* jniStrError(int errnum, char* buf, size_t buflen)
         return ret;
     }
 }
+
+static struct CachedFields {
+    jclass fileDescriptorClass;
+    jmethodID fileDescriptorCtor;
+    jfieldID descriptorField;
+} gCachedFields;
+
+int registerJniHelp(JNIEnv* env) {
+    gCachedFields.fileDescriptorClass =
+            (*env)->NewGlobalRef(env, (*env)->FindClass(env, "java/io/FileDescriptor"));
+    if (gCachedFields.fileDescriptorClass == NULL) {
+        return -1;
+    }
+
+    gCachedFields.fileDescriptorCtor =
+            (*env)->GetMethodID(env, gCachedFields.fileDescriptorClass, "<init>", "()V");
+    if (gCachedFields.fileDescriptorCtor == NULL) {
+        return -1;
+    }
+
+    gCachedFields.descriptorField =
+            (*env)->GetFieldID(env, gCachedFields.fileDescriptorClass, "descriptor", "I");
+    if (gCachedFields.descriptorField == NULL) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*
+ * Create a java.io.FileDescriptor given an integer fd
+ */
+jobject jniCreateFileDescriptor(JNIEnv* env, int fd) {
+    jobject fileDescriptor = (*env)->NewObject(env,
+            gCachedFields.fileDescriptorClass, gCachedFields.fileDescriptorCtor);
+    jniSetFileDescriptorOfFD(env, fileDescriptor, fd);
+    return fileDescriptor;
+}
+
+/*
+ * Get an int file descriptor from a java.io.FileDescriptor
+ */
+int jniGetFDFromFileDescriptor(JNIEnv* env, jobject fileDescriptor) {
+    return (*env)->GetIntField(env, fileDescriptor, gCachedFields.descriptorField);
+}
+
+/*
+ * Set the descriptor of a java.io.FileDescriptor
+ */
+void jniSetFileDescriptorOfFD(JNIEnv* env, jobject fileDescriptor, int value) {
+    (*env)->SetIntField(env, fileDescriptor, gCachedFields.descriptorField, value);
+}
