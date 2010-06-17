@@ -1280,8 +1280,7 @@ static bool handleFmt10t_Fmt20t_Fmt30t(CompilationUnit *cUnit, MIR *mir,
 static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
 {
     OpCode dalvikOpCode = mir->dalvikInsn.opCode;
-    if (((dalvikOpCode >= OP_UNUSED_3E) && (dalvikOpCode <= OP_UNUSED_43)) ||
-        ((dalvikOpCode >= OP_UNUSED_E3) && (dalvikOpCode <= OP_UNUSED_E7))) {
+    if ((dalvikOpCode >= OP_UNUSED_3E) && (dalvikOpCode <= OP_UNUSED_43)) {
         LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpCode);
         return true;
     }
@@ -1292,6 +1291,8 @@ static bool handleFmt10x(CompilationUnit *cUnit, MIR *mir)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
+        case OP_UNUSED_F1:
+        case OP_UNUSED_FF:
             LOGE("Codegen: got unused opcode 0x%x\n",dalvikOpCode);
             return true;
         case OP_NOP:

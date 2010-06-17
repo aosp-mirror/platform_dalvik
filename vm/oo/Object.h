@@ -714,9 +714,19 @@ INLINE double dvmGetFieldDouble(const Object* obj, int offset) {
 INLINE Object* dvmGetFieldObject(const Object* obj, int offset) {
     return ((JValue*)BYTE_OFFSET(obj, offset))->l;
 }
+INLINE s4 dvmGetFieldIntVolatile(const Object* obj, int offset) {
+    s4* ptr = &((JValue*)BYTE_OFFSET(obj, offset))->i;
+    return android_atomic_acquire_load(ptr);
+}
+INLINE Object* dvmGetFieldObjectVolatile(const Object* obj, int offset) {
+    void** ptr = &((JValue*)BYTE_OFFSET(obj, offset))->l;
+    return (Object*) android_atomic_acquire_load((int32_t*)ptr);
+}
 INLINE s8 dvmGetFieldLongVolatile(const Object* obj, int offset) {
     const s8* addr = BYTE_OFFSET(obj, offset);
-    return dvmQuasiAtomicRead64((s8*)addr);
+    s8 val = dvmQuasiAtomicRead64(addr);
+    ANDROID_MEMBAR_FULL();
+    return val;
 }
 
 INLINE void dvmSetFieldBoolean(Object* obj, int offset, bool val) {
@@ -746,8 +756,17 @@ INLINE void dvmSetFieldDouble(Object* obj, int offset, double val) {
 INLINE void dvmSetFieldObject(Object* obj, int offset, Object* val) {
     ((JValue*)BYTE_OFFSET(obj, offset))->l = val;
 }
+INLINE void dvmSetFieldIntVolatile(Object* obj, int offset, s4 val) {
+    s4* ptr = &((JValue*)BYTE_OFFSET(obj, offset))->i;
+    android_atomic_release_store(val, ptr);
+}
+INLINE void dvmSetFieldObjectVolatile(Object* obj, int offset, Object* val) {
+    void** ptr = &((JValue*)BYTE_OFFSET(obj, offset))->l;
+    android_atomic_release_store((int32_t)val, (int32_t*)ptr);
+}
 INLINE void dvmSetFieldLongVolatile(Object* obj, int offset, s8 val) {
     s8* addr = BYTE_OFFSET(obj, offset);
+    ANDROID_MEMBAR_FULL();
     dvmQuasiAtomicSwap64(val, addr);
 }
 
@@ -785,9 +804,19 @@ INLINE double dvmGetStaticFieldDouble(const StaticField* sfield) {
 INLINE Object* dvmGetStaticFieldObject(const StaticField* sfield) {
     return sfield->value.l;
 }
+INLINE s4 dvmGetStaticFieldIntVolatile(const StaticField* sfield) {
+    const s4* ptr = &(sfield->value.i);
+    return android_atomic_acquire_load((s4*)ptr);
+}
+INLINE Object* dvmGetStaticFieldObjectVolatile(const StaticField* sfield) {
+    void* const* ptr = &(sfield->value.l);
+    return (Object*) android_atomic_acquire_load((int32_t*)ptr);
+}
 INLINE s8 dvmGetStaticFieldLongVolatile(const StaticField* sfield) {
     const s8* addr = &sfield->value.j;
-    return dvmQuasiAtomicRead64((s8*)addr);
+    s8 val = dvmQuasiAtomicRead64(addr);
+    ANDROID_MEMBAR_FULL();
+    return val;
 }
 
 INLINE void dvmSetStaticFieldBoolean(StaticField* sfield, bool val) {
@@ -817,8 +846,17 @@ INLINE void dvmSetStaticFieldDouble(StaticField* sfield, double val) {
 INLINE void dvmSetStaticFieldObject(StaticField* sfield, Object* val) {
     sfield->value.l = val;
 }
+INLINE void dvmSetStaticFieldIntVolatile(StaticField* sfield, s4 val) {
+    s4* ptr = &(sfield->value.i);
+    android_atomic_release_store(val, ptr);
+}
+INLINE void dvmSetStaticFieldObjectVolatile(StaticField* sfield, Object* val) {
+    void** ptr = &(sfield->value.l);
+    android_atomic_release_store((int32_t)val, (int32_t*)ptr);
+}
 INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
     s8* addr = &sfield->value.j;
+    ANDROID_MEMBAR_FULL();
     dvmQuasiAtomicSwap64(val, addr);
 }
 

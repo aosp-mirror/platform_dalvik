@@ -56,7 +56,7 @@ int64_t dvmQuasiAtomicSwap64(int64_t value, volatile int64_t* addr)
     return oldValue;
 }
 
-int64_t dvmQuasiAtomicRead64(volatile int64_t* addr)
+int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr)
 {
     return OSAtomicAdd64Barrier(0, addr);
 }
@@ -103,7 +103,7 @@ int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
     return prev != oldvalue;
 }
 
-int64_t dvmQuasiAtomicRead64(volatile int64_t* addr)
+int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr)
 {
     int64_t value;
     __asm__ __volatile__ ("@ dvmQuasiAtomicRead64\n"
@@ -171,7 +171,7 @@ int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
     return result;
 }
 
-int64_t dvmQuasiAtomicRead64(volatile int64_t* addr)
+int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr)
 {
     int64_t result;
     pthread_mutex_t*  lock = SWAP_LOCK(addr);
@@ -242,7 +242,7 @@ int dvmQuasiAtomicCas64(int64_t oldvalue, int64_t newvalue,
     return result;
 }
 
-int64_t dvmQuasiAtomicRead64(volatile int64_t* addr)
+int64_t dvmQuasiAtomicRead64(volatile const int64_t* addr)
 {
     int64_t result;
 

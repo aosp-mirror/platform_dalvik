@@ -4459,6 +4459,7 @@ aput_1nr_common:
         break;
 
     case OP_IGET:
+    case OP_IGET_VOLATILE:
         tmpType = kRegTypeInteger;
         goto iget_1nr_common;
     case OP_IGET_BOOLEAN:
@@ -4548,6 +4549,7 @@ iget_1nr_common:
         }
         break;
     case OP_IGET_OBJECT:
+    case OP_IGET_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             InstField* instField;
@@ -4577,6 +4579,7 @@ iget_1nr_common:
         }
         break;
     case OP_IPUT:
+    case OP_IPUT_VOLATILE:
         tmpType = kRegTypeInteger;
         goto iput_1nr_common;
     case OP_IPUT_BOOLEAN:
@@ -4687,6 +4690,7 @@ iput_1nr_common:
         }
         break;
     case OP_IPUT_OBJECT:
+    case OP_IPUT_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -4748,6 +4752,7 @@ iput_1nr_common:
         break;
 
     case OP_SGET:
+    case OP_SGET_VOLATILE:
         tmpType = kRegTypeInteger;
         goto sget_1nr_common;
     case OP_SGET_BOOLEAN:
@@ -4831,6 +4836,7 @@ sget_1nr_common:
         }
         break;
     case OP_SGET_OBJECT:
+    case OP_SGET_OBJECT_VOLATILE:
         {
             StaticField* staticField;
             ClassObject* fieldClass;
@@ -4855,6 +4861,7 @@ sget_1nr_common:
         }
         break;
     case OP_SPUT:
+    case OP_SPUT_VOLATILE:
         tmpType = kRegTypeInteger;
         goto sput_1nr_common;
     case OP_SPUT_BOOLEAN:
@@ -4958,6 +4965,7 @@ sput_1nr_common:
         }
         break;
     case OP_SPUT_OBJECT:
+    case OP_SPUT_OBJECT_VOLATILE:
         {
             ClassObject* fieldClass;
             ClassObject* valueClass;
@@ -5497,16 +5505,8 @@ sput_1nr_common:
     case OP_UNUSED_73:
     case OP_UNUSED_79:
     case OP_UNUSED_7A:
-    case OP_UNUSED_E3:
-    case OP_UNUSED_E4:
-    case OP_UNUSED_E5:
-    case OP_UNUSED_E6:
-    case OP_UNUSED_E7:
     case OP_BREAKPOINT:
     case OP_UNUSED_F1:
-    case OP_UNUSED_FC:
-    case OP_UNUSED_FD:
-    case OP_UNUSED_FE:
     case OP_UNUSED_FF:
         failure = VERIFY_ERROR_GENERIC;
         break;

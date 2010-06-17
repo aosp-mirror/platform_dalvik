@@ -5683,44 +5683,74 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E3: /* 0xe3 */
-/* File: x86/OP_UNUSED_E3.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_VOLATILE: /* 0xe3 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IGET_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E4: /* 0xe4 */
-/* File: x86/OP_UNUSED_E4.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_VOLATILE: /* 0xe4 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IPUT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E5: /* 0xe5 */
-/* File: x86/OP_UNUSED_E5.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_VOLATILE: /* 0xe5 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SGET_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E6: /* 0xe6 */
-/* File: x86/OP_UNUSED_E6.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_VOLATILE: /* 0xe6 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SPUT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E7: /* 0xe7 */
-/* File: x86/OP_UNUSED_E7.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IGET_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_IGET_WIDE_VOLATILE: /* 0xe8 */
@@ -6111,28 +6141,46 @@ dvmAsmInstructionStart = .L_OP_NOP
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FC: /* 0xfc */
-/* File: x86/OP_UNUSED_FC.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_IPUT_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FD: /* 0xfd */
-/* File: x86/OP_UNUSED_FD.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SGET_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FE: /* 0xfe */
-/* File: x86/OP_UNUSED_FE.S */
-/* File: x86/unused.S */
-    jmp     common_abort
-
-
+.L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
+    /* (stub) */
+    GET_GLUE(%ecx)
+    SAVE_PC_TO_GLUE(%ecx)            # only need to export these two
+    SAVE_FP_TO_GLUE(%ecx)            # only need to export these two
+    movl %ecx,OUT_ARG0(%esp)         # glue is first arg to function
+    call      dvmMterp_OP_SPUT_OBJECT_VOLATILE     # do the real work
+    GET_GLUE(%ecx)
+    LOAD_PC_FROM_GLUE(%ecx)          # retrieve updated values
+    LOAD_FP_FROM_GLUE(%ecx)          # retrieve updated values
+    FETCH_INST()
+    GOTO_NEXT
 /* ------------------------------ */
     .balign 64
 .L_OP_UNUSED_FF: /* 0xff */

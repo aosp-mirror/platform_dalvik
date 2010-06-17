@@ -20,6 +20,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * ARMv5 definitions and declarations.
  */
@@ -241,6 +242,13 @@ unspecified registers or condition codes.
 .macro  LDMFD_PC regs
     ldmfd   sp!, {\regs,pc}
 .endm
+
+/*
+ * Macro for data memory barrier; not meaningful pre-ARMv6K.
+ */
+.macro  SMP_DMB gen
+.endm
+
 
 /* File: armv5te/entry.S */
 /*
@@ -2807,6 +2815,7 @@ dalvik_inst:
     beq     .LOP_SGET_resolve         @ yes, do resolve
 .LOP_SGET_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2860,6 +2869,7 @@ dalvik_inst:
     beq     .LOP_SGET_OBJECT_resolve         @ yes, do resolve
 .LOP_SGET_OBJECT_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2886,6 +2896,7 @@ dalvik_inst:
     beq     .LOP_SGET_BOOLEAN_resolve         @ yes, do resolve
 .LOP_SGET_BOOLEAN_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2912,6 +2923,7 @@ dalvik_inst:
     beq     .LOP_SGET_BYTE_resolve         @ yes, do resolve
 .LOP_SGET_BYTE_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2938,6 +2950,7 @@ dalvik_inst:
     beq     .LOP_SGET_CHAR_resolve         @ yes, do resolve
 .LOP_SGET_CHAR_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2964,6 +2977,7 @@ dalvik_inst:
     beq     .LOP_SGET_SHORT_resolve         @ yes, do resolve
 .LOP_SGET_SHORT_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2992,6 +3006,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3045,6 +3060,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3071,6 +3087,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3097,6 +3114,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3123,6 +3141,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3149,6 +3168,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -7402,42 +7422,140 @@ d2i_doconv:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E3: /* 0xe3 */
-/* File: armv5te/OP_UNUSED_E3.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IGET_VOLATILE: /* 0xe3 */
+/* File: armv5te/OP_IGET_VOLATILE.S */
+/* File: armv5te/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0
+    bne     .LOP_IGET_VOLATILE_finish
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E4: /* 0xe4 */
-/* File: armv5te/OP_UNUSED_E4.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IPUT_VOLATILE: /* 0xe4 */
+/* File: armv5te/OP_IPUT_VOLATILE.S */
+/* File: armv5te/OP_IPUT.S */
+    /*
+     * General 32-bit instance field put.
+     *
+     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_IPUT_VOLATILE_finish          @ yes, finish up
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E5: /* 0xe5 */
-/* File: armv5te/OP_UNUSED_E5.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_SGET_VOLATILE: /* 0xe5 */
+/* File: armv5te/OP_SGET_VOLATILE.S */
+/* File: armv5te/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_VOLATILE_resolve         @ yes, do resolve
+.LOP_SGET_VOLATILE_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 1                   @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[AA]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E6: /* 0xe6 */
-/* File: armv5te/OP_UNUSED_E6.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_SPUT_VOLATILE: /* 0xe6 */
+/* File: armv5te/OP_SPUT_VOLATILE.S */
+/* File: armv5te/OP_SPUT.S */
+    /*
+     * General 32-bit SPUT handler.
+     *
+     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_VOLATILE_resolve         @ yes, do resolve
+.LOP_SPUT_VOLATILE_finish:   @ field ptr in r0
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[AA]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 1                   @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vAA
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_E7: /* 0xe7 */
-/* File: armv5te/OP_UNUSED_E7.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IGET_OBJECT_VOLATILE: /* 0xe7 */
+/* File: armv5te/OP_IGET_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_IGET.S */
+    /*
+     * General 32-bit instance field get.
+     *
+     * for: iget, iget-object, iget-boolean, iget-byte, iget-char, iget-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IGET_OBJECT_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0
+    bne     .LOP_IGET_OBJECT_VOLATILE_finish
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
@@ -7882,26 +8000,84 @@ d2i_doconv:
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FC: /* 0xfc */
-/* File: armv5te/OP_UNUSED_FC.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_IPUT_OBJECT_VOLATILE: /* 0xfc */
+/* File: armv5te/OP_IPUT_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_IPUT.S */
+    /*
+     * General 32-bit instance field put.
+     *
+     * for: iput, iput-object, iput-boolean, iput-byte, iput-char, iput-short
+     */
+    /* op vA, vB, field@CCCC */
+    mov     r0, rINST, lsr #12          @ r0<- B
+    ldr     r3, [rGLUE, #offGlue_methodClassDex]    @ r3<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref CCCC
+    ldr     r2, [r3, #offDvmDex_pResFields] @ r2<- pDvmDex->pResFields
+    GET_VREG(r9, r0)                    @ r9<- fp[B], the object pointer
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    bne     .LOP_IPUT_OBJECT_VOLATILE_finish          @ no, already resolved
+8:  ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveInstField         @ r0<- resolved InstField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_IPUT_OBJECT_VOLATILE_finish          @ yes, finish up
+    b       common_exceptionThrown
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FD: /* 0xfd */
-/* File: armv5te/OP_UNUSED_FD.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_SGET_OBJECT_VOLATILE: /* 0xfd */
+/* File: armv5te/OP_SGET_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_SGET.S */
+    /*
+     * General 32-bit SGET handler.
+     *
+     * for: sget, sget-object, sget-boolean, sget-byte, sget-char, sget-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SGET_OBJECT_VOLATILE_resolve         @ yes, do resolve
+.LOP_SGET_OBJECT_VOLATILE_finish: @ field ptr in r0
+    ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB 1                   @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    SET_VREG(r1, r2)                    @ fp[AA]<- r1
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
     .balign 64
-.L_OP_UNUSED_FE: /* 0xfe */
-/* File: armv5te/OP_UNUSED_FE.S */
-/* File: armv5te/unused.S */
-    bl      common_abort
+.L_OP_SPUT_OBJECT_VOLATILE: /* 0xfe */
+/* File: armv5te/OP_SPUT_OBJECT_VOLATILE.S */
+/* File: armv5te/OP_SPUT.S */
+    /*
+     * General 32-bit SPUT handler.
+     *
+     * for: sput, sput-object, sput-boolean, sput-byte, sput-char, sput-short
+     */
+    /* op vAA, field@BBBB */
+    ldr     r2, [rGLUE, #offGlue_methodClassDex]    @ r2<- DvmDex
+    FETCH(r1, 1)                        @ r1<- field ref BBBB
+    ldr     r2, [r2, #offDvmDex_pResFields] @ r2<- dvmDex->pResFields
+    ldr     r0, [r2, r1, lsl #2]        @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ is resolved entry null?
+    beq     .LOP_SPUT_OBJECT_VOLATILE_resolve         @ yes, do resolve
+.LOP_SPUT_OBJECT_VOLATILE_finish:   @ field ptr in r0
+    mov     r2, rINST, lsr #8           @ r2<- AA
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_VREG(r1, r2)                    @ r1<- fp[AA]
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 1                   @ releasing store
+    str     r1, [r0, #offStaticField_value] @ field<- vAA
+    GOTO_OPCODE(ip)                     @ jump to next instruction
 
 
 /* ------------------------------ */
@@ -8555,6 +8731,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8601,6 +8778,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8621,6 +8799,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8641,6 +8820,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8661,6 +8841,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8681,6 +8862,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 0                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8705,6 +8887,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8750,6 +8933,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8770,6 +8954,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8790,6 +8975,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8810,6 +8996,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8830,6 +9017,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 0                   @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -9324,6 +9512,99 @@ d2l_doconv:
     stmia   r9, {r0-r1}                 @ vAA/vAA+1<- r0/r1
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
+/* continuation for OP_IGET_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_VOLATILE_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 1                   @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    and     r2, r2, #15                 @ r2<- A
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r2)                    @ fp[A]<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_IPUT_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_VOLATILE_finish:
+    @bl      common_squeak0
+    mov     r1, rINST, lsr #8           @ r1<- A+
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    and     r1, r1, #15                 @ r1<- A
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[A]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 1                   @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_SGET_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SGET_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SPUT_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_IGET_OBJECT_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IGET_OBJECT_VOLATILE_finish:
+    @bl      common_squeak0
+    cmp     r9, #0                      @ check object for null
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    beq     common_errNullObject        @ object was null
+    ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
+    SMP_DMB 1                   @ acquiring load
+    mov     r2, rINST, lsr #8           @ r2<- A+
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    and     r2, r2, #15                 @ r2<- A
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SET_VREG(r0, r2)                    @ fp[A]<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
 /* continuation for OP_IGET_WIDE_VOLATILE */
 
     /*
@@ -9474,6 +9755,57 @@ d2l_doconv:
 
 .LOP_EXECUTE_INLINE_RANGE_table:
     .word   gDvmInlineOpsTable
+
+/* continuation for OP_IPUT_OBJECT_VOLATILE */
+
+    /*
+     * Currently:
+     *  r0 holds resolved field
+     *  r9 holds object
+     */
+.LOP_IPUT_OBJECT_VOLATILE_finish:
+    @bl      common_squeak0
+    mov     r1, rINST, lsr #8           @ r1<- A+
+    ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
+    and     r1, r1, #15                 @ r1<- A
+    cmp     r9, #0                      @ check object for null
+    GET_VREG(r0, r1)                    @ r0<- fp[A]
+    beq     common_errNullObject        @ object was null
+    FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
+    GET_INST_OPCODE(ip)                 @ extract opcode from rINST
+    SMP_DMB 1                   @ releasing store
+    str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
+    GOTO_OPCODE(ip)                     @ jump to next instruction
+
+/* continuation for OP_SGET_OBJECT_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SGET_OBJECT_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SGET_OBJECT_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
+
+/* continuation for OP_SPUT_OBJECT_VOLATILE */
+
+    /*
+     * Continuation if the field has not yet been resolved.
+     *  r1: BBBB field ref
+     */
+.LOP_SPUT_OBJECT_VOLATILE_resolve:
+    ldr     r2, [rGLUE, #offGlue_method]    @ r2<- current method
+    EXPORT_PC()                         @ resolve() could throw, so export now
+    ldr     r0, [r2, #offMethod_clazz]  @ r0<- method->clazz
+    bl      dvmResolveStaticField       @ r0<- resolved StaticField ptr
+    cmp     r0, #0                      @ success?
+    bne     .LOP_SPUT_OBJECT_VOLATILE_finish          @ yes, finish
+    b       common_exceptionThrown      @ no, handle exception
 
     .size   dvmAsmSisterStart, .-dvmAsmSisterStart
     .global dvmAsmSisterEnd

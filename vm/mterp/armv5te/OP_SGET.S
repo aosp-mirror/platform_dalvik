@@ -1,3 +1,4 @@
+%default { "volatile":"0" }
 %verify "executed"
 %verify "field already resolved"
 %verify "field not yet resolved"
@@ -16,6 +17,7 @@
     beq     .L${opcode}_resolve         @ yes, do resolve
 .L${opcode}_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
+    SMP_DMB $volatile                   @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1

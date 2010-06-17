@@ -35,6 +35,14 @@ import c/opcommon.c
 op-start x86
     # stub -- need native impl
     op OP_EXECUTE_INLINE_RANGE c
+    op OP_IGET_VOLATILE c
+    op OP_IPUT_VOLATILE c
+    op OP_SGET_VOLATILE c
+    op OP_SPUT_VOLATILE c
+    op OP_IGET_OBJECT_VOLATILE c
+    op OP_IPUT_OBJECT_VOLATILE c
+    op OP_SGET_OBJECT_VOLATILE c
+    op OP_SPUT_OBJECT_VOLATILE c
     op OP_IGET_WIDE_VOLATILE c
     op OP_IPUT_WIDE_VOLATILE c
     op OP_SGET_WIDE_VOLATILE c

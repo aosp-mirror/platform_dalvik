@@ -37,7 +37,7 @@
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     ldmia   r2, {r0-r1}                 @ r0/r1<- fp[A]
     GET_INST_OPCODE(r10)                @ extract opcode from rINST
-    .if $volatile
+    .if     $volatile
     add     r2, r9, r3                  @ r2<- target address
     bl      dvmQuasiAtomicSwap64        @ stores r0/r1 into addr r2
     .else

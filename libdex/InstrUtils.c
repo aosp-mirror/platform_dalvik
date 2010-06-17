@@ -297,6 +297,14 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+        case OP_IGET_VOLATILE:
+        case OP_IPUT_VOLATILE:
+        case OP_SGET_VOLATILE:
+        case OP_SPUT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE:
+        case OP_SPUT_OBJECT_VOLATILE:
         case OP_IGET_WIDE_VOLATILE:
         case OP_IPUT_WIDE_VOLATILE:
         case OP_SGET_WIDE_VOLATILE:
@@ -324,16 +332,8 @@ InstructionWidth* dexCreateInstrWidthTable(void)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_E3:
-        case OP_UNUSED_E4:
-        case OP_UNUSED_E5:
-        case OP_UNUSED_E6:
-        case OP_UNUSED_E7:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
-        case OP_UNUSED_FC:
-        case OP_UNUSED_FD:
-        case OP_UNUSED_FE:
         case OP_UNUSED_FF:
             assert(width == 0);
             break;
@@ -628,6 +628,14 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_IPUT_QUICK:
         case OP_IPUT_WIDE_QUICK:
         case OP_IPUT_OBJECT_QUICK:
+        case OP_IGET_VOLATILE:
+        case OP_IPUT_VOLATILE:
+        case OP_SGET_VOLATILE:
+        case OP_SPUT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE:
+        case OP_SPUT_OBJECT_VOLATILE:
         case OP_IGET_WIDE_VOLATILE:
         case OP_IPUT_WIDE_VOLATILE:
         case OP_SGET_WIDE_VOLATILE:
@@ -653,16 +661,8 @@ InstructionFlags* dexCreateInstrFlagsTable(void)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_E3:
-        case OP_UNUSED_E4:
-        case OP_UNUSED_E5:
-        case OP_UNUSED_E6:
-        case OP_UNUSED_E7:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
-        case OP_UNUSED_FC:
-        case OP_UNUSED_FD:
-        case OP_UNUSED_FE:
         case OP_UNUSED_FF:
             break;
 
@@ -973,6 +973,14 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_IPUT_WIDE_VOLATILE:
         case OP_SGET_WIDE_VOLATILE:
         case OP_SPUT_WIDE_VOLATILE:
+        case OP_IGET_VOLATILE:
+        case OP_IPUT_VOLATILE:
+        case OP_SGET_VOLATILE:
+        case OP_SPUT_VOLATILE:
+        case OP_IGET_OBJECT_VOLATILE:
+        case OP_IPUT_OBJECT_VOLATILE:
+        case OP_SGET_OBJECT_VOLATILE:
+        case OP_SPUT_OBJECT_VOLATILE:
             fmt = kFmt22c;
             break;
         case OP_IGET_QUICK:
@@ -1011,16 +1019,8 @@ InstructionFormat* dexCreateInstrFormatTable(void)
         case OP_UNUSED_73:
         case OP_UNUSED_79:
         case OP_UNUSED_7A:
-        case OP_UNUSED_E3:
-        case OP_UNUSED_E4:
-        case OP_UNUSED_E5:
-        case OP_UNUSED_E6:
-        case OP_UNUSED_E7:
         case OP_BREAKPOINT:
         case OP_UNUSED_F1:
-        case OP_UNUSED_FC:
-        case OP_UNUSED_FD:
-        case OP_UNUSED_FE:
         case OP_UNUSED_FF:
             fmt = kFmtUnknown;
             break;

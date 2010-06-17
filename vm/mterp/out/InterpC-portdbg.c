@@ -3145,24 +3145,24 @@ OP_END
 HANDLE_OP_SHX_INT_LIT8(OP_USHR_INT_LIT8,  "ushr", (u4), >>)
 OP_END
 
-/* File: c/OP_UNUSED_E3.c */
-HANDLE_OPCODE(OP_UNUSED_E3)
+/* File: c/OP_IGET_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E4.c */
-HANDLE_OPCODE(OP_UNUSED_E4)
+/* File: c/OP_IPUT_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E5.c */
-HANDLE_OPCODE(OP_UNUSED_E5)
+/* File: c/OP_SGET_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E6.c */
-HANDLE_OPCODE(OP_UNUSED_E6)
+/* File: c/OP_SPUT_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_VOLATILE,         "-volatile", IntVolatile, )
 OP_END
 
-/* File: c/OP_UNUSED_E7.c */
-HANDLE_OPCODE(OP_UNUSED_E7)
+/* File: c/OP_IGET_OBJECT_VOLATILE.c */
+HANDLE_IGET_X(OP_IGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
 /* File: c/OP_IGET_WIDE_VOLATILE.c */
@@ -3392,16 +3392,16 @@ HANDLE_OPCODE(OP_INVOKE_SUPER_QUICK_RANGE /*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
     GOTO_invoke(invokeSuperQuick, true);
 OP_END
 
-/* File: c/OP_UNUSED_FC.c */
-HANDLE_OPCODE(OP_UNUSED_FC)
+/* File: c/OP_IPUT_OBJECT_VOLATILE.c */
+HANDLE_IPUT_X(OP_IPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_FD.c */
-HANDLE_OPCODE(OP_UNUSED_FD)
+/* File: c/OP_SGET_OBJECT_VOLATILE.c */
+HANDLE_SGET_X(OP_SGET_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
-/* File: c/OP_UNUSED_FE.c */
-HANDLE_OPCODE(OP_UNUSED_FE)
+/* File: c/OP_SPUT_OBJECT_VOLATILE.c */
+HANDLE_SPUT_X(OP_SPUT_OBJECT_VOLATILE,  "-object-volatile", ObjectVolatile, _AS_OBJECT)
 OP_END
 
 /* File: c/OP_UNUSED_FF.c */

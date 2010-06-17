@@ -34,8 +34,20 @@
     ldmfd   sp!, {\regs,pc}
 .endm
 
+#if !defined(ANDROID_SMP)
+# error "Must define ANDROID_SMP"
+#endif
+
 /*
  * Macro for data memory barrier; not meaningful pre-ARMv6K.
+ * If the argument is nonzero, emit barrier; otherwise, emit nothing.
  */
 .macro  SMP_DMB gen
+#if ANDROID_SMP != 0
+    .if     \gen
+    dmb
+    .endif
+#else
+    /* not SMP */
+#endif
 .endm
