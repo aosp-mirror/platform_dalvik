@@ -42,11 +42,9 @@
  * Macro for data memory barrier; not meaningful pre-ARMv6K.
  * If the argument is nonzero, emit barrier; otherwise, emit nothing.
  */
-.macro  SMP_DMB gen
+.macro  SMP_DMB
 #if ANDROID_SMP != 0
-    .if     \gen
     dmb
-    .endif
 #else
     /* not SMP */
 #endif

@@ -1,2 +1,2 @@
 %verify "executed"
-%include "armv5te/OP_SGET.S" {"volatile":"1"}
+%include "armv5te/OP_SGET.S" {"barrier":"SMP_DMB"}

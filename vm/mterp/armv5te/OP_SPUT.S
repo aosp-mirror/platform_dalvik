@@ -1,4 +1,4 @@
-%default { "volatile":"0" }
+%default { "barrier":"@ no-op " }
 %verify "executed"
 %verify "field already resolved"
 %verify "field not yet resolved"
@@ -20,7 +20,7 @@
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB $volatile                   @ releasing store
+    $barrier                            @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 %break
