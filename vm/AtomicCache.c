@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Mutex-free cache.  Each entry has two 32-bit keys, one 32-bit value,
  * and a 32-bit version.
@@ -75,7 +76,6 @@ void dvmFreeAtomicCache(AtomicCache* cache)
 }
 
 
-
 /*
  * Update a cache entry.
  *
@@ -91,18 +91,19 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
     )
 {
     /*
-     * The fields don't match, so we need to update them.  There is a
-     * risk that another thread is also trying to update them, so we
-     * grab an ownership flag to lock out other threads.
+     * The fields don't match, so we want to update them.  There is a risk
+     * that another thread is also trying to update them, so we grab an
+     * ownership flag to lock out other threads.
      *
      * If the lock flag was already set in "firstVersion", somebody else
-     * was in mid-update.  (This means that using "firstVersion" as the
-     * "before" argument to the CAS would succeed when it shouldn't and
-     * vice-versa -- we could also just pass in
-     * (firstVersion & ~ATOMIC_LOCK_FLAG) as the first argument.)
+     * was in mid-update, and we don't want to continue here.  (This means
+     * that using "firstVersion" as the "before" argument to the CAS would
+     * succeed when it shouldn't and vice-versa -- we could also just pass
+     * in (firstVersion & ~ATOMIC_LOCK_FLAG) as the first argument.)
      *
-     * NOTE: we don't really deal with the situation where we overflow
-     * the version counter (at 2^31).  Probably not a real concern.
+     * NOTE: we don't deal with the situation where we overflow the version
+     * counter and trample the ATOMIC_LOCK_FLAG (at 2^31).  Probably not
+     * a real concern.
      */
     if ((firstVersion & ATOMIC_LOCK_FLAG) != 0 ||
         android_atomic_release_cas(
@@ -129,7 +130,11 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
         pCache->misses++;
 #endif
 
-    /* volatile incr */
+    /*
+     * We have the write lock, but somebody could be reading this entry
+     * while we work.  We use memory barriers to ensure that the state
+     * is always consistent when the version number is even.
+     */
     pEntry->version++;
     ANDROID_MEMBAR_FULL();
 
@@ -137,15 +142,15 @@ void dvmUpdateAtomicCache(u4 key1, u4 key2, u4 value, AtomicCacheEntry* pEntry,
     pEntry->key2 = key2;
     pEntry->value = value;
 
-    /* volatile incr */
-    pEntry->version++;
     ANDROID_MEMBAR_FULL();
+    pEntry->version++;
 
     /*
      * Clear the lock flag.  Nobody else should have been able to modify
      * pEntry->version, so if this fails the world is broken.
      */
     firstVersion += 2;
+    assert((firstVersion & 0x01) == 0);
     if (android_atomic_release_cas(
             firstVersion | ATOMIC_LOCK_FLAG, firstVersion,
             (volatile s4*) &pEntry->version) != 0)
