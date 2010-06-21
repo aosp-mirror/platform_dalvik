@@ -37,5 +37,5 @@
 /*
  * Macro for data memory barrier; not meaningful pre-ARMv6K.
  */
-.macro  SMP_DMB gen
+.macro  SMP_DMB
 .endm

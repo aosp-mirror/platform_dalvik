@@ -246,9 +246,8 @@ unspecified registers or condition codes.
 /*
  * Macro for data memory barrier; not meaningful pre-ARMv6K.
  */
-.macro  SMP_DMB gen
+.macro  SMP_DMB
 .endm
-
 
 /* File: armv5te/entry.S */
 /*
@@ -2815,7 +2814,7 @@ dalvik_inst:
     beq     .LOP_SGET_resolve         @ yes, do resolve
 .LOP_SGET_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2869,7 +2868,7 @@ dalvik_inst:
     beq     .LOP_SGET_OBJECT_resolve         @ yes, do resolve
 .LOP_SGET_OBJECT_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2896,7 +2895,7 @@ dalvik_inst:
     beq     .LOP_SGET_BOOLEAN_resolve         @ yes, do resolve
 .LOP_SGET_BOOLEAN_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2923,7 +2922,7 @@ dalvik_inst:
     beq     .LOP_SGET_BYTE_resolve         @ yes, do resolve
 .LOP_SGET_BYTE_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2950,7 +2949,7 @@ dalvik_inst:
     beq     .LOP_SGET_CHAR_resolve         @ yes, do resolve
 .LOP_SGET_CHAR_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -2977,7 +2976,7 @@ dalvik_inst:
     beq     .LOP_SGET_SHORT_resolve         @ yes, do resolve
 .LOP_SGET_SHORT_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -3006,7 +3005,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3060,7 +3059,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3087,7 +3086,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3114,7 +3113,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3141,7 +3140,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -3168,7 +3167,7 @@ dalvik_inst:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -7495,7 +7494,7 @@ d2i_doconv:
     beq     .LOP_SGET_VOLATILE_resolve         @ yes, do resolve
 .LOP_SGET_VOLATILE_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 1                   @ acquiring load
+    SMP_DMB                            @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -7525,7 +7524,7 @@ d2i_doconv:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 1                   @ releasing store
+    SMP_DMB                            @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8045,7 +8044,7 @@ d2i_doconv:
     beq     .LOP_SGET_OBJECT_VOLATILE_resolve         @ yes, do resolve
 .LOP_SGET_OBJECT_VOLATILE_finish: @ field ptr in r0
     ldr     r1, [r0, #offStaticField_value] @ r1<- field value
-    SMP_DMB 1                   @ acquiring load
+    SMP_DMB                            @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- AA
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     SET_VREG(r1, r2)                    @ fp[AA]<- r1
@@ -8075,7 +8074,7 @@ d2i_doconv:
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_VREG(r1, r2)                    @ r1<- fp[AA]
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 1                   @ releasing store
+    SMP_DMB                            @ releasing store
     str     r1, [r0, #offStaticField_value] @ field<- vAA
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8731,7 +8730,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8778,7 +8777,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8799,7 +8798,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8820,7 +8819,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8841,7 +8840,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8862,7 +8861,7 @@ OP_CMPG_FLOAT_nan:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 0                   @ acquiring load
+    @ no-op                             @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -8887,7 +8886,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8933,7 +8932,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8954,7 +8953,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8975,7 +8974,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -8996,7 +8995,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -9017,7 +9016,7 @@ OP_CMPG_FLOAT_nan:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 0                   @ releasing store
+    @ no-op                             @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -9525,7 +9524,7 @@ d2l_doconv:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 1                   @ acquiring load
+    SMP_DMB                            @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -9550,7 +9549,7 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 1                   @ releasing store
+    SMP_DMB                            @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
@@ -9597,7 +9596,7 @@ d2l_doconv:
     ldr     r3, [r0, #offInstField_byteOffset]  @ r3<- byte offset of field
     beq     common_errNullObject        @ object was null
     ldr   r0, [r9, r3]                @ r0<- obj.field (8/16/32 bits)
-    SMP_DMB 1                   @ acquiring load
+    SMP_DMB                            @ acquiring load
     mov     r2, rINST, lsr #8           @ r2<- A+
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     and     r2, r2, #15                 @ r2<- A
@@ -9773,7 +9772,7 @@ d2l_doconv:
     beq     common_errNullObject        @ object was null
     FETCH_ADVANCE_INST(2)               @ advance rPC, load rINST
     GET_INST_OPCODE(ip)                 @ extract opcode from rINST
-    SMP_DMB 1                   @ releasing store
+    SMP_DMB                            @ releasing store
     str  r0, [r9, r3]                @ obj.field (8/16/32 bits)<- r0
     GOTO_OPCODE(ip)                     @ jump to next instruction
 
