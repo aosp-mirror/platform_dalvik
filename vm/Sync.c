@@ -894,8 +894,7 @@ static void inflateMonitor(Thread *self, Object *obj)
     thin &= LW_HASH_STATE_MASK << LW_HASH_STATE_SHIFT;
     thin |= (u4)mon | LW_SHAPE_FAT;
     /* Publish the updated lock word. */
-    ANDROID_MEMBAR_FULL();
-    obj->lock = thin;
+    android_atomic_release_store(thin, (int32_t *)&obj->lock);
 }
 
 /*
@@ -1292,7 +1291,6 @@ void dvmThreadInterrupt(Thread* thread)
      * something.
      */
     thread->interrupted = true;
-    ANDROID_MEMBAR_FULL();
 
     /*
      * Is the thread waiting?
