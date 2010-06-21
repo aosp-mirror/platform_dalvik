@@ -2491,7 +2491,10 @@ bool dvmLinkClass(ClassObject* clazz)
                 goto bail;
             }
             memcpy(interfaceIdxArray, clazz->interfaces, len);
+
+            dvmLinearReadWrite(clazz->classLoader, clazz->interfaces);
             memset(clazz->interfaces, 0, len);
+            dvmLinearReadOnly(clazz->classLoader, clazz->interfaces);
         }
 
         assert(sizeof(superclassIdx) == sizeof(clazz->super));
