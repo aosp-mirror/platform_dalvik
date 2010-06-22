@@ -287,4 +287,11 @@ void dvmAbort(void);
 size_t strlcpy(char *dst, const char *src, size_t size);
 #endif
 
+/*
+ *  Allocates a memory region using ashmem and mmap, initialized to
+ *  zero.  Actual allocation rounded up to page multiple.  Returns
+ *  NULL on failure.
+ */
+void *dvmAllocRegion(size_t size, int prot, const char *name);
+
 #endif /*_DALVIK_MISC*/

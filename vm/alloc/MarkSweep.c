@@ -483,6 +483,160 @@ static void scanObject(const Object *obj, GcMarkContext *ctx)
     }
 }
 
+/*
+ * Variants for partial GC. Scan immune objects, and rebuild the card
+ * table.
+ */
+
+/*
+ * Mark an object which was found in an immune object.
+ */
+static void scanImmuneReference(const Object *obj, GcMarkContext *ctx)
+{
+    if (obj != NULL) {
+        if (obj < (Object *)ctx->immuneLimit) {
+            assert(isMarked(obj, ctx));
+        } else {
+            ctx->crossGen = true;
+            markObjectNonNull(obj, ctx, true, false);
+        }
+    }
+}
+
+/*
+ * Scans instance fields.
+ */
+static void scanImmuneInstanceFields(const Object *obj, GcMarkContext *ctx)
+{
+    assert(obj != NULL);
+    assert(obj->clazz != NULL);
+    assert(ctx != NULL);
+
+    if (obj->clazz->refOffsets != CLASS_WALK_SUPER) {
+        unsigned int refOffsets = obj->clazz->refOffsets;
+        while (refOffsets != 0) {
+            const int rshift = CLZ(refOffsets);
+            refOffsets &= ~(CLASS_HIGH_BIT >> rshift);
+            scanImmuneReference(
+                dvmGetFieldObject((Object*)obj, CLASS_OFFSET_FROM_CLZ(rshift)),
+                ctx);
+        }
+    } else {
+        ClassObject *clazz;
+        int i;
+        for (clazz = obj->clazz; clazz != NULL; clazz = clazz->super) {
+            InstField *field = clazz->ifields;
+            for (i = 0; i < clazz->ifieldRefCount; ++i, ++field) {
+                void *addr = BYTE_OFFSET((Object *)obj, field->byteOffset);
+                scanImmuneReference(((JValue *)addr)->l, ctx);
+            }
+        }
+    }
+}
+
+/*
+ * Scans the header, static field references, and interface
+ * pointers of a class object.
+ */
+static void scanImmuneClassObject(const ClassObject *obj, GcMarkContext *ctx)
+{
+    int i;
+
+    assert(obj != NULL);
+    assert(obj->obj.clazz == gDvm.classJavaLangClass);
+    assert(ctx != NULL);
+
+    scanImmuneReference((Object *)obj->obj.clazz, ctx);
+    if (IS_CLASS_FLAG_SET(obj, CLASS_ISARRAY)) {
+        scanImmuneReference((Object *)obj->elementClass, ctx);
+    }
+    /* Do super and the interfaces contain Objects and not dex idx values? */
+    if (obj->status > CLASS_IDX) {
+        scanImmuneReference((Object *)obj->super, ctx);
+    }
+    scanImmuneReference(obj->classLoader, ctx);
+    /* Scan static field references. */
+    for (i = 0; i < obj->sfieldCount; ++i) {
+        char ch = obj->sfields[i].field.signature[0];
+        if (ch == '[' || ch == 'L') {
+            scanImmuneReference(obj->sfields[i].value.l, ctx);
+        }
+    }
+    /* Scan the instance fields. */
+    scanImmuneInstanceFields((const Object *)obj, ctx);
+    /* Scan interface references. */
+    if (obj->status > CLASS_IDX) {
+        for (i = 0; i < obj->interfaceCount; ++i) {
+            scanImmuneReference((Object *)obj->interfaces[i], ctx);
+        }
+    }
+}
+
+/*
+ * Scans the header of all array objects.  If the array object is
+ * specialized to a reference type, scans the array data as well.
+ */
+static void scanImmuneArrayObject(const ArrayObject *obj, GcMarkContext *ctx)
+{
+    size_t i;
+
+    assert(obj != NULL);
+    assert(obj->obj.clazz != NULL);
+    assert(ctx != NULL);
+    /* Scan the class object reference. */
+    scanImmuneReference((Object *)obj->obj.clazz, ctx);
+    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISOBJECTARRAY)) {
+        /* Scan the array contents. */
+        Object **contents = (Object **)obj->contents;
+        for (i = 0; i < obj->length; ++i) {
+            scanImmuneReference(contents[i], ctx);
+        }
+    }
+}
+
+/*
+ * Scans the header and field references of a data object.
+ */
+static void scanImmuneDataObject(DataObject *obj, GcMarkContext *ctx)
+{
+    assert(obj != NULL);
+    assert(obj->obj.clazz != NULL);
+    assert(ctx != NULL);
+    /* Scan the class object. */
+    scanImmuneReference((Object *)obj->obj.clazz, ctx);
+    /* Scan the instance fields. */
+    scanImmuneInstanceFields((const Object *)obj, ctx);
+    if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
+        scanImmuneReference((Object *)obj, ctx);
+    }
+}
+
+/*
+ * Scans an object reference.  Determines the type of the reference
+ * and dispatches to a specialized scanning routine.
+ */
+static void scanImmuneObject(const Object *obj, GcMarkContext *ctx)
+{
+    assert(obj != NULL);
+    assert(obj->clazz != NULL);
+    assert(ctx != NULL);
+    assert(obj < (Object *)ctx->immuneLimit);
+
+#if WITH_HPROF
+    if (gDvm.gcHeap->hprofContext != NULL) {
+        hprofDumpHeapObject(gDvm.gcHeap->hprofContext, obj);
+    }
+#endif
+    /* Dispatch a type-specific scan routine. */
+    if (obj->clazz == gDvm.classJavaLangClass) {
+        scanImmuneClassObject((ClassObject *)obj, ctx);
+    } else if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
+        scanImmuneArrayObject((ArrayObject *)obj, ctx);
+    } else {
+        scanImmuneDataObject((DataObject *)obj, ctx);
+    }
+}
+
 static void
 processMarkStack(GcMarkContext *ctx)
 {
@@ -537,8 +691,62 @@ void dvmHeapScanMarkedObjects(void)
 #ifndef NDEBUG
     gLastFinger = 0;
 #endif
-    dvmHeapBitmapWalk(ctx->bitmap, scanBitmapCallback, ctx);
+    if (gDvm.executionMode == kExecutionModeInterpPortable) {
+        /* The portable interpreter dirties cards on write; other
+         * modes do not yet do so.
+         * TODO: Bring the fast interpreter and JIT into the fold.
+         */
+        HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+        HeapBitmap liveBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+        size_t numBitmaps, i;
+        numBitmaps = dvmHeapSourceGetNumHeaps();
+        dvmHeapSourceGetObjectBitmaps(liveBits, markBits, numBitmaps);
+        for (i = 0; i < numBitmaps; i++) {
+            /* The use of finger to tell visited from unvisited objects
+             * requires we walk the bitmaps from low to high
+             * addresses. This code assumes [and asserts] that the order
+             * of the heaps returned is the reverse of that.
+             */
+            size_t j = numBitmaps-1-i;
+            assert(j == 0 || (markBits[j].base < markBits[j-1].base));
+            if (markBits[j].base < (uintptr_t)ctx->immuneLimit) {
+                if (gDvm.verifyCardTable) {
+                    dvmVerifyCardTable(&markBits[j], ctx->immuneLimit);
+                }
+                uintptr_t minAddr = markBits[j].base;
+                uintptr_t maxAddr = markBits[j].base +
+                    HB_MAX_OFFSET(&markBits[j]);
+                u1 *minCard = dvmCardFromAddr((void *)minAddr);
+                u1 *maxCard = dvmCardFromAddr((void *)maxAddr);
 
+                u1 *card;
+                /* TODO: This double-loop should be made faster.
+                 */
+                for (card = minCard; card <= maxCard; card++) {
+                    if (*card == GC_CARD_DIRTY) {
+                        uintptr_t addr = (uintptr_t)dvmAddrFromCard(card);
+                        uintptr_t endAddr = addr + GC_CARD_SIZE;
+                        ctx->crossGen  = false;
+                        for ( ; addr < endAddr; addr += 8) {
+                            if (dvmIsValidObject((void *)addr)) {
+                                scanImmuneObject((void *)addr, ctx);
+                            }
+                        }
+                        if (! ctx->crossGen) {
+                            *card = GC_CARD_CLEAN;
+                        }
+                    }
+                }
+                if (gDvm.verifyCardTable) {
+                    dvmVerifyCardTable(&markBits[j], ctx->immuneLimit);
+                }
+            } else {
+                dvmHeapBitmapWalk(&markBits[j], scanBitmapCallback, ctx);
+            }
+        }
+    } else {
+        dvmHeapBitmapWalk(ctx->bitmap, scanBitmapCallback, ctx);
+    }
     /* We've walked the mark bitmaps.  Scan anything that's
      * left on the mark stack.
      */

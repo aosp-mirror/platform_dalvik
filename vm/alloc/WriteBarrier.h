@@ -23,13 +23,17 @@
 /*
  * The address within the Object has been written, and perhaps changed.
  */
-INLINE void dvmWriteBarrierField(const Object *obj, void *addr) {
+INLINE void dvmWriteBarrierField(const Object *obj, void *addr)
+{
+    dvmMarkCard(obj);
 }
 
 /*
  * All of the Object may have changed.
  */
-INLINE void dvmWriteBarrierObject(const Object *obj) {
+INLINE void dvmWriteBarrierObject(const Object *obj)
+{
+    dvmMarkCard(obj);
 }
 
 /*
@@ -37,6 +41,8 @@ INLINE void dvmWriteBarrierObject(const Object *obj) {
  * or equal to start and strictly less than end, have been written,
  * and perhaps changed.
  */
-INLINE void dvmWriteBarrierArray(const ArrayObject* obj,
-                                 size_t start, size_t end) {
+INLINE void dvmWriteBarrierArray(const ArrayObject *obj,
+                                 size_t start, size_t end)
+{
+    dvmMarkCard((Object *)obj);
 }

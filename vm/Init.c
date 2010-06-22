@@ -118,6 +118,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
+    dvmFprintf(stderr, "  -Xgc:[no]verifycardtable\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -988,6 +989,10 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.concurrentMarkSweep = true;
             else if (strcmp(argv[i] + 5, "noconcurrent") == 0)
                 gDvm.concurrentMarkSweep = false;
+            else if (strcmp(argv[i] + 5, "verifycardtable") == 0)
+                gDvm.verifyCardTable = true;
+            else if (strcmp(argv[i] + 5, "noverifycardtable") == 0)
+                gDvm.verifyCardTable = false;
             else {
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;

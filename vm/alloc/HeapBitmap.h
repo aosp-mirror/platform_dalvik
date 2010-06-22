@@ -50,7 +50,7 @@
     static inline p
 
 
-typedef struct {
+struct HeapBitmap {
     /* The bitmap data, which points to an mmap()ed area of zeroed
      * anonymous memory.
      */
@@ -77,7 +77,8 @@ typedef struct {
      * to a set bit.  If there are no bits set, (max < base).
      */
     uintptr_t max;
-} HeapBitmap;
+};
+typedef struct HeapBitmap HeapBitmap;
 
 
 /*

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <cutils/ashmem.h>
 #include <cutils/mspace.h>
 #include <limits.h>     // for INT_MAX
 #include <sys/mman.h>
@@ -473,7 +472,6 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     mspace msp;
     size_t length;
     void *base;
-    int fd, ret;
 
     assert(gHs == NULL);
 
@@ -488,17 +486,9 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
      * among the heaps managed by the garbage collector.
      */
     length = ALIGN_UP_TO_PAGE_SIZE(absoluteMaxSize);
-    fd = ashmem_create_region("dalvik-heap", length);
-    if (fd == -1) {
+    base = dvmAllocRegion(length, PROT_NONE, "dalvik-heap");
+    if (base == NULL) {
         return NULL;
-    }
-    base = mmap(NULL, length, PROT_NONE, MAP_PRIVATE, fd, 0);
-    if (base == MAP_FAILED) {
-        return NULL;
-    }
-    ret = close(fd);
-    if (ret == -1) {
-        goto fail;
     }
 
     /* Create an unlocked dlmalloc mspace to use as
@@ -557,6 +547,10 @@ dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize)
     countAllocation(hs2heap(hs), hs, false);
 
     gHs = hs;
+    if (!dvmCardTableStartup(gcHeap, base)) {
+        LOGE_HEAP("card table allocation failed.");
+        goto fail;
+    }
     return gcHeap;
 
 fail:

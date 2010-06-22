@@ -130,6 +130,7 @@ LOCAL_SRC_FILES := \
 	UtfString.c \
 	alloc/clz.c.arm \
 	alloc/Alloc.c \
+	alloc/CardTable.c \
 	alloc/HeapBitmap.c.arm \
 	alloc/HeapDebug.c \
 	alloc/HeapTable.c \
