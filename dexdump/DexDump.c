@@ -836,7 +836,14 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
             pDecInsn->vA, pDecInsn->vB, (s4)pDecInsn->vC, (u2)pDecInsn->vC);
         break;
     case kFmt22c:        // op vA, vB, thing@CCCC
-        if (pDecInsn->opCode >= OP_IGET && pDecInsn->opCode <= OP_IPUT_SHORT) {
+        if (pDecInsn->opCode == OP_INSTANCE_OF ||
+            pDecInsn->opCode == OP_NEW_ARRAY)
+        {
+            printf(" v%d, v%d, %s // class@%04x",
+                pDecInsn->vA, pDecInsn->vB,
+                getClassDescriptor(pDexFile, pDecInsn->vC), pDecInsn->vC);
+        } else {
+            /* iget* and iput*, including dexopt-generated -volatile */
             FieldMethodInfo fieldInfo;
             if (getFieldInfo(pDexFile, pDecInsn->vC, &fieldInfo)) {
                 printf(" v%d, v%d, %s.%s:%s // field@%04x", pDecInsn->vA,
@@ -846,10 +853,6 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                 printf(" v%d, v%d, ??? // field@%04x", pDecInsn->vA,
                     pDecInsn->vB, pDecInsn->vC);
             }
-        } else {
-            printf(" v%d, v%d, %s // class@%04x",
-                pDecInsn->vA, pDecInsn->vB,
-                getClassDescriptor(pDexFile, pDecInsn->vC), pDecInsn->vC);
         }
         break;
     case kFmt22cs:       // [opt] op vA, vB, field offset CCCC
