@@ -23,7 +23,7 @@
 #include "Jit.h"
 
 
-#include "dexdump/OpCodeNames.h"
+#include "libdex/OpCodeNames.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
@@ -235,7 +235,8 @@ static void selfVerificationDumpTrace(const u2* pc, Thread* self)
         offset =  (int)((u2*)addr - stackSave->method->insns);
         decInsn = &(shadowSpace->trace[i].decInsn);
         /* Not properly decoding instruction, some registers may be garbage */
-        LOGD("0x%x: (0x%04x) %s", addr, offset, getOpcodeName(decInsn->opCode));
+        LOGD("0x%x: (0x%04x) %s",
+            addr, offset, dexGetOpcodeName(decInsn->opCode));
     }
 }
 
@@ -267,7 +268,7 @@ static bool selfVerificationDebugInterp(const u2* pc, Thread* self,
 
     //LOGD("### DbgIntp(%d): PC: 0x%x endPC: 0x%x state: %d len: %d %s",
     //    self->threadId, (int)pc, (int)shadowSpace->endPC, state,
-    //    shadowSpace->traceLength, getOpcodeName(decInsn.opCode));
+    //    shadowSpace->traceLength, dexGetOpcodeName(decInsn.opCode));
 
     if (state == kSVSIdle || state == kSVSStart) {
         LOGD("~~~ DbgIntrp: INCORRECT PREVIOUS STATE(%d): %d",
@@ -685,7 +686,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
 
 
 #if defined(SHOW_TRACE)
-            LOGD("TraceGen: adding %s",getOpcodeName(decInsn.opCode));
+            LOGD("TraceGen: adding %s", dexGetOpcodeName(decInsn.opCode));
 #endif
             flags = dexGetInstrFlags(gDvm.instrFlags, decInsn.opCode);
             len = dexGetInstrOrTableWidthAbs(gDvm.instrWidth, lastPC);
@@ -729,7 +730,7 @@ int dvmCheckJit(const u2* pc, Thread* self, InterpState* interpState)
                     interpState->jitState = kJitTSelectEnd;
 #if defined(SHOW_TRACE)
                 LOGD("TraceGen: ending on %s, basic block end",
-                     getOpcodeName(decInsn.opCode));
+                     dexGetOpcodeName(decInsn.opCode));
 #endif
 
                 /*

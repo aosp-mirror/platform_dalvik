@@ -3892,7 +3892,7 @@ void dvmCompilerMIR2LIR(CompilationUnit *cUnit)
             if (notHandled) {
                 LOGE("%#06x: Opcode 0x%x (%s) / Fmt %d not handled\n",
                      mir->offset,
-                     dalvikOpCode, getOpcodeName(dalvikOpCode),
+                     dalvikOpCode, dexGetOpcodeName(dalvikOpCode),
                      dalvikFormat);
                 dvmCompilerAbort(cUnit);
                 break;

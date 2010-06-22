@@ -17,7 +17,7 @@
 #include "Dalvik.h"
 #include "Dataflow.h"
 #include "Loop.h"
-#include "dexdump/OpCodeNames.h"
+#include "libdex/OpCodeNames.h"
 
 /*
  * Main table containing data flow attributes for each bytecode. The first
@@ -826,7 +826,7 @@ char *dvmCompilerGetDalvikDisassembly(DecodedInstruction *insn)
     char *ret;
 
     buffer[0] = 0;
-    strcpy(buffer, getOpcodeName(opcode));
+    strcpy(buffer, dexGetOpcodeName(opcode));
 
     if (dfAttributes & DF_FORMAT_35C) {
         unsigned int i;

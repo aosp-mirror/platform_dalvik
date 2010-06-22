@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik opcode names.
  */
-#ifndef _DEXDUMP_OPCODENAMES
-#define _DEXDUMP_OPCODENAMES
+#ifndef _LIBDEX_OPCODENAMES
+#define _LIBDEX_OPCODENAMES
 
-#include "libdex/OpCode.h"
+#include "OpCode.h"
 
-const char* getOpcodeName(OpCode op);
+const char* dexGetOpcodeName(OpCode op);
 
-#endif /*_DEXDUMP_OPCODENAMES*/
+#endif /*_LIBDEX_OPCODENAMES*/

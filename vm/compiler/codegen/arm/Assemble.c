@@ -16,7 +16,7 @@
 
 #include "Dalvik.h"
 #include "libdex/OpCode.h"
-#include "dexdump/OpCodeNames.h"
+#include "libdex/OpCodeNames.h"
 
 #include "../../CompilerInternals.h"
 #include "ArmLIR.h"

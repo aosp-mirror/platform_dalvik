@@ -34,10 +34,9 @@
 #include "libdex/DexClass.h"
 #include "libdex/DexProto.h"
 #include "libdex/InstrUtils.h"
+#include "libdex/OpCodeNames.h"
 #include "libdex/SysUtil.h"
 #include "libdex/CmdUtils.h"
-
-#include "dexdump/OpCodeNames.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -740,7 +739,7 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
             printf("|%04x: nop // spacer", insnIdx);
         }
     } else {
-        printf("|%04x: %s", insnIdx, getOpcodeName(pDecInsn->opCode));
+        printf("|%04x: %s", insnIdx, dexGetOpcodeName(pDecInsn->opCode));
     }
 
     switch (dexGetInstrFormat(gInstrFormat, pDecInsn->opCode)) {

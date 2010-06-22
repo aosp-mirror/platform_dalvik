@@ -216,7 +216,6 @@ WITH_JIT := $(strip $(WITH_JIT))
 ifeq ($(WITH_JIT),true)
   LOCAL_CFLAGS += -DWITH_JIT
   LOCAL_SRC_FILES += \
-	../dexdump/OpCodeNames.c \
 	compiler/Compiler.c \
 	compiler/Frontend.c \
 	compiler/Utility.c \

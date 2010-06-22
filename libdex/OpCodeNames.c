@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Table of Dalvik opcode names.
  */
 #include "OpCodeNames.h"
+
+#include <assert.h>
 
 /*
  * The following two lines work, but slashes and dashes both turn into
@@ -323,7 +326,8 @@ static const char* gOpNames[256] = {
 /*
  * Return the name of an opcode.
  */
-const char* getOpcodeName(OpCode op)
+const char* dexGetOpcodeName(OpCode op)
 {
+    assert(op >= 0 && op < kNumDalvikInstructions);
     return gOpNames[op];
 }
