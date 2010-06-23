@@ -286,6 +286,7 @@ static void virtualFree(void *addr, size_t length)
     }
 }
 
+#ifndef NDEBUG
 static int isValidAddress(const HeapSource *heapSource, const u1 *addr)
 {
     size_t block;
@@ -294,6 +295,7 @@ static int isValidAddress(const HeapSource *heapSource, const u1 *addr)
     return heapSource->baseBlock <= block &&
            heapSource->limitBlock > block;
 }
+#endif
 
 /*
  * Iterate over the block map looking for a contiguous run of free
@@ -681,6 +683,12 @@ void *allocateGray(size_t size)
     return addr;
 }
 
+bool dvmHeapSourceContainsAddress(const void *ptr)
+{
+    HeapSource *heapSource = gDvm.gcHeap->heapSource;
+    return dvmHeapBitmapCoversAddress(&heapSource->allocBits, ptr);
+}
+
 /*
  * Returns true if the given address is within the heap and points to
  * the header of a live object.
@@ -993,10 +1001,12 @@ static int isWeakReference(const Object *obj)
     return getReferenceFlags(obj) & CLASS_ISWEAKREFERENCE;
 }
 
+#ifndef NDEBUG
 static bool isPhantomReference(const Object *obj)
 {
     return getReferenceFlags(obj) & CLASS_ISPHANTOMREFERENCE;
 }
+#endif
 
 /*
  * Returns true if the reference was registered with a reference queue
@@ -1027,7 +1037,7 @@ static bool isReferenceEnqueuable(const Object *ref)
 /*
  * Schedules a reference to be appended to its reference queue.
  */
-static void enqueueReference(const Object *ref)
+static void enqueueReference(Object *ref)
 {
     assert(ref != NULL);
     assert(dvmGetFieldObject(ref, gDvm.offJavaLangRefReference_queue) != NULL);
@@ -1155,7 +1165,7 @@ void processFinalizableReferences(void)
     /* Create a table that the new pending refs will
      * be added to.
      */
-    if (!dvmHeapInitHeapRefTable(&newPendingRefs, 128)) {
+    if (!dvmHeapInitHeapRefTable(&newPendingRefs)) {
         //TODO: mark all finalizable refs and hope that
         //      we can schedule them next time.  Watch out,
         //      because we may be expecting to free up space
