@@ -276,7 +276,6 @@ struct DvmGlobals {
     int         offJavaLangRefReference_referent;
     int         offJavaLangRefReference_queue;
     int         offJavaLangRefReference_queueNext;
-    int         offJavaLangRefReference_vmData;
 
     /* method pointers - java.lang.ref.Reference */
     Method*     methJavaLangRefReference_enqueueInternal;

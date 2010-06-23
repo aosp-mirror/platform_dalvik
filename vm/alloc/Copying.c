@@ -1061,17 +1061,18 @@ static void clearReference(Object *obj)
  */
 void clearWhiteReferences(Object **list)
 {
-    size_t referentOffset, vmDataOffset;
+    size_t referentOffset, queueNextOffset;
     bool doSignal;
 
-    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     doSignal = false;
     while (*list != NULL) {
         Object *ref = *list;
         JValue *field = dvmFieldPtr(ref, referentOffset);
         Object *referent = field->l;
-        *list = dvmGetFieldObject(ref, vmDataOffset);
+        *list = dvmGetFieldObject(ref, queueNextOffset);
+        dvmSetFieldObject(ref, queueNextOffset, NULL);
         assert(referent != NULL);
         if (isForward(referent->clazz)) {
             field->l = referent = getForward(referent->clazz);
@@ -1104,11 +1105,11 @@ void preserveSoftReferences(Object **list)
 {
     Object *ref;
     Object *prev, *next;
-    size_t referentOffset, vmDataOffset;
+    size_t referentOffset, queueNextOffset;
     unsigned counter;
     bool white;
 
-    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
+    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
     referentOffset = gDvm.offJavaLangRefReference_referent;
     counter = 0;
     prev = next = NULL;
@@ -1116,7 +1117,7 @@ void preserveSoftReferences(Object **list)
     while (ref != NULL) {
         JValue *field = dvmFieldPtr(ref, referentOffset);
         Object *referent = field->l;
-        next = dvmGetFieldObject(ref, vmDataOffset);
+        next = dvmGetFieldObject(ref, queueNextOffset);
         assert(referent != NULL);
         if (isForward(referent->clazz)) {
             /* Referent is black. */
@@ -1133,8 +1134,8 @@ void preserveSoftReferences(Object **list)
         if (white) {
             /* Referent is black, unlink it. */
             if (prev != NULL) {
-                dvmSetFieldObject(ref, vmDataOffset, NULL);
-                dvmSetFieldObject(prev, vmDataOffset, next);
+                dvmSetFieldObject(ref, queueNextOffset, NULL);
+                dvmSetFieldObject(prev, queueNextOffset, next);
             }
         } else {
             /* Referent is white, skip over it. */
@@ -1262,7 +1263,7 @@ static void scavengeReferenceObject(Object *obj)
 {
     Object *referent;
     Object **queue;
-    size_t referentOffset, vmDataOffset;
+    size_t referentOffset, queueNextOffset;
 
     assert(obj != NULL);
     LOG_SCAV("scavengeReferenceObject(obj=%p),'%s'", obj, obj->clazz->descriptor);
@@ -1280,8 +1281,8 @@ static void scavengeReferenceObject(Object *obj)
         assert(isPhantomReference(obj));
         queue = &gDvm.gcHeap->phantomReferences;
     }
-    vmDataOffset = gDvm.offJavaLangRefReference_vmData;
-    dvmSetFieldObject(obj, vmDataOffset, *queue);
+    queueNextOffset = gDvm.offJavaLangRefReference_queueNext;
+    dvmSetFieldObject(obj, queueNextOffset, *queue);
     *queue = obj;
     LOG_SCAV("scavengeReferenceObject: enqueueing %p", obj);
 }

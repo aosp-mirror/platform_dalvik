@@ -2370,11 +2370,6 @@ static bool precacheReferenceOffsets(ClassObject* clazz)
                 "queueNext", "Ljava/lang/ref/Reference;");
     assert(gDvm.offJavaLangRefReference_queueNext >= 0);
 
-    gDvm.offJavaLangRefReference_vmData =
-        dvmFindFieldOffset(gDvm.classJavaLangRefReference,
-                "vmData", "I");
-    assert(gDvm.offJavaLangRefReference_vmData >= 0);
-
     /* enqueueInternal() is private and thus a direct method. */
     meth = dvmFindDirectMethodByDescriptor(clazz, "enqueueInternal", "()Z");
     assert(meth != NULL);
