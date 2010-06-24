@@ -175,8 +175,6 @@ Object* dvmAllocObject(ClassObject* clazz, int flags)
     newObj = dvmMalloc(clazz->objectSize, flags);
     if (newObj != NULL) {
         DVM_OBJECT_INIT(newObj, clazz);
-        LOGVV("AllocObject: %s (%d)\n", clazz->descriptor,
-            (int) clazz->objectSize);
 #if WITH_HPROF && WITH_HPROF_STACK
         hprofFillInStackTrace(newObj);
 #endif
@@ -289,7 +287,6 @@ void dvmCollectGarbage(bool collectSoftReferences)
 {
     dvmLockHeap();
 
-    LOGVV("Explicit GC\n");
     dvmCollectGarbageInternal(collectSoftReferences, GC_EXPLICIT);
 
     dvmUnlockHeap();

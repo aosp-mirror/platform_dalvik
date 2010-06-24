@@ -1723,7 +1723,6 @@ static void scavengeThreadStack(Thread *thread)
                     if (bits == 1) {
                         /* set bit 9 so we can tell when we're empty */
                         bits = *regVector++ | 0x0100;
-                        LOGVV("loaded bits: 0x%02x\n", bits & 0xff);
                     }
 
                     if (rval != 0 && (bits & 0x01) != 0) {
