@@ -1345,7 +1345,6 @@ retry:
          * aligned word following the instance data.
          */
         assert(obj->clazz != gDvm.classJavaLangClass);
-        assert(obj->clazz != gDvm.unlinkedJavaLangClass);
         if (IS_CLASS_FLAG_SET(obj->clazz, CLASS_ISARRAY)) {
             size = dvmArrayObjectSize((ArrayObject *)obj);
             size = (size + 2) & ~2;
