@@ -260,8 +260,9 @@ import java.util.ArrayList;
      * {@link AttributeList}, if any, translating it to one or more of an
      * {@code InnerClass}, {@code EnclosingClass}, or
      * {@code MemberClasses} annotation.
-     *
-     * @param thisClass {@code non-null;} type representing the class being processed
+     * 
+     * @param thisClass {@code non-null;} type representing the class being
+     * processed
      * @param attribs {@code non-null;} the attributes list to search in
      * @param needEnclosingClass whether to include an
      * {@code EnclosingClass} annotation
@@ -314,10 +315,20 @@ import java.util.ArrayList;
                 if (outer == null) {
                     throw new Warning(
                             "Ignoring InnerClasses attribute for an " +
-                            "anonymous inner class that doesn't come with " +
-                            "an associated EnclosingMethod attribute. " +
-                            "(This class was probably produced by a broken " +
-                            "compiler.)");
+                            "anonymous inner class\n" +
+                            "(" + thisClass.toHuman() +
+                            ") that doesn't come with an\n" +
+                            "associated EnclosingMethod attribute. " +
+                            "This class was probably produced by a\n" +
+                            "compiler that did not target the modern " +
+                            ".class file format. The recommended\n" +
+                            "solution is to recompile the class from " +
+                            "source, using an up-to-date compiler\n" +
+                            "and without specifying any \"-target\" type " +
+                            "options. The consequence of ignoring\n" +
+                            "this warning is that reflective operations " +
+                            "on this class will incorrectly\n" +
+                            "indicate that it is *not* an inner class.");
                 }
                 result.add(AnnotationUtils.makeEnclosingClass(
                                    foundThisClass.getOuterClass()));
@@ -343,7 +354,8 @@ import java.util.ArrayList;
      * result set.
      *
      * @param method {@code non-null;} the method in question
-     * @return {@code non-null;} the list of annotation sets, which may be empty
+     * @return {@code non-null;} the list of annotation sets, which may be
+     * empty
      */
     public static AnnotationsList getParameterAnnotations(Method method) {
         AttributeList attribs = method.getAttributes();
