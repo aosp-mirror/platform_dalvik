@@ -260,7 +260,7 @@ import java.util.ArrayList;
      * {@link AttributeList}, if any, translating it to one or more of an
      * {@code InnerClass}, {@code EnclosingClass}, or
      * {@code MemberClasses} annotation.
-     * 
+     *
      * @param thisClass {@code non-null;} type representing the class being
      * processed
      * @param attribs {@code non-null;} the attributes list to search in
