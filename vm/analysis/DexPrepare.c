@@ -1030,7 +1030,7 @@ static const u1* getSignature(const ClassPathEntry* cpe)
  * If this changes, update DEX_OPT_MAGIC_VERS.
  */
 static const size_t kMinDepSize = 4 * 4;
-static const size_t kMaxDepSize = 4 * 4 + 1024;     // sanity check
+static const size_t kMaxDepSize = 4 * 4 + 2048;     // sanity check
 
 /*
  * Read the "opt" header, verify it, then read the dependencies section
