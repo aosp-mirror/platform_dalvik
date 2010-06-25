@@ -191,6 +191,26 @@ void dvmAssertHeapWorkerThreadRunning()
     }
 }
 
+/*
+ * Acquires a mutex, transitioning to the VMWAIT state if the mutex is
+ * held.  This allows the thread to suspend while it waits for another
+ * thread to release the mutex.
+ */
+static void lockMutex(pthread_mutex_t *mu)
+{
+    Thread *self;
+    ThreadStatus oldStatus;
+
+    assert(mu != NULL);
+    if (dvmTryLockMutex(mu) != 0) {
+        self = dvmThreadSelf();
+        assert(self != NULL);
+        oldStatus = dvmChangeStatus(self, THREAD_VMWAIT);
+        dvmLockMutex(mu);
+        dvmChangeStatus(self, oldStatus);
+    }
+}
+
 static void callMethod(Thread *self, Object *obj, Method *method)
 {
     JValue unused;
@@ -223,7 +243,10 @@ static void callMethod(Thread *self, Object *obj, Method *method)
     } else {
         dvmCallMethod(self, method, obj, &unused);
     }
-    dvmLockMutex(&gDvm.heapWorkerLock);
+    /*
+     * Reacquire the heap worker lock in a suspend-friendly way.
+     */
+    lockMutex(&gDvm.heapWorkerLock);
 
     gDvm.gcHeap->heapWorkerCurrentObject = NULL;
     gDvm.gcHeap->heapWorkerCurrentMethod = NULL;
