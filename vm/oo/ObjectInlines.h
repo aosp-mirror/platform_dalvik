@@ -17,8 +17,8 @@
 /*
  * Helper functions to access data fields in Objects.
  */
-#ifndef _DALVIK_OO_OBJECTACCESS
-#define _DALVIK_OO_OBJECTACCESS
+#ifndef _DALVIK_OO_OBJECTINLINES
+#define _DALVIK_OO_OBJECTINLINES
 
 /*
  * Store a single value in the array, and note in the write barrier.
@@ -223,4 +223,4 @@ INLINE void dvmSetStaticFieldLongVolatile(StaticField* sfield, s8 val) {
     dvmQuasiAtomicSwap64(val, addr);
 }
 
-#endif /*_DALVIK_OO_OBJECTACCESS*/
+#endif /*_DALVIK_OO_OBJECTINLINES*/
