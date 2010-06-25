@@ -1343,7 +1343,6 @@ static bool createFakeRunFrame(Thread* thread)
  */
 static void setThreadName(const char *threadName)
 {
-#if defined(HAVE_PRCTL)
     int hasAt = 0;
     int hasDot = 0;
     const char *s = threadName;
@@ -1358,7 +1357,13 @@ static void setThreadName(const char *threadName)
     } else {
         s = threadName + len - 15;
     }
+#if defined(HAVE_PTHREAD_SETNAME_NP)
+    if (pthread_setname_np(pthread_self(), s) != 0)
+        LOGW("Unable to set the name of the current thread\n");
+#elif defined(HAVE_PRCTL)
     prctl(PR_SET_NAME, (unsigned long) s, 0, 0, 0);
+#else
+    LOGD("Unable to set current thread's name: %s\n", s);
 #endif
 }
 
