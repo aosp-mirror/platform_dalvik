@@ -721,9 +721,6 @@ dvmHeapSourceAlloc(size_t n)
     heap = hs2heap(hs);
 
     if (heap->bytesAllocated + n <= hs->softLimit) {
-// TODO: allocate large blocks (>64k?) as separate mmap regions so that
-//       they don't increase the high-water mark when they're freed.
-// TODO: zero out large objects using madvise
         ptr = mspace_calloc(heap->msp, 1, n);
         if (ptr != NULL) {
             countAllocation(heap, ptr, true);
