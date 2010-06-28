@@ -3510,7 +3510,7 @@ void dvmDumpThreadEx(const DebugOutputTarget* target, Thread* thread,
         }
     }
     if (groupName == NULL)
-        groupName = strdup("(BOGUS GROUP)");
+        groupName = strdup("(null; initializing?)");
 
     dvmPrintDebugMessage(target,
         "\"%s\"%s prio=%d tid=%d %s%s\n",
