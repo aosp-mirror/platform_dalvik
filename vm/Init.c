@@ -117,6 +117,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xgc:[no]overwritefree\n");
     dvmFprintf(stderr, "  -Xgc:[no]preverify\n");
     dvmFprintf(stderr, "  -Xgc:[no]postverify\n");
+    dvmFprintf(stderr, "  -Xgc:[no]concurrent\n");
     dvmFprintf(stderr, "  -Xgenregmap\n");
     dvmFprintf(stderr, "  -Xcheckdexsum\n");
 #if defined(WITH_JIT)
@@ -983,6 +984,10 @@ static int dvmProcessOptions(int argc, const char* const argv[],
                 gDvm.postVerify = true;
             else if (strcmp(argv[i] + 5, "nopostverify") == 0)
                 gDvm.postVerify = false;
+            else if (strcmp(argv[i] + 5, "concurrent") == 0)
+                gDvm.concurrentMarkSweep = true;
+            else if (strcmp(argv[i] + 5, "noconcurrent") == 0)
+                gDvm.concurrentMarkSweep = false;
             else {
                 dvmFprintf(stderr, "Bad value for -Xgc");
                 return -1;
@@ -1591,7 +1596,7 @@ void dvmShutdown(void)
     /*
      * Stop our internal threads.
      */
-    dvmHeapWorkerShutdown();
+    dvmGcThreadShutdown();
 
     if (gDvm.jdwpState != NULL)
         dvmJdwpShutdown(gDvm.jdwpState);

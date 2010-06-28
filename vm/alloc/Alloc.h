@@ -28,6 +28,7 @@ bool dvmGcStartup(void);
 bool dvmCreateStockExceptions(void);
 bool dvmGcStartupAfterZygote(void);
 void dvmGcShutdown(void);
+void dvmGcThreadShutdown(void);
 
 /*
  * Do any last-minute preparation before we call fork() for the first time.

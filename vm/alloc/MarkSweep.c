@@ -20,6 +20,7 @@
 #include "alloc/HeapInternal.h"
 #include "alloc/HeapSource.h"
 #include "alloc/MarkSweep.h"
+#include "alloc/Visit.h"
 #include <limits.h>     // for ULONG_MAX
 #include <sys/mman.h>   // for madvise(), mmap()
 #include <cutils/ashmem.h>
@@ -453,7 +454,6 @@ static void scanDataObject(DataObject *obj, GcMarkContext *ctx)
     markObject((Object *)obj->obj.clazz, ctx);
     /* Scan the instance fields. */
     scanInstanceFields((const Object *)obj, ctx);
-
     if (IS_CLASS_FLAG_SET(obj->obj.clazz, CLASS_ISREFERENCE)) {
         delayReferenceReferent((Object *)obj, ctx);
     }
@@ -545,6 +545,53 @@ void dvmHeapScanMarkedObjects(void)
     processMarkStack(ctx);
 
     LOG_SCAN("done with marked objects\n");
+}
+
+static void dirtyObjectVisitor(void *ptr, void *arg)
+{
+    markObject(*(Object **)ptr, (GcMarkContext *)arg);
+}
+
+/*
+ * Callback applied to each gray object to blacken it.
+ */
+static bool dirtyObjectCallback(size_t numPtrs, void **ptrs,
+                                const void *finger, void *arg)
+{
+    GcMarkContext *ctx;
+    size_t i;
+
+    ctx = (GcMarkContext *)arg;
+    for (i = 0; i < numPtrs; ++i) {
+        dvmVisitObject(dirtyObjectVisitor, ptrs[i], ctx);
+    }
+    return true;
+}
+
+/*
+ * Re-mark dirtied objects.  Iterates through all blackened objects
+ * looking for references to white objects.
+ */
+void dvmMarkDirtyObjects(void)
+{
+    HeapBitmap markBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+    HeapBitmap liveBits[HEAP_SOURCE_MAX_HEAP_COUNT];
+    GcMarkContext *ctx;
+    size_t numBitmaps;
+    size_t i;
+
+    ctx = &gDvm.gcHeap->markContext;
+    /*
+     * Reset the finger to the maximum value to ensure that gray
+     * objects are always pushed onto the mark stack.
+     */
+    assert(ctx->finger == (void *)ULONG_MAX);
+    numBitmaps = dvmHeapSourceGetNumHeaps();
+    dvmHeapSourceGetObjectBitmaps(liveBits, markBits, numBitmaps);
+    for (i = 0; i < numBitmaps; i++) {
+        dvmHeapBitmapWalk(&markBits[i], dirtyObjectCallback, ctx);
+    }
+    processMarkStack(ctx);
 }
 
 /** Clear the referent field.

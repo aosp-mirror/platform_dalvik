@@ -38,6 +38,7 @@
 
 static const char* GcReasonStr[] = {
     [GC_FOR_MALLOC] = "GC_FOR_MALLOC",
+    [GC_CONCURRENT] = "GC_CONCURRENT",
     [GC_EXPLICIT] = "GC_EXPLICIT",
     [GC_EXTERNAL_ALLOC] = "GC_EXTERNAL_ALLOC",
     [GC_HPROF_DUMP_HEAP] = "GC_HPROF_DUMP_HEAP"
@@ -91,12 +92,13 @@ bool dvmHeapStartup()
     return true;
 }
 
-void dvmHeapStartupAfterZygote()
+bool dvmHeapStartupAfterZygote(void)
 {
     /* Update our idea of the last GC start time so that we
      * don't use the last time that Zygote happened to GC.
      */
     gDvm.gcHeap->gcStartTime = dvmGetRelativeTimeUsec();
+    return dvmHeapSourceStartupAfterZygote();
 }
 
 void dvmHeapShutdown()
@@ -124,6 +126,14 @@ void dvmHeapShutdown()
          */
         dvmHeapSourceShutdown(&gDvm.gcHeap);
     }
+}
+
+/*
+ * Shutdown any threads internal to the heap.
+ */
+void dvmHeapThreadShutdown(void)
+{
+    dvmHeapSourceThreadShutdown();
 }
 
 /*
@@ -613,6 +623,7 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     int numFreed;
     size_t sizeFreed;
     GcMode gcMode;
+    int oldThreadPriority = kInvalidPriority;
 
     /* The heap lock must be held.
      */
@@ -635,32 +646,37 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 
     dvmSuspendAllThreads(SUSPEND_FOR_GC);
 
-    /* Get the priority (the "nice" value) of the current thread.  The
-     * getpriority() call can legitimately return -1, so we have to
-     * explicitly test errno.
+    /*
+     * If we are not marking concurrently raise the priority of the
+     * thread performing the garbage collection.
      */
-    errno = 0;
-    int oldThreadPriority = kInvalidPriority;
-    int priorityResult = getpriority(PRIO_PROCESS, 0);
-    if (errno != 0) {
-        LOGI_HEAP("getpriority(self) failed: %s\n", strerror(errno));
-    } else if (priorityResult > ANDROID_PRIORITY_NORMAL) {
-        /* Current value is numerically greater than "normal", which
-         * in backward UNIX terms means lower priority.
+    if (reason != GC_CONCURRENT) {
+        /* Get the priority (the "nice" value) of the current thread.  The
+         * getpriority() call can legitimately return -1, so we have to
+         * explicitly test errno.
          */
+        errno = 0;
+        int priorityResult = getpriority(PRIO_PROCESS, 0);
+        if (errno != 0) {
+            LOGI_HEAP("getpriority(self) failed: %s\n", strerror(errno));
+        } else if (priorityResult > ANDROID_PRIORITY_NORMAL) {
+            /* Current value is numerically greater than "normal", which
+             * in backward UNIX terms means lower priority.
+             */
 
-        if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
-            set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
-        }
+            if (priorityResult >= ANDROID_PRIORITY_BACKGROUND) {
+                set_sched_policy(dvmGetSysThreadId(), SP_FOREGROUND);
+            }
 
-        if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
-            LOGI_HEAP("Unable to elevate priority from %d to %d\n",
-                priorityResult, ANDROID_PRIORITY_NORMAL);
-        } else {
-            /* priority elevated; save value so we can restore it later */
-            LOGD_HEAP("Elevating priority from %d to %d\n",
-                priorityResult, ANDROID_PRIORITY_NORMAL);
-            oldThreadPriority = priorityResult;
+            if (setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_NORMAL) != 0) {
+                LOGI_HEAP("Unable to elevate priority from %d to %d\n",
+                          priorityResult, ANDROID_PRIORITY_NORMAL);
+            } else {
+                /* priority elevated; save value so we can restore it later */
+                LOGD_HEAP("Elevating priority from %d to %d\n",
+                          priorityResult, ANDROID_PRIORITY_NORMAL);
+                oldThreadPriority = priorityResult;
+            }
         }
     }
 
@@ -760,12 +776,38 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
     gcHeap->weakReferences = NULL;
     gcHeap->phantomReferences = NULL;
 
+    if (reason == GC_CONCURRENT) {
+        /*
+         * We are performing a concurrent collection.  Resume all
+         * threads for the duration of the recursive mark.
+         */
+        dvmResumeAllThreads(SUSPEND_FOR_GC);
+    }
+
     /* Recursively mark any objects that marked objects point to strongly.
      * If we're not collecting soft references, soft-reachable
      * objects will also be marked.
      */
     LOGD_HEAP("Recursing...");
     dvmHeapScanMarkedObjects();
+
+    if (reason == GC_CONCURRENT) {
+        /*
+         * We are performing a concurrent collection.  Perform the
+         * final thread suspension.
+         */
+        dvmSuspendAllThreads(SUSPEND_FOR_GC);
+        /*
+         * As no barrier intercepts root updates, we conservatively
+         * assume all roots may be gray and re-mark them.
+         */
+        dvmHeapMarkRootSet();
+        /*
+         * Recursively mark gray objects pointed to by the roots or by
+         * heap objects dirtied during the concurrent mark.
+         */
+        dvmMarkDirtyObjects();
+    }
 
     /* All strongly-reachable objects have now been marked.
      */
@@ -870,16 +912,18 @@ void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason)
 #endif
 
     dvmResumeAllThreads(SUSPEND_FOR_GC);
-    if (oldThreadPriority != kInvalidPriority) {
-        if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
-            LOGW_HEAP("Unable to reset priority to %d: %s\n",
-                oldThreadPriority, strerror(errno));
-        } else {
-            LOGD_HEAP("Reset priority to %d\n", oldThreadPriority);
-        }
+    if (reason != GC_CONCURRENT) {
+        if (oldThreadPriority != kInvalidPriority) {
+            if (setpriority(PRIO_PROCESS, 0, oldThreadPriority) != 0) {
+                LOGW_HEAP("Unable to reset priority to %d: %s\n",
+                          oldThreadPriority, strerror(errno));
+            } else {
+                LOGD_HEAP("Reset priority to %d\n", oldThreadPriority);
+            }
 
-        if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
-            set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
+            if (oldThreadPriority >= ANDROID_PRIORITY_BACKGROUND) {
+                set_sched_policy(dvmGetSysThreadId(), SP_BACKGROUND);
+            }
         }
     }
     gcElapsedTime = (dvmGetRelativeTimeUsec() - gcHeap->gcStartTime) / 1000;

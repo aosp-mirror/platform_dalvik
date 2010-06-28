@@ -122,6 +122,7 @@ struct DvmGlobals {
     bool        preVerify;
     bool        postVerify;
     bool        generateRegisterMaps;
+    bool        concurrentMarkSweep;
 
     int         assertionCtrlCount;
     AssertionControl*   assertionCtrl;

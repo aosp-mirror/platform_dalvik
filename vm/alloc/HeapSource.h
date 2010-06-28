@@ -36,11 +36,25 @@ GcHeap *dvmHeapSourceStartup(size_t startSize, size_t absoluteMaxSize);
 
 /*
  * If the HeapSource was created while in zygote mode, this
+ * will create a new heap for post-zygote allocations.
+ * Having a separate heap should maximize the number of pages
+ * that a given app_process shares with the zygote process.
+ */
+bool dvmHeapSourceStartupAfterZygote(void);
+
+/*
+ * If the HeapSource was created while in zygote mode, this
  * will create an additional zygote heap before the first fork().
  * Having a separate heap should reduce the number of shared
  * pages subsequently touched by the zygote process.
  */
 bool dvmHeapSourceStartupBeforeFork(void);
+
+/*
+ * Shutdown any threads internal to the heap source.  This should be
+ * called before the heap source itself is shutdown.
+ */
+void dvmHeapSourceThreadShutdown(void);
 
 /*
  * Tears down the heap source and frees any resources associated with it.
@@ -57,7 +71,7 @@ void dvmHeapSourceGetObjectBitmaps(HeapBitmap objBits[], HeapBitmap markBits[],
 /*
  * Get the bitmap representing all live objects.
  */
-HeapBitmap *dvmHeapSourceGetLiveBits();
+HeapBitmap *dvmHeapSourceGetLiveBits(void);
 
 /*
  * Returns the requested value. If the per-heap stats are requested, fill

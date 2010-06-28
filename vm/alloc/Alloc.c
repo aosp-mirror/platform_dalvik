@@ -47,8 +47,16 @@ bool dvmGcStartupAfterZygote(void)
     if (!dvmHeapWorkerStartup()) {
         return false;
     }
-    dvmHeapStartupAfterZygote();
-    return true;
+    return dvmHeapStartupAfterZygote();
+}
+
+/*
+ * Shutdown the threads internal to the garbage collector.
+ */
+void dvmGcThreadShutdown(void)
+{
+    dvmHeapWorkerShutdown();
+    dvmHeapThreadShutdown();
 }
 
 /*
