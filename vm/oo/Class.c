@@ -23,6 +23,7 @@
 
 #include "Dalvik.h"
 #include "libdex/DexClass.h"
+#include "analysis/Optimize.h"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -4282,9 +4283,9 @@ bool dvmInitClass(ClassObject* clazz)
 verify_failed:
             dvmThrowExceptionWithClassMessage("Ljava/lang/VerifyError;",
                 clazz->descriptor);
-            dvmSetFieldObject((Object *)clazz,
-                              offsetof(ClassObject, verifyErrorClass),
-                              (Object *)dvmGetException(self)->clazz);
+            dvmSetFieldObject((Object*) clazz,
+                offsetof(ClassObject, verifyErrorClass),
+                (Object*) dvmGetException(self)->clazz);
             clazz->status = CLASS_ERROR;
             goto bail_unlock;
         }
@@ -4293,8 +4294,20 @@ verify_failed:
     }
 noverify:
 
+    /*
+     * We need to ensure that certain instructions, notably accesses to
+     * volatile fields, are replaced before any code is executed.  This
+     * must happen even if DEX optimizations are disabled.
+     */
+    if (!IS_CLASS_FLAG_SET(clazz, CLASS_ISOPTIMIZED)) {
+        LOGV("+++ late optimize on %s (pv=%d)\n",
+            clazz->descriptor, IS_CLASS_FLAG_SET(clazz, CLASS_ISPREVERIFIED));
+        dvmOptimizeClass(clazz, true);
+        SET_CLASS_FLAG(clazz, CLASS_ISOPTIMIZED);
+    }
+
 #ifdef WITH_DEBUGGER
-    /* update instruction stream now that the verifier is done */
+    /* update instruction stream now that verification + optimization is done */
     dvmFlushBreakpoints(clazz);
 #endif
 

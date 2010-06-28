@@ -965,7 +965,7 @@ static void verifyAndOptimizeClass(DexFile* pDexFile, ClassObject* clazz,
             LOGV("DexOpt: not optimizing '%s': not verified\n",
                 classDescriptor);
         } else {
-            dvmOptimizeClass(clazz);
+            dvmOptimizeClass(clazz, false);
 
             /* set the flag whether or not we actually changed anything */
             ((DexClassDef*)pClassDef)->accessFlags |= CLASS_ISOPTIMIZED;

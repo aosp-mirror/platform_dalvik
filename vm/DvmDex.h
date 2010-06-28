@@ -59,6 +59,9 @@ typedef struct DvmDex {
 
     /* shared memory region with file contents */
     MemMapping          memMap;
+
+    /* lock ensuring mutual exclusion during updates */
+    pthread_mutex_t     modLock;
 } DvmDex;
 
 
