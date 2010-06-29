@@ -456,8 +456,8 @@ static void gcDaemonShutdown(void)
         dvmLockMutex(&gHs->gcThreadMutex);
         gHs->gcThreadShutdown = true;
         dvmSignalCond(&gHs->gcThreadCond);
-        pthread_join(gHs->gcThread, NULL);
         dvmUnlockMutex(&gHs->gcThreadMutex);
+        pthread_join(gHs->gcThread, NULL);
     }
 }
 
