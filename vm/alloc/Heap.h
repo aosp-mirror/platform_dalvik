@@ -79,12 +79,6 @@ typedef enum {
 } GcReason;
 
 /*
- * Suspend the VM as for a GC, and assert-fail if any object has any
- * corrupt references.
- */
-void dvmHeapSuspendAndVerify();
-
-/*
  * Run the garbage collector without doing any locking.
  */
 void dvmCollectGarbageInternal(bool clearSoftRefs, GcReason reason);
