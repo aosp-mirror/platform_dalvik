@@ -582,8 +582,8 @@ void dvmMarkDirtyObjects(void)
 
     ctx = &gDvm.gcHeap->markContext;
     /*
-     * Reset the finger to the maximum value to ensure that gray
-     * objects are always pushed onto the mark stack.
+     * The finger must have been set to the maximum value to ensure
+     * that gray objects will be pushed onto the mark stack.
      */
     assert(ctx->finger == (void *)ULONG_MAX);
     numBitmaps = dvmHeapSourceGetNumHeaps();
