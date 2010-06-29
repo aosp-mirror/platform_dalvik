@@ -581,26 +581,6 @@ static void verifyHeap()
 }
 
 /*
- * Suspend the VM as for a GC, and assert-fail if any object has any
- * corrupt references.
- */
-void dvmHeapSuspendAndVerify()
-{
-    /* Suspend the VM. */
-    dvmSuspendAllThreads(SUSPEND_FOR_VERIFY);
-    dvmLockMutex(&gDvm.heapWorkerLock);
-    dvmAssertHeapWorkerThreadRunning();
-    dvmLockMutex(&gDvm.heapWorkerListLock);
-
-    verifyHeap();
-
-    /* Resume the VM. */
-    dvmUnlockMutex(&gDvm.heapWorkerListLock);
-    dvmUnlockMutex(&gDvm.heapWorkerLock);
-    dvmResumeAllThreads(SUSPEND_FOR_VERIFY);
-}
-
-/*
  * Initiate garbage collection.
  *
  * NOTES:
